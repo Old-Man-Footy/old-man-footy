@@ -1,0 +1,174 @@
+<% layout('layout') -%>
+
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <i class="bi bi-trophy display-3 text-primary mb-3"></i>
+            <h1 class="display-4 fw-bold mb-3">About NRL Masters</h1>
+            <p class="lead text-muted">Your central hub for Masters Rugby League carnival information across Australia</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- What is NRL Masters -->
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">What is NRL Masters?</h2>
+                    <p>NRL Masters is the premier platform for discovering and managing Masters Rugby League carnival events across Australia. We connect clubs, players, and fans with exciting rugby league tournaments and competitions designed for mature players who still love the game.</p>
+                    
+                    <p>Masters Rugby League welcomes players typically aged 35+ (with some variations depending on the specific carnival) who want to continue playing the sport they love in a competitive yet social environment.</p>
+                </div>
+            </div>
+
+            <!-- Our Mission -->
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">Our Mission</h2>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i> Connect Masters Rugby League clubs and players across Australia</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i> Provide a centralized directory of carnival events and tournaments</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i> Support club delegates in promoting their events</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i> Foster the growth of Masters Rugby League community</li>
+                        <li class="mb-0"><i class="bi bi-check-circle text-success me-2"></i> Celebrate the passion for rugby league beyond traditional playing age</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">Platform Features</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-calendar-event text-primary"></i> Event Discovery</h5>
+                            <p class="mb-3">Find Masters Rugby League carnivals across all Australian states with detailed information, schedules, and registration links.</p>
+                            
+                            <h5><i class="bi bi-bell text-primary"></i> Email Notifications</h5>
+                            <p class="mb-3">Subscribe to receive notifications about new carnivals in your preferred states.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-person-badge text-primary"></i> Club Management</h5>
+                            <p class="mb-3">Club delegates can register to create, edit, and manage their carnival listings with full event details.</p>
+                            
+                            <h5><i class="bi bi-link-45deg text-primary"></i> MySideline Integration</h5>
+                            <p class="mb-3">Connected with official MySideline registration system for seamless player registration.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- For Club Delegates -->
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">For Club Delegates</h2>
+                    <p>Are you organizing a Masters Rugby League carnival? Register as a club delegate to:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="bi bi-plus-circle text-primary me-2"></i> Create detailed carnival listings</li>
+                                <li class="mb-2"><i class="bi bi-image text-primary me-2"></i> Upload club logos and promotional images</li>
+                                <li class="mb-2"><i class="bi bi-file-earmark text-primary me-2"></i> Share draw sheets and results</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="bi bi-share text-primary me-2"></i> Link to social media and websites</li>
+                                <li class="mb-2"><i class="bi bi-people text-primary me-2"></i> Call for volunteers</li>
+                                <li class="mb-2"><i class="bi bi-pencil text-primary me-2"></i> Update event information easily</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <% if (!user) { %>
+                            <a href="/auth/register" class="btn btn-primary btn-lg">
+                                <i class="bi bi-person-plus"></i> Register as Club Delegate
+                            </a>
+                        <% } else { %>
+                            <a href="/carnivals/new" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle"></i> Add Your Carnival
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MySideline Integration -->
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">Official Registration via MySideline</h2>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <p>All official Masters Rugby League player registrations are processed through MySideline, the official registration platform for rugby league in Australia.</p>
+                            <p class="mb-0">Our platform complements MySideline by providing comprehensive carnival information while directing players to the official registration system.</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <a href="<%= process.env.MYSIDELINE_URL || '#' %>" class="btn btn-success btn-lg" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> Visit MySideline
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">Get in Touch</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Have a Question?</h5>
+                            <p>Whether you're a player looking for carnivals or a club delegate needing help with the platform, we're here to assist.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Contact Options</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-envelope text-primary me-2"></i>
+                                    <a href="mailto:support@nrlmasters.com.au">support@nrlmasters.com.au</a>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-calendar3 text-primary me-2"></i>
+                                    <a href="/carnivals">Browse Carnivals</a>
+                                </li>
+                                <% if (!user) { %>
+                                    <li class="mb-0">
+                                        <i class="bi bi-person-plus text-primary me-2"></i>
+                                        <a href="/auth/register">Register as Delegate</a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="card shadow bg-primary text-white">
+                <div class="card-body p-4 text-center">
+                    <h2 class="h4 mb-3">Join the Masters Community</h2>
+                    <p class="mb-3">Be part of the growing Masters Rugby League community across Australia</p>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <i class="bi bi-people display-6 mb-2"></i>
+                            <h5>Growing Community</h5>
+                            <p class="small mb-0">Clubs and players nationwide</p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="bi bi-calendar-event display-6 mb-2"></i>
+                            <h5>Regular Events</h5>
+                            <p class="small mb-0">Carnivals throughout the year</p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="bi bi-trophy display-6 mb-2"></i>
+                            <h5>Competitive Play</h5>
+                            <p class="small mb-0">High-quality rugby league</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

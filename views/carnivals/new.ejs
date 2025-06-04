@@ -1,0 +1,250 @@
+<% layout('layout') -%>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Add New Carnival
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <% errors.forEach(error => { %>
+                                <p class="mb-0"><%= error.msg %></p>
+                            <% }) %>
+                        </div>
+                    <% } %>
+
+                    <form method="POST" action="/carnivals/new" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Basic Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Carnival Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.title : '' %>" required>
+                                <div class="invalid-feedback">Please provide a carnival title.</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="date" class="form-label">Date *</label>
+                                    <input type="date" class="form-control" id="date" name="date" 
+                                           value="<%= typeof formData !== 'undefined' ? formData.date : '' %>" required>
+                                    <div class="invalid-feedback">Please select a date.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="state" class="form-label">State *</label>
+                                    <select class="form-select" id="state" name="state" required>
+                                        <option value="">Select State</option>
+                                        <% states.forEach(state => { %>
+                                            <option value="<%= state %>" 
+                                                    <%= typeof formData !== 'undefined' && formData.state === state ? 'selected' : '' %>>
+                                                <%= state %>
+                                            </option>
+                                        <% }) %>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a state.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="locationAddress" class="form-label">Location Address *</label>
+                                <textarea class="form-control" id="locationAddress" name="locationAddress" rows="2" required><%= typeof formData !== 'undefined' ? formData.locationAddress : '' %></textarea>
+                                <div class="invalid-feedback">Please provide the location address.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="scheduleDetails" class="form-label">Schedule Details *</label>
+                                <textarea class="form-control" id="scheduleDetails" name="scheduleDetails" rows="4" 
+                                          placeholder="Include game times, age groups, format details, etc." required><%= typeof formData !== 'undefined' ? formData.scheduleDetails : '' %></textarea>
+                                <div class="invalid-feedback">Please provide schedule details.</div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Organiser Contact Information</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="organiserContactName" class="form-label">Contact Name *</label>
+                                    <input type="text" class="form-control" id="organiserContactName" name="organiserContactName" 
+                                           value="<%= typeof formData !== 'undefined' ? formData.organiserContactName : user.firstName + ' ' + user.lastName %>" required>
+                                    <div class="invalid-feedback">Please provide a contact name.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="organiserContactPhone" class="form-label">Contact Phone *</label>
+                                    <input type="tel" class="form-control" id="organiserContactPhone" name="organiserContactPhone" 
+                                           value="<%= typeof formData !== 'undefined' ? formData.organiserContactPhone : '' %>" required>
+                                    <div class="invalid-feedback">Please provide a contact phone number.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="organiserContactEmail" class="form-label">Contact Email *</label>
+                                <input type="email" class="form-control" id="organiserContactEmail" name="organiserContactEmail" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.organiserContactEmail : user.email %>" required>
+                                <div class="invalid-feedback">Please provide a valid contact email.</div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Additional Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="registrationLink" class="form-label">Registration Link</label>
+                                <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.registrationLink : '' %>"
+                                       placeholder="https://...">
+                                <div class="form-text">Link to online registration or MySideline event</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="feesDescription" class="form-label">Fees Description</label>
+                                <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
+                                          placeholder="Entry fees, payment methods, etc."><%= typeof formData !== 'undefined' ? formData.feesDescription : '' %></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="callForVolunteers" class="form-label">Call for Volunteers</label>
+                                <textarea class="form-control" id="callForVolunteers" name="callForVolunteers" rows="2" 
+                                          placeholder="Volunteer opportunities, requirements, contact details"><%= typeof formData !== 'undefined' ? formData.callForVolunteers : '' %></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Social Media Links -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Social Media Links</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="facebook" class="form-label">
+                                        <i class="bi bi-facebook text-primary"></i> Facebook
+                                    </label>
+                                    <input type="url" class="form-control" id="facebook" name="socialMedia.facebook" 
+                                           value="<%= typeof formData !== 'undefined' && formData.socialMedia ? formData.socialMedia.facebook : '' %>"
+                                           placeholder="https://facebook.com/yourpage">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="instagram" class="form-label">
+                                        <i class="bi bi-instagram text-danger"></i> Instagram
+                                    </label>
+                                    <input type="url" class="form-control" id="instagram" name="socialMedia.instagram" 
+                                           value="<%= typeof formData !== 'undefined' && formData.socialMedia ? formData.socialMedia.instagram : '' %>"
+                                           placeholder="https://instagram.com/yourpage">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="twitter" class="form-label">
+                                        <i class="bi bi-twitter text-info"></i> Twitter
+                                    </label>
+                                    <input type="url" class="form-control" id="twitter" name="socialMedia.twitter" 
+                                           value="<%= typeof formData !== 'undefined' && formData.socialMedia ? formData.socialMedia.twitter : '' %>"
+                                           placeholder="https://twitter.com/yourpage">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="youtube" class="form-label">
+                                        <i class="bi bi-youtube text-danger"></i> YouTube
+                                    </label>
+                                    <input type="url" class="form-control" id="youtube" name="socialMedia.youtube" 
+                                           value="<%= typeof formData !== 'undefined' && formData.socialMedia ? formData.socialMedia.youtube : '' %>"
+                                           placeholder="https://youtube.com/channel/yourchannel">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="website" class="form-label">
+                                    <i class="bi bi-globe text-success"></i> Website
+                                </label>
+                                <input type="url" class="form-control" id="website" name="socialMedia.website" 
+                                       value="<%= typeof formData !== 'undefined' && formData.socialMedia ? formData.socialMedia.website : '' %>"
+                                       placeholder="https://yourwebsite.com">
+                            </div>
+                        </div>
+
+                        <!-- File Uploads -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Images & Documents</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="clubLogo" class="form-label">Club Logo</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="clubLogo" name="clubLogo" 
+                                               accept="image/*" style="display: none;">
+                                        <i class="bi bi-cloud-upload display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload club logo</p>
+                                        <small class="text-muted">Max 5MB, JPG/PNG only</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="promotionalImage" class="form-label">Promotional Image</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="promotionalImage" name="promotionalImage" 
+                                               accept="image/*" style="display: none;">
+                                        <i class="bi bi-image display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload promotional image</p>
+                                        <small class="text-muted">Max 5MB, JPG/PNG only</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="drawFile" class="form-label">Draw Sheet</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="drawFile" name="drawFile" 
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
+                                        <i class="bi bi-file-earmark-text display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload draw sheet</p>
+                                        <small class="text-muted">Max 10MB, PDF/DOC/Image files</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Draw Information -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="drawTitle" class="form-label">Draw Title</label>
+                                    <input type="text" class="form-control" id="drawTitle" name="drawTitle" 
+                                           value="<%= typeof formData !== 'undefined' ? formData.drawTitle : '' %>"
+                                           placeholder="e.g., Pool Draw, Finals Draw">
+                                    <div class="form-text">Optional title for the draw sheet</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="drawDescription" class="form-label">Draw Description</label>
+                                    <textarea class="form-control" id="drawDescription" name="drawDescription" rows="2" 
+                                              placeholder="Brief description of the draw format or details"><%= typeof formData !== 'undefined' ? formData.drawDescription : '' %></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/dashboard" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Create Carnival
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Make file upload areas clickable
+document.querySelectorAll('.file-upload-area').forEach(area => {
+    area.addEventListener('click', function() {
+        const input = this.querySelector('input[type="file"]');
+        if (input) {
+            input.click();
+        }
+    });
+});
+</script>

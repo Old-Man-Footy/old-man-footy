@@ -1,0 +1,114 @@
+<% layout('layout') -%>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus display-4 text-primary"></i>
+                        <h2 class="h4 mt-2">Register as Club Delegate</h2>
+                        <p class="text-muted">Create an account to manage your club's carnivals</p>
+                    </div>
+
+                    <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <% errors.forEach(error => { %>
+                                <p class="mb-0"><%= error.msg %></p>
+                            <% }) %>
+                        </div>
+                    <% } %>
+
+                    <form method="POST" action="/auth/register" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.firstName : '' %>" required>
+                                <div class="invalid-feedback">Please provide your first name.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.lastName : '' %>" required>
+                                <div class="invalid-feedback">Please provide your last name.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="<%= typeof formData !== 'undefined' ? formData.email : '' %>" required>
+                            <div class="invalid-feedback">Please provide a valid email address.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="clubName" class="form-label">Club Name</label>
+                            <input type="text" class="form-control" id="clubName" name="clubName" 
+                                   value="<%= typeof formData !== 'undefined' ? formData.clubName : '' %>" 
+                                   list="clubList" required>
+                            <datalist id="clubList">
+                                <% if (clubs && clubs.length > 0) { %>
+                                    <% clubs.forEach(club => { %>
+                                        <option value="<%= club.clubName %>">
+                                    <% }) %>
+                                <% } %>
+                            </datalist>
+                            <div class="form-text">Start typing to see existing clubs or enter a new club name.</div>
+                            <div class="invalid-feedback">Please provide your club name.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   minlength="8" required>
+                            <div class="form-text">Password must be at least 8 characters long.</div>
+                            <div class="invalid-feedback">Password must be at least 8 characters long.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            <div class="invalid-feedback">Please confirm your password.</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Note:</strong> The first person to register for a club becomes the primary delegate 
+                            with additional privileges to invite other delegates.
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-person-check"></i> Register
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account?</p>
+                        <a href="/auth/login" class="btn btn-outline-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Password confirmation validation
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>

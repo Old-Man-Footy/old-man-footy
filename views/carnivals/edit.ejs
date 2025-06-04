@@ -1,0 +1,284 @@
+<% layout('layout') -%>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil"></i> Edit Carnival
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <% errors.forEach(error => { %>
+                                <p class="mb-0"><%= error.msg %></p>
+                            <% }) %>
+                        </div>
+                    <% } %>
+
+                    <form method="POST" action="/carnivals/<%= carnival._id %>/edit" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Basic Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Carnival Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="<%= carnival.title %>" required>
+                                <div class="invalid-feedback">Please provide a carnival title.</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="date" class="form-label">Date *</label>
+                                    <input type="date" class="form-control" id="date" name="date" 
+                                           value="<%= carnival.date.toISOString().split('T')[0] %>" required>
+                                    <div class="invalid-feedback">Please select a date.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="state" class="form-label">State *</label>
+                                    <select class="form-select" id="state" name="state" required>
+                                        <option value="">Select State</option>
+                                        <% states.forEach(state => { %>
+                                            <option value="<%= state %>" <%= carnival.state === state ? 'selected' : '' %>>
+                                                <%= state %>
+                                            </option>
+                                        <% }) %>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a state.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="locationAddress" class="form-label">Location Address *</label>
+                                <textarea class="form-control" id="locationAddress" name="locationAddress" rows="2" required><%= carnival.locationAddress %></textarea>
+                                <div class="invalid-feedback">Please provide the location address.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="scheduleDetails" class="form-label">Schedule Details *</label>
+                                <textarea class="form-control" id="scheduleDetails" name="scheduleDetails" rows="4" 
+                                          placeholder="Include game times, age groups, format details, etc." required><%= carnival.scheduleDetails %></textarea>
+                                <div class="invalid-feedback">Please provide schedule details.</div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Organiser Contact Information</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="organiserContactName" class="form-label">Contact Name *</label>
+                                    <input type="text" class="form-control" id="organiserContactName" name="organiserContactName" 
+                                           value="<%= carnival.organiserContactName %>" required>
+                                    <div class="invalid-feedback">Please provide a contact name.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="organiserContactPhone" class="form-label">Contact Phone *</label>
+                                    <input type="tel" class="form-control" id="organiserContactPhone" name="organiserContactPhone" 
+                                           value="<%= carnival.organiserContactPhone %>" required>
+                                    <div class="invalid-feedback">Please provide a contact phone number.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="organiserContactEmail" class="form-label">Contact Email *</label>
+                                <input type="email" class="form-control" id="organiserContactEmail" name="organiserContactEmail" 
+                                       value="<%= carnival.organiserContactEmail %>" required>
+                                <div class="invalid-feedback">Please provide a valid contact email.</div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Additional Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="registrationLink" class="form-label">Registration Link</label>
+                                <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
+                                       value="<%= carnival.registrationLink || '' %>"
+                                       placeholder="https://...">
+                                <div class="form-text">Link to online registration or MySideline event</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="feesDescription" class="form-label">Fees Description</label>
+                                <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
+                                          placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="callForVolunteers" class="form-label">Call for Volunteers</label>
+                                <textarea class="form-control" id="callForVolunteers" name="callForVolunteers" rows="2" 
+                                          placeholder="Volunteer opportunities, requirements, contact details"><%= carnival.callForVolunteers || '' %></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Social Media Links -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Social Media Links</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="facebook" class="form-label">
+                                        <i class="bi bi-facebook text-primary"></i> Facebook
+                                    </label>
+                                    <input type="url" class="form-control" id="facebook" name="socialMediaFacebook" 
+                                           value="<%= carnival.socialMediaFacebook || '' %>"
+                                           placeholder="https://facebook.com/yourpage">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="instagram" class="form-label">
+                                        <i class="bi bi-instagram text-danger"></i> Instagram
+                                    </label>
+                                    <input type="url" class="form-control" id="instagram" name="socialMediaInstagram" 
+                                           value="<%= carnival.socialMediaInstagram || '' %>"
+                                           placeholder="https://instagram.com/yourpage">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="twitter" class="form-label">
+                                        <i class="bi bi-twitter text-info"></i> Twitter
+                                    </label>
+                                    <input type="url" class="form-control" id="twitter" name="socialMediaTwitter" 
+                                           value="<%= carnival.socialMediaTwitter || '' %>"
+                                           placeholder="https://twitter.com/yourpage">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="website" class="form-label">
+                                        <i class="bi bi-globe text-success"></i> Website
+                                    </label>
+                                    <input type="url" class="form-control" id="website" name="socialMediaWebsite" 
+                                           value="<%= carnival.socialMediaWebsite || '' %>"
+                                           placeholder="https://yourwebsite.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current Images Display -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Current Images</h5>
+                            <div class="row">
+                                <% if (carnival.clubLogoURL) { %>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <img src="<%= carnival.clubLogoURL %>" class="card-img-top" alt="Current Club Logo" style="height: 150px; object-fit: contain;">
+                                            <div class="card-body text-center">
+                                                <small class="text-muted">Current Club Logo</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                <% if (carnival.promotionalImageURL) { %>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" alt="Current Promotional Image" style="height: 150px; object-fit: cover;">
+                                            <div class="card-body text-center">
+                                                <small class="text-muted">Current Promotional Image</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                <% if (carnival.drawFileURL) { %>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-text display-6 text-muted"></i>
+                                                <br>
+                                                <small class="text-muted">Current Draw File</small>
+                                                <br>
+                                                <a href="<%= carnival.drawFileURL %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                    <i class="bi bi-download"></i> View
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- File Uploads -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Update Images & Documents</h5>
+                            <p class="text-muted mb-3">Upload new files to replace existing ones (optional)</p>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="clubLogo" class="form-label">New Club Logo</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="clubLogo" name="clubLogo" 
+                                               accept="image/*" style="display: none;">
+                                        <i class="bi bi-cloud-upload display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload new club logo</p>
+                                        <small class="text-muted">Max 5MB, JPG/PNG only</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="promotionalImage" class="form-label">New Promotional Image</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="promotionalImage" name="promotionalImage" 
+                                               accept="image/*" style="display: none;">
+                                        <i class="bi bi-image display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload new promotional image</p>
+                                        <small class="text-muted">Max 5MB, JPG/PNG only</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="drawFile" class="form-label">New Draw Sheet</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="drawFile" name="drawFile" 
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
+                                        <i class="bi bi-file-earmark-text display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload new draw sheet</p>
+                                        <small class="text-muted">Max 10MB, PDF/DOC/Image files</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Draw Information -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="drawTitle" class="form-label">Draw Title</label>
+                                    <input type="text" class="form-control" id="drawTitle" name="drawTitle" 
+                                           value="<%= carnival.drawTitle || '' %>"
+                                           placeholder="e.g., Pool Draw, Finals Draw">
+                                    <div class="form-text">Optional title for the draw sheet</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="drawDescription" class="form-label">Draw Description</label>
+                                    <textarea class="form-control" id="drawDescription" name="drawDescription" rows="2" 
+                                              placeholder="Brief description of the draw format or details"><%= carnival.drawDescription || '' %></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/carnivals/<%= carnival._id %>" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle"></i> Update Carnival
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Make file upload areas clickable
+document.querySelectorAll('.file-upload-area').forEach(area => {
+    area.addEventListener('click', function() {
+        const input = this.querySelector('input[type="file"]');
+        if (input) {
+            input.click();
+        }
+    });
+});
+</script>
