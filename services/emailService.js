@@ -80,9 +80,9 @@ class EmailService {
     // Send carnival notification to subscribers
     async sendCarnivalNotification(carnival, type = 'new') {
         try {
-            // Get all email subscriptions for this carnival's state
+            // Get all email subscriptions that include this carnival's state in their stateFilter
             const subscriptions = await EmailSubscription.find({ 
-                state: { $in: [carnival.state, 'all'] },
+                stateFilter: { $in: [carnival.state] },
                 isActive: true
             });
 
@@ -191,8 +191,14 @@ class EmailService {
     }
 
     // Send welcome email to new subscribers
-    async sendWelcomeEmail(email, state) {
+    async sendWelcomeEmail(email, states) {
         const unsubscribeUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(email)}`;
+        
+        // Handle both single state (string) and multiple states (array) for backward compatibility
+        const stateArray = Array.isArray(states) ? states : [states];
+        const stateText = stateArray.length === 1 
+            ? `in ${stateArray[0]}` 
+            : `in ${stateArray.slice(0, -1).join(', ')} and ${stateArray[stateArray.length - 1]}`;
         
         const mailOptions = {
             from: `"Rugby League Masters" <${process.env.EMAIL_USER}>`,
@@ -212,7 +218,7 @@ class EmailService {
                         
                         <p>You'll now receive email updates about:</p>
                         <ul>
-                            <li>New rugby league carnivals ${state !== 'all' ? `in ${state}` : 'across Australia'}</li>
+                            <li>New rugby league carnivals ${stateText}</li>
                             <li>Event updates and schedule changes</li>
                             <li>Registration reminders</li>
                             <li>Important announcements</li>
@@ -221,6 +227,8 @@ class EmailService {
                         <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
                             <h3 style="color: #006837; margin-top: 0;">What's Next?</h3>
                             <p>Keep an eye on your inbox for upcoming carnival announcements. You can also visit our website anytime to browse current events and get the latest information.</p>
+                            
+                            <p><strong>Your subscription covers:</strong> ${stateArray.join(', ')}</p>
                         </div>
                         
                         <div style="text-align: center; margin: 30px 0;">

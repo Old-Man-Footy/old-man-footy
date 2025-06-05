@@ -80,7 +80,8 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
         if (req.user.isPrimaryDelegate) {
             emailStats = await EmailSubscription.aggregate([
                 { $match: { isActive: true } },
-                { $group: { _id: '$state', count: { $sum: 1 } } },
+                { $unwind: '$stateFilter' },
+                { $group: { _id: '$stateFilter', count: { $sum: 1 } } },
                 { $sort: { _id: 1 } }
             ]);
         }
@@ -126,37 +127,54 @@ router.post('/subscribe', async (req, res) => {
         const { email, state } = req.body;
 
         if (!email || !state) {
-            req.flash('error_msg', 'Email and state are required.');
+            req.flash('error_msg', 'Email and at least one state are required.');
             return res.redirect('/');
         }
 
-        // Validate state
+        // Handle both single and multiple state selections
+        const selectedStates = Array.isArray(state) ? state : [state];
+
+        // Validate states
         const validStates = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
-        if (!validStates.includes(state)) {
-            req.flash('error_msg', 'Please select a valid state.');
+        const invalidStates = selectedStates.filter(s => !validStates.includes(s));
+        
+        if (invalidStates.length > 0) {
+            req.flash('error_msg', 'Please select valid states only.');
             return res.redirect('/');
         }
 
-        // Check if already subscribed
-        const existingSubscription = await EmailSubscription.findOne({ email, state });
+        // Check if already subscribed for this email
+        const existingSubscription = await EmailSubscription.findOne({ email });
         
         if (existingSubscription) {
             if (existingSubscription.isActive) {
-                req.flash('info_msg', 'You are already subscribed to notifications for this state.');
+                // Update existing subscription with new state filters
+                existingSubscription.stateFilter = selectedStates;
+                await existingSubscription.save();
+                
+                // Send updated welcome email
+                try {
+                    await emailService.sendWelcomeEmail(email, selectedStates);
+                } catch (emailError) {
+                    console.error('Failed to send welcome email:', emailError);
+                }
+                
+                req.flash('success_msg', 'Your subscription has been updated with the selected states!');
             } else {
-                // Reactivate subscription
+                // Reactivate subscription with new state filters
                 existingSubscription.isActive = true;
+                existingSubscription.stateFilter = selectedStates;
                 existingSubscription.subscribedAt = new Date();
                 await existingSubscription.save();
                 
                 // Send welcome email
                 try {
-                    await emailService.sendWelcomeEmail(email, state);
+                    await emailService.sendWelcomeEmail(email, selectedStates);
                 } catch (emailError) {
                     console.error('Failed to send welcome email:', emailError);
                 }
                 
-                req.flash('success_msg', 'Your subscription has been reactivated! You will receive notifications about new carnivals.');
+                req.flash('success_msg', 'Your subscription has been reactivated! You will receive notifications about new carnivals in your selected states.');
             }
             return res.redirect('/');
         }
@@ -164,7 +182,7 @@ router.post('/subscribe', async (req, res) => {
         // Create new subscription
         const subscription = new EmailSubscription({
             email,
-            state,
+            stateFilter: selectedStates,
             unsubscribeToken: require('crypto').randomBytes(32).toString('hex')
         });
 
@@ -172,13 +190,13 @@ router.post('/subscribe', async (req, res) => {
 
         // Send welcome email
         try {
-            await emailService.sendWelcomeEmail(email, state);
+            await emailService.sendWelcomeEmail(email, selectedStates);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
             // Don't fail the subscription if email fails
         }
 
-        req.flash('success_msg', 'Successfully subscribed! You will receive email notifications about new carnivals.');
+        req.flash('success_msg', 'Successfully subscribed! You will receive email notifications about new carnivals in your selected states.');
         res.redirect('/');
 
     } catch (error) {
@@ -260,7 +278,8 @@ router.get('/admin/stats', ensureAuthenticated, async (req, res) => {
         // Get email subscriptions by state
         const subscriptionsByState = await EmailSubscription.aggregate([
             { $match: { isActive: true } },
-            { $group: { _id: '$state', count: { $sum: 1 } } },
+            { $unwind: '$stateFilter' },
+            { $group: { _id: '$stateFilter', count: { $sum: 1 } } },
             { $sort: { _id: 1 } }
         ]);
 

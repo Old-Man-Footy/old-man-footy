@@ -1,0 +1,251 @@
+<%- contentFor('body') %>
+<div class="container">
+    <div class="admin-header mb-4">
+        <h1><i class="fas fa-chart-bar"></i> Admin Statistics</h1>
+        <p class="lead">System overview and analytics</p>
+    </div>
+
+    <!-- Overview Statistics -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.totalCarnivals %></h3>
+                    <p>Total Carnivals</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.upcomingCarnivals %></h3>
+                    <p>Upcoming Events</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.totalUsers %></h3>
+                    <p>Registered Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.emailSubscriptions %></h3>
+                    <p>Email Subscribers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Breakdowns -->
+    <div class="row">
+        <!-- Carnival Statistics -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-trophy"></i> Carnival Breakdown</h4>
+                </div>
+                <div class="card-body">
+                    <div class="stat-breakdown">
+                        <div class="stat-item">
+                            <span class="label">MySideline Events:</span>
+                            <span class="value"><%= stats.mySidelineCarnivals %></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Manual Entries:</span>
+                            <span class="value"><%= stats.manualCarnivals %></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Club Delegates:</span>
+                            <span class="value"><%= stats.clubDelegates %></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carnivals by State -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-map-marker-alt"></i> Carnivals by State</h4>
+                </div>
+                <div class="card-body">
+                    <% if (stats.carnivalsByState && stats.carnivalsByState.length > 0) { %>
+                        <% stats.carnivalsByState.forEach(function(item) { %>
+                            <div class="state-stat">
+                                <span class="state-name"><%= item._id %></span>
+                                <span class="state-count"><%= item.count %> events</span>
+                                <div class="state-bar">
+                                    <div class="state-fill" style="width: <%= (item.count / stats.totalCarnivals * 100) %>%"></div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p class="text-muted">No carnival data available.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Subscriptions by State -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-mail-bulk"></i> Email Subscriptions by State</h4>
+                </div>
+                <div class="card-body">
+                    <% if (stats.subscriptionsByState && stats.subscriptionsByState.length > 0) { %>
+                        <div class="row">
+                            <% stats.subscriptionsByState.forEach(function(item) { %>
+                                <div class="col-md-3 mb-3">
+                                    <div class="subscription-stat">
+                                        <h5><%= item._id %></h5>
+                                        <p class="subscription-count"><%= item.count %> subscribers</p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">No subscription data available.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-cogs"></i> Admin Actions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="admin-actions">
+                        <form action="/carnivals/admin/sync-mysideline" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-sync"></i> Trigger MySideline Sync
+                            </button>
+                        </form>
+                        <a href="/dashboard" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+    color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-right: 1rem;
+    opacity: 0.8;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-content p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.stat-breakdown .stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.stat-breakdown .stat-item:last-child {
+    border-bottom: none;
+}
+
+.state-stat {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.state-name {
+    width: 60px;
+    font-weight: bold;
+}
+
+.state-count {
+    width: 100px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.state-bar {
+    flex: 1;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    margin-left: 1rem;
+}
+
+.state-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-green), var(--gold));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.subscription-stat {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.subscription-count {
+    color: var(--primary-green);
+    font-weight: bold;
+    margin: 0;
+}
+
+.admin-actions {
+    padding: 1rem 0;
+}
+
+.admin-header {
+    border-bottom: 3px solid var(--primary-green);
+    padding-bottom: 1rem;
+}
+</style>
