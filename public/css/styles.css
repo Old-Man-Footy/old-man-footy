@@ -1,13 +1,16 @@
-/* NRL Masters Custom Styles */
+/* Rugby League Masters Custom Styles */
 
-/* Root Variables for Consistent Theming */
+/* Root Variables for Consistent Theming - Green/Gold Theme */
 :root {
-    --nrl-primary: #003d7a;
-    --nrl-secondary: #dc3545;
-    --nrl-success: #28a745;
-    --nrl-warning: #ffc107;
-    --nrl-light: #f8f9fa;
-    --nrl-dark: #343a40;
+    --rugby-green: #006837;
+    --rugby-gold: #FFD700;
+    --rugby-dark-green: #004d27;
+    --rugby-light-green: #e8f5e8;
+    --secondary: #dc3545;
+    --success: #28a745;
+    --warning: #ffc107;
+    --light: #f8f9fa;
+    --dark: #343a40;
     --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
@@ -23,16 +26,21 @@ body {
 /* Header and Navigation */
 .navbar-brand {
     font-weight: 700;
-    color: var(--nrl-primary) !important;
+    color: white !important;
 }
 
-.navbar-nav .nav-link {
+.navbar-dark .navbar-nav .nav-link {
     font-weight: 500;
+    color: rgba(255, 255, 255, 0.9) !important;
     transition: color 0.3s ease;
 }
 
-.navbar-nav .nav-link:hover {
-    color: var(--nrl-primary) !important;
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: var(--rugby-gold) !important;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%) !important;
 }
 
 /* Button Enhancements */
@@ -48,13 +56,52 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--nrl-primary);
-    border-color: var(--nrl-primary);
+    background-color: var(--rugby-green);
+    border-color: var(--rugby-green);
+    color: white;
 }
 
 .btn-primary:hover {
-    background-color: #002952;
-    border-color: #002952;
+    background-color: var(--rugby-dark-green);
+    border-color: var(--rugby-dark-green);
+}
+
+.btn-outline-primary {
+    color: var(--rugby-green);
+    border-color: var(--rugby-green);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--rugby-green);
+    border-color: var(--rugby-green);
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--rugby-gold);
+    border-color: var(--rugby-gold);
+    color: var(--rugby-dark-green);
+    font-weight: 600;
+}
+
+.btn-success:hover {
+    background-color: #e6c200;
+    border-color: #e6c200;
+    color: var(--rugby-dark-green);
+}
+
+/* Dashboard Stats Cards */
+.dashboard-stats .card:nth-child(1) .card-body {
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+}
+
+.dashboard-stats .card:nth-child(2) .card-body {
+    background: linear-gradient(135deg, var(--rugby-gold), #e6c200);
+    color: var(--rugby-dark-green) !important;
+}
+
+.dashboard-stats .card:nth-child(3) .card-body {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
 }
 
 /* Card Enhancements */
@@ -76,6 +123,11 @@ body {
     font-weight: 600;
 }
 
+.card-header.bg-primary {
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green)) !important;
+    color: white;
+}
+
 /* Carnival Card Specific Styles */
 .carnival-card {
     height: 100%;
@@ -84,6 +136,8 @@ body {
 
 .carnival-card .card-img-top {
     transition: transform 0.3s ease;
+    height: 200px;
+    object-fit: cover;
 }
 
 .carnival-card:hover .card-img-top {
@@ -102,7 +156,7 @@ body {
 }
 
 .carnival-card .social-links a:hover {
-    color: var(--nrl-primary);
+    color: var(--rugby-green);
 }
 
 /* File Upload Areas */
@@ -117,19 +171,20 @@ body {
 }
 
 .file-upload-area:hover {
-    border-color: var(--nrl-primary);
-    background-color: #e3f2fd;
+    border-color: var(--rugby-green);
+    background-color: var(--rugby-light-green);
 }
 
 .file-upload-area.drag-over {
-    border-color: var(--nrl-success);
-    background-color: #e8f5e8;
+    border-color: var(--rugby-gold);
+    background-color: #fffbf0;
     transform: scale(1.02);
 }
 
 .file-upload-area i {
     opacity: 0.6;
     transition: opacity 0.3s ease;
+    color: var(--rugby-green);
 }
 
 .file-upload-area:hover i {
@@ -150,90 +205,46 @@ body {
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: var(--nrl-primary);
-    box-shadow: 0 0 0 0.2rem rgba(0, 61, 122, 0.25);
+    border-color: var(--rugby-green);
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
 }
 
 .form-label {
     font-weight: 600;
-    color: var(--nrl-dark);
+    color: var(--dark);
     margin-bottom: 0.5rem;
 }
 
-/* Textarea Auto-resize */
-textarea.form-control {
-    resize: vertical;
-    min-height: 2.5rem;
+/* Text Colors */
+.text-primary {
+    color: var(--rugby-green) !important;
 }
 
-/* Alert Enhancements */
-.alert {
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
+.text-success {
+    color: var(--rugby-gold) !important;
 }
 
-.alert-success {
-    background-color: #d1edff;
-    color: #0c5460;
+/* State Badge Colors - Australian States */
+.badge.bg-secondary {
+    background-color: var(--rugby-green) !important;
 }
 
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.alert-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-}
-
-/* Badge Enhancements */
-.badge {
-    font-weight: 500;
-    letter-spacing: 0.025em;
-}
-
-/* Loading States */
-.btn.loading {
-    pointer-events: none;
-    opacity: 0.6;
-}
-
-.btn.loading::after {
-    content: "";
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    margin-left: 0.5rem;
-    border: 2px solid transparent;
-    border-top: 2px solid currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Search and Filter Section */
-.filter-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-}
+.badge.state-nsw { background-color: #003d7a; }
+.badge.state-qld { background-color: #8b0000; }
+.badge.state-vic { background-color: #003366; }
+.badge.state-wa { background-color: #ffcd00; color: #000; }
+.badge.state-sa { background-color: #d50000; }
+.badge.state-tas { background-color: var(--rugby-green); }
+.badge.state-nt { background-color: #e87722; }
+.badge.state-act { background-color: #0066cc; }
 
 /* Hero Section Enhancements */
-.hero-section {
-    background: linear-gradient(135deg, var(--nrl-primary) 0%, #004891 100%);
+.hero-section, .bg-primary {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%) !important;
     color: white;
+}
+
+.hero-section {
     padding: 4rem 0;
     margin-bottom: 2rem;
 }
@@ -248,24 +259,7 @@ textarea.form-control {
     opacity: 0.9;
 }
 
-/* State Badge Colors */
-.badge.state-nsw { background-color: #003d7a; }
-.badge.state-qld { background-color: #8b0000; }
-.badge.state-vic { background-color: #003366; }
-.badge.state-wa { background-color: #ffcd00; color: #000; }
-.badge.state-sa { background-color: #d50000; }
-.badge.state-tas { background-color: #006838; }
-.badge.state-nt { background-color: #e87722; }
-.badge.state-act { background-color: #0066cc; }
-
-/* Responsive Image Handling */
-.responsive-image {
-    width: 100%;
-    height: auto;
-    border-radius: 0.5rem;
-}
-
-/* Social Media Icons */
+/* Social Media Icons with Rugby League Colors */
 .social-links a {
     display: inline-block;
     margin-right: 0.75rem;
@@ -276,15 +270,18 @@ textarea.form-control {
 }
 
 .social-links a:hover {
-    background-color: var(--nrl-primary);
+    background-color: var(--rugby-green);
     color: white !important;
     transform: translateY(-2px);
 }
 
 /* Footer Enhancements */
-.footer {
-    background-color: var(--nrl-dark);
+.footer, .bg-dark {
+    background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
     color: white;
+}
+
+.footer {
     padding: 2rem 0;
     margin-top: 4rem;
 }
@@ -296,17 +293,98 @@ textarea.form-control {
 }
 
 .footer a:hover {
+    color: var(--rugby-gold);
+}
+
+/* Alert Enhancements with Rugby Theme */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: var(--rugby-light-green);
+    color: var(--rugby-dark-green);
+    border-left: 4px solid var(--rugby-green);
+}
+
+.alert-info {
+    background-color: #e3f2fd;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid var(--rugby-gold);
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+/* Search and Filter Section */
+.filter-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 2px solid var(--rugby-light-green);
+}
+
+/* Rugby League Masters Specific Enhancements */
+.rugby-masters-hero {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
     color: white;
+    padding: 4rem 0;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Toast Container */
-.toast-container {
-    z-index: 1055;
+.rugby-masters-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="2"/></svg>') repeat;
+    opacity: 0.3;
 }
 
-/* Mobile Responsiveness */
+.rugby-masters-card {
+    background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+    border: 2px solid var(--rugby-light-green);
+    transition: all 0.3s ease;
+}
+
+.rugby-masters-card:hover {
+    border-color: var(--rugby-green);
+    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.15);
+}
+
+/* Trophy and Medal Icons */
+.trophy-gold {
+    color: var(--rugby-gold);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.trophy-green {
+    color: var(--rugby-green);
+}
+
+/* Loading Spinner with Rugby Colors */
+.btn.loading::after {
+    border-top: 2px solid var(--rugby-gold);
+}
+
+/* Responsive Design Enhancements */
 @media (max-width: 768px) {
-    .hero-section {
+    .hero-section, .rugby-masters-hero {
         padding: 2rem 0;
     }
     
@@ -322,8 +400,8 @@ textarea.form-control {
         padding: 1rem 0.5rem;
     }
     
-    .btn-group-vertical .btn {
-        margin-bottom: 0.5rem;
+    .dashboard-stats .card {
+        margin-bottom: 1rem;
     }
 }
 
@@ -334,44 +412,28 @@ textarea.form-control {
     
     .btn {
         font-size: 0.875rem;
+        padding: 0.5rem 1rem;
     }
     
     .badge {
         font-size: 0.65rem;
     }
-}
-
-/* Print Styles */
-@media print {
-    .navbar, .footer, .btn, .alert {
-        display: none !important;
-    }
     
-    .card {
-        box-shadow: none;
-        border: 1px solid #dee2e6;
-    }
-    
-    .page-break {
-        page-break-before: always;
+    .navbar-brand {
+        font-size: 1.1rem;
     }
 }
 
-/* Accessibility Enhancements */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-/* Focus Indicators */
+/* Focus Indicators with Rugby Colors */
 .btn:focus,
 .form-control:focus,
 .form-select:focus {
-    outline: 2px solid var(--nrl-primary);
+    outline: 2px solid var(--rugby-green);
     outline-offset: 2px;
+}
+
+.btn-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.5);
 }
 
 /* Skip Links for Accessibility */
@@ -379,31 +441,16 @@ textarea.form-control {
     position: absolute;
     top: -40px;
     left: 6px;
-    background: var(--nrl-primary);
+    background: var(--rugby-green);
     color: white;
     padding: 8px;
     text-decoration: none;
     z-index: 1000;
+    border-radius: 4px;
 }
 
 .skip-link:focus {
     top: 6px;
-}
-
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-    .card {
-        border: 2px solid;
-    }
-    
-    .btn {
-        border-width: 2px;
-    }
-}
-
-/* Dark Mode Preparation */
-@media (prefers-color-scheme: dark) {
-    /* Future dark mode styles can go here */
 }
 
 /* Animation Classes */
@@ -423,4 +470,51 @@ textarea.form-control {
 @keyframes slideIn {
     from { transform: translateX(-20px); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
+}
+
+.bounce-in {
+    animation: bounceIn 0.6s ease-out;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .footer, .btn, .alert {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+    
+    .rugby-masters-hero {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid var(--rugby-green);
+    }
+    
+    .btn {
+        border-width: 2px;
+    }
+    
+    .rugby-masters-card {
+        border-width: 3px;
+    }
 }

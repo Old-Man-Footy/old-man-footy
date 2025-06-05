@@ -1,59 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 const Carnival = require('../models/Carnival');
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit for draw files
-    },
-    fileFilter: (req, file, cb) => {
-        if (file.fieldname === 'drawFile') {
-            // Allow documents and images for draw files
-            const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
-            const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-            const mimetype = /image|pdf|application\/msword|application\/vnd.openxmlformats-officedocument.wordprocessingml.document/.test(file.mimetype);
-            
-            if (mimetype && extname) {
-                return cb(null, true);
-            } else {
-                cb(new Error('Draw files must be images, PDF, or Word documents'));
-            }
-        } else {
-            // Image files only for club logo and promotional images
-            const allowedTypes = /jpeg|jpg|png|gif/;
-            const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-            const mimetype = allowedTypes.test(file.mimetype);
-
-            if (mimetype && extname) {
-                return cb(null, true);
-            } else {
-                cb(new Error('Only image files are allowed'));
-            }
-        }
-    }
-});
+const { carnivalUpload, handleUploadError } = require('../middleware/upload');
+const mySidelineService = require('../services/mySidelineService');
+const emailService = require('../services/emailService');
 
 // List all carnivals with filtering
 router.get('/', async (req, res) => {
     try {
-        const { state, search, upcoming } = req.query;
+        const { state, search, upcoming, mysideline } = req.query;
         let filter = { isActive: true };
 
         // State filter
@@ -64,6 +22,13 @@ router.get('/', async (req, res) => {
         // Date filter
         if (upcoming === 'true') {
             filter.date = { $gte: new Date() };
+        }
+
+        // MySideline filter
+        if (mysideline === 'true') {
+            filter.mySidelineEventId = { $exists: true, $ne: null };
+        } else if (mysideline === 'false') {
+            filter.mySidelineEventId = { $exists: false };
         }
 
         // Search filter
@@ -85,7 +50,7 @@ router.get('/', async (req, res) => {
             title: 'All Carnivals',
             carnivals,
             states,
-            currentFilters: { state, search, upcoming }
+            currentFilters: { state, search, upcoming, mysideline }
         });
     } catch (error) {
         console.error('Error fetching carnivals:', error);
@@ -116,9 +81,16 @@ router.get('/:id', async (req, res) => {
             return res.redirect('/carnivals');
         }
 
+        // Check if this is a MySideline event that can be claimed
+        const canTakeOwnership = carnival.mySidelineEventId && 
+                                !carnival.createdByUserId && 
+                                req.user && 
+                                req.user.clubId;
+
         res.render('carnivals/show', {
             title: carnival.title,
-            carnival
+            carnival,
+            canTakeOwnership
         });
     } catch (error) {
         console.error('Error fetching carnival:', error);
@@ -136,12 +108,8 @@ router.get('/new', ensureAuthenticated, (req, res) => {
     });
 });
 
-// Create carnival POST
-router.post('/new', ensureAuthenticated, upload.fields([
-    { name: 'clubLogo', maxCount: 1 },
-    { name: 'promotionalImage', maxCount: 1 },
-    { name: 'drawFile', maxCount: 1 }
-]), [
+// Create carnival POST with enhanced upload middleware
+router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('date').isISO8601().withMessage('Valid date is required'),
     body('locationAddress').trim().notEmpty().withMessage('Location address is required'),
@@ -180,6 +148,7 @@ router.post('/new', ensureAuthenticated, upload.fields([
             callForVolunteers: req.body.callForVolunteers || '',
             state: req.body.state,
             createdByUserId: req.user._id,
+            isManuallyEntered: true,
             // Social media links
             socialMediaFacebook: req.body.socialMediaFacebook || '',
             socialMediaInstagram: req.body.socialMediaInstagram || '',
@@ -187,20 +156,34 @@ router.post('/new', ensureAuthenticated, upload.fields([
             socialMediaWebsite: req.body.socialMediaWebsite || ''
         };
 
-        // Handle file uploads
-        if (req.files.clubLogo) {
-            carnivalData.clubLogoURL = '/uploads/' + req.files.clubLogo[0].filename;
+        // Handle file uploads with enhanced middleware
+        if (req.files && req.files.logo) {
+            carnivalData.clubLogoURL = '/uploads/' + req.files.logo[0].filename;
         }
-        if (req.files.promotionalImage) {
-            carnivalData.promotionalImageURL = '/uploads/' + req.files.promotionalImage[0].filename;
+        if (req.files && req.files.promotionalImage) {
+            const imageFiles = req.files.promotionalImage.map(file => '/uploads/' + file.filename);
+            carnivalData.promotionalImageURL = imageFiles[0]; // Primary image
+            carnivalData.additionalImages = imageFiles.slice(1); // Additional images
         }
-        if (req.files.drawFile) {
-            carnivalData.drawFileURL = '/uploads/' + req.files.drawFile[0].filename;
-            carnivalData.drawFileName = req.files.drawFile[0].originalname;
+        if (req.files && req.files.drawDocument) {
+            const drawFiles = req.files.drawDocument.map(file => ({
+                url: '/uploads/' + file.filename,
+                name: file.originalname,
+                uploadDate: new Date()
+            }));
+            carnivalData.drawFiles = drawFiles;
         }
 
         const carnival = new Carnival(carnivalData);
         await carnival.save();
+
+        // Send notification emails to subscribers
+        try {
+            await emailService.sendCarnivalNotification(carnival, 'new');
+        } catch (emailError) {
+            console.error('Failed to send carnival notification emails:', emailError);
+            // Don't fail the carnival creation if email fails
+        }
 
         req.flash('success_msg', 'Carnival created successfully!');
         res.redirect('/dashboard');
@@ -246,12 +229,8 @@ router.get('/:id/edit', ensureAuthenticated, async (req, res) => {
     }
 });
 
-// Update carnival POST
-router.post('/:id/edit', ensureAuthenticated, upload.fields([
-    { name: 'clubLogo', maxCount: 1 },
-    { name: 'promotionalImage', maxCount: 1 },
-    { name: 'drawFile', maxCount: 1 }
-]), [
+// Update carnival POST with enhanced upload middleware
+router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError, [
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('date').isISO8601().withMessage('Valid date is required'),
     body('locationAddress').trim().notEmpty().withMessage('Location address is required'),
@@ -309,19 +288,37 @@ router.post('/:id/edit', ensureAuthenticated, upload.fields([
         carnival.socialMediaTwitter = req.body.socialMediaTwitter || '';
         carnival.socialMediaWebsite = req.body.socialMediaWebsite || '';
 
-        // Handle file uploads
-        if (req.files.clubLogo) {
-            carnival.clubLogoURL = '/uploads/' + req.files.clubLogo[0].filename;
+        // Handle file uploads with enhanced middleware
+        if (req.files && req.files.logo) {
+            carnival.clubLogoURL = '/uploads/' + req.files.logo[0].filename;
         }
-        if (req.files.promotionalImage) {
-            carnival.promotionalImageURL = '/uploads/' + req.files.promotionalImage[0].filename;
+        if (req.files && req.files.promotionalImage) {
+            const imageFiles = req.files.promotionalImage.map(file => '/uploads/' + file.filename);
+            carnival.promotionalImageURL = imageFiles[0]; // Primary image
+            if (imageFiles.length > 1) {
+                carnival.additionalImages = carnival.additionalImages || [];
+                carnival.additionalImages.push(...imageFiles.slice(1));
+            }
         }
-        if (req.files.drawFile) {
-            carnival.drawFileURL = '/uploads/' + req.files.drawFile[0].filename;
-            carnival.drawFileName = req.files.drawFile[0].originalname;
+        if (req.files && req.files.drawDocument) {
+            const drawFiles = req.files.drawDocument.map(file => ({
+                url: '/uploads/' + file.filename,
+                name: file.originalname,
+                uploadDate: new Date()
+            }));
+            carnival.drawFiles = carnival.drawFiles || [];
+            carnival.drawFiles.push(...drawFiles);
         }
 
         await carnival.save();
+
+        // Send notification emails to subscribers about the update
+        try {
+            await emailService.sendCarnivalNotification(carnival, 'updated');
+        } catch (emailError) {
+            console.error('Failed to send carnival update notification emails:', emailError);
+            // Don't fail the carnival update if email fails
+        }
 
         req.flash('success_msg', 'Carnival updated successfully!');
         res.redirect('/dashboard');
@@ -366,45 +363,58 @@ router.post('/:id/delete', ensureAuthenticated, async (req, res) => {
 // Take ownership of MySideline event
 router.post('/:id/take-ownership', ensureAuthenticated, async (req, res) => {
     try {
-        const carnival = await Carnival.findById(req.params.id);
-
-        if (!carnival) {
-            req.flash('error_msg', 'Carnival not found.');
-            return res.redirect('/carnivals');
-        }
-
-        // Check if the carnival is an automatically imported MySideline event
-        if (carnival.isManuallyEntered || !carnival.mySidelineEventId) {
-            req.flash('error_msg', 'This carnival is not an automatically imported MySideline event.');
-            return res.redirect('/carnivals');
-        }
-
-        // Check if user is a club delegate (has a clubId)
-        if (!req.user.clubId) {
-            req.flash('error_msg', 'Only club delegates can take ownership of events.');
-            return res.redirect('/carnivals');
-        }
-
-        // Check if carnival already has an owner
-        if (carnival.createdByUserId) {
-            req.flash('error_msg', 'This event has already been claimed by another club.');
-            return res.redirect('/carnivals');
-        }
-
-        // Update the carnival to be owned by the current user's club
-        carnival.createdByUserId = req.user._id;
-        carnival.isManuallyEntered = true; // Mark as manually managed now
-        carnival.claimedAt = new Date();
+        const result = await mySidelineService.takeOwnership(req.params.id, req.user._id);
         
-        await carnival.save();
-
-        req.flash('success_msg', 'You have successfully taken ownership of this event!');
-        res.redirect(`/carnivals/${carnival._id}`);
+        req.flash('success_msg', result.message);
+        res.redirect(`/carnivals/${req.params.id}`);
 
     } catch (error) {
         console.error('Error taking ownership of carnival:', error);
-        req.flash('error_msg', 'An error occurred while taking ownership of the event.');
+        req.flash('error_msg', error.message || 'An error occurred while taking ownership of the event.');
         res.redirect('/carnivals');
+    }
+});
+
+// Admin route: Trigger MySideline sync
+router.post('/admin/sync-mysideline', ensureAuthenticated, async (req, res) => {
+    try {
+        // Check if user is admin/primary delegate
+        if (!req.user.isPrimaryDelegate) {
+            req.flash('error_msg', 'Only primary delegates can trigger MySideline sync.');
+            return res.redirect('/dashboard');
+        }
+
+        const result = await mySidelineService.triggerManualSync();
+        
+        if (result.success) {
+            req.flash('success_msg', `MySideline sync completed. Processed ${result.eventsProcessed} events.`);
+        } else {
+            req.flash('error_msg', `MySideline sync failed: ${result.message || result.error}`);
+        }
+
+        res.redirect('/dashboard');
+
+    } catch (error) {
+        console.error('Error triggering MySideline sync:', error);
+        req.flash('error_msg', 'An error occurred while triggering MySideline sync.');
+        res.redirect('/dashboard');
+    }
+});
+
+// Admin route: Get MySideline sync status
+router.get('/admin/mysideline-status', ensureAuthenticated, (req, res) => {
+    try {
+        // Check if user is admin/primary delegate
+        if (!req.user.isPrimaryDelegate) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const status = mySidelineService.getSyncStatus();
+        res.json(status);
+
+    } catch (error) {
+        console.error('Error getting MySideline status:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

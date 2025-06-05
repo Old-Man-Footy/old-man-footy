@@ -1,7 +1,7 @@
-# NRL Masters - Current Project Status & Architecture
+# Rugby League Masters - Current Project Status & Architecture
 
-## Project Overview
-The NRL Masters platform is a web application for managing and displaying rugby league carnival events across Australia. The platform allows club delegates to register and manage carnival events, while providing public access to upcoming events and email subscription services.
+## Overview
+The Rugby League Masters platform is a web application for managing and displaying rugby league carnival events across Australia. The platform allows club delegates to register and manage carnival events, while providing public access to upcoming events and email subscription services.
 
 ## Current Implementation Status
 

@@ -1,7 +1,7 @@
 {
-  "name": "nrl-masters-website",
+  "name": "rugby-league-masters-website",
   "version": "1.0.0",
-  "description": "NRL Masters Carnivals Website - Directory and management system for Masters Rugby League carnival events",
+  "description": "Rugby League Masters Carnivals Website - Directory and management system for Masters Rugby League carnival events",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -9,14 +9,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "NRL",
-    "Masters",
     "Rugby League",
+    "Masters",
     "Carnivals",
-    "Australia",
-    "Sports"
+    "Sports",
+    "Directory",
+    "Events"
   ],
-  "author": "NRL Masters",
+  "author": "Rugby League Masters",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.9.0",

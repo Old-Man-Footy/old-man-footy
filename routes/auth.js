@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Club = require('../models/Club');
 const { body, validationResult } = require('express-validator');
 const { ensureGuest, ensureAuthenticated } = require('../middleware/auth');
+const emailService = require('../services/emailService');
 
 // Login page
 router.get('/login', ensureGuest, (req, res) => {
@@ -181,11 +182,12 @@ router.post('/accept-invitation/:token', [
                 invitationToken: req.params.token,
                 tokenExpires: { $gt: new Date() }
             }).populate('clubId');
-
+            
             return res.render('auth/accept-invitation', {
                 title: 'Complete Registration',
                 user,
-                errors: errors.array()
+                errors: errors.array(),
+                formData: req.body
             });
         }
 
@@ -201,19 +203,81 @@ router.post('/accept-invitation/:token', [
 
         // Set password and activate account
         user.passwordHash = req.body.password; // Will be hashed by pre-save middleware
+        user.isActive = true;
         user.invitationToken = undefined;
         user.tokenExpires = undefined;
-        user.isActive = true;
-
+        
         await user.save();
 
-        req.flash('success_msg', 'Account activated successfully! You can now log in.');
+        req.flash('success_msg', 'Registration completed successfully! You can now log in.');
         res.redirect('/auth/login');
 
     } catch (error) {
         console.error('Accept invitation error:', error);
-        req.flash('error_msg', 'An error occurred while activating your account.');
+        req.flash('error_msg', 'An error occurred while completing registration.');
         res.redirect('/auth/login');
+    }
+});
+
+// Invite delegate (Primary delegate only)
+router.post('/invite-delegate', ensureAuthenticated, [
+    body('email').isEmail().normalizeEmail(),
+    body('firstName').trim().notEmpty(),
+    body('lastName').trim().notEmpty()
+], async (req, res) => {
+    try {
+        // Check if user is primary delegate
+        if (!req.user.isPrimaryDelegate) {
+            req.flash('error_msg', 'Only primary delegates can invite new delegates.');
+            return res.redirect('/dashboard');
+        }
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please provide valid information for all fields.');
+            return res.redirect('/dashboard');
+        }
+
+        const { email, firstName, lastName } = req.body;
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            req.flash('error_msg', 'A user with this email address already exists.');
+            return res.redirect('/dashboard');
+        }
+
+        // Create new inactive user with invitation token
+        const newUser = new User({
+            email,
+            firstName,
+            lastName,
+            clubId: req.user.clubId,
+            isPrimaryDelegate: false,
+            isActive: false
+        });
+
+        const invitationToken = newUser.generateInvitationToken();
+        await newUser.save();
+
+        // Send invitation email
+        const invitationLink = `${req.protocol}://${req.get('host')}/auth/accept-invitation/${invitationToken}`;
+        
+        await emailService.sendInvitationEmail({
+            to: email,
+            firstName,
+            inviterName: `${req.user.firstName} ${req.user.lastName}`,
+            clubName: req.user.clubId.clubName,
+            invitationLink
+        });
+
+        req.flash('success_msg', `Invitation sent successfully to ${email}. They have 7 days to complete their registration.`);
+        res.redirect('/dashboard');
+
+    } catch (error) {
+        console.error('Invite delegate error:', error);
+        req.flash('error_msg', 'An error occurred while sending the invitation. Please try again.');
+        res.redirect('/dashboard');
     }
 });
 

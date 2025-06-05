@@ -6,6 +6,7 @@ const flash = require('connect-flash');
 const path = require('path');
 const helmet = require('helmet');
 const expressLayouts = require('express-ejs-layouts');
+const mySidelineService = require('./services/mySidelineService');
 require('dotenv').config();
 
 const app = express();
@@ -42,7 +43,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'nrl-masters-secret-key',
+    secret: process.env.SESSION_SECRET || 'rugby-league-masters-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -69,8 +70,12 @@ app.use((req, res, next) => {
 });
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nrl-masters')
-.then(() => console.log('MongoDB connected successfully'))
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rugby-league-masters')
+.then(() => {
+    console.log('MongoDB connected successfully');
+    // Initialize MySideline service after database connection
+    mySidelineService.initializeScheduledSync();
+})
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
@@ -101,7 +106,7 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`NRL Masters server running on port ${PORT}`);
+    console.log(`Rugby League Masters server running on port ${PORT}`);
 });
 
 module.exports = app;

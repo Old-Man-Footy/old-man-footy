@@ -1,6 +1,6 @@
-// NRL Masters Application JavaScript
+// Rugby League Masters Application JavaScript
 
-window.NRLMasters = {
+window.RugbyLeagueMasters = {
     // Confirmation dialogs
     confirmDelete: function(message) {
         return confirm(message || 'Are you sure you want to delete this item?');
@@ -175,10 +175,12 @@ window.NRLMasters = {
             this.initTextareas();
             this.initSearchFilters();
             
-            console.log('NRL Masters app initialized');
+            if (this.utils) {
+                console.log('Rugby League Masters app initialized');
+            }
         });
     }
 };
 
 // Auto-initialize
-NRLMasters.init();
+RugbyLeagueMasters.init();

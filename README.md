@@ -1,10 +1,11 @@
-# NRL Masters Carnival Management Platform
+# Rugby League Masters Carnival Management Platform
 
-A comprehensive web application for managing National Rugby League (NRL) Masters carnivals across Australia. This platform allows club delegates to create, manage, and promote rugby league carnival events while providing a centralized directory for players and fans to discover upcoming tournaments.
+A comprehensive web application for managing Rugby League Masters carnivals across Australia. This platform allows club delegates to create, manage, and promote rugby league carnival events while providing a centralized directory for players and fans to discover upcoming tournaments.
 
 ## 🏉 Features
 
 ### Core Functionality
+
 - **Carnival Management**: Create, edit, and delete carnival events
 - **Multi-State Support**: Support for all Australian states (NSW, QLD, VIC, WA, SA, TAS, NT, ACT)
 - **File Uploads**: Club logos, promotional images, and draw files
@@ -13,12 +14,14 @@ A comprehensive web application for managing National Rugby League (NRL) Masters
 - **Email Subscriptions**: State-based email notifications for carnival updates
 
 ### User Management
+
 - **Authentication System**: Secure user registration and login
 - **Role-based Access**: Club delegates can manage their carnivals
 - **MySideline Integration**: Import and claim events from MySideline platform
 - **Dashboard**: Personalized view of user's carnivals
 
 ### Enhanced User Experience
+
 - **Responsive Design**: Mobile-optimized interface
 - **Drag & Drop Uploads**: Enhanced file upload experience
 - **Real-time Search**: Auto-submit filtering with debouncing
@@ -46,31 +49,36 @@ Before running this application, make sure you have the following installed:
 ## ⚙️ Installation
 
 1. **Clone the repository**:
+
    ```bash
-   git clone https://github.com/yourusername/nrl-masters.git
-   cd nrl-masters
+   git clone https://github.com/yourusername/rugby-league-masters.git
+   cd rugby-league-masters
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**:
    Create a `.env` file in the root directory:
+
    ```env
    PORT=3000
-   MONGODB_URI=mongodb://localhost:27017/nrl-masters
+   MONGODB_URI=mongodb://localhost:27017/rugby-league-masters
    SESSION_SECRET=your-super-secret-session-key
    NODE_ENV=development
    ```
 
 4. **Create uploads directory** (if not exists):
+
    ```bash
    mkdir uploads
    ```
 
 5. **Start the application**:
+
    ```bash
    npm start
    ```
@@ -83,7 +91,7 @@ Before running this application, make sure you have the following installed:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | Server port number | 3000 |
-| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/nrl-masters |
+| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/rugby-league-masters |
 | `SESSION_SECRET` | Secret key for session encryption | Required |
 | `NODE_ENV` | Environment mode | development |
 
@@ -143,6 +151,7 @@ Before running this application, make sure you have the following installed:
 ## 🔧 API Endpoints
 
 ### Authentication
+
 - `GET /auth/register` - Registration form
 - `POST /auth/register` - Create new user account
 - `GET /auth/login` - Login form
@@ -150,6 +159,7 @@ Before running this application, make sure you have the following installed:
 - `POST /auth/logout` - Logout user
 
 ### Carnivals
+
 - `GET /carnivals` - List all carnivals (with filtering)
 - `GET /carnivals/new` - Create carnival form (authenticated)
 - `POST /carnivals/new` - Create new carnival (authenticated)
@@ -160,6 +170,7 @@ Before running this application, make sure you have the following installed:
 - `POST /carnivals/:id/take-ownership` - Claim MySideline event
 
 ### General
+
 - `GET /` - Homepage with upcoming carnivals
 - `GET /about` - About page
 - `GET /dashboard` - User dashboard (authenticated)
@@ -169,11 +180,13 @@ Before running this application, make sure you have the following installed:
 ## 🧪 Testing
 
 Run the application in development mode:
+
 ```bash
 npm run dev
 ```
 
 For production deployment:
+
 ```bash
 npm start
 ```
@@ -181,13 +194,16 @@ npm start
 ## 🚀 Deployment
 
 ### Environment Setup
+
 1. Set environment variables for production
 2. Configure MongoDB connection (MongoDB Atlas recommended)
 3. Set up file upload storage (consider cloud storage for production)
 4. Configure session store (Redis recommended for production)
 
 ### Cloud Deployment
+
 The application is ready for deployment on platforms like:
+
 - **Heroku**: With MongoDB Atlas
 - **Railway**: With built-in MongoDB
 - **DigitalOcean App Platform**: With managed database
@@ -205,9 +221,9 @@ The application is ready for deployment on platforms like:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🏉 About NRL Masters
+## 🏉 About Rugby League Masters
 
-NRL Masters is a rugby league format for players aged 35+ across Australia. This platform aims to streamline carnival organization and promote participation in masters rugby league competitions.
+Rugby League Masters is a rugby league format for players aged 35+ across Australia. This platform aims to streamline carnival organization and promote participation in masters rugby league competitions.
 
 ## 📞 Support
 
@@ -215,4 +231,4 @@ For support, please contact the development team or create an issue in this repo
 
 ---
 
-Built with ❤️ for the NRL Masters community
+Built with ❤️ for the Rugby League Masters community
