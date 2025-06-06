@@ -35,6 +35,8 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As an administrator, I want to view a panel with comprehensive metrics on platform usage and events. | ✅ Completed |
 | As a developer, I want to ensure there are no references to MongoDB/Mongoose instead we should be using SQLite/Sequelize. | ✅ Completed |
 | As a developer, I want to ensure my site follows all best practices outlined in .github/copilot-instructions.md | ✅ Completed |
+| As a developer, I want all buttons and links on the website to have a purpose and a destination. Ensure they all have a function. | ✅ Completed |
+| As a club delegate, I want to ensure any carnivals I create on this website are merged with data synched from MySideline. We should not end up with duplicates. | ⭕ Not Started |
 | As a developer, I want to ensure all user interfaces, views and models are vigorously unit tested aiming for 100% coverage. | 🔄 In Progress |
 | **Enhancements** | |
 | As a user, I want to view carnivals on a calendar to visualise event dates. | ⭕ Not Started |
