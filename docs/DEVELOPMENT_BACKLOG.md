@@ -33,6 +33,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a user, I want to experience a professional and responsive "Green and Gold" theme on both desktop and mobile devices. | ✅ Completed |
 | As a club delegate, I want to see a dashboard with statistics and filtering options to manage my carnivals effectively. | ✅ Completed |
 | As an administrator, I want to view a panel with comprehensive metrics on platform usage and events. | ✅ Completed |
+| As a developer, I want to ensure there are no references to MongoDB/Mongoose instead we should be using SQLite/Sequelize. | ⭕ Not Started | 
 | As a developer, I want to ensure my site follows all best practices outlined in .github/copilot-instructions.md | ⭕ Not Started |
 | As a developer, I want to ensure all user interfaces, views and models are vigorously unit tested aiming for 100% coverage. | ⭕ Not Started |
 | **Enhancements** | |
