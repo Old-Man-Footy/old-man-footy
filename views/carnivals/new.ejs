@@ -9,14 +9,59 @@
                 </div>
                 <div class="card-body p-4">
                     <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
-                        <div class="alert alert-danger">
-                            <% errors.forEach(error => { %>
-                                <p class="mb-0"><%= error.msg %></p>
-                            <% }) %>
-                        </div>
+                        <% if (typeof duplicateWarning !== 'undefined' && duplicateWarning) { %>
+                            <div class="alert alert-warning border-warning">
+                                <div class="d-flex">
+                                    <div class="me-3">
+                                        <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="alert-heading mb-2">Potential Duplicate Detected!</h6>
+                                        <% errors.forEach(error => { %>
+                                            <p class="mb-2"><%= error.msg %></p>
+                                        <% }) %>
+                                        <hr class="my-3">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="proceedAnyway()">
+                                                <i class="bi bi-check-circle"></i> Create Anyway
+                                            </button>
+                                            <a href="/carnivals" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-search"></i> View Existing Carnivals
+                                            </a>
+                                            <button type="button" class="btn btn-outline-info btn-sm" onclick="clearForm()">
+                                                <i class="bi bi-arrow-clockwise"></i> Start Over
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="alert alert-danger">
+                                <% errors.forEach(error => { %>
+                                    <p class="mb-0"><%= error.msg %></p>
+                                <% }) %>
+                            </div>
+                        <% } %>
                     <% } %>
 
-                    <form method="POST" action="/carnivals/new" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <!-- Information about MySideline integration -->
+                    <div class="alert alert-info">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-info-circle-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="alert-heading mb-2">Smart Duplicate Prevention</h6>
+                                <p class="mb-1">Our system automatically checks for similar events from MySideline to prevent duplicates.</p>
+                                <small class="text-muted">If a matching MySideline event exists, your data will be merged with the imported event.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="/carnivals/new" enctype="multipart/form-data" class="needs-validation" novalidate id="carnivalForm">
+                        <!-- Hidden field to force creation when user chooses to proceed anyway -->
+                        <input type="hidden" name="forceCreate" id="forceCreate" value="false">
+                        
                         <!-- Basic Information -->
                         <div class="mb-4">
                             <h5 class="text-primary mb-3">Basic Information</h5>
@@ -245,4 +290,15 @@ document.querySelectorAll('.file-upload-area').forEach(area => {
         }
     });
 });
+
+function proceedAnyway() {
+    // Set the hidden field to true and submit the form
+    document.getElementById('forceCreate').value = 'true';
+    document.getElementById('carnivalForm').submit();
+}
+
+function clearForm() {
+    // Clear the form fields
+    document.getElementById('carnivalForm').reset();
+}
 </script>

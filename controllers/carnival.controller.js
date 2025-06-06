@@ -199,7 +199,43 @@ const createCarnival = async (req, res) => {
             carnivalData.drawDescription = req.body.drawDescription;
         }
 
-        const carnival = await Carnival.create(carnivalData);
+        // Use the duplicate detection and merging service
+        let carnival;
+        try {
+            // Check if user is forcing creation despite duplicate warning
+            const forceCreate = req.body.forceCreate === 'true';
+            
+            if (forceCreate) {
+                // Create directly without duplicate checking
+                carnival = await Carnival.create(carnivalData);
+            } else {
+                // Use duplicate detection and merging
+                carnival = await mySidelineService.createOrMergeEvent(carnivalData, req.user.id);
+            }
+            
+            // Check if this was a merge operation
+            const wasMerged = carnival.mySidelineEventId && carnival.claimedAt;
+            
+            if (wasMerged) {
+                req.flash('success_msg', `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`);
+            } else {
+                req.flash('success_msg', 'Carnival created successfully!');
+            }
+            
+        } catch (duplicateError) {
+            // Handle duplicate detection errors
+            if (duplicateError.message.includes('similar carnival already exists')) {
+                const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+                return res.render('carnivals/new', {
+                    title: 'Add New Carnival',
+                    states,
+                    errors: [{ msg: duplicateError.message }],
+                    formData: req.body,
+                    duplicateWarning: true
+                });
+            }
+            throw duplicateError; // Re-throw if it's not a duplicate issue
+        }
 
         // Send notification emails to subscribers
         try {
@@ -208,7 +244,6 @@ const createCarnival = async (req, res) => {
             console.error('Error sending notification emails:', emailError);
         }
 
-        req.flash('success_msg', 'Carnival created successfully!');
         res.redirect(`/carnivals/${carnival.id}`);
 
     } catch (error) {

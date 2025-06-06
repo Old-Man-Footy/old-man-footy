@@ -683,6 +683,216 @@ class MySidelineIntegrationService {
         return newCarnival;
     }
 
+    /**
+     * Detect potential duplicate carnivals based on title, date, and location
+     * @param {Object} carnivalData - New carnival data to check
+     * @returns {Promise<Object|null>} - Existing carnival if duplicate found, null otherwise
+     */
+    async detectPotentialDuplicate(carnivalData) {
+        try {
+            const { title, date, locationAddress, state } = carnivalData;
+            
+            // Look for exact matches first
+            const exactMatch = await Carnival.findOne({
+                where: {
+                    title: title,
+                    date: date,
+                    state: state,
+                    isActive: true
+                }
+            });
+
+            if (exactMatch) {
+                return exactMatch;
+            }
+
+            // Look for potential matches with similar criteria
+            const dateObj = new Date(date);
+            const dayBefore = new Date(dateObj);
+            dayBefore.setDate(dateObj.getDate() - 1);
+            const dayAfter = new Date(dateObj);
+            dayAfter.setDate(dateObj.getDate() + 1);
+
+            const potentialMatches = await Carnival.findAll({
+                where: {
+                    state: state,
+                    date: {
+                        [Op.between]: [dayBefore, dayAfter]
+                    },
+                    isActive: true,
+                    [Op.or]: [
+                        // Similar title (fuzzy matching)
+                        { title: { [Op.iLike]: `%${title.split(' ')[0]}%` } },
+                        // Similar location
+                        { locationAddress: { [Op.iLike]: `%${locationAddress}%` } }
+                    ]
+                }
+            });
+
+            // Calculate similarity scores
+            for (const match of potentialMatches) {
+                const titleSimilarity = this.calculateSimilarity(title.toLowerCase(), match.title.toLowerCase());
+                const locationSimilarity = this.calculateSimilarity(
+                    locationAddress.toLowerCase(), 
+                    match.locationAddress.toLowerCase()
+                );
+                
+                // If similarity is high enough, consider it a potential duplicate
+                if (titleSimilarity > 0.7 || locationSimilarity > 0.8) {
+                    return match;
+                }
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error detecting potential duplicates:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Calculate string similarity using Levenshtein distance
+     * @param {string} str1 - First string
+     * @param {string} str2 - Second string
+     * @returns {number} - Similarity score between 0 and 1
+     */
+    calculateSimilarity(str1, str2) {
+        const matrix = [];
+        const len1 = str1.length;
+        const len2 = str2.length;
+
+        if (len1 === 0) return len2 === 0 ? 1 : 0;
+        if (len2 === 0) return 0;
+
+        // Create matrix
+        for (let i = 0; i <= len2; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= len1; j++) {
+            matrix[0][j] = j;
+        }
+
+        // Fill matrix
+        for (let i = 1; i <= len2; i++) {
+            for (let j = 1; j <= len1; j++) {
+                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
+                    );
+                }
+            }
+        }
+
+        const distance = matrix[len2][len1];
+        const maxLength = Math.max(len1, len2);
+        return (maxLength - distance) / maxLength;
+    }
+
+    /**
+     * Merge manual carnival data with existing MySideline event
+     * @param {Object} existingCarnival - Existing carnival from MySideline
+     * @param {Object} manualData - Manual carnival data from user
+     * @param {number} userId - User ID creating the manual carnival
+     * @returns {Promise<Object>} - Updated carnival with merged data
+     */
+    async mergeWithExistingEvent(existingCarnival, manualData, userId) {
+        try {
+            // Prioritize manual data over MySideline data for most fields
+            const mergedData = {
+                // User-provided data takes priority
+                title: manualData.title || existingCarnival.title,
+                date: manualData.date || existingCarnival.date,
+                locationAddress: manualData.locationAddress || existingCarnival.locationAddress,
+                organiserContactName: manualData.organiserContactName || existingCarnival.organiserContactName,
+                organiserContactEmail: manualData.organiserContactEmail || existingCarnival.organiserContactEmail,
+                organiserContactPhone: manualData.organiserContactPhone || existingCarnival.organiserContactPhone,
+                scheduleDetails: manualData.scheduleDetails || existingCarnival.scheduleDetails,
+                registrationLink: manualData.registrationLink || existingCarnival.registrationLink,
+                feesDescription: manualData.feesDescription || existingCarnival.feesDescription,
+                callForVolunteers: manualData.callForVolunteers || existingCarnival.callForVolunteers,
+                state: manualData.state || existingCarnival.state,
+                
+                // File uploads from manual entry
+                clubLogoURL: manualData.clubLogoURL || existingCarnival.clubLogoURL,
+                promotionalImageURL: manualData.promotionalImageURL || existingCarnival.promotionalImageURL,
+                additionalImages: manualData.additionalImages || existingCarnival.additionalImages,
+                drawFiles: manualData.drawFiles || existingCarnival.drawFiles,
+                drawFileURL: manualData.drawFileURL || existingCarnival.drawFileURL,
+                drawFileName: manualData.drawFileName || existingCarnival.drawFileName,
+                drawTitle: manualData.drawTitle || existingCarnival.drawTitle,
+                drawDescription: manualData.drawDescription || existingCarnival.drawDescription,
+                
+                // Social media from manual entry
+                socialMediaFacebook: manualData.socialMediaFacebook || existingCarnival.socialMediaFacebook,
+                socialMediaInstagram: manualData.socialMediaInstagram || existingCarnival.socialMediaInstagram,
+                socialMediaTwitter: manualData.socialMediaTwitter || existingCarnival.socialMediaTwitter,
+                socialMediaWebsite: manualData.socialMediaWebsite || existingCarnival.socialMediaWebsite,
+                
+                // Ownership and management
+                createdByUserId: userId,
+                isManuallyEntered: true, // Now manually managed
+                claimedAt: new Date(),
+                lastMySidelineSync: existingCarnival.lastMySidelineSync || new Date()
+            };
+
+            await existingCarnival.update(mergedData);
+
+            console.log(`Merged manual carnival data with MySideline event: ${existingCarnival.title}`);
+            
+            // Send notification about the merge
+            try {
+                await emailService.sendCarnivalNotification(existingCarnival, 'merged');
+            } catch (emailError) {
+                console.error('Failed to send merge notification:', emailError);
+            }
+
+            return existingCarnival;
+        } catch (error) {
+            console.error('Error merging carnival data:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Check for duplicates and handle creation or merging
+     * @param {Object} carnivalData - Carnival data to create
+     * @param {number} userId - User ID creating the carnival
+     * @returns {Promise<Object>} - Created or merged carnival
+     */
+    async createOrMergeEvent(carnivalData, userId) {
+        try {
+            // Check for potential duplicates
+            const existingCarnival = await this.detectPotentialDuplicate(carnivalData);
+            
+            if (existingCarnival) {
+                // Check if it's a MySideline event without an owner
+                if (existingCarnival.mySidelineEventId && !existingCarnival.createdByUserId) {
+                    // Merge with existing MySideline event
+                    return await this.mergeWithExistingEvent(existingCarnival, carnivalData, userId);
+                } else {
+                    // Return information about the duplicate for user decision
+                    throw new Error(`A similar carnival already exists: "${existingCarnival.title}" on ${new Date(existingCarnival.date).toLocaleDateString()}. Please check if this is a duplicate.`);
+                }
+            }
+
+            // No duplicates found, create new carnival
+            const newCarnival = await Carnival.create({
+                ...carnivalData,
+                createdByUserId: userId,
+                isManuallyEntered: true
+            });
+
+            return newCarnival;
+        } catch (error) {
+            console.error('Error in createOrMergeEvent:', error);
+            throw error;
+        }
+    }
+
     // Manual sync trigger for admin users
     async triggerManualSync() {
         if (this.isRunning) {

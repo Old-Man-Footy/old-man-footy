@@ -94,11 +94,29 @@ class EmailService {
                 return { success: true, emailsSent: 0 };
             }
 
-            const subject = type === 'new' 
-                ? `New Rugby League Carnival: ${carnival.title}`
-                : `Carnival Updated: ${carnival.title}`;
+            let subject, actionText, headerText;
+            switch (type) {
+                case 'new':
+                    subject = `New Rugby League Carnival: ${carnival.title}`;
+                    actionText = 'new carnival';
+                    headerText = '🏉 New Carnival Alert!';
+                    break;
+                case 'updated':
+                    subject = `Carnival Updated: ${carnival.title}`;
+                    actionText = 'carnival update';
+                    headerText = '📅 Carnival Update';
+                    break;
+                case 'merged':
+                    subject = `Carnival Enhanced: ${carnival.title}`;
+                    actionText = 'carnival enhancement';
+                    headerText = '🔄 Carnival Enhanced with MySideline Data!';
+                    break;
+                default:
+                    subject = `Carnival Notification: ${carnival.title}`;
+                    actionText = 'carnival notification';
+                    headerText = '📢 Carnival Notification';
+            }
 
-            const actionText = type === 'new' ? 'new carnival' : 'carnival update';
             const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
 
             const promises = subscriptions.map(subscription => {
@@ -116,7 +134,16 @@ class EmailService {
                             </div>
                             
                             <div style="padding: 30px; background: #f9f9f9;">
-                                <h2 style="color: #006837;">${type === 'new' ? '🏉 New Carnival Alert!' : '📅 Carnival Update'}</h2>
+                                <h2 style="color: #006837;">${headerText}</h2>
+                                
+                                ${type === 'merged' ? `
+                                    <div style="background: #e8f5e8; border-left: 4px solid #006837; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                                        <p style="margin: 0; color: #006837; font-weight: bold;">
+                                            This carnival has been enhanced by merging user-provided details with MySideline event data, 
+                                            giving you the most complete and up-to-date information available!
+                                        </p>
+                                    </div>
+                                ` : ''}
                                 
                                 <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
                                     <h3 style="color: #006837; margin-top: 0;">${carnival.title}</h3>
@@ -144,6 +171,15 @@ class EmailService {
                                                       text-decoration: none; border-radius: 5px; font-weight: bold;">
                                                 Register Now
                                             </a>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${type === 'merged' && carnival.mySidelineEventId ? `
+                                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
+                                            <small style="color: #666;">
+                                                <strong>Data Source:</strong> Enhanced with MySideline integration • 
+                                                <strong>Last Updated:</strong> ${new Date().toLocaleDateString('en-AU')}
+                                            </small>
                                         </div>
                                     ` : ''}
                                 </div>
