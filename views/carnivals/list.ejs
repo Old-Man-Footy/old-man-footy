@@ -251,7 +251,7 @@
             <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
             <h4 class="text-muted mb-3">No carnivals found</h4>
             
-            <% if (currentFilters.search || currentFilters.state !== 'all' || currentFilters.upcoming) { %>
+            <% if (currentFilters.search || (currentFilters.state && currentFilters.state !== 'all') || currentFilters.upcoming === 'true') { %>
                 <p class="text-muted mb-3">
                     Try adjusting your search criteria or 
                     <a href="/carnivals" class="text-decoration-none">view all carnivals</a>.
@@ -260,6 +260,10 @@
                 <p class="text-muted mb-3">
                     Be the first to add a carnival to the platform!
                 </p>
+            <% } %>
+
+            <!-- Action buttons for different user states -->
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center align-items-center">
                 <% if (user) { %>
                     <a href="/carnivals/new" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Add Your Carnival
@@ -269,7 +273,13 @@
                         <i class="bi bi-person-plus"></i> Register as Club Delegate
                     </a>
                 <% } %>
-            <% } %>
+                
+                <% if (currentFilters.search || (currentFilters.state && currentFilters.state !== 'all') || currentFilters.upcoming === 'true') { %>
+                    <a href="/carnivals" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Clear All Filters
+                    </a>
+                <% } %>
+            </div>
         </div>
     <% } %>
 
