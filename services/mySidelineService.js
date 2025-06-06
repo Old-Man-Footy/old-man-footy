@@ -600,20 +600,59 @@ class MySidelineIntegrationService {
         return processedEvents;
     }
 
+    /**
+     * Process a single scraped MySideline event.
+     * Handles both direct ID matches and fuzzy duplicate detection for manual carnivals.
+     * @param {Object} scrapedEvent - The event data scraped from MySideline
+     * @returns {Promise<Object>} - The updated or created carnival
+     */
     async processIndividualEvent(scrapedEvent) {
         try {
-            // Check if event already exists
-            const existingCarnival = await Carnival.findOne({
+            // 1. Check for direct MySideline ID match
+            let existingCarnival = await Carnival.findOne({
                 where: { mySidelineEventId: scrapedEvent.mySidelineId }
             });
 
             if (existingCarnival) {
                 // Update existing event if data has changed
                 return await this.updateExistingEvent(existingCarnival, scrapedEvent);
-            } else {
-                // Create new event
-                return await this.createNewEvent(scrapedEvent);
             }
+
+            // 2. Fuzzy duplicate detection for manual carnivals (no mySidelineEventId)
+            const fuzzyDuplicate = await this.detectPotentialDuplicate({
+                title: scrapedEvent.title,
+                date: scrapedEvent.date,
+                locationAddress: scrapedEvent.location,
+                state: scrapedEvent.state
+            });
+
+            if (fuzzyDuplicate && !fuzzyDuplicate.mySidelineEventId) {
+                // Merge MySideline data into the manual event
+                await fuzzyDuplicate.update({
+                    mySidelineEventId: scrapedEvent.mySidelineId,
+                    // Prefer MySideline data for schedule/registration if not present
+                    scheduleDetails: fuzzyDuplicate.scheduleDetails || scrapedEvent.description,
+                    registrationLink: fuzzyDuplicate.registrationLink || scrapedEvent.registrationLink,
+                    organiserContactName: fuzzyDuplicate.organiserContactName || scrapedEvent.contactInfo?.name,
+                    organiserContactEmail: fuzzyDuplicate.organiserContactEmail || scrapedEvent.contactInfo?.email,
+                    organiserContactPhone: fuzzyDuplicate.organiserContactPhone || scrapedEvent.contactInfo?.phone,
+                    lastMySidelineSync: new Date()
+                });
+                // Optionally, update other fields if you want to always prefer MySideline data
+                // ...
+                // Send notification if claimed
+                if (fuzzyDuplicate.createdByUserId) {
+                    try {
+                        await emailService.sendCarnivalNotification(fuzzyDuplicate, 'merged');
+                    } catch (emailError) {
+                        console.error('Failed to send merge notification:', emailError);
+                    }
+                }
+                return fuzzyDuplicate;
+            }
+
+            // 3. No duplicates found, create new event
+            return await this.createNewEvent(scrapedEvent);
         } catch (error) {
             console.error(`Error processing event ${scrapedEvent.mySidelineId}:`, error);
             throw error;

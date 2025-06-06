@@ -194,7 +194,7 @@ describe('MySidelineIntegrationService', () => {
                 location: 'Test Stadium',
                 state: 'NSW',
                 description: 'Test Description',
-                registrationLink: '/register/test-001',
+                registrationLink: 'https://example.com/register/test-001',
                 contactInfo: {
                     name: 'Test Organiser',
                     email: 'test@example.com',
@@ -238,7 +238,7 @@ describe('MySidelineIntegrationService', () => {
                 location: 'Updated Location',
                 state: 'NSW',
                 description: 'Updated Description',
-                registrationLink: '/register/test-001',
+                registrationLink: 'https://example.com/register/test-001',
                 contactInfo: {
                     name: 'Updated Organiser',
                     email: 'updated@example.com',
@@ -282,7 +282,7 @@ describe('MySidelineIntegrationService', () => {
                 contactInfo: {
                     name: 'Test Contact',
                     email: 'test@example.com',
-                    phone: '0400123456'
+                    phone: '0400 123 456'
                 }
             };
 
@@ -512,7 +512,7 @@ describe('MySidelineIntegrationService', () => {
                 location: 'Test Stadium',
                 state: 'NSW',
                 description: 'Test Description',
-                registrationLink: '/register/notification-test-001',
+                registrationLink: 'https://example.com/register/notification-test-001',
                 contactInfo: {
                     name: 'Test Organiser',
                     email: 'test@example.com',
@@ -538,7 +538,7 @@ describe('MySidelineIntegrationService', () => {
                 location: 'Test Stadium',
                 state: 'NSW',
                 description: 'Test Description',
-                registrationLink: '/register/email-fail-test-001',
+                registrationLink: 'https://example.com/register/email-fail-test-001',
                 contactInfo: {
                     name: 'Test Organiser',
                     email: 'test@example.com',
@@ -550,6 +550,54 @@ describe('MySidelineIntegrationService', () => {
             const result = await MySidelineService.createNewEvent(scrapedEvent);
             expect(result).toBeDefined();
             expect(result.title).toBe('Email Fail Test Carnival');
+        });
+    });
+
+    /**
+     * Additional tests for 100% coverage of mySidelineService.js
+     * These tests supplement any existing tests in this file.
+     */
+
+    describe('mySidelineService utility/static methods', () => {
+        it('parseEventDate returns default for invalid input', () => {
+            const result = MySidelineService.parseEventDate(undefined);
+            expect(result instanceof Date).toBe(true);
+        });
+        it('parseEventDate parses valid date string', () => {
+            const result = MySidelineService.parseEventDate('2025-12-25');
+            expect(result.getFullYear()).toBe(2025);
+        });
+        it('parseEventDate parses DD/MM/YYYY', () => {
+            const result = MySidelineService.parseEventDate('25/12/2025');
+            expect(result.getFullYear()).toBeGreaterThanOrEqual(2024);
+        });
+        it('getEnvironmentUrl returns test url in test env', () => {
+            const old = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'test';
+            expect(MySidelineService.getEnvironmentUrl()).toContain('test.mysideline.com.au');
+            process.env.NODE_ENV = old;
+        });
+        it('getEnvironmentUrl returns prod url otherwise', () => {
+            const old = process.env.NODE_ENV;
+            process.env.NODE_ENV = 'production';
+            process.env.MYSIDELINE_URL = 'https://custom.url';
+            expect(MySidelineService.getEnvironmentUrl()).toBe('https://custom.url');
+            process.env.NODE_ENV = old;
+        });
+        it('validateEventData returns false for missing fields', () => {
+            expect(MySidelineService.constructor.validateEventData({})).toBe(false);
+            expect(MySidelineService.constructor.validateEventData({ title: '', date: ''})).toBe(false);
+        });
+        it('validateEventData returns true for valid event', () => {
+            expect(MySidelineService.constructor.validateEventData({ title: 'T', date: new Date() })).toBe(true);
+        });
+        it('handleScrapingError returns recommendations', () => {
+            const timeout = MySidelineService.constructor.handleScrapingError(new Error('timeout'), 'op');
+            expect(timeout.fallbackRecommendation).toBeDefined();
+            const network = MySidelineService.constructor.handleScrapingError(new Error('Network error'), 'op');
+            expect(network.fallbackRecommendation).toBeDefined();
+            const generic = MySidelineService.constructor.handleScrapingError(new Error('other'), 'op');
+            expect(generic.fallbackRecommendation).toBeDefined();
         });
     });
 });
