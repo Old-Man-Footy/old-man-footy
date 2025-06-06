@@ -62,11 +62,11 @@ Example delegate emails:
 
 ## Technical Details
 
-### Database Collections Populated
-- `users` - Admin and delegate accounts
-- `clubs` - Rugby League clubs across Australia
-- `carnivals` - Manual and MySideline imported events
-- `emailsubscriptions` - Test email subscriptions
+### Database Tables Populated
+- `Users` - Admin and delegate accounts
+- `Clubs` - Rugby League clubs across Australia
+- `Carnivals` - Manual and MySideline imported events
+- `EmailSubscriptions` - Test email subscriptions
 
 ### MySideline Integration
 The seeder automatically attempts to import real events from MySideline.com.au for each Australian state. If MySideline is unavailable, it gracefully falls back to mock data.
@@ -83,10 +83,20 @@ You can modify the sample data in `scripts/seed-database.js`:
 
 ## Troubleshooting
 
-### MongoDB Connection Issues
-Ensure MongoDB is running and the connection string in your `.env` file is correct:
+### SQLite Database Issues
+The SQLite database is automatically created when the application starts. Ensure the `data/` directory has write permissions:
+```bash
+# Create data directory if it doesn't exist
+mkdir -p data
+chmod 755 data
 ```
-MONGODB_URI=mongodb://localhost:27017/rugby-league-masters
+
+If you need to manually check the database:
+```bash
+# Access the SQLite database
+sqlite3 data/rugby-league-masters-dev.db
+.tables
+.quit
 ```
 
 ### MySideline Import Failures

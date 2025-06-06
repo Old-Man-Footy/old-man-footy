@@ -39,13 +39,12 @@ app.use(session({
 
 ### ✅ Implemented
 - [x] Express-validator for form validation
-- [x] MongoDB query sanitization
+- [x] Sequelize parameterized queries for SQL injection prevention
 - [x] File upload type and size restrictions
 - [x] XSS protection with proper EJS escaping
 
 ### 🔍 Review Required
-- [ ] SQL injection prevention (using MongoDB - low risk)
-- [ ] NoSQL injection prevention
+- [ ] SQL injection prevention with Sequelize (built-in protection)
 - [ ] File upload malware scanning
 - [ ] CSV injection in data exports
 - [ ] HTML sanitization for user content

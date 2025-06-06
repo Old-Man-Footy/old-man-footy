@@ -30,7 +30,7 @@ A comprehensive web application for managing Rugby League Masters carnivals acro
 ## 🚀 Technology Stack
 
 - **Backend**: Node.js with Express.js
-- **Database**: MongoDB with Mongoose ODM
+- **Database**: SQLite with Sequelize ORM
 - **Authentication**: Passport.js with local strategy
 - **File Uploads**: Multer for handling multipart/form-data
 - **Frontend**: EJS templating engine
@@ -43,16 +43,17 @@ Before running this application, make sure you have the following installed:
 
 - **Node.js** (version 14.0 or higher)
 - **npm** (comes with Node.js)
-- **MongoDB** (local installation or MongoDB Atlas)
 - **Git** (for version control)
+
+Note: SQLite database is included and requires no separate installation.
 
 ## ⚙️ Installation
 
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/yourusername/rugby-league-masters.git
-   cd rugby-league-masters
+   git clone https://github.com/yourusername/nrl-masters.git
+   cd nrl-masters
    ```
 
 2. **Install dependencies**:
@@ -66,7 +67,6 @@ Before running this application, make sure you have the following installed:
 
    ```env
    PORT=3000
-   MONGODB_URI=mongodb://localhost:27017/rugby-league-masters
    SESSION_SECRET=your-super-secret-session-key
    NODE_ENV=development
    ```
@@ -91,7 +91,6 @@ Before running this application, make sure you have the following installed:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | Server port number | 3000 |
-| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/rugby-league-masters |
 | `SESSION_SECRET` | Secret key for session encryption | Required |
 | `NODE_ENV` | Environment mode | development |
 
@@ -196,7 +195,7 @@ npm start
 ### Environment Setup
 
 1. Set environment variables for production
-2. Configure MongoDB connection (MongoDB Atlas recommended)
+2. SQLite database will be automatically created on first run
 3. Set up file upload storage (consider cloud storage for production)
 4. Configure session store (Redis recommended for production)
 
@@ -204,10 +203,12 @@ npm start
 
 The application is ready for deployment on platforms like:
 
-- **Heroku**: With MongoDB Atlas
-- **Railway**: With built-in MongoDB
-- **DigitalOcean App Platform**: With managed database
-- **AWS/Azure/GCP**: With appropriate database services
+- **Heroku**: With SQLite database (includes automatic backups)
+- **Railway**: With persistent storage for SQLite
+- **DigitalOcean App Platform**: With managed storage
+- **AWS/Azure/GCP**: With appropriate storage services
+
+Note: For production deployments, ensure persistent storage is configured for the SQLite database file.
 
 ## 🤝 Contributing
 

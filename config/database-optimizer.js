@@ -1,36 +1,36 @@
-const mongoose = require('mongoose');
+const { sequelize } = require('./database');
 
 /**
- * Database optimization configurations for production
- * These optimizations improve performance, reliability, and monitoring
+ * Database optimization configurations for SQLite/Sequelize
+ * These optimizations improve performance, reliability, and monitoring for SQLite
  */
 
 class DatabaseOptimizer {
     static async configureProduction() {
-        // Connection pool optimization
+        // SQLite connection pool optimization
         const connectionOptions = {
-            maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE) || 10,
-            minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE) || 2,
-            maxIdleTimeMS: parseInt(process.env.MONGODB_MAX_IDLE_TIME) || 30000,
-            connectTimeoutMS: parseInt(process.env.MONGODB_CONNECT_TIMEOUT) || 10000,
-            socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT) || 45000,
+            pool: {
+                max: parseInt(process.env.SQLITE_MAX_POOL_SIZE) || 5,
+                min: parseInt(process.env.SQLITE_MIN_POOL_SIZE) || 1,
+                acquire: parseInt(process.env.SQLITE_ACQUIRE_TIMEOUT) || 30000,
+                idle: parseInt(process.env.SQLITE_IDLE_TIMEOUT) || 10000
+            },
             
-            // Replica set optimizations
-            readPreference: 'secondaryPreferred',
-            retryWrites: true,
-            w: 'majority',
+            // SQLite specific optimizations
+            dialectOptions: {
+                // Enable foreign key constraints
+                options: {
+                    enableForeignKeyConstraints: true
+                }
+            },
             
-            // Connection management
-            serverSelectionTimeoutMS: 5000,
-            heartbeatFrequencyMS: 10000,
+            // Logging configuration
+            logging: process.env.NODE_ENV === 'production' ? false : console.log,
             
-            // Buffer management
-            bufferMaxEntries: 0,
-            bufferCommands: false,
-            
-            // Compression
-            compressors: ['zlib'],
-            zlibCompressionLevel: 6
+            // Query timeout
+            dialectOptions: {
+                timeout: parseInt(process.env.SQLITE_QUERY_TIMEOUT) || 30000
+            }
         };
 
         return connectionOptions;
@@ -41,44 +41,66 @@ class DatabaseOptimizer {
             console.log('Creating database indexes for optimization...');
 
             // Carnival indexes
-            await mongoose.connection.collection('carnivals').createIndexes([
-                // Performance indexes
-                { key: { date: 1, isActive: 1 }, name: 'date_active_idx' },
-                { key: { state: 1, date: 1 }, name: 'state_date_idx' },
-                { key: { createdByUserId: 1, isActive: 1 }, name: 'user_active_idx' },
-                { key: { mySidelineEventId: 1 }, name: 'mysideline_idx', sparse: true },
-                
-                // Search indexes
-                { key: { title: 'text', locationAddress: 'text', scheduleDetails: 'text' }, 
-                  name: 'search_text_idx' },
-                
-                // Admin queries
-                { key: { createdAt: -1 }, name: 'created_desc_idx' },
-                { key: { lastMySidelineSync: 1 }, name: 'sync_date_idx', sparse: true }
-            ]);
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_carnivals_date_active 
+                ON Carnivals(date, isActive) 
+                WHERE isActive = 1;
+            `);
+
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_carnivals_state_date 
+                ON Carnivals(state, date);
+            `);
+
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_carnivals_user_active 
+                ON Carnivals(createdByUserId, isActive) 
+                WHERE isActive = 1;
+            `);
+
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_carnivals_mysideline 
+                ON Carnivals(mySidelineEventId) 
+                WHERE mySidelineEventId IS NOT NULL;
+            `);
+
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_carnivals_created 
+                ON Carnivals(createdAt DESC);
+            `);
 
             // User indexes
-            await mongoose.connection.collection('users').createIndexes([
-                { key: { email: 1 }, name: 'email_unique_idx', unique: true },
-                { key: { clubId: 1, isActive: 1 }, name: 'club_active_idx' },
-                { key: { isPrimaryDelegate: 1, isActive: 1 }, name: 'primary_active_idx' },
-                { key: { invitationToken: 1 }, name: 'invitation_idx', sparse: true },
-                { key: { tokenExpiry: 1 }, name: 'token_expiry_idx', sparse: true }
-            ]);
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_users_club_active 
+                ON Users(clubId, isActive) 
+                WHERE isActive = 1;
+            `);
+
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_users_primary_active 
+                ON Users(isPrimaryDelegate, isActive) 
+                WHERE isActive = 1;
+            `);
+
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_users_invitation 
+                ON Users(invitationToken) 
+                WHERE invitationToken IS NOT NULL;
+            `);
 
             // Club indexes
-            await mongoose.connection.collection('clubs').createIndexes([
-                { key: { name: 1, state: 1 }, name: 'name_state_idx' },
-                { key: { state: 1, isActive: 1 }, name: 'state_active_idx' },
-                { key: { isActive: 1 }, name: 'active_idx' }
-            ]);
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_clubs_state_active 
+                ON Clubs(state, isActive) 
+                WHERE isActive = 1;
+            `);
 
             // Email subscription indexes
-            await mongoose.connection.collection('emailsubscriptions').createIndexes([
-                { key: { email: 1 }, name: 'email_unique_idx', unique: true },
-                { key: { state: 1, isActive: 1 }, name: 'state_active_idx' },
-                { key: { unsubscribeToken: 1 }, name: 'unsubscribe_idx', unique: true }
-            ]);
+            await sequelize.query(`
+                CREATE INDEX IF NOT EXISTS idx_subscriptions_state_active 
+                ON EmailSubscriptions(state, isActive) 
+                WHERE isActive = 1;
+            `);
 
             console.log('Database indexes created successfully');
         } catch (error) {
@@ -91,35 +113,36 @@ class DatabaseOptimizer {
         try {
             console.log('Analyzing database performance...');
 
-            const db = mongoose.connection.db;
-            
-            // Get collection statistics
-            const collections = ['carnivals', 'users', 'clubs', 'emailsubscriptions'];
+            // Get table statistics
+            const tables = ['Carnivals', 'Users', 'Clubs', 'EmailSubscriptions'];
             const stats = {};
 
-            for (const collection of collections) {
-                const collStats = await db.collection(collection).stats();
-                stats[collection] = {
-                    count: collStats.count,
-                    avgObjSize: Math.round(collStats.avgObjSize),
-                    storageSize: Math.round(collStats.storageSize / 1024), // KB
-                    indexSizes: collStats.indexSizes,
-                    totalIndexSize: Math.round(collStats.totalIndexSize / 1024) // KB
+            for (const table of tables) {
+                const countResult = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
+                const count = countResult[0][0].count;
+                
+                stats[table] = {
+                    count: count,
+                    tableName: table
                 };
             }
 
-            // Check slow operations
-            const slowOps = await db.admin().command({
-                currentOp: true,
-                $or: [
-                    { "active": true, "secs_running": { "$gt": 1 } },
-                    { "waitingForLock": true }
-                ]
-            });
+            // Check SQLite database size
+            const dbSizeResult = await sequelize.query(`
+                SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()
+            `);
+            const dbSize = dbSizeResult[0][0].size;
+
+            // Get index list
+            const indexResult = await sequelize.query(`
+                SELECT name, tbl_name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'
+            `);
+            const indexes = indexResult[0];
 
             return {
-                collectionStats: stats,
-                slowOperations: slowOps.inprog || [],
+                tableStats: stats,
+                databaseSize: Math.round(dbSize / 1024), // KB
+                indexes: indexes,
                 timestamp: new Date()
             };
         } catch (error) {
@@ -128,127 +151,67 @@ class DatabaseOptimizer {
         }
     }
 
-    static async optimizeQueries() {
-        // Query optimization hints and aggregation pipeline optimizations
-        const optimizations = {
-            // Carnival queries
-            upcomingCarnivals: {
-                pipeline: [
-                    { $match: { date: { $gte: new Date() }, isActive: true } },
-                    { $sort: { date: 1 } },
-                    { $limit: 50 },
-                    { $lookup: {
-                        from: 'users',
-                        localField: 'createdByUserId',
-                        foreignField: '_id',
-                        as: 'creator',
-                        pipeline: [{ $project: { name: 1, email: 1 } }]
-                    }}
-                ],
-                hint: { date: 1, isActive: 1 }
-            },
+    static async optimizeDatabase() {
+        try {
+            console.log('Optimizing SQLite database...');
 
-            // User statistics
-            userStats: {
-                pipeline: [
-                    { $match: { isActive: true } },
-                    { $group: {
-                        _id: '$clubId',
-                        userCount: { $sum: 1 },
-                        primaryDelegates: { 
-                            $sum: { $cond: ['$isPrimaryDelegate', 1, 0] } 
-                        }
-                    }},
-                    { $lookup: {
-                        from: 'clubs',
-                        localField: '_id',
-                        foreignField: '_id',
-                        as: 'club'
-                    }},
-                    { $unwind: '$club' },
-                    { $project: {
-                        clubName: '$club.name',
-                        state: '$club.state',
-                        userCount: 1,
-                        primaryDelegates: 1
-                    }}
-                ]
-            },
+            // Run VACUUM to compact the database
+            await sequelize.query('VACUUM;');
+            console.log('Database VACUUMed successfully');
 
-            // Carnival statistics by state
-            carnivalsByState: {
-                pipeline: [
-                    { $match: { isActive: true } },
-                    { $group: {
-                        _id: '$state',
-                        totalCarnivals: { $sum: 1 },
-                        upcomingCarnivals: {
-                            $sum: { $cond: [{ $gte: ['$date', new Date()] }, 1, 0] }
-                        },
-                        avgDaysAhead: {
-                            $avg: {
-                                $divide: [
-                                    { $subtract: ['$date', new Date()] },
-                                    86400000 // milliseconds in a day
-                                ]
-                            }
-                        }
-                    }},
-                    { $sort: { totalCarnivals: -1 } }
-                ]
-            }
-        };
+            // Analyze tables to update query planner statistics
+            await sequelize.query('ANALYZE;');
+            console.log('Database statistics updated');
 
-        return optimizations;
+            // Set pragma optimizations
+            await sequelize.query('PRAGMA optimize;');
+            console.log('Database optimized successfully');
+
+        } catch (error) {
+            console.error('Error optimizing database:', error);
+            throw error;
+        }
     }
 
     static async setupMonitoring() {
         try {
             console.log('Setting up database monitoring...');
 
-            // Connection event monitoring
-            mongoose.connection.on('connected', () => {
-                console.log('MongoDB connected successfully');
+            // Sequelize connection event monitoring
+            sequelize.addHook('beforeConnect', () => {
+                console.log('SQLite connection establishing...');
             });
 
-            mongoose.connection.on('error', (err) => {
-                console.error('MongoDB connection error:', err);
+            sequelize.addHook('afterConnect', () => {
+                console.log('SQLite connected successfully');
             });
 
-            mongoose.connection.on('disconnected', () => {
-                console.log('MongoDB disconnected');
+            sequelize.addHook('beforeDisconnect', () => {
+                console.log('SQLite disconnecting...');
+            });
+
+            sequelize.addHook('afterDisconnect', () => {
+                console.log('SQLite disconnected');
             });
 
             // Query performance monitoring
             if (process.env.NODE_ENV === 'production') {
-                mongoose.set('debug', (collection, method, query, options) => {
-                    const startTime = Date.now();
-                    
-                    // Log slow queries (>100ms)
-                    setTimeout(() => {
-                        const duration = Date.now() - startTime;
+                sequelize.addHook('beforeQuery', (options) => {
+                    options.startTime = Date.now();
+                });
+
+                sequelize.addHook('afterQuery', (options) => {
+                    if (options.startTime) {
+                        const duration = Date.now() - options.startTime;
                         if (duration > 100) {
-                            console.warn(`Slow query detected: ${collection}.${method}`, {
-                                query: JSON.stringify(query),
-                                duration: `${duration}ms`,
-                                options
+                            console.warn(`Slow query detected: ${duration}ms`, {
+                                sql: options.sql,
+                                duration: `${duration}ms`
                             });
                         }
-                    }, 0);
+                    }
                 });
             }
-
-            // Connection pool monitoring
-            setInterval(() => {
-                const poolStats = {
-                    totalConnections: mongoose.connection.readyState,
-                    availableConnections: mongoose.connection.db?.serverConfig?.s?.poolSize || 0
-                };
-                
-                if (poolStats.availableConnections < 2) {
-                    console.warn('Low database connection pool availability:', poolStats);
-                }
-            }, 30000); // Check every 30 seconds
 
             console.log('Database monitoring setup complete');
         } catch (error) {
@@ -261,60 +224,47 @@ class DatabaseOptimizer {
         try {
             console.log('Performing database maintenance...');
 
-            const db = mongoose.connection.db;
-            
-            // Compact collections to reclaim space
-            const collections = ['carnivals', 'users', 'clubs', 'emailsubscriptions'];
-            
-            for (const collection of collections) {
-                try {
-                    await db.command({ compact: collection });
-                    console.log(`Compacted collection: ${collection}`);
-                } catch (error) {
-                    console.warn(`Could not compact ${collection}:`, error.message);
-                }
-            }
-
-            // Update statistics
-            await db.command({ planCacheClear: 1 });
-            console.log('Query plan cache cleared');
-
             // Cleanup expired tokens
             const now = new Date();
             
-            const expiredInvitations = await mongoose.connection.collection('users').updateMany(
+            const { User } = require('../models');
+            const expiredInvitations = await User.update(
                 { 
-                    tokenExpiry: { $lt: now },
-                    invitationToken: { $exists: true }
+                    invitationToken: null,
+                    tokenExpiry: null
                 },
                 {
-                    $unset: { 
-                        invitationToken: 1,
-                        tokenExpiry: 1
+                    where: {
+                        tokenExpiry: { [sequelize.Op.lt]: now },
+                        invitationToken: { [sequelize.Op.ne]: null }
                     }
                 }
             );
 
-            console.log(`Cleaned up ${expiredInvitations.modifiedCount} expired invitation tokens`);
+            console.log(`Cleaned up ${expiredInvitations[0]} expired invitation tokens`);
 
             // Archive old carnival data (older than 2 years)
             const archiveDate = new Date();
             archiveDate.setFullYear(archiveDate.getFullYear() - 2);
 
-            const oldCarnivals = await mongoose.connection.collection('carnivals').updateMany(
+            const { Carnival } = require('../models');
+            const oldCarnivals = await Carnival.update(
                 { 
-                    date: { $lt: archiveDate },
-                    isActive: true
+                    isActive: false,
+                    archivedAt: new Date()
                 },
                 {
-                    $set: { 
-                        isActive: false,
-                        archivedAt: new Date()
+                    where: {
+                        date: { [sequelize.Op.lt]: archiveDate },
+                        isActive: true
                     }
                 }
             );
 
-            console.log(`Archived ${oldCarnivals.modifiedCount} old carnivals`);
+            console.log(`Archived ${oldCarnivals[0]} old carnivals`);
+
+            // Optimize database
+            await this.optimizeDatabase();
 
             console.log('Database maintenance completed');
         } catch (error) {
@@ -330,28 +280,27 @@ class DatabaseOptimizer {
         }
 
         try {
-            console.log('Starting database backup...');
+            console.log('Starting SQLite database backup...');
 
+            const fs = require('fs').promises;
+            const path = require('path');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const backupName = `rugby-masters-backup-${timestamp}`;
-
-            // This would integrate with your chosen backup solution
-            // Example implementations:
-
-            // For MongoDB Atlas
-            if (process.env.MONGODB_URI.includes('mongodb.net')) {
-                console.log('Using MongoDB Atlas backup (configured in Atlas dashboard)');
-                return;
+            const backupName = `rugby-masters-backup-${timestamp}.db`;
+            
+            // Ensure backup directory exists
+            const backupDir = './backups';
+            try {
+                await fs.mkdir(backupDir, { recursive: true });
+            } catch (error) {
+                // Directory already exists
             }
 
-            // For self-hosted MongoDB with mongodump
-            const { exec } = require('child_process');
-            const util = require('util');
-            const execAsync = util.promisify(exec);
+            // Get the current database file path
+            const dbPath = sequelize.options.storage;
+            const backupPath = path.join(backupDir, backupName);
 
-            const mongodumpCmd = `mongodump --uri="${process.env.MONGODB_URI}" --out=./backups/${backupName}`;
-            
-            await execAsync(mongodumpCmd);
+            // Copy the database file
+            await fs.copyFile(dbPath, backupPath);
             console.log(`Database backup completed: ${backupName}`);
 
             // Cleanup old backups
@@ -359,21 +308,18 @@ class DatabaseOptimizer {
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
-            // Remove old backup directories
-            const fs = require('fs').promises;
-            const path = require('path');
-            
             try {
-                const backupDir = './backups';
                 const backups = await fs.readdir(backupDir);
                 
                 for (const backup of backups) {
-                    const backupPath = path.join(backupDir, backup);
-                    const stats = await fs.stat(backupPath);
-                    
-                    if (stats.isDirectory() && stats.mtime < cutoffDate) {
-                        await fs.rmdir(backupPath, { recursive: true });
-                        console.log(`Removed old backup: ${backup}`);
+                    if (backup.endsWith('.db')) {
+                        const backupPath = path.join(backupDir, backup);
+                        const stats = await fs.stat(backupPath);
+                        
+                        if (stats.mtime < cutoffDate) {
+                            await fs.unlink(backupPath);
+                            console.log(`Removed old backup: ${backup}`);
+                        }
                     }
                 }
             } catch (error) {
@@ -381,7 +327,7 @@ class DatabaseOptimizer {
             }
 
         } catch (error) {
-            console.error('Database backup failed:', error);
+            console.error('SQLite database backup failed:', error);
             throw error;
         }
     }

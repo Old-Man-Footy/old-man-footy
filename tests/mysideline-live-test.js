@@ -1,14 +1,14 @@
 // Test script to verify MySideline integration with the actual search page
 const mySidelineService = require('../services/mySidelineService');
-const mongoose = require('mongoose');
+const { sequelize } = require('../config/database');
 
 async function testMySidelineIntegration() {
     console.log('🔍 Testing MySideline Integration with actual search page...\n');
     
     try {
         // Connect to database (use test DB)
-        await mongoose.connect(process.env.MONGODB_URI_TEST || process.env.MONGODB_URI);
-        console.log('✅ Connected to database');
+        await sequelize.authenticate();
+        console.log('✅ Connected to SQLite database');
 
         // Test the search page scraping
         console.log('\n📡 Testing search page scraping...');
@@ -48,7 +48,7 @@ async function testMySidelineIntegration() {
         console.error('\n❌ MySideline integration test failed:', error.message);
         console.error('Stack trace:', error.stack);
     } finally {
-        await mongoose.disconnect();
+        await sequelize.close();
         console.log('\n👋 Disconnected from database');
     }
 }

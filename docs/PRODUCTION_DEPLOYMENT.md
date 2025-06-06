@@ -3,7 +3,7 @@
 ## Pre-Deployment Checklist
 
 ### ✅ Environment Setup
-- [ ] Production MongoDB Atlas cluster configured
+- [ ] SQLite database storage configured with persistent volumes
 - [ ] Environment variables configured (use .env.production.template)
 - [ ] SSL certificates obtained and configured
 - [ ] Domain name configured with DNS
@@ -34,7 +34,8 @@
 - **RAM**: 4GB minimum, 8GB recommended
 - **Storage**: 50GB SSD minimum
 - **Node.js**: v18.x or newer
-- **MongoDB**: Use MongoDB Atlas (recommended) or self-hosted
+
+Note: SQLite database is included and requires no separate installation.
 
 #### Deployment Steps
 
@@ -412,11 +413,11 @@ node --version
 
 2. **Database Connection Issues**
 ```bash
-# Test MongoDB connection
-mongo "your-connection-string"
+# Test SQLite connection
+sqlite3 /path/to/your/database.db "SELECT 1"
 
-# Check network connectivity
-ping cluster.mongodb.net
+# Check file permissions
+ls -l /path/to/your/database.db
 ```
 
 3. **SSL Certificate Issues**
@@ -435,7 +436,7 @@ htop
 df -h
 
 # Monitor database queries
-# Use MongoDB Compass or Atlas monitoring
+# Use SQLite database tools or logs
 
 # Check application performance
 pm2 monit
@@ -455,7 +456,7 @@ pm2 monit
 ### Recovery Procedures
 ```bash
 # Restore database from backup
-mongorestore --uri="your-connection-string" /path/to/backup
+sqlite3 /path/to/your/database.db < /path/to/backup/database_backup.sql
 
 # Restore files
 tar -xzf /backups/files-20241206.tar.gz -C /path/to/app/
