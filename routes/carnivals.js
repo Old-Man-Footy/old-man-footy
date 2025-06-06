@@ -1,48 +1,54 @@
 const express = require('express');
 const router = express.Router();
-const Carnival = require('../models/Carnival');
-const User = require('../models/User');
+const { Carnival, User, Club } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { carnivalUpload, handleUploadError } = require('../middleware/upload');
 const mySidelineService = require('../services/mySidelineService');
 const emailService = require('../services/emailService');
+const { Op } = require('sequelize');
 
 // List all carnivals with filtering
 router.get('/', async (req, res) => {
     try {
         const { state, search, upcoming, mysideline } = req.query;
-        let filter = { isActive: true };
+        let whereClause = { isActive: true };
 
         // State filter
         if (state && state !== 'all') {
-            filter.state = state;
+            whereClause.state = state;
         }
 
         // Date filter
         if (upcoming === 'true') {
-            filter.date = { $gte: new Date() };
+            whereClause.date = { [Op.gte]: new Date() };
         }
 
         // MySideline filter
         if (mysideline === 'true') {
-            filter.mySidelineEventId = { $exists: true, $ne: null };
+            whereClause.mySidelineEventId = { [Op.ne]: null };
         } else if (mysideline === 'false') {
-            filter.mySidelineEventId = { $exists: false };
+            whereClause.mySidelineEventId = null;
         }
 
         // Search filter
         if (search) {
-            filter.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { locationAddress: { $regex: search, $options: 'i' } },
-                { organiserContactName: { $regex: search, $options: 'i' } }
+            whereClause[Op.or] = [
+                { title: { [Op.iLike]: `%${search}%` } },
+                { locationAddress: { [Op.iLike]: `%${search}%` } },
+                { organiserContactName: { [Op.iLike]: `%${search}%` } }
             ];
         }
 
-        const carnivals = await Carnival.find(filter)
-            .populate('createdByUserId', 'firstName lastName')
-            .sort({ date: 1 });
+        const carnivals = await Carnival.findAll({
+            where: whereClause,
+            include: [{
+                model: User,
+                as: 'creator',
+                attributes: ['firstName', 'lastName']
+            }],
+            order: [['date', 'ASC']]
+        });
 
         const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
 
@@ -66,15 +72,17 @@ router.get('/', async (req, res) => {
 // Show individual carnival
 router.get('/:id', async (req, res) => {
     try {
-        const carnival = await Carnival.findById(req.params.id)
-            .populate('createdByUserId', 'firstName lastName clubId')
-            .populate({
-                path: 'createdByUserId',
-                populate: {
-                    path: 'clubId',
-                    model: 'Club'
-                }
-            });
+        const carnival = await Carnival.findByPk(req.params.id, {
+            include: [{
+                model: User,
+                as: 'creator',
+                attributes: ['firstName', 'lastName'],
+                include: [{
+                    model: Club,
+                    as: 'club'
+                }]
+            }]
+        });
 
         if (!carnival || !carnival.isActive) {
             req.flash('error_msg', 'Carnival not found.');
@@ -147,7 +155,7 @@ router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
             feesDescription: req.body.feesDescription || '',
             callForVolunteers: req.body.callForVolunteers || '',
             state: req.body.state,
-            createdByUserId: req.user._id,
+            createdByUserId: req.user.id,
             isManuallyEntered: true,
             // Social media links
             socialMediaFacebook: req.body.socialMediaFacebook || '',
@@ -174,8 +182,7 @@ router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
             carnivalData.drawFiles = drawFiles;
         }
 
-        const carnival = new Carnival(carnivalData);
-        await carnival.save();
+        const carnival = await Carnival.create(carnivalData);
 
         // Send notification emails to subscribers
         try {
@@ -203,7 +210,7 @@ router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
 // Edit carnival form
 router.get('/:id/edit', ensureAuthenticated, async (req, res) => {
     try {
-        const carnival = await Carnival.findById(req.params.id);
+        const carnival = await Carnival.findByPk(req.params.id);
 
         if (!carnival) {
             req.flash('error_msg', 'Carnival not found.');
@@ -211,7 +218,7 @@ router.get('/:id/edit', ensureAuthenticated, async (req, res) => {
         }
 
         // Check if user owns this carnival
-        if (carnival.createdByUserId.toString() !== req.user._id.toString()) {
+        if (carnival.createdByUserId !== req.user.id) {
             req.flash('error_msg', 'You can only edit your own carnivals.');
             return res.redirect('/dashboard');
         }
@@ -245,7 +252,7 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
     body('socialMediaWebsite').optional().isURL().withMessage('Website URL must be valid')
 ], async (req, res) => {
     try {
-        const carnival = await Carnival.findById(req.params.id);
+        const carnival = await Carnival.findByPk(req.params.id);
 
         if (!carnival) {
             req.flash('error_msg', 'Carnival not found.');
@@ -253,7 +260,7 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
         }
 
         // Check if user owns this carnival
-        if (carnival.createdByUserId.toString() !== req.user._id.toString()) {
+        if (carnival.createdByUserId !== req.user.id) {
             req.flash('error_msg', 'You can only edit your own carnivals.');
             return res.redirect('/dashboard');
         }
@@ -270,23 +277,24 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
         }
 
         // Update carnival data
-        carnival.title = req.body.title;
-        carnival.date = new Date(req.body.date);
-        carnival.locationAddress = req.body.locationAddress;
-        carnival.organiserContactName = req.body.organiserContactName;
-        carnival.organiserContactEmail = req.body.organiserContactEmail;
-        carnival.organiserContactPhone = req.body.organiserContactPhone;
-        carnival.scheduleDetails = req.body.scheduleDetails;
-        carnival.registrationLink = req.body.registrationLink || '';
-        carnival.feesDescription = req.body.feesDescription || '';
-        carnival.callForVolunteers = req.body.callForVolunteers || '';
-        carnival.state = req.body.state;
-        
-        // Update social media links
-        carnival.socialMediaFacebook = req.body.socialMediaFacebook || '';
-        carnival.socialMediaInstagram = req.body.socialMediaInstagram || '';
-        carnival.socialMediaTwitter = req.body.socialMediaTwitter || '';
-        carnival.socialMediaWebsite = req.body.socialMediaWebsite || '';
+        await carnival.update({
+            title: req.body.title,
+            date: new Date(req.body.date),
+            locationAddress: req.body.locationAddress,
+            organiserContactName: req.body.organiserContactName,
+            organiserContactEmail: req.body.organiserContactEmail,
+            organiserContactPhone: req.body.organiserContactPhone,
+            scheduleDetails: req.body.scheduleDetails,
+            registrationLink: req.body.registrationLink || '',
+            feesDescription: req.body.feesDescription || '',
+            callForVolunteers: req.body.callForVolunteers || '',
+            state: req.body.state,
+            // Update social media links
+            socialMediaFacebook: req.body.socialMediaFacebook || '',
+            socialMediaInstagram: req.body.socialMediaInstagram || '',
+            socialMediaTwitter: req.body.socialMediaTwitter || '',
+            socialMediaWebsite: req.body.socialMediaWebsite || ''
+        });
 
         // Handle file uploads with enhanced middleware
         if (req.files && req.files.logo) {
@@ -333,7 +341,7 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
 // Delete carnival
 router.post('/:id/delete', ensureAuthenticated, async (req, res) => {
     try {
-        const carnival = await Carnival.findById(req.params.id);
+        const carnival = await Carnival.findByPk(req.params.id);
 
         if (!carnival) {
             req.flash('error_msg', 'Carnival not found.');
@@ -341,14 +349,13 @@ router.post('/:id/delete', ensureAuthenticated, async (req, res) => {
         }
 
         // Check if user owns this carnival
-        if (carnival.createdByUserId.toString() !== req.user._id.toString()) {
+        if (carnival.createdByUserId !== req.user.id) {
             req.flash('error_msg', 'You can only delete your own carnivals.');
             return res.redirect('/dashboard');
         }
 
         // Soft delete - mark as inactive
-        carnival.isActive = false;
-        await carnival.save();
+        await carnival.update({ isActive: false });
 
         req.flash('success_msg', 'Carnival deleted successfully.');
         res.redirect('/dashboard');
@@ -363,7 +370,7 @@ router.post('/:id/delete', ensureAuthenticated, async (req, res) => {
 // Take ownership of MySideline event
 router.post('/:id/take-ownership', ensureAuthenticated, async (req, res) => {
     try {
-        const result = await mySidelineService.takeOwnership(req.params.id, req.user._id);
+        const result = await mySidelineService.takeOwnership(req.params.id, req.user.id);
         
         req.flash('success_msg', result.message);
         res.redirect(`/carnivals/${req.params.id}`);

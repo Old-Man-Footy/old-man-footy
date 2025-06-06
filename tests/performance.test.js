@@ -1,5 +1,5 @@
 const { performance } = require('perf_hooks');
-const mongoose = require('mongoose');
+const { sequelize } = require('../models');
 const Carnival = require('../models/Carnival');
 const User = require('../models/User');
 const Club = require('../models/Club');
@@ -8,51 +8,65 @@ const EmailSubscription = require('../models/EmailSubscription');
 describe('Performance Tests', () => {
     const PERFORMANCE_TIMEOUT = 120000; // 2 minutes for performance tests
     
+    beforeAll(async () => {
+        await sequelize.sync({ force: true });
+    });
+
     beforeEach(() => {
         jest.setTimeout(PERFORMANCE_TIMEOUT);
+    });
+
+    afterAll(async () => {
+        await sequelize.close();
     });
 
     describe('Database Performance', () => {
         test('should handle large dataset queries efficiently', async () => {
             const startTime = performance.now();
             
-            // Create smaller test data for faster tests
+            // Create test data
             const clubs = [];
-            for (let i = 0; i < 20; i++) { // Reduced from 100
+            for (let i = 0; i < 20; i++) {
                 clubs.push({
-                    name: `Test Club ${i}`,
+                    clubName: `Test Club ${i}`,
                     state: ['NSW', 'QLD', 'VIC', 'WA', 'SA'][i % 5],
                     isActive: true
                 });
             }
-            await Club.insertMany(clubs);
+            await Club.bulkCreate(clubs);
 
             const users = [];
-            const createdClubs = await Club.find({});
-            for (let i = 0; i < 100; i++) { // Reduced from 500
+            const createdClubs = await Club.findAll();
+            for (let i = 0; i < 100; i++) {
                 users.push({
                     email: `user${i}@example.com`,
-                    name: `User ${i}`,
-                    clubId: createdClubs[i % createdClubs.length]._id,
+                    firstName: `User`,
+                    lastName: `${i}`,
+                    passwordHash: 'hashedpassword123',
+                    clubId: createdClubs[i % createdClubs.length].id,
                     isPrimaryDelegate: i % 10 === 0,
                     isActive: true
                 });
             }
-            await User.insertMany(users);
+            await User.bulkCreate(users);
 
             const carnivals = [];
-            for (let i = 0; i < 200; i++) { // Reduced from 1000
-                const user = users[i % users.length];
+            const createdUsers = await User.findAll();
+            for (let i = 0; i < 200; i++) {
                 carnivals.push({
                     title: `Test Carnival ${i}`,
-                    date: new Date(Date.now() + (i * 24 * 60 * 60 * 1000)), // Spread over time
+                    date: new Date(Date.now() + (i * 24 * 60 * 60 * 1000)),
                     locationAddress: `Stadium ${i}`,
+                    organiserContactName: `Organiser ${i}`,
+                    organiserContactEmail: `organiser${i}@example.com`,
+                    organiserContactPhone: `040012345${i % 10}`,
+                    scheduleDetails: `Schedule details for carnival ${i}`,
                     state: ['NSW', 'QLD', 'VIC', 'WA', 'SA'][i % 5],
-                    createdByUserId: user._id || mongoose.Types.ObjectId(),
+                    createdByUserId: createdUsers[i % createdUsers.length].id,
                     isActive: true
                 });
             }
-            await Carnival.insertMany(carnivals);
+            await Carnival.bulkCreate(carnivals);
 
             const dataCreationTime = performance.now();
             console.log(`Test data creation: ${dataCreationTime - startTime}ms`);
@@ -61,13 +75,19 @@ describe('Performance Tests', () => {
             const queryStartTime = performance.now();
             
             // Complex query with joins and filtering
-            const upcomingCarnivals = await Carnival.find({
-                date: { $gte: new Date() },
-                isActive: true
-            })
-            .populate('createdByUserId', 'name email')
-            .sort({ date: 1 })
-            .limit(50);
+            const upcomingCarnivals = await Carnival.findAll({
+                where: {
+                    date: { [sequelize.Sequelize.Op.gte]: new Date() },
+                    isActive: true
+                },
+                include: [{
+                    model: User,
+                    as: 'createdByUser',
+                    attributes: ['firstName', 'lastName', 'email']
+                }],
+                order: [['date', 'ASC']],
+                limit: 50
+            });
 
             const queryEndTime = performance.now();
             console.log(`Complex query time: ${queryEndTime - queryStartTime}ms`);
@@ -78,15 +98,19 @@ describe('Performance Tests', () => {
             // Test pagination performance
             const paginationStartTime = performance.now();
             
-            const page1 = await Carnival.find({ isActive: true })
-                .sort({ date: -1 })
-                .skip(0)
-                .limit(20);
+            const page1 = await Carnival.findAll({
+                where: { isActive: true },
+                order: [['date', 'DESC']],
+                offset: 0,
+                limit: 20
+            });
             
-            const page10 = await Carnival.find({ isActive: true })
-                .sort({ date: -1 })
-                .skip(180)
-                .limit(20);
+            const page10 = await Carnival.findAll({
+                where: { isActive: true },
+                order: [['date', 'DESC']],
+                offset: 180,
+                limit: 20
+            });
 
             const paginationEndTime = performance.now();
             console.log(`Pagination queries: ${paginationEndTime - paginationStartTime}ms`);
@@ -95,20 +119,18 @@ describe('Performance Tests', () => {
             expect(page10.length).toBeLessThanOrEqual(20);
             expect(paginationEndTime - paginationStartTime).toBeLessThan(2000); // More realistic 2 seconds
 
-            // Test aggregation performance
+            // Test aggregation performance (using raw SQL for aggregation in SQLite)
             const aggregationStartTime = performance.now();
             
-            const statistics = await Carnival.aggregate([
-                { $match: { isActive: true } },
-                { 
-                    $group: {
-                        _id: '$state',
-                        count: { $sum: 1 },
-                        avgDate: { $avg: '$date' }
-                    }
-                },
-                { $sort: { count: -1 } }
-            ]);
+            const statistics = await sequelize.query(`
+                SELECT state, COUNT(*) as count, AVG(date) as avgDate
+                FROM Carnivals 
+                WHERE isActive = 1 
+                GROUP BY state 
+                ORDER BY count DESC
+            `, {
+                type: sequelize.QueryTypes.SELECT
+            });
 
             const aggregationEndTime = performance.now();
             console.log(`Aggregation query: ${aggregationEndTime - aggregationStartTime}ms`);
@@ -120,25 +142,25 @@ describe('Performance Tests', () => {
             console.log(`Total test time: ${totalTime}ms`);
 
             // Cleanup
-            await Carnival.deleteMany({});
-            await User.deleteMany({});
-            await Club.deleteMany({});
+            await Carnival.destroy({ where: {} });
+            await User.destroy({ where: {} });
+            await Club.destroy({ where: {} });
         });
 
         test('should handle concurrent database operations', async () => {
             const concurrentOperations = [];
             const startTime = performance.now();
 
-            // Simulate concurrent user operations (reduced count)
-            for (let i = 0; i < 5; i++) { // Reduced from 10
+            // Simulate concurrent user operations
+            for (let i = 0; i < 5; i++) {
                 concurrentOperations.push(
-                    Carnival.find({ isActive: true }).limit(10)
+                    Carnival.findAll({ where: { isActive: true }, limit: 10 })
                 );
                 concurrentOperations.push(
-                    User.find({ isActive: true }).limit(10)
+                    User.findAll({ where: { isActive: true }, limit: 10 })
                 );
                 concurrentOperations.push(
-                    Club.find({ isActive: true }).limit(10)
+                    Club.findAll({ where: { isActive: true }, limit: 10 })
                 );
             }
 
@@ -148,21 +170,43 @@ describe('Performance Tests', () => {
             console.log(`Concurrent operations time: ${endTime - startTime}ms`);
 
             const successfulOperations = results.filter(r => r.status === 'fulfilled');
-            expect(successfulOperations.length).toBeGreaterThan(10); // Adjusted expectation
-            expect(endTime - startTime).toBeLessThan(10000); // More realistic 10 seconds
+            expect(successfulOperations.length).toBeGreaterThan(10);
+            expect(endTime - startTime).toBeLessThan(10000);
         });
 
         test('should optimize memory usage for large queries', async () => {
             const initialMemory = process.memoryUsage();
             
-            // Create a cursor-based query for large datasets
-            const carnivalCursor = Carnival.find({ isActive: true }).cursor();
+            // Create test data first
+            const carnivals = [];
+            for (let i = 0; i < 100; i++) {
+                carnivals.push({
+                    title: `Memory Test Carnival ${i}`,
+                    date: new Date(),
+                    locationAddress: `Location ${i}`,
+                    organiserContactName: `Organiser ${i}`,
+                    organiserContactEmail: `organiser${i}@test.com`,
+                    organiserContactPhone: '0400123456',
+                    scheduleDetails: 'Test schedule',
+                    state: 'NSW',
+                    isActive: true
+                });
+            }
+            await Carnival.bulkCreate(carnivals);
             
+            // Process records in batches for memory efficiency
+            const batchSize = 10;
             let processedCount = 0;
-            for (let carnival = await carnivalCursor.next(); carnival != null; carnival = await carnivalCursor.next()) {
-                processedCount++;
-                // Simulate processing
-                if (processedCount >= 50) break; // Reduced limit for test
+            
+            for (let offset = 0; offset < 50; offset += batchSize) {
+                const batch = await Carnival.findAll({
+                    where: { isActive: true },
+                    limit: batchSize,
+                    offset: offset
+                });
+                
+                processedCount += batch.length;
+                if (processedCount >= 50) break;
             }
 
             const finalMemory = process.memoryUsage();
@@ -171,8 +215,10 @@ describe('Performance Tests', () => {
             console.log(`Memory increase: ${Math.round(memoryIncrease / 1024 / 1024)}MB`);
             console.log(`Processed ${processedCount} carnivals`);
 
-            // Memory increase should be reasonable (less than 100MB for this test)
-            expect(memoryIncrease).toBeLessThan(100 * 1024 * 1024); // More realistic 100MB
+            expect(memoryIncrease).toBeLessThan(100 * 1024 * 1024);
+
+            // Cleanup
+            await Carnival.destroy({ where: {} });
         });
     });
 
@@ -202,7 +248,7 @@ describe('Performance Tests', () => {
         });
 
         test('should handle high concurrent request load', async () => {
-            const concurrentRequests = 20; // Reduced from 50
+            const concurrentRequests = 20;
             const requests = [];
             
             const startTime = performance.now();
@@ -232,9 +278,9 @@ describe('Performance Tests', () => {
             console.log(`Max response time: ${maxResponseTime.toFixed(2)}ms`);
             console.log(`Total time: ${totalTime.toFixed(2)}ms`);
 
-            expect(avgResponseTime).toBeLessThan(500); // More realistic 500ms
-            expect(maxResponseTime).toBeLessThan(1000); // More realistic 1 second
-            expect(totalTime).toBeLessThan(2000); // More realistic 2 seconds
+            expect(avgResponseTime).toBeLessThan(500);
+            expect(maxResponseTime).toBeLessThan(1000);
+            expect(totalTime).toBeLessThan(2000);
         });
     });
 
@@ -262,7 +308,7 @@ describe('Performance Tests', () => {
 
             // Upload time should scale reasonably with file size
             expect(uploadTimes[0]).toBeLessThan(uploadTimes[3]);
-            expect(uploadTimes[3]).toBeLessThan(1000); // More realistic 1 second for largest file
+            expect(uploadTimes[3]).toBeLessThan(1000);
         });
     });
 
@@ -276,20 +322,19 @@ describe('Performance Tests', () => {
             console.log(`Heap Total: ${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`);
             console.log(`External: ${Math.round(memoryUsage.external / 1024 / 1024)}MB`);
 
-            // More realistic memory usage expectations
-            expect(memoryUsage.heapUsed).toBeLessThan(1000 * 1024 * 1024); // Less than 1GB
+            expect(memoryUsage.heapUsed).toBeLessThan(1000 * 1024 * 1024);
         });
 
         test('should check for memory leaks in event processing', async () => {
             const initialMemory = process.memoryUsage().heapUsed;
             
-            // Simulate processing fewer events for faster test
-            for (let i = 0; i < 50; i++) { // Reduced from 100
+            // Simulate processing events
+            for (let i = 0; i < 50; i++) {
                 const mockEvent = {
                     title: `Test Event ${i}`,
                     date: new Date(),
                     location: 'Test Location',
-                    description: 'Test Description'.repeat(50) // Smaller string
+                    description: 'Test Description'.repeat(50)
                 };
                 
                 // Simulate event processing
@@ -306,8 +351,7 @@ describe('Performance Tests', () => {
             
             console.log(`Memory increase after processing: ${Math.round(memoryIncrease / 1024)}KB`);
             
-            // More realistic memory increase expectation
-            expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024); // Less than 50MB
+            expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
         });
     });
 });

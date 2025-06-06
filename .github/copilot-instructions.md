@@ -44,7 +44,7 @@ This project follows the MVC architectural pattern. Adhere strictly to the separ
 
 * **Purpose:** Models are responsible exclusively for data structure, validation, and database interaction. They are the single source of truth for all data-related logic.  
 * **Rules:**  
-  * All database queries (e.g., using an ORM like Sequelize or Mongoose) must be contained within model files.  
+  * All database queries (e.g., using Sequelize for SQLite3) must be contained within model files.  
   * Models must **not** interact directly with the request or response objects from the web server (e.g., Express).  
   * Business logic related to data manipulation (e.g., formatting user data, calculating values) belongs here.  
   * Files should be named after the data they represent (e.g., user.model.js, product.model.js).

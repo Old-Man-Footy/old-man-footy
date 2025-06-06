@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const User = require('../models/User');
-const Club = require('../models/Club');
+const { User, Club } = require('../models');
 const { body, validationResult } = require('express-validator');
 const { ensureGuest, ensureAuthenticated } = require('../middleware/auth');
 const emailService = require('../services/emailService');
+const { Op } = require('sequelize');
 
 // Login page
 router.get('/login', ensureGuest, (req, res) => {
@@ -46,7 +46,9 @@ router.post('/logout', ensureAuthenticated, (req, res) => {
 // Initial registration - Club delegate signs up
 router.get('/register', ensureGuest, async (req, res) => {
     try {
-        const clubs = await Club.find({}).sort({ clubName: 1 });
+        const clubs = await Club.findAll({
+            order: [['clubName', 'ASC']]
+        });
         res.render('auth/register', {
             title: 'Register as Club Delegate',
             clubs
@@ -77,7 +79,9 @@ router.post('/register', ensureGuest, [
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const clubs = await Club.find({}).sort({ clubName: 1 });
+            const clubs = await Club.findAll({
+                order: [['clubName', 'ASC']]
+            });
             return res.render('auth/register', {
                 title: 'Register as Club Delegate',
                 clubs,
@@ -89,9 +93,13 @@ router.post('/register', ensureGuest, [
         const { email, firstName, lastName, clubName, password } = req.body;
 
         // Check if user already exists
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ 
+            where: { email: email.toLowerCase() } 
+        });
         if (existingUser) {
-            const clubs = await Club.find({}).sort({ clubName: 1 });
+            const clubs = await Club.findAll({
+                order: [['clubName', 'ASC']]
+            });
             return res.render('auth/register', {
                 title: 'Register as Club Delegate',
                 clubs,
@@ -101,37 +109,44 @@ router.post('/register', ensureGuest, [
         }
 
         // Find or create club
-        let club = await Club.findOne({ clubName: { $regex: new RegExp(`^${clubName}$`, 'i') } });
+        let club = await Club.findOne({ 
+            where: { 
+                clubName: {
+                    [Op.iLike]: clubName.trim()
+                }
+            }
+        });
         if (!club) {
-            club = new Club({ clubName });
-            await club.save();
+            club = await Club.create({ clubName: clubName.trim() });
         }
 
         // Check if this club already has a primary delegate
         const existingPrimaryDelegate = await User.findOne({
-            clubId: club._id,
-            isPrimaryDelegate: true
+            where: {
+                clubId: club.id,
+                isPrimaryDelegate: true
+            }
         });
 
         // Create new user
-        const newUser = new User({
+        const newUser = await User.create({
             email,
             firstName,
             lastName,
-            clubId: club._id,
+            clubId: club.id,
             passwordHash: password, // Will be hashed by the pre-save middleware
             isPrimaryDelegate: !existingPrimaryDelegate, // First delegate becomes primary
             isActive: true
         });
-
-        await newUser.save();
 
         req.flash('success_msg', 'Registration successful! You can now log in.');
         res.redirect('/auth/login');
 
     } catch (error) {
         console.error('Registration error:', error);
-        const clubs = await Club.find({}).sort({ clubName: 1 });
+        const clubs = await Club.findAll({
+            order: [['clubName', 'ASC']]
+        });
         res.render('auth/register', {
             title: 'Register as Club Delegate',
             clubs,
@@ -145,9 +160,17 @@ router.post('/register', ensureGuest, [
 router.get('/accept-invitation/:token', async (req, res) => {
     try {
         const user = await User.findOne({
-            invitationToken: req.params.token,
-            tokenExpires: { $gt: new Date() }
-        }).populate('clubId');
+            where: {
+                invitationToken: req.params.token,
+                tokenExpires: {
+                    [Op.gt]: new Date()
+                }
+            },
+            include: [{
+                model: Club,
+                as: 'club'
+            }]
+        });
 
         if (!user) {
             req.flash('error_msg', 'Invalid or expired invitation link.');
@@ -179,9 +202,17 @@ router.post('/accept-invitation/:token', [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const user = await User.findOne({
-                invitationToken: req.params.token,
-                tokenExpires: { $gt: new Date() }
-            }).populate('clubId');
+                where: {
+                    invitationToken: req.params.token,
+                    tokenExpires: {
+                        [Op.gt]: new Date()
+                    }
+                },
+                include: [{
+                    model: Club,
+                    as: 'club'
+                }]
+            });
             
             return res.render('auth/accept-invitation', {
                 title: 'Complete Registration',
@@ -192,8 +223,12 @@ router.post('/accept-invitation/:token', [
         }
 
         const user = await User.findOne({
-            invitationToken: req.params.token,
-            tokenExpires: { $gt: new Date() }
+            where: {
+                invitationToken: req.params.token,
+                tokenExpires: {
+                    [Op.gt]: new Date()
+                }
+            }
         });
 
         if (!user) {
@@ -204,8 +239,7 @@ router.post('/accept-invitation/:token', [
         // Set password and activate account
         user.passwordHash = req.body.password; // Will be hashed by pre-save middleware
         user.isActive = true;
-        user.invitationToken = undefined;
-        user.tokenExpires = undefined;
+        user.clearInvitationToken();
         
         await user.save();
 
@@ -241,14 +275,16 @@ router.post('/invite-delegate', ensureAuthenticated, [
         const { email, firstName, lastName } = req.body;
 
         // Check if user already exists
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ 
+            where: { email: email.toLowerCase() } 
+        });
         if (existingUser) {
             req.flash('error_msg', 'A user with this email address already exists.');
             return res.redirect('/dashboard');
         }
 
         // Create new inactive user with invitation token
-        const newUser = new User({
+        const newUser = await User.create({
             email,
             firstName,
             lastName,
@@ -267,7 +303,7 @@ router.post('/invite-delegate', ensureAuthenticated, [
             to: email,
             firstName,
             inviterName: `${req.user.firstName} ${req.user.lastName}`,
-            clubName: req.user.clubId.clubName,
+            clubName: req.user.club.clubName,
             invitationLink
         });
 

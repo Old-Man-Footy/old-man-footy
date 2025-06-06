@@ -2,9 +2,8 @@ const cron = require('node-cron');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');
-const Carnival = require('../models/Carnival');
-const User = require('../models/User');
-const Club = require('../models/Club');
+const { Carnival, User, Club } = require('../models');
+const { Op } = require('sequelize');
 const emailService = require('./emailService');
 
 class MySidelineIntegrationService {
@@ -34,8 +33,11 @@ class MySidelineIntegrationService {
     async checkAndRunInitialSync() {
         try {
             const lastImportedCarnival = await Carnival.findOne({ 
-                mySidelineEventId: { $exists: true, $ne: null } 
-            }).sort({ createdAt: -1 });
+                where: {
+                    mySidelineEventId: { [Op.ne]: null }
+                },
+                order: [['createdAt', 'DESC']]
+            });
 
             if (!lastImportedCarnival || 
                 (new Date() - lastImportedCarnival.createdAt) > 24 * 60 * 60 * 1000) {
@@ -602,7 +604,7 @@ class MySidelineIntegrationService {
         try {
             // Check if event already exists
             const existingCarnival = await Carnival.findOne({
-                mySidelineEventId: scrapedEvent.mySidelineId
+                where: { mySidelineEventId: scrapedEvent.mySidelineId }
             });
 
             if (existingCarnival) {
@@ -625,17 +627,17 @@ class MySidelineIntegrationService {
             existingCarnival.locationAddress !== scrapedEvent.location;
 
         if (hasChanges) {
-            existingCarnival.title = scrapedEvent.title;
-            existingCarnival.date = scrapedEvent.date;
-            existingCarnival.locationAddress = scrapedEvent.location;
-            existingCarnival.scheduleDetails = scrapedEvent.description;
-            existingCarnival.registrationLink = scrapedEvent.registrationLink;
-            existingCarnival.organiserContactName = scrapedEvent.contactInfo.name;
-            existingCarnival.organiserContactEmail = scrapedEvent.contactInfo.email;
-            existingCarnival.organiserContactPhone = scrapedEvent.contactInfo.phone;
-            existingCarnival.lastMySidelineSync = new Date();
-
-            await existingCarnival.save();
+            await existingCarnival.update({
+                title: scrapedEvent.title,
+                date: scrapedEvent.date,
+                locationAddress: scrapedEvent.location,
+                scheduleDetails: scrapedEvent.description,
+                registrationLink: scrapedEvent.registrationLink,
+                organiserContactName: scrapedEvent.contactInfo.name,
+                organiserContactEmail: scrapedEvent.contactInfo.email,
+                organiserContactPhone: scrapedEvent.contactInfo.phone,
+                lastMySidelineSync: new Date()
+            });
 
             // Send update notifications if event has an owner
             if (existingCarnival.createdByUserId) {
@@ -654,7 +656,7 @@ class MySidelineIntegrationService {
     }
 
     async createNewEvent(scrapedEvent) {
-        const newCarnival = new Carnival({
+        const newCarnival = await Carnival.create({
             title: scrapedEvent.title,
             date: scrapedEvent.date,
             locationAddress: scrapedEvent.location,
@@ -669,8 +671,6 @@ class MySidelineIntegrationService {
             isActive: true,
             lastMySidelineSync: new Date()
         });
-
-        await newCarnival.save();
 
         // Send new carnival notifications
         try {
@@ -715,8 +715,13 @@ class MySidelineIntegrationService {
     // Take ownership of MySideline event
     async takeOwnership(carnivalId, userId) {
         try {
-            const carnival = await Carnival.findById(carnivalId);
-            const user = await User.findById(userId).populate('clubId');
+            const carnival = await Carnival.findByPk(carnivalId);
+            const user = await User.findByPk(userId, {
+                include: [{
+                    model: Club,
+                    as: 'club'
+                }]
+            });
 
             if (!carnival || !user) {
                 throw new Error('Carnival or user not found');
@@ -730,9 +735,10 @@ class MySidelineIntegrationService {
                 throw new Error('Not a MySideline imported event');
             }
 
-            carnival.createdByUserId = userId;
-            carnival.isManuallyEntered = true; // Now managed manually
-            await carnival.save();
+            await carnival.update({
+                createdByUserId: userId,
+                isManuallyEntered: true // Now managed manually
+            });
 
             console.log(`User ${user.email} took ownership of carnival: ${carnival.title}`);
             
@@ -1121,3 +1127,8 @@ class MySidelineIntegrationService {
 }
 
 module.exports = new MySidelineIntegrationService();
+
+// Also export the class for accessing static methods
+module.exports.MySidelineIntegrationService = MySidelineIntegrationService;
+module.exports.validateEventData = MySidelineIntegrationService.validateEventData;
+module.exports.handleScrapingError = MySidelineIntegrationService.handleScrapingError;

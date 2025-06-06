@@ -1,12 +1,13 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const session = require('express-session');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const passport = require('./config/passport'); // Updated to use our config
 const flash = require('connect-flash');
 const path = require('path');
 const helmet = require('helmet');
 const expressLayouts = require('express-ejs-layouts');
 const mySidelineService = require('./services/mySidelineService');
+const { sequelize } = require('./models');
 require('dotenv').config();
 
 const app = express();
@@ -41,9 +42,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Session store using SQLite
+const sessionStore = new SequelizeStore({
+    db: sequelize,
+});
+
 // Session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'rugby-league-masters-secret-key',
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -69,14 +76,27 @@ app.use((req, res, next) => {
     next();
 });
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rugby-league-masters')
-.then(() => {
-    console.log('MongoDB connected successfully');
-    // Initialize MySideline service after database connection
-    mySidelineService.initializeScheduledSync();
-})
-.catch(err => console.error('MongoDB connection error:', err));
+// Database connection and initialization
+async function initializeDatabase() {
+    try {
+        const { initializeDatabase } = require('./config/database');
+        await initializeDatabase();
+        
+        // Create session store table
+        await sessionStore.sync();
+        
+        console.log('✅ SQLite database initialized successfully');
+        
+        // Initialize MySideline service after database connection
+        mySidelineService.initializeScheduledSync();
+    } catch (error) {
+        console.error('❌ Database initialization failed:', error);
+        process.exit(1);
+    }
+}
+
+// Initialize database
+initializeDatabase();
 
 // Routes
 const indexRoutes = require('./routes/index');

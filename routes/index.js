@@ -1,29 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const Carnival = require('../models/Carnival');
-const EmailSubscription = require('../models/EmailSubscription');
-const User = require('../models/User');
+const { Carnival, EmailSubscription, User, Club, sequelize } = require('../models');
 const { ensureAuthenticated } = require('../middleware/auth');
 const emailService = require('../services/emailService');
 const mySidelineService = require('../services/mySidelineService');
+const { Op } = require('sequelize');
 
 // Home page - Display upcoming carnivals
 router.get('/', async (req, res) => {
     try {
         // Get upcoming carnivals for homepage
-        const upcomingCarnivals = await Carnival.find({
-            isActive: true,
-            date: { $gte: new Date() }
-        })
-        .populate('createdByUserId', 'firstName lastName')
-        .sort({ date: 1 })
-        .limit(6);
+        const upcomingCarnivals = await Carnival.findAll({
+            where: {
+                isActive: true,
+                date: { [Op.gte]: new Date() }
+            },
+            include: [{
+                model: User,
+                as: 'creator',
+                attributes: ['firstName', 'lastName']
+            }],
+            order: [['date', 'ASC']],
+            limit: 6
+        });
 
         // Get carnival statistics for homepage
-        const totalCarnivals = await Carnival.countDocuments({ isActive: true });
-        const upcomingCount = await Carnival.countDocuments({ 
-            isActive: true, 
-            date: { $gte: new Date() } 
+        const totalCarnivals = await Carnival.count({ 
+            where: { isActive: true } 
+        });
+        const upcomingCount = await Carnival.count({ 
+            where: {
+                isActive: true, 
+                date: { [Op.gte]: new Date() }
+            }
         });
 
         res.render('index', { 
@@ -50,241 +59,281 @@ router.get('/', async (req, res) => {
 // Enhanced Dashboard for authenticated users
 router.get('/dashboard', ensureAuthenticated, async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user.id;
         
         // Get user's carnivals
-        const userCarnivals = await Carnival.find({
-            createdByUserId: userId,
-            isActive: true
-        }).sort({ date: 1 });
+        const userCarnivals = await Carnival.findAll({
+            where: {
+                createdByUserId: userId,
+                isActive: true
+            },
+            order: [['date', 'ASC']]
+        });
 
         // Get unclaimed MySideline events if user is a club delegate
         let unclaimedEvents = [];
         if (req.user.clubId) {
-            unclaimedEvents = await Carnival.find({
-                mySidelineEventId: { $exists: true, $ne: null },
-                createdByUserId: { $exists: false },
-                isActive: true,
-                date: { $gte: new Date() }
-            }).sort({ date: 1 }).limit(10);
+            unclaimedEvents = await Carnival.findAll({
+                where: {
+                    isActive: true,
+                    mySidelineEventId: { [Op.ne]: null },
+                    createdByUserId: null,
+                    date: { [Op.gte]: new Date() }
+                },
+                order: [['date', 'ASC']],
+                limit: 5
+            });
         }
 
-        // Get MySideline sync status for primary delegates
-        let mySidelineStatus = null;
-        if (req.user.isPrimaryDelegate) {
-            mySidelineStatus = mySidelineService.getSyncStatus();
-        }
-
-        // Get email subscription statistics for primary delegates
-        let emailStats = null;
-        if (req.user.isPrimaryDelegate) {
-            emailStats = await EmailSubscription.aggregate([
-                { $match: { isActive: true } },
-                { $unwind: '$stateFilter' },
-                { $group: { _id: '$stateFilter', count: { $sum: 1 } } },
-                { $sort: { _id: 1 } }
-            ]);
-        }
-
-        // Categorize user's carnivals
-        const today = new Date();
-        const categorizedCarnivals = {
-            upcoming: userCarnivals.filter(c => new Date(c.date) >= today),
-            past: userCarnivals.filter(c => new Date(c.date) < today)
+        // Get recent activity statistics
+        const recentStats = {
+            totalUserCarnivals: userCarnivals.length,
+            upcomingUserCarnivals: userCarnivals.filter(c => new Date(c.date) >= new Date()).length,
+            unclaimedEventsCount: unclaimedEvents.length
         };
 
         res.render('dashboard', {
             title: 'Dashboard',
-            userCarnivals: categorizedCarnivals,
+            user: req.user,
+            userCarnivals,
             unclaimedEvents,
-            mySidelineStatus,
-            emailStats,
-            user: req.user
+            stats: recentStats
         });
 
     } catch (error) {
         console.error('Error loading dashboard:', error);
-        req.flash('error_msg', 'Error loading dashboard data.');
         res.render('dashboard', {
             title: 'Dashboard',
-            userCarnivals: { upcoming: [], past: [] },
+            user: req.user,
+            userCarnivals: [],
             unclaimedEvents: [],
-            mySidelineStatus: null,
-            emailStats: null,
-            user: req.user
+            stats: {
+                totalUserCarnivals: 0,
+                upcomingUserCarnivals: 0,
+                unclaimedEventsCount: 0
+            }
         });
     }
 });
 
 // About page
 router.get('/about', (req, res) => {
-    res.render('about', { title: 'About Rugby League Masters' });
+    res.render('about', {
+        title: 'About Rugby League Masters'
+    });
 });
 
-// Email subscription
+// Newsletter subscription
 router.post('/subscribe', async (req, res) => {
     try {
-        const { email, state } = req.body;
+        const { email, firstName, lastName, stateFilter } = req.body;
 
-        if (!email || !state) {
-            req.flash('error_msg', 'Email and at least one state are required.');
-            return res.redirect('/');
+        // Validate required fields
+        if (!email || !firstName || !lastName) {
+            req.flash('error_msg', 'Please provide all required information.');
+            return res.redirect('/#newsletter');
         }
 
-        // Handle both single and multiple state selections
-        const selectedStates = Array.isArray(state) ? state : [state];
-
-        // Validate states
-        const validStates = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
-        const invalidStates = selectedStates.filter(s => !validStates.includes(s));
-        
-        if (invalidStates.length > 0) {
-            req.flash('error_msg', 'Please select valid states only.');
-            return res.redirect('/');
-        }
-
-        // Check if already subscribed for this email
-        const existingSubscription = await EmailSubscription.findOne({ email });
-        
-        if (existingSubscription) {
-            if (existingSubscription.isActive) {
-                // Update existing subscription with new state filters
-                existingSubscription.stateFilter = selectedStates;
-                await existingSubscription.save();
-                
-                // Send updated welcome email
-                try {
-                    await emailService.sendWelcomeEmail(email, selectedStates);
-                } catch (emailError) {
-                    console.error('Failed to send welcome email:', emailError);
-                }
-                
-                req.flash('success_msg', 'Your subscription has been updated with the selected states!');
-            } else {
-                // Reactivate subscription with new state filters
-                existingSubscription.isActive = true;
-                existingSubscription.stateFilter = selectedStates;
-                existingSubscription.subscribedAt = new Date();
-                await existingSubscription.save();
-                
-                // Send welcome email
-                try {
-                    await emailService.sendWelcomeEmail(email, selectedStates);
-                } catch (emailError) {
-                    console.error('Failed to send welcome email:', emailError);
-                }
-                
-                req.flash('success_msg', 'Your subscription has been reactivated! You will receive notifications about new carnivals in your selected states.');
+        // Check if email already exists
+        const existingSubscription = await EmailSubscription.findOne({ 
+            where: { 
+                email: email.toLowerCase(),
+                isActive: true 
             }
-            return res.redirect('/');
+        });
+
+        if (existingSubscription) {
+            req.flash('error_msg', 'You are already subscribed to our newsletter.');
+            return res.redirect('/#newsletter');
         }
 
         // Create new subscription
-        const subscription = new EmailSubscription({
-            email,
-            stateFilter: selectedStates,
-            unsubscribeToken: require('crypto').randomBytes(32).toString('hex')
+        const subscription = await EmailSubscription.create({
+            email: email.toLowerCase(),
+            firstName,
+            lastName,
+            stateFilter: stateFilter || [],
+            isActive: true,
+            subscribedDate: new Date()
         });
-
-        await subscription.save();
 
         // Send welcome email
         try {
-            await emailService.sendWelcomeEmail(email, selectedStates);
+            await emailService.sendWelcomeEmail(subscription);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
             // Don't fail the subscription if email fails
         }
 
-        req.flash('success_msg', 'Successfully subscribed! You will receive email notifications about new carnivals in your selected states.');
-        res.redirect('/');
+        req.flash('success_msg', 'Successfully subscribed to the newsletter!');
+        res.redirect('/#newsletter');
 
     } catch (error) {
-        console.error('Error subscribing to email notifications:', error);
+        console.error('Error subscribing to newsletter:', error);
         req.flash('error_msg', 'An error occurred while subscribing. Please try again.');
-        res.redirect('/');
+        res.redirect('/#newsletter');
     }
 });
 
-// Unsubscribe from email notifications
-router.get('/unsubscribe', async (req, res) => {
+// Unsubscribe from newsletter
+router.get('/unsubscribe/:token', async (req, res) => {
     try {
-        const { token, email } = req.query;
-
-        let subscription;
-        if (token) {
-            subscription = await EmailSubscription.findOne({ unsubscribeToken: token });
-        } else if (email) {
-            subscription = await EmailSubscription.findOne({ email });
-        }
+        const subscription = await EmailSubscription.findOne({
+            where: {
+                unsubscribeToken: req.params.token,
+                isActive: true
+            }
+        });
 
         if (!subscription) {
             req.flash('error_msg', 'Invalid unsubscribe link.');
             return res.redirect('/');
         }
 
-        subscription.isActive = false;
-        subscription.unsubscribedAt = new Date();
-        await subscription.save();
+        await subscription.update({ isActive: false });
 
-        req.flash('success_msg', 'You have been successfully unsubscribed from email notifications.');
+        req.flash('success_msg', 'You have been successfully unsubscribed from our newsletter.');
         res.redirect('/');
 
     } catch (error) {
-        console.error('Error unsubscribing from email notifications:', error);
-        req.flash('error_msg', 'An error occurred while unsubscribing. Please try again.');
+        console.error('Error unsubscribing:', error);
+        req.flash('error_msg', 'An error occurred while unsubscribing.');
         res.redirect('/');
     }
 });
 
-// Admin routes for primary delegates
+// MySideline webhook endpoint
+router.post('/webhook/mysideline', async (req, res) => {
+    try {
+        console.log('MySideline webhook received:', req.body);
+        
+        // Process the webhook data
+        const result = await mySidelineService.processWebhook(req.body);
+        
+        if (result.success) {
+            res.status(200).json({ message: 'Webhook processed successfully' });
+        } else {
+            res.status(400).json({ error: result.error });
+        }
+
+    } catch (error) {
+        console.error('Error processing MySideline webhook:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// API endpoint for carnival search (for AJAX requests)
+router.get('/api/carnivals/search', async (req, res) => {
+    try {
+        const { q, state, limit = 10 } = req.query;
+        
+        let whereClause = { isActive: true };
+        
+        if (state && state !== 'all') {
+            whereClause.state = state;
+        }
+        
+        if (q) {
+            whereClause[Op.or] = [
+                { title: { [Op.iLike]: `%${q}%` } },
+                { locationAddress: { [Op.iLike]: `%${q}%` } },
+                { organiserContactName: { [Op.iLike]: `%${q}%` } }
+            ];
+        }
+
+        const carnivals = await Carnival.findAll({
+            where: whereClause,
+            attributes: ['id', 'title', 'date', 'locationAddress', 'state'],
+            order: [['date', 'ASC']],
+            limit: parseInt(limit)
+        });
+
+        res.json(carnivals);
+
+    } catch (error) {
+        console.error('Error searching carnivals:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Admin statistics page (Primary delegates only)
 router.get('/admin/stats', ensureAuthenticated, async (req, res) => {
     try {
+        // Check if user is primary delegate
         if (!req.user.isPrimaryDelegate) {
-            req.flash('error_msg', 'Access denied. Primary delegates only.');
+            req.flash('error_msg', 'Access denied. Only primary delegates can view statistics.');
             return res.redirect('/dashboard');
         }
 
         // Get comprehensive statistics
-        const totalCarnivals = await Carnival.countDocuments({ isActive: true });
-        const upcomingCarnivals = await Carnival.countDocuments({ 
-            isActive: true, 
-            date: { $gte: new Date() } 
+        const totalCarnivals = await Carnival.count({ 
+            where: { isActive: true } 
         });
-        const mySidelineCarnivals = await Carnival.countDocuments({ 
-            isActive: true,
-            mySidelineEventId: { $exists: true, $ne: null }
+        const upcomingCarnivals = await Carnival.count({ 
+            where: {
+                isActive: true,
+                date: { [Op.gte]: new Date() }
+            }
         });
-        const manualCarnivals = await Carnival.countDocuments({ 
-            isActive: true,
-            isManuallyEntered: true 
+        const mySidelineCarnivals = await Carnival.count({
+            where: {
+                isActive: true,
+                mySidelineEventId: { [Op.ne]: null }
+            }
+        });
+        const manualCarnivals = await Carnival.count({ 
+            where: {
+                isActive: true,
+                isManuallyEntered: true 
+            }
         });
 
-        const totalUsers = await User.countDocuments({ isActive: true });
-        const clubDelegates = await User.countDocuments({ 
-            isActive: true, 
-            clubId: { $exists: true, $ne: null } 
+        const totalUsers = await User.count({ 
+            where: { isActive: true } 
+        });
+        const clubDelegates = await User.count({ 
+            where: {
+                isActive: true, 
+                clubId: { [Op.ne]: null }
+            }
         });
 
-        const emailSubscriptions = await EmailSubscription.countDocuments({ isActive: true });
+        const emailSubscriptions = await EmailSubscription.count({ 
+            where: { isActive: true } 
+        });
 
-        // Get carnivals by state
-        const carnivalsByState = await Carnival.aggregate([
-            { $match: { isActive: true } },
-            { $group: { _id: '$state', count: { $sum: 1 } } },
-            { $sort: { _id: 1 } }
-        ]);
+        // Get carnivals by state using raw query for aggregation
+        const carnivalsByState = await Carnival.findAll({
+            where: { isActive: true },
+            attributes: [
+                'state',
+                [sequelize.fn('COUNT', sequelize.col('state')), 'count']
+            ],
+            group: ['state'],
+            order: [['state', 'ASC']],
+            raw: true
+        });
 
-        // Get email subscriptions by state
-        const subscriptionsByState = await EmailSubscription.aggregate([
-            { $match: { isActive: true } },
-            { $unwind: '$stateFilter' },
-            { $group: { _id: '$stateFilter', count: { $sum: 1 } } },
-            { $sort: { _id: 1 } }
-        ]);
+        // Get recent activity (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentCarnivals = await Carnival.count({
+            where: {
+                isActive: true,
+                createdAt: { [Op.gte]: thirtyDaysAgo }
+            }
+        });
+
+        const recentSubscriptions = await EmailSubscription.count({
+            where: {
+                isActive: true,
+                subscribedDate: { [Op.gte]: thirtyDaysAgo }
+            }
+        });
 
         res.render('admin/stats', {
-            title: 'Admin Statistics',
+            title: 'System Statistics',
             stats: {
                 totalCarnivals,
                 upcomingCarnivals,
@@ -294,12 +343,13 @@ router.get('/admin/stats', ensureAuthenticated, async (req, res) => {
                 clubDelegates,
                 emailSubscriptions,
                 carnivalsByState,
-                subscriptionsByState
+                recentCarnivals,
+                recentSubscriptions
             }
         });
 
     } catch (error) {
-        console.error('Error loading admin stats:', error);
+        console.error('Error loading admin statistics:', error);
         req.flash('error_msg', 'Error loading statistics.');
         res.redirect('/dashboard');
     }

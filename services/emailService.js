@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
-const EmailSubscription = require('../models/EmailSubscription');
+const { EmailSubscription } = require('../models');
+const { Op } = require('sequelize');
 
 class EmailService {
     constructor() {
@@ -81,9 +82,11 @@ class EmailService {
     async sendCarnivalNotification(carnival, type = 'new') {
         try {
             // Get all email subscriptions that include this carnival's state in their stateFilter
-            const subscriptions = await EmailSubscription.find({ 
-                stateFilter: { $in: [carnival.state] },
-                isActive: true
+            const subscriptions = await EmailSubscription.findAll({ 
+                where: {
+                    stateFilter: { [Op.contains]: [carnival.state] },
+                    isActive: true
+                }
             });
 
             if (subscriptions.length === 0) {
@@ -96,7 +99,7 @@ class EmailService {
                 : `Carnival Updated: ${carnival.title}`;
 
             const actionText = type === 'new' ? 'new carnival' : 'carnival update';
-            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival._id}`;
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
 
             const promises = subscriptions.map(subscription => {
                 const unsubscribeUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/unsubscribe?token=${subscription.unsubscribeToken}`;
