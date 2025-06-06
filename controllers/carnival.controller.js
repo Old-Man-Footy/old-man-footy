@@ -21,13 +21,19 @@ const listCarnivals = async (req, res) => {
         const { state, search, upcoming, mysideline } = req.query;
         let whereClause = { isActive: true };
 
+        // Set default for upcoming if no explicit filters are applied
+        let upcomingFilter = upcoming;
+        if (upcomingFilter === undefined && !search && (!state || state === 'all')) {
+            upcomingFilter = 'true'; // Default to showing upcoming events
+        }
+
         // State filter
         if (state && state !== 'all') {
             whereClause.state = state;
         }
 
         // Date filter
-        if (upcoming === 'true') {
+        if (upcomingFilter === 'true') {
             whereClause.date = { [Op.gte]: new Date() };
         }
 
@@ -63,7 +69,7 @@ const listCarnivals = async (req, res) => {
             title: 'All Carnivals',
             carnivals,
             states,
-            currentFilters: { state, search, upcoming, mysideline }
+            currentFilters: { state, search, upcoming: upcomingFilter, mysideline }
         });
     } catch (error) {
         console.error('Error fetching carnivals:', error);
