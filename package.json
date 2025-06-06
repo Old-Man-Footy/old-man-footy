@@ -39,7 +39,8 @@
     "node-cron": "^4.1.0",
     "nodemailer": "^7.0.3",
     "passport": "^0.7.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "puppeteer": "^24.10.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

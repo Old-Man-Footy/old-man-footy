@@ -3,7 +3,7 @@ const EmailSubscription = require('../models/EmailSubscription');
 
 class EmailService {
     constructor() {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
             // Gmail configuration (can be switched to other providers)
             service: 'gmail',
             auth: {

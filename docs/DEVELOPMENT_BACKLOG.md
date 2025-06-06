@@ -404,3 +404,309 @@ MYSIDELINE_URL=https://www.mysideline.com.au
 - Comprehensive logging
 
 The application is now feature-complete for the core requirements and ready for testing and deployment. All major functionality has been implemented with proper error handling, security measures, and a professional user interface that reflects the Rugby League Masters branding.
+
+# NRL Masters Development Backlog
+
+## Project Overview
+**Project:** Rugby League Masters Carnival Management Platform  
+**Technology Stack:** Node.js, Express.js, MongoDB, EJS, Bootstrap 5.3  
+**Current Phase:** Testing & Production Preparation  
+**Last Updated:** June 6, 2025  
+
+---
+
+## 🎯 Current Sprint Status
+
+### Sprint Goals
+- [ ] Complete MySideline integration testing
+- [ ] Finalize production deployment preparation
+- [ ] Conduct security review and performance testing
+- [ ] User acceptance testing with Rugby League clubs
+
+---
+
+## 📊 Feature Status Overview
+
+| Category | Total | Completed | In Progress | Not Started |
+|----------|-------|-----------|-------------|-------------|
+| Core Features | 8 | 8 ✅ | 0 | 0 |
+| Medium Priority | 3 | 3 ✅ | 0 | 0 |
+| Testing & QA | 4 | 0 | 4 🔄 | 0 |
+| Deployment | 4 | 0 | 2 🔄 | 2 |
+| Enhancements | 6 | 0 | 0 | 6 ⭕ |
+
+---
+
+## ✅ COMPLETED FEATURES
+
+### Core Application Features (8/8 Complete)
+
+#### 1. Authentication System ✅
+- [x] User registration and login with Passport.js
+- [x] Club-based access control and delegate management
+- [x] Invitation system with secure tokens
+- [x] Session management and security middleware
+- [x] Primary delegate privileges
+
+#### 2. Carnival Management ✅
+- [x] Full CRUD operations for carnival events
+- [x] State-based organization and filtering
+- [x] Contact information and registration management
+- [x] MySideline event ID tracking and ownership
+- [x] Manual vs automated event distinction
+
+#### 3. User Interface ✅
+- [x] Professional EJS templates with Rugby League branding
+- [x] Responsive Bootstrap 5.3 design (green/gold theme)
+- [x] Dashboard with statistics and filtering
+- [x] Admin panel with comprehensive metrics
+- [x] Mobile-optimized layouts
+
+#### 4. File Management ✅
+- [x] Secure file upload with Multer middleware
+- [x] Support for promotional images and club logos
+- [x] File type and size validation
+- [x] Error handling and user feedback
+- [x] Integration with carnival forms
+
+#### 5. Email System ✅
+- [x] Multi-provider email service (Gmail, SendGrid, AWS SES)
+- [x] HTML email templates with Rugby League branding
+- [x] Carnival notifications (create, update, delete)
+- [x] Weekly roundup emails
+- [x] Subscription management with unsubscribe
+
+#### 6. MySideline Integration ✅
+- [x] Web scraping service for event discovery
+- [x] Scheduled daily synchronization (3 AM)
+- [x] Event ownership and conflict resolution
+- [x] Mock data generation for development
+- [x] Manual sync triggers for administrators
+
+#### 7. Database Models ✅
+- [x] User model with club associations
+- [x] Carnival model with comprehensive fields
+- [x] Club model with delegate management
+- [x] Email subscription model with state filtering
+- [x] Proper relationships and MongoDB indexing
+
+#### 8. Security & Validation ✅
+- [x] Input validation with express-validator
+- [x] Password hashing with bcrypt
+- [x] Helmet security headers
+- [x] Session security configuration
+- [x] File upload security measures
+
+---
+
+## 🔄 IN PROGRESS
+
+### Testing & Quality Assurance (0/4 Complete)
+
+#### 1. MySideline Integration Testing 🔄
+- [ ] **Test with live MySideline website structure**
+  - Validate HTML parsing accuracy
+  - Test event extraction logic
+  - Verify contact information parsing
+- [ ] **Ownership transfer functionality testing**
+  - Test manual event claiming
+  - Validate delegate permissions
+  - Test conflict resolution
+- [ ] **Sync scheduling validation**
+  - Test cron job execution
+  - Validate error handling
+  - Test notification triggers
+
+#### 2. Performance Testing 🔄
+- [ ] **Load testing with large datasets**
+  - Test with 1000+ carnivals
+  - Validate database query performance
+  - Test concurrent user scenarios
+- [ ] **Memory usage optimization**
+  - Profile application memory usage
+  - Optimize database connections
+  - Test file upload performance
+
+#### 3. Security Review 🔄
+- [ ] **Authentication security audit**
+  - Validate session security
+  - Test invitation token security
+  - Review password policies
+- [ ] **File upload security testing**
+  - Test malicious file uploads
+  - Validate file type restrictions
+  - Test storage security
+
+#### 4. User Acceptance Testing 🔄
+- [ ] **Rugby League club feedback collection**
+  - Test with real club delegates
+  - Gather usability feedback
+  - Validate workflow efficiency
+- [ ] **Mobile experience testing**
+  - Test on various mobile devices
+  - Validate responsive design
+  - Test touch interactions
+
+### Production Preparation (0/2 Complete)
+
+#### 1. Environment Configuration 🔄
+- [ ] **Production environment setup**
+  - Configure production MongoDB instance
+  - Set up email service credentials
+  - Configure domain and SSL certificates
+- [ ] **Environment variable documentation**
+  - Document all required variables
+  - Create production .env template
+  - Set up configuration validation
+
+#### 2. Deployment Pipeline 🔄
+- [ ] **CI/CD pipeline setup**
+  - Configure automated testing
+  - Set up deployment automation
+  - Configure monitoring and alerts
+- [ ] **Database migration planning**
+  - Plan production data migration
+  - Set up backup procedures
+  - Configure monitoring
+
+---
+
+## ⭕ BACKLOG (Not Started)
+
+### Deployment & Infrastructure (0/2 Complete)
+
+#### 1. Hosting Setup ⭕
+- [ ] **Cloud hosting configuration**
+  - Set up production server
+  - Configure load balancing
+  - Set up CDN for static assets
+- [ ] **Monitoring and logging**
+  - Implement application monitoring
+  - Set up error tracking
+  - Configure performance metrics
+
+#### 2. Backup & Recovery ⭕
+- [ ] **Backup procedures**
+  - Automated database backups
+  - File storage backups
+  - Recovery testing procedures
+- [ ] **Disaster recovery planning**
+  - Document recovery procedures
+  - Test backup restoration
+  - Set up monitoring alerts
+
+### Future Enhancements (0/6 Complete)
+
+#### 1. Advanced Features ⭕
+- [ ] **Calendar view for carnivals**
+  - Interactive calendar component
+  - Month/week/day views
+  - Event filtering and search
+- [ ] **Advanced search and filtering**
+  - Multi-criteria search
+  - Location-based filtering
+  - Date range selection
+
+#### 2. Analytics & Reporting ⭕
+- [ ] **Carnival analytics dashboard**
+  - Registration tracking
+  - Geographic distribution
+  - Participation trends
+- [ ] **Reporting system**
+  - Export functionality
+  - Custom report generation
+  - Email report delivery
+
+#### 3. Mobile Application ⭕
+- [ ] **Progressive Web App (PWA)**
+  - Offline functionality
+  - Push notifications
+  - App store deployment
+- [ ] **Native mobile app consideration**
+  - React Native evaluation
+  - Feature planning
+  - Development roadmap
+
+#### 4. Integration Enhancements ⭕
+- [ ] **Social media integration**
+  - Facebook event integration
+  - Twitter updates
+  - Instagram photo sharing
+- [ ] **Federation API integration**
+  - State Rugby League body APIs
+  - Official tournament integration
+  - Results tracking
+
+#### 5. User Experience Enhancements ⭕
+- [ ] **Advanced user roles**
+  - Super admin roles
+  - Read-only access levels
+  - Federation representative access
+- [ ] **Communication features**
+  - In-app messaging
+  - Club-to-club communication
+  - Event discussion boards
+
+#### 6. System Administration ⭕
+- [ ] **Health monitoring**
+  - System health dashboard
+  - Performance metrics
+  - Automated alerts
+- [ ] **Audit logging**
+  - User action tracking
+  - Data change history
+  - Security event logging
+
+---
+
+## 🚀 Release Planning
+
+### Version 1.0 - Production Launch (Current)
+**Target Date:** June 2025  
+**Scope:** Core features with MySideline integration  
+**Blockers:** Testing completion, production setup  
+
+### Version 1.1 - Performance Optimization
+**Target Date:** July 2025  
+**Scope:** Performance improvements, mobile enhancements  
+
+### Version 2.0 - Advanced Features
+**Target Date:** September 2025  
+**Scope:** Calendar view, analytics, PWA functionality  
+
+---
+
+## 📋 Technical Debt & Known Issues
+
+### High Priority
+- [ ] MySideline scraping reliability (depends on external website)
+- [ ] File upload storage strategy (local vs cloud)
+- [ ] Email delivery reliability monitoring
+
+### Medium Priority
+- [ ] Database query optimization for large datasets
+- [ ] Client-side JavaScript error handling
+- [ ] Image optimization and compression
+
+### Low Priority
+- [ ] Code documentation improvements
+- [ ] Test coverage expansion
+- [ ] Refactoring opportunity identification
+
+---
+
+## 📞 Development Team Notes
+
+### Current Focus
+Testing and production preparation are the immediate priorities. All core features are complete and functional.
+
+### Risk Factors
+1. **MySideline dependency** - External website changes could break integration
+2. **Email deliverability** - Production email service setup critical
+3. **Performance at scale** - Needs testing with realistic data volumes
+
+### Success Metrics
+- Successful deployment to production environment
+- User acceptance by Rugby League clubs
+- Reliable MySideline integration
+- Sub-2 second page load times

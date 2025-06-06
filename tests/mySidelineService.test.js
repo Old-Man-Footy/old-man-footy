@@ -159,33 +159,37 @@ describe('MySidelineIntegrationService', () => {
         });
 
         test('should not update carnival when no changes detected', async () => {
+            // Create an existing carnival with all required fields
             const existingCarnival = new Carnival({
-                title: 'Same Title',
-                date: new Date('2025-07-15'),
-                locationAddress: 'Same Location',
-                mySidelineEventId: 'test-001',
+                title: 'Existing Event',
+                date: new Date('2025-08-15'),
+                locationAddress: 'Test Location',
+                state: 'NSW',
+                scheduleDetails: 'Test schedule details',
+                organiserContactName: 'Test Organiser',
+                organiserContactEmail: 'test@example.com',
+                organiserContactPhone: '0400123456',
+                mySidelineEventId: 'existing-event-1',
+                isManuallyEntered: false,
                 isActive: true
             });
             await existingCarnival.save();
 
             const scrapedEvent = {
-                mySidelineId: 'test-001',
-                title: 'Same Title',
-                date: new Date('2025-07-15'),
-                location: 'Same Location',
-                state: 'NSW',
-                description: 'Same Description',
-                registrationLink: '/register/test-001',
+                mySidelineId: 'existing-event-1',
+                title: 'Existing Event',
+                date: new Date('2025-08-15'),
+                location: 'Test Location',
+                description: 'Test Description',
                 contactInfo: {
-                    name: 'Same Organiser',
-                    email: 'same@example.com',
-                    phone: '0400 123 456'
+                    name: 'Test Contact',
+                    email: 'test@example.com',
+                    phone: '0400123456'
                 }
             };
 
             const result = await MySidelineService.updateExistingEvent(existingCarnival, scrapedEvent);
-            
-            expect(result).toBeNull(); // No changes, so null returned
+            expect(result).toBeNull(); // No changes detected
         });
     });
 
@@ -298,27 +302,33 @@ describe('MySidelineIntegrationService', () => {
         });
 
         test('should handle full sync process', async () => {
-            // Mock successful scraping
-            axios.get.mockResolvedValue({
-                data: `
-                    <div class="event-item" data-event-id="sync-001">
-                        <div class="event-title">Sync Test Carnival</div>
-                        <div class="event-date">2025-07-15</div>
-                        <div class="event-location">Sync Test Stadium</div>
-                        <div class="event-description">Sync Test Description</div>
-                    </div>
-                `
-            });
+            // Mock the scraping to return some events
+            jest.spyOn(MySidelineService, 'scrapeMySidelineEvents').mockResolvedValue([
+                {
+                    mySidelineId: 'test-event-1',
+                    title: 'Test Masters Event',
+                    date: new Date('2025-08-15'),
+                    location: 'Test Location',
+                    state: 'NSW',
+                    description: 'Test Description',
+                    contactInfo: {
+                        name: 'Test Contact',
+                        email: 'test@example.com',
+                        phone: '0400123456'
+                    }
+                }
+            ]);
 
             const result = await MySidelineService.syncMySidelineEvents();
-            
+
             expect(result.success).toBe(true);
             expect(result.eventsProcessed).toBeGreaterThan(0);
             expect(result.lastSync).toBeInstanceOf(Date);
             
             // Verify events were created
-            const createdEvents = await Carnival.find({ mySidelineEventId: { $exists: true } });
-            expect(createdEvents.length).toBeGreaterThan(0);
+            const carnival = await Carnival.findOne({ mySidelineEventId: 'test-event-1' });
+            expect(carnival).toBeTruthy();
+            expect(carnival.title).toBe('Test Masters Event');
         });
     });
 
@@ -344,19 +354,10 @@ describe('MySidelineIntegrationService', () => {
         });
 
         test('should extract contact info correctly', () => {
-            const mockElement = {
-                find: jest.fn((selector) => ({
-                    text: jest.fn(() => {
-                        switch (selector) {
-                            case '.contact-name': return { trim: () => 'Test Organiser' };
-                            case '.contact-email': return { trim: () => 'test@example.com' };
-                            case '.contact-phone': return { trim: () => '0400 123 456' };
-                            default: return { trim: () => '' };
-                        }
-                    })
-                }))
+            const mockElement = { 
+                mockData: true,
+                textContent: 'Contact: Test Organiser, Email: test@example.com, Phone: 0400 123 456'
             };
-
             const contactInfo = MySidelineService.extractContactInfo(mockElement);
             
             expect(contactInfo).toEqual({
