@@ -150,7 +150,6 @@ sessions/
 *.sqlite3
 
 # Config files with sensitive data
-config/database.js
 config/keys.js
 
 # PM2 process file
