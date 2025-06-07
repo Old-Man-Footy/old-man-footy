@@ -1,0 +1,228 @@
+<% if (success_msg.length > 0) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= success_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+
+<% if (error_msg.length > 0) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= error_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+
+<!-- Page Header -->
+<div class="bg-primary text-white py-4 mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="h2 mb-0">Manage Club Profile</h1>
+                <p class="lead mb-0">Update your club's public listing and contact information</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <a href="/dashboard" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Club Management Form -->
+<section class="py-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> Club Profile Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/clubs/manage/profile">
+                            <!-- Basic Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3"><i class="bi bi-info-circle"></i> Basic Information</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="clubName" class="form-label">Club Name</label>
+                                    <input type="text" class="form-control" id="clubName" value="<%= club.clubName %>" disabled>
+                                    <div class="form-text">Contact support to change your club name</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="state" class="form-label">State</label>
+                                    <input type="text" class="form-control" id="state" value="<%= club.state || 'Not specified' %>" disabled>
+                                    <div class="form-text">Contact support to change your state</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <label for="location" class="form-label">Location/Suburb</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           placeholder="e.g., Parramatta, Sydney" value="<%= club.location || '' %>"
+                                           maxlength="100">
+                                    <div class="form-text">Specify your club's home location or suburb</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <label for="description" class="form-label">Club Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="4"
+                                              placeholder="Tell potential players about your club, its history, values, and what makes it special..."
+                                              maxlength="1000"><%= club.description || '' %></textarea>
+                                    <div class="form-text">This will be shown on your public club profile (max 1000 characters)</div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3"><i class="bi bi-telephone"></i> Contact Information</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactPerson" class="form-label">Primary Contact Person</label>
+                                    <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                           placeholder="e.g., John Smith" value="<%= club.contactPerson || '' %>"
+                                           maxlength="100">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactEmail" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                           placeholder="e.g., info@yourclub.com" value="<%= club.contactEmail || '' %>"
+                                           maxlength="100">
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="contactPhone" class="form-label">Contact Phone</label>
+                                    <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                           placeholder="e.g., (02) 1234 5678" value="<%= club.contactPhone || '' %>"
+                                           maxlength="20">
+                                </div>
+                            </div>
+
+                            <!-- Online Presence -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3"><i class="bi bi-globe"></i> Online Presence</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="website" class="form-label">Club Website</label>
+                                    <input type="url" class="form-control" id="website" name="website" 
+                                           placeholder="https://www.yourclub.com" value="<%= club.website || '' %>"
+                                           maxlength="200">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="facebookUrl" class="form-label">Facebook Page</label>
+                                    <input type="url" class="form-control" id="facebookUrl" name="facebookUrl" 
+                                           placeholder="https://facebook.com/yourclub" value="<%= club.facebookUrl || '' %>"
+                                           maxlength="200">
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="instagramUrl" class="form-label">Instagram Profile</label>
+                                    <input type="url" class="form-control" id="instagramUrl" name="instagramUrl" 
+                                           placeholder="https://instagram.com/yourclub" value="<%= club.instagramUrl || '' %>"
+                                           maxlength="200">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="twitterUrl" class="form-label">Twitter Profile</label>
+                                    <input type="url" class="form-control" id="twitterUrl" name="twitterUrl" 
+                                           placeholder="https://twitter.com/yourclub" value="<%= club.twitterUrl || '' %>"
+                                           maxlength="200">
+                                </div>
+                            </div>
+
+                            <!-- Visibility Settings -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3"><i class="bi bi-eye"></i> Visibility Settings</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="isPubliclyListed" name="isPubliclyListed" 
+                                               <%= club.isPubliclyListed ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="isPubliclyListed">
+                                            <strong>Make club publicly visible</strong>
+                                        </label>
+                                        <div class="form-text">
+                                            When enabled, your club will appear in public club listings and search results. 
+                                            Players looking for a team will be able to find and contact your club.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Update Club Profile
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Tips for Success</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Complete your description</strong> - Tell players what makes your club special
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Add contact details</strong> - Make it easy for interested players to reach you
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Link social media</strong> - Show your club's activity and community
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Enable public listing</strong> - Let players find your club in search results
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Current Status -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Profile Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Public Listing:</strong>
+                            <% if (club.isPubliclyListed) { %>
+                                <span class="badge bg-success ms-2">Active</span>
+                                <div class="form-text">Your club is visible to the public</div>
+                            <% } else { %>
+                                <span class="badge bg-secondary ms-2">Hidden</span>
+                                <div class="form-text">Your club is not yet visible to the public</div>
+                            <% } %>
+                        </div>
+
+                        <% if (club.isPubliclyListed) { %>
+                            <div class="d-grid">
+                                <a href="/clubs/<%= club.id %>" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> View Public Profile
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

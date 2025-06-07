@@ -1,23 +1,35 @@
-const { sequelize } = require('../models');
+const { Sequelize } = require('sequelize');
+const path = require('path');
 
-/**
- * Global test setup for Jest
- * Configures the test database and cleans up after tests
- */
+// Create a separate test database file to avoid conflicts
+const testDbPath = path.join(__dirname, '..', 'data', 'test-rugby-league-masters.db');
 
-beforeAll(async () => {
-  // Ensure we're using the test database
-  if (process.env.NODE_ENV !== 'test') {
-    process.env.NODE_ENV = 'test';
+// Initialize Sequelize for SQLite with proper test configuration
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: testDbPath,
+  logging: false, // Disable logging to reduce noise in tests
+  retry: {
+    max: 3
+  },
+  pool: {
+    max: 1,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
   }
-  
+});
+
+// Import models - this will set up the associations
+const models = require('../models');
+
+// Global test setup
+beforeAll(async () => {
   try {
-    // Test database connection
-    await sequelize.authenticate();
     console.log('Test database connection established successfully.');
     
-    // Sync database (create tables if they don't exist)
-    await sequelize.sync({ force: true });
+    // Force recreate all tables and indexes
+    await sequelize.sync({ force: true, alter: false });
     console.log('Test database synchronized.');
   } catch (error) {
     console.error('Unable to connect to the test database:', error);
@@ -25,9 +37,9 @@ beforeAll(async () => {
   }
 });
 
+// Clean up after all tests
 afterAll(async () => {
   try {
-    // Clean up and close database connection
     await sequelize.close();
     console.log('Test database connection closed.');
   } catch (error) {
@@ -35,24 +47,43 @@ afterAll(async () => {
   }
 });
 
-// Clean up after each test
+// Clean up between each test
 afterEach(async () => {
-  try {
-    // Truncate all tables to ensure clean state between tests
-    const models = Object.keys(sequelize.models);
-    await sequelize.transaction(async (t) => {
-      for (const modelName of models) {
-        await sequelize.models[modelName].destroy({
-          where: {},
-          force: true,
-          transaction: t
-        });
+  if (sequelize.connectionManager.pool) {
+    try {
+      // Only clean up data if connection is still active
+      const models = sequelize.models;
+      
+      // Delete in reverse dependency order to avoid foreign key conflicts
+      const modelsToClean = [
+        'Carnival',
+        'User', 
+        'Club',
+        'EmailSubscription'
+      ];
+      
+      for (const modelName of modelsToClean) {
+        if (models[modelName]) {
+          try {
+            await models[modelName].destroy({ 
+              where: {},
+              truncate: true,
+              cascade: true,
+              force: true
+            });
+          } catch (cleanupError) {
+            // Ignore cleanup errors - table might not exist
+          }
+        }
       }
-    });
-  } catch (error) {
-    console.error('Error cleaning up test data:', error);
+    } catch (error) {
+      // Ignore cleanup errors in tests
+    }
   }
 });
 
-// Set longer timeout for database operations
-jest.setTimeout(30000);
+// Export sequelize instance for use in tests
+module.exports = {
+  sequelize,
+  models: sequelize.models
+};

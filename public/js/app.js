@@ -1,6 +1,6 @@
 // Old Man Footy Application JavaScript
 
-window.RugbyLeagueMasters = {
+window.oldmanfooty = {
     // Confirmation dialogs
     confirmDelete: function(message) {
         return confirm(message || 'Are you sure you want to delete this item?');
@@ -183,7 +183,7 @@ window.RugbyLeagueMasters = {
 };
 
 // Auto-initialize
-RugbyLeagueMasters.init();
+oldmanfooty.init();
 
 /**
  * Initialize image carousel functionality

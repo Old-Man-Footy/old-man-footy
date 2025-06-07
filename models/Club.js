@@ -103,6 +103,76 @@ Club.init({
       len: [0, 100]
     }
   },
+  contactEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isEmail: true,
+      len: [0, 100]
+    }
+  },
+  contactPhone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [0, 20]
+    }
+  },
+  contactPerson: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [0, 100]
+    }
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    validate: {
+      len: [0, 1000]
+    }
+  },
+  website: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isUrl: true,
+      len: [0, 200]
+    }
+  },
+  facebookUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [0, 200]
+    }
+  },
+  instagramUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [0, 200]
+    }
+  },
+  twitterUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [0, 200]
+    }
+  },
+  logoUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [0, 200]
+    }
+  },
+  isPubliclyListed: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

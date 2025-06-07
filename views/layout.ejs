@@ -26,6 +26,9 @@
                         <a class="nav-link" href="/carnivals">All Carnivals</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/clubs">Find Clubs</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/about">About</a>
                     </li>
                 </ul>
@@ -43,6 +46,11 @@
                                 <li><a class="dropdown-item" href="/carnivals/new">
                                     <i class="bi bi-plus-circle"></i> Add Carnival
                                 </a></li>
+                                <% if (user.clubId) { %>
+                                    <li><a class="dropdown-item" href="/clubs/manage/profile">
+                                        <i class="bi bi-gear"></i> Manage Club Profile
+                                    </a></li>
+                                <% } %>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="/auth/logout" class="d-inline">

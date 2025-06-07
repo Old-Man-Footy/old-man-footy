@@ -5,7 +5,7 @@
  * for Old Man Footy platform delegates and administrators.
  */
 
-const { DataTypes, Model } = require('sequelize');
+const { DataTypes, Model, Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { sequelize } = require('../config/database');
@@ -19,9 +19,36 @@ class User extends Model {
    * @param {string} candidatePassword - Password to verify
    * @returns {Promise<boolean>} Password match result
    */
-  async comparePassword(candidatePassword) {
+  async checkPassword(candidatePassword) {
     if (!this.passwordHash) return false;
-    return await bcrypt.compare(candidatePassword, this.passwordHash);
+    try {
+      return await bcrypt.compare(candidatePassword, this.passwordHash);
+    } catch (error) {
+      throw new Error(`Bcrypt error`);
+    }
+  }
+
+  /**
+   * Legacy method name for backwards compatibility
+   */
+  async comparePassword(candidatePassword) {
+    return this.checkPassword(candidatePassword);
+  }
+
+  /**
+   * Get user's full name
+   * @returns {string} Combined first and last name
+   */
+  getFullName() {
+    return `${this.firstName || ''} ${this.lastName || ''}`;
+  }
+
+  /**
+   * Get user's full name (getter property)
+   * @returns {string} Combined first and last name
+   */
+  get fullName() {
+    return this.getFullName();
   }
 
   /**
@@ -29,8 +56,9 @@ class User extends Model {
    * @returns {string} Generated invitation token
    */
   generateInvitationToken() {
-    this.invitationToken = crypto.randomBytes(32).toString('hex');
-    this.tokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    this.invitationToken = crypto.randomBytes(16).toString('hex'); // 32 characters
+    this.invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    this.tokenExpires = this.invitationExpires; // Backwards compatibility
     return this.invitationToken;
   }
 
@@ -38,8 +66,17 @@ class User extends Model {
    * Check if invitation token is still valid
    * @returns {boolean} Token validity status
    */
+  isInvitationValid() {
+    return this.invitationToken && 
+           this.invitationExpires && 
+           new Date() < this.invitationExpires;
+  }
+
+  /**
+   * Legacy method name for backwards compatibility
+   */
   isInvitationTokenValid() {
-    return this.invitationToken && this.tokenExpires && new Date() < this.tokenExpires;
+    return this.isInvitationValid();
   }
 
   /**
@@ -47,15 +84,41 @@ class User extends Model {
    */
   clearInvitationToken() {
     this.invitationToken = null;
+    this.invitationExpires = null;
     this.tokenExpires = null;
   }
 
   /**
-   * Get user's full name
-   * @returns {string} Combined first and last name
+   * Static method to find user by email
+   * @param {string} email - Email to search for
+   * @returns {Promise<User|null>} Found user or null
    */
-  get fullName() {
-    return `${this.firstName} ${this.lastName}`;
+  static async findByEmail(email) {
+    return await this.findOne({
+      where: { email: email.toLowerCase().trim() }
+    });
+  }
+
+  /**
+   * Static method to find only active users
+   * @returns {Promise<User[]>} Array of active users
+   */
+  static async findActiveUsers() {
+    return await this.findAll({
+      where: { isActive: true }
+    });
+  }
+
+  /**
+   * Static method to create user with invitation token
+   * @param {Object} userData - User data for creation
+   * @returns {Promise<User>} Created user with invitation token
+   */
+  static async createWithInvitation(userData) {
+    const user = await this.create(userData);
+    user.generateInvitationToken();
+    await user.save();
+    return user;
   }
 }
 
@@ -161,15 +224,6 @@ User.init({
     },
     {
       fields: ['isActive']
-    },
-    {
-      unique: true,
-      fields: ['invitationToken'],
-      where: {
-        invitationToken: {
-          [require('sequelize').Op.ne]: null
-        }
-      }
     }
   ],
   hooks: {
@@ -198,7 +252,7 @@ User.init({
             clubId: user.clubId,
             isPrimaryDelegate: true,
             isActive: true,
-            id: { [require('sequelize').Op.ne]: user.id || 0 }
+            id: { [Op.ne]: user.id || 0 }
           }
         });
         

@@ -365,7 +365,7 @@ body {
 
 .stat-number-small {
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: bold;
     color: var(--rugby-gold);
     line-height: 1;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
@@ -373,8 +373,7 @@ body {
 
 .stat-label-small {
     font-size: 0.75rem;
-    color: #adb5bd;
-    font-weight: 500;
+    color: #6c757d;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-top: 0.25rem;
@@ -586,139 +585,134 @@ body {
     animation-play-state: paused;
 }
 
-/* Responsive Design Enhancements */
+/* Club Listings Styles */
+.rugby-masters-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.rugby-masters-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.stat-item-small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-number-small {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.stat-label-small {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.social-links a {
+    display: inline-block;
+    padding: 0.25rem;
+    color: #6c757d;
+    font-size: 1.2rem;
+    transition: color 0.2s ease;
+}
+
+.social-links a:hover {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+/* Club Profile Styles */
+.club-profile-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+.club-stat-card {
+    border-left: 4px solid #0d6efd;
+    background: #f8f9fa;
+}
+
+.club-contact-card {
+    border-left: 4px solid #198754;
+}
+
+.club-social-card {
+    border-left: 4px solid #ffc107;
+}
+
+/* Club Management Form Styles */
+.form-section-header {
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.club-management-form .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.club-management-form .form-text {
+    font-size: 0.8rem;
+}
+
+/* Enhanced button styles for club actions */
+.btn-club-primary {
+    background: linear-gradient(45deg, #0d6efd, #0a58ca);
+    border: none;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-club-primary:hover {
+    background: linear-gradient(45deg, #0a58ca, #084298);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    color: white;
+}
+
+/* Club search and filter styles */
+.club-search-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.club-filter-form .form-control:focus,
+.club-filter-form .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Responsive club grid */
 @media (max-width: 768px) {
-    .hero-section, .rugby-masters-hero {
-        padding: 2rem 0;
+    .club-grid .col-lg-6 {
+        margin-bottom: 1rem;
     }
     
-    .hero-section h1 {
+    .stat-number-small {
+        font-size: 1.25rem;
+    }
+    
+    .rugby-masters-card .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Club profile responsive adjustments */
+@media (max-width: 992px) {
+    .club-profile-header .display-5 {
         font-size: 2rem;
     }
     
-    .carnival-card .card-img-top {
-        height: 150px;
-    }
-    
-    .file-upload-area {
-        padding: 1rem 0.5rem;
-    }
-    
-    .dashboard-stats .card {
-        margin-bottom: 1rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .btn {
-        font-size: 0.875rem;
-        padding: 0.5rem 1rem;
-    }
-    
-    .badge {
-        font-size: 0.65rem;
-    }
-    
-    .navbar-brand {
-        font-size: 1.1rem;
-    }
-}
-
-/* Focus Indicators with Rugby Colors */
-.btn:focus,
-.form-control:focus,
-.form-select:focus {
-    outline: 2px solid var(--rugby-green);
-    outline-offset: 2px;
-}
-
-.btn-primary:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.5);
-}
-
-/* Skip Links for Accessibility */
-.skip-link {
-    position: absolute;
-    top: -40px;
-    left: 6px;
-    background: var(--rugby-green);
-    color: white;
-    padding: 8px;
-    text-decoration: none;
-    z-index: 1000;
-    border-radius: 4px;
-}
-
-.skip-link:focus {
-    top: 6px;
-}
-
-/* Animation Classes */
-.fade-in {
-    animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in {
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-.bounce-in {
-    animation: bounceIn 0.6s ease-out;
-}
-
-@keyframes bounceIn {
-    0% { transform: scale(0.3); opacity: 0; }
-    50% { transform: scale(1.05); }
-    70% { transform: scale(0.9); }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* Print Styles */
-@media print {
-    .navbar, .footer, .btn, .alert {
-        display: none !important;
-    }
-    
-    .card {
-        box-shadow: none;
-        border: 1px solid #dee2e6;
-    }
-    
-    .rugby-masters-hero {
-        background: white !important;
-        color: black !important;
-    }
-    
-    .page-break {
-        page-break-before: always;
-    }
-}
-
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-    .card {
-        border: 2px solid var(--rugby-green);
-    }
-    
-    .btn {
-        border-width: 2px;
-    }
-    
-    .rugby-masters-card {
-        border-width: 3px;
+    .club-profile-header .lead {
+        font-size: 1rem;
     }
 }

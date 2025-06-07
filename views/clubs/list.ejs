@@ -1,0 +1,191 @@
+<% if (success_msg.length > 0) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= success_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+
+<% if (error_msg.length > 0) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= error_msg %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+
+<!-- Page Header -->
+<div class="bg-primary text-white py-4 mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="h2 mb-0">Find a Masters Rugby League Club</h1>
+                <p class="lead mb-0">Connect with Masters Rugby League clubs across Australia</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <% if (user && user.clubId) { %>
+                    <a href="/clubs/manage/profile" class="btn btn-outline-light">
+                        <i class="bi bi-gear"></i> Manage Club Profile
+                    </a>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<section class="mb-4">
+    <div class="container">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="GET" action="/clubs" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="search" class="form-label">Search Clubs</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               placeholder="Club name, location, or description..." 
+                               value="<%= filters.search || '' %>">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="state" class="form-label">Filter by State</label>
+                        <select class="form-select" id="state" name="state">
+                            <option value="">All States</option>
+                            <% states.forEach(stateOption => { %>
+                                <option value="<%= stateOption %>" <%= filters.state === stateOption ? 'selected' : '' %>>
+                                    <%= stateOption %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Club Listings -->
+<section class="py-3">
+    <div class="container">
+        <% if (clubs && clubs.length > 0) { %>
+            <div class="row">
+                <% clubs.forEach(club => { %>
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card h-100 shadow-sm rugby-masters-card">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex align-items-start mb-3">
+                                    <% if (club.logoUrl) { %>
+                                        <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
+                                             class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                    <% } else { %>
+                                        <div class="me-3 bg-light rounded d-flex align-items-center justify-content-center" 
+                                             style="width: 60px; height: 60px;">
+                                            <i class="bi bi-people text-muted"></i>
+                                        </div>
+                                    <% } %>
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1"><%= club.clubName %></h5>
+                                        <div class="text-muted small">
+                                            <% if (club.location && club.state) { %>
+                                                <i class="bi bi-geo-alt"></i> <%= club.location %>, <%= club.state %>
+                                            <% } else if (club.state) { %>
+                                                <i class="bi bi-geo-alt"></i> <%= club.state %>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <% if (club.description) { %>
+                                    <p class="card-text flex-grow-1">
+                                        <%= club.description.length > 150 ? club.description.substring(0, 150) + '...' : club.description %>
+                                    </p>
+                                <% } %>
+
+                                <div class="mt-auto">
+                                    <!-- Club Stats -->
+                                    <div class="row text-center mb-3">
+                                        <div class="col-6">
+                                            <div class="stat-item-small">
+                                                <span class="stat-number-small text-primary"><%= club.carnivalCount || 0 %></span>
+                                                <span class="stat-label-small">Carnivals</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="stat-item-small">
+                                                <span class="stat-number-small text-success"><%= club.delegates ? club.delegates.length : 0 %></span>
+                                                <span class="stat-label-small">Delegates</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contact Info -->
+                                    <% if (club.contactEmail || club.contactPhone || club.website) { %>
+                                        <div class="mb-3">
+                                            <% if (club.contactEmail) { %>
+                                                <div class="text-muted small mb-1">
+                                                    <i class="bi bi-envelope"></i> 
+                                                    <a href="mailto:<%= club.contactEmail %>" class="text-decoration-none">
+                                                        <%= club.contactEmail %>
+                                                    </a>
+                                                </div>
+                                            <% } %>
+                                            <% if (club.contactPhone) { %>
+                                                <div class="text-muted small mb-1">
+                                                    <i class="bi bi-phone"></i> 
+                                                    <a href="tel:<%= club.contactPhone %>" class="text-decoration-none">
+                                                        <%= club.contactPhone %>
+                                                    </a>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    <% } %>
+
+                                    <!-- Social Media Links -->
+                                    <% if (club.facebookUrl || club.instagramUrl || club.twitterUrl || club.website) { %>
+                                        <div class="social-links mb-3">
+                                            <% if (club.website) { %>
+                                                <a href="<%= club.website %>" target="_blank" class="text-decoration-none me-2" title="Website">
+                                                    <i class="bi bi-globe"></i>
+                                                </a>
+                                            <% } %>
+                                            <% if (club.facebookUrl) { %>
+                                                <a href="<%= club.facebookUrl %>" target="_blank" class="text-decoration-none me-2" title="Facebook">
+                                                    <i class="bi bi-facebook"></i>
+                                                </a>
+                                            <% } %>
+                                            <% if (club.instagramUrl) { %>
+                                                <a href="<%= club.instagramUrl %>" target="_blank" class="text-decoration-none me-2" title="Instagram">
+                                                    <i class="bi bi-instagram"></i>
+                                                </a>
+                                            <% } %>
+                                            <% if (club.twitterUrl) { %>
+                                                <a href="<%= club.twitterUrl %>" target="_blank" class="text-decoration-none me-2" title="Twitter">
+                                                    <i class="bi bi-twitter"></i>
+                                                </a>
+                                            <% } %>
+                                        </div>
+                                    <% } %>
+
+                                    <a href="/clubs/<%= club.id %>" class="btn btn-primary w-100">
+                                        <i class="bi bi-eye"></i> View Club Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <div class="text-center py-5">
+                <i class="bi bi-people display-4 text-muted mb-3"></i>
+                <h4 class="text-muted">No clubs found</h4>
+                <% if (filters.search || filters.state) { %>
+                    <p class="text-muted">Try adjusting your search criteria or <a href="/clubs" class="text-decoration-none">view all clubs</a>.</p>
+                <% } else { %>
+                    <p class="text-muted">No clubs have created public profiles yet. Check back later!</p>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</section>

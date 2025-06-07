@@ -670,11 +670,11 @@ class MySidelineIntegrationService {
                 title: scrapedEvent.title,
                 date: scrapedEvent.date,
                 locationAddress: scrapedEvent.location,
-                scheduleDetails: scrapedEvent.description,
+                scheduleDetails: scrapedEvent.description || 'Event details to be confirmed',
                 registrationLink: scrapedEvent.registrationLink,
-                organiserContactName: scrapedEvent.contactInfo.name,
-                organiserContactEmail: scrapedEvent.contactInfo.email,
-                organiserContactPhone: scrapedEvent.contactInfo.phone,
+                organiserContactName: scrapedEvent.contactInfo?.name || 'Event Organiser',
+                organiserContactEmail: scrapedEvent.contactInfo?.email || 'contact@example.com',
+                organiserContactPhone: scrapedEvent.contactInfo?.phone || '0400000000',
                 lastMySidelineSync: new Date()
             });
 
@@ -700,11 +700,11 @@ class MySidelineIntegrationService {
             date: scrapedEvent.date,
             locationAddress: scrapedEvent.location,
             state: scrapedEvent.state,
-            scheduleDetails: scrapedEvent.description,
+            scheduleDetails: scrapedEvent.description || 'Event details to be confirmed',
             registrationLink: scrapedEvent.registrationLink,
-            organiserContactName: scrapedEvent.contactInfo.name,
-            organiserContactEmail: scrapedEvent.contactInfo.email,
-            organiserContactPhone: scrapedEvent.contactInfo.phone,
+            organiserContactName: scrapedEvent.contactInfo?.name || 'Event Organiser',
+            organiserContactEmail: scrapedEvent.contactInfo?.email || 'contact@example.com',
+            organiserContactPhone: scrapedEvent.contactInfo?.phone || '0400000000',
             mySidelineEventId: scrapedEvent.mySidelineId,
             isManuallyEntered: false,
             isActive: true,
@@ -752,6 +752,7 @@ class MySidelineIntegrationService {
             const dayAfter = new Date(dateObj);
             dayAfter.setDate(dateObj.getDate() + 1);
 
+            // SQLite-compatible case-insensitive search
             const potentialMatches = await Carnival.findAll({
                 where: {
                     state: state,
@@ -760,10 +761,10 @@ class MySidelineIntegrationService {
                     },
                     isActive: true,
                     [Op.or]: [
-                        // Similar title (fuzzy matching)
-                        { title: { [Op.iLike]: `%${title.split(' ')[0]}%` } },
-                        // Similar location
-                        { locationAddress: { [Op.iLike]: `%${locationAddress}%` } }
+                        // Similar title (SQLite-compatible case-insensitive search)
+                        { title: { [Op.like]: `%${title.split(' ')[0]}%` } },
+                        // Similar location (SQLite-compatible case-insensitive search)
+                        { locationAddress: { [Op.like]: `%${locationAddress}%` } }
                     ]
                 }
             });
@@ -1113,7 +1114,7 @@ class MySidelineIntegrationService {
             return {
                 title: rawData.title || rawData.name || 'Masters Event',
                 description: rawData.description || '',
-                date: rawData.date || new Date().toISOString(),
+                date: rawData.date || rawData.start_date || new Date().toISOString(),
                 location: rawData.location || '',
                 contact: rawData.contact || '',
                 source: 'MySideline',

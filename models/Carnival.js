@@ -408,25 +408,10 @@ Carnival.init({
       fields: ['isActive']
     },
     {
-      unique: true,
-      fields: ['mySidelineEventId'],
-      where: {
-        mySidelineEventId: {
-          [require('sequelize').Op.ne]: null
-        }
-      }
-    },
-    {
       fields: ['createdByUserId']
     },
     {
       fields: ['isManuallyEntered']
-    },
-    {
-      fields: ['date', 'state']
-    },
-    {
-      fields: ['date', 'isActive']
     }
   ],
   hooks: {

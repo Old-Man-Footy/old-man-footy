@@ -37,18 +37,31 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a developer, I want to ensure my site follows all best practices outlined in .github/copilot-instructions.md | ✅ Completed |
 | As a developer, I want all buttons and links on the website to have a purpose and a destination. Ensure they all have a function. | ✅ Completed |
 | As a club delegate, I want to ensure any carnivals I create on this website are merged with data synched from MySideline. We should not end up with duplicates. | ✅ Completed |
-| As a club delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages.  | ⭕ Not Started |
-| As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa.  | ⭕ Not Started |
-| As a developer, I want to ensure all user interfaces, views and models are vigorously unit tested aiming for 100% coverage. | 🔄 In Progress |
+| As a club delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages.  | ✅ Completed |
+| As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on All Carnivals page. | ⭕ Not Started |
+| As a user, when I click on 'Find Clubs' I should not get a 404 Page Not Found error. | ⭕ Not Started |
+| As a developer, all test clubs and carnivals should use `public\icons\test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
+| As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ⭕ Not Started |
+| As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa. | ⭕ Not Started |
+| As a developer, I want to ensure images which are uploaded by delegates or sub delegates remain linked to that club and/or carnival. This requires a complex naming standard be added to uploaded images (renamed) | ⭕ Not Started |
 | As a club delegate, I want to be able to transfer the role of delegate to another user. | ⭕ Not Started |
-| As a developer, I want to have a route for potential players to search for clubs and view them in their state | ⭕ Not Started |
-| As a user, I want to view carnivals on a calendar to visualise event dates. | ⭕ Not Started |
+| As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ⭕ Not Started |
-| As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
 | As a club delegate, I want to display social media links and feeds on carnival pages. | ⭕ Not Started |
+| As a club delegate, when I log in, I want to be able access a user guide that helps me understand how the site works. | ⭕ Not Started |
+| As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
+| As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |
+| As a club delegate, The user guide should explain the process of how imported carnivals will merge with my created ones later. | ⭕ Not Started |
+| As a club delegate, The user guide should explain the process of how to update the club profile. | ⭕ Not Started |
+| As a club delegate, The user guide should explain the process of how to add images to my club profile. | ⭕ Not Started |
+| As a club delegate, The user guide should explain the process of how to upload images to my carnival. | ⭕ Not Started |
+| As a club delegate, I want the ability to opt-out of my images being used on the home page carousel. | ⭕ Not Started |
+| As a club delegate, When I mark a club as inactive, it should be removed from the "Find Clubs" interface. | ⭕ Not Started |
+| As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
+| As a developer, I want to ensure all user interfaces, views and models are vigorously unit tested aiming for 100% coverage. | 🔄 In Progress |
+| As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
-| As a club delegate, I want to use an in-app messaging system to communicate with other users and administrators. | ⭕ Not Started |
 | As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
 | As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
 | As a developer, I want to ensure my entire site is vigorously tested and confirmed working 100% and all unit tests are written and executed. | ⭕ Not Started |

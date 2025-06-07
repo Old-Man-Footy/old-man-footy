@@ -99,7 +99,8 @@ Guidelines for managing static assets and styles to ensure a clean and efficient
 
 ## **4\. Unit Testing**
 
-A robust test suite is essential for maintaining a stable and reliable application. We use the [Jest](https://jestjs.io/) testing framework.
+* A robust test suite is essential for maintaining a stable and reliable application. We use the [Jest](https://jestjs.io/) testing framework.
+* The correct way to test a single test component is `npm test -- "<controller|view|model|service name>.test.js" --verbose`
 
 ### **4.1. Test File Location and Naming**
 

@@ -5,26 +5,20 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Carnival, EmailSubscription, User, Club, sequelize } = require('../models');
+const { Carnival, Club, User, EmailSubscription } = require('../models');
 const { Op } = require('sequelize');
-const { validationResult } = require('express-validator');
 const emailService = require('../services/emailService');
-const mySidelineService = require('../services/mySidelineService');
-const fs = require('fs').promises;
-const path = require('path');
+const crypto = require('crypto');
 
 /**
  * Display homepage with upcoming carnivals
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
  */
-const showHomepage = async (req, res) => {
+const getIndex = async (req, res) => {
     try {
-        // Get upcoming carnivals for homepage
         const upcomingCarnivals = await Carnival.findAll({
             where: {
-                isActive: true,
-                date: { [Op.gte]: new Date() }
+                date: { [Op.gte]: new Date() },
+                isActive: true
             },
             include: [{
                 model: User,
@@ -32,354 +26,268 @@ const showHomepage = async (req, res) => {
                 attributes: ['firstName', 'lastName']
             }],
             order: [['date', 'ASC']],
-            limit: 6
+            limit: 5
         });
-
-        // Get carnival statistics for homepage
-        const totalCarnivals = await Carnival.count({ 
-            where: { isActive: true } 
-        });
-        const upcomingCount = await Carnival.count({ 
-            where: {
-                isActive: true, 
-                date: { [Op.gte]: new Date() }
-            }
-        });
-
-        // Get clubs count from registered users and MySideline events
-        const registeredClubsCount = await User.count({
-            where: {
-                isActive: true,
-                clubId: { [Op.ne]: null }
-            },
-            distinct: true,
-            col: 'clubId'
-        });
-
-        // Get unique clubs from MySideline carnival data
-        const mySidelineClubsCount = await Carnival.count({
-            where: {
-                isActive: true,
-                mySidelineEventId: { [Op.ne]: null }
-            },
-            distinct: true,
-            col: 'organizerName'
-        });
-
-        // Total unique clubs (actual count, no minimum)
-        const clubsCount = Math.max(registeredClubsCount, mySidelineClubsCount, 0);
-
-        // Get carousel images
-        let carouselImages = [];
-        try {
-            const imagesDir = path.join(__dirname, '../uploads/images');
-            const files = await fs.readdir(imagesDir);
-            carouselImages = files
-                .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file))
-                .map(file => `/uploads/images/${file}`);
-        } catch (error) {
-            console.log('No carousel images found or unable to read images directory');
-        }
 
         res.render('index', { 
-            title: 'Old Man Footy - carnivals Directory',
-            carnivals: upcomingCarnivals,
-            carouselImages,
-            stats: {
-                totalCarnivals,
-                upcomingCount,
-                clubsCount
-            }
+            title: 'Old Man Footy',
+            upcomingCarnivals
         });
     } catch (error) {
         console.error('Error loading homepage:', error);
         res.render('index', { 
-            title: 'Old Man Footy - carnivals Directory',
-            carnivals: [],
-            carouselImages: [],
-            stats: {
-                totalCarnivals: 0,
-                upcomingCount: 0,
-                clubsCount: 0
-            }
+            title: 'Old Man Footy',
+            upcomingCarnivals: []
         });
     }
 };
 
 /**
  * Display user dashboard
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
  */
-const showDashboard = async (req, res) => {
+const getDashboard = async (req, res) => {
     try {
-        const userId = req.user.id;
-        
         // Get user's carnivals
         const userCarnivals = await Carnival.findAll({
-            where: {
-                createdByUserId: userId,
-                isActive: true
+            where: { 
+                creatorId: req.user.id,
+                isActive: true 
             },
-            order: [['date', 'ASC']]
+            order: [['date', 'DESC']]
         });
 
-        // Get total statistics
-        const totalCarnivals = await Carnival.count({
-            where: { isActive: true }
-        });
-        
-        const upcomingCarnivals = await Carnival.count({
+        // Get upcoming carnivals
+        const upcomingCarnivals = await Carnival.findAll({
             where: {
-                isActive: true,
-                date: { [Op.gte]: new Date() }
-            }
+                date: { [Op.gte]: new Date() },
+                isActive: true
+            },
+            order: [['date', 'ASC']],
+            limit: 5
         });
 
         res.render('dashboard', {
             title: 'Dashboard',
-            carnivals: userCarnivals,
-            stats: {
-                totalCarnivals,
-                upcomingCarnivals,
-                userCarnivals: userCarnivals.length
-            }
+            user: req.user,
+            userCarnivals,
+            upcomingCarnivals
         });
     } catch (error) {
         console.error('Error loading dashboard:', error);
-        req.flash('error_msg', 'Error loading dashboard.');
-        res.redirect('/');
-    }
-};
-
-/**
- * Handle email subscription
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-const subscribeEmail = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            req.flash('error_msg', 'Please provide a valid email address and select at least one state.');
-            return res.redirect('/#subscribe');
-        }
-
-        const { email, states } = req.body;
-        const stateList = Array.isArray(states) ? states : [states];
-
-        // Check if subscription already exists
-        const existingSubscription = await EmailSubscription.findOne({
-            where: { email: email.toLowerCase() }
+        res.render('dashboard', {
+            title: 'Dashboard',
+            user: req.user,
+            userCarnivals: [],
+            upcomingCarnivals: []
         });
-
-        if (existingSubscription) {
-            // Update existing subscription
-            await existingSubscription.update({
-                states: stateList,
-                isActive: true
-            });
-            req.flash('success_msg', 'Your subscription has been updated successfully!');
-        } else {
-            // Create new subscription
-            await EmailSubscription.create({
-                email: email.toLowerCase(),
-                states: stateList,
-                isActive: true,
-                subscribedDate: new Date()
-            });
-            req.flash('success_msg', 'Thank you for subscribing! You will receive notifications about new carnivals in your selected states.');
-        }
-
-        res.redirect('/#subscribe');
-    } catch (error) {
-        console.error('Error handling email subscription:', error);
-        req.flash('error_msg', 'An error occurred while processing your subscription.');
-        res.redirect('/#subscribe');
-    }
-};
-
-/**
- * Handle email unsubscription
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-const unsubscribeEmail = async (req, res) => {
-    try {
-        const { token } = req.params;
-        
-        if (!token) {
-            req.flash('error_msg', 'Invalid unsubscribe link.');
-            return res.redirect('/');
-        }
-
-        const subscription = await EmailSubscription.findOne({
-            where: { 
-                email: Buffer.from(token, 'base64').toString(),
-                isActive: true 
-            }
-        });
-
-        if (!subscription) {
-            req.flash('error_msg', 'Subscription not found or already inactive.');
-            return res.redirect('/');
-        }
-
-        await subscription.update({ isActive: false });
-        req.flash('success_msg', 'You have been successfully unsubscribed from email notifications.');
-        res.redirect('/');
-    } catch (error) {
-        console.error('Error unsubscribing:', error);
-        req.flash('error_msg', 'An error occurred while unsubscribing.');
-        res.redirect('/');
     }
 };
 
 /**
  * Display about page
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
  */
-const showAbout = (req, res) => {
-    res.render('about', {
-        title: 'About Old Man Footy'
-    });
+const getAbout = (req, res) => {
+    res.render('about', { title: 'About Old Man Footy' });
 };
 
 /**
- * Display admin statistics (admin/primary delegate only)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * Handle email subscription
  */
-const showAdminStats = async (req, res) => {
+const postSubscribe = async (req, res) => {
     try {
-        // Check if user has admin privileges
-        if (!req.user.isPrimaryDelegate && !req.user.isAdmin) {
-            req.flash('error_msg', 'Access denied. Admin privileges required.');
-            return res.redirect('/dashboard');
+        const { email } = req.body;
+
+        // Validate email
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email address is required'
+            });
         }
 
-        // Get comprehensive statistics
-        const totalCarnivals = await Carnival.count({
-            where: { isActive: true }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email address'
+            });
+        }
+
+        // Check if email already exists
+        const existingSubscription = await EmailSubscription.findOne({
+            where: { email: email.toLowerCase() }
         });
 
-        const upcomingCarnivals = await Carnival.count({
-            where: {
+        if (existingSubscription && existingSubscription.isActive) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email already subscribed'
+            });
+        }
+
+        if (existingSubscription && !existingSubscription.isActive) {
+            // Reactivate existing subscription
+            await existingSubscription.update({
                 isActive: true,
-                date: { [Op.gte]: new Date() }
-            }
-        });
-
-        const mySidelineCarnivals = await Carnival.count({
-            where: {
+                subscribedAt: new Date()
+            });
+        } else {
+            // Create new subscription
+            await EmailSubscription.create({
+                email: email.toLowerCase(),
                 isActive: true,
-                mySidelineEventId: { [Op.ne]: null }
-            }
+                subscribedAt: new Date()
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Successfully subscribed to newsletter!'
         });
-
-        const manualCarnivals = await Carnival.count({
-            where: {
-                isActive: true,
-                isManuallyEntered: true
-            }
-        });
-
-        const totalUsers = await User.count({
-            where: { isActive: true }
-        });
-
-        const clubDelegates = await User.count({
-            where: {
-                isActive: true,
-                clubId: { [Op.ne]: null }
-            }
-        });
-
-        const emailSubscriptions = await EmailSubscription.count({
-            where: { isActive: true }
-        });
-
-        // Carnivals by state
-        const carnivalsByState = await Carnival.findAll({
-            where: { isActive: true },
-            attributes: [
-                'state',
-                [sequelize.fn('COUNT', sequelize.col('id')), 'count']
-            ],
-            group: ['state'],
-            order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
-        });
-
-        // Recent activity (last 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        const recentCarnivals = await Carnival.count({
-            where: {
-                isActive: true,
-                createdAt: { [Op.gte]: thirtyDaysAgo }
-            }
-        });
-
-        const recentSubscriptions = await EmailSubscription.count({
-            where: {
-                isActive: true,
-                subscribedDate: { [Op.gte]: thirtyDaysAgo }
-            }
-        });
-
-        res.render('admin/stats', {
-            title: 'System Statistics',
-            stats: {
-                totalCarnivals,
-                upcomingCarnivals,
-                mySidelineCarnivals,
-                manualCarnivals,
-                totalUsers,
-                clubDelegates,
-                emailSubscriptions,
-                carnivalsByState,
-                recentCarnivals,
-                recentSubscriptions
-            }
-        });
-
     } catch (error) {
-        console.error('Error loading admin statistics:', error);
-        req.flash('error_msg', 'Error loading statistics.');
-        res.redirect('/dashboard');
+        console.error('Error handling email subscription:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to process subscription. Please try again.'
+        });
     }
 };
 
 /**
- * Get carousel images from uploads/images folder
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * Display unsubscribe page
  */
-const getCarouselImages = async (req, res) => {
+const getUnsubscribe = async (req, res) => {
     try {
-        const imagesDir = path.join(__dirname, '../uploads/images');
-        const files = await fs.readdir(imagesDir);
+        const { token } = req.params;
+        
+        // Decrypt token to get email
+        const decipher = crypto.createDecipher('aes192', process.env.ENCRYPTION_KEY || 'default-key');
+        let email = decipher.update(token, 'hex', 'utf8');
+        email += decipher.final('utf8');
 
-        // Filter and map image files
-        const images = files
-            .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file))
-            .map(file => `/uploads/images/${file}`);
+        const subscription = await EmailSubscription.findOne({
+            where: { email, isActive: true }
+        });
 
-        res.json(images);
+        if (!subscription) {
+            return res.status(400).render('error', {
+                title: 'Invalid Link',
+                message: 'This unsubscribe link is invalid or has expired.',
+                error: null
+            });
+        }
+
+        res.render('unsubscribe', {
+            title: 'Unsubscribe',
+            email: subscription.email
+        });
     } catch (error) {
-        console.error('Error fetching carousel images:', error);
-        res.status(500).json({ error: 'Failed to load images' });
+        console.error('Error unsubscribing:', error);
+        res.status(400).render('error', {
+            title: 'Invalid Link', 
+            message: 'This unsubscribe link is invalid or has expired.',
+            error: null
+        });
+    }
+};
+
+/**
+ * Process unsubscribe request
+ */
+const postUnsubscribe = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const subscription = await EmailSubscription.findOne({
+            where: { email }
+        });
+
+        if (subscription) {
+            await subscription.update({
+                isActive: false,
+                unsubscribedAt: new Date()
+            });
+        }
+
+        res.render('success', {
+            title: 'Unsubscribed',
+            message: 'You have been successfully unsubscribed from our newsletter.'
+        });
+    } catch (error) {
+        console.error('Error unsubscribing:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Unable to process unsubscribe request.'
+        });
+    }
+};
+
+/**
+ * Display admin statistics
+ */
+const getStats = async (req, res) => {
+    try {
+        const stats = {
+            totalUsers: await User.count(),
+            totalCarnivals: await Carnival.count(),
+            totalClubs: await Club.count(),
+            totalSubscriptions: await EmailSubscription.count({ where: { isActive: true } })
+        };
+
+        res.render('admin/stats', {
+            title: 'Admin Statistics',
+            stats
+        });
+    } catch (error) {
+        console.error('Error loading admin statistics:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Unable to load statistics'
+        });
+    }
+};
+
+/**
+ * Send newsletter to subscribers
+ */
+const sendNewsletter = async (req, res) => {
+    try {
+        const { subject, content } = req.body;
+
+        if (!subject || !content) {
+            return res.status(400).json({
+                success: false,
+                message: 'Subject and content are required'
+            });
+        }
+
+        const subscribers = await EmailSubscription.findAll({
+            where: { isActive: true }
+        });
+
+        const result = await emailService.sendNewsletter(subject, content, subscribers);
+
+        res.json({
+            success: true,
+            message: `Newsletter sent to ${result.sent} subscribers`,
+            details: result
+        });
+    } catch (error) {
+        console.error('Error sending newsletter:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send newsletter'
+        });
     }
 };
 
 module.exports = {
-    showHomepage,
-    showDashboard,
-    subscribeEmail,
-    unsubscribeEmail,
-    showAbout,
-    showAdminStats,
-    getCarouselImages
+    getIndex,
+    getDashboard,
+    getAbout,
+    postSubscribe,
+    getUnsubscribe,
+    postUnsubscribe,
+    getStats,
+    sendNewsletter
 };

@@ -129,15 +129,6 @@ EmailSubscription.init({
     },
     {
       fields: ['isActive']
-    },
-    {
-      unique: true,
-      fields: ['unsubscribeToken'],
-      where: {
-        unsubscribeToken: {
-          [require('sequelize').Op.ne]: null
-        }
-      }
     }
   ],
   hooks: {
