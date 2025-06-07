@@ -5,10 +5,12 @@
             <div class="card shadow mb-4">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <% if (club.logoUrl) { %>
-                            <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
-                                 class="me-3" style="height: 80px; width: auto;">
-                        <% } %>
+                        <% 
+                        // Show club logo or fallback to missing.svg
+                        const clubLogoUrl = club.logoUrl || '/icons/missing.svg';
+                        %>
+                        <img src="<%= clubLogoUrl %>" alt="<%= club.clubName %> Logo" 
+                             class="me-3" style="height: 80px; width: auto;">
                         <div class="flex-grow-1">
                             <h1 class="h2 mb-2"><%= club.clubName %></h1>
                             <% if (club.location) { %>

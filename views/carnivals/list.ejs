@@ -105,13 +105,11 @@
                                     </h5>
                                 </div>
                                 <% 
-                                // Show carnival logo first, then fall back to hosting club logo
-                                const logoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl);
+                                // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
+                                const logoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
                                 %>
-                                <% if (logoUrl) { %>
-                                    <img src="<%= logoUrl %>" alt="Club Logo" 
-                                         style="width: 40px; height: 40px; object-fit: contain;" class="ms-2">
-                                <% } %>
+                                <img src="<%= logoUrl %>" alt="Club Logo" 
+                                     style="width: 40px; height: 40px; object-fit: contain;" class="ms-2">
                             </div>
 
                             <!-- Badges -->

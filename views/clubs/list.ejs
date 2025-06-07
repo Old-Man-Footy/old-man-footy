@@ -75,15 +75,12 @@
                         <div class="card h-100 shadow-sm rugby-masters-card">
                             <div class="card-body d-flex flex-column">
                                 <div class="d-flex align-items-start mb-3">
-                                    <% if (club.logoUrl) { %>
-                                        <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
-                                             class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
-                                    <% } else { %>
-                                        <div class="me-3 bg-light rounded d-flex align-items-center justify-content-center" 
-                                             style="width: 60px; height: 60px;">
-                                            <i class="bi bi-people text-muted"></i>
-                                        </div>
-                                    <% } %>
+                                    <% 
+                                    // Show club logo or fallback to missing.svg
+                                    const clubLogoUrl = club.logoUrl || '/icons/missing.svg';
+                                    %>
+                                    <img src="<%= clubLogoUrl %>" alt="<%= club.clubName %> Logo" 
+                                         class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
                                     <div class="flex-grow-1">
                                         <h5 class="card-title mb-1"><%= club.clubName %></h5>
                                         <div class="text-muted small">

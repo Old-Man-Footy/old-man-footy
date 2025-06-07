@@ -7,13 +7,11 @@
                     <div class="card-body bg-light">
                         <div class="d-flex align-items-center">
                             <% 
-                            // Show carnival logo first, then fall back to hosting club logo
-                            const hostingLogoUrl = carnival.clubLogoURL || carnival.creator.club.logoUrl;
+                            // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
+                            const hostingLogoUrl = carnival.clubLogoURL || carnival.creator.club.logoUrl || '/icons/missing.svg';
                             %>
-                            <% if (hostingLogoUrl) { %>
-                                <img src="<%= hostingLogoUrl %>" alt="<%= carnival.creator.club.clubName %> Logo" 
-                                     class="me-3" style="height: 60px; width: auto;">
-                            <% } %>
+                            <img src="<%= hostingLogoUrl %>" alt="<%= carnival.creator.club.clubName %> Logo" 
+                                 class="me-3" style="height: 60px; width: auto;">
                             <div class="flex-grow-1">
                                 <h5 class="mb-1 text-primary">Hosted by</h5>
                                 <h4 class="mb-2">
@@ -72,7 +70,18 @@
                             </div>
                         </div>
                         <% if (carnival.clubLogoURL) { %>
-                            <img src="<%= carnival.clubLogoURL %>" alt="Club Logo" 
+                            <% 
+                            // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
+                            const carnivalLogoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                            %>
+                            <img src="<%= carnivalLogoUrl %>" alt="Club Logo" 
+                                 style="width: 80px; height: 80px; object-fit: contain;">
+                        <% } else { %>
+                            <% 
+                            // No carnival logo, check for club logo, otherwise use missing.svg
+                            const fallbackLogoUrl = (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                            %>
+                            <img src="<%= fallbackLogoUrl %>" alt="Club Logo" 
                                  style="width: 80px; height: 80px; object-fit: contain;">
                         <% } %>
                     </div>
