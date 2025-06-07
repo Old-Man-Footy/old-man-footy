@@ -375,7 +375,7 @@
                             </div>
                         <% } %>
                         <% if (club.website) { %>
-                            <div class="mb-0">
+                            <div class="mb-3">
                                 <strong><i class="bi bi-globe me-2"></i>Website:</strong><br>
                                 <a href="<%= club.website %>" target="_blank" class="text-decoration-none">
                                     Visit Club Website
@@ -383,72 +383,119 @@
                                 </a>
                             </div>
                         <% } %>
+                        
+                        <!-- Social Media Links in Contact Information -->
+                        <% if (club.facebookUrl || club.instagramUrl || club.twitterUrl) { %>
+                            <div class="mb-0">
+                                <strong>Follow Us:</strong><br>
+                                <div class="social-links mt-2">
+                                    <% if (club.facebookUrl) { %>
+                                        <a href="<%= club.facebookUrl %>" target="_blank" class="btn btn-outline-primary btn-sm me-2 mb-1">
+                                            <i class="bi bi-facebook"></i> Facebook
+                                        </a>
+                                    <% } %>
+                                    <% if (club.instagramUrl) { %>
+                                        <a href="<%= club.instagramUrl %>" target="_blank" class="btn btn-outline-danger btn-sm me-2 mb-1">
+                                            <i class="bi bi-instagram"></i> Instagram
+                                        </a>
+                                    <% } %>
+                                    <% if (club.twitterUrl) { %>
+                                        <a href="<%= club.twitterUrl %>" target="_blank" class="btn btn-outline-info btn-sm me-2 mb-1">
+                                            <i class="bi bi-twitter"></i> X
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
             <% } %>
+        </div>
+    </div>
+</div>
 
-            <!-- Social Media -->
-            <% if (club.facebookUrl || club.instagramUrl || club.twitterUrl) { %>
-                <div class="card shadow mb-4 club-social-card">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">
-                            <i class="bi bi-share me-2"></i>Social Media
-                        </h5>
+<!-- Full-width Footer Section -->
+<div class="club-footer bg-light border-top mt-4">
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="text-primary mb-3">Club Summary</h5>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-geo-alt text-primary me-2"></i>
+                    <span><%= club.location %><% if (club.state) { %>, <%= club.state %><% } %></span>
+                </div>
+                <% if (club.establishedYear) { %>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-calendar3 text-primary me-2"></i>
+                        <span>Established <%= club.establishedYear %></span>
                     </div>
-                    <div class="card-body">
-                        <div class="social-links">
-                            <% if (club.facebookUrl) { %>
-                                <a href="<%= club.facebookUrl %>" target="_blank" 
-                                   class="btn btn-outline-primary mb-2 w-100 d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-facebook me-2"></i>Facebook
-                                </a>
-                            <% } %>
-                            <% if (club.instagramUrl) { %>
-                                <a href="<%= club.instagramUrl %>" target="_blank" 
-                                   class="btn btn-outline-danger mb-2 w-100 d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-instagram me-2"></i>Instagram
-                                </a>
-                            <% } %>
-                            <% if (club.twitterUrl) { %>
-                                <a href="<%= club.twitterUrl %>" target="_blank" 
-                                   class="btn btn-outline-info mb-2 w-100 d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-twitter me-2"></i>X
-                                </a>
-                            <% } %>
+                <% } %>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-trophy text-primary me-2"></i>
+                    <span><%= clubCarnivals.length %> carnivals hosted (<%= upcomingCarnivals %> upcoming)</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h5 class="text-primary mb-3">Quick Actions</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <% if (club.contactEmail) { %>
+                        <a href="mailto:<%= club.contactEmail %>?subject=Enquiry about <%= club.clubName %>" 
+                           class="btn btn-sm btn-primary">
+                            <i class="bi bi-envelope"></i> Contact Club
+                        </a>
+                    <% } %>
+                    <a href="/clubs" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to All Clubs
+                    </a>
+                    <% if (club.website) { %>
+                        <a href="<%= club.website %>" target="_blank" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-globe"></i> Visit Website
+                        </a>
+                    <% } %>
+                    <% if (club.facebookUrl) { %>
+                        <a href="<%= club.facebookUrl %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                    <% } %>
+                    <% if (club.instagramUrl) { %>
+                        <a href="<%= club.instagramUrl %>" target="_blank" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                    <% } %>
+                    <% if (club.twitterUrl) { %>
+                        <a href="<%= club.twitterUrl %>" target="_blank" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                    <% } %>
+                </div>
+
+                <!-- Admin Actions for Club Members -->
+                <% if (user && user.clubId && user.clubId.toString() === club.id.toString()) { %>
+                    <div class="mt-3">
+                        <h6 class="text-muted mb-2">Admin Actions</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/carnivals/new" class="btn btn-sm btn-success">
+                                <i class="bi bi-plus"></i> Add New Carnival
+                            </a>
+                            <a href="/clubs/<%= club.id %>/manage" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-gear"></i> Manage Club
+                            </a>
                         </div>
                     </div>
-                </div>
-            <% } %>
-
-            <!-- Quick Actions -->
-            <div class="card shadow">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <% if (club.contactEmail) { %>
-                            <a href="mailto:<%= club.contactEmail %>?subject=Enquiry about <%= club.clubName %>" 
-                               class="btn btn-primary btn-sm">
-                                <i class="fas fa-envelope me-2"></i>Contact Club
-                            </a>
-                        <% } %>
-                        
-                        <a href="/clubs" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-arrow-left me-2"></i>Back to All Clubs
-                        </a>
-
-                        <% if (user && user.clubId && user.clubId.toString() === club.id.toString()) { %>
-                            <hr>
-                            <a href="/carnivals/new" class="btn btn-success btn-sm">
-                                <i class="fas fa-plus me-2"></i>Add New Carnival
-                            </a>
-                            <a href="/clubs/<%= club.id %>/manage" class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-cog me-2"></i>Manage Club
-                            </a>
-                        <% } %>
-                    </div>
-                </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <!-- Footer disclaimer -->
+        <hr class="my-4">
+        <div class="row">
+            <div class="col-12 text-center text-muted">
+                <small>
+                    Club information is managed by the club administrators. For questions or corrections, please contact the club directly.
+                    <br>
+                    <strong>Club ID:</strong> <%= club.id %> | 
+                    <strong>Last Updated:</strong> <%= new Date(club.updatedAt).toLocaleDateString('en-AU') %>
+                </small>
             </div>
         </div>
     </div>
