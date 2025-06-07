@@ -1,0 +1,54 @@
+const express = require('express');
+const router = express.Router();
+const { body } = require('express-validator');
+const { ensureAuthenticated } = require('../middleware/auth');
+const carnivalSponsorController = require('../controllers/carnivalSponsor.controller');
+
+// Get all carnival-sponsor relationships with filtering
+router.get('/', carnivalSponsorController.getCarnivalSponsors);
+
+// Get a specific carnival-sponsor relationship
+router.get('/:id', carnivalSponsorController.getCarnivalSponsor);
+
+// Create a new carnival-sponsor relationship
+router.post('/', ensureAuthenticated, [
+    body('carnivalId').isInt({ min: 1 }).withMessage('Valid carnival ID is required'),
+    body('sponsorId').isInt({ min: 1 }).withMessage('Valid sponsor ID is required'),
+    body('sponsorshipLevel').optional().isIn(['Platinum', 'Gold', 'Silver', 'Bronze', 'Supporting']).withMessage('Invalid sponsorship level'),
+    body('sponsorshipValue').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Sponsorship value must be a valid amount'),
+    body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a non-negative integer'),
+    body('logoDisplaySize').optional().isIn(['Small', 'Medium', 'Large']).withMessage('Invalid logo display size'),
+    body('includeInProgram').optional().isBoolean().withMessage('Include in program must be true or false'),
+    body('includeOnWebsite').optional().isBoolean().withMessage('Include on website must be true or false')
+], carnivalSponsorController.createCarnivalSponsor);
+
+// Update a carnival-sponsor relationship
+router.put('/:id', ensureAuthenticated, [
+    body('sponsorshipLevel').optional().isIn(['Platinum', 'Gold', 'Silver', 'Bronze', 'Supporting']).withMessage('Invalid sponsorship level'),
+    body('sponsorshipValue').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Sponsorship value must be a valid amount'),
+    body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a non-negative integer'),
+    body('logoDisplaySize').optional().isIn(['Small', 'Medium', 'Large']).withMessage('Invalid logo display size'),
+    body('includeInProgram').optional().isBoolean().withMessage('Include in program must be true or false'),
+    body('includeOnWebsite').optional().isBoolean().withMessage('Include on website must be true or false')
+], carnivalSponsorController.updateCarnivalSponsor);
+
+// Delete/deactivate a carnival-sponsor relationship
+router.delete('/:id', ensureAuthenticated, carnivalSponsorController.deleteCarnivalSponsor);
+
+// Get sponsors for a specific carnival
+router.get('/carnival/:carnivalId/sponsors', carnivalSponsorController.getCarnivalSponsorsForCarnival);
+
+// Get carnivals for a specific sponsor
+router.get('/sponsor/:sponsorId/carnivals', carnivalSponsorController.getCarnivalsForSponsor);
+
+// Get sponsorship summary for a carnival
+router.get('/carnival/:carnivalId/summary', carnivalSponsorController.getCarnivalSponsorshipSummary);
+
+// Reorder carnival sponsors (update display order)
+router.patch('/carnival/:carnivalId/reorder', ensureAuthenticated, [
+    body('sponsorOrders').isArray().withMessage('Sponsor orders must be an array'),
+    body('sponsorOrders.*.id').isInt({ min: 1 }).withMessage('Valid relationship ID is required'),
+    body('sponsorOrders.*.displayOrder').isInt({ min: 0 }).withMessage('Display order must be a non-negative integer')
+], carnivalSponsorController.reorderCarnivalSponsors);
+
+module.exports = router;

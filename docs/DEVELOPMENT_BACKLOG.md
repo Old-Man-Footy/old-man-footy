@@ -46,7 +46,8 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ✅ Completed |
 | As a club delegate, I want to display social media links and feeds in Contact information on carnival pages. | ✅ Completed |
 | As a developer, I want to be able to store sponsor information, including logo, name, location, description of business, contacts and social media information. Sponsors can be linked to by multiple clubs. | ✅ Completed |
-| As a club delegate, I want to be able to add sponsors and link them to my Club, and Carnivals. | ⭕ Not Started |
+| As a club delegate, I want to be able to add sponsors and link them to my Club, and Carnivals. | 🔄 In Progress |
+| As a user, I don't want links to be underlined on hover if they already move or change colour. | ⭕ Not Started |
 | As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ⭕ Not Started |
 | As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
@@ -61,6 +62,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want clubs who have marked as coming to a carnival to be displayed on the Carnival information page in a list, with links to their club. | ⭕ Not Started |
 | As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. | ⭕ Not Started |
+| As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
 | As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
 | As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
@@ -68,9 +70,11 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `models/Carnival.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Club.js`  | ⭕ Not Started |
 | As a developer, all test clubs and carnivals should use `public\icons\test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
-| As a tester, I want comprehensive unit tests for `models/Index.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/User.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/CarnivalSponsor.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/ClubSponsor.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Sponsor.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/Index.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/EmailSubscription.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/emailService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/mySidelineService.js`  | ⭕ Not Started |
@@ -80,6 +84,8 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `contollers/club.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/main.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/auth.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/clubSponsor.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/carnivalSponsor.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/sponsor.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/auth.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/carnivals.js`  | ⭕ Not Started |

@@ -13,6 +13,8 @@ const Club = require('./Club');
 const Carnival = require('./Carnival');
 const EmailSubscription = require('./EmailSubscription');
 const Sponsor = require('./Sponsor');
+const ClubSponsor = require('./ClubSponsor');
+const CarnivalSponsor = require('./CarnivalSponsor');
 
 /**
  * Define model associations/relationships
@@ -42,34 +44,75 @@ User.hasMany(Carnival, {
   as: 'carnivals'
 });
 
-// Club and Sponsor many-to-many relationship
+// Club and Sponsor many-to-many relationship through ClubSponsor
 Club.belongsToMany(Sponsor, {
-  through: 'ClubSponsors',
+  through: ClubSponsor,
   foreignKey: 'clubId',
   otherKey: 'sponsorId',
   as: 'sponsors'
 });
 
 Sponsor.belongsToMany(Club, {
-  through: 'ClubSponsors',
+  through: ClubSponsor,
   foreignKey: 'sponsorId',
   otherKey: 'clubId',
   as: 'clubs'
 });
 
-// Carnival and Sponsor many-to-many relationship
+// Carnival and Sponsor many-to-many relationship through CarnivalSponsor
 Carnival.belongsToMany(Sponsor, {
-  through: 'CarnivalSponsors',
+  through: CarnivalSponsor,
   foreignKey: 'carnivalId',
   otherKey: 'sponsorId',
   as: 'sponsors'
 });
 
 Sponsor.belongsToMany(Carnival, {
-  through: 'CarnivalSponsors',
+  through: CarnivalSponsor,
   foreignKey: 'sponsorId',
   otherKey: 'carnivalId',
   as: 'carnivals'
+});
+
+// Direct associations for junction tables
+ClubSponsor.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'club'
+});
+
+ClubSponsor.belongsTo(Sponsor, {
+  foreignKey: 'sponsorId',
+  as: 'sponsor'
+});
+
+CarnivalSponsor.belongsTo(Carnival, {
+  foreignKey: 'carnivalId',
+  as: 'carnival'
+});
+
+CarnivalSponsor.belongsTo(Sponsor, {
+  foreignKey: 'sponsorId',
+  as: 'sponsor'
+});
+
+Club.hasMany(ClubSponsor, {
+  foreignKey: 'clubId',
+  as: 'clubSponsors'
+});
+
+Sponsor.hasMany(ClubSponsor, {
+  foreignKey: 'sponsorId',
+  as: 'clubSponsors'
+});
+
+Carnival.hasMany(CarnivalSponsor, {
+  foreignKey: 'carnivalId',
+  as: 'carnivalSponsors'
+});
+
+Sponsor.hasMany(CarnivalSponsor, {
+  foreignKey: 'sponsorId',
+  as: 'carnivalSponsors'
 });
 
 /**
@@ -81,5 +124,7 @@ module.exports = {
   Club,
   Carnival,
   EmailSubscription,
-  Sponsor
+  Sponsor,
+  ClubSponsor,
+  CarnivalSponsor
 };

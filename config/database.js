@@ -74,7 +74,7 @@ async function initializeDatabase() {
     // Use force: false and alter: false to avoid dropping tables with foreign key constraints
     const syncOptions = {
       force: false,
-      alter: false  // Changed from 'alter: true' which was causing the issue
+      alter: false  // Back to original setting to avoid conflicts
     };
 
     // Sync all models (create tables if they don't exist, but don't alter existing ones)

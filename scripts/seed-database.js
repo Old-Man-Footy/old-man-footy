@@ -9,7 +9,7 @@
  */
 
 const bcrypt = require('bcrypt');
-const { sequelize, User, Club, Carnival, EmailSubscription } = require('../models');
+const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor } = require('../models');
 const MySidelineService = require('../services/mySidelineService');
 
 // Load environment variables
@@ -482,11 +482,353 @@ const SAMPLE_SUBSCRIPTIONS = [
     { email: 'masters.supporter@outlook.com', states: ['QLD', 'VIC'] }
 ];
 
+/**
+ * Sample sponsor data for testing - diverse Australian businesses
+ */
+const SAMPLE_SPONSORS = [
+    {
+        sponsorName: 'Bunnings Warehouse',
+        businessType: 'Hardware & Home Improvement',
+        location: 'Multiple Locations',
+        state: 'NSW',
+        description: 'Australia\'s leading retailer of home improvement and outdoor living products. Supporting local rugby league communities since 1994.',
+        contactPerson: 'Community Relations Team',
+        contactEmail: 'community@bunnings.com.au',
+        contactPhone: '1800 555 0001',
+        website: 'https://www.bunnings.com.au',
+        facebookUrl: 'https://facebook.com/Bunnings',
+        instagramUrl: 'https://instagram.com/bunningswarehouse',
+        twitterUrl: 'https://twitter.com/Bunnings',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Gold',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Coca-Cola Australia',
+        businessType: 'Beverages',
+        location: 'Sydney',
+        state: 'NSW',
+        description: 'Refreshing Australian communities for over 75 years. Proud supporters of grassroots sports and local clubs.',
+        contactPerson: 'Sports Marketing',
+        contactEmail: 'sports@coca-cola.com.au',
+        contactPhone: '1800 555 0002',
+        website: 'https://www.coca-cola.com.au',
+        facebookUrl: 'https://facebook.com/CocaColaAustralia',
+        instagramUrl: 'https://instagram.com/cocacolaau',
+        twitterUrl: 'https://twitter.com/CocaColaAU',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Gold',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Toyota Australia',
+        businessType: 'Automotive',
+        location: 'Melbourne',
+        state: 'VIC',
+        description: 'Built for Australia. Toyota has been supporting Australian sport and communities for decades.',
+        contactPerson: 'Community Partnerships',
+        contactEmail: 'community@toyota.com.au',
+        contactPhone: '1800 555 0003',
+        website: 'https://www.toyota.com.au',
+        facebookUrl: 'https://facebook.com/ToyotaAustralia',
+        instagramUrl: 'https://instagram.com/toyotaaustralia',
+        twitterUrl: 'https://twitter.com/ToyotaAustralia',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Gold',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Woolworths Group',
+        businessType: 'Retail & Supermarkets',
+        location: 'Sydney',
+        state: 'NSW',
+        description: 'Fresh food people. Supporting local communities and grassroots sports across Australia.',
+        contactPerson: 'Community Investment',
+        contactEmail: 'community@woolworths.com.au',
+        contactPhone: '1800 555 0004',
+        website: 'https://www.woolworthsgroup.com.au',
+        facebookUrl: 'https://facebook.com/woolworths',
+        instagramUrl: 'https://instagram.com/woolworths_au',
+        twitterUrl: 'https://twitter.com/woolworths',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Gold',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'ANZ Bank',
+        businessType: 'Banking & Finance',
+        location: 'Melbourne',
+        state: 'VIC',
+        description: 'We live in your world. ANZ is committed to supporting local communities and sporting excellence.',
+        contactPerson: 'Corporate Sponsorship',
+        contactEmail: 'sponsorship@anz.com',
+        contactPhone: '1800 555 0005',
+        website: 'https://www.anz.com.au',
+        facebookUrl: 'https://facebook.com/ANZAustralia',
+        instagramUrl: 'https://instagram.com/anz_au',
+        twitterUrl: 'https://twitter.com/ANZ_AU',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Silver',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Harvey Norman',
+        businessType: 'Electronics & Furniture',
+        location: 'Sydney',
+        state: 'NSW',
+        description: 'Go Harvey Norman! Australia\'s leading electrical, computer, furniture and bedding retailer.',
+        contactPerson: 'Marketing Department',
+        contactEmail: 'marketing@harveynorman.com.au',
+        contactPhone: '1800 555 0006',
+        website: 'https://www.harveynorman.com.au',
+        facebookUrl: 'https://facebook.com/HarveyNormanAU',
+        instagramUrl: 'https://instagram.com/harveynormanau',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Silver',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Lions Construction Group',
+        businessType: 'Construction',
+        location: 'Brisbane',
+        state: 'QLD',
+        description: 'Building Queensland communities. Local construction company specializing in residential and commercial projects.',
+        contactPerson: 'Mark Stevens',
+        contactEmail: 'mark@lionsconstruction.com.au',
+        contactPhone: '(07) 3123 4567',
+        website: 'https://www.lionsconstruction.com.au',
+        facebookUrl: 'https://facebook.com/lionsconstruction',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Bronze',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Sharks Electrical Services',
+        businessType: 'Electrical Services',
+        location: 'Cronulla',
+        state: 'NSW',
+        description: 'Your local electrical experts. Servicing the Shire for over 20 years with reliable, professional electrical services.',
+        contactPerson: 'Tony Russo',
+        contactEmail: 'tony@sharkselectrical.com.au',
+        contactPhone: '(02) 9523 7890',
+        website: 'https://www.sharkselectrical.com.au',
+        facebookUrl: 'https://facebook.com/sharkselectrical',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Bunworthy Real Estate',
+        businessType: 'Real Estate',
+        location: 'Parramatta',
+        state: 'NSW',
+        description: 'Selling Sydney\'s West for 30 years. Family-owned real estate agency committed to exceptional service and community support.',
+        contactPerson: 'Sarah Bunworthy',
+        contactEmail: 'sarah@bunworthyrealestate.com.au',
+        contactPhone: '(02) 9630 5678',
+        website: 'https://www.bunworthyrealestate.com.au',
+        facebookUrl: 'https://facebook.com/bunworthyrealestate',
+        instagramUrl: 'https://instagram.com/bunworthyrealestate',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Melbourne Storm Plumbing',
+        businessType: 'Plumbing Services',
+        location: 'Melbourne',
+        state: 'VIC',
+        description: 'Professional plumbing services across Melbourne. Emergency callouts, renovations, and maintenance - we do it all.',
+        contactPerson: 'Peter Storm',
+        contactEmail: 'peter@stormplumbing.com.au',
+        contactPhone: '(03) 9876 5432',
+        website: 'https://www.stormplumbing.com.au',
+        facebookUrl: 'https://facebook.com/stormplumbing',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Bronze',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Geelong Auto Parts',
+        businessType: 'Automotive Parts',
+        location: 'Geelong',
+        state: 'VIC',
+        description: 'Your one-stop shop for automotive parts and accessories. Serving Geelong and surrounding areas since 1995.',
+        contactPerson: 'Robert Mitchell',
+        contactEmail: 'robert@geelongautoparts.com.au',
+        contactPhone: '(03) 5248 9012',
+        website: 'https://www.geelongautoparts.com.au',
+        facebookUrl: 'https://facebook.com/geelongautoparts',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Perth Pirates Fitness',
+        businessType: 'Fitness & Gym',
+        location: 'Perth',
+        state: 'WA',
+        description: 'Train like a champion. State-of-the-art fitness facility offering personal training, group classes, and sports conditioning.',
+        contactPerson: 'Chris Walker',
+        contactEmail: 'chris@piratesfitness.com.au',
+        contactPhone: '(08) 9321 3456',
+        website: 'https://www.piratesfitness.com.au',
+        facebookUrl: 'https://facebook.com/piratesfitness',
+        instagramUrl: 'https://instagram.com/piratesfitness',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Bronze',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Fremantle Fish & Chips',
+        businessType: 'Restaurant',
+        location: 'Fremantle',
+        state: 'WA',
+        description: 'Fresh fish, crispy chips, and local hospitality. A Fremantle institution serving the community for over 40 years.',
+        contactPerson: 'Maria Antonelli',
+        contactEmail: 'maria@fremantlefish.com.au',
+        contactPhone: '(08) 9433 6789',
+        facebookUrl: 'https://facebook.com/fremantlefish',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Adelaide Hills Brewery',
+        businessType: 'Brewery',
+        location: 'Adelaide',
+        state: 'SA',
+        description: 'Crafting quality beer since 2010. Supporting local sport and bringing communities together one beer at a time.',
+        contactPerson: 'James Anderson',
+        contactEmail: 'james@adelaidehillsbrewery.com.au',
+        contactPhone: '(08) 8234 7890',
+        website: 'https://www.adelaidehillsbrewery.com.au',
+        facebookUrl: 'https://facebook.com/adelaidehillsbrewery',
+        instagramUrl: 'https://instagram.com/adelaidehillsbrewery',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Bronze',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Port Power Earthmoving',
+        businessType: 'Earthmoving & Excavation',
+        location: 'Port Adelaide',
+        state: 'SA',
+        description: 'Moving mountains for South Australia. Specialist earthmoving, excavation, and site preparation services.',
+        contactPerson: 'Daniel Power',
+        contactEmail: 'daniel@portpowerearthmoving.com.au',
+        contactPhone: '(08) 8447 2345',
+        website: 'https://www.portpowerearthmoving.com.au',
+        facebookUrl: 'https://facebook.com/portpowerearthmoving',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Tasmania Devils Transport',
+        businessType: 'Transport & Logistics',
+        location: 'Hobart',
+        state: 'TAS',
+        description: 'Island-wide transport solutions. Reliable freight and logistics services connecting Tasmania to the mainland.',
+        contactPerson: 'Michelle Green',
+        contactEmail: 'michelle@devilstransport.com.au',
+        contactPhone: '(03) 6234 5678',
+        website: 'https://www.devilstransport.com.au',
+        facebookUrl: 'https://facebook.com/devilstransport',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Bronze',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Lions Landscaping',
+        businessType: 'Landscaping',
+        location: 'Launceston',
+        state: 'TAS',
+        description: 'Creating beautiful outdoor spaces across northern Tasmania. Commercial and residential landscaping specialists.',
+        contactPerson: 'John Campbell',
+        contactEmail: 'john@lionslandscaping.com.au',
+        contactPhone: '(03) 6331 6789',
+        website: 'https://www.lionslandscaping.com.au',
+        facebookUrl: 'https://facebook.com/lionslandscaping',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Crocodile Security Services',
+        businessType: 'Security Services',
+        location: 'Darwin',
+        state: 'NT',
+        description: 'Protecting the Top End. Professional security services for commercial, residential, and event security needs.',
+        contactPerson: 'Terry Robinson',
+        contactEmail: 'terry@crocodilesecurity.com.au',
+        contactPhone: '(08) 8922 7890',
+        website: 'https://www.crocodilesecurity.com.au',
+        facebookUrl: 'https://facebook.com/crocodilesecurity',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Bronze',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Capital City Catering',
+        businessType: 'Catering Services',
+        location: 'Canberra',
+        state: 'ACT',
+        description: 'Serving the nation\'s capital with exceptional catering services. Specializing in corporate events and sporting functions.',
+        contactPerson: 'Lisa Wilson',
+        contactEmail: 'lisa@capitalcatering.com.au',
+        contactPhone: '(02) 6247 3456',
+        website: 'https://www.capitalcatering.com.au',
+        facebookUrl: 'https://facebook.com/capitalcatering',
+        instagramUrl: 'https://instagram.com/capitalcatering',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    },
+    {
+        sponsorName: 'Sunshine Coast Physiotherapy',
+        businessType: 'Healthcare',
+        location: 'Sunshine Coast',
+        state: 'QLD',
+        description: 'Keeping athletes moving. Sports physiotherapy and injury rehabilitation specialists serving the Sunshine Coast.',
+        contactPerson: 'Dr. Amanda Clarke',
+        contactEmail: 'amanda@sunshinecoastphysio.com.au',
+        contactPhone: '(07) 5444 8901',
+        website: 'https://www.sunshinecoastphysio.com.au',
+        facebookUrl: 'https://facebook.com/sunshinecoastphysio',
+        instagramUrl: 'https://instagram.com/sunshinecoastphysio',
+        logoUrl: '/icons/seed.svg',
+        sponsorshipLevel: 'Supporting',
+        isActive: true,
+        isPubliclyVisible: true
+    }
+];
+
 class DatabaseSeeder {
     constructor() {
         this.createdClubs = [];
         this.createdUsers = [];
         this.createdCarnivals = [];
+        this.createdSponsors = [];
     }
 
     /**
@@ -518,6 +860,7 @@ class DatabaseSeeder {
             await User.destroy({ where: {}, transaction });
             await Club.destroy({ where: {}, transaction });
             await EmailSubscription.destroy({ where: {}, transaction });
+            await Sponsor.destroy({ where: {}, transaction });
             
             await transaction.commit();
             console.log('✅ Database cleared');
@@ -690,6 +1033,20 @@ class DatabaseSeeder {
     }
 
     /**
+     * Create test sponsors using Sequelize
+     */
+    async createSponsors() {
+        console.log('🤝 Creating test sponsors...');
+        
+        for (const sponsorData of SAMPLE_SPONSORS) {
+            const sponsor = await Sponsor.create(sponsorData);
+            this.createdSponsors.push(sponsor);
+        }
+        
+        console.log(`✅ Created ${this.createdSponsors.length} sponsors`);
+    }
+
+    /**
      * Generate summary statistics using Sequelize
      */
     async generateSummary() {
@@ -700,6 +1057,7 @@ class DatabaseSeeder {
             manualCarnivals: await Carnival.count({ where: { isManuallyEntered: true, isActive: true } }),
             mySidelineCarnivals: await Carnival.count({ where: { isManuallyEntered: false, isActive: true } }),
             subscriptions: await EmailSubscription.count({ where: { isActive: true } }),
+            sponsors: await Sponsor.count({ where: { isActive: true } }),
             upcomingCarnivals: await Carnival.count({ 
                 where: { 
                     date: { [require('sequelize').Op.gte]: new Date() }, 
@@ -712,6 +1070,7 @@ class DatabaseSeeder {
         console.log('=' .repeat(50));
         console.log(`👥 Users: ${stats.users} (including admin)`);
         console.log(`🏢 Clubs: ${stats.clubs}`);
+        console.log(`🤝 Sponsors: ${stats.sponsors}`);
         console.log(`🎪 Total Carnivals: ${stats.carnivals}`);
         console.log(`   ✏️  Manual: ${stats.manualCarnivals}`);
         console.log(`   🔄 MySideline: ${stats.mySidelineCarnivals}`);
@@ -733,7 +1092,10 @@ class DatabaseSeeder {
             await this.clearDatabase();
             await this.createClubs();
             await this.createUsers();
+            await this.createSponsors();
+            //TODO await this.linkSponsorsToClubs();
             await this.createManualCarnivals();
+            //TODO await this.linkSponsorsToCarnivals();
             await this.importMySidelineData();
             await this.createEmailSubscriptions();
             await this.generateSummary();

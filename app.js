@@ -102,12 +102,14 @@ initializeDatabase();
 const indexRoutes = require('./routes/index');
 const authRoutes = require('./routes/auth');
 const carnivalRoutes = require('./routes/carnivals');
+const carnivalSponsorRoutes = require('./routes/carnivalSponsors');
 const clubRoutes = require('./routes/clubs');
 const sponsorRoutes = require('./routes/sponsors');
 
 app.use('/', indexRoutes);
 app.use('/auth', authRoutes);
 app.use('/carnivals', carnivalRoutes);
+app.use('/carnival-sponsors', carnivalSponsorRoutes);
 app.use('/clubs', clubRoutes);
 app.use('/sponsors', sponsorRoutes);
 
