@@ -86,6 +86,7 @@ const showSponsorListings = async (req, res) => {
 const showSponsorProfile = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`showSponsorProfile called with ID: ${id}`);
         
         const sponsor = await Sponsor.findOne({
             where: {
@@ -103,11 +104,19 @@ const showSponsorProfile = async (req, res) => {
             }]
         });
 
+        console.log(`Sponsor found:`, sponsor ? 'YES' : 'NO');
+        if (sponsor) {
+            console.log(`Sponsor name: ${sponsor.sponsorName}`);
+            console.log(`Associated clubs count: ${sponsor.clubs ? sponsor.clubs.length : 0}`);
+        }
+
         if (!sponsor) {
+            console.log('Sponsor not found, redirecting to /sponsors');
             req.flash('error_msg', 'Sponsor not found.');
             return res.redirect('/sponsors');
         }
 
+        console.log('Rendering sponsors/show template');
         res.render('sponsors/show', {
             title: `${sponsor.sponsorName} - Sponsor Profile`,
             sponsor,
