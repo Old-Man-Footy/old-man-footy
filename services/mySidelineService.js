@@ -1028,8 +1028,12 @@ class MySidelineIntegrationService {
         try {
             console.log('🌐 Starting browser automation...');
             
+            // Only run headless in production mode
+            const isProduction = process.env.NODE_ENV === 'production';
+            console.log(`🖥️  Browser mode: ${isProduction ? 'headless (production)' : 'visible (development)'}`);
+            
             browser = await puppeteer.launch({
-                headless: true,
+                headless: isProduction,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
             

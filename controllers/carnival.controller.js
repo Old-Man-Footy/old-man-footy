@@ -9,6 +9,7 @@ const { Carnival, User, Club } = require('../models');
 const { validationResult } = require('express-validator');
 const mySidelineService = require('../services/mySidelineService');
 const emailService = require('../services/emailService');
+const ImageNamingService = require('../services/imageNamingService');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 
@@ -191,28 +192,6 @@ const createCarnival = async (req, res) => {
             socialMediaWebsite: req.body.socialMediaWebsite || ''
         };
 
-        // Handle file uploads
-        if (req.files && req.files.logo) {
-            carnivalData.clubLogoURL = '/uploads/' + req.files.logo[0].filename;
-        }
-        if (req.files && req.files.promotionalImage) {
-            const imageFiles = req.files.promotionalImage.map(file => '/uploads/' + file.filename);
-            carnivalData.promotionalImageURL = imageFiles[0];
-            carnivalData.additionalImages = imageFiles.slice(1);
-        }
-        if (req.files && req.files.drawDocument) {
-            const drawFiles = req.files.drawDocument.map(file => ({
-                url: '/uploads/' + file.filename,
-                filename: file.originalname,
-                title: req.body.drawTitle || 'Draw Sheet'
-            }));
-            carnivalData.drawFiles = drawFiles;
-            carnivalData.drawFileURL = drawFiles[0].url;
-            carnivalData.drawFileName = drawFiles[0].filename;
-            carnivalData.drawTitle = req.body.drawTitle;
-            carnivalData.drawDescription = req.body.drawDescription;
-        }
-
         // Use the duplicate detection and merging service
         let carnival;
         try {
@@ -225,6 +204,63 @@ const createCarnival = async (req, res) => {
             } else {
                 // Use duplicate detection and merging
                 carnival = await mySidelineService.createOrMergeEvent(carnivalData, req.user.id);
+            }
+            
+            // Handle structured file uploads after carnival creation
+            if (req.structuredUploads && req.structuredUploads.length > 0) {
+                const uploadUpdates = {};
+                const additionalImages = [];
+                const drawFiles = [];
+
+                for (const upload of req.structuredUploads) {
+                    switch (upload.fieldname) {
+                        case 'logo':
+                            uploadUpdates.clubLogoURL = upload.path;
+                            break;
+                        case 'promotionalImage':
+                            if (!uploadUpdates.promotionalImageURL) {
+                                uploadUpdates.promotionalImageURL = upload.path;
+                            } else {
+                                additionalImages.push(upload.path);
+                            }
+                            break;
+                        case 'galleryImage':
+                            additionalImages.push(upload.path);
+                            break;
+                        case 'drawDocument':
+                            drawFiles.push({
+                                url: upload.path,
+                                filename: upload.originalname,
+                                title: req.body.drawTitle || `Draw Document ${drawFiles.length + 1}`,
+                                uploadMetadata: upload.metadata
+                            });
+                            break;
+                        case 'bannerImage':
+                            // Store banner images in additionalImages with metadata
+                            additionalImages.push(upload.path);
+                            break;
+                    }
+                }
+
+                // Update carnival with file paths
+                if (additionalImages.length > 0) {
+                    uploadUpdates.additionalImages = additionalImages;
+                }
+                
+                if (drawFiles.length > 0) {
+                    uploadUpdates.drawFiles = drawFiles;
+                    // Maintain legacy compatibility
+                    uploadUpdates.drawFileURL = drawFiles[0].url;
+                    uploadUpdates.drawFileName = drawFiles[0].filename;
+                    uploadUpdates.drawTitle = req.body.drawTitle || drawFiles[0].title;
+                    uploadUpdates.drawDescription = req.body.drawDescription || '';
+                }
+
+                // Update carnival with upload information
+                await carnival.update(uploadUpdates);
+                
+                // Log structured upload success
+                console.log(`✅ Carnival ${carnival.id} created with ${req.structuredUploads.length} structured uploads`);
             }
             
             // Check if this was a merge operation
@@ -332,7 +368,7 @@ const updateCarnival = async (req, res) => {
         }
 
         // Update carnival data
-        await carnival.update({
+        const updateData = {
             title: req.body.title,
             date: new Date(req.body.date),
             locationAddress: req.body.locationAddress,
@@ -349,24 +385,52 @@ const updateCarnival = async (req, res) => {
             socialMediaInstagram: req.body.socialMediaInstagram || '',
             socialMediaTwitter: req.body.socialMediaTwitter || '',
             socialMediaWebsite: req.body.socialMediaWebsite || ''
-        });
+        };
 
-        // Handle file uploads
-        if (req.files && req.files.logo) {
-            carnival.clubLogoURL = '/uploads/' + req.files.logo[0].filename;
-            await carnival.save();
+        // Handle structured file uploads
+        if (req.structuredUploads && req.structuredUploads.length > 0) {
+            const existingAdditionalImages = carnival.additionalImages || [];
+            const existingDrawFiles = carnival.drawFiles || [];
+
+            for (const upload of req.structuredUploads) {
+                switch (upload.fieldname) {
+                    case 'logo':
+                        updateData.clubLogoURL = upload.path;
+                        console.log(`📸 Updated carnival ${carnival.id} logo: ${upload.path}`);
+                        break;
+                    case 'promotionalImage':
+                        updateData.promotionalImageURL = upload.path;
+                        console.log(`📸 Updated carnival ${carnival.id} promotional image: ${upload.path}`);
+                        break;
+                    case 'galleryImage':
+                        existingAdditionalImages.push(upload.path);
+                        updateData.additionalImages = existingAdditionalImages;
+                        console.log(`📸 Added gallery image to carnival ${carnival.id}: ${upload.path}`);
+                        break;
+                    case 'drawDocument':
+                        const newDrawFile = {
+                            url: upload.path,
+                            filename: upload.originalname,
+                            title: req.body.drawTitle || `Draw Document ${existingDrawFiles.length + 1}`,
+                            uploadMetadata: upload.metadata
+                        };
+                        existingDrawFiles.push(newDrawFile);
+                        updateData.drawFiles = existingDrawFiles;
+                        
+                        // Update legacy fields with first draw file
+                        if (existingDrawFiles.length === 1) {
+                            updateData.drawFileURL = newDrawFile.url;
+                            updateData.drawFileName = newDrawFile.filename;
+                            updateData.drawTitle = req.body.drawTitle || newDrawFile.title;
+                            updateData.drawDescription = req.body.drawDescription || '';
+                        }
+                        console.log(`📄 Added draw document to carnival ${carnival.id}: ${upload.path}`);
+                        break;
+                }
+            }
         }
-        if (req.files && req.files.promotionalImage) {
-            carnival.promotionalImageURL = '/uploads/' + req.files.promotionalImage[0].filename;
-            await carnival.save();
-        }
-        if (req.files && req.files.drawDocument) {
-            carnival.drawFileURL = '/uploads/' + req.files.drawDocument[0].filename;
-            carnival.drawFileName = req.files.drawDocument[0].originalname;
-            carnival.drawTitle = req.body.drawTitle;
-            carnival.drawDescription = req.body.drawDescription;
-            await carnival.save();
-        }
+
+        await carnival.update(updateData);
 
         req.flash('success_msg', 'Carnival updated successfully!');
         res.redirect(`/carnivals/${carnival.id}`);

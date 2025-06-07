@@ -8,6 +8,7 @@
 const { Club, User, Carnival } = require('../models');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
+const ImageNamingService = require('../services/imageNamingService');
 
 /**
  * Display public club listings with search and filter options
@@ -228,7 +229,8 @@ const updateClubProfile = async (req, res) => {
             isPubliclyListed
         } = req.body;
 
-        await club.update({
+        // Prepare update data
+        const updateData = {
             location: location?.trim(),
             contactEmail: contactEmail?.trim(),
             contactPhone: contactPhone?.trim(),
@@ -239,7 +241,30 @@ const updateClubProfile = async (req, res) => {
             instagramUrl: instagramUrl?.trim(),
             twitterUrl: twitterUrl?.trim(),
             isPubliclyListed: isPubliclyListed === 'on'
-        });
+        };
+
+        // Handle structured file uploads
+        if (req.structuredUploads && req.structuredUploads.length > 0) {
+            for (const upload of req.structuredUploads) {
+                switch (upload.fieldname) {
+                    case 'logo':
+                        updateData.logoUrl = upload.path;
+                        console.log(`📸 Updated club ${club.id} logo: ${upload.path}`);
+                        break;
+                    case 'galleryImage':
+                        // For clubs, we might store gallery images differently
+                        // This could be extended to support a gallery field in the Club model
+                        console.log(`📸 Added gallery image to club ${club.id}: ${upload.path}`);
+                        break;
+                    case 'bannerImage':
+                        // Store banner image reference if the club model supports it
+                        console.log(`📸 Added banner image to club ${club.id}: ${upload.path}`);
+                        break;
+                }
+            }
+        }
+
+        await club.update(updateData);
 
         req.flash('success_msg', 'Club profile updated successfully!');
         res.redirect('/clubs/manage');
@@ -250,9 +275,103 @@ const updateClubProfile = async (req, res) => {
     }
 };
 
+/**
+ * Get all images associated with a club
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getClubImages = async (req, res) => {
+    try {
+        const { clubId } = req.params;
+        const { imageType } = req.query;
+
+        // Verify user has access to this club
+        if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You can only view images for your own club.'
+            });
+        }
+
+        const images = await ImageNamingService.getEntityImages(
+            ImageNamingService.ENTITY_TYPES.CLUB,
+            parseInt(clubId),
+            imageType
+        );
+
+        res.json({
+            success: true,
+            images,
+            total: images.length
+        });
+    } catch (error) {
+        console.error('Error fetching club images:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching club images'
+        });
+    }
+};
+
+/**
+ * Delete a specific club image
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const deleteClubImage = async (req, res) => {
+    try {
+        const { clubId, filename } = req.params;
+
+        // Verify user has access to this club
+        if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You can only delete images for your own club.'
+            });
+        }
+
+        // Parse the filename to verify it belongs to this club
+        const parsed = ImageNamingService.parseImageName(filename);
+        if (!parsed || parsed.entityType !== ImageNamingService.ENTITY_TYPES.CLUB || parsed.entityId !== parseInt(clubId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid image file or image does not belong to this club'
+            });
+        }
+
+        // Get the full path and delete the file
+        const imagePath = ImageNamingService.getRelativePath(parsed.entityType, parsed.imageType);
+        const fullPath = path.join(imagePath, filename);
+        
+        const fs = require('fs').promises;
+        await fs.unlink(path.join('uploads', fullPath));
+
+        // If this was the club's logo, update the database
+        if (parsed.imageType === ImageNamingService.IMAGE_TYPES.LOGO) {
+            const club = await Club.findByPk(clubId);
+            if (club && club.logoUrl && club.logoUrl.includes(filename)) {
+                await club.update({ logoUrl: null });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Image deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting club image:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting image'
+        });
+    }
+};
+
 module.exports = {
     showClubListings,
     showClubProfile,
     showClubManagement,
-    updateClubProfile
+    updateClubProfile,
+    getClubImages,
+    deleteClubImage
 };

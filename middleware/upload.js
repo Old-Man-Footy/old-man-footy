@@ -1,91 +1,308 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const ImageNamingService = require('../services/imageNamingService');
 
 // Ensure upload directories exist
-const uploadDirs = ['uploads/logos', 'uploads/images', 'uploads/documents'];
+const uploadDirs = [
+    'uploads/logos/club',
+    'uploads/logos/carnival', 
+    'uploads/images/club/promo',
+    'uploads/images/club/gallery',
+    'uploads/images/carnival/promo',
+    'uploads/images/carnival/gallery',
+    'uploads/documents/club',
+    'uploads/documents/carnival'
+];
+
 uploadDirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 });
 
-// Configure storage
+// Configure storage with structured naming
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        let uploadPath = 'uploads/';
-        
-        // Determine upload directory based on field name
-        if (file.fieldname === 'logo') {
-            uploadPath += 'logos/';
-        } else if (file.fieldname === 'promotionalImage') {
-            uploadPath += 'images/';
-        } else if (file.fieldname === 'drawDocument') {
-            uploadPath += 'documents/';
-        } else {
-            uploadPath += 'misc/';
-        }
-        
-        cb(null, uploadPath);
+        // We'll determine the final path in the filename function
+        // For now, use a temporary directory
+        cb(null, 'uploads/temp/');
     },
-    filename: function (req, file, cb) {
-        // Generate unique filename with timestamp
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    filename: async function (req, file, cb) {
+        try {
+            // Extract context from request
+            const context = extractUploadContext(req, file);
+            
+            // Generate structured filename
+            const namingResult = await ImageNamingService.generateImageName({
+                entityType: context.entityType,
+                entityId: context.entityId,
+                imageType: context.imageType,
+                uploaderId: context.uploaderId,
+                originalName: file.originalname,
+                customSuffix: context.customSuffix
+            });
+            
+            // Store metadata in request for later use
+            if (!req.uploadMetadata) req.uploadMetadata = [];
+            req.uploadMetadata.push({
+                fieldname: file.fieldname,
+                ...namingResult
+            });
+            
+            // Ensure the target directory exists
+            const targetDir = path.join('uploads', namingResult.relativePath);
+            if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true });
+            }
+            
+            cb(null, namingResult.filename);
+        } catch (error) {
+            console.error('Error generating structured filename:', error);
+            // Fallback to original naming scheme
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+        }
     }
 });
 
-// File filter function
-const fileFilter = (req, file, cb) => {
-    // Allowed file types
-    const allowedTypes = {
-        logo: /jpeg|jpg|png|gif/,
-        promotionalImage: /jpeg|jpg|png|gif/,
-        drawDocument: /pdf|doc|docx|xls|xlsx/
+/**
+ * Extract upload context from request and file
+ * @param {Object} req - Express request object
+ * @param {Object} file - Multer file object
+ * @returns {Object} Upload context
+ */
+function extractUploadContext(req, file) {
+    // Default context
+    let context = {
+        entityType: ImageNamingService.ENTITY_TYPES.SYSTEM,
+        entityId: 1,
+        imageType: ImageNamingService.IMAGE_TYPES.GALLERY,
+        uploaderId: req.user ? req.user.id : 1,
+        customSuffix: ''
     };
     
-    const extname = allowedTypes[file.fieldname]?.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes[file.fieldname]?.test(file.mimetype);
+    // Determine entity type and ID from route
+    if (req.route && req.route.path) {
+        if (req.route.path.includes('/clubs')) {
+            context.entityType = ImageNamingService.ENTITY_TYPES.CLUB;
+            context.entityId = req.params.id || req.body.clubId || 1;
+        } else if (req.route.path.includes('/carnivals')) {
+            context.entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL;
+            context.entityId = req.params.id || req.body.carnivalId || 1;
+        }
+    }
+    
+    // Determine image type from field name
+    switch (file.fieldname) {
+        case 'logo':
+        case 'clubLogo':
+            context.imageType = ImageNamingService.IMAGE_TYPES.LOGO;
+            break;
+        case 'promotionalImage':
+        case 'promoImage':
+            context.imageType = ImageNamingService.IMAGE_TYPES.PROMOTIONAL;
+            break;
+        case 'drawDocument':
+        case 'drawFile':
+            context.imageType = ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT;
+            break;
+        case 'galleryImage':
+            context.imageType = ImageNamingService.IMAGE_TYPES.GALLERY;
+            break;
+        case 'bannerImage':
+            context.imageType = ImageNamingService.IMAGE_TYPES.BANNER;
+            break;
+        case 'avatar':
+            context.imageType = ImageNamingService.IMAGE_TYPES.AVATAR;
+            context.entityType = ImageNamingService.ENTITY_TYPES.USER;
+            context.entityId = req.user ? req.user.id : 1;
+            break;
+        default:
+            context.imageType = ImageNamingService.IMAGE_TYPES.GALLERY;
+    }
+    
+    // Add upload context as suffix if available
+    if (req.body.uploadContext) {
+        context.customSuffix = req.body.uploadContext;
+    }
+    
+    return context;
+}
+
+// Enhanced file filter function
+const fileFilter = (req, file, cb) => {
+    // Allowed file types by category
+    const allowedTypes = {
+        [ImageNamingService.IMAGE_TYPES.LOGO]: /jpeg|jpg|png|gif|svg|webp/,
+        [ImageNamingService.IMAGE_TYPES.PROMOTIONAL]: /jpeg|jpg|png|gif|webp/,
+        [ImageNamingService.IMAGE_TYPES.GALLERY]: /jpeg|jpg|png|gif|webp/,
+        [ImageNamingService.IMAGE_TYPES.BANNER]: /jpeg|jpg|png|gif|webp/,
+        [ImageNamingService.IMAGE_TYPES.AVATAR]: /jpeg|jpg|png|gif|webp/,
+        [ImageNamingService.IMAGE_TYPES.THUMBNAIL]: /jpeg|jpg|png|gif|webp/,
+        [ImageNamingService.IMAGE_TYPES.SOCIAL_MEDIA]: /jpeg|jpg|png|gif|webp/,
+        [ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT]: /pdf|doc|docx|xls|xlsx|txt/
+    };
+    
+    // Determine image type from field name
+    const context = extractUploadContext(req, file);
+    const allowedPattern = allowedTypes[context.imageType];
+    
+    if (!allowedPattern) {
+        return cb(new Error(`Unsupported image type: ${context.imageType}`));
+    }
+    
+    const extname = allowedPattern.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedPattern.test(file.mimetype);
     
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb(new Error(`Invalid file type for ${file.fieldname}. Please check allowed formats.`));
+        cb(new Error(`Invalid file type for ${file.fieldname}. Allowed formats: ${allowedPattern.source}`));
     }
 };
 
-// Configure multer
+// Configure multer with enhanced options
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10, // Maximum 10 files per upload
+        fields: 20 // Maximum 20 form fields
     },
     fileFilter: fileFilter
 });
 
+/**
+ * Post-upload processing middleware
+ * Moves files from temp directory to structured paths and updates database
+ */
+const processStructuredUpload = async (req, res, next) => {
+    if (!req.files && !req.file) {
+        return next();
+    }
+    
+    try {
+        const files = req.files ? Object.values(req.files).flat() : [req.file];
+        const uploadResults = [];
+        
+        for (const file of files) {
+            // Find corresponding metadata
+            const metadata = req.uploadMetadata?.find(meta => 
+                meta.filename === file.filename
+            );
+            
+            if (metadata) {
+                // Move file from temp to structured location
+                const tempPath = file.path;
+                const finalPath = path.join('uploads', metadata.fullPath);
+                
+                // Ensure target directory exists
+                const targetDir = path.dirname(finalPath);
+                if (!fs.existsSync(targetDir)) {
+                    fs.mkdirSync(targetDir, { recursive: true });
+                }
+                
+                // Move file
+                fs.renameSync(tempPath, finalPath);
+                
+                // Update file object with final information
+                file.path = finalPath;
+                file.filename = metadata.filename;
+                file.structuredPath = metadata.fullPath;
+                file.metadata = metadata.metadata;
+                
+                uploadResults.push({
+                    fieldname: file.fieldname,
+                    originalname: file.originalname,
+                    filename: metadata.filename,
+                    path: `/uploads/${metadata.fullPath.replace(/\\/g, '/')}`,
+                    size: file.size,
+                    metadata: metadata.metadata
+                });
+            }
+        }
+        
+        // Store upload results in request for controllers to use
+        req.structuredUploads = uploadResults;
+        
+        next();
+    } catch (error) {
+        console.error('Error processing structured upload:', error);
+        // Clean up any temporary files
+        if (req.files || req.file) {
+            const files = req.files ? Object.values(req.files).flat() : [req.file];
+            files.forEach(file => {
+                if (fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+            });
+        }
+        next(error);
+    }
+};
+
 // Export different upload configurations
 module.exports = {
-    // For carnival creation/editing (multiple files)
-    carnivalUpload: upload.fields([
-        { name: 'logo', maxCount: 1 },
-        { name: 'promotionalImage', maxCount: 3 },
-        { name: 'drawDocument', maxCount: 5 }
-    ]),
+    // For carnival creation/editing (multiple files with structured naming)
+    carnivalUpload: [
+        upload.fields([
+            { name: 'logo', maxCount: 1 },
+            { name: 'promotionalImage', maxCount: 5 },
+            { name: 'galleryImage', maxCount: 10 },
+            { name: 'drawDocument', maxCount: 5 },
+            { name: 'bannerImage', maxCount: 2 }
+        ]),
+        processStructuredUpload
+    ],
+    
+    // For club management (multiple files with structured naming)
+    clubUpload: [
+        upload.fields([
+            { name: 'logo', maxCount: 1 },
+            { name: 'galleryImage', maxCount: 10 },
+            { name: 'bannerImage', maxCount: 2 }
+        ]),
+        processStructuredUpload
+    ],
     
     // For single logo upload
-    logoUpload: upload.single('logo'),
+    logoUpload: [
+        upload.single('logo'),
+        processStructuredUpload
+    ],
     
     // For single image upload
-    imageUpload: upload.single('promotionalImage'),
+    imageUpload: [
+        upload.single('promotionalImage'),
+        processStructuredUpload
+    ],
     
     // For single document upload
-    documentUpload: upload.single('drawDocument'),
+    documentUpload: [
+        upload.single('drawDocument'),
+        processStructuredUpload
+    ],
+    
+    // For user avatar upload
+    avatarUpload: [
+        upload.single('avatar'),
+        processStructuredUpload
+    ],
+    
+    // Raw multer instance for custom configurations
+    upload,
+    
+    // Utility functions
+    ImageNamingService,
     
     // Error handling middleware
     handleUploadError: (error, req, res, next) => {
         if (error instanceof multer.MulterError) {
             if (error.code === 'LIMIT_FILE_SIZE') {
-                req.flash('error', 'File too large. Maximum size is 5MB.');
+                req.flash('error', 'File too large. Maximum size is 10MB.');
+            } else if (error.code === 'LIMIT_FILE_COUNT') {
+                req.flash('error', 'Too many files. Please reduce the number of files.');
             } else {
                 req.flash('error', 'File upload error: ' + error.message);
             }

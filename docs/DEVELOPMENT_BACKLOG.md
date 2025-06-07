@@ -39,10 +39,9 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to ensure any carnivals I create on this website are merged with data synched from MySideline. We should not end up with duplicates. | ✅ Completed |
 | As a club delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages.  | ✅ Completed |
 | As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on All Carnivals page. | ✅ Completed |
-| As a developer, all test clubs and carnivals should use `public\icons\test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
-| As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ⭕ Not Started |
-| As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa. | ⭕ Not Started |
-| As a developer, I want to ensure images which are uploaded by delegates or sub delegates remain linked to that club and/or carnival. This requires a complex naming standard be added to uploaded images (renamed) | ⭕ Not Started |
+| As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ✅ Completed |
+| As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa. | ✅ Completed |
+| As a developer, I want to ensure images (icons|images) which are uploaded by delegates or sub delegates remain linked to that club and/or carnival. This requires a complex naming standard be added to uploaded and renamed images | ⭕ Not Started |
 | As a club delegate, I want to be able to transfer the role of delegate to another user. | ⭕ Not Started |
 | As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ⭕ Not Started |
@@ -57,16 +56,19 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want the ability to opt-out of my images being used on the home page carousel. | ⭕ Not Started |
 | As a club delegate, When I mark a club as inactive, it should be removed from the "Find Clubs" interface. | ⭕ Not Started |
 | As a club delegate, I want to be able to mark my club as attending a Carnival run by another club. | ⭕ Not Started |
+| As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
 | As a club delegate, I want clubs who have marked as coming to be displayed on the Carnival information page in a list, with links to their club. | ⭕ Not Started |
 | As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
-| As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
+| **Testing** | |
 | As a tester, I want comprehensive unit tests for `models/Carnival.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Club.js`  | ⭕ Not Started |
+| As a developer, all test clubs and carnivals should use `public\icons\test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Index.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/User.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/EmailSubscription.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/emailService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/mySidelineService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `services/imageNamingService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/auth.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/carnival.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/club.controller.js`  | ⭕ Not Started |
@@ -92,13 +94,14 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `views/error.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/index.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/layout.ejs`  | ⭕ Not Started |
+| **Enhancements** | |
 | As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
 | As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
 | As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
-| As a developer, I want to ensure my entire site is vigorously tested and confirmed working 100% and all unit tests are executed and passing. | ⭕ Not Started |
 | **Production & Infrastructure** | |
+| As a developer, I want to ensure my entire site is vigorously tested and confirmed working 100% and all unit tests have been executed and passing. | ⭕ Not Started |
 | As a developer, I want to configure the production environment (SQLite database, email, SSL) for the application to go live. | 🔄 In Progress |
 | As a developer, I want to set up a CI/CD pipeline for automated testing and deployment. | 🔄 In Progress |
 | As an administrator, I want automated SQLite database backups and a disaster recovery plan to protect platform data. | ⭕ Not Started |
