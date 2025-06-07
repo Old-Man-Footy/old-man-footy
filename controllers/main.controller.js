@@ -46,6 +46,29 @@ const showHomepage = async (req, res) => {
             }
         });
 
+        // Get clubs count from registered users and MySideline events
+        const registeredClubsCount = await User.count({
+            where: {
+                isActive: true,
+                clubId: { [Op.ne]: null }
+            },
+            distinct: true,
+            col: 'clubId'
+        });
+
+        // Get unique clubs from MySideline carnival data
+        const mySidelineClubsCount = await Carnival.count({
+            where: {
+                isActive: true,
+                mySidelineEventId: { [Op.ne]: null }
+            },
+            distinct: true,
+            col: 'organizerName'
+        });
+
+        // Total unique clubs (actual count, no minimum)
+        const clubsCount = Math.max(registeredClubsCount, mySidelineClubsCount, 0);
+
         // Get carousel images
         let carouselImages = [];
         try {
@@ -64,7 +87,8 @@ const showHomepage = async (req, res) => {
             carouselImages,
             stats: {
                 totalCarnivals,
-                upcomingCount
+                upcomingCount,
+                clubsCount
             }
         });
     } catch (error) {
@@ -75,7 +99,8 @@ const showHomepage = async (req, res) => {
             carouselImages: [],
             stats: {
                 totalCarnivals: 0,
-                upcomingCount: 0
+                upcomingCount: 0,
+                clubsCount: 0
             }
         });
     }

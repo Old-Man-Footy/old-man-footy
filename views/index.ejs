@@ -1,28 +1,62 @@
 <!-- Hero Section -->
-<section class="bg-primary text-white py-5">
-    <div class="container">
+<section class="hero-banner bg-primary text-white py-4">
+    <div class="hero-background-pattern"></div>
+    <div class="container position-relative">
         <div class="row align-items-center">
             <div class="col-lg-4 text-center">
-                <img src="/icons/old-man-footy.svg" alt="Old Man Footy Logo" class="img-fluid" style="max-height: 350px;">
+                <div class="logo-container">
+                    <img src="/icons/old-man-footy.svg" alt="Old Man Footy Logo" class="img-fluid hero-logo">
+                </div>
             </div>
             <div class="col-lg-8">
-                <div class="text-justify mb-5">
-                    <p class="lead">The 'Old Man Footy' website is your central hub for 
-                        discovering Masters Rugby League carnival events across Australia. 
-                        Explore carnivals in local communities nationwide, all with comprehensive 
-                        event details readily available to help you plan your next Masters experience.</p>
-                </div>
-                <div class="d-flex gap-3 flex-wrap">
-                    <a href="/carnivals" class="btn btn-success btn-lg">
-                        <i class="bi bi-calendar-event"></i> View All Carnivals
-                    </a>
-                    <% if (!user) { %>
-                        <a href="/auth/register" class="btn btn-outline-success btn-lg">
-                            <i class="bi bi-person-plus"></i> Register as Club Delegate
+                <div class="hero-content">
+                    <h1 class="hero-title mb-3">Discover Masters Rugby League</h1>
+                    <div class="hero-description mb-4">
+                        <p class="lead">The 'Old Man Footy' website is your central hub for 
+                            discovering Masters Rugby League carnival events across Australia. 
+                            Explore carnivals in local communities nationwide, all with comprehensive 
+                            event details readily available to help you plan your next Masters experience.</p>
+                    </div>
+                    <div class="hero-actions d-flex gap-3 flex-wrap">
+                        <a href="/carnivals" class="btn btn-success btn-lg hero-btn">
+                            <i class="bi bi-calendar-event"></i> View All Carnivals
                         </a>
-                    <% } %>
+                        <% if (!user) { %>
+                            <a href="/auth/register" class="btn btn-outline-success btn-lg hero-btn">
+                                <i class="bi bi-person-plus"></i> Register as Club Delegate
+                            </a>
+                        <% } %>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Runner -->
+<section class="stats-runner bg-dark text-white py-2">
+    <div class="container">
+        <div class="row text-center">
+            <div class="<%= stats.clubsCount >= 10 ? 'col-6 col-md-4' : 'col-6' %>">
+                <div class="stat-item-small">
+                    <span class="stat-number-small"><%= stats.totalCarnivals %></span>
+                    <span class="stat-label-small">Total Carnivals</span>
+                </div>
+            </div>
+            <div class="<%= stats.clubsCount >= 10 ? 'col-6 col-md-4' : 'col-6' %>">
+                <div class="stat-item-small">
+                    <span class="stat-number-small"><%= stats.upcomingCount %></span>
+                    <span class="stat-label-small">Upcoming Events</span>
+                </div>
+            </div>
+            <% if (stats.clubsCount >= 10) { %>
+            <div class="col-12 col-md-4 mt-2 mt-md-0">
+                <div class="stat-item-small">
+                    <span class="stat-number-small"><%= stats.clubsCount %></span>
+                    <span class="stat-label-small">Registered Clubs</span>
+                </div>
+            </div>
+            <% } %>
         </div>
     </div>
 </section>
