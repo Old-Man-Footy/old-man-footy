@@ -99,37 +99,41 @@ const showClubProfile = async (req, res) => {
             return res.redirect('/clubs');
         }
 
-        // Get club's carnivals
-        const Carnival = require('../models/Carnival');
-        const User = require('../models/User');
-        
-        // Get delegates for this club
+        // Get club's carnivals created by this club's delegates
         const delegates = await User.findAll({
-          where: {
-            clubId: club.id,
-            isActive: true
-          },
-          attributes: ['id']
+            where: {
+                clubId: club.id,
+                isActive: true
+            },
+            attributes: ['id']
         });
         
         const delegateIds = delegates.map(d => d.id);
         
         // Get carnivals created by this club's delegates
         const carnivals = await Carnival.findAll({
-          where: {
-            createdByUserId: delegateIds,
-            isActive: true
-          },
-          include: [{
-            model: User,
-            as: 'createdBy',
-            attributes: ['firstName', 'lastName', 'email']
-          }],
-          order: [['startDate', 'ASC']]
+            where: {
+                createdByUserId: { [Op.in]: delegateIds },
+                isActive: true
+            },
+            include: [{
+                model: User,
+                as: 'creator',
+                attributes: ['firstName', 'lastName', 'email']
+            }],
+            order: [['date', 'ASC']]
         });
 
-        const delegates_full = await club.getDelegates();
-        const primaryDelegate = await club.getPrimaryDelegate();
+        // Get full delegate information
+        const delegates_full = await User.findAll({
+            where: {
+                clubId: club.id,
+                isActive: true
+            },
+            attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate']
+        });
+
+        const primaryDelegate = delegates_full.find(delegate => delegate.isPrimaryDelegate);
 
         res.render('clubs/show', {
             title: `${club.clubName} - Masters Rugby League Club`,

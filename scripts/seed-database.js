@@ -19,22 +19,26 @@ require('dotenv').config();
  * Australian Rugby League club names and locations for realistic test data
  */
 const SAMPLE_CLUBS = [
-    { name: 'Canterbury Bankstown Masters', state: 'NSW', location: 'Belmore' },
-    { name: 'Parramatta Eels Masters', state: 'NSW', location: 'Parramatta' },
-    { name: 'Brisbane Broncos Masters', state: 'QLD', location: 'Brisbane' },
-    { name: 'Gold Coast Titans Masters', state: 'QLD', location: 'Gold Coast' },
-    { name: 'Melbourne Storm Masters', state: 'VIC', location: 'Melbourne' },
-    { name: 'Geelong Masters Rugby League', state: 'VIC', location: 'Geelong' },
-    { name: 'Perth Pirates Masters', state: 'WA', location: 'Perth' },
-    { name: 'Fremantle Dockers Masters', state: 'WA', location: 'Fremantle' },
-    { name: 'Adelaide Rams Masters', state: 'SA', location: 'Adelaide' },
-    { name: 'Port Adelaide Masters', state: 'SA', location: 'Port Adelaide' },
-    { name: 'Hobart Devils Masters', state: 'TAS', location: 'Hobart' },
-    { name: 'Launceston Lions Masters', state: 'TAS', location: 'Launceston' }
+    { name: 'Canterbury Bankstown Masters', state: 'NSW', location: 'Belmore', isPubliclyListed: true },
+    { name: 'Parramatta Eels Masters', state: 'NSW', location: 'Parramatta', isPubliclyListed: true },
+    { name: 'Cronulla Sharks Masters', state: 'NSW', location: 'Cronulla', isPubliclyListed: true },
+    { name: 'Brisbane Broncos Masters', state: 'QLD', location: 'Brisbane', isPubliclyListed: true },
+    { name: 'Gold Coast Titans Masters', state: 'QLD', location: 'Gold Coast', isPubliclyListed: true },
+    { name: 'North Queensland Cowboys Masters', state: 'QLD', location: 'Townsville', isPubliclyListed: true },
+    { name: 'Melbourne Storm Masters', state: 'VIC', location: 'Melbourne', isPubliclyListed: true },
+    { name: 'Geelong Masters Rugby League', state: 'VIC', location: 'Geelong', isPubliclyListed: true },
+    { name: 'Perth Pirates Masters', state: 'WA', location: 'Perth', isPubliclyListed: true },
+    { name: 'Fremantle Dockers Masters', state: 'WA', location: 'Fremantle', isPubliclyListed: true },
+    { name: 'Adelaide Rams Masters', state: 'SA', location: 'Adelaide', isPubliclyListed: true },
+    { name: 'Port Adelaide Masters', state: 'SA', location: 'Port Adelaide', isPubliclyListed: false }, // Test club - not public
+    { name: 'Hobart Devils Masters', state: 'TAS', location: 'Hobart', isPubliclyListed: true },
+    { name: 'Launceston Lions Masters', state: 'TAS', location: 'Launceston', isPubliclyListed: true },
+    { name: 'Darwin Crocodiles Masters', state: 'NT', location: 'Darwin', isPubliclyListed: true },
+    { name: 'Canberra Raiders Masters', state: 'ACT', location: 'Canberra', isPubliclyListed: true }
 ];
 
 /**
- * Sample carnival data for testing
+ * Sample carnival data for testing - diverse across all states
  */
 const SAMPLE_CARNIVALS = [
     {
@@ -53,6 +57,20 @@ const SAMPLE_CARNIVALS = [
         socialMediaInstagram: 'https://instagram.com/nswmasters'
     },
     {
+        title: 'Cronulla Beach Masters Tournament',
+        date: new Date('2025-08-10'),
+        state: 'NSW',
+        locationAddress: 'Sharks Park, Cronulla NSW 2230',
+        scheduleDetails: 'Beach-side tournament with modified touch rules. 10:00 AM start, BBQ lunch included.',
+        organiserContactName: 'Steve Rogers',
+        organiserContactEmail: 'steve.rogers@cronullamasters.com.au',
+        organiserContactPhone: '0423 111 222',
+        registrationLink: 'https://www.cronullamasters.com.au/beach-tournament',
+        feesDescription: 'Team entry: $120. Individual players: $30.',
+        socialMediaFacebook: 'https://facebook.com/cronullamasters',
+        socialMediaWebsite: 'https://www.cronullamasters.com.au'
+    },
+    {
         title: 'Queensland Masters Carnival',
         date: new Date('2025-08-20'),
         state: 'QLD',
@@ -66,6 +84,34 @@ const SAMPLE_CARNIVALS = [
         callForVolunteers: 'Volunteers needed for ground setup, timekeeping, and canteen duties.',
         socialMediaFacebook: 'https://facebook.com/qldmasters',
         socialMediaWebsite: 'https://www.qldmasters.com.au'
+    },
+    {
+        title: 'Gold Coast Summer Festival',
+        date: new Date('2025-12-28'),
+        state: 'QLD',
+        locationAddress: 'Cbus Super Stadium, Robina QLD 4226',
+        scheduleDetails: 'Holiday season festival with family activities. Games run from 9:00 AM to 5:00 PM.',
+        organiserContactName: 'Mark Thompson',
+        organiserContactEmail: 'mark.thompson@gcmasters.com.au',
+        organiserContactPhone: '0434 222 333',
+        registrationLink: 'https://www.gcmasters.com.au/summer-festival',
+        feesDescription: 'Entry: $80 per team. Kids activities included.',
+        socialMediaInstagram: 'https://instagram.com/gcmasters',
+        socialMediaTwitter: 'https://twitter.com/gcmasters'
+    },
+    {
+        title: 'North Queensland Cowboys Heritage Cup',
+        date: new Date('2025-07-15'),
+        state: 'QLD',
+        locationAddress: 'Queensland Country Bank Stadium, Townsville QLD 4810',
+        scheduleDetails: 'Heritage round celebrating rugby league history. Traditional jerseys encouraged.',
+        organiserContactName: 'Jim Richards',
+        organiserContactEmail: 'jim.richards@nqmasters.com.au',
+        organiserContactPhone: '0445 333 444',
+        registrationLink: 'https://www.nqmasters.com.au/heritage-cup',
+        feesDescription: 'Team registration: $140. Museum tour included.',
+        callForVolunteers: 'Looking for heritage display volunteers and photographers.',
+        socialMediaWebsite: 'https://www.nqmasters.com.au'
     },
     {
         title: 'Victorian Masters Championship',
@@ -82,6 +128,20 @@ const SAMPLE_CARNIVALS = [
         socialMediaTwitter: 'https://twitter.com/vicmasters'
     },
     {
+        title: 'Geelong Waterfront Masters Cup',
+        date: new Date('2025-10-12'),
+        state: 'VIC',
+        locationAddress: 'Kardinia Park, Geelong VIC 3220',
+        scheduleDetails: 'Scenic waterfront tournament with post-game festivities. 9:00 AM to 6:00 PM.',
+        organiserContactName: 'Paul Anderson',
+        organiserContactEmail: 'paul.anderson@geelongmasters.com.au',
+        organiserContactPhone: '0456 444 555',
+        registrationLink: 'https://www.geelongmasters.com.au/waterfront-cup',
+        feesDescription: 'Entry: $160 per team. Evening dinner optional ($35pp).',
+        socialMediaFacebook: 'https://facebook.com/geelongmasters',
+        socialMediaInstagram: 'https://instagram.com/geelongmasters'
+    },
+    {
         title: 'Perth Masters Festival',
         date: new Date('2025-10-05'),
         state: 'WA',
@@ -96,6 +156,19 @@ const SAMPLE_CARNIVALS = [
         socialMediaWebsite: 'https://www.wamasters.com.au'
     },
     {
+        title: 'Fremantle Dockers Masters Derby',
+        date: new Date('2025-09-28'),
+        state: 'WA',
+        locationAddress: 'Fremantle Oval, Fremantle WA 6160',
+        scheduleDetails: 'Local derby with traditional rivalries. Morning games followed by presentation lunch.',
+        organiserContactName: 'Tony Walsh',
+        organiserContactEmail: 'tony.walsh@fremantlemasters.com.au',
+        organiserContactPhone: '0467 555 666',
+        registrationLink: 'https://www.fremantlemasters.com.au/derby2025',
+        feesDescription: 'Team entry: $130. Lunch included for all participants.',
+        socialMediaFacebook: 'https://facebook.com/fremantlemasters'
+    },
+    {
         title: 'Adelaide Masters Cup',
         date: new Date('2025-06-25'),
         state: 'SA',
@@ -106,6 +179,76 @@ const SAMPLE_CARNIVALS = [
         organiserContactPhone: '0456 789 012',
         registrationLink: 'https://www.samasters.com.au/cup2025',
         feesDescription: 'Entry: $120 per team. Trophy presentation at 5:00 PM.'
+    },
+    {
+        title: 'Port Adelaide Heritage Carnival',
+        date: new Date('2025-11-14'),
+        state: 'SA',
+        locationAddress: 'Alberton Oval, Port Adelaide SA 5015',
+        scheduleDetails: 'Heritage-themed carnival celebrating club history. Vintage uniforms encouraged.',
+        organiserContactName: 'Robert Power',
+        organiserContactEmail: 'robert.power@portmasters.com.au',
+        organiserContactPhone: '0478 666 777',
+        registrationLink: 'https://www.portmasters.com.au/heritage2025',
+        feesDescription: 'Team registration: $110. Heritage display entry free.',
+        callForVolunteers: 'Seeking volunteers for heritage displays and photography.',
+        socialMediaInstagram: 'https://instagram.com/portmasters'
+    },
+    {
+        title: 'Tasmania Devils Island Championship',
+        date: new Date('2025-08-05'),
+        state: 'TAS',
+        locationAddress: 'Bellerive Oval, Hobart TAS 7018',
+        scheduleDetails: 'Island-wide championship bringing together teams from across Tasmania.',
+        organiserContactName: 'Andrew Clark',
+        organiserContactEmail: 'andrew.clark@tasmasters.com.au',
+        organiserContactPhone: '0489 777 888',
+        registrationLink: 'https://www.tasmasters.com.au/island-championship',
+        feesDescription: 'Entry: $90 per team. Ferry discounts available for visiting teams.',
+        socialMediaFacebook: 'https://facebook.com/tasmasters',
+        socialMediaWebsite: 'https://www.tasmasters.com.au'
+    },
+    {
+        title: 'Launceston Lions Northern Cup',
+        date: new Date('2025-09-20'),
+        state: 'TAS',
+        locationAddress: 'York Park, Launceston TAS 7250',
+        scheduleDetails: 'Northern Tasmania competition with interstate teams welcome. Two-day format.',
+        organiserContactName: 'Karen Mitchell',
+        organiserContactEmail: 'karen.mitchell@northerntasmasters.com.au',
+        organiserContactPhone: '0491 888 999',
+        registrationLink: 'https://www.northerntasmasters.com.au/northern-cup',
+        feesDescription: 'Team entry: $100. Accommodation assistance available.',
+        socialMediaTwitter: 'https://twitter.com/northerntasmasters'
+    },
+    {
+        title: 'Darwin Crocodiles Top End Tournament',
+        date: new Date('2025-08-30'),
+        state: 'NT',
+        locationAddress: 'TIO Stadium, Darwin NT 0800',
+        scheduleDetails: 'Unique Top End experience with modified heat rules. Early morning and evening games.',
+        organiserContactName: 'Terry Johnson',
+        organiserContactEmail: 'terry.johnson@ntmasters.com.au',
+        organiserContactPhone: '0412 999 111',
+        registrationLink: 'https://www.ntmasters.com.au/top-end-tournament',
+        feesDescription: 'Entry: $85 per team. Heat management protocols included.',
+        callForVolunteers: 'Need volunteers familiar with tropical weather protocols.',
+        socialMediaFacebook: 'https://facebook.com/ntmasters',
+        socialMediaWebsite: 'https://www.ntmasters.com.au'
+    },
+    {
+        title: 'Canberra Raiders Capital Cup',
+        date: new Date('2025-07-05'),
+        state: 'ACT',
+        locationAddress: 'GIO Stadium, Canberra ACT 2617',
+        scheduleDetails: 'National capital tournament featuring teams from surrounding regions.',
+        organiserContactName: 'Michelle Green',
+        organiserContactEmail: 'michelle.green@actmasters.com.au',
+        organiserContactPhone: '0423 111 000',
+        registrationLink: 'https://www.actmasters.com.au/capital-cup',
+        feesDescription: 'Team registration: $140. Parliament House tour optional.',
+        socialMediaInstagram: 'https://instagram.com/actmasters',
+        socialMediaTwitter: 'https://twitter.com/actmasters'
     }
 ];
 
@@ -176,6 +319,7 @@ class DatabaseSeeder {
                 clubName: clubData.name,
                 state: clubData.state,
                 location: clubData.location,
+                isPubliclyListed: clubData.isPubliclyListed,
                 isActive: true
             });
             
