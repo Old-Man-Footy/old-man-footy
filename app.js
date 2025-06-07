@@ -120,7 +120,8 @@ app.use((error, req, res, next) => {
     res.render('error', {
         title: 'Error',
         message: error.message,
-        error: process.env.NODE_ENV === 'production' ? {} : error
+        error: process.env.NODE_ENV === 'production' ? {} : error,
+        user: req.user || null
     });
 });
 

@@ -42,10 +42,26 @@ const loginUser = (req, res, next) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showRegisterForm = (req, res) => {
-    res.render('auth/register', {
-        title: 'Register as Club Delegate'
-    });
+const showRegisterForm = async (req, res) => {
+    try {
+        // Fetch all clubs for autocomplete
+        const clubs = await Club.findAll({
+            where: { isActive: true },
+            order: [['clubName', 'ASC']]
+        });
+
+        res.render('auth/register', {
+            title: 'Register as Club Delegate',
+            clubs
+        });
+    } catch (error) {
+        console.error('Error fetching clubs for registration:', error);
+        // Fallback without clubs data
+        res.render('auth/register', {
+            title: 'Register as Club Delegate',
+            clubs: []
+        });
+    }
 };
 
 /**
@@ -57,10 +73,17 @@ const registerUser = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            // Fetch clubs for autocomplete when re-rendering form with errors
+            const clubs = await Club.findAll({
+                where: { isActive: true },
+                order: [['clubName', 'ASC']]
+            });
+
             return res.render('auth/register', {
                 title: 'Register as Club Delegate',
                 errors: errors.array(),
-                formData: req.body
+                formData: req.body,
+                clubs
             });
         }
 
@@ -69,10 +92,17 @@ const registerUser = async (req, res) => {
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
         if (existingUser) {
+            // Fetch clubs for autocomplete when re-rendering form with errors
+            const clubs = await Club.findAll({
+                where: { isActive: true },
+                order: [['clubName', 'ASC']]
+            });
+
             return res.render('auth/register', {
                 title: 'Register as Club Delegate',
                 errors: [{ msg: 'User with this email already exists' }],
-                formData: req.body
+                formData: req.body,
+                clubs
             });
         }
 
@@ -90,10 +120,17 @@ const registerUser = async (req, res) => {
             });
 
             if (existingPrimaryDelegate) {
+                // Fetch clubs for autocomplete when re-rendering form with errors
+                const clubs = await Club.findAll({
+                    where: { isActive: true },
+                    order: [['clubName', 'ASC']]
+                });
+
                 return res.render('auth/register', {
                     title: 'Register as Club Delegate',
                     errors: [{ msg: 'This club already has a primary delegate. Please contact them for an invitation.' }],
-                    formData: req.body
+                    formData: req.body,
+                    clubs
                 });
             }
         } else {

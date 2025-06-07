@@ -39,7 +39,8 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to ensure any carnivals I create on this website are merged with data synched from MySideline. We should not end up with duplicates. | ✅ Completed |
 | As a developer, I want to ensure all user interfaces, views and models are vigorously unit tested aiming for 100% coverage. | 🔄 In Progress |
 | **Enhancements** | |
-| As a delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages. | ⭕ Not Started |
+| As a club delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages. | ⭕ Not Started |
+| As a club delegate, I want to be able to transfer the role of delegate to another user. | ⭕ Not Started |
 | As a developer, I want to have a route for potential players to search for clubs and view them in their state | ⭕ Not Started |
 | As a user, I want to view carnivals on a calendar to visualise event dates. | ⭕ Not Started |
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ⭕ Not Started |
