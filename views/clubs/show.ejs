@@ -295,34 +295,40 @@
         <!-- Sidebar -->
         <div class="col-lg-4">
             <!-- Contact Information -->
-            <% if (club.contactEmail || club.contactPhone || club.website) { %>
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-address-book me-2"></i>Contact Information</h5>
+            <% if (club.contactPerson || club.contactEmail || club.contactPhone || club.website) { %>
+                <div class="card shadow mb-4 club-contact-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Contact Information</h5>
                     </div>
                     <div class="card-body">
+                        <% if (club.contactPerson) { %>
+                            <div class="mb-3">
+                                <strong><i class="bi bi-person me-2"></i>Contact Person:</strong><br>
+                                <span class="text-muted"><%= club.contactPerson %></span>
+                            </div>
+                        <% } %>
                         <% if (club.contactEmail) { %>
                             <div class="mb-3">
-                                <strong>Email:</strong><br>
-                                <a href="mailto:<%= club.contactEmail %>">
+                                <strong><i class="bi bi-envelope me-2"></i>Email:</strong><br>
+                                <a href="mailto:<%= club.contactEmail %>" class="text-decoration-none">
                                     <%= club.contactEmail %>
                                 </a>
                             </div>
                         <% } %>
                         <% if (club.contactPhone) { %>
                             <div class="mb-3">
-                                <strong>Phone:</strong><br>
-                                <a href="tel:<%= club.contactPhone %>">
+                                <strong><i class="bi bi-telephone me-2"></i>Phone:</strong><br>
+                                <a href="tel:<%= club.contactPhone %>" class="text-decoration-none">
                                     <%= club.contactPhone %>
                                 </a>
                             </div>
                         <% } %>
                         <% if (club.website) { %>
                             <div class="mb-0">
-                                <strong>Website:</strong><br>
+                                <strong><i class="bi bi-globe me-2"></i>Website:</strong><br>
                                 <a href="<%= club.website %>" target="_blank" class="text-decoration-none">
                                     Visit Club Website
-                                    <i class="fas fa-external-link-alt ms-1 small"></i>
+                                    <i class="bi bi-box-arrow-up-right ms-1 small"></i>
                                 </a>
                             </div>
                         <% } %>
@@ -331,38 +337,32 @@
             <% } %>
 
             <!-- Social Media -->
-            <% if (club.socialMediaFacebook || club.socialMediaInstagram || club.socialMediaTwitter) { %>
+            <% if (club.facebookUrl || club.instagramUrl || club.twitterUrl) { %>
                 <div class="card shadow mb-4 club-social-card">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0">
-                            <i class="bi bi-share"></i> Social Media
+                            <i class="bi bi-share me-2"></i>Social Media
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <% if (club.socialMediaFacebook) { %>
-                                <div class="col-12 mb-3">
-                                    <a href="<%= club.socialMediaFacebook %>" target="_blank" 
-                                       class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center">
-                                        <i class="fab fa-facebook me-2"></i>Facebook
-                                    </a>
-                                </div>
+                        <div class="social-links">
+                            <% if (club.facebookUrl) { %>
+                                <a href="<%= club.facebookUrl %>" target="_blank" 
+                                   class="btn btn-outline-primary mb-2 w-100 d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-facebook me-2"></i>Facebook
+                                </a>
                             <% } %>
-                            <% if (club.socialMediaInstagram) { %>
-                                <div class="col-12 mb-3">
-                                    <a href="<%= club.socialMediaInstagram %>" target="_blank" 
-                                       class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center">
-                                        <i class="fab fa-instagram me-2"></i>Instagram
-                                    </a>
-                                </div>
+                            <% if (club.instagramUrl) { %>
+                                <a href="<%= club.instagramUrl %>" target="_blank" 
+                                   class="btn btn-outline-danger mb-2 w-100 d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-instagram me-2"></i>Instagram
+                                </a>
                             <% } %>
-                            <% if (club.socialMediaTwitter) { %>
-                                <div class="col-12">
-                                    <a href="<%= club.socialMediaTwitter %>" target="_blank" 
-                                       class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center">
-                                        <i class="fab fa-twitter me-2"></i>X
-                                    </a>
-                                </div>
+                            <% if (club.twitterUrl) { %>
+                                <a href="<%= club.twitterUrl %>" target="_blank" 
+                                   class="btn btn-outline-info mb-2 w-100 d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-twitter me-2"></i>X
+                                </a>
                             <% } %>
                         </div>
                     </div>
