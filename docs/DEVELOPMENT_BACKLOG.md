@@ -94,9 +94,12 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `views/carnivals/list.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/carnivals/new.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/carnivals/show.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/sponsors.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/clubs/list.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/clubs/manage.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/clubs/show.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/clubs/sponsors.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/clubs/add-sponsor.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/about.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/dashboard.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/error.ejs`  | ⭕ Not Started |

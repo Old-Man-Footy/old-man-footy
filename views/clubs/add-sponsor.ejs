@@ -1,0 +1,337 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-plus text-primary me-2"></i>
+                        Add Sponsor
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Add a new sponsor or link an existing one to <%= club.clubName %>
+                    </p>
+                </div>
+                <div>
+                    <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Sponsors
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            <%- include('../partials/flash-messages') %>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Sponsor Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Sponsor Type Selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Choose Option:</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="sponsorType" id="newSponsor" value="new" checked>
+                                    <label class="btn btn-outline-primary" for="newSponsor">
+                                        <i class="fas fa-plus me-2"></i>Create New Sponsor
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="sponsorType" id="existingSponsor" value="existing" 
+                                           <% if (!availableSponsors || availableSponsors.length === 0) { %>disabled<% } %>>
+                                    <label class="btn btn-outline-success" for="existingSponsor">
+                                        <i class="fas fa-link me-2"></i>Link Existing Sponsor
+                                        <% if (availableSponsors && availableSponsors.length > 0) { %>
+                                            <span class="badge bg-success ms-1"><%= availableSponsors.length %></span>
+                                        <% } %>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <form method="POST" action="/clubs/manage/sponsors/add" enctype="multipart/form-data" id="sponsorForm">
+                                <input type="hidden" name="sponsorType" id="sponsorTypeInput" value="new">
+
+                                <!-- Existing Sponsor Selection -->
+                                <div id="existingSponsorSection" style="display: none;">
+                                    <div class="mb-4">
+                                        <label for="existingSponsorId" class="form-label">Select Existing Sponsor</label>
+                                        <select class="form-select" name="existingSponsorId" id="existingSponsorId">
+                                            <option value="">Choose a sponsor...</option>
+                                            <% if (availableSponsors && availableSponsors.length > 0) { %>
+                                                <% availableSponsors.forEach(sponsor => { %>
+                                                    <option value="<%= sponsor.id %>">
+                                                        <%= sponsor.sponsorName %> 
+                                                        <% if (sponsor.location) { %>- <%= sponsor.location %><% } %>
+                                                        <% if (sponsor.sponsorshipLevel) { %> (<%= sponsor.sponsorshipLevel %>)<% } %>
+                                                    </option>
+                                                <% }); %>
+                                            <% } %>
+                                        </select>
+                                        <div class="form-text">
+                                            Select a sponsor that already exists in the system to link to your club.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- New Sponsor Form -->
+                                <div id="newSponsorSection">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label for="sponsorName" class="form-label">Sponsor Name <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="sponsorName" id="sponsorName" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="sponsorshipLevel" class="form-label">Sponsorship Level</label>
+                                                <select class="form-select" name="sponsorshipLevel" id="sponsorshipLevel">
+                                                    <option value="">Select level...</option>
+                                                    <% sponsorshipLevels.forEach(level => { %>
+                                                        <option value="<%= level %>"><%= level %></option>
+                                                    <% }); %>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="businessType" class="form-label">Business Type</label>
+                                                <input type="text" class="form-control" name="businessType" id="businessType" 
+                                                       placeholder="e.g., Construction, Real Estate, Restaurant">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="state" class="form-label">State</label>
+                                                <select class="form-select" name="state" id="state">
+                                                    <option value="">Select state...</option>
+                                                    <% states.forEach(state => { %>
+                                                        <option value="<%= state %>"><%= state %></option>
+                                                    <% }); %>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="location" class="form-label">Location</label>
+                                        <input type="text" class="form-control" name="location" id="location" 
+                                               placeholder="City or suburb">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="description" rows="3" 
+                                                  placeholder="Brief description of the sponsor's business or services"></textarea>
+                                    </div>
+
+                                    <!-- Contact Information -->
+                                    <h6 class="mb-3 mt-4">Contact Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="contactPerson" class="form-label">Contact Person</label>
+                                                <input type="text" class="form-control" name="contactPerson" id="contactPerson">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="contactEmail" class="form-label">Email</label>
+                                                <input type="email" class="form-control" name="contactEmail" id="contactEmail">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="contactPhone" class="form-label">Phone</label>
+                                                <input type="tel" class="form-control" name="contactPhone" id="contactPhone">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="website" class="form-label">Website</label>
+                                                <input type="url" class="form-control" name="website" id="website" 
+                                                       placeholder="https://www.example.com">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Social Media -->
+                                    <h6 class="mb-3 mt-4">Social Media (Optional)</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="facebookUrl" class="form-label">
+                                                    <i class="fab fa-facebook text-primary me-1"></i>Facebook
+                                                </label>
+                                                <input type="url" class="form-control" name="facebookUrl" id="facebookUrl" 
+                                                       placeholder="https://facebook.com/business">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="instagramUrl" class="form-label">
+                                                    <i class="fab fa-instagram text-danger me-1"></i>Instagram
+                                                </label>
+                                                <input type="url" class="form-control" name="instagramUrl" id="instagramUrl" 
+                                                       placeholder="https://instagram.com/business">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="twitterUrl" class="form-label">
+                                                    <i class="fab fa-twitter text-info me-1"></i>Twitter
+                                                </label>
+                                                <input type="url" class="form-control" name="twitterUrl" id="twitterUrl" 
+                                                       placeholder="https://twitter.com/business">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="linkedinUrl" class="form-label">
+                                                    <i class="fab fa-linkedin text-primary me-1"></i>LinkedIn
+                                                </label>
+                                                <input type="url" class="form-control" name="linkedinUrl" id="linkedinUrl" 
+                                                       placeholder="https://linkedin.com/company/business">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Logo Upload -->
+                                    <h6 class="mb-3 mt-4">Logo</h6>
+                                    <div class="mb-3">
+                                        <label for="logo" class="form-label">Sponsor Logo</label>
+                                        <input type="file" class="form-control" name="logo" id="logo" 
+                                               accept="image/*">
+                                        <div class="form-text">
+                                            Upload a logo image for the sponsor. Supported formats: JPG, PNG, SVG. Max size: 5MB.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Buttons -->
+                                <div class="d-flex gap-2 pt-3 border-top">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>
+                                        <span id="submitText">Add Sponsor</span>
+                                    </button>
+                                    <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Sponsors Preview -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Available Sponsors
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <% if (availableSponsors && availableSponsors.length > 0) { %>
+                                <p class="text-muted small mb-3">
+                                    You can link to any of these existing sponsors:
+                                </p>
+                                <div class="list-group list-group-flush">
+                                    <% availableSponsors.slice(0, 5).forEach(sponsor => { %>
+                                        <div class="list-group-item px-0 py-2">
+                                            <div class="d-flex align-items-center">
+                                                <% if (sponsor.logoUrl) { %>
+                                                    <img src="/<%= sponsor.logoUrl %>" 
+                                                         alt="<%= sponsor.sponsorName %>" 
+                                                         class="me-2 rounded" 
+                                                         style="width: 32px; height: 32px; object-fit: contain;">
+                                                <% } else { %>
+                                                    <div class="me-2 bg-light rounded d-flex align-items-center justify-content-center" 
+                                                         style="width: 32px; height: 32px;">
+                                                        <i class="fas fa-building text-muted"></i>
+                                                    </div>
+                                                <% } %>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold small"><%= sponsor.sponsorName %></div>
+                                                    <% if (sponsor.location) { %>
+                                                        <div class="text-muted small"><%= sponsor.location %></div>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                    <% if (availableSponsors.length > 5) { %>
+                                        <div class="list-group-item px-0 py-2 text-center text-muted">
+                                            <small>And <%= availableSponsors.length - 5 %> more...</small>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            <% } else { %>
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                    <p class="mb-0 small">
+                                        No existing sponsors available to link. Create a new sponsor to get started.
+                                    </p>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const newSponsorRadio = document.getElementById('newSponsor');
+    const existingSponsorRadio = document.getElementById('existingSponsor');
+    const newSponsorSection = document.getElementById('newSponsorSection');
+    const existingSponsorSection = document.getElementById('existingSponsorSection');
+    const sponsorTypeInput = document.getElementById('sponsorTypeInput');
+    const submitText = document.getElementById('submitText');
+
+    function toggleSections() {
+        if (newSponsorRadio.checked) {
+            newSponsorSection.style.display = 'block';
+            existingSponsorSection.style.display = 'none';
+            sponsorTypeInput.value = 'new';
+            submitText.textContent = 'Add New Sponsor';
+            
+            // Make new sponsor fields required
+            document.getElementById('sponsorName').required = true;
+            document.getElementById('existingSponsorId').required = false;
+        } else {
+            newSponsorSection.style.display = 'none';
+            existingSponsorSection.style.display = 'block';
+            sponsorTypeInput.value = 'existing';
+            submitText.textContent = 'Link Existing Sponsor';
+            
+            // Make existing sponsor selection required
+            document.getElementById('sponsorName').required = false;
+            document.getElementById('existingSponsorId').required = true;
+        }
+    }
+
+    newSponsorRadio.addEventListener('change', toggleSections);
+    existingSponsorRadio.addEventListener('change', toggleSections);
+
+    // Initialize
+    toggleSections();
+});
+</script>
+
+<%- include('../partials/footer') %>

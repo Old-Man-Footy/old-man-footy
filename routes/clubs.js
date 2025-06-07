@@ -31,4 +31,18 @@ router.get('/:clubId/images', ensureAuthenticated, clubController.getClubImages)
 // Delete a specific club image
 router.delete('/:clubId/images/:filename', ensureAuthenticated, clubController.deleteClubImage);
 
+// Sponsor management routes for club delegates
+// View club's sponsors
+router.get('/manage/sponsors', ensureAuthenticated, clubController.showClubSponsors);
+
+// Add new sponsor or link existing sponsor to club
+router.get('/manage/sponsors/add', ensureAuthenticated, clubController.showAddSponsor);
+router.post('/manage/sponsors/add', ensureAuthenticated, clubController.addSponsorToClub);
+
+// Remove sponsor from club
+router.post('/manage/sponsors/:sponsorId/remove', ensureAuthenticated, clubController.removeSponsorFromClub);
+
+// Update sponsor priority/order for club
+router.post('/manage/sponsors/reorder', ensureAuthenticated, clubController.reorderClubSponsors);
+
 module.exports = router;

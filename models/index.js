@@ -57,6 +57,21 @@ Sponsor.belongsToMany(Club, {
   as: 'clubs'
 });
 
+// Carnival and Sponsor many-to-many relationship
+Carnival.belongsToMany(Sponsor, {
+  through: 'CarnivalSponsors',
+  foreignKey: 'carnivalId',
+  otherKey: 'sponsorId',
+  as: 'sponsors'
+});
+
+Sponsor.belongsToMany(Carnival, {
+  through: 'CarnivalSponsors',
+  foreignKey: 'sponsorId',
+  otherKey: 'carnivalId',
+  as: 'carnivals'
+});
+
 /**
  * Export all models and database instance
  */

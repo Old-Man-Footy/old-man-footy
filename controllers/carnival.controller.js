@@ -5,7 +5,7 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Carnival, User, Club } = require('../models');
+const { Carnival, User, Club, Sponsor } = require('../models');
 const { validationResult } = require('express-validator');
 const mySidelineService = require('../services/mySidelineService');
 const emailService = require('../services/emailService');
@@ -603,6 +603,172 @@ module.exports = {
                 success: false,
                 message: `Sync failed: ${error.message}`
             });
+        }
+    },
+
+    /**
+     * Show carnival's sponsors management page
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    showCarnivalSponsors: async (req, res) => {
+        try {
+            const carnival = await Carnival.findByPk(req.params.id, {
+                include: [
+                    {
+                        model: User,
+                        as: 'creator',
+                        attributes: ['firstName', 'lastName', 'clubId']
+                    },
+                    {
+                        model: Sponsor,
+                        as: 'sponsors',
+                        where: { isActive: true },
+                        required: false,
+                        through: { attributes: [] }
+                    }
+                ]
+            });
+
+            if (!carnival) {
+                req.flash('error_msg', 'Carnival not found.');
+                return res.redirect('/carnivals');
+            }
+
+            // Check if user can edit this carnival
+            if (!carnival.canUserEdit(req.user)) {
+                req.flash('error_msg', 'You can only manage sponsors for your own carnivals.');
+                return res.redirect(`/carnivals/${carnival.id}`);
+            }
+
+            // Get club sponsors that can be linked to this carnival
+            let clubSponsors = [];
+            if (req.user.clubId) {
+                const club = await Club.findByPk(req.user.clubId, {
+                    include: [{
+                        model: Sponsor,
+                        as: 'sponsors',
+                        where: { isActive: true },
+                        required: false,
+                        through: { attributes: [] }
+                    }]
+                });
+                clubSponsors = club ? club.sponsors : [];
+            }
+
+            res.render('carnivals/sponsors', {
+                title: `Manage Sponsors - ${carnival.title}`,
+                carnival,
+                carnivalSponsors: carnival.sponsors || [],
+                clubSponsors
+            });
+        } catch (error) {
+            console.error('Error loading carnival sponsors:', error);
+            req.flash('error_msg', 'Error loading carnival sponsors.');
+            res.redirect(`/carnivals/${req.params.id}`);
+        }
+    },
+
+    /**
+     * Add sponsor to carnival
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    addSponsorToCarnival: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { sponsorId } = req.body;
+
+            const carnival = await Carnival.findByPk(id);
+
+            if (!carnival) {
+                req.flash('error_msg', 'Carnival not found.');
+                return res.redirect('/carnivals');
+            }
+
+            // Check if user can edit this carnival
+            if (!carnival.canUserEdit(req.user)) {
+                req.flash('error_msg', 'You can only manage sponsors for your own carnivals.');
+                return res.redirect(`/carnivals/${carnival.id}`);
+            }
+
+            const sponsor = await Sponsor.findByPk(sponsorId);
+            
+            if (!sponsor) {
+                req.flash('error_msg', 'Sponsor not found.');
+                return res.redirect(`/carnivals/${carnival.id}/sponsors`);
+            }
+
+            // Check if sponsor is already linked to this carnival
+            const existingSponsors = await carnival.getSponsors();
+            const isAlreadyLinked = existingSponsors.some(s => s.id === parseInt(sponsorId));
+            
+            if (isAlreadyLinked) {
+                req.flash('error_msg', 'This sponsor is already linked to this carnival.');
+                return res.redirect(`/carnivals/${carnival.id}/sponsors`);
+            }
+
+            // Check if sponsor is associated with user's club
+            if (req.user.clubId) {
+                const isClubSponsor = await sponsor.isAssociatedWithClub(req.user.clubId);
+                if (!isClubSponsor && !req.user.isAdmin) {
+                    req.flash('error_msg', 'You can only link sponsors that are associated with your club.');
+                    return res.redirect(`/carnivals/${carnival.id}/sponsors`);
+                }
+            }
+
+            // Add sponsor to carnival
+            await carnival.addSponsor(sponsor);
+
+            req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to this carnival!`);
+            res.redirect(`/carnivals/${carnival.id}/sponsors`);
+
+        } catch (error) {
+            console.error('Error adding sponsor to carnival:', error);
+            req.flash('error_msg', 'Error adding sponsor to carnival.');
+            res.redirect(`/carnivals/${req.params.id}/sponsors`);
+        }
+    },
+
+    /**
+     * Remove sponsor from carnival
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    removeSponsorFromCarnival: async (req, res) => {
+        try {
+            const { id, sponsorId } = req.params;
+
+            const carnival = await Carnival.findByPk(id);
+
+            if (!carnival) {
+                req.flash('error_msg', 'Carnival not found.');
+                return res.redirect('/carnivals');
+            }
+
+            // Check if user can edit this carnival
+            if (!carnival.canUserEdit(req.user)) {
+                req.flash('error_msg', 'You can only manage sponsors for your own carnivals.');
+                return res.redirect(`/carnivals/${carnival.id}`);
+            }
+
+            const sponsor = await Sponsor.findByPk(sponsorId);
+            
+            if (!sponsor) {
+                req.flash('error_msg', 'Sponsor not found.');
+                return res.redirect(`/carnivals/${carnival.id}/sponsors`);
+            }
+
+            // Remove sponsor from carnival
+            await carnival.removeSponsor(sponsor);
+
+            req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been removed from this carnival.`);
+            res.redirect(`/carnivals/${carnival.id}/sponsors`);
+
+        } catch (error) {
+            console.error('Error removing sponsor from carnival:', error);
+            req.flash('error_msg', 'Error removing sponsor from carnival.');
+            res.redirect(`/carnivals/${req.params.id}/sponsors`);
         }
     }
 };

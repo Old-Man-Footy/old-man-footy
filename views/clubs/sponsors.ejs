@@ -1,0 +1,217 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="fas fa-handshake text-primary me-2"></i>
+                        Club Sponsors
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Manage sponsors for <%= club.clubName %>
+                    </p>
+                </div>
+                <div>
+                    <a href="/clubs/manage" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Club Management
+                    </a>
+                    <a href="/clubs/manage/sponsors/add" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Sponsor
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            <%- include('../partials/flash-messages') %>
+
+            <!-- Sponsors Grid -->
+            <% if (sponsors && sponsors.length > 0) { %>
+                <div class="row g-4">
+                    <% sponsors.forEach((sponsor, index) => { %>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <!-- Sponsor Logo -->
+                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 150px;">
+                                    <% if (sponsor.logoUrl) { %>
+                                        <img src="/<%= sponsor.logoUrl %>" 
+                                             alt="<%= sponsor.sponsorName %> Logo" 
+                                             class="img-fluid" 
+                                             style="max-height: 120px; max-width: 100%; object-fit: contain;">
+                                    <% } else { %>
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-building fa-3x mb-2"></i>
+                                            <p class="mb-0 small">No Logo</p>
+                                        </div>
+                                    <% } %>
+                                </div>
+
+                                <div class="card-body d-flex flex-column">
+                                    <div class="mb-auto">
+                                        <h5 class="card-title">
+                                            <%= sponsor.sponsorName %>
+                                            <% if (sponsor.sponsorshipLevel) { %>
+                                                <span class="badge bg-secondary ms-2"><%= sponsor.sponsorshipLevel %></span>
+                                            <% } %>
+                                        </h5>
+                                        
+                                        <% if (sponsor.businessType) { %>
+                                            <p class="text-muted small mb-2">
+                                                <i class="fas fa-industry me-1"></i>
+                                                <%= sponsor.businessType %>
+                                            </p>
+                                        <% } %>
+
+                                        <% if (sponsor.location) { %>
+                                            <p class="text-muted small mb-2">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                <%= sponsor.location %><% if (sponsor.state) { %>, <%= sponsor.state %><% } %>
+                                            </p>
+                                        <% } %>
+
+                                        <% if (sponsor.description) { %>
+                                            <p class="card-text small">
+                                                <%= sponsor.description.length > 100 ? sponsor.description.substring(0, 100) + '...' : sponsor.description %>
+                                            </p>
+                                        <% } %>
+                                    </div>
+
+                                    <!-- Priority Badge -->
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            Priority: #<%= sponsor.clubSponsor?.priority || (index + 1) %>
+                                        </small>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="mt-auto">
+                                        <div class="btn-group w-100" role="group">
+                                            <a href="/sponsors/<%= sponsor.id %>" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                            <% if (sponsor.website) { %>
+                                                <a href="<%= sponsor.website %>" target="_blank" class="btn btn-outline-success btn-sm">
+                                                    <i class="fas fa-external-link-alt me-1"></i>Website
+                                                </a>
+                                            <% } %>
+                                            <form method="POST" action="/clubs/manage/sponsors/<%= sponsor.id %>/remove" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                        onclick="return confirm('Remove <%= sponsor.sponsorName %> from your club?')">
+                                                    <i class="fas fa-times me-1"></i>Remove
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+
+                <!-- Sponsor Reordering Section -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sort me-2"></i>
+                            Sponsor Display Order
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">
+                            Drag and drop sponsors to change their display order on your club page.
+                        </p>
+                        <div id="sponsor-order-list" class="list-group">
+                            <% sponsors.forEach(sponsor => { %>
+                                <div class="list-group-item d-flex justify-content-between align-items-center" 
+                                     data-sponsor-id="<%= sponsor.id %>">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-grip-vertical text-muted me-3" style="cursor: grab;"></i>
+                                        <div>
+                                            <strong><%= sponsor.sponsorName %></strong>
+                                            <% if (sponsor.sponsorshipLevel) { %>
+                                                <span class="badge bg-secondary ms-2"><%= sponsor.sponsorshipLevel %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        Priority: #<%= sponsor.clubSponsor?.priority || '?' %>
+                                    </small>
+                                </div>
+                            <% }); %>
+                        </div>
+                        <button id="save-sponsor-order" class="btn btn-success mt-3" style="display: none;">
+                            <i class="fas fa-save me-1"></i>Save New Order
+                        </button>
+                    </div>
+                </div>
+
+            <% } else { %>
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-handshake fa-5x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">No Sponsors Yet</h4>
+                    <p class="text-muted mb-4">
+                        Your club doesn't have any sponsors linked yet. Add sponsors to showcase your partnerships and support network.
+                    </p>
+                    <a href="/clubs/manage/sponsors/add" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add Your First Sponsor
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Include SortableJS for drag and drop functionality -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sponsorList = document.getElementById('sponsor-order-list');
+    const saveButton = document.getElementById('save-sponsor-order');
+    
+    if (sponsorList && sponsorList.children.length > 1) {
+        // Initialize Sortable
+        Sortable.create(sponsorList, {
+            handle: '.fa-grip-vertical',
+            animation: 150,
+            onEnd: function() {
+                saveButton.style.display = 'block';
+            }
+        });
+
+        // Save new order
+        saveButton.addEventListener('click', function() {
+            const sponsorIds = Array.from(sponsorList.children).map(item => 
+                item.getAttribute('data-sponsor-id')
+            );
+
+            fetch('/clubs/manage/sponsors/reorder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ sponsorOrder: sponsorIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating sponsor order: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating sponsor order');
+            });
+        });
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>

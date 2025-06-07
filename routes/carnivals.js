@@ -60,4 +60,14 @@ router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeO
 // Sync MySideline events (admin only)
 router.post('/sync-mysideline', ensureAuthenticated, carnivalController.syncMySideline);
 
+// Sponsor management routes for carnivals
+// Manage sponsors for a specific carnival
+router.get('/:id/sponsors', ensureAuthenticated, carnivalController.showCarnivalSponsors);
+
+// Add sponsor to carnival
+router.post('/:id/sponsors/add', ensureAuthenticated, carnivalController.addSponsorToCarnival);
+
+// Remove sponsor from carnival
+router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, carnivalController.removeSponsorFromCarnival);
+
 module.exports = router;
