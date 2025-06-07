@@ -6,13 +6,13 @@ const { carnivalUpload, handleUploadError } = require('../middleware/upload');
 const carnivalController = require('../controllers/carnival.controller');
 
 // List all carnivals with filtering
-router.get('/', carnivalController.listCarnivals);
+router.get('/', carnivalController.list);
 
 // Show individual carnival
-router.get('/:id', carnivalController.showCarnival);
+router.get('/:id', carnivalController.show);
 
 // Create carnival form
-router.get('/new', ensureAuthenticated, carnivalController.showCreateForm);
+router.get('/new', ensureAuthenticated, carnivalController.getNew);
 
 // Create carnival POST with validation
 router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
@@ -29,10 +29,10 @@ router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
     body('socialMediaTwitter').optional().isURL().withMessage('Twitter URL must be valid'),
     body('socialMediaWebsite').optional().isURL().withMessage('Website URL must be valid'),
     body('registrationLink').optional().isURL().withMessage('Registration link must be valid')
-], carnivalController.createCarnival);
+], carnivalController.postNew);
 
 // Edit carnival form
-router.get('/:id/edit', ensureAuthenticated, carnivalController.showEditForm);
+router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 
 // Update carnival POST with validation
 router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError, [
@@ -49,10 +49,10 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
     body('socialMediaTwitter').optional().isURL().withMessage('Twitter URL must be valid'),
     body('socialMediaWebsite').optional().isURL().withMessage('Website URL must be valid'),
     body('registrationLink').optional().isURL().withMessage('Registration link must be valid')
-], carnivalController.updateCarnival);
+], carnivalController.postEdit);
 
 // Delete carnival
-router.post('/:id/delete', ensureAuthenticated, carnivalController.deleteCarnival);
+router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);
 
 // Take ownership of MySideline event
 router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeOwnership);
