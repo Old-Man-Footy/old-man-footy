@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 const path = require('path');
 
 // Create a separate test database file to avoid conflicts
-const testDbPath = path.join(__dirname, '..', 'data', 'test-rugby-league-masters.db');
+const testDbPath = path.join(__dirname, '..', 'data', 'test-old-man-footy.db');
 
 // Initialize Sequelize for SQLite with proper test configuration
 const sequelize = new Sequelize({

@@ -94,7 +94,7 @@ chmod 755 data
 If you need to manually check the database:
 ```bash
 # Access the SQLite database
-sqlite3 data/rugby-league-masters-dev.db
+sqlite3 data/dev-old-man-footy.db
 .tables
 .quit
 ```
