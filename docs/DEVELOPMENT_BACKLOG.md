@@ -42,10 +42,9 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ✅ Completed |
 | As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa. | ✅ Completed |
 | As a developer, I want to ensure images (icons|images) which are uploaded by delegates or sub delegates remain linked to that club and/or carnival. This requires a complex naming standard be added to uploaded and renamed images | ✅ Completed |
-| As a club delegate, I want to be able to transfer the role of delegate to another user. | ⭕ Not Started |
-| As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
-| As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ⭕ Not Started |
-| As a club delegate, I want to display social media links and feeds on carnival pages. | ⭕ Not Started |
+| As a club delegate, I want to be able to transfer the role of delegate to another user. | ✅ Completed |
+| As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ✅ Completed |
+| As a club delegate, I want to display social media links and feeds in Contact information on carnival pages. | ⭕ Not Started |
 | As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |
@@ -59,6 +58,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
 | As a club delegate, I want clubs who have marked as coming to be displayed on the Carnival information page in a list, with links to their club. | ⭕ Not Started |
 | As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
+| As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
 | **Testing** | |
 | As a tester, I want comprehensive unit tests for `models/Carnival.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Club.js`  | ⭕ Not Started |
