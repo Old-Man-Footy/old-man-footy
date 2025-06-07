@@ -17,7 +17,7 @@ const ImageNamingService = require('../services/imageNamingService');
  */
 const showSponsorListings = async (req, res) => {
     try {
-        const { search, state, sponsorshipLevel } = req.query;
+        const { search, state } = req.query;
         
         // Build where clause for filters
         const whereClause = {
@@ -36,10 +36,6 @@ const showSponsorListings = async (req, res) => {
 
         if (state) {
             whereClause.state = state;
-        }
-
-        if (sponsorshipLevel) {
-            whereClause.sponsorshipLevel = sponsorshipLevel;
         }
 
         const sponsors = await Sponsor.findAll({
@@ -67,9 +63,8 @@ const showSponsorListings = async (req, res) => {
         res.render('sponsors/list', {
             title: 'Our Sponsors',
             sponsors: sponsorsWithStats,
-            filters: { search, state, sponsorshipLevel },
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind']
+            filters: { search, state },
+            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']
         });
     } catch (error) {
         console.error('Error loading sponsor listings:', error);
