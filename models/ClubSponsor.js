@@ -45,7 +45,7 @@ class ClubSponsor extends Model {
    * @returns {Promise<Array>} Array of active relationships
    */
   static async getActiveForClub(clubId) {
-    return await this.findAll({
+    const relationships = await this.findAll({
       where: {
         clubId: clubId,
         isActive: true,
@@ -61,8 +61,37 @@ class ClubSponsor extends Model {
           model: require('./Sponsor'),
           as: 'sponsor'
         }
-      ],
-      order: [['sponsorshipLevel', 'ASC'], ['startDate', 'DESC']]
+      ]
+    });
+
+    // Define sponsorship level hierarchy for proper sorting
+    const levelHierarchy = {
+      'Gold': 1,
+      'Silver': 2,
+      'Bronze': 3,
+      'Supporting': 4,
+      'In-Kind': 5
+    };
+
+    // Sort by hierarchy, then display order, then start date
+    return relationships.sort((a, b) => {
+      const levelA = levelHierarchy[a.sponsorshipLevel] || 999;
+      const levelB = levelHierarchy[b.sponsorshipLevel] || 999;
+      
+      if (levelA !== levelB) {
+        return levelA - levelB;
+      }
+      
+      // Within same level, sort by display order
+      const orderA = a.displayOrder || 999;
+      const orderB = b.displayOrder || 999;
+      
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      
+      // Finally, sort by start date (newest first)
+      return new Date(b.startDate) - new Date(a.startDate);
     });
   }
 

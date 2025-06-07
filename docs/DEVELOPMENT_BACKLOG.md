@@ -47,7 +47,8 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to display social media links and feeds in Contact information on carnival pages. | ✅ Completed |
 | As a developer, I want to be able to store sponsor information, including logo, name, location, description of business, contacts and social media information. Sponsors can be linked to by multiple clubs. | ✅ Completed |
 | As a club delegate, I want to be able to add sponsors and link them to my Club, and Carnivals. | ✅ Completed |
-| As a user, I want to be able to see sponsors on Club and Carnival pages | ⭕ Not Started |
+| As a user, I want to be able to see sponsors on Club and Carnival pages | ✅ Completed |
+| As a club delegate, I want my sponsors sorted by most important at the top on my club and carnival pages. | ⭕ Not Started |
 | As a user, I don't want links to be underlined on hover if they already move or change colour. | ⭕ Not Started |
 | As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ⭕ Not Started |
 | As a developer, I want to be able to link other clubs to Carnivals as attendees. Creating a new route CarnivalClub for 1:N relationships. | ⭕ Not Started |
