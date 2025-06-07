@@ -9,7 +9,7 @@
  */
 
 const bcrypt = require('bcrypt');
-const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor } = require('../models');
+const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor, ClubSponsor, CarnivalSponsor } = require('../models');
 const MySidelineService = require('../services/mySidelineService');
 
 // Load environment variables
@@ -1047,6 +1047,318 @@ class DatabaseSeeder {
     }
 
     /**
+     * Link sponsors to clubs with realistic relationships
+     */
+    async linkSponsorsToClubs() {
+        console.log('🔗 Linking sponsors to clubs...');
+        
+        let totalLinks = 0;
+        
+        // Create realistic sponsor-club relationships
+        for (const club of this.createdClubs) {
+            // Each club gets 1-4 sponsors with varying levels
+            const numSponsors = Math.floor(Math.random() * 4) + 1;
+            const availableSponsors = [...this.createdSponsors];
+            
+            // Prefer local sponsors (same state) with 70% probability
+            const localSponsors = availableSponsors.filter(sponsor => sponsor.state === club.state);
+            const otherSponsors = availableSponsors.filter(sponsor => sponsor.state !== club.state);
+            
+            const selectedSponsors = [];
+            
+            for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
+                let sponsorPool;
+                
+                // 70% chance to pick local sponsor, 30% for national/other state
+                if (Math.random() < 0.7 && localSponsors.length > 0) {
+                    sponsorPool = localSponsors;
+                } else {
+                    sponsorPool = otherSponsors.length > 0 ? otherSponsors : localSponsors;
+                }
+                
+                if (sponsorPool.length === 0) break;
+                
+                const randomIndex = Math.floor(Math.random() * sponsorPool.length);
+                const selectedSponsor = sponsorPool[randomIndex];
+                
+                selectedSponsors.push(selectedSponsor);
+                
+                // Remove from both pools to avoid duplicates
+                const globalIndex = availableSponsors.indexOf(selectedSponsor);
+                availableSponsors.splice(globalIndex, 1);
+                localSponsors.splice(localSponsors.indexOf(selectedSponsor), 1);
+                if (otherSponsors.includes(selectedSponsor)) {
+                    otherSponsors.splice(otherSponsors.indexOf(selectedSponsor), 1);
+                }
+            }
+            
+            // Create relationships with appropriate sponsorship levels
+            for (let i = 0; i < selectedSponsors.length; i++) {
+                const sponsor = selectedSponsors[i];
+                
+                // Assign sponsorship levels based on sponsor's existing level and position
+                let sponsorshipLevel;
+                const sponsorLevels = ['Gold', 'Silver', 'Bronze', 'Supporting'];
+                
+                if (sponsor.sponsorshipLevel === 'Gold' && i === 0) {
+                    sponsorshipLevel = 'Gold';
+                } else if (sponsor.sponsorshipLevel === 'Gold' || sponsor.sponsorshipLevel === 'Silver') {
+                    sponsorshipLevel = i === 0 ? 'Silver' : (Math.random() < 0.5 ? 'Bronze' : 'Supporting');
+                } else {
+                    sponsorshipLevel = Math.random() < 0.3 ? 'Bronze' : 'Supporting';
+                }
+                
+                // Generate realistic sponsorship values
+                const sponsorshipValues = {
+                    'Gold': { min: 5000, max: 15000 },
+                    'Silver': { min: 2000, max: 7000 },
+                    'Bronze': { min: 500, max: 2500 },
+                    'Supporting': { min: 100, max: 800 }
+                };
+                
+                const valueRange = sponsorshipValues[sponsorshipLevel];
+                const sponsorshipValue = Math.floor(
+                    Math.random() * (valueRange.max - valueRange.min) + valueRange.min
+                );
+                
+                // Generate start date (within last 2 years)
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 730));
+                
+                // 90% get ongoing sponsorship, 10% get end date
+                let endDate = null;
+                if (Math.random() < 0.1) {
+                    endDate = new Date(startDate);
+                    endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 365) + 365);
+                }
+                
+                const contractDetails = this.generateContractDetails(sponsorshipLevel, sponsor.businessType);
+                
+                await ClubSponsor.create({
+                    clubId: club.id,
+                    sponsorId: sponsor.id,
+                    sponsorshipLevel: sponsorshipLevel,
+                    sponsorshipValue: sponsorshipValue,
+                    startDate: startDate,
+                    endDate: endDate,
+                    contractDetails: contractDetails,
+                    isActive: true,
+                    notes: `Seeded relationship - ${sponsorshipLevel} level sponsorship`
+                });
+                
+                totalLinks++;
+            }
+        }
+        
+        console.log(`✅ Created ${totalLinks} club-sponsor relationships`);
+    }
+
+    /**
+     * Link sponsors to carnivals with realistic relationships
+     */
+    async linkSponsorsToCarnivals() {
+        console.log('🎪 Linking sponsors to carnivals...');
+        
+        let totalLinks = 0;
+        
+        // Focus on major carnivals and upcoming events
+        const majorCarnivals = this.createdCarnivals.filter(carnival => 
+            carnival.title.includes('Grand Final') || 
+            carnival.title.includes('Championship') || 
+            carnival.title.includes('Cup') ||
+            carnival.date > new Date()
+        );
+        
+        for (const carnival of majorCarnivals) {
+            // Major carnivals get 2-6 sponsors, regular events get 0-3
+            const isMajorEvent = carnival.title.includes('Grand Final') || 
+                                carnival.title.includes('Championship');
+            const maxSponsors = isMajorEvent ? 6 : 3;
+            const minSponsors = isMajorEvent ? 2 : 0;
+            
+            const numSponsors = Math.floor(Math.random() * (maxSponsors - minSponsors + 1)) + minSponsors;
+            
+            if (numSponsors === 0) continue;
+            
+            // Prefer local sponsors (same state) with 80% probability for carnivals
+            const localSponsors = this.createdSponsors.filter(sponsor => sponsor.state === carnival.state);
+            const nationalSponsors = this.createdSponsors.filter(sponsor => 
+                ['Bunnings Warehouse', 'Coca-Cola Australia', 'Toyota Australia', 'Woolworths Group', 'ANZ Bank'].includes(sponsor.sponsorName)
+            );
+            const otherSponsors = this.createdSponsors.filter(sponsor => 
+                sponsor.state !== carnival.state && !nationalSponsors.includes(sponsor)
+            );
+            
+            const selectedSponsors = [];
+            const availableSponsors = [...this.createdSponsors];
+            
+            for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
+                let sponsorPool;
+                
+                // First sponsor for major events: 50% chance of national sponsor
+                if (i === 0 && isMajorEvent && Math.random() < 0.5 && nationalSponsors.length > 0) {
+                    sponsorPool = nationalSponsors.filter(s => availableSponsors.includes(s));
+                }
+                // 80% chance for local sponsors
+                else if (Math.random() < 0.8 && localSponsors.length > 0) {
+                    sponsorPool = localSponsors.filter(s => availableSponsors.includes(s));
+                }
+                // Otherwise pick from remaining sponsors
+                else {
+                    sponsorPool = availableSponsors.filter(s => 
+                        !selectedSponsors.includes(s) && 
+                        (otherSponsors.includes(s) || nationalSponsors.includes(s))
+                    );
+                    if (sponsorPool.length === 0) {
+                        sponsorPool = localSponsors.filter(s => availableSponsors.includes(s));
+                    }
+                }
+                
+                if (sponsorPool.length === 0) break;
+                
+                const randomIndex = Math.floor(Math.random() * sponsorPool.length);
+                const selectedSponsor = sponsorPool[randomIndex];
+                
+                selectedSponsors.push(selectedSponsor);
+                availableSponsors.splice(availableSponsors.indexOf(selectedSponsor), 1);
+            }
+            
+            // Create carnival sponsorships
+            for (let i = 0; i < selectedSponsors.length; i++) {
+                const sponsor = selectedSponsors[i];
+                
+                // Title sponsors and major sponsors get higher levels
+                let sponsorshipType;
+                let sponsorshipLevel;
+                
+                if (i === 0 && isMajorEvent) {
+                    sponsorshipType = Math.random() < 0.7 ? 'Title Sponsor' : 'Presenting Sponsor';
+                    sponsorshipLevel = 'Gold';
+                } else if (i === 0) {
+                    sponsorshipType = 'Major Sponsor';
+                    sponsorshipLevel = Math.random() < 0.6 ? 'Gold' : 'Silver';
+                } else if (i === 1 && isMajorEvent) {
+                    sponsorshipType = 'Major Sponsor';
+                    sponsorshipLevel = Math.random() < 0.5 ? 'Silver' : 'Bronze';
+                } else {
+                    const types = ['Supporting Sponsor', 'Official Sponsor', 'Community Partner'];
+                    sponsorshipType = types[Math.floor(Math.random() * types.length)];
+                    sponsorshipLevel = Math.random() < 0.3 ? 'Bronze' : 'Supporting';
+                }
+                
+                // Generate sponsorship values for carnivals
+                const carnivalValues = {
+                    'Gold': { min: 3000, max: 12000 },
+                    'Silver': { min: 1000, max: 5000 },
+                    'Bronze': { min: 300, max: 1500 },
+                    'Supporting': { min: 100, max: 500 }
+                };
+                
+                const valueRange = carnivalValues[sponsorshipLevel];
+                const sponsorshipValue = Math.floor(
+                    Math.random() * (valueRange.max - valueRange.min) + valueRange.min
+                );
+                
+                const benefits = this.generateCarnivalBenefits(sponsorshipLevel, sponsorshipType);
+                
+                await CarnivalSponsor.create({
+                    carnivalId: carnival.id,
+                    sponsorId: sponsor.id,
+                    sponsorshipType: sponsorshipType,
+                    sponsorshipLevel: sponsorshipLevel,
+                    sponsorshipValue: sponsorshipValue,
+                    benefits: benefits,
+                    isActive: true,
+                    notes: `Seeded relationship - ${sponsorshipType} (${sponsorshipLevel})`
+                });
+                
+                totalLinks++;
+            }
+        }
+        
+        console.log(`✅ Created ${totalLinks} carnival-sponsor relationships`);
+    }
+
+    /**
+     * Generate realistic contract details for club sponsorships
+     */
+    generateContractDetails(level, businessType) {
+        const details = [];
+        
+        // Base benefits by level
+        switch (level) {
+            case 'Gold':
+                details.push('Logo on playing jerseys');
+                details.push('Stadium signage');
+                details.push('Website homepage feature');
+                details.push('Social media promotion');
+                details.push('VIP match day hospitality');
+                break;
+            case 'Silver':
+                details.push('Logo on training gear');
+                details.push('Dugout signage');
+                details.push('Website sponsor page');
+                details.push('Social media mentions');
+                break;
+            case 'Bronze':
+                details.push('Ground signage');
+                details.push('Website listing');
+                details.push('Newsletter mentions');
+                break;
+            case 'Supporting':
+                details.push('Website listing');
+                details.push('Match day announcements');
+                break;
+        }
+        
+        // Add business-specific benefits
+        if (businessType.includes('Food') || businessType.includes('Restaurant')) {
+            details.push('Post-match catering opportunities');
+        }
+        if (businessType.includes('Automotive')) {
+            details.push('Vehicle display opportunities');
+        }
+        if (businessType.includes('Healthcare') || businessType.includes('Fitness')) {
+            details.push('Player injury support services');
+        }
+        
+        return details.join('; ');
+    }
+
+    /**
+     * Generate realistic benefits for carnival sponsorships
+     */
+    generateCarnivalBenefits(level, type) {
+        const benefits = [];
+        
+        if (type === 'Title Sponsor') {
+            benefits.push('Event naming rights');
+            benefits.push('Logo on all event materials');
+            benefits.push('Opening ceremony presentation');
+            benefits.push('Trophy presentation rights');
+            benefits.push('Premium hospitality package');
+        } else if (type === 'Presenting Sponsor') {
+            benefits.push('Logo on event materials');
+            benefits.push('Ground announcements');
+            benefits.push('Hospitality package');
+            benefits.push('Social media promotion');
+        } else if (type === 'Major Sponsor') {
+            benefits.push('Ground signage');
+            benefits.push('Program advertising');
+            benefits.push('Website promotion');
+            benefits.push('Public announcements');
+        } else {
+            benefits.push('Website listing');
+            benefits.push('Program mention');
+            if (Math.random() < 0.5) {
+                benefits.push('Ground signage');
+            }
+        }
+        
+        return benefits.join('; ');
+    }
+
+    /**
      * Generate summary statistics using Sequelize
      */
     async generateSummary() {
@@ -1093,9 +1405,9 @@ class DatabaseSeeder {
             await this.createClubs();
             await this.createUsers();
             await this.createSponsors();
-            //TODO await this.linkSponsorsToClubs();
+            await this.linkSponsorsToClubs();
             await this.createManualCarnivals();
-            //TODO await this.linkSponsorsToCarnivals();
+            await this.linkSponsorsToCarnivals();
             await this.importMySidelineData();
             await this.createEmailSubscriptions();
             await this.generateSummary();
