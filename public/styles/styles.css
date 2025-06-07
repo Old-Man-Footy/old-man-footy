@@ -61,9 +61,13 @@ body {
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
     background-color: var(--rugby-dark-green);
     border-color: var(--rugby-dark-green);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
 }
 
 .btn-outline-primary {
@@ -71,10 +75,13 @@ body {
     border-color: var(--rugby-green);
 }
 
-.btn-outline-primary:hover {
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
     background-color: var(--rugby-green);
     border-color: var(--rugby-green);
     color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
 }
 
 .btn-success {
@@ -84,10 +91,13 @@ body {
     font-weight: 600;
 }
 
-.btn-success:hover {
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
     background-color: #e6c200;
     border-color: #e6c200;
     color: var(--rugby-dark-green);
+    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
 .btn-outline-success {
@@ -95,10 +105,110 @@ body {
     border-color: var(--rugby-gold);
 }
 
-.btn-outline-success:hover {
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
+    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+}
+
+/* Specific styling for register buttons to ensure theme consistency */
+a[href*="/auth/register"],
+button[type="submit"]:contains("Register"),
+.btn:contains("Register") {
+    background-color: var(--rugby-gold);
+    border-color: var(--rugby-gold);
+    color: var(--rugby-dark-green);
+    font-weight: 600;
+}
+
+a[href*="/auth/register"]:hover,
+a[href*="/auth/register"]:focus,
+button[type="submit"]:contains("Register"):hover,
+button[type="submit"]:contains("Register"):focus,
+.btn:contains("Register"):hover,
+.btn:contains("Register"):focus {
+    background-color: #e6c200;
+    border-color: #e6c200;
+    color: var(--rugby-dark-green);
+    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Registration form specific styling */
+.registration-btn,
+button[type="submit"]:contains("Complete Registration") {
+    background: linear-gradient(45deg, var(--rugby-gold), #e6c200);
+    border: none;
+    color: var(--rugby-dark-green);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.registration-btn:hover,
+.registration-btn:focus,
+button[type="submit"]:contains("Complete Registration"):hover,
+button[type="submit"]:contains("Complete Registration"):focus {
+    background: linear-gradient(45deg, #e6c200, var(--rugby-gold));
+    color: var(--rugby-dark-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+/* Better register button targeting - more reliable CSS selectors */
+.btn-outline-primary {
+    color: var(--rugby-green);
+    border-color: var(--rugby-green);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--rugby-green);
+    border-color: var(--rugby-green);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+}
+
+/* Override Bootstrap's red focus states specifically for register buttons */
+.btn-outline-primary:not(:disabled):not(.disabled):active,
+.btn-outline-primary:not(:disabled):not(.disabled).active,
+.show > .btn-outline-primary.dropdown-toggle {
+    background-color: var(--rugby-green) !important;
+    border-color: var(--rugby-green) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
+}
+
+/* Ensure no red Bootstrap colors bleed through */
+.btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
+}
+
+/* Register-specific button class for targeted styling */
+.btn-register {
+    background: linear-gradient(45deg, var(--rugby-gold), #e6c200) !important;
+    border: 2px solid var(--rugby-gold) !important;
+    color: var(--rugby-dark-green) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-register:hover,
+.btn-register:focus,
+.btn-register:active {
+    background: linear-gradient(45deg, #e6c200, var(--rugby-gold)) !important;
+    border-color: #e6c200 !important;
+    color: var(--rugby-dark-green) !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25) !important;
+    transform: translateY(-2px);
 }
 
 /* Dashboard Stats Cards */
@@ -503,21 +613,18 @@ body {
 }
 
 /* Social Media Platform Colors */
-.btn-outline-primary:hover,
 .social-links a[href*="facebook"]:hover {
     background-color: #1877f2;
     border-color: #1877f2;
     color: white;
 }
 
-.btn-outline-danger:hover,
 .social-links a[href*="instagram"]:hover {
     background-color: #e4405f;
     border-color: #e4405f;
     color: white;
 }
 
-.btn-outline-info:hover,
 .social-links a[href*="twitter"]:hover,
 .social-links a[href*="x.com"]:hover {
     background-color: #1da1f2;
@@ -525,7 +632,7 @@ body {
     color: white;
 }
 
-.btn-outline-success:hover,
+/* YouTube-specific styling - only for social links, not general outline-success buttons */
 .social-links a[href*="youtube"]:hover {
     background-color: #ff0000;
     border-color: #ff0000;
