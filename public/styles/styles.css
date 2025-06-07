@@ -90,6 +90,17 @@ body {
     color: var(--rugby-dark-green);
 }
 
+.btn-outline-success {
+    color: var(--rugby-gold);
+    border-color: var(--rugby-gold);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--rugby-gold);
+    border-color: var(--rugby-gold);
+    color: var(--rugby-dark-green);
+}
+
 /* Dashboard Stats Cards */
 .dashboard-stats .card:nth-child(1) .card-body {
     background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
