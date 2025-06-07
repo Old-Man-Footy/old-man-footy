@@ -189,14 +189,9 @@
                                         <% } %>
                                         <div class="flex-grow-1">
                                             <h6 class="mb-1">
-                                                <% if (sponsor.website) { %>
-                                                    <a href="<%= sponsor.website %>" target="_blank" class="text-decoration-none">
-                                                        <%= sponsor.sponsorName %>
-                                                        <i class="bi bi-box-arrow-up-right small"></i>
-                                                    </a>
-                                                <% } else { %>
+                                                <a href="/sponsors/<%= sponsor.id %>" class="text-decoration-none">
                                                     <%= sponsor.sponsorName %>
-                                                <% } %>
+                                                </a>
                                             </h6>
                                             <% if (sponsor.sponsorshipLevel) { %>
                                                 <span class="badge bg-secondary small"><%= sponsor.sponsorshipLevel %></span>
