@@ -57,6 +57,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want the ability to opt-out of my images being used on the home page carousel. | ⭕ Not Started |
 | As a club delegate, When I mark a club as inactive, it should be removed from the "Find Clubs" interface. | ⭕ Not Started |
 | As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
+| As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Carnival.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Club.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Index.js`  | ⭕ Not Started |
