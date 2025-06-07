@@ -10,6 +10,7 @@ const { validationResult } = require('express-validator');
 const mySidelineService = require('../services/mySidelineService');
 const emailService = require('../services/emailService');
 const ImageNamingService = require('../services/imageNamingService');
+const { sortSponsorsHierarchically } = require('../services/sponsorSortingService');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 
@@ -136,15 +137,8 @@ const showCarnival = async (req, res) => {
                                 req.user && 
                                 req.user.clubId;
 
-        // Sort sponsors by priority (if available) or by name
-        const sortedSponsors = (carnival.sponsors || []).sort((a, b) => {
-            const priorityA = a.CarnivalSponsor?.displayOrder || 999;
-            const priorityB = b.CarnivalSponsor?.displayOrder || 999;
-            if (priorityA !== priorityB) {
-                return priorityA - priorityB;
-            }
-            return a.sponsorName.localeCompare(b.sponsorName);
-        });
+        // Sort sponsors hierarchically using the sorting service
+        const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
 
         res.render('carnivals/show', {
             title: carnival.title,

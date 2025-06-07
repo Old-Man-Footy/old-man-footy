@@ -9,6 +9,7 @@ const { Club, User, Carnival, Sponsor } = require('../models');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const ImageNamingService = require('../services/imageNamingService');
+const sponsorSortingService = require('../services/sponsorSortingService');
 
 /**
  * Display public club listings with search and filter options
@@ -150,15 +151,8 @@ const showClubProfile = async (req, res) => {
 
         const primaryDelegate = delegates_full.find(delegate => delegate.isPrimaryDelegate);
 
-        // Sort sponsors by priority (if available) or by name
-        const sortedSponsors = (club.sponsors || []).sort((a, b) => {
-            const priorityA = a.ClubSponsor?.displayOrder || 999;
-            const priorityB = b.ClubSponsor?.displayOrder || 999;
-            if (priorityA !== priorityB) {
-                return priorityA - priorityB;
-            }
-            return a.sponsorName.localeCompare(b.sponsorName);
-        });
+        // Sort sponsors using the hierarchical sorting service
+        const sortedSponsors = sponsorSortingService.sortSponsorsHierarchically(club.sponsors);
 
         res.render('clubs/show', {
             title: `${club.clubName} - Masters Rugby League Club`,
@@ -588,12 +582,12 @@ const addSponsorToClub = async (req, res) => {
             return res.redirect('/clubs/manage/sponsors/add');
         }
 
-        // Link sponsor to club with priority
+        // Link sponsor to club with displayOrder
         const currentSponsors = await club.getSponsors();
-        const priority = currentSponsors.length + 1;
+        const displayOrder = currentSponsors.length + 1;
 
         await club.addSponsor(sponsor, { 
-            through: { priority } 
+            through: { displayOrder } 
         });
 
         req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club!`);
@@ -688,21 +682,18 @@ const reorderClubSponsors = async (req, res) => {
             });
         }
 
-        // Update priorities for each sponsor
-        const updatePromises = sponsorOrder.map(async (sponsorId, index) => {
-            const sponsor = await Sponsor.findByPk(sponsorId);
-            if (sponsor) {
-                const isLinked = await sponsor.isAssociatedWithClub(club.id);
-                if (isLinked) {
-                    // Update the through table with new priority
-                    await club.addSponsor(sponsor, { 
-                        through: { priority: index + 1 } 
-                    });
+        // Update display orders
+        for (let i = 0; i < sponsorOrder.length; i++) {
+            await ClubSponsor.update(
+                { displayOrder: i + 1 },
+                { 
+                    where: { 
+                        clubId: clubId, 
+                        sponsorId: sponsorOrder[i] 
+                    } 
                 }
-            }
-        });
-
-        await Promise.all(updatePromises);
+            );
+        }
 
         res.json({
             success: true,
