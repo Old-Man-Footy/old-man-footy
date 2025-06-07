@@ -4,61 +4,71 @@
             <!-- Club Header -->
             <div class="card shadow mb-4">
                 <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <% 
-                        // Show club logo or fallback to missing.svg
-                        const clubLogoUrl = club.logoUrl || '/icons/missing.svg';
-                        %>
-                        <img src="<%= clubLogoUrl %>" alt="<%= club.clubName %> Logo" 
-                             class="me-3" style="height: 80px; width: auto;">
-                        <div class="flex-grow-1">
-                            <h1 class="h2 mb-2"><%= club.clubName %></h1>
-                            <% if (club.location) { %>
-                                <p class="mb-1 text-muted">
-                                    <i class="fas fa-map-marker-alt me-1"></i><%= club.location %>
-                                    <% if (club.state) { %>
-                                        <span class="badge bg-primary ms-2"><%= club.state %></span>
+                    <div class="row">
+                        <!-- Logo Column - Full Height Left Side -->
+                        <div class="col-md-4 d-flex align-items-center justify-content-center">
+                            <% 
+                            // Show club logo or fallback to missing.svg
+                            const clubLogoUrl = club.logoUrl || '/icons/missing.svg';
+                            %>
+                            <img src="<%= clubLogoUrl %>" alt="<%= club.clubName %> Logo" 
+                                 class="img-fluid" style="max-height: 300px; width: auto; object-fit: contain;">
+                        </div>
+                        
+                        <!-- Content Column -->
+                        <div class="col-md-8">
+                            <div class="h-100 d-flex flex-column">
+                                <!-- Club Info -->
+                                <div class="mb-4">
+                                    <h1 class="h2 mb-2"><%= club.clubName %></h1>
+                                    <% if (club.location) { %>
+                                        <p class="mb-1 text-muted">
+                                            <i class="fas fa-map-marker-alt me-1"></i><%= club.location %>
+                                            <% if (club.state) { %>
+                                                <span class="badge bg-primary ms-2"><%= club.state %></span>
+                                            <% } %>
+                                        </p>
                                     <% } %>
-                                </p>
-                            <% } %>
-                            <% if (club.establishedYear) { %>
-                                <p class="mb-0 text-muted">
-                                    <i class="fas fa-calendar me-1"></i>Established <%= club.establishedYear %>
-                                </p>
-                            <% } %>
-                        </div>
-                    </div>
+                                    <% if (club.establishedYear) { %>
+                                        <p class="mb-0 text-muted">
+                                            <i class="fas fa-calendar me-1"></i>Established <%= club.establishedYear %>
+                                        </p>
+                                    <% } %>
+                                </div>
 
-                    <% if (club.description) { %>
-                        <div class="mb-3">
-                            <h5>About Us</h5>
-                            <p style="white-space: pre-line;"><%= club.description %></p>
-                        </div>
-                    <% } %>
-
-                    <!-- Club Statistics -->
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h4 class="text-primary"><%= clubCarnivals.length %></h4>
-                                <p class="text-muted mb-0">Carnivals Hosted</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h4 class="text-success"><%= upcomingCarnivals %></h4>
-                                <p class="text-muted mb-0">Upcoming Events</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <% if (club.establishedYear) { %>
-                                    <h4 class="text-warning"><%= new Date().getFullYear() - club.establishedYear %></h4>
-                                    <p class="text-muted mb-0">Years Active</p>
-                                <% } else { %>
-                                    <h4 class="text-info">-</h4>
-                                    <p class="text-muted mb-0">Years Active</p>
+                                <% if (club.description) { %>
+                                    <div class="mb-4 flex-grow-1">
+                                        <h5>About Us</h5>
+                                        <p style="white-space: pre-line;"><%= club.description %></p>
+                                    </div>
                                 <% } %>
+
+                                <!-- Club Statistics -->
+                                <div class="row text-center mt-auto">
+                                    <div class="col-4">
+                                        <div class="stat-item">
+                                            <h4 class="text-primary"><%= clubCarnivals.length %></h4>
+                                            <p class="text-muted mb-0 small">Carnivals Hosted</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="stat-item">
+                                            <h4 class="text-success"><%= upcomingCarnivals %></h4>
+                                            <p class="text-muted mb-0 small">Upcoming Events</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="stat-item">
+                                            <% if (club.establishedYear) { %>
+                                                <h4 class="text-warning"><%= new Date().getFullYear() - club.establishedYear %></h4>
+                                                <p class="text-muted mb-0 small">Years Active</p>
+                                            <% } else { %>
+                                                <h4 class="text-info">-</h4>
+                                                <p class="text-muted mb-0 small">Years Active</p>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

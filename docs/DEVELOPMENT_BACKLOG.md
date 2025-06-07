@@ -45,6 +45,9 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to be able to transfer the role of delegate to another user. | ✅ Completed |
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ✅ Completed |
 | As a club delegate, I want to display social media links and feeds in Contact information on carnival pages. | ✅ Completed |
+| As a developer, I want to be able to store sponsor information, including logo, name, location, description of business, contacts and social media information. | ⭕ Not Started |
+| As a club delegate, I want to be able to add sponsors and link them to my Club, and Carnivals. | ⭕ Not Started |
+| As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ⭕ Not Started |
 | As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |
@@ -55,8 +58,10 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want the ability to opt-out of my images being used on the home page carousel. | ⭕ Not Started |
 | As a club delegate, When I mark a club as inactive, it should be removed from the "Find Clubs" interface. | ⭕ Not Started |
 | As a club delegate, I want to be able to mark my club as attending a Carnival run by another club. | ⭕ Not Started |
+| As a club delegate, I want clubs who have marked as coming to a carnival to be displayed on the Carnival information page in a list, with links to their club. | ⭕ Not Started |
 | As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
-| As a club delegate, I want clubs who have marked as coming to be displayed on the Carnival information page in a list, with links to their club. | ⭕ Not Started |
+| As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. | ⭕ Not Started |
+| As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
 | As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
 | As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
 | **Testing** | |
