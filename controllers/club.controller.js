@@ -86,13 +86,22 @@ const showClubProfile = async (req, res) => {
                 isActive: true,
                 isPubliclyListed: true
             },
-            include: [{
-                model: User,
-                as: 'delegates',
-                where: { isActive: true },
-                required: false,
-                attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
-            }]
+            include: [
+                {
+                    model: User,
+                    as: 'delegates',
+                    where: { isActive: true },
+                    required: false,
+                    attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
+                },
+                {
+                    model: Sponsor,
+                    as: 'sponsors',
+                    where: { isActive: true },
+                    required: false,
+                    through: { attributes: ['priority'] }
+                }
+            ]
         });
 
         if (!club) {
@@ -141,6 +150,16 @@ const showClubProfile = async (req, res) => {
 
         const primaryDelegate = delegates_full.find(delegate => delegate.isPrimaryDelegate);
 
+        // Sort sponsors by priority (if available) or by name
+        const sortedSponsors = (club.sponsors || []).sort((a, b) => {
+            const priorityA = a.ClubSponsor?.priority || 999;
+            const priorityB = b.ClubSponsor?.priority || 999;
+            if (priorityA !== priorityB) {
+                return priorityA - priorityB;
+            }
+            return a.sponsorName.localeCompare(b.sponsorName);
+        });
+
         res.render('clubs/show', {
             title: `${club.clubName} - Masters Rugby League Club`,
             club,
@@ -148,6 +167,7 @@ const showClubProfile = async (req, res) => {
             upcomingCarnivals,
             delegates: delegates_full,
             primaryDelegate,
+            sponsors: sortedSponsors,
             user: req.user || null
         });
     } catch (error) {

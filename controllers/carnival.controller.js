@@ -105,15 +105,24 @@ const listCarnivals = async (req, res) => {
 const showCarnival = async (req, res) => {
     try {
         const carnival = await Carnival.findByPk(req.params.id, {
-            include: [{
-                model: User,
-                as: 'creator',
-                attributes: ['firstName', 'lastName'],
-                include: [{
-                    model: Club,
-                    as: 'club'
-                }]
-            }]
+            include: [
+                {
+                    model: User,
+                    as: 'creator',
+                    attributes: ['firstName', 'lastName'],
+                    include: [{
+                        model: Club,
+                        as: 'club'
+                    }]
+                },
+                {
+                    model: Sponsor,
+                    as: 'sponsors',
+                    where: { isActive: true },
+                    required: false,
+                    through: { attributes: ['priority'] }
+                }
+            ]
         });
 
         if (!carnival || !carnival.isActive) {
@@ -127,9 +136,20 @@ const showCarnival = async (req, res) => {
                                 req.user && 
                                 req.user.clubId;
 
+        // Sort sponsors by priority (if available) or by name
+        const sortedSponsors = (carnival.sponsors || []).sort((a, b) => {
+            const priorityA = a.CarnivalSponsor?.priority || 999;
+            const priorityB = b.CarnivalSponsor?.priority || 999;
+            if (priorityA !== priorityB) {
+                return priorityA - priorityB;
+            }
+            return a.sponsorName.localeCompare(b.sponsorName);
+        });
+
         res.render('carnivals/show', {
             title: carnival.title,
             carnival,
+            sponsors: sortedSponsors,
             canTakeOwnership
         });
     } catch (error) {
