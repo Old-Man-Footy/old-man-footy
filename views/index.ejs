@@ -74,40 +74,51 @@
                 <% if (carnivals && carnivals.length > 0) { %>
                     <div class="row">
                         <% carnivals.forEach(carnival => { %>
-                            <div class="col-md-6 col-lg-4 mb-4">
-                                <div class="card h-100 shadow-sm">
-                                    <% if (carnival.promotionalImageURL) { %>
-                                        <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" alt="<%= carnival.title %>" style="height: 200px; object-fit: cover;">
-                                    <% } %>
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title"><%= carnival.title %></h5>
-                                        <div class="mb-2">
-                                            <small class="text-muted">
-                                                <i class="bi bi-calendar3"></i> 
-                                                <%= carnival.date.toLocaleDateString('en-AU') %>
-                                            </small>
+                            <div class="col-md-6 mb-4">
+                                <div class="card shadow-sm">
+                                    <div class="row g-0">
+                                        <div class="col-8">
+                                            <div class="card-body p-3">
+                                                <h6 class="card-title mb-2"><%= carnival.title %></h6>
+                                                <div class="mb-1">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-calendar3"></i> 
+                                                        <%= carnival.date.toLocaleDateString('en-AU', { 
+                                                            month: 'short', 
+                                                            day: 'numeric' 
+                                                        }) %>
+                                                    </small>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-geo-alt"></i> 
+                                                        <%= carnival.locationAddress.length > 30 ? 
+                                                            carnival.locationAddress.substring(0, 30) + '...' : 
+                                                            carnival.locationAddress %>
+                                                    </small>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                </div>
+                                                <div class="d-flex gap-1">
+                                                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
+                                                        <i class="bi bi-eye"></i> View
+                                                    </a>
+                                                    <% if (carnival.registrationLink) { %>
+                                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-success btn-sm" target="_blank">
+                                                            <i class="bi bi-person-plus"></i> Register
+                                                        </a>
+                                                    <% } %>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="mb-2">
-                                            <small class="text-muted">
-                                                <i class="bi bi-geo-alt"></i> 
-                                                <%= carnival.locationAddress %>
-                                            </small>
-                                        </div>
-                                        <div class="mb-3">
-                                            <span class="badge bg-secondary"><%= carnival.state %></span>
-                                        </div>
-                                        <p class="card-text flex-grow-1">
-                                            <%= carnival.scheduleDetails.substring(0, 100) %>...
-                                        </p>
-                                        <div class="mt-auto">
-                                            <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
-                                                View Details
-                                            </a>
-                                            <% if (carnival.registrationLink) { %>
-                                                <a href="<%= carnival.registrationLink %>" class="btn btn-outline-success btn-sm" target="_blank">
-                                                    Register
-                                                </a>
-                                            <% } %>
+                                        <div class="col-4 d-flex align-items-center justify-content-center p-3">
+                                            <% 
+                                            // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
+                                            const logoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                                            %>
+                                            <img src="<%= logoUrl %>" alt="Club Logo" 
+                                                 class="img-fluid" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                         </div>
                                     </div>
                                 </div>

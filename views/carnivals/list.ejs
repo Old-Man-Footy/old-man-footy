@@ -88,127 +88,69 @@
     <% if (carnivals && carnivals.length > 0) { %>
         <div class="row">
             <% carnivals.forEach(carnival => { %>
-                <div class="col-lg-6 col-xl-4 mb-4">
-                    <div class="card h-100 shadow-sm carnival-card">
-                        <% if (carnival.promotionalImageURL) { %>
-                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" 
-                                 alt="<%= carnival.title %>" style="height: 200px; object-fit: cover;">
-                        <% } %>
-                        <div class="card-body d-flex flex-column">
-                            <!-- Header with badges -->
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-1">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm carnival-card">
+                        <div class="row g-0">
+                            <div class="col-8">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title mb-2">
                                         <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none">
                                             <%= carnival.title %>
                                         </a>
-                                    </h5>
-                                </div>
-                                <% 
-                                // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
-                                const logoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
-                                %>
-                                <img src="<%= logoUrl %>" alt="Club Logo" 
-                                     style="width: 40px; height: 40px; object-fit: contain;" class="ms-2">
-                            </div>
-
-                            <!-- Badges -->
-                            <div class="mb-3">
-                                <span class="badge bg-secondary me-1"><%= carnival.state %></span>
-                                <% if (carnival.date >= new Date()) { %>
-                                    <span class="badge bg-success me-1">Upcoming</span>
-                                <% } else { %>
-                                    <span class="badge bg-secondary me-1">Past Event</span>
-                                <% } %>
-                                <% if (!carnival.isManuallyEntered && carnival.mySidelineEventId) { %>
-                                    <span class="badge bg-warning text-dark">MySideline</span>
-                                <% } %>
-                            </div>
-
-                            <!-- Key Information -->
-                            <div class="mb-3">
-                                <div class="mb-2">
-                                    <small class="text-muted">
-                                        <i class="bi bi-calendar3 me-1"></i>
-                                        <%= carnival.date.toLocaleDateString('en-AU', { 
-                                            weekday: 'short',
-                                            year: 'numeric', 
-                                            month: 'short', 
-                                            day: 'numeric' 
-                                        }) %>
-                                    </small>
-                                </div>
-                                <div class="mb-2">
-                                    <small class="text-muted">
-                                        <i class="bi bi-geo-alt me-1"></i>
-                                        <%= carnival.locationAddress.length > 60 ? 
-                                            carnival.locationAddress.substring(0, 60) + '...' : 
-                                            carnival.locationAddress %>
-                                    </small>
-                                </div>
-                                <div class="mb-2">
-                                    <small class="text-muted">
-                                        <i class="bi bi-person me-1"></i>
-                                        <%= carnival.organiserContactName %>
-                                    </small>
-                                </div>
-                            </div>
-
-                            <!-- Schedule Preview -->
-                            <p class="card-text text-muted small flex-grow-1">
-                                <%= carnival.scheduleDetails.length > 100 ? 
-                                    carnival.scheduleDetails.substring(0, 100) + '...' : 
-                                    carnival.scheduleDetails %>
-                            </p>
-
-                            <!-- Social Media Links -->
-                            <% if (carnival.socialMediaFacebook || carnival.socialMediaInstagram || carnival.socialMediaTwitter || carnival.socialMediaWebsite) { %>
-                                <div class="social-links mb-3">
-                                    <% if (carnival.socialMediaFacebook) { %>
-                                        <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="text-decoration-none me-2">
-                                            <i class="bi bi-facebook"></i>
+                                    </h6>
+                                    
+                                    <!-- Date and Location -->
+                                    <div class="mb-1">
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar3"></i> 
+                                            <%= carnival.date.toLocaleDateString('en-AU', { 
+                                                month: 'short', 
+                                                day: 'numeric' 
+                                            }) %>
+                                        </small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-geo-alt"></i> 
+                                            <%= carnival.locationAddress.length > 30 ? 
+                                                carnival.locationAddress.substring(0, 30) + '...' : 
+                                                carnival.locationAddress %>
+                                        </small>
+                                    </div>
+                                    
+                                    <!-- Badges -->
+                                    <div class="mb-2">
+                                        <span class="badge bg-secondary me-1"><%= carnival.state %></span>
+                                        <% if (carnival.date >= new Date()) { %>
+                                            <span class="badge bg-success me-1">Upcoming</span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary me-1">Past Event</span>
+                                        <% } %>
+                                        <% if (!carnival.isManuallyEntered && carnival.mySidelineEventId) { %>
+                                            <span class="badge bg-warning text-dark">MySideline</span>
+                                        <% } %>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="d-flex gap-1 mb-2">
+                                        <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-eye"></i> View
                                         </a>
-                                    <% } %>
-                                    <% if (carnival.socialMediaInstagram) { %>
-                                        <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="text-decoration-none me-2">
-                                            <i class="bi bi-instagram"></i>
-                                        </a>
-                                    <% } %>
-                                    <% if (carnival.socialMediaTwitter) { %>
-                                        <a href="<%= carnival.socialMediaTwitter %>" target="_blank" class="text-decoration-none me-2">
-                                            <i class="bi bi-twitter"></i>
-                                        </a>
-                                    <% } %>
-                                    <% if (carnival.socialMediaWebsite) { %>
-                                        <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="text-decoration-none me-2">
-                                            <i class="bi bi-globe"></i>
-                                        </a>
-                                    <% } %>
-                                </div>
-                            <% } %>
+                                        <% if (carnival.registrationLink) { %>
+                                            <a href="<%= carnival.registrationLink %>" class="btn btn-outline-success btn-sm" target="_blank">
+                                                <i class="bi bi-person-plus"></i> Register
+                                            </a>
+                                        <% } %>
+                                        <% if (carnival.drawFileURL) { %>
+                                            <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-info btn-sm" target="_blank">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        <% } %>
+                                    </div>
 
-                            <!-- Action Buttons -->
-                            <div class="mt-auto">
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm flex-fill">
-                                        View Details
-                                    </a>
-                                    <% if (carnival.registrationLink) { %>
-                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-success btn-sm" target="_blank">
-                                            Register
-                                        </a>
-                                    <% } %>
-                                    <% if (carnival.drawFileURL) { %>
-                                        <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-info btn-sm" target="_blank">
-                                            <i class="bi bi-download"></i>
-                                        </a>
-                                    <% } %>
-                                </div>
-
-                                <!-- Owner Actions -->
-                                <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId) { %>
-                                    <div class="mt-2 pt-2 border-top">
-                                        <div class="d-flex gap-2">
+                                    <!-- Owner Actions -->
+                                    <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId) { %>
+                                        <div class="d-flex gap-1">
                                             <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-warning btn-sm">
                                                 <i class="bi bi-pencil"></i> Edit
                                             </a>
@@ -219,20 +161,28 @@
                                                 </button>
                                             </form>
                                         </div>
-                                    </div>
-                                <% } %>
+                                    <% } %>
 
-                                <!-- Take Ownership for unclaimed MySideline events -->
-                                <% if (user && user.clubId && !carnival.isManuallyEntered && carnival.mySidelineEventId && !carnival.createdByUserId) { %>
-                                    <div class="mt-2 pt-2 border-top">
-                                        <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership">
-                                            <button type="submit" class="btn btn-warning btn-sm w-100" 
-                                                    onclick="return confirm('Take ownership of this MySideline event for your club?')">
-                                                <i class="bi bi-hand-thumbs-up"></i> Claim Event
-                                            </button>
-                                        </form>
-                                    </div>
-                                <% } %>
+                                    <!-- Take Ownership for unclaimed MySideline events -->
+                                    <% if (user && user.clubId && !carnival.isManuallyEntered && carnival.mySidelineEventId && !carnival.createdByUserId) { %>
+                                        <div class="mt-1">
+                                            <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership">
+                                                <button type="submit" class="btn btn-warning btn-sm" 
+                                                        onclick="return confirm('Take ownership of this MySideline event for your club?')">
+                                                    <i class="bi bi-hand-thumbs-up"></i> Claim
+                                                </button>
+                                            </form>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="col-4 d-flex align-items-center justify-content-center p-3">
+                                <% 
+                                // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
+                                const logoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                                %>
+                                <img src="<%= logoUrl %>" alt="Club Logo" 
+                                     class="img-fluid" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                             </div>
                         </div>
                     </div>
