@@ -19,22 +19,22 @@ require('dotenv').config();
  * Australian Rugby League club names and locations for realistic test data
  */
 const SAMPLE_CLUBS = [
-    { name: 'Canterbury Bankstown Masters', state: 'NSW', location: 'Belmore', isPubliclyListed: true },
-    { name: 'Parramatta Eels Masters', state: 'NSW', location: 'Parramatta', isPubliclyListed: true },
-    { name: 'Cronulla Sharks Masters', state: 'NSW', location: 'Cronulla', isPubliclyListed: true },
-    { name: 'Brisbane Broncos Masters', state: 'QLD', location: 'Brisbane', isPubliclyListed: true },
-    { name: 'Gold Coast Titans Masters', state: 'QLD', location: 'Gold Coast', isPubliclyListed: true },
-    { name: 'North Queensland Cowboys Masters', state: 'QLD', location: 'Townsville', isPubliclyListed: true },
-    { name: 'Melbourne Storm Masters', state: 'VIC', location: 'Melbourne', isPubliclyListed: true },
-    { name: 'Geelong Masters Rugby League', state: 'VIC', location: 'Geelong', isPubliclyListed: true },
-    { name: 'Perth Pirates Masters', state: 'WA', location: 'Perth', isPubliclyListed: true },
-    { name: 'Fremantle Dockers Masters', state: 'WA', location: 'Fremantle', isPubliclyListed: true },
-    { name: 'Adelaide Rams Masters', state: 'SA', location: 'Adelaide', isPubliclyListed: true },
-    { name: 'Port Adelaide Masters', state: 'SA', location: 'Port Adelaide', isPubliclyListed: false }, // Test club - not public
-    { name: 'Hobart Devils Masters', state: 'TAS', location: 'Hobart', isPubliclyListed: true },
-    { name: 'Launceston Lions Masters', state: 'TAS', location: 'Launceston', isPubliclyListed: true },
-    { name: 'Darwin Crocodiles Masters', state: 'NT', location: 'Darwin', isPubliclyListed: true },
-    { name: 'Canberra Raiders Masters', state: 'ACT', location: 'Canberra', isPubliclyListed: true }
+    { name: 'Canterbury Bankstown Masters', state: 'NSW', location: 'Belmore', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Parramatta Eels Masters', state: 'NSW', location: 'Parramatta', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Cronulla Sharks Masters', state: 'NSW', location: 'Cronulla', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Brisbane Broncos Masters', state: 'QLD', location: 'Brisbane', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Gold Coast Titans Masters', state: 'QLD', location: 'Gold Coast', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'North Queensland Cowboys Masters', state: 'QLD', location: 'Townsville', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Melbourne Storm Masters', state: 'VIC', location: 'Melbourne', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Geelong Masters Rugby League', state: 'VIC', location: 'Geelong', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Perth Pirates Masters', state: 'WA', location: 'Perth', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Fremantle Dockers Masters', state: 'WA', location: 'Fremantle', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Adelaide Rams Masters', state: 'SA', location: 'Adelaide', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Port Adelaide Masters', state: 'SA', location: 'Port Adelaide', isPubliclyListed: false, logoUrl: '/icons/seed.svg' }, // Test club - not public
+    { name: 'Hobart Devils Masters', state: 'TAS', location: 'Hobart', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Launceston Lions Masters', state: 'TAS', location: 'Launceston', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Darwin Crocodiles Masters', state: 'NT', location: 'Darwin', isPubliclyListed: true, logoUrl: '/icons/seed.svg' },
+    { name: 'Canberra Raiders Masters', state: 'ACT', location: 'Canberra', isPubliclyListed: true, logoUrl: '/icons/seed.svg' }
 ];
 
 /**
