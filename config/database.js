@@ -11,7 +11,7 @@ const path = require('path');
 // Database file location
 const dbPath = process.env.NODE_ENV === 'production' 
   ? path.join(__dirname, '..', 'data', 'rugby-league-masters.db')
-  : path.join(__dirname, '..', 'data', 'rugby-league-masters-dev.db');
+  : path.join(__dirname, '..', 'data', 'dev-old-man-footy.db');
 
 /**
  * Sequelize instance configuration
