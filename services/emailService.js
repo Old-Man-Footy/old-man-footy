@@ -36,7 +36,7 @@ class EmailService {
                         
                         <p>As a club delegate, you'll be able to:</p>
                         <ul>
-                            <li>Create and manage carnival events</li>
+                            <li>Create and manage carnivals</li>
                             <li>Upload promotional materials and draws</li>
                             <li>Connect with other clubs across Australia</li>
                             <li>Manage your club's carnival schedule</li>

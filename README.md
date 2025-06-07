@@ -1,12 +1,12 @@
 # Old Man Footy:  Rugby League Masters Carnival Management Platform
 
-A comprehensive web application for managing Rugby League Masters carnivals across Australia. This platform allows club delegates to create, manage, and promote rugby league carnival events while providing a centralized directory for players and fans to discover upcoming tournaments.
+A comprehensive web application for managing Rugby League Masters carnivals across Australia. This platform allows club delegates to create, manage, and promote rugby league carnivals while providing a centralized directory for players and fans to discover upcoming tournaments.
 
 ## 🏉 Features
 
 ### Core Functionality
 
-- **Carnival Management**: Create, edit, and delete carnival events
+- **Carnival Management**: Create, edit, and delete carnivals
 - **Multi-State Support**: Support for all Australian states (NSW, QLD, VIC, WA, SA, TAS, NT, ACT)
 - **File Uploads**: Club logos, promotional images, and draw files
 - **Social Media Integration**: Facebook, Instagram, Twitter, and website links
@@ -135,7 +135,7 @@ Note: SQLite database is included and requires no separate installation.
 ### For Club Delegates
 
 1. **Register an Account**: Sign up with your club details
-2. **Create Carnivals**: Add new carnival events with complete information
+2. **Create Carnivals**: Add new carnivals with complete information
 3. **Manage Events**: Edit, update, or delete your carnivals
 4. **Upload Files**: Add club logos, promotional images, and draw files
 5. **Claim MySideline Events**: Take ownership of imported events

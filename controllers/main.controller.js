@@ -82,7 +82,7 @@ const showHomepage = async (req, res) => {
         }
 
         res.render('index', { 
-            title: 'Old Man Footy - Carnival Events Directory',
+            title: 'Old Man Footy - carnivals Directory',
             carnivals: upcomingCarnivals,
             carouselImages,
             stats: {
@@ -94,7 +94,7 @@ const showHomepage = async (req, res) => {
     } catch (error) {
         console.error('Error loading homepage:', error);
         res.render('index', { 
-            title: 'Old Man Footy - Carnival Events Directory',
+            title: 'Old Man Footy - carnivals Directory',
             carnivals: [],
             carouselImages: [],
             stats: {

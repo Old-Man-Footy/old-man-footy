@@ -1,7 +1,7 @@
 /**
  * Carnival Model - SQLite/Sequelize Implementation
  * 
- * Manages Rugby League carnival events with comprehensive features including
+ * Manages Rugby League carnivals with comprehensive features including
  * MySideline integration, file management, and social media links.
  */
 
