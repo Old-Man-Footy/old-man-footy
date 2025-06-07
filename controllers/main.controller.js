@@ -75,7 +75,7 @@ const getDashboard = async (req, res) => {
         // Get user's carnivals
         const userCarnivals = await Carnival.findAll({
             where: { 
-                creatorId: req.user.id,
+                createdByUserId: req.user.id,
                 isActive: true 
             },
             order: [['date', 'DESC']]

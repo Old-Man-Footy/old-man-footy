@@ -152,7 +152,7 @@ const registerUser = async (req, res) => {
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             email: email.toLowerCase(),
-            password: hashedPassword,
+            passwordHash: hashedPassword,
             clubId: club.id,
             isPrimaryDelegate: true,
             isActive: true
@@ -259,7 +259,7 @@ const acceptInvitation = async (req, res) => {
         await invitedUser.update({
             firstName: req.body.firstName.trim(),
             lastName: req.body.lastName.trim(),
-            password: hashedPassword,
+            passwordHash: hashedPassword,
             isActive: true,
             invitationToken: null,
             tokenExpires: null
