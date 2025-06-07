@@ -73,6 +73,22 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `routes/carnivals.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/clubs.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/index.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/admin/stats.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/auth/accept-invitation.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/auth/login.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/auth/register.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/edit.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/list.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/new.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/show.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/clubs/list.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/clubs/manage.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/clubs/show.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/about.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/dashboard.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/error.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/index.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/layout.ejs`  | ⭕ Not Started |
 | As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
