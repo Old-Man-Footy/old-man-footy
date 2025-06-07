@@ -164,11 +164,6 @@ Sponsor.init({
       len: [0, 200]
     }
   },
-  sponsorshipLevel: {
-    type: DataTypes.ENUM('Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'),
-    allowNull: true,
-    defaultValue: 'Supporting'
-  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
@@ -194,9 +189,6 @@ Sponsor.init({
     },
     {
       fields: ['isActive']
-    },
-    {
-      fields: ['sponsorshipLevel']
     }
   ]
 });
