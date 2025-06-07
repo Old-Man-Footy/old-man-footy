@@ -101,6 +101,11 @@ Guidelines for managing static assets and styles to ensure a clean and efficient
 
 * A robust test suite is essential for maintaining a stable and reliable application. We use the [Jest](https://jestjs.io/) testing framework.
 * The correct way to test a single test component is `npm test -- "<controller|view|model|service name>.test.js" --verbose`
+* The order which tests should be written in Jest is:
+  1. Model
+  2. Service
+  3. Controller
+  4. View
 
 ### **4.1. Test File Location and Naming**
 
