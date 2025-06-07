@@ -38,7 +38,12 @@ const getIndex = async (req, res) => {
                     isActive: true
                 }
             }),
-            clubsCount: await Club.count()
+            clubsCount: await Club.count({ 
+                where: { 
+                    isActive: true, 
+                    isPubliclyListed: true 
+                } 
+            })
         };
 
         res.render('index', { 
