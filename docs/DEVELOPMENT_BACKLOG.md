@@ -38,7 +38,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a developer, I want all buttons and links on the website to have a purpose and a destination. Ensure they all have a function. | ✅ Completed |
 | As a club delegate, I want to ensure any carnivals I create on this website are merged with data synched from MySideline. We should not end up with duplicates. | ✅ Completed |
 | As a club delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages.  | ✅ Completed |
-| As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on All Carnivals page. | ⭕ Not Started |
+| As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on All Carnivals page. | ✅ Completed |
 | As a user, when I click on 'Find Clubs' I should not get a 404 Page Not Found error. | ⭕ Not Started |
 | As a developer, all test clubs and carnivals should use `public\icons\test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
 | As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ⭕ Not Started |
@@ -48,7 +48,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ⭕ Not Started |
 | As a club delegate, I want to display social media links and feeds on carnival pages. | ⭕ Not Started |
-| As a club delegate, when I log in, I want to be able access a user guide that helps me understand how the site works. | ⭕ Not Started |
+| As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of how imported carnivals will merge with my created ones later. | ⭕ Not Started |

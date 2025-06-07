@@ -19,13 +19,13 @@ const { sequelize } = require('../models');
  */
 const listCarnivals = async (req, res) => {
     try {
-        const { state, search, upcoming, mysideline } = req.query;
+        const { state, search, upcoming, mysideline, _submitted } = req.query;
         let whereClause = { isActive: true };
 
-        // Set default for upcoming if no explicit filters are applied
+        // Set default for upcoming only if no form has been submitted and no explicit filters are applied
         let upcomingFilter = upcoming;
-        if (upcomingFilter === undefined && !search && (!state || state === 'all')) {
-            upcomingFilter = 'true'; // Default to showing upcoming events
+        if (upcomingFilter === undefined && !_submitted && !search && (!state || state === 'all')) {
+            upcomingFilter = 'true'; // Default to showing upcoming events only on first page load
         }
 
         // State filter
@@ -33,7 +33,7 @@ const listCarnivals = async (req, res) => {
             whereClause.state = state;
         }
 
-        // Date filter
+        // Date filter - only apply if upcomingFilter is explicitly 'true'
         if (upcomingFilter === 'true') {
             whereClause.date = { [Op.gte]: new Date() };
         }

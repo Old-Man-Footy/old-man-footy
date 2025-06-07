@@ -20,6 +20,9 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="/carnivals" class="row g-3">
+                <!-- Hidden field to track form submission -->
+                <input type="hidden" name="_submitted" value="1">
+                
                 <div class="col-md-3">
                     <label for="state" class="form-label">State</label>
                     <select class="form-select" id="state" name="state">
