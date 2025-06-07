@@ -430,6 +430,48 @@ const deleteSponsor = async (req, res) => {
     }
 };
 
+/**
+ * Toggle sponsor active status
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const toggleSponsorStatus = async (req, res) => {
+    try {
+        if (!req.user || !req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. Admin privileges required.'
+            });
+        }
+
+        const { id } = req.params;
+        const { isActive } = req.body;
+
+        const sponsor = await Sponsor.findByPk(id);
+
+        if (!sponsor) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sponsor not found.'
+            });
+        }
+
+        await sponsor.update({ isActive: Boolean(isActive) });
+
+        res.json({
+            success: true,
+            message: `Sponsor ${isActive ? 'activated' : 'deactivated'} successfully.`,
+            isActive: sponsor.isActive
+        });
+    } catch (error) {
+        console.error('Error toggling sponsor status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating sponsor status.'
+        });
+    }
+};
+
 module.exports = {
     showSponsorListings,
     showSponsorProfile,
@@ -437,5 +479,6 @@ module.exports = {
     createSponsor,
     showEditSponsor,
     updateSponsor,
-    deleteSponsor
+    deleteSponsor,
+    toggleSponsorStatus
 };

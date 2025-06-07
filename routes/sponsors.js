@@ -8,12 +8,12 @@ const sponsorController = require('../controllers/sponsor.controller');
 // Public sponsor listings
 router.get('/', sponsorController.showSponsorListings);
 
+// Admin-only routes for sponsor management
+// Show create sponsor form (must be before /:id route)
+router.get('/new', ensureAuthenticated, ensureAdmin, sponsorController.showCreateSponsor);
+
 // Individual sponsor profile (public)
 router.get('/:id', sponsorController.showSponsorProfile);
-
-// Admin-only routes for sponsor management
-// Show create sponsor form
-router.get('/new', ensureAuthenticated, ensureAdmin, sponsorController.showCreateSponsor);
 
 // Create new sponsor
 router.post('/', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploadError, [
@@ -56,5 +56,8 @@ router.post('/:id', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploa
 
 // Delete sponsor (soft delete)
 router.delete('/:id', ensureAuthenticated, ensureAdmin, sponsorController.deleteSponsor);
+
+// Toggle sponsor status
+router.put('/:id/status', ensureAuthenticated, ensureAdmin, sponsorController.toggleSponsorStatus);
 
 module.exports = router;
