@@ -99,7 +99,7 @@ const showClubProfile = async (req, res) => {
                     as: 'sponsors',
                     where: { isActive: true },
                     required: false,
-                    through: { attributes: ['priority'] }
+                    through: { attributes: ['displayOrder'] }
                 }
             ]
         });
@@ -152,8 +152,8 @@ const showClubProfile = async (req, res) => {
 
         // Sort sponsors by priority (if available) or by name
         const sortedSponsors = (club.sponsors || []).sort((a, b) => {
-            const priorityA = a.ClubSponsor?.priority || 999;
-            const priorityB = b.ClubSponsor?.priority || 999;
+            const priorityA = a.ClubSponsor?.displayOrder || 999;
+            const priorityB = b.ClubSponsor?.displayOrder || 999;
             if (priorityA !== priorityB) {
                 return priorityA - priorityB;
             }
@@ -408,7 +408,7 @@ const showClubSponsors = async (req, res) => {
                 where: { isActive: true },
                 required: false,
                 through: { 
-                    attributes: ['priority'],
+                    attributes: ['displayOrder'],
                     as: 'clubSponsor'
                 }
             }]
@@ -421,8 +421,8 @@ const showClubSponsors = async (req, res) => {
 
         // Sort sponsors by priority
         const sponsors = club.sponsors ? club.sponsors.sort((a, b) => {
-            const priorityA = a.clubSponsor?.priority || 999;
-            const priorityB = b.clubSponsor?.priority || 999;
+            const priorityA = a.clubSponsor?.displayOrder || 999;
+            const priorityB = b.clubSponsor?.displayOrder || 999;
             return priorityA - priorityB;
         }) : [];
 

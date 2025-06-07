@@ -143,16 +143,16 @@ Sponsors - Old Man Footy
                     <div class="stat-label">Total Sponsors</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number"><%= sponsors.filter(s => s.status === 'active').length %></div>
+                    <div class="stat-number"><%= sponsors.filter(s => s.isActive).length %></div>
                     <div class="stat-label">Active</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number"><%= sponsors.filter(s => s.tier === 'platinum').length %></div>
-                    <div class="stat-label">Platinum</div>
+                    <div class="stat-number"><%= sponsors.filter(s => s.sponsorshipLevel === 'Gold').length %></div>
+                    <div class="stat-label">Gold</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number"><%= sponsors.filter(s => s.tier === 'gold').length %></div>
-                    <div class="stat-label">Gold</div>
+                    <div class="stat-number"><%= sponsors.filter(s => s.sponsorshipLevel === 'Silver').length %></div>
+                    <div class="stat-label">Silver</div>
                 </div>
             </div>
 
