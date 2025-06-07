@@ -984,34 +984,373 @@ button[type="submit"]:contains("Complete Registration"):focus {
     margin-bottom: 2rem;
 }
 
-.club-filter-form .form-control:focus,
-.club-filter-form .form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+/* Club logo in associated clubs section */
+.club-logo-small {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
 }
 
-/* Responsive club grid */
+/* ==================================================
+   SPONSOR PAGE STYLES
+   ================================================== */
+
+/* Sponsor Header Section */
+.sponsor-header {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.sponsor-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="2"/></svg>') repeat;
+    opacity: 0.3;
+}
+
+.sponsor-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Sponsor Logo Styling */
+.sponsor-logo-large {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+}
+
+.sponsor-logo-large:hover {
+    transform: scale(1.05);
+}
+
+/* Fallback icon styling - Fix oversized icon issue */
+.sponsor-logo-large.d-flex {
+    font-size: 3rem !important;
+}
+
+.sponsor-logo-large .fa-4x {
+    font-size: 3rem !important;
+}
+
+.sponsor-logo-large i {
+    font-size: 3rem !important;
+}
+
+/* Sponsor Tier Badges */
+.sponsor-tier-badge {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tier-platinum { 
+    background: linear-gradient(45deg, #e5e4e2, #d3d3d3); 
+    color: #333; 
+}
+
+.tier-gold { 
+    background: linear-gradient(45deg, var(--rugby-gold), #e6c200); 
+    color: #333; 
+}
+
+.tier-silver { 
+    background: linear-gradient(45deg, #c0c0c0, #a8a8a8); 
+    color: #333; 
+}
+
+.tier-bronze { 
+    background: linear-gradient(45deg, #cd7f32, #b8722c); 
+    color: white; 
+}
+
+.tier-community { 
+    background: linear-gradient(45deg, #28a745, #1e7e34); 
+    color: white; 
+}
+
+.tier-supporting { 
+    background: linear-gradient(45deg, #6c757d, #545b62); 
+    color: white; 
+}
+
+.tier-in-kind { 
+    background: linear-gradient(45deg, #17a2b8, #138496); 
+    color: white; 
+}
+
+/* Information Cards */
+.info-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--rugby-green);
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.info-card h3, .info-card h4 {
+    color: var(--rugby-dark-green);
+    font-weight: 600;
+}
+
+/* Information Items */
+.info-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.info-item:hover {
+    background-color: rgba(0, 104, 55, 0.02);
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin: 0 -0.5rem 1rem -0.5rem;
+}
+
+.info-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--rugby-light-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: var(--rugby-green);
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover .info-icon {
+    background: var(--rugby-green);
+    color: white;
+    transform: scale(1.1);
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-content h6 {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-content p {
+    margin: 0.25rem 0 0 0;
+    font-weight: 500;
+    color: #333;
+}
+
+.info-content a {
+    color: var(--rugby-link-green);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.info-content a:hover {
+    color: var(--rugby-link-green-hover);
+    text-decoration: underline;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-active {
+    background: linear-gradient(45deg, #d4edda, #c3e6cb);
+    color: #155724;
+    border: 1px solid #28a745;
+}
+
+.status-pending {
+    background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.status-inactive {
+    background: linear-gradient(45deg, #f8d7da, #f1b0b7);
+    color: #721c24;
+    border: 1px solid #dc3545;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Associated Clubs Styling */
+.info-card .card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.info-card .card:hover {
+    border-color: var(--rugby-green);
+    box-shadow: 0 4px 12px rgba(0, 104, 55, 0.1);
+    transform: translateY(-2px);
+}
+
+.info-card .card-body {
+    padding: 1rem;
+}
+
+.info-card .card-title {
+    color: var(--rugby-dark-green);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+/* Quick Actions Sidebar */
+.d-grid .btn {
+    margin-bottom: 0.5rem;
+}
+
+.d-grid .btn:last-child {
+    margin-bottom: 0;
+}
+
+/* Social Media Links in Sidebar */
+.info-card .social-links {
+    justify-content: flex-start;
+}
+
+.info-card .social-links .btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.info-card .social-links .btn:hover {
+    transform: translateY(-2px) scale(1.1);
+}
+
+/* Statistics Card */
+.info-card .h3 {
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.info-card .text-primary {
+    color: var(--rugby-green) !important;
+}
+
+.info-card .text-success {
+    color: var(--rugby-gold) !important;
+}
+
+.info-card small {
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive Design for Sponsor Page */
 @media (max-width: 768px) {
-    .club-grid .col-lg-6 {
-        margin-bottom: 1rem;
+    .sponsor-header {
+        padding: 2rem 0;
     }
     
-    .stat-number-small {
-        font-size: 1.25rem;
+    .sponsor-header .display-flex {
+        flex-direction: column;
+        text-align: center;
     }
     
-    .rugby-masters-card .card-body {
+    .action-buttons {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .info-card {
+        padding: 1.5rem;
+    }
+    
+    .sponsor-logo-large {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .info-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .sponsor-tier-badge {
+        font-size: 0.9rem;
+        padding: 0.4rem 1rem;
+    }
+    
+    .info-card {
         padding: 1rem;
     }
-}
-
-/* Club profile responsive adjustments */
-@media (max-width: 992px) {
-    .club-profile-header .display-5 {
-        font-size: 2rem;
+    
+    .action-buttons {
+        flex-direction: column;
     }
     
-    .club-profile-header .lead {
-        font-size: 1rem;
+    .action-buttons .btn {
+        width: 100%;
     }
 }

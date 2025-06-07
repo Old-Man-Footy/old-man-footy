@@ -1,174 +1,3 @@
-<%- contentFor('title') %>
-<%= sponsor.sponsorName %> - Sponsors - Old Man Footy
-
-<%- contentFor('styles') %>
-<style>
-    .sponsor-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 3rem 0;
-        margin-bottom: 2rem;
-    }
-    
-    .sponsor-logo-large {
-        width: 150px;
-        height: 150px;
-        object-fit: contain;
-        background: white;
-        border-radius: 12px;
-        padding: 1rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    
-    .sponsor-tier-badge {
-        display: inline-block;
-        padding: 0.5rem 1.5rem;
-        border-radius: 25px;
-        font-size: 1rem;
-        font-weight: bold;
-        text-transform: uppercase;
-        margin-bottom: 1rem;
-    }
-    
-    .tier-platinum { background: #e5e4e2; color: #333; }
-    .tier-gold { background: #ffd700; color: #333; }
-    .tier-silver { background: #c0c0c0; color: #333; }
-    .tier-bronze { background: #cd7f32; color: white; }
-    .tier-community { background: #28a745; color: white; }
-    .tier-supporting { background: #6c757d; color: white; }
-    .tier-in-kind { background: #17a2b8; color: white; }
-    
-    .info-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        padding: 2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .info-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .info-item:last-child {
-        margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: none;
-    }
-    
-    .info-icon {
-        width: 40px;
-        height: 40px;
-        background: #f8f9fa;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-        color: #007bff;
-    }
-    
-    .info-content h6 {
-        margin: 0;
-        color: #666;
-        font-size: 0.9rem;
-    }
-    
-    .info-content p {
-        margin: 0;
-        font-weight: 500;
-    }
-    
-    .gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .gallery-item {
-        position: relative;
-        border-radius: 8px;
-        overflow: hidden;
-        aspect-ratio: 16/9;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }
-    
-    .gallery-item:hover {
-        transform: scale(1.02);
-    }
-    
-    .gallery-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .status-badge {
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-    
-    .status-active {
-        background: #d4edda;
-        color: #155724;
-    }
-    
-    .status-pending {
-        background: #fff3cd;
-        color: #856404;
-    }
-    
-    .status-inactive {
-        background: #f8d7da;
-        color: #721c24;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-    
-    .documents-list {
-        list-style: none;
-        padding: 0;
-    }
-    
-    .document-item {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem;
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
-        margin-bottom: 0.5rem;
-        transition: background-color 0.2s ease;
-    }
-    
-    .document-item:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .document-icon {
-        width: 32px;
-        height: 32px;
-        background: #007bff;
-        color: white;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-    }
-</style>
-
 <div class="sponsor-header">
     <div class="container">
         <div class="row align-items-center">
@@ -179,7 +8,7 @@
                          class="sponsor-logo-large">
                 <% } else { %>
                     <div class="sponsor-logo-large d-flex align-items-center justify-content-center">
-                        <i class="fas fa-building fa-4x text-muted"></i>
+                        <i class="fas fa-building fa-3x text-muted"></i>
                     </div>
                 <% } %>
             </div>
@@ -318,7 +147,7 @@
                                     <div class="card-body">
                                         <div class="d-flex align-items-center">
                                             <% if (club.logoUrl) { %>
-                                                <img src="<%= club.logoUrl %>" alt="<%= club.clubName %>" class="me-3" style="width: 40px; height: 40px; object-fit: contain;">
+                                                <img src="<%= club.logoUrl %>" alt="<%= club.clubName %>" class="me-3 club-logo-small">
                                             <% } %>
                                             <div>
                                                 <h6 class="card-title mb-1"><%= club.clubName %></h6>
@@ -403,7 +232,6 @@
     </div>
 </div>
 
-<%- contentFor('scripts') %>
 <script>
     function confirmDelete() {
         if (confirm('Are you sure you want to delete this sponsor? This action cannot be undone.')) {
