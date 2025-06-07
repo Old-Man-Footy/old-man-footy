@@ -120,7 +120,7 @@ const showCarnival = async (req, res) => {
                     as: 'sponsors',
                     where: { isActive: true },
                     required: false,
-                    through: { attributes: ['priority'] }
+                    through: { attributes: ['displayOrder'] }
                 }
             ]
         });
@@ -138,8 +138,8 @@ const showCarnival = async (req, res) => {
 
         // Sort sponsors by priority (if available) or by name
         const sortedSponsors = (carnival.sponsors || []).sort((a, b) => {
-            const priorityA = a.CarnivalSponsor?.priority || 999;
-            const priorityB = b.CarnivalSponsor?.priority || 999;
+            const priorityA = a.CarnivalSponsor?.displayOrder || 999;
+            const priorityB = b.CarnivalSponsor?.displayOrder || 999;
             if (priorityA !== priorityB) {
                 return priorityA - priorityB;
             }

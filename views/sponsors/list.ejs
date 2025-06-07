@@ -167,26 +167,24 @@ Sponsors - Old Man Footy
                                    id="search" 
                                    name="search" 
                                    placeholder="Search by name, industry, or location..."
-                                   value="<%= search || '' %>">
+                                   value="<%= filters.search || '' %>">
                         </div>
                         <div class="filter-group">
-                            <label for="tier" class="form-label">Tier</label>
-                            <select class="form-select" id="tier" name="tier">
-                                <option value="">All Tiers</option>
-                                <option value="platinum" <%= tier === 'platinum' ? 'selected' : '' %>>Platinum</option>
-                                <option value="gold" <%= tier === 'gold' ? 'selected' : '' %>>Gold</option>
-                                <option value="silver" <%= tier === 'silver' ? 'selected' : '' %>>Silver</option>
-                                <option value="bronze" <%= tier === 'bronze' ? 'selected' : '' %>>Bronze</option>
-                                <option value="community" <%= tier === 'community' ? 'selected' : '' %>>Community</option>
+                            <label for="state" class="form-label">State</label>
+                            <select class="form-select" id="state" name="state">
+                                <option value="">All States</option>
+                                <% states.forEach(state => { %>
+                                    <option value="<%= state %>" <%= filters.state === state ? 'selected' : '' %>><%= state %></option>
+                                <% }); %>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="">All Status</option>
-                                <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active</option>
-                                <option value="pending" <%= status === 'pending' ? 'selected' : '' %>>Pending</option>
-                                <option value="inactive" <%= status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                            <label for="sponsorshipLevel" class="form-label">Sponsorship Level</label>
+                            <select class="form-select" id="sponsorshipLevel" name="sponsorshipLevel">
+                                <option value="">All Levels</option>
+                                <% sponsorshipLevels.forEach(level => { %>
+                                    <option value="<%= level %>" <%= filters.sponsorshipLevel === level ? 'selected' : '' %>><%= level %></option>
+                                <% }); %>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -204,7 +202,7 @@ Sponsors - Old Man Footy
                         <div class="sponsor-card">
                             <% if (sponsor.logoUrl) { %>
                                 <img src="<%= sponsor.logoUrl %>" 
-                                     alt="<%= sponsor.name %> Logo" 
+                                     alt="<%= sponsor.sponsorName %> Logo" 
                                      class="sponsor-logo">
                             <% } else { %>
                                 <div class="sponsor-logo d-flex align-items-center justify-content-center">
@@ -213,15 +211,15 @@ Sponsors - Old Man Footy
                             <% } %>
                             
                             <div class="sponsor-info">
-                                <div class="sponsor-name"><%= sponsor.name %></div>
+                                <div class="sponsor-name"><%= sponsor.sponsorName %></div>
                                 
-                                <span class="sponsor-tier tier-<%= sponsor.tier %>">
-                                    <%= sponsor.tier %>
+                                <span class="sponsor-tier tier-<%= sponsor.sponsorshipLevel ? sponsor.sponsorshipLevel.toLowerCase() : 'bronze' %>">
+                                    <%= sponsor.sponsorshipLevel || 'Bronze' %>
                                 </span>
                                 
-                                <% if (sponsor.industry) { %>
+                                <% if (sponsor.businessType) { %>
                                     <div class="text-muted small mb-2">
-                                        <i class="fas fa-industry"></i> <%= sponsor.industry %>
+                                        <i class="fas fa-industry"></i> <%= sponsor.businessType %>
                                     </div>
                                 <% } %>
                                 
@@ -258,7 +256,7 @@ Sponsors - Old Man Footy
                     <i class="fas fa-handshake fa-5x text-muted mb-3"></i>
                     <h3 class="text-muted">No Sponsors Found</h3>
                     <p class="text-muted">
-                        <% if (search || tier || status) { %>
+                        <% if (filters.search || filters.state || filters.sponsorshipLevel) { %>
                             No sponsors match your current filters. Try adjusting your search criteria.
                         <% } else { %>
                             No sponsors have been added yet.
