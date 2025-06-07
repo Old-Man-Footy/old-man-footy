@@ -169,6 +169,14 @@ ClubSponsor.init({
     validate: {
       len: [0, 1000]
     }
+  },
+  displayOrder: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 999,
+    validate: {
+      min: 0
+    }
   }
 }, {
   sequelize,
