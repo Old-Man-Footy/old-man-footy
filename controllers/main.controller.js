@@ -91,11 +91,27 @@ const getDashboard = async (req, res) => {
             limit: 5
         });
 
+        // Get eligible delegates for transfer (if user is primary delegate)
+        let eligibleDelegates = [];
+        if (req.user.isPrimaryDelegate && req.user.clubId) {
+            eligibleDelegates = await User.findAll({
+                where: {
+                    clubId: req.user.clubId,
+                    isActive: true,
+                    isPrimaryDelegate: false,
+                    id: { [Op.ne]: req.user.id } // Exclude current user
+                },
+                attributes: ['id', 'firstName', 'lastName', 'email'],
+                order: [['firstName', 'ASC'], ['lastName', 'ASC']]
+            });
+        }
+
         res.render('dashboard', {
             title: 'Dashboard',
             user: req.user,
             userCarnivals,
-            upcomingCarnivals
+            upcomingCarnivals,
+            eligibleDelegates
         });
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -103,7 +119,8 @@ const getDashboard = async (req, res) => {
             title: 'Dashboard',
             user: req.user,
             userCarnivals: [],
-            upcomingCarnivals: []
+            upcomingCarnivals: [],
+            eligibleDelegates: []
         });
     }
 };

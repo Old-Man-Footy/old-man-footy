@@ -32,6 +32,11 @@ router.post('/send-invitation', [
     body('email').isEmail().withMessage('Valid email is required')
 ], authController.sendInvitation);
 
+// Transfer delegate role (for primary delegates)
+router.post('/transfer-delegate-role', [
+    body('newPrimaryUserId').isInt({ min: 1 }).withMessage('Valid user ID is required')
+], authController.transferDelegateRole);
+
 // Logout
 router.post('/logout', authController.logoutUser);
 

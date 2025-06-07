@@ -303,6 +303,72 @@ class EmailService {
         }
     }
 
+    // Send notification email when delegate role is transferred
+    async sendDelegateRoleTransferNotification(newPrimaryEmail, newPrimaryName, formerPrimaryName, clubName) {
+        const mailOptions = {
+            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            to: newPrimaryEmail,
+            subject: `You are now the Primary Delegate for ${clubName}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
+                        <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                        <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
+                    </div>
+                    
+                    <div style="padding: 30px; background: #f9f9f9;">
+                        <h2 style="color: #006837;">🏆 Primary Delegate Role Transferred</h2>
+                        
+                        <p>Hello <strong>${newPrimaryName}</strong>,</p>
+                        
+                        <p><strong>${formerPrimaryName}</strong> has transferred the primary delegate role for <strong>${clubName}</strong> to you.</p>
+                        
+                        <div style="background: #e8f5e8; border-left: 4px solid #006837; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                            <h3 style="color: #006837; margin-top: 0;">Your New Responsibilities</h3>
+                            <p style="margin: 0;">As the primary delegate, you now have additional privileges:</p>
+                            <ul style="margin: 10px 0 0 0;">
+                                <li>Invite new delegates to your club</li>
+                                <li>Transfer the primary delegate role to other club members</li>
+                                <li>Manage club settings and profile information</li>
+                                <li>Full access to all club carnival management features</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/dashboard" 
+                               style="background: #006837; color: white; padding: 15px 30px; 
+                                      text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                Access Your Dashboard
+                            </a>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666;">
+                            If you have any questions about your new role or need assistance, 
+                            please don't hesitate to contact our support team.
+                        </p>
+                        
+                        <p style="font-size: 14px; color: #666; text-align: center; margin-top: 30px;">
+                            Thank you for your continued support of Masters Rugby League!
+                        </p>
+                    </div>
+                    
+                    <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+                        <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        try {
+            const result = await this.transporter.sendMail(mailOptions);
+            console.log('Delegate role transfer notification sent successfully:', result.messageId);
+            return { success: true, messageId: result.messageId };
+        } catch (error) {
+            console.error('Failed to send delegate role transfer notification:', error);
+            throw error;
+        }
+    }
+
     // Test email configuration
     async testEmailConfiguration() {
         try {

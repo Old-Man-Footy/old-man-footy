@@ -349,6 +349,85 @@ const sendInvitation = async (req, res) => {
     }
 };
 
+/**
+ * Transfer primary delegate role to another user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const transferDelegateRole = async (req, res) => {
+    try {
+        // Check if current user is primary delegate
+        if (!req.user.isPrimaryDelegate) {
+            req.flash('error_msg', 'Only primary delegates can transfer their role.');
+            return res.redirect('/dashboard');
+        }
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please select a valid user to transfer the role to.');
+            return res.redirect('/dashboard');
+        }
+
+        const { newPrimaryUserId } = req.body;
+
+        // Find the user to transfer role to
+        const newPrimaryUser = await User.findOne({
+            where: {
+                id: newPrimaryUserId,
+                clubId: req.user.clubId,
+                isActive: true,
+                isPrimaryDelegate: false
+            }
+        });
+
+        if (!newPrimaryUser) {
+            req.flash('error_msg', 'Selected user not found or not eligible for primary delegate role.');
+            return res.redirect('/dashboard');
+        }
+
+        // Perform the transfer in a transaction to ensure data consistency
+        const { sequelize } = require('../config/database');
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Remove primary delegate status from current user
+            await req.user.update({
+                isPrimaryDelegate: false
+            }, { transaction });
+
+            // Grant primary delegate status to new user
+            await newPrimaryUser.update({
+                isPrimaryDelegate: true
+            }, { transaction });
+
+            // Commit the transaction
+            await transaction.commit();
+
+            // Send notification email to new primary delegate
+            const club = await Club.findByPk(req.user.clubId);
+            await emailService.sendDelegateRoleTransferNotification(
+                newPrimaryUser.email,
+                newPrimaryUser.getFullName(),
+                req.user.getFullName(),
+                club.clubName
+            );
+
+            req.flash('success_msg', `Primary delegate role successfully transferred to ${newPrimaryUser.getFullName()}.`);
+            res.redirect('/dashboard');
+
+        } catch (transactionError) {
+            // Rollback the transaction
+            await transaction.rollback();
+            throw transactionError;
+        }
+
+    } catch (error) {
+        console.error('Error transferring delegate role:', error);
+        req.flash('error_msg', 'An error occurred while transferring the delegate role.');
+        res.redirect('/dashboard');
+    }
+};
+
 module.exports = {
     showLoginForm,
     loginUser,
@@ -357,5 +436,6 @@ module.exports = {
     showInvitationForm,
     acceptInvitation,
     logoutUser,
-    sendInvitation
+    sendInvitation,
+    transferDelegateRole
 };
