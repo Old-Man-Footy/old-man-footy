@@ -332,29 +332,37 @@
 
             <!-- Social Media -->
             <% if (club.socialMediaFacebook || club.socialMediaInstagram || club.socialMediaTwitter) { %>
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-share-alt me-2"></i>Follow Us</h5>
+                <div class="card shadow mb-4 club-social-card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-share"></i> Social Media
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="d-grid gap-2">
+                        <div class="row">
                             <% if (club.socialMediaFacebook) { %>
-                                <a href="<%= club.socialMediaFacebook %>" target="_blank" 
-                                   class="btn btn-outline-primary btn-sm">
-                                    <i class="fab fa-facebook me-2"></i>Facebook
-                                </a>
+                                <div class="col-12 mb-3">
+                                    <a href="<%= club.socialMediaFacebook %>" target="_blank" 
+                                       class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fab fa-facebook me-2"></i>Facebook
+                                    </a>
+                                </div>
                             <% } %>
                             <% if (club.socialMediaInstagram) { %>
-                                <a href="<%= club.socialMediaInstagram %>" target="_blank" 
-                                   class="btn btn-outline-danger btn-sm">
-                                    <i class="fab fa-instagram me-2"></i>Instagram
-                                </a>
+                                <div class="col-12 mb-3">
+                                    <a href="<%= club.socialMediaInstagram %>" target="_blank" 
+                                       class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fab fa-instagram me-2"></i>Instagram
+                                    </a>
+                                </div>
                             <% } %>
                             <% if (club.socialMediaTwitter) { %>
-                                <a href="<%= club.socialMediaTwitter %>" target="_blank" 
-                                   class="btn btn-outline-info btn-sm">
-                                    <i class="fab fa-twitter me-2"></i>Twitter
-                                </a>
+                                <div class="col-12">
+                                    <a href="<%= club.socialMediaTwitter %>" target="_blank" 
+                                       class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fab fa-twitter me-2"></i>X
+                                    </a>
+                                </div>
                             <% } %>
                         </div>
                     </div>

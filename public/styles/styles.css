@@ -440,6 +440,124 @@ body {
     transform: translateY(-2px);
 }
 
+/* Social Media Links Enhancement */
+.social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.social-links .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.social-links .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.social-links .btn i {
+    font-size: 1rem;
+}
+
+/* Contact Information Social Media */
+.card-body .social-links {
+    margin-top: 8px;
+}
+
+.card-body .social-links .btn {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+}
+
+/* Main content social media styling */
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-right: 12px;
+    margin-bottom: 8px;
+    background-color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.social-links a:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    text-decoration: none;
+}
+
+.social-links a i {
+    font-size: 1.1rem;
+}
+
+/* Social Media Platform Colors */
+.btn-outline-primary:hover,
+.social-links a[href*="facebook"]:hover {
+    background-color: #1877f2;
+    border-color: #1877f2;
+    color: white;
+}
+
+.btn-outline-danger:hover,
+.social-links a[href*="instagram"]:hover {
+    background-color: #e4405f;
+    border-color: #e4405f;
+    color: white;
+}
+
+.btn-outline-info:hover,
+.social-links a[href*="twitter"]:hover,
+.social-links a[href*="x.com"]:hover {
+    background-color: #1da1f2;
+    border-color: #1da1f2;
+    color: white;
+}
+
+.btn-outline-success:hover,
+.social-links a[href*="youtube"]:hover {
+    background-color: #ff0000;
+    border-color: #ff0000;
+    color: white;
+}
+
+.social-links a[href*="youtube"] i {
+    color: #ff0000;
+}
+
+/* Website link styling */
+.social-links a:not([href*="facebook"]):not([href*="instagram"]):not([href*="twitter"]):not([href*="x.com"]):not([href*="youtube"]):hover {
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
+}
+
+/* Responsive social media buttons */
+@media (max-width: 576px) {
+    .social-links {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .social-links .btn,
+    .social-links a {
+        justify-content: center;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+}
+
 /* Footer Enhancements */
 .footer, .bg-dark {
     background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;

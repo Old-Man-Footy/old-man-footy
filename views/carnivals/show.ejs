@@ -160,7 +160,7 @@
                                 <% } %>
                                 <% if (carnival.socialMediaTwitter) { %>
                                     <a href="<%= carnival.socialMediaTwitter %>" target="_blank" class="text-decoration-none me-3">
-                                        <i class="bi bi-twitter text-info"></i> Twitter
+                                        <i class="bi bi-twitter-x text-info"></i> X
                                     </a>
                                 <% } %>
                                 <% if (carnival.socialMediaWebsite) { %>
@@ -218,6 +218,36 @@
                             <%= carnival.organiserContactPhone %>
                         </a>
                     </div>
+                    
+                    <!-- Social Media Links in Contact Information -->
+                    <% if (carnival.socialMediaFacebook || carnival.socialMediaInstagram || carnival.socialMediaTwitter || carnival.socialMediaWebsite) { %>
+                        <div class="mb-3">
+                            <strong>Follow Us:</strong><br>
+                            <div class="social-links mt-2">
+                                <% if (carnival.socialMediaFacebook) { %>
+                                    <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="btn btn-outline-primary btn-sm me-2 mb-1">
+                                        <i class="bi bi-facebook"></i> Facebook
+                                    </a>
+                                <% } %>
+                                <% if (carnival.socialMediaInstagram) { %>
+                                    <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="btn btn-outline-danger btn-sm me-2 mb-1">
+                                        <i class="bi bi-instagram"></i> Instagram
+                                    </a>
+                                <% } %>
+                                <% if (carnival.socialMediaTwitter) { %>
+                                    <a href="<%= carnival.socialMediaTwitter %>" target="_blank" class="btn btn-outline-info btn-sm me-2 mb-1">
+                                        <i class="bi bi-twitter-x"></i> X
+                                    </a>
+                                <% } %>
+                                <% if (carnival.socialMediaWebsite) { %>
+                                    <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="btn btn-outline-success btn-sm me-2 mb-1">
+                                        <i class="bi bi-globe"></i> Website
+                                    </a>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } %>
+                    
                     <% if (carnival.creator && carnival.creator.club) { %>
                         <div class="mb-0">
                             <strong>Hosting Club:</strong><br>

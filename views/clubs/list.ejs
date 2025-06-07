@@ -141,11 +141,6 @@
                                     <!-- Social Media Links -->
                                     <% if (club.facebookUrl || club.instagramUrl || club.twitterUrl || club.website) { %>
                                         <div class="social-links mb-3">
-                                            <% if (club.website) { %>
-                                                <a href="<%= club.website %>" target="_blank" class="text-decoration-none me-2" title="Website">
-                                                    <i class="bi bi-globe"></i>
-                                                </a>
-                                            <% } %>
                                             <% if (club.facebookUrl) { %>
                                                 <a href="<%= club.facebookUrl %>" target="_blank" class="text-decoration-none me-2" title="Facebook">
                                                     <i class="bi bi-facebook"></i>
@@ -157,8 +152,13 @@
                                                 </a>
                                             <% } %>
                                             <% if (club.twitterUrl) { %>
-                                                <a href="<%= club.twitterUrl %>" target="_blank" class="text-decoration-none me-2" title="Twitter">
-                                                    <i class="bi bi-twitter"></i>
+                                                <a href="<%= club.twitterUrl %>" target="_blank" class="text-decoration-none me-2" title="X">
+                                                    <i class="bi bi-twitter-x"></i>
+                                                </a>
+                                            <% } %>
+                                            <% if (club.website) { %>
+                                                <a href="<%= club.website %>" target="_blank" class="text-decoration-none me-2" title="Website">
+                                                    <i class="bi bi-globe"></i>
                                                 </a>
                                             <% } %>
                                         </div>
