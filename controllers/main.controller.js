@@ -29,15 +29,35 @@ const getIndex = async (req, res) => {
             limit: 5
         });
 
+        // Get statistics for the stats runner
+        const stats = {
+            totalCarnivals: await Carnival.count({ where: { isActive: true } }),
+            upcomingCount: await Carnival.count({
+                where: {
+                    date: { [Op.gte]: new Date() },
+                    isActive: true
+                }
+            }),
+            clubsCount: await Club.count()
+        };
+
         res.render('index', { 
             title: 'Old Man Footy',
-            upcomingCarnivals
+            upcomingCarnivals,
+            carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
+            stats
         });
     } catch (error) {
         console.error('Error loading homepage:', error);
         res.render('index', { 
             title: 'Old Man Footy',
-            upcomingCarnivals: []
+            upcomingCarnivals: [],
+            carnivals: [], // Also provide as 'carnivals' for template compatibility
+            stats: {
+                totalCarnivals: 0,
+                upcomingCount: 0,
+                clubsCount: 0
+            }
         });
     }
 };
