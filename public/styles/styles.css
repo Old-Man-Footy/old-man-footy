@@ -1285,6 +1285,63 @@ button[type="submit"]:contains("Complete Registration"):focus {
     }
 }
 
-/* ==================================================
-   END OF SPONSOR PAGE STYLES
-   ================================================== */
+/* Social Media Button Styles */
+.btn-facebook {
+    background-color: #1877f2;
+    border-color: #1877f2;
+    color: white;
+}
+
+.btn-facebook:hover {
+    background-color: #166fe5;
+    border-color: #166fe5;
+    color: white;
+}
+
+.btn-instagram {
+    background: #e1306c;
+    border-color: #e1306c;
+    color: white;
+}
+
+.btn-instagram:hover {
+    background: #e1306c;
+    border-color: #d4285f;
+    color: white;
+}
+
+.btn-twitter {
+    background-color: #1da1f2;
+    border-color: #1da1f2;
+    color: white;
+}
+
+.btn-twitter:hover {
+    background-color: #1a91da;
+    border-color: #1a91da;
+    color: white;
+}
+
+.btn-linkedin {
+    background-color: #0077b5;
+    border-color: #0077b5;
+    color: white;
+}
+
+.btn-linkedin:hover {
+    background-color: #006ba1;
+    border-color: #006ba1;
+    color: white;
+}
+
+/* Social Links Container Styling */
+.social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.social-links .btn {
+    flex: 1;
+    min-width: fit-content;
+}
