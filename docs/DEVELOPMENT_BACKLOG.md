@@ -58,13 +58,28 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want the ability to opt-out of my images being used on the home page carousel. | ⭕ Not Started |
 | As a club delegate, When I mark a club as inactive, it should be removed from the "Find Clubs" interface. | ⭕ Not Started |
 | As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
-| As a developer, I want to ensure all user interfaces, views and models are vigorously unit tested aiming for 100% coverage. | 🔄 In Progress |
+| As a tester, I want comprehensive unit tests for `models/Carnival.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/Club.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/Index.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/User.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/EmailSubscription.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `services/emailService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `services/mySidelineService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/auth.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/carnival.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/club.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/main.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/auth.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `routes/auth.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `routes/carnivals.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `routes/clubs.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `routes/index.js`  | ⭕ Not Started |
 | As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
 | As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
 | As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
-| As a developer, I want to ensure my entire site is vigorously tested and confirmed working 100% and all unit tests are written and executed. | ⭕ Not Started |
+| As a developer, I want to ensure my entire site is vigorously tested and confirmed working 100% and all unit tests are executed and passing. | ⭕ Not Started |
 | **Production & Infrastructure** | |
 | As a developer, I want to configure the production environment (SQLite database, email, SSL) for the application to go live. | 🔄 In Progress |
 | As a developer, I want to set up a CI/CD pipeline for automated testing and deployment. | 🔄 In Progress |

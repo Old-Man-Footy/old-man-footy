@@ -100,12 +100,6 @@ Guidelines for managing static assets and styles to ensure a clean and efficient
 ## **4\. Unit Testing**
 
 * A robust test suite is essential for maintaining a stable and reliable application. We use the [Jest](https://jestjs.io/) testing framework.
-* The correct way to test a single test component is `npm test -- "<controller|view|model|service name>.test.js" --verbose`
-* The order which tests should be written in Jest is:
-  1. Model
-  2. Service
-  3. Controller
-  4. View
 
 ### **4.1. Test File Location and Naming**
 
@@ -123,6 +117,12 @@ When writing unit tests, follow these standards:
   2. **Act:** Execute the function or method being tested.  
   3. **Assert:** Verify that the outcome is as expected using Jest's matchers (e.g., expect(result).toBe(true)).  
 * **Coverage:** Aim to test all business logic within controllers and models. Pay special attention to edge cases, error handling paths, and validation logic.
+* The correct way to test a single test component is `npm test -- "<controller|view|model|service name>.test.js" --verbose`
+* The order which tests should be written in Jest is:
+  1. Model
+  2. Service
+  3. Controller
+  4. Route
 
 **Example Prompt for Copilot:**
 
