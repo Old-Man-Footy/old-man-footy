@@ -45,7 +45,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to be able to transfer the role of delegate to another user. | ✅ Completed |
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ✅ Completed |
 | As a club delegate, I want to display social media links and feeds in Contact information on carnival pages. | ✅ Completed |
-| As a developer, I want to be able to store sponsor information, including logo, name, location, description of business, contacts and social media information. | ⭕ Not Started |
+| As a developer, I want to be able to store sponsor information, including logo, name, location, description of business, contacts and social media information. Sponsors can be linked to by multiple clubs. | ✅ Completed |
 | As a club delegate, I want to be able to add sponsors and link them to my Club, and Carnivals. | ⭕ Not Started |
 | As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ⭕ Not Started |
 | As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
@@ -70,6 +70,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a developer, all test clubs and carnivals should use `public\icons\test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Index.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/User.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/Sponsor.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/EmailSubscription.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/emailService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/mySidelineService.js`  | ⭕ Not Started |
@@ -79,10 +80,12 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `contollers/club.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/main.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `contollers/auth.controller.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `contollers/sponsor.controller.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/auth.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/carnivals.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/clubs.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `routes/index.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `routes/sponsor.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/admin/stats.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/auth/accept-invitation.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/auth/login.ejs`  | ⭕ Not Started |

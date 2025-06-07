@@ -24,8 +24,18 @@ function ensurePrimaryDelegate(req, res, next) {
     res.redirect('/dashboard');
 }
 
+// Middleware to ensure user is admin
+function ensureAdmin(req, res, next) {
+    if (req.isAuthenticated() && req.user.isAdmin) {
+        return next();
+    }
+    req.flash('error_msg', 'Access denied. Admin privileges required.');
+    res.redirect('/dashboard');
+}
+
 module.exports = {
     ensureAuthenticated,
     ensureGuest,
-    ensurePrimaryDelegate
+    ensurePrimaryDelegate,
+    ensureAdmin
 };

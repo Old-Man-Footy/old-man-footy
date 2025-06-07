@@ -6,13 +6,17 @@ const ImageNamingService = require('../services/imageNamingService');
 // Ensure upload directories exist
 const uploadDirs = [
     'uploads/logos/club',
-    'uploads/logos/carnival', 
+    'uploads/logos/carnival',
+    'uploads/logos/sponsor',
     'uploads/images/club/promo',
     'uploads/images/club/gallery',
     'uploads/images/carnival/promo',
     'uploads/images/carnival/gallery',
+    'uploads/images/sponsor/promo',
+    'uploads/images/sponsor/gallery',
     'uploads/documents/club',
-    'uploads/documents/carnival'
+    'uploads/documents/carnival',
+    'uploads/documents/sponsor'
 ];
 
 uploadDirs.forEach(dir => {
@@ -90,6 +94,9 @@ function extractUploadContext(req, file) {
         } else if (req.route.path.includes('/carnivals')) {
             context.entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL;
             context.entityId = req.params.id || req.body.carnivalId || 1;
+        } else if (req.route.path.includes('/sponsors')) {
+            context.entityType = ImageNamingService.ENTITY_TYPES.SPONSOR;
+            context.entityId = req.params.id || req.body.sponsorId || 1;
         }
     }
     
@@ -252,6 +259,16 @@ module.exports = {
             { name: 'galleryImage', maxCount: 10 },
             { name: 'drawDocument', maxCount: 5 },
             { name: 'bannerImage', maxCount: 2 }
+        ]),
+        processStructuredUpload
+    ],
+    
+    // For sponsor management (multiple files with structured naming)
+    sponsorUpload: [
+        upload.fields([
+            { name: 'logo', maxCount: 1 },
+            { name: 'galleryImage', maxCount: 10 },
+            { name: 'promotionalImage', maxCount: 5 }
         ]),
         processStructuredUpload
     ],

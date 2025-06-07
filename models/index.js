@@ -12,6 +12,7 @@ const User = require('./User');
 const Club = require('./Club');
 const Carnival = require('./Carnival');
 const EmailSubscription = require('./EmailSubscription');
+const Sponsor = require('./Sponsor');
 
 /**
  * Define model associations/relationships
@@ -41,6 +42,21 @@ User.hasMany(Carnival, {
   as: 'carnivals'
 });
 
+// Club and Sponsor many-to-many relationship
+Club.belongsToMany(Sponsor, {
+  through: 'ClubSponsors',
+  foreignKey: 'clubId',
+  otherKey: 'sponsorId',
+  as: 'sponsors'
+});
+
+Sponsor.belongsToMany(Club, {
+  through: 'ClubSponsors',
+  foreignKey: 'sponsorId',
+  otherKey: 'clubId',
+  as: 'clubs'
+});
+
 /**
  * Export all models and database instance
  */
@@ -49,5 +65,6 @@ module.exports = {
   User,
   Club,
   Carnival,
-  EmailSubscription
+  EmailSubscription,
+  Sponsor
 };

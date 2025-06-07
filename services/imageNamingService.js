@@ -24,6 +24,7 @@ class ImageNamingService {
     static ENTITY_TYPES = {
         CLUB: 'club',
         CARNIVAL: 'carnival',
+        SPONSOR: 'sponsor',
         USER: 'user',
         SYSTEM: 'system'
     };
@@ -278,7 +279,7 @@ class ImageNamingService {
      * @returns {Promise<Object>} Cleanup results
      */
     static async cleanupOrphanedImages(dryRun = true) {
-        const { Club, Carnival, User } = require('../models');
+        const { Club, Carnival, Sponsor, User } = require('../models');
         const results = {
             processed: 0,
             orphaned: [],
@@ -286,16 +287,18 @@ class ImageNamingService {
         };
 
         try {
-            // Get all clubs, carnivals, and users
-            const [clubs, carnivals, users] = await Promise.all([
+            // Get all clubs, carnivals, sponsors, and users
+            const [clubs, carnivals, sponsors, users] = await Promise.all([
                 Club.findAll({ attributes: ['id'] }),
                 Carnival.findAll({ attributes: ['id'] }),
+                Sponsor.findAll({ attributes: ['id'] }),
                 User.findAll({ attributes: ['id'] })
             ]);
 
             const validEntityIds = {
                 club: new Set(clubs.map(c => c.id)),
                 carnival: new Set(carnivals.map(c => c.id)),
+                sponsor: new Set(sponsors.map(s => s.id)),
                 user: new Set(users.map(u => u.id))
             };
 

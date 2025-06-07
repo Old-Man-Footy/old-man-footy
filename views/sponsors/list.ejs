@@ -1,0 +1,276 @@
+<%- contentFor('title') %>
+Sponsors - Old Man Footy
+
+<%- contentFor('styles') %>
+<style>
+    .sponsor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .sponsor-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: transform 0.2s ease;
+    }
+    
+    .sponsor-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .sponsor-logo {
+        width: 100%;
+        height: 150px;
+        object-fit: contain;
+        background: #f8f9fa;
+        padding: 1rem;
+    }
+    
+    .sponsor-info {
+        padding: 1rem;
+    }
+    
+    .sponsor-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    
+    .sponsor-tier {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+    
+    .tier-platinum { background: #e5e4e2; color: #333; }
+    .tier-gold { background: #ffd700; color: #333; }
+    .tier-silver { background: #c0c0c0; color: #333; }
+    .tier-bronze { background: #cd7f32; color: white; }
+    .tier-community { background: #28a745; color: white; }
+    
+    .sponsor-description {
+        color: #666;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        margin-bottom: 1rem;
+    }
+    
+    .sponsor-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .search-filters {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .filter-row {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .stats-bar {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Sponsors</h1>
+                <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
+                <div>
+                    <a href="/sponsors/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Sponsor
+                    </a>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- Statistics Bar -->
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-number"><%= sponsors.length %></div>
+                    <div class="stat-label">Total Sponsors</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number"><%= sponsors.filter(s => s.status === 'active').length %></div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number"><%= sponsors.filter(s => s.tier === 'platinum').length %></div>
+                    <div class="stat-label">Platinum</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number"><%= sponsors.filter(s => s.tier === 'gold').length %></div>
+                    <div class="stat-label">Gold</div>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="search-filters">
+                <form method="GET" action="/sponsors">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="search" class="form-label">Search Sponsors</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="search" 
+                                   name="search" 
+                                   placeholder="Search by name, industry, or location..."
+                                   value="<%= search || '' %>">
+                        </div>
+                        <div class="filter-group">
+                            <label for="tier" class="form-label">Tier</label>
+                            <select class="form-select" id="tier" name="tier">
+                                <option value="">All Tiers</option>
+                                <option value="platinum" <%= tier === 'platinum' ? 'selected' : '' %>>Platinum</option>
+                                <option value="gold" <%= tier === 'gold' ? 'selected' : '' %>>Gold</option>
+                                <option value="silver" <%= tier === 'silver' ? 'selected' : '' %>>Silver</option>
+                                <option value="bronze" <%= tier === 'bronze' ? 'selected' : '' %>>Bronze</option>
+                                <option value="community" <%= tier === 'community' ? 'selected' : '' %>>Community</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Status</option>
+                                <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active</option>
+                                <option value="pending" <%= status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                <option value="inactive" <%= status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                            <a href="/sponsors" class="btn btn-outline-secondary">Clear</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sponsors Grid -->
+            <% if (sponsors.length > 0) { %>
+                <div class="sponsor-grid">
+                    <% sponsors.forEach(sponsor => { %>
+                        <div class="sponsor-card">
+                            <% if (sponsor.logoUrl) { %>
+                                <img src="<%= sponsor.logoUrl %>" 
+                                     alt="<%= sponsor.name %> Logo" 
+                                     class="sponsor-logo">
+                            <% } else { %>
+                                <div class="sponsor-logo d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-building fa-3x text-muted"></i>
+                                </div>
+                            <% } %>
+                            
+                            <div class="sponsor-info">
+                                <div class="sponsor-name"><%= sponsor.name %></div>
+                                
+                                <span class="sponsor-tier tier-<%= sponsor.tier %>">
+                                    <%= sponsor.tier %>
+                                </span>
+                                
+                                <% if (sponsor.industry) { %>
+                                    <div class="text-muted small mb-2">
+                                        <i class="fas fa-industry"></i> <%= sponsor.industry %>
+                                    </div>
+                                <% } %>
+                                
+                                <% if (sponsor.location) { %>
+                                    <div class="text-muted small mb-2">
+                                        <i class="fas fa-map-marker-alt"></i> <%= sponsor.location %>
+                                    </div>
+                                <% } %>
+                                
+                                <% if (sponsor.description) { %>
+                                    <div class="sponsor-description">
+                                        <%= sponsor.description.length > 100 ? 
+                                            sponsor.description.substring(0, 100) + '...' : 
+                                            sponsor.description %>
+                                    </div>
+                                <% } %>
+                                
+                                <div class="sponsor-actions">
+                                    <a href="/sponsors/<%= sponsor.id %>" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
+                                        <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="text-center py-5">
+                    <i class="fas fa-handshake fa-5x text-muted mb-3"></i>
+                    <h3 class="text-muted">No Sponsors Found</h3>
+                    <p class="text-muted">
+                        <% if (search || tier || status) { %>
+                            No sponsors match your current filters. Try adjusting your search criteria.
+                        <% } else { %>
+                            No sponsors have been added yet.
+                        <% } %>
+                    </p>
+                    <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
+                        <a href="/sponsors/new" class="btn btn-primary mt-3">
+                            <i class="fas fa-plus"></i> Add First Sponsor
+                        </a>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
