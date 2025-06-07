@@ -496,4 +496,4 @@ tar -xzf /backups/files-20241206.tar.gz -C /path/to/app/
 - Rate limiting
 - Input validation
 
-This deployment guide provides comprehensive instructions for getting the Rugby League Masters application running in production with proper security, performance, and monitoring configurations.
+This deployment guide provides comprehensive instructions for getting the Old Man Footy application running in production with proper security, performance, and monitoring configurations.

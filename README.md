@@ -1,4 +1,4 @@
-# Rugby League Masters Carnival Management Platform
+# Old Man Footy:  Rugby League Masters Carnival Management Platform
 
 A comprehensive web application for managing Rugby League Masters carnivals across Australia. This platform allows club delegates to create, manage, and promote rugby league carnival events while providing a centralized directory for players and fans to discover upcoming tournaments.
 

@@ -2,7 +2,7 @@
  * Models Index - SQLite/Sequelize Implementation
  * 
  * Establishes model relationships and exports all models
- * for the Rugby League Masters platform.
+ * for the Old Man Footy platform.
  */
 
 const { sequelize } = require('../config/database');

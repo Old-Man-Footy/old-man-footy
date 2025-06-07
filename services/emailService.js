@@ -19,20 +19,20 @@ class EmailService {
         const inviteUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/register?token=${inviteToken}`;
         
         const mailOptions = {
-            from: `"Rugby League Masters" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: `Invitation to join ${clubName} on Rugby League Masters`,
+            subject: `Invitation to join ${clubName} on Old Man Footy`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
-                        <h1 style="color: white; margin: 0;">Rugby League Masters</h1>
-                        <p style="color: white; margin: 5px 0 0 0;">Rugby League Carnivals Australia</p>
+                        <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                        <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
                     </div>
                     
                     <div style="padding: 30px; background: #f9f9f9;">
                         <h2 style="color: #006837;">You're Invited!</h2>
                         
-                        <p><strong>${inviterName}</strong> has invited you to join <strong>${clubName}</strong> as a club delegate on the Rugby League Masters platform.</p>
+                        <p><strong>${inviterName}</strong> has invited you to join <strong>${clubName}</strong> as a club delegate on the Old Man Footy platform.</p>
                         
                         <p>As a club delegate, you'll be able to:</p>
                         <ul>
@@ -62,7 +62,7 @@ class EmailService {
                     </div>
                     
                     <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
-                        <p>© 2025 Rugby League Masters. Connecting Rugby League Communities Across Australia.</p>
+                        <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
                     </div>
                 </div>
             `
@@ -97,7 +97,7 @@ class EmailService {
             let subject, actionText, headerText;
             switch (type) {
                 case 'new':
-                    subject = `New Rugby League Carnival: ${carnival.title}`;
+                    subject = `New Masters Rugby League Carnival: ${carnival.title}`;
                     actionText = 'new carnival';
                     headerText = '🏉 New Carnival Alert!';
                     break;
@@ -123,14 +123,14 @@ class EmailService {
                 const unsubscribeUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/unsubscribe?token=${subscription.unsubscribeToken}`;
                 
                 const mailOptions = {
-                    from: `"Rugby League Masters" <${process.env.EMAIL_USER}>`,
+                    from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
                     to: subscription.email,
                     subject: subject,
                     html: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                             <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
-                                <h1 style="color: white; margin: 0;">Rugby League Masters</h1>
-                                <p style="color: white; margin: 5px 0 0 0;">Rugby League Carnivals Australia</p>
+                                <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                                <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
                             </div>
                             
                             <div style="padding: 30px; background: #f9f9f9;">
@@ -198,7 +198,7 @@ class EmailService {
                             </div>
                             
                             <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
-                                <p>© 2025 Rugby League Masters. Connecting Rugby League Communities Across Australia.</p>
+                                <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
                                 <p>
                                     <a href="${unsubscribeUrl}" style="color: #ccc;">Unsubscribe from these notifications</a>
                                 </p>
@@ -240,18 +240,18 @@ class EmailService {
             : `in ${stateArray.slice(0, -1).join(', ')} and ${stateArray[stateArray.length - 1]}`;
         
         const mailOptions = {
-            from: `"Rugby League Masters" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: 'Welcome to Rugby League Masters - Carnival Notifications',
+            subject: 'Welcome to Old Man Footy - Masters Carnival Notifications',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
-                        <h1 style="color: white; margin: 0;">Rugby League Masters</h1>
-                        <p style="color: white; margin: 5px 0 0 0;">Rugby League Carnivals Australia</p>
+                        <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                        <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
                     </div>
                     
                     <div style="padding: 30px; background: #f9f9f9;">
-                        <h2 style="color: #006837;">Welcome to Rugby League Masters! 🏉</h2>
+                        <h2 style="color: #006837;">Welcome to Old Man Footy! 🏉</h2>
                         
                         <p>Thank you for subscribing to our carnival notifications!</p>
                         
@@ -284,7 +284,7 @@ class EmailService {
                     </div>
                     
                     <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
-                        <p>© 2025 Rugby League Masters. Connecting Rugby League Communities Across Australia.</p>
+                        <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
                         <p>
                             <a href="${unsubscribeUrl}" style="color: #ccc;">Unsubscribe from these notifications</a>
                         </p>

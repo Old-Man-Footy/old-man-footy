@@ -2,7 +2,7 @@
  * User Model - SQLite/Sequelize Implementation
  * 
  * Manages user accounts, authentication, and club associations
- * for Rugby League Masters platform delegates and administrators.
+ * for Old Man Footy platform delegates and administrators.
  */
 
 const { DataTypes, Model } = require('sequelize');

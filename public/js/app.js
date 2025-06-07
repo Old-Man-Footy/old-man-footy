@@ -1,4 +1,4 @@
-// Rugby League Masters Application JavaScript
+// Old Man Footy Application JavaScript
 
 window.RugbyLeagueMasters = {
     // Confirmation dialogs
@@ -176,7 +176,7 @@ window.RugbyLeagueMasters = {
             this.initSearchFilters();
             
             if (this.utils) {
-                console.log('Rugby League Masters app initialized');
+                console.log('Old Man Footy app initialized');
             }
         });
     }

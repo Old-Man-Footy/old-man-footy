@@ -1,4 +1,4 @@
-/* Rugby League Masters Custom Styles */
+/* Old Man Footy Custom Styles */
 
 /* Root Variables for Consistent Theming - Green/Gold Theme */
 :root {
@@ -336,7 +336,7 @@ body {
     border: 2px solid var(--rugby-light-green);
 }
 
-/* Rugby League Masters Specific Enhancements */
+/* Old Man Footy Specific Enhancements */
 .rugby-masters-hero {
     background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
     color: white;

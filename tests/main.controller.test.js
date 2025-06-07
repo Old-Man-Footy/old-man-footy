@@ -73,7 +73,7 @@ describe('Main Controller', () => {
             });
 
             expect(res.render).toHaveBeenCalledWith('index', {
-                title: 'Rugby League Masters',
+                title: 'Old Man Footy',
                 upcomingCarnivals: mockCarnivals
             });
         });
@@ -88,7 +88,7 @@ describe('Main Controller', () => {
 
             // Assert
             expect(res.render).toHaveBeenCalledWith('index', {
-                title: 'Rugby League Masters',
+                title: 'Old Man Footy',
                 upcomingCarnivals: []
             });
         });
@@ -102,7 +102,7 @@ describe('Main Controller', () => {
 
             // Assert
             expect(res.render).toHaveBeenCalledWith('index', {
-                title: 'Rugby League Masters',
+                title: 'Old Man Footy',
                 upcomingCarnivals: []
             });
         });
@@ -186,7 +186,7 @@ describe('Main Controller', () => {
 
             // Assert
             expect(res.render).toHaveBeenCalledWith('about', {
-                title: 'About Rugby League Masters'
+                title: 'About Old Man Footy'
             });
         });
     });

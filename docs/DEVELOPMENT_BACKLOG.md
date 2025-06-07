@@ -1,6 +1,6 @@
 Of course. Here is a simplified backlog of user stories with their current development status, presented in a logical order.
 
-### **Development Backlog: Rugby League Masters Platform**
+### **Development Backlog: Old Man Footy Platform**
 
 | User Story | Status |
 | :--- | :--- |

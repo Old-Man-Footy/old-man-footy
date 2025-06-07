@@ -2,7 +2,7 @@
  * Club Model - SQLite/Sequelize Implementation
  * 
  * Manages Rugby League club information and associations
- * for the Rugby League Masters platform.
+ * for the Old Man Footy platform.
  */
 
 const { DataTypes, Model } = require('sequelize');

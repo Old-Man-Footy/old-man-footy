@@ -1,4 +1,4 @@
-# Security Review Checklist for Rugby League Masters
+# Security Review Checklist for Old Man Footy
 
 ## Authentication & Authorization
 

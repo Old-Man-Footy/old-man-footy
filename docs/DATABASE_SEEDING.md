@@ -1,7 +1,7 @@
 # Database Seeding for Development
 
 ## Overview
-The database seeding system provides a comprehensive way to populate your local development SQLite database with realistic test data for the Rugby League Masters platform.
+The database seeding system provides a comprehensive way to populate your local development SQLite database with realistic test data for the Old Man Footy platform.
 
 ## Features
 - **Realistic Test Data**: Australian Rugby League club names and locations

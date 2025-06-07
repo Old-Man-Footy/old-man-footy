@@ -45,7 +45,7 @@ const showHomepage = async (req, res) => {
         });
 
         res.render('index', { 
-            title: 'Rugby League Masters - Carnival Events Directory',
+            title: 'Old Man Footy - Carnival Events Directory',
             carnivals: upcomingCarnivals,
             stats: {
                 totalCarnivals,
@@ -55,7 +55,7 @@ const showHomepage = async (req, res) => {
     } catch (error) {
         console.error('Error loading homepage:', error);
         res.render('index', { 
-            title: 'Rugby League Masters - Carnival Events Directory',
+            title: 'Old Man Footy - Carnival Events Directory',
             carnivals: [],
             stats: {
                 totalCarnivals: 0,
@@ -201,7 +201,7 @@ const unsubscribeEmail = async (req, res) => {
  */
 const showAbout = (req, res) => {
     res.render('about', {
-        title: 'About Rugby League Masters'
+        title: 'About Old Man Footy'
     });
 };
 
