@@ -6,8 +6,12 @@
                 <div class="card shadow mb-4 border-primary">
                     <div class="card-body bg-light">
                         <div class="d-flex align-items-center">
-                            <% if (carnival.creator.club.logoUrl) { %>
-                                <img src="<%= carnival.creator.club.logoUrl %>" alt="<%= carnival.creator.club.clubName %> Logo" 
+                            <% 
+                            // Show carnival logo first, then fall back to hosting club logo
+                            const hostingLogoUrl = carnival.clubLogoURL || carnival.creator.club.logoUrl;
+                            %>
+                            <% if (hostingLogoUrl) { %>
+                                <img src="<%= hostingLogoUrl %>" alt="<%= carnival.creator.club.clubName %> Logo" 
                                      class="me-3" style="height: 60px; width: auto;">
                             <% } %>
                             <div class="flex-grow-1">

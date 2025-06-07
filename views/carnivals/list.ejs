@@ -104,8 +104,12 @@
                                         </a>
                                     </h5>
                                 </div>
-                                <% if (carnival.clubLogoURL) { %>
-                                    <img src="<%= carnival.clubLogoURL %>" alt="Club Logo" 
+                                <% 
+                                // Show carnival logo first, then fall back to hosting club logo
+                                const logoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl);
+                                %>
+                                <% if (logoUrl) { %>
+                                    <img src="<%= logoUrl %>" alt="Club Logo" 
                                          style="width: 40px; height: 40px; object-fit: contain;" class="ms-2">
                                 <% } %>
                             </div>
