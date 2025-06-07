@@ -39,7 +39,6 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to ensure any carnivals I create on this website are merged with data synched from MySideline. We should not end up with duplicates. | ✅ Completed |
 | As a club delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages.  | ✅ Completed |
 | As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on All Carnivals page. | ✅ Completed |
-| As a user, when I click on 'Find Clubs' I should not get a 404 Page Not Found error. | ⭕ Not Started |
 | As a developer, all test clubs and carnivals should use `public\icons\test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
 | As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ⭕ Not Started |
 | As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa. | ⭕ Not Started |
