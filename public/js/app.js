@@ -184,3 +184,73 @@ window.RugbyLeagueMasters = {
 
 // Auto-initialize
 RugbyLeagueMasters.init();
+
+/**
+ * Initialize image carousel functionality
+ */
+function initializeImageCarousel() {
+    const carouselContainer = document.getElementById('imageCarousel');
+    
+    if (!carouselContainer) {
+        return; // Carousel not present on this page
+    }
+
+    // Get carousel images from the server-side rendered data
+    const carouselImages = window.carouselImages || [];
+    
+    if (carouselImages.length === 0) {
+        // Hide carousel section if no images
+        const carouselSection = carouselContainer.closest('section');
+        if (carouselSection) {
+            carouselSection.style.display = 'none';
+        }
+        return;
+    }
+
+    // Calculate how many times to repeat images to fill screen width
+    const screenWidth = window.innerWidth;
+    const estimatedImageWidth = 300; // Approximate width for 200px height images
+    const imagesNeeded = Math.ceil((screenWidth * 2) / estimatedImageWidth); // *2 for smooth looping
+    
+    // Create array with repeated images
+    let displayImages = [];
+    while (displayImages.length < imagesNeeded) {
+        displayImages = displayImages.concat(carouselImages);
+    }
+    
+    // Duplicate the array for seamless looping
+    displayImages = displayImages.concat(displayImages);
+
+    // Populate carousel with images
+    carouselContainer.innerHTML = '';
+    displayImages.forEach((imageSrc, index) => {
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        img.alt = `Carnival Image ${(index % carouselImages.length) + 1}`;
+        img.loading = 'lazy';
+        img.onerror = function() {
+            // Hide broken images
+            this.style.display = 'none';
+        };
+        carouselContainer.appendChild(img);
+    });
+
+    // Adjust animation duration based on number of images
+    const animationDuration = Math.max(20, displayImages.length * 2);
+    carouselContainer.style.animationDuration = `${animationDuration}s`;
+}
+
+/**
+ * Handle window resize for carousel responsiveness
+ */
+function handleCarouselResize() {
+    // Reinitialize carousel on window resize to adjust for new screen width
+    clearTimeout(window.carouselResizeTimeout);
+    window.carouselResizeTimeout = setTimeout(initializeImageCarousel, 250);
+}
+
+// Initialize carousel when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeImageCarousel);
+
+// Handle window resize
+window.addEventListener('resize', handleCarouselResize);

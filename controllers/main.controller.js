@@ -10,6 +10,8 @@ const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const emailService = require('../services/emailService');
 const mySidelineService = require('../services/mySidelineService');
+const fs = require('fs').promises;
+const path = require('path');
 
 /**
  * Display homepage with upcoming carnivals
@@ -44,9 +46,22 @@ const showHomepage = async (req, res) => {
             }
         });
 
+        // Get carousel images
+        let carouselImages = [];
+        try {
+            const imagesDir = path.join(__dirname, '../uploads/images');
+            const files = await fs.readdir(imagesDir);
+            carouselImages = files
+                .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file))
+                .map(file => `/uploads/images/${file}`);
+        } catch (error) {
+            console.log('No carousel images found or unable to read images directory');
+        }
+
         res.render('index', { 
             title: 'Old Man Footy - Carnival Events Directory',
             carnivals: upcomingCarnivals,
+            carouselImages,
             stats: {
                 totalCarnivals,
                 upcomingCount
@@ -57,6 +72,7 @@ const showHomepage = async (req, res) => {
         res.render('index', { 
             title: 'Old Man Footy - Carnival Events Directory',
             carnivals: [],
+            carouselImages: [],
             stats: {
                 totalCarnivals: 0,
                 upcomingCount: 0
@@ -311,11 +327,34 @@ const showAdminStats = async (req, res) => {
     }
 };
 
+/**
+ * Get carousel images from uploads/images folder
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getCarouselImages = async (req, res) => {
+    try {
+        const imagesDir = path.join(__dirname, '../uploads/images');
+        const files = await fs.readdir(imagesDir);
+
+        // Filter and map image files
+        const images = files
+            .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file))
+            .map(file => `/uploads/images/${file}`);
+
+        res.json(images);
+    } catch (error) {
+        console.error('Error fetching carousel images:', error);
+        res.status(500).json({ error: 'Failed to load images' });
+    }
+};
+
 module.exports = {
     showHomepage,
     showDashboard,
     subscribeEmail,
     unsubscribeEmail,
     showAbout,
-    showAdminStats
+    showAdminStats,
+    getCarouselImages
 };

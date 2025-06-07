@@ -92,6 +92,19 @@
     </div>
 </section>
 
+<!-- Image Carousel Section -->
+<% if (carouselImages && carouselImages.length > 0) { %>
+<section class="py-3 bg-light">
+    <div class="container-fluid">
+        <div class="image-carousel-container">
+            <div class="image-carousel" id="imageCarousel">
+                <!-- Images will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</section>
+<% } %>
+
 <!-- Email Subscription Section -->
 <section id="subscribe" class="bg-light py-5">
     <div class="container">
@@ -153,3 +166,8 @@
         </div>
     </div>
 </section>
+
+<script>
+    // Pass carousel images to client-side JavaScript
+    window.carouselImages = <%- JSON.stringify(carouselImages || []) %>;
+</script>
