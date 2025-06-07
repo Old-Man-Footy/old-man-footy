@@ -54,7 +54,8 @@ const SAMPLE_CARNIVALS = [
         feesDescription: 'Entry fee: $150 per team. Includes lunch and presentation.',
         callForVolunteers: 'Seeking referees and ground officials. Contact organiser for details.',
         socialMediaFacebook: 'https://facebook.com/nswmasters',
-        socialMediaInstagram: 'https://instagram.com/nswmasters'
+        socialMediaInstagram: 'https://instagram.com/nswmasters',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Cronulla Beach Masters Tournament',
@@ -68,7 +69,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.cronullamasters.com.au/beach-tournament',
         feesDescription: 'Team entry: $120. Individual players: $30.',
         socialMediaFacebook: 'https://facebook.com/cronullamasters',
-        socialMediaWebsite: 'https://www.cronullamasters.com.au'
+        socialMediaWebsite: 'https://www.cronullamasters.com.au',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Queensland Masters Carnival',
@@ -83,7 +85,8 @@ const SAMPLE_CARNIVALS = [
         feesDescription: 'Team entry: $200. Individual registration: $50.',
         callForVolunteers: 'Volunteers needed for ground setup, timekeeping, and canteen duties.',
         socialMediaFacebook: 'https://facebook.com/qldmasters',
-        socialMediaWebsite: 'https://www.qldmasters.com.au'
+        socialMediaWebsite: 'https://www.qldmasters.com.au',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Gold Coast Summer Festival',
@@ -97,7 +100,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.gcmasters.com.au/summer-festival',
         feesDescription: 'Entry: $80 per team. Kids activities included.',
         socialMediaInstagram: 'https://instagram.com/gcmasters',
-        socialMediaTwitter: 'https://twitter.com/gcmasters'
+        socialMediaTwitter: 'https://twitter.com/gcmasters',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'North Queensland Cowboys Heritage Cup',
@@ -111,7 +115,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.nqmasters.com.au/heritage-cup',
         feesDescription: 'Team registration: $140. Museum tour included.',
         callForVolunteers: 'Looking for heritage display volunteers and photographers.',
-        socialMediaWebsite: 'https://www.nqmasters.com.au'
+        socialMediaWebsite: 'https://www.nqmasters.com.au',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Victorian Masters Championship',
@@ -125,7 +130,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.vicmasters.com.au/championship',
         feesDescription: 'Entry fee: $180 per team. Includes referee fees and ground hire.',
         socialMediaFacebook: 'https://facebook.com/vicmasters',
-        socialMediaTwitter: 'https://twitter.com/vicmasters'
+        socialMediaTwitter: 'https://twitter.com/vicmasters',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Geelong Waterfront Masters Cup',
@@ -139,7 +145,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.geelongmasters.com.au/waterfront-cup',
         feesDescription: 'Entry: $160 per team. Evening dinner optional ($35pp).',
         socialMediaFacebook: 'https://facebook.com/geelongmasters',
-        socialMediaInstagram: 'https://instagram.com/geelongmasters'
+        socialMediaInstagram: 'https://instagram.com/geelongmasters',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Perth Masters Festival',
@@ -153,7 +160,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.wamasters.com.au/festival',
         feesDescription: 'Participation fee: $100 per team. Includes BBQ lunch.',
         callForVolunteers: 'Looking for BBQ helpers and event coordinators.',
-        socialMediaWebsite: 'https://www.wamasters.com.au'
+        socialMediaWebsite: 'https://www.wamasters.com.au',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Fremantle Dockers Masters Derby',
@@ -166,7 +174,8 @@ const SAMPLE_CARNIVALS = [
         organiserContactPhone: '0467 555 666',
         registrationLink: 'https://www.fremantlemasters.com.au/derby2025',
         feesDescription: 'Team entry: $130. Lunch included for all participants.',
-        socialMediaFacebook: 'https://facebook.com/fremantlemasters'
+        socialMediaFacebook: 'https://facebook.com/fremantlemasters',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Adelaide Masters Cup',
@@ -178,7 +187,8 @@ const SAMPLE_CARNIVALS = [
         organiserContactEmail: 'lisa.taylor@samasters.com.au',
         organiserContactPhone: '0456 789 012',
         registrationLink: 'https://www.samasters.com.au/cup2025',
-        feesDescription: 'Entry: $120 per team. Trophy presentation at 5:00 PM.'
+        feesDescription: 'Entry: $120 per team. Trophy presentation at 5:00 PM.',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Port Adelaide Heritage Carnival',
@@ -192,7 +202,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.portmasters.com.au/heritage2025',
         feesDescription: 'Team registration: $110. Heritage display entry free.',
         callForVolunteers: 'Seeking volunteers for heritage displays and photography.',
-        socialMediaInstagram: 'https://instagram.com/portmasters'
+        socialMediaInstagram: 'https://instagram.com/portmasters',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Tasmania Devils Island Championship',
@@ -206,7 +217,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.tasmasters.com.au/island-championship',
         feesDescription: 'Entry: $90 per team. Ferry discounts available for visiting teams.',
         socialMediaFacebook: 'https://facebook.com/tasmasters',
-        socialMediaWebsite: 'https://www.tasmasters.com.au'
+        socialMediaWebsite: 'https://www.tasmasters.com.au',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Launceston Lions Northern Cup',
@@ -219,7 +231,8 @@ const SAMPLE_CARNIVALS = [
         organiserContactPhone: '0491 888 999',
         registrationLink: 'https://www.northerntasmasters.com.au/northern-cup',
         feesDescription: 'Team entry: $100. Accommodation assistance available.',
-        socialMediaTwitter: 'https://twitter.com/northerntasmasters'
+        socialMediaTwitter: 'https://twitter.com/northerntasmasters',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Darwin Crocodiles Top End Tournament',
@@ -234,7 +247,8 @@ const SAMPLE_CARNIVALS = [
         feesDescription: 'Entry: $85 per team. Heat management protocols included.',
         callForVolunteers: 'Need volunteers familiar with tropical weather protocols.',
         socialMediaFacebook: 'https://facebook.com/ntmasters',
-        socialMediaWebsite: 'https://www.ntmasters.com.au'
+        socialMediaWebsite: 'https://www.ntmasters.com.au',
+        clubLogoURL: '/icons/seed.svg'
     },
     {
         title: 'Canberra Raiders Capital Cup',
@@ -248,7 +262,8 @@ const SAMPLE_CARNIVALS = [
         registrationLink: 'https://www.actmasters.com.au/capital-cup',
         feesDescription: 'Team registration: $140. Parliament House tour optional.',
         socialMediaInstagram: 'https://instagram.com/actmasters',
-        socialMediaTwitter: 'https://twitter.com/actmasters'
+        socialMediaTwitter: 'https://twitter.com/actmasters',
+        clubLogoURL: '/icons/seed.svg'
     }
 ];
 
