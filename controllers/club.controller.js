@@ -124,6 +124,11 @@ const showClubProfile = async (req, res) => {
             order: [['date', 'ASC']]
         });
 
+        // Calculate upcoming carnivals count
+        const upcomingCarnivals = carnivals.filter(carnival => 
+            new Date(carnival.date) >= new Date()
+        ).length;
+
         // Get full delegate information
         const delegates_full = await User.findAll({
             where: {
@@ -138,7 +143,8 @@ const showClubProfile = async (req, res) => {
         res.render('clubs/show', {
             title: `${club.clubName} - Masters Rugby League Club`,
             club,
-            carnivals,
+            clubCarnivals: carnivals,
+            upcomingCarnivals,
             delegates: delegates_full,
             primaryDelegate,
             user: req.user || null
