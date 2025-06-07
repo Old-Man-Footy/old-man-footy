@@ -1123,234 +1123,168 @@ button[type="submit"]:contains("Complete Registration"):focus {
     display: flex;
     align-items: center;
     margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.2s ease;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid var(--rugby-green);
 }
 
-.info-item:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
+.info-item i {
+    color: var(--rugby-green);
+    margin-right: 1rem;
+    font-size: 1.2rem;
+    min-width: 20px;
 }
 
-.info-item:hover {
-    background-color: rgba(0, 104, 55, 0.02);
-    border-radius: 6px;
-    padding: 0.5rem;
-    margin: 0 -0.5rem 1rem -0.5rem;
+.info-item strong {
+    color: var(--rugby-dark-green);
+    margin-right: 0.5rem;
 }
 
-.info-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--rugby-light-green);
+/* Accept Invitation Form Styles */
+.accept-invitation-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, var(--rugby-light-green) 0%, #f8f9fa 100%);
+}
+
+.accept-invitation-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    padding: 3rem;
+    border-top: 4px solid var(--rugby-green);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.accept-invitation-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.accept-invitation-header .icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 1rem;
-    color: var(--rugby-green);
-    flex-shrink: 0;
-    transition: all 0.3s ease;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,104,55,0.3);
 }
 
-.info-item:hover .info-icon {
-    background: var(--rugby-green);
+.accept-invitation-header .icon-wrapper i {
     color: white;
-    transform: scale(1.1);
+    font-size: 2rem;
 }
 
-.info-content {
-    flex: 1;
-}
-
-.info-content h6 {
-    margin: 0;
-    color: #666;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.info-content p {
-    margin: 0.25rem 0 0 0;
-    font-weight: 500;
-    color: #333;
-}
-
-.info-content a {
-    color: var(--rugby-link-green);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.info-content a:hover {
-    color: var(--rugby-link-green-hover);
-    text-decoration: underline;
-}
-
-/* Status Badges */
-.status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-active {
-    background: linear-gradient(45deg, #d4edda, #c3e6cb);
-    color: #155724;
-    border: 1px solid #28a745;
-}
-
-.status-pending {
-    background: linear-gradient(45deg, #fff3cd, #ffeaa7);
-    color: #856404;
-    border: 1px solid #ffc107;
-}
-
-.status-inactive {
-    background: linear-gradient(45deg, #f8d7da, #f1b0b7);
-    color: #721c24;
-    border: 1px solid #dc3545;
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-/* Associated Clubs Styling */
-.info-card .card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.info-card .card:hover {
-    border-color: var(--rugby-green);
-    box-shadow: 0 4px 12px rgba(0, 104, 55, 0.1);
-    transform: translateY(-2px);
-}
-
-.info-card .card-body {
-    padding: 1rem;
-}
-
-.info-card .card-title {
+.accept-invitation-header h2 {
     color: var(--rugby-dark-green);
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-/* Quick Actions Sidebar */
-.d-grid .btn {
+    font-weight: 700;
     margin-bottom: 0.5rem;
 }
 
-.d-grid .btn:last-child {
-    margin-bottom: 0;
+.accept-invitation-header .lead {
+    color: #6c757d;
+    font-size: 1.1rem;
 }
 
-/* Social Media Links in Sidebar */
-.info-card .social-links {
-    justify-content: flex-start;
+.invitation-details {
+    background: var(--rugby-light-green);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--rugby-green);
 }
 
-.info-card .social-links .btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.invitation-details h5 {
+    color: var(--rugby-dark-green);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.invitation-info {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0;
+    margin-bottom: 0.75rem;
+}
+
+.invitation-info i {
+    color: var(--rugby-green);
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    min-width: 16px;
+}
+
+.invitation-info strong {
+    color: var(--rugby-dark-green);
     margin-right: 0.5rem;
+}
+
+.accept-form .form-label {
+    font-weight: 600;
+    color: var(--rugby-dark-green);
+    margin-bottom: 0.5rem;
+}
+
+.accept-form .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
     transition: all 0.3s ease;
 }
 
-.info-card .social-links .btn:hover {
-    transform: translateY(-2px) scale(1.1);
+.accept-form .form-control:focus {
+    border-color: var(--rugby-green);
+    box-shadow: 0 0 0 0.2rem rgba(0,104,55,0.25);
 }
 
-/* Statistics Card */
-.info-card .h3 {
-    font-weight: 700;
-    margin-bottom: 0;
-}
-
-.info-card .text-primary {
-    color: var(--rugby-green) !important;
-}
-
-.info-card .text-success {
-    color: var(--rugby-gold) !important;
-}
-
-.info-card small {
-    font-weight: 500;
+.btn-accept-invitation {
+    background: linear-gradient(45deg, var(--rugby-green), var(--rugby-dark-green));
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 1rem;
 }
 
-/* Responsive Design for Sponsor Page */
-@media (max-width: 768px) {
-    .sponsor-header {
-        padding: 2rem 0;
-    }
-    
-    .sponsor-header .display-flex {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .action-buttons {
-        justify-content: center;
-        margin-top: 1rem;
-    }
-    
-    .info-card {
-        padding: 1.5rem;
-    }
-    
-    .sponsor-logo-large {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .info-item {
-        flex-direction: column;
-        text-align: center;
-        align-items: center;
-    }
-    
-    .info-icon {
-        margin-right: 0;
-        margin-bottom: 0.5rem;
-    }
+.btn-accept-invitation:hover {
+    background: linear-gradient(45deg, var(--rugby-dark-green), var(--rugby-green));
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,104,55,0.3);
 }
 
+.btn-accept-invitation:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0,104,55,0.25);
+    color: white;
+}
+
+/* Responsive adjustments */
 @media (max-width: 576px) {
-    .sponsor-tier-badge {
-        font-size: 0.9rem;
-        padding: 0.4rem 1rem;
+    .accept-invitation-card {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
     }
     
-    .info-card {
-        padding: 1rem;
+    .accept-invitation-header .icon-wrapper {
+        width: 60px;
+        height: 60px;
     }
     
-    .action-buttons {
-        flex-direction: column;
-    }
-    
-    .action-buttons .btn {
-        width: 100%;
+    .accept-invitation-header .icon-wrapper i {
+        font-size: 1.5rem;
     }
 }
+
+/* ==================================================
+   END OF SPONSOR PAGE STYLES
+   ================================================== */

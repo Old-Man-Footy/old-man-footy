@@ -8,7 +8,7 @@
                          class="sponsor-logo-large">
                 <% } else { %>
                     <div class="sponsor-logo-large d-flex align-items-center justify-content-center">
-                        <i class="fas fa-building fa-3x text-muted"></i>
+                        <i class="bi bi-building fa-3x text-muted"></i>
                     </div>
                 <% } %>
             </div>
@@ -29,10 +29,10 @@
                     <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
                         <div class="action-buttons">
                             <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-light">
-                                <i class="fas fa-edit"></i> Edit
+                                <i class="bi bi-pencil"></i> Edit
                             </a>
                             <button class="btn btn-outline-light" onclick="confirmDelete()">
-                                <i class="fas fa-trash"></i> Delete
+                                <i class="bi bi-trash"></i> Delete
                             </button>
                         </div>
                     <% } %>
@@ -52,7 +52,7 @@
                 <% if (sponsor.businessType) { %>
                     <div class="info-item">
                         <div class="info-icon">
-                            <i class="fas fa-industry"></i>
+                            <i class="bi bi-building"></i>
                         </div>
                         <div class="info-content">
                             <h6>Business Type</h6>
@@ -64,7 +64,7 @@
                 <% if (sponsor.location) { %>
                     <div class="info-item">
                         <div class="info-icon">
-                            <i class="fas fa-map-marker-alt"></i>
+                            <i class="bi bi-geo-alt"></i>
                         </div>
                         <div class="info-content">
                             <h6>Location</h6>
@@ -76,7 +76,7 @@
                 <% if (sponsor.website) { %>
                     <div class="info-item">
                         <div class="info-icon">
-                            <i class="fas fa-globe"></i>
+                            <i class="bi bi-globe"></i>
                         </div>
                         <div class="info-content">
                             <h6>Website</h6>
@@ -88,7 +88,7 @@
                 <% if (sponsor.contactPerson) { %>
                     <div class="info-item">
                         <div class="info-icon">
-                            <i class="fas fa-user"></i>
+                            <i class="bi bi-person"></i>
                         </div>
                         <div class="info-content">
                             <h6>Contact Person</h6>
@@ -100,7 +100,7 @@
                 <% if (sponsor.contactEmail) { %>
                     <div class="info-item">
                         <div class="info-icon">
-                            <i class="fas fa-envelope"></i>
+                            <i class="bi bi-envelope"></i>
                         </div>
                         <div class="info-content">
                             <h6>Contact Email</h6>
@@ -112,7 +112,7 @@
                 <% if (sponsor.contactPhone) { %>
                     <div class="info-item">
                         <div class="info-icon">
-                            <i class="fas fa-phone"></i>
+                            <i class="bi bi-telephone"></i>
                         </div>
                         <div class="info-content">
                             <h6>Contact Phone</h6>
@@ -123,7 +123,7 @@
                 
                 <div class="info-item">
                     <div class="info-icon">
-                        <i class="fas fa-calendar"></i>
+                        <i class="bi bi-calendar"></i>
                     </div>
                     <div class="info-content">
                         <h6>Member Since</h6>
@@ -171,10 +171,10 @@
                     <h4 class="mb-3">Quick Actions</h4>
                     <div class="d-grid gap-2">
                         <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> Edit Sponsor
+                            <i class="bi bi-pencil"></i> Edit Sponsor
                         </a>
                         <button class="btn btn-outline-secondary" onclick="toggleStatus()">
-                            <i class="fas fa-toggle-<%= sponsor.isActive ? 'on' : 'off' %>"></i>
+                            <i class="bi bi-toggle-<%= sponsor.isActive ? 'on' : 'off' %>"></i>
                             <%= sponsor.isActive ? 'Deactivate' : 'Activate' %>
                         </button>
                     </div>
@@ -187,23 +187,23 @@
                     <h4 class="mb-3">Social Media</h4>
                     <div class="d-flex gap-2">
                         <% if (sponsor.facebookUrl) { %>
-                            <a href="<%= sponsor.facebookUrl %>" target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="fab fa-facebook"></i>
+                            <a href="<%= sponsor.facebookUrl %>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-facebook"></i> Facebook
                             </a>
                         <% } %>
                         <% if (sponsor.instagramUrl) { %>
-                            <a href="<%= sponsor.instagramUrl %>" target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="fab fa-instagram"></i>
+                            <a href="<%= sponsor.instagramUrl %>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-instagram"></i> Instagram
                             </a>
                         <% } %>
                         <% if (sponsor.twitterUrl) { %>
-                            <a href="<%= sponsor.twitterUrl %>" target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="fab fa-twitter"></i>
+                            <a href="<%= sponsor.twitterUrl %>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-twitter"></i> X
                             </a>
                         <% } %>
                         <% if (sponsor.linkedinUrl) { %>
-                            <a href="<%= sponsor.linkedinUrl %>" target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="fab fa-linkedin"></i>
+                            <a href="<%= sponsor.linkedinUrl %>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-linkedin"></i> LinkedIn
                             </a>
                         <% } %>
                     </div>
