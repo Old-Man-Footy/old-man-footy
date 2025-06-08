@@ -991,6 +991,26 @@ button[type="submit"]:contains("Complete Registration"):focus {
     object-fit: contain;
 }
 
+/* Club card hover effects for sponsor page */
+.club-card-hover {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.club-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--rugby-green);
+}
+
+.club-card-hover .card-title {
+    transition: color 0.3s ease;
+}
+
+.club-card-hover:hover .card-title {
+    color: var(--rugby-green) !important;
+}
+
 /* ==================================================
    SPONSOR PAGE STYLES
    ================================================== */

@@ -138,19 +138,21 @@
                     <div class="row">
                         <% associatedClubs.forEach(club => { %>
                             <div class="col-md-6 mb-3">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center">
-                                            <% if (club.logoUrl) { %>
-                                                <img src="<%= club.logoUrl %>" alt="<%= club.clubName %>" class="me-3 club-logo-small">
-                                            <% } %>
-                                            <div>
-                                                <h6 class="card-title mb-1"><%= club.clubName %></h6>
-                                                <small class="text-muted"><%= club.state %></small>
+                                <a href="/clubs/<%= club.id %>" class="text-decoration-none">
+                                    <div class="card club-card-hover">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <% if (club.logoUrl) { %>
+                                                    <img src="<%= club.logoUrl %>" alt="<%= club.clubName %>" class="me-3 club-logo-small">
+                                                <% } %>
+                                                <div>
+                                                    <h6 class="card-title mb-1 text-primary"><%= club.clubName %></h6>
+                                                    <small class="text-muted"><%= club.state %></small>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                         <% }); %>
                     </div>
