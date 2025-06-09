@@ -5,7 +5,7 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Club, User, Carnival, Sponsor } = require('../models');
+const { Club, User, Carnival, Sponsor, ClubAlternateName } = require('../models');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const ImageNamingService = require('../services/imageNamingService');
@@ -26,12 +26,22 @@ const showClubListings = async (req, res) => {
             isPubliclyListed: true
         };
 
+        let clubIdsFromAlternateNames = [];
+
         if (search) {
+            // Search for clubs by alternate names first
+            clubIdsFromAlternateNames = await ClubAlternateName.searchClubsByAlternateName(search);
+            
             whereClause[Op.or] = [
                 { clubName: { [Op.like]: `%${search}%` } },
                 { location: { [Op.like]: `%${search}%` } },
                 { description: { [Op.like]: `%${search}%` } }
             ];
+
+            // Include clubs found by alternate names
+            if (clubIdsFromAlternateNames.length > 0) {
+                whereClause[Op.or].push({ id: { [Op.in]: clubIdsFromAlternateNames } });
+            }
         }
 
         if (state) {
@@ -650,6 +660,236 @@ const removeSponsorFromClub = async (req, res) => {
 };
 
 /**
+ * Show club alternate names management page
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showClubAlternateNames = async (req, res) => {
+    try {
+        const user = req.user;
+        
+        if (!user.clubId) {
+            req.flash('error_msg', 'You must be associated with a club to manage alternate names.');
+            return res.redirect('/dashboard');
+        }
+
+        const club = await Club.findByPk(user.clubId, {
+            include: [{
+                model: ClubAlternateName,
+                as: 'alternateNames',
+                where: { isActive: true },
+                required: false,
+                order: [['displayName', 'ASC']]
+            }]
+        });
+
+        if (!club) {
+            req.flash('error_msg', 'Club not found.');
+            return res.redirect('/dashboard');
+        }
+
+        res.render('clubs/alternate-names', {
+            title: 'Manage Club Alternate Names',
+            club,
+            alternateNames: club.alternateNames || []
+        });
+    } catch (error) {
+        console.error('Error loading club alternate names:', error);
+        req.flash('error_msg', 'Error loading club alternate names.');
+        res.redirect('/clubs/manage');
+    }
+};
+
+/**
+ * Add new alternate name to club
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const addAlternateName = async (req, res) => {
+    try {
+        const user = req.user;
+        const { alternateName } = req.body;
+        
+        if (!user.clubId) {
+            return res.status(403).json({
+                success: false,
+                message: 'You must be associated with a club to manage alternate names.'
+            });
+        }
+
+        if (!alternateName || alternateName.trim().length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'Alternate name must be at least 2 characters long.'
+            });
+        }
+
+        const club = await Club.findByPk(user.clubId);
+        
+        if (!club) {
+            return res.status(404).json({
+                success: false,
+                message: 'Club not found.'
+            });
+        }
+
+        // Check if alternate name is unique for this club
+        const isUnique = await ClubAlternateName.isUniqueForClub(alternateName, club.id);
+        if (!isUnique) {
+            return res.status(400).json({
+                success: false,
+                message: 'This alternate name already exists for your club.'
+            });
+        }
+
+        // Create the alternate name
+        const newAlternateName = await ClubAlternateName.create({
+            clubId: club.id,
+            alternateName: alternateName.trim(),
+            displayName: alternateName.trim()
+        });
+
+        res.json({
+            success: true,
+            message: 'Alternate name added successfully.',
+            alternateName: {
+                id: newAlternateName.id,
+                displayName: newAlternateName.displayName
+            }
+        });
+
+    } catch (error) {
+        console.error('Error adding alternate name:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error adding alternate name.'
+        });
+    }
+};
+
+/**
+ * Update existing alternate name
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updateAlternateName = async (req, res) => {
+    try {
+        const user = req.user;
+        const { id } = req.params;
+        const { alternateName } = req.body;
+        
+        if (!user.clubId) {
+            return res.status(403).json({
+                success: false,
+                message: 'You must be associated with a club to manage alternate names.'
+            });
+        }
+
+        if (!alternateName || alternateName.trim().length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'Alternate name must be at least 2 characters long.'
+            });
+        }
+
+        const existingAlternateName = await ClubAlternateName.findOne({
+            where: { 
+                id,
+                clubId: user.clubId,
+                isActive: true
+            }
+        });
+
+        if (!existingAlternateName) {
+            return res.status(404).json({
+                success: false,
+                message: 'Alternate name not found.'
+            });
+        }
+
+        // Check if the new name is unique for this club (excluding current record)
+        const isUnique = await ClubAlternateName.isUniqueForClub(alternateName, user.clubId, id);
+        if (!isUnique) {
+            return res.status(400).json({
+                success: false,
+                message: 'This alternate name already exists for your club.'
+            });
+        }
+
+        // Update the alternate name
+        await existingAlternateName.update({
+            alternateName: alternateName.trim(),
+            displayName: alternateName.trim()
+        });
+
+        res.json({
+            success: true,
+            message: 'Alternate name updated successfully.',
+            alternateName: {
+                id: existingAlternateName.id,
+                displayName: existingAlternateName.displayName
+            }
+        });
+
+    } catch (error) {
+        console.error('Error updating alternate name:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating alternate name.'
+        });
+    }
+};
+
+/**
+ * Delete alternate name
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const deleteAlternateName = async (req, res) => {
+    try {
+        const user = req.user;
+        const { id } = req.params;
+        
+        if (!user.clubId) {
+            return res.status(403).json({
+                success: false,
+                message: 'You must be associated with a club to manage alternate names.'
+            });
+        }
+
+        const alternateName = await ClubAlternateName.findOne({
+            where: { 
+                id,
+                clubId: user.clubId,
+                isActive: true
+            }
+        });
+
+        if (!alternateName) {
+            return res.status(404).json({
+                success: false,
+                message: 'Alternate name not found.'
+            });
+        }
+
+        // Soft delete by setting isActive to false
+        await alternateName.update({ isActive: false });
+
+        res.json({
+            success: true,
+            message: 'Alternate name deleted successfully.'
+        });
+
+    } catch (error) {
+        console.error('Error deleting alternate name:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting alternate name.'
+        });
+    }
+};
+
+/**
  * Reorder club sponsors by priority
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -688,7 +928,7 @@ const reorderClubSponsors = async (req, res) => {
                 { displayOrder: i + 1 },
                 { 
                     where: { 
-                        clubId: clubId, 
+                        clubId: user.clubId, 
                         sponsorId: sponsorOrder[i] 
                     } 
                 }
@@ -720,5 +960,9 @@ module.exports = {
     showAddSponsor,
     addSponsorToClub,
     removeSponsorFromClub,
-    reorderClubSponsors
+    reorderClubSponsors,
+    showClubAlternateNames,
+    addAlternateName,
+    updateAlternateName,
+    deleteAlternateName
 };

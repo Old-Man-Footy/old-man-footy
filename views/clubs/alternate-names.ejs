@@ -1,0 +1,286 @@
+<%- include('../layout', { title: title }) %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/clubs/manage">Manage Club</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Alternate Names</li>
+                </ol>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><%= club.clubName %> - Alternate Names</h2>
+                    <p class="text-muted">Manage search names for your club to help players find you more easily.</p>
+                </div>
+                <a href="/clubs/manage" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Club Management
+                </a>
+            </div>
+
+            <!-- Add New Alternate Name Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Add New Alternate Name
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="addAlternateNameForm">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="alternateName" class="form-label">Alternate Name</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="alternateName" 
+                                           name="alternateName" 
+                                           placeholder="e.g., Warriors, The Warriors, Warriors RLFC"
+                                           required>
+                                    <div class="form-text">Enter alternative names that players might search for when looking for your club.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus"></i> Add Alternate Name
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Current Alternate Names -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul"></i> Current Alternate Names
+                        <span class="badge bg-secondary ms-2"><%= alternateNames.length %></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (alternateNames.length === 0) { %>
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-muted">No Alternate Names Yet</h5>
+                            <p class="text-muted">Add alternate names to help players find your club when searching.</p>
+                            <div class="alert alert-info mt-3">
+                                <strong>Tip:</strong> Consider adding common abbreviations, nicknames, or variations of your club name that players might use when searching.
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="row" id="alternateNamesList">
+                            <% alternateNames.forEach(alternateName => { %>
+                                <div class="col-md-6 mb-3" data-id="<%= alternateName.id %>">
+                                    <div class="card alternate-name-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="card-title mb-1 alternate-name-display">
+                                                        <%= alternateName.displayName %>
+                                                    </h6>
+                                                    <small class="text-muted">Added <%= new Date(alternateName.createdAt).toLocaleDateString() %></small>
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" 
+                                                            class="btn btn-outline-primary btn-sm edit-alternate-name"
+                                                            data-id="<%= alternateName.id %>"
+                                                            data-name="<%= alternateName.displayName %>"
+                                                            title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-outline-danger btn-sm delete-alternate-name"
+                                                            data-id="<%= alternateName.id %>"
+                                                            data-name="<%= alternateName.displayName %>"
+                                                            title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>How it works:</strong> When players search for clubs, these alternate names will be included in the search results alongside your main club name.
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Alternate Name Modal -->
+<div class="modal fade" id="editAlternateNameModal" tabindex="-1" aria-labelledby="editAlternateNameModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAlternateNameModalLabel">Edit Alternate Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editAlternateNameForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editAlternateNameId">
+                    <div class="form-group">
+                        <label for="editAlternateName" class="form-label">Alternate Name</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="editAlternateName" 
+                               name="alternateName" 
+                               required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Alternate Name</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add new alternate name
+    const addForm = document.getElementById('addAlternateNameForm');
+    addForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(addForm);
+        
+        try {
+            const response = await fetch('/clubs/manage/alternate-names', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    alternateName: formData.get('alternateName')
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload(); // Refresh the page to show the new alternate name
+            } else {
+                alert(result.message || 'Error adding alternate name');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error adding alternate name');
+        }
+    });
+
+    // Edit alternate name
+    document.querySelectorAll('.edit-alternate-name').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            
+            document.getElementById('editAlternateNameId').value = id;
+            document.getElementById('editAlternateName').value = name;
+            
+            const modal = new bootstrap.Modal(document.getElementById('editAlternateNameModal'));
+            modal.show();
+        });
+    });
+
+    // Update alternate name
+    const editForm = document.getElementById('editAlternateNameForm');
+    editForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('editAlternateNameId').value;
+        const alternateName = document.getElementById('editAlternateName').value;
+        
+        try {
+            const response = await fetch(`/clubs/manage/alternate-names/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ alternateName })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload(); // Refresh the page to show the updated name
+            } else {
+                alert(result.message || 'Error updating alternate name');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error updating alternate name');
+        }
+    });
+
+    // Delete alternate name
+    document.querySelectorAll('.delete-alternate-name').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            
+            if (confirm(`Are you sure you want to delete the alternate name "${name}"?`)) {
+                deleteAlternateName(id);
+            }
+        });
+    });
+
+    async function deleteAlternateName(id) {
+        try {
+            const response = await fetch(`/clubs/manage/alternate-names/${id}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload(); // Refresh the page to remove the deleted name
+            } else {
+                alert(result.message || 'Error deleting alternate name');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error deleting alternate name');
+        }
+    }
+});
+</script>
+
+<style>
+.alternate-name-card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.alternate-name-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.form-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+</style>

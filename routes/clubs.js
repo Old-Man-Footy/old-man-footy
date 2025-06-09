@@ -15,7 +15,7 @@ router.get('/:id', clubController.showClubProfile);
 router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
 
 // Update club profile with structured upload support
-router.post('/manage', ensureAuthenticated, clubUpload, handleUploadError, [
+router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
     body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
     body('website').optional().isURL().withMessage('Valid website URL required'),
     body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
@@ -44,5 +44,15 @@ router.post('/manage/sponsors/:sponsorId/remove', ensureAuthenticated, clubContr
 
 // Update sponsor priority/order for club
 router.post('/manage/sponsors/reorder', ensureAuthenticated, clubController.reorderClubSponsors);
+
+// Alternate names management routes for club delegates
+router.get('/manage/alternate-names', ensureAuthenticated, clubController.showClubAlternateNames);
+router.post('/manage/alternate-names', ensureAuthenticated, [
+    body('alternateName').isLength({ min: 2, max: 100 }).withMessage('Alternate name must be between 2 and 100 characters')
+], clubController.addAlternateName);
+router.put('/manage/alternate-names/:id', ensureAuthenticated, [
+    body('alternateName').isLength({ min: 2, max: 100 }).withMessage('Alternate name must be between 2 and 100 characters')
+], clubController.updateAlternateName);
+router.delete('/manage/alternate-names/:id', ensureAuthenticated, clubController.deleteAlternateName);
 
 module.exports = router;

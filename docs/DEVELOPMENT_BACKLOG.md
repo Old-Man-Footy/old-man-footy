@@ -50,7 +50,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a user, I want to be able to see sponsors on Club and Carnival pages | ✅ Completed |
 | As a club delegate, I want my sponsors sorted by most important at the top on my club and carnival pages. | ✅ Completed |
 | As a user, when I click on a sponsor, it should open a sponsor page with full details about the sponsor, logo, name, location, description etc.  All the information in the sponsor model should be on this screen. | ✅ Completed |
-| As a club delegate, I want to add 1:N alternate names to my club which are used when searching. | ⭕ Not Started |
+| As a club delegate, I want to add 1:N alternate names to my club which are used when searching. | ✅ Completed |
 | As a user, I don't want links to be underlined on hover if they already move or change colour. | ⭕ Not Started |
 | As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ⭕ Not Started |
 | As a developer, I want to be able to link other clubs to Carnivals as attendees. Creating a new route CarnivalClub for 1:N relationships. | ⭕ Not Started |
@@ -81,6 +81,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `models/Sponsor.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/Index.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `models/EmailSubscription.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `models/ClubAlternateName.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/emailService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/mySidelineService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `services/imageNamingService.js`  | ⭕ Not Started |

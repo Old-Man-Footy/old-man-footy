@@ -15,6 +15,7 @@ const EmailSubscription = require('./EmailSubscription');
 const Sponsor = require('./Sponsor');
 const ClubSponsor = require('./ClubSponsor');
 const CarnivalSponsor = require('./CarnivalSponsor');
+const ClubAlternateName = require('./ClubAlternateName');
 
 /**
  * Define model associations/relationships
@@ -30,6 +31,18 @@ User.belongsTo(Club, {
 Club.hasMany(User, {
   foreignKey: 'clubId',
   as: 'delegates'
+});
+
+// Club has many Alternate Names (one-to-many)
+Club.hasMany(ClubAlternateName, {
+  foreignKey: 'clubId',
+  as: 'alternateNames'
+});
+
+// ClubAlternateName belongs to Club (many-to-one)
+ClubAlternateName.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'club'
 });
 
 // Carnival belongs to User (creator) (many-to-one)
@@ -126,5 +139,6 @@ module.exports = {
   EmailSubscription,
   Sponsor,
   ClubSponsor,
-  CarnivalSponsor
+  CarnivalSponsor,
+  ClubAlternateName
 };

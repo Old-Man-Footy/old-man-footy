@@ -61,6 +61,72 @@ a:visited {
     color: var(--rugby-link-green);
 }
 
+/* Remove underlines from links that already have visual feedback */
+/* Navigation links */
+.navbar a:hover,
+.navbar a:focus,
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:focus,
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    text-decoration: none;
+}
+
+/* Button-style links */
+.btn:hover,
+.btn:focus,
+a.btn:hover,
+a.btn:focus {
+    text-decoration: none;
+}
+
+/* Card links with hover effects */
+.card:hover a,
+.card a:hover,
+.rugby-masters-card:hover a,
+.rugby-masters-card a:hover,
+.club-card-hover:hover a,
+.club-card-hover a:hover,
+.carnival-card:hover a,
+.carnival-card a:hover {
+    text-decoration: none;
+}
+
+/* Social media links */
+.social-links a:hover,
+.social-links a:focus {
+    text-decoration: none;
+}
+
+/* Links with transform effects */
+a[class*="btn"]:hover,
+a[class*="btn"]:focus,
+.hero-btn:hover,
+.hero-btn:focus,
+.hero-logo:hover {
+    text-decoration: none;
+}
+
+/* Footer links */
+.footer a:hover,
+.footer a:focus {
+    text-decoration: none;
+}
+
+/* Breadcrumb links */
+.breadcrumb-item a:hover,
+.breadcrumb-item a:focus {
+    text-decoration: none;
+}
+
+/* Action button links */
+.action-buttons a:hover,
+.action-buttons a:focus,
+.quick-actions a:hover,
+.quick-actions a:focus {
+    text-decoration: none;
+}
+
 /* Header and Navigation */
 .navbar-brand {
     font-weight: 700;
