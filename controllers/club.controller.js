@@ -949,6 +949,212 @@ const reorderClubSponsors = async (req, res) => {
     }
 };
 
+/**
+ * Show form to create a club on behalf of others
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getCreateOnBehalf = async (req, res) => {
+    try {
+        // Only allow club delegates and admins to create clubs on behalf of others
+        if (!req.user.clubId && !req.user.isAdmin) {
+            req.flash('error_msg', 'You must be a club delegate or administrator to create clubs on behalf of others.');
+            return res.redirect('/clubs');
+        }
+
+        res.render('clubs/create-on-behalf', {
+            title: 'Create Club on Behalf of Others',
+            user: req.user,
+            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            errors: [],
+            formData: {}
+        });
+    } catch (error) {
+        console.error('Error showing create on behalf form:', error);
+        req.flash('error_msg', 'An error occurred while loading the form.');
+        res.redirect('/clubs');
+    }
+};
+
+/**
+ * Create a club on behalf of others (proxy creation)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const postCreateOnBehalf = async (req, res) => {
+    try {
+        // Validate authorization
+        if (!req.user.clubId && !req.user.isAdmin) {
+            req.flash('error_msg', 'You must be a club delegate or administrator to create clubs on behalf of others.');
+            return res.redirect('/clubs');
+        }
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.render('clubs/create-on-behalf', {
+                title: 'Create Club on Behalf of Others',
+                user: req.user,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: errors.array(),
+                formData: req.body
+            });
+        }
+
+        const {
+            clubName,
+            state,
+            location,
+            contactEmail,
+            contactPhone,
+            contactPerson,
+            description,
+            inviteEmail,
+            customMessage
+        } = req.body;
+
+        // Check if club name already exists
+        const existingClub = await Club.findOne({ 
+            where: { clubName: clubName.trim() } 
+        });
+
+        if (existingClub) {
+            return res.render('clubs/create-on-behalf', {
+                title: 'Create Club on Behalf of Others',
+                user: req.user,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: [{ msg: 'A club with this name already exists.' }],
+                formData: req.body
+            });
+        }
+
+        // Create the club with proxy flag
+        const newClub = await Club.create({
+            clubName: clubName.trim(),
+            state,
+            location: location?.trim(),
+            contactEmail: contactEmail?.trim(),
+            contactPhone: contactPhone?.trim(),
+            contactPerson: contactPerson?.trim(),
+            description: description?.trim(),
+            createdByProxy: true,
+            inviteEmail: inviteEmail.trim(),
+            createdByUserId: req.user.id,
+            isPubliclyListed: false // Keep unlisted until claimed
+        });
+
+        // Send ownership invitation email
+        const emailService = require('../services/emailService');
+        await emailService.sendClubOwnershipInvitation(
+            newClub,
+            req.user,
+            inviteEmail.trim(),
+            customMessage || ''
+        );
+
+        req.flash('success_msg', `Club "${clubName}" has been created and an ownership invitation has been sent to ${inviteEmail}.`);
+        res.redirect(`/clubs/${newClub.id}`);
+
+    } catch (error) {
+        console.error('Error creating club on behalf:', error);
+        req.flash('error_msg', 'An error occurred while creating the club.');
+        res.render('clubs/create-on-behalf', {
+            title: 'Create Club on Behalf of Others',
+            user: req.user,
+            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            errors: [{ msg: 'An error occurred while creating the club.' }],
+            formData: req.body
+        });
+    }
+};
+
+/**
+ * Show club claiming page
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getClaimOwnership = async (req, res) => {
+    try {
+        const club = await Club.findByPk(req.params.id);
+
+        if (!club) {
+            req.flash('error_msg', 'Club not found.');
+            return res.redirect('/clubs');
+        }
+
+        // Check if club is available for claiming
+        const isUnclaimed = await club.isUnclaimed();
+        if (!isUnclaimed) {
+            req.flash('error_msg', 'This club already has an owner or was not created for claiming.');
+            return res.redirect(`/clubs/${club.id}`);
+        }
+
+        // Check if user can claim this club
+        const canClaim = await club.canUserClaim(req.user);
+        if (!canClaim) {
+            req.flash('error_msg', 'You are not authorized to claim this club. Please ensure you are logged in with the invited email address.');
+            return res.redirect(`/clubs/${club.id}`);
+        }
+
+        const proxyCreator = await club.getProxyCreator();
+
+        res.render('clubs/claim-ownership', {
+            title: `Claim Ownership - ${club.clubName}`,
+            user: req.user,
+            club,
+            proxyCreator
+        });
+
+    } catch (error) {
+        console.error('Error showing claim ownership page:', error);
+        req.flash('error_msg', 'An error occurred while loading the claiming page.');
+        res.redirect('/clubs');
+    }
+};
+
+/**
+ * Process club ownership claim
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const postClaimOwnership = async (req, res) => {
+    try {
+        const club = await Club.findByPk(req.params.id);
+
+        if (!club) {
+            req.flash('error_msg', 'Club not found.');
+            return res.redirect('/clubs');
+        }
+
+        // Verify user can claim this club
+        const canClaim = await club.canUserClaim(req.user);
+        if (!canClaim) {
+            req.flash('error_msg', 'You are not authorized to claim this club.');
+            return res.redirect(`/clubs/${club.id}`);
+        }
+
+        // Update user to be associated with this club as primary delegate
+        await req.user.update({
+            clubId: club.id,
+            isPrimaryDelegate: true
+        });
+
+        // Clear proxy flags and invite email
+        await club.update({
+            createdByProxy: false,
+            inviteEmail: null,
+            isPubliclyListed: true // Make public now that it's claimed
+        });
+
+        req.flash('success_msg', `Congratulations! You are now the primary delegate for ${club.clubName}. You can manage your club's information and create carnivals.`);
+        res.redirect('/dashboard');
+
+    } catch (error) {
+        console.error('Error claiming club ownership:', error);
+        req.flash('error_msg', 'An error occurred while claiming ownership.');
+        res.redirect(`/clubs/${req.params.id}`);
+    }
+};
+
 module.exports = {
     showClubListings,
     showClubProfile,
@@ -964,5 +1170,9 @@ module.exports = {
     showClubAlternateNames,
     addAlternateName,
     updateAlternateName,
-    deleteAlternateName
+    deleteAlternateName,
+    getCreateOnBehalf,
+    postCreateOnBehalf,
+    getClaimOwnership,
+    postClaimOwnership
 };

@@ -57,7 +57,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to be able to mark my club as attending a Carnival run by another club. | ✅ Completed |
 | As a club delegate, I want clubs who have marked as coming to a carnival to be displayed on the Carnival information page in a list, with links to their club page. | ✅ Completed |
 | As a club delegate, I want to be able to upload a Draw for a Carnival and have it displayed on the Carnival page. | ✅ Completed |
-| As a club delegate, I want to be able to email information on the carnival to attendee clubs directly from the Carnival page when logged in, email should have a link back to the carnival page. | ⭕ Not Started |
+| As a club delegate, I want to be able to email information on the carnival to attendee clubs directly from the Carnival page when logged in, email should have a link back to the carnival page. | ✅ Completed |
 | As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |

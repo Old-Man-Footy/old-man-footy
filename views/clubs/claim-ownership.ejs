@@ -1,0 +1,205 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-crown"></i> Claim Ownership of <%= club.clubName %>
+                    </h3>
+                    <p class="mb-0 small">Complete your club registration and become the primary delegate</p>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Success Alert -->
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-check-circle"></i> You're Eligible to Claim This Club!</h5>
+                        <p class="mb-0">You've been invited to take ownership of <strong><%= club.clubName %></strong>. 
+                        Once you claim it, you'll become the primary delegate and can manage all aspects of your club.</p>
+                    </div>
+
+                    <!-- Club Information -->
+                    <div class="card mb-4 border-info">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Club Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-tag"></i> Club Name</h6>
+                                    <p class="text-primary font-weight-bold"><%= club.clubName %></p>
+                                    
+                                    <% if (club.state) { %>
+                                        <h6><i class="fas fa-map-marker-alt"></i> State</h6>
+                                        <p><%= club.state %></p>
+                                    <% } %>
+                                    
+                                    <% if (club.location) { %>
+                                        <h6><i class="fas fa-location-arrow"></i> Location</h6>
+                                        <p><%= club.location %></p>
+                                    <% } %>
+                                </div>
+                                <div class="col-md-6">
+                                    <% if (club.contactPerson) { %>
+                                        <h6><i class="fas fa-user"></i> Contact Person</h6>
+                                        <p><%= club.contactPerson %></p>
+                                    <% } %>
+                                    
+                                    <% if (club.contactEmail) { %>
+                                        <h6><i class="fas fa-envelope"></i> Contact Email</h6>
+                                        <p><a href="mailto:<%= club.contactEmail %>"><%= club.contactEmail %></a></p>
+                                    <% } %>
+                                    
+                                    <% if (club.contactPhone) { %>
+                                        <h6><i class="fas fa-phone"></i> Contact Phone</h6>
+                                        <p><a href="tel:<%= club.contactPhone %>"><%= club.contactPhone %></a></p>
+                                    <% } %>
+                                </div>
+                            </div>
+                            
+                            <% if (club.description) { %>
+                                <h6><i class="fas fa-file-alt"></i> Description</h6>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-0" style="white-space: pre-line;"><%= club.description %></p>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Creator Information -->
+                    <% if (proxyCreator) { %>
+                        <div class="card mb-4 border-secondary">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-user-plus"></i> Created By</h6>
+                            </div>
+                            <div class="card-body">
+                                <p><strong><%= proxyCreator.firstName %> <%= proxyCreator.lastName %></strong> created this club profile for you.</p>
+                                <p class="small text-muted">
+                                    If you have any questions about this club profile, you can contact them at 
+                                    <a href="mailto:<%= proxyCreator.email %>"><%= proxyCreator.email %></a>
+                                </p>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <!-- What Happens Next -->
+                    <div class="card mb-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-trophy"></i> What You'll Get as Club Owner</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success"></i> <strong>Primary Delegate Status</strong> - You become the main contact for your club</li>
+                                        <li><i class="fas fa-check text-success"></i> <strong>Club Management</strong> - Update club info, logos, and contact details</li>
+                                        <li><i class="fas fa-check text-success"></i> <strong>Create Carnivals</strong> - Organize and host your own events</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success"></i> <strong>Register for Events</strong> - Sign up your teams for carnivals</li>
+                                        <li><i class="fas fa-check text-success"></i> <strong>Manage Sponsors</strong> - Add and showcase your club sponsors</li>
+                                        <li><i class="fas fa-check text-success"></i> <strong>Invite Delegates</strong> - Add other club members to help manage</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Claim Form -->
+                    <form action="/clubs/<%= club.id %>/claim" method="POST">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Important Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmOwnership" required>
+                                    <label class="form-check-label" for="confirmOwnership">
+                                        <strong>I confirm that I am authorized to represent <%= club.clubName %> and agree to become the primary delegate for this club.</strong>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmAccuracy" required>
+                                    <label class="form-check-label" for="confirmAccuracy">
+                                        I understand that the information shown above represents my club and I will update it as needed to ensure accuracy.
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmResponsibility" required>
+                                    <label class="form-check-label" for="confirmResponsibility">
+                                        I accept responsibility for managing this club's profile and understand that I can invite other club members as additional delegates.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a href="/clubs/<%= club.id %>" class="btn btn-secondary">
+                                <i class="fas fa-eye"></i> View Club Profile
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" id="claimButton" disabled>
+                                <i class="fas fa-crown"></i> Claim Ownership of <%= club.clubName %>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-question-circle"></i> Need Help?</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-2">
+                        <strong>Questions about claiming this club?</strong> 
+                        <% if (proxyCreator) { %>
+                            Contact <strong><%= proxyCreator.firstName %> <%= proxyCreator.lastName %></strong> 
+                            at <a href="mailto:<%= proxyCreator.email %>"><%= proxyCreator.email %></a> who created this profile.
+                        <% } %>
+                    </p>
+                    <p class="small mb-0">
+                        <strong>Technical issues?</strong> 
+                        Email us at <a href="mailto:support@oldmanfooty.com.au">support@oldmanfooty.com.au</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enable claim button only when all checkboxes are checked
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][required]');
+    const claimButton = document.getElementById('claimButton');
+    
+    function updateButtonState() {
+        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+        claimButton.disabled = !allChecked;
+        
+        if (allChecked) {
+            claimButton.classList.remove('btn-secondary');
+            claimButton.classList.add('btn-primary');
+        } else {
+            claimButton.classList.remove('btn-primary');
+            claimButton.classList.add('btn-secondary');
+        }
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateButtonState);
+    });
+    
+    // Initial state
+    updateButtonState();
+});
+</script>
+
+<%- include('../partials/footer') %>

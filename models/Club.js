@@ -66,6 +66,44 @@ class Club extends Model {
     const delegates = await this.getDelegates();
     return delegates.map(delegate => delegate.id);
   }
+
+  /**
+   * Check if this club is unclaimed (created on behalf of others)
+   * @returns {boolean} True if club has no delegates and was created by proxy
+   */
+  async isUnclaimed() {
+    if (!this.createdByProxy) return false;
+    
+    const delegates = await this.getDelegates();
+    return delegates.length === 0;
+  }
+
+  /**
+   * Get the user who created this club on behalf of others
+   * @returns {Promise<User|null>} The proxy creator user or null
+   */
+  async getProxyCreator() {
+    if (!this.createdByUserId) return null;
+    
+    const User = require('./User');
+    return await User.findByPk(this.createdByUserId);
+  }
+
+  /**
+   * Check if a user can claim ownership of this club
+   * @param {User} user - The user attempting to claim
+   * @returns {boolean} True if user can claim this club
+   */
+  async canUserClaim(user) {
+    if (!user || !user.email) return false;
+    
+    // Club must be unclaimed and have a pending invite email
+    const isUnclaimed = await this.isUnclaimed();
+    if (!isUnclaimed || !this.inviteEmail) return false;
+    
+    // User's email must match the invite email
+    return user.email.toLowerCase() === this.inviteEmail.toLowerCase();
+  }
 }
 
 /**
@@ -177,6 +215,27 @@ Club.init({
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     allowNull: false
+  },
+  createdByProxy: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  },
+  inviteEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isEmail: true,
+      len: [0, 100]
+    }
+  },
+  createdByUserId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
 }, {
   sequelize,

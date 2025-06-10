@@ -507,6 +507,109 @@ class EmailService {
         }
     }
 
+    // Send club ownership invitation email
+    async sendClubOwnershipInvitation(club, proxyCreator, inviteEmail, customMessage = '') {
+        try {
+            const claimUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/clubs/${club.id}/claim`;
+            const clubUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/clubs/${club.id}`;
+            
+            const mailOptions = {
+                from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                to: inviteEmail,
+                subject: `You've been invited to claim ${club.clubName} on Old Man Footy`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
+                            <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                            <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
+                        </div>
+                        
+                        <div style="padding: 30px; background: #f9f9f9;">
+                            <h2 style="color: #006837;">🏉 Club Ownership Invitation</h2>
+                            
+                            <p>Hello,</p>
+                            
+                            <p><strong>${proxyCreator.firstName} ${proxyCreator.lastName}</strong> has created a club profile for <strong>${club.clubName}</strong> on Old Man Footy and would like to invite you to take ownership of it.</p>
+                            
+                            ${customMessage ? `
+                                <div style="background: #e8f5e8; border-left: 4px solid #006837; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                                    <h4 style="color: #006837; margin-top: 0;">Message from ${proxyCreator.firstName}:</h4>
+                                    <p style="margin: 0; white-space: pre-line;">${customMessage}</p>
+                                </div>
+                            ` : ''}
+                            
+                            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                <h3 style="color: #006837; margin-top: 0;">${club.clubName}</h3>
+                                
+                                ${club.state ? `<p><strong>📍 State:</strong> ${club.state}</p>` : ''}
+                                ${club.location ? `<p><strong>🌍 Location:</strong> ${club.location}</p>` : ''}
+                                ${club.contactEmail ? `<p><strong>📧 Email:</strong> ${club.contactEmail}</p>` : ''}
+                                ${club.contactPhone ? `<p><strong>📱 Phone:</strong> ${club.contactPhone}</p>` : ''}
+                                ${club.description ? `<p><strong>📋 Description:</strong></p><div style="background: #f8f9fa; padding: 10px; border-radius: 4px; white-space: pre-line;">${club.description}</div>` : ''}
+                            </div>
+                            
+                            <h3 style="color: #006837;">What happens when you claim ownership?</h3>
+                            <ul>
+                                <li>✅ You become the primary delegate for ${club.clubName}</li>
+                                <li>✅ You can manage club information and settings</li>
+                                <li>✅ You can create and manage carnivals for your club</li>
+                                <li>✅ You can invite other club members as delegates</li>
+                                <li>✅ You can register your club for carnivals hosted by others</li>
+                            </ul>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="${claimUrl}" 
+                                   style="background: #006837; color: white; padding: 15px 30px; 
+                                          text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                    🏆 Claim ${club.clubName}
+                                </a>
+                            </div>
+                            
+                            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                                <h4 style="margin-top: 0; color: #856404;">📋 Important Notes:</h4>
+                                <ul style="margin: 0; color: #856404;">
+                                    <li>You need to register or login with this email address (${inviteEmail}) to claim ownership</li>
+                                    <li>Once claimed, you'll be the primary delegate and can manage everything about your club</li>
+                                    <li>If you don't claim ownership, the club profile will remain as a placeholder</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="text-align: center; margin: 20px 0;">
+                                <a href="${clubUrl}" 
+                                   style="background: #ffc107; color: #212529; padding: 10px 20px; 
+                                          text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                    👀 View Club Profile
+                                </a>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #666;">
+                                Questions about this invitation? Contact ${proxyCreator.firstName} ${proxyCreator.lastName} at 
+                                <a href="mailto:${proxyCreator.email}">${proxyCreator.email}</a> or reply to this email.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+                            <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
+                            <p>This invitation was sent by ${proxyCreator.firstName} ${proxyCreator.lastName} on behalf of ${club.clubName}.</p>
+                        </div>
+                    </div>
+                `
+            };
+
+            await this.transporter.sendMail(mailOptions);
+            console.log(`Club ownership invitation sent to ${inviteEmail} for club: ${club.clubName}`);
+            
+            return { 
+                success: true, 
+                message: `Ownership invitation sent to ${inviteEmail}` 
+            };
+
+        } catch (error) {
+            console.error('Failed to send club ownership invitation:', error);
+            throw error;
+        }
+    }
+
     // Test email configuration
     async testEmailConfiguration() {
         try {

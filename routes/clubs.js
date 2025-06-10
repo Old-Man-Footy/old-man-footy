@@ -55,4 +55,19 @@ router.put('/manage/alternate-names/:id', ensureAuthenticated, [
 ], clubController.updateAlternateName);
 router.delete('/manage/alternate-names/:id', ensureAuthenticated, clubController.deleteAlternateName);
 
+// Proxy club creation routes (for delegates and admins)
+router.get('/create-on-behalf', ensureAuthenticated, clubController.getCreateOnBehalf);
+router.post('/create-on-behalf', ensureAuthenticated, [
+    body('clubName').isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
+    body('inviteEmail').isEmail().withMessage('Valid email address required for invitation'),
+    body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state required'),
+    body('contactEmail').optional().isEmail().withMessage('Valid contact email required'),
+    body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
+    body('customMessage').optional().isLength({ max: 2000 }).withMessage('Custom message must be 2000 characters or less')
+], clubController.postCreateOnBehalf);
+
+// Club ownership claiming routes
+router.get('/:id/claim', ensureAuthenticated, clubController.getClaimOwnership);
+router.post('/:id/claim', ensureAuthenticated, clubController.postClaimOwnership);
+
 module.exports = router;

@@ -1,0 +1,214 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-users"></i> Create Club on Behalf of Others
+                    </h3>
+                    <p class="mb-0 small">Help other clubs get started on Old Man Footy by creating their profile</p>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Info Alert -->
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> How This Works</h5>
+                        <ul class="mb-0">
+                            <li>You can create a club profile for another club that isn't yet on the platform</li>
+                            <li>An invitation email will be sent to the club's contact person</li>
+                            <li>They can claim ownership by registering with the invited email address</li>
+                            <li>Once claimed, they become the primary delegate and can manage the club</li>
+                        </ul>
+                    </div>
+
+                    <!-- Error Messages -->
+                    <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Please fix the following errors:</h6>
+                            <ul class="mb-0">
+                                <% errors.forEach(error => { %>
+                                    <li><%= error.msg %></li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    <% } %>
+
+                    <form action="/clubs/create-on-behalf" method="POST">
+                        <!-- Club Basic Information -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="clubName" class="form-label">
+                                        <strong>Club Name</strong> <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="clubName" 
+                                           name="clubName" 
+                                           value="<%= formData.clubName || '' %>"
+                                           placeholder="e.g., Parramatta Eels Old Boys"
+                                           required>
+                                    <small class="form-text text-muted">The official name of the club</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="state" class="form-label">
+                                        <strong>State</strong> <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" id="state" name="state" required>
+                                        <option value="">Select State</option>
+                                        <% states.forEach(state => { %>
+                                            <option value="<%= state %>" <%= (formData.state === state) ? 'selected' : '' %>><%= state %></option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location" class="form-label">
+                                <strong>Location/Suburb</strong>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="location" 
+                                   name="location" 
+                                   value="<%= formData.location || '' %>"
+                                   placeholder="e.g., Parramatta, NSW">
+                            <small class="form-text text-muted">City, suburb, or general location</small>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <h5 class="mt-4 mb-3"><i class="fas fa-address-book"></i> Club Contact Details</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="contactPerson" class="form-label">Contact Person</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="contactPerson" 
+                                           name="contactPerson" 
+                                           value="<%= formData.contactPerson || '' %>"
+                                           placeholder="Primary contact name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="contactPhone" class="form-label">Contact Phone</label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="contactPhone" 
+                                           name="contactPhone" 
+                                           value="<%= formData.contactPhone || '' %>"
+                                           placeholder="Contact phone number">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contactEmail" class="form-label">Club Contact Email</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="contactEmail" 
+                                   name="contactEmail" 
+                                   value="<%= formData.contactEmail || '' %>"
+                                   placeholder="General club contact email">
+                            <small class="form-text text-muted">Public contact email for the club (optional)</small>
+                        </div>
+
+                        <!-- Club Description -->
+                        <div class="form-group">
+                            <label for="description" class="form-label">
+                                <strong>Club Description</strong>
+                            </label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="4"
+                                      placeholder="Brief description of the club, its history, achievements, or what makes it special..."><%= formData.description || '' %></textarea>
+                            <small class="form-text text-muted">Tell people about this club (optional, max 1000 characters)</small>
+                        </div>
+
+                        <!-- Invitation Details -->
+                        <div class="card mt-4 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-envelope"></i> Ownership Invitation</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="inviteEmail" class="form-label">
+                                        <strong>Email to Invite for Ownership</strong> <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="inviteEmail" 
+                                           name="inviteEmail" 
+                                           value="<%= formData.inviteEmail || '' %>"
+                                           placeholder="president@club.com.au"
+                                           required>
+                                    <small class="form-text text-muted">
+                                        This person will receive an email invitation to claim ownership of the club.
+                                        They must register or login with this exact email address to claim it.
+                                    </small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="customMessage" class="form-label">
+                                        <strong>Personal Message (Optional)</strong>
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="customMessage" 
+                                              name="customMessage" 
+                                              rows="4"
+                                              placeholder="Hi [Name], I've created a profile for your club on Old Man Footy. This platform helps connect Masters Rugby League clubs across Australia for carnivals and events. Would you like to take ownership of your club's profile?"><%= formData.customMessage || '' %></textarea>
+                                    <small class="form-text text-muted">Add a personal message explaining why you're creating this club profile (max 2000 characters)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a href="/clubs" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-plus-circle"></i> Create Club & Send Invitation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Information -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-question-circle"></i> Why Create Clubs on Behalf of Others?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-network-wired"></i> Build the Network</h6>
+                            <p class="small">Help grow the Old Man Footy community by bringing more clubs onto the platform.</p>
+                            
+                            <h6><i class="fas fa-calendar-alt"></i> Better Carnival Planning</h6>
+                            <p class="small">Having more clubs listed makes it easier to organize carnivals and invite teams.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-handshake"></i> Help Other Clubs</h6>
+                            <p class="small">Some clubs may not know about the platform yet. You can help them get started.</p>
+                            
+                            <h6><i class="fas fa-shield-alt"></i> Safe & Secure</h6>
+                            <p class="small">Only the invited email address can claim ownership. The club remains safe until claimed.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
