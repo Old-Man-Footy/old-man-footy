@@ -55,14 +55,10 @@ router.post('/contact', [
         .withMessage('Invalid newsletter subscription value')
 ], mainController.postContact);
 
-// Email subscription
-router.post('/subscribe', [
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('states').isArray({ min: 1 }).withMessage('At least one state must be selected')
-], mainController.postSubscribe);
-
-// Email unsubscription
-router.get('/unsubscribe/:token', mainController.getUnsubscribe);
+// Newsletter routes
+router.post('/subscribe', mainController.postSubscribe);
+router.get('/unsubscribe', mainController.getUnsubscribe);
+router.post('/unsubscribe', mainController.postUnsubscribe);
 
 // Admin statistics (for primary delegates and admins)
 router.get('/admin/stats', ensureAuthenticated, mainController.getStats);

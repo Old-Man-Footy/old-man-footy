@@ -333,7 +333,12 @@ const sendNewsletter = async (req, res) => {
  * Display contact page
  */
 const getContact = (req, res) => {
-    res.render('contact', { title: 'Contact Us' });
+    res.render('contact', {
+        title: 'Contact Us',
+        user: req.user,
+        errors: req.flash('error'),
+        success: req.flash('success')
+    });
 };
 
 /**

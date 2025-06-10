@@ -160,6 +160,28 @@ class MySidelineIntegrationService {
             // Set viewport
             await page.setViewport({ width: 1280, height: 720 });
 
+            // Track navigation requests to capture hidden register links
+            const capturedLinks = [];
+            
+            // Intercept navigation attempts to capture hidden register links
+            await page.setRequestInterception(true);
+            page.on('request', (request) => {
+                const url = request.url();
+                
+                // Look for registration-related URLs
+                if (url.includes('register') || url.includes('signup') || url.includes('event')) {
+                    console.log(`🔗 Captured potential registration link: ${url}`);
+                    capturedLinks.push({
+                        url: url,
+                        method: request.method(),
+                        timestamp: new Date()
+                    });
+                }
+                
+                // Continue the request
+                request.continue();
+            });
+
             console.log(`Navigating to MySideline search: ${this.searchUrl}`);
             
             // Navigate to the search page
@@ -172,7 +194,7 @@ class MySidelineIntegrationService {
             console.log('Waiting for search results to load...');
             await page.waitForTimeout(5000);
 
-            // Try to find search results or any content with "Masters"
+            // Enhanced event extraction with Register button interaction
             const events = await page.evaluate(() => {
                 const foundElements = [];
                 
@@ -202,6 +224,33 @@ class MySidelineIntegrationService {
                             
                             // Check if this element contains "Masters" (case insensitive)
                             if (text.toLowerCase().includes('masters') && text.length > 20) {
+                                // Look for Register buttons and extract their targets
+                                const registerButtons = el.querySelectorAll('button, a, input[type="button"], input[type="submit"]');
+                                let registrationInfo = null;
+                                
+                                registerButtons.forEach(btn => {
+                                    const btnText = (btn.textContent || btn.value || '').toLowerCase();
+                                    if (btnText.includes('register') || btnText.includes('sign up') || btnText.includes('join')) {
+                                        // Try to extract the registration target
+                                        const href = btn.href || btn.getAttribute('href');
+                                        const onclick = btn.getAttribute('onclick');
+                                        const dataUrl = btn.getAttribute('data-url') || btn.getAttribute('data-href');
+                                        const formAction = btn.closest('form')?.action;
+                                        
+                                        registrationInfo = {
+                                            buttonText: btn.textContent || btn.value,
+                                            href: href,
+                                            onclick: onclick,
+                                            dataUrl: dataUrl,
+                                            formAction: formAction,
+                                            buttonClass: btn.className,
+                                            buttonId: btn.id
+                                        };
+                                        
+                                        console.log(`🎯 Found Register button:`, registrationInfo);
+                                    }
+                                });
+                                
                                 // Extract links
                                 const links = el.querySelectorAll('a');
                                 const href = links.length > 0 ? links[0].href : null;
@@ -211,7 +260,8 @@ class MySidelineIntegrationService {
                                     text: text,
                                     href: href,
                                     html: el.innerHTML,
-                                    id: el.id || `found-${Date.now()}-${index}`
+                                    id: el.id || `found-${Date.now()}-${index}`,
+                                    registrationInfo: registrationInfo
                                 });
                                 
                                 console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
@@ -239,7 +289,8 @@ class MySidelineIntegrationService {
                                     selector: 'div-fallback',
                                     text: text,
                                     href: div.querySelector('a')?.href || null,
-                                    id: `fallback-${index}`
+                                    id: `fallback-${index}`,
+                                    registrationInfo: null
                                 });
                             }
                         });
@@ -251,13 +302,73 @@ class MySidelineIntegrationService {
                 return foundElements;
             });
 
+            // Try to interact with Register buttons to capture their destinations
+            console.log('Attempting to interact with Register buttons to capture destinations...');
+            
+            for (const event of events) {
+                if (event.registrationInfo) {
+                    try {
+                        // Try to click the register button and capture where it tries to go
+                        const registerButton = await page.$(event.registrationInfo.buttonId ? `#${event.registrationInfo.buttonId}` : 
+                                                      event.registrationInfo.buttonClass ? `.${event.registrationInfo.buttonClass.split(' ')[0]}` :
+                                                      'button, input[type="button"], input[type="submit"]');
+                        
+                        if (registerButton) {
+                            // Set up a promise to capture navigation
+                            const navigationPromise = page.waitForNavigation({ 
+                                waitUntil: 'networkidle2', 
+                                timeout: 5000 
+                            }).catch(() => null);
+                            
+                            // Click the button
+                            await registerButton.click();
+                            
+                            // Wait for navigation or timeout
+                            const navigationResult = await navigationPromise;
+                            
+                            if (navigationResult) {
+                                const currentUrl = page.url();
+                                console.log(`🎯 Register button led to: ${currentUrl}`);
+                                
+                                // Extract event ID from the URL
+                                const eventId = this.extractEventIdFromUrl(currentUrl);
+                                if (eventId) {
+                                    event.mySidelineEventId = eventId;
+                                    event.registrationLink = currentUrl;
+                                    console.log(`✅ Extracted event ID: ${eventId}`);
+                                }
+                                
+                                // Navigate back to continue processing
+                                await page.goBack({ waitUntil: 'networkidle2' });
+                            }
+                        }
+                    } catch (interactionError) {
+                        console.log(`⚠️ Could not interact with register button: ${interactionError.message}`);
+                    }
+                }
+            }
+
+            // Log all captured links for analysis
+            if (capturedLinks.length > 0) {
+                console.log(`📋 Captured ${capturedLinks.length} registration-related links:`);
+                capturedLinks.forEach(link => {
+                    console.log(`  - ${link.url}`);
+                    
+                    // Try to extract event ID from captured links
+                    const eventId = this.extractEventIdFromUrl(link.url);
+                    if (eventId) {
+                        console.log(`    🆔 Event ID: ${eventId}`);
+                    }
+                });
+            }
+
             console.log(`Browser found ${events.length} potential Masters events`);
             
             // Convert browser events to standard format
             const standardEvents = [];
             for (const browserEvent of events) {
                 try {
-                    const standardEvent = this.convertBrowserEventToStandardFormat(browserEvent);
+                    const standardEvent = this.convertBrowserEventToStandardFormat(browserEvent, capturedLinks);
                     if (standardEvent) {
                         standardEvents.push(standardEvent);
                     }
@@ -283,1012 +394,256 @@ class MySidelineIntegrationService {
     }
 
     /**
-     * Convert browser-found event to standard format
+     * Capture hidden registration links from Register buttons
+     * This method clicks on Register buttons to reveal their actual destination URLs
      */
-    convertBrowserEventToStandardFormat(browserEvent) {
+    async captureRegistrationLinks(page) {
         try {
-            const text = browserEvent.text || '';
-            const href = browserEvent.href || '';
+            console.log('🔍 Searching for Register buttons and capturing their links...');
             
-            // Extract event title (first substantial line)
-            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 3);
-            const title = lines[0] || 'Masters Rugby League Event';
+            // Wait for any potential dynamic content to load
+            await page.waitForTimeout(2000);
             
-            // Try to extract date from text
-            const date = this.extractDateFromText(text) || this.getDefaultFutureDate();
-            
-            // Try to extract location
-            const location = this.extractLocationFromText(text) || 'Location TBD';
-            
-            // Determine state from location or default
-            const state = this.extractStateFromText(text) || 'NSW';
-            
-            // Extract contact info
-            const contact = this.extractContact(text);
-            
-            // Create standardized event object
-            const event = {
-                mySidelineEventId: browserEvent.id || `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                title: title,
-                description: text.length > 200 ? text.substring(0, 200) + '...' : text,
-                date: date,
-                location: location,
-                state: state,
-                registrationLink: href && href.startsWith('http') ? href : null,
-                contactInfo: {
-                    name: 'Event Organiser',
-                    email: contact && contact.includes('@') ? contact : null,
-                    phone: contact && !contact.includes('@') ? contact : null
-                },
-                source: 'MySideline Browser',
-                lastUpdated: new Date()
-            };
-            
-            // Validate the event before returning
-            if (this.isValidEvent(event)) {
-                return event;
-            } else {
-                console.log(`⚠️ Invalid event filtered out: ${title}`);
-                return null;
-            }
-            
-        } catch (error) {
-            console.error('Error converting browser event:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Extract date from text using various patterns
-     */
-    extractDateFromText(text) {
-        if (!text) return null;
-        
-        const datePatterns = [
-            // Australian date formats
-            /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g,                    // DD/MM/YYYY
-            /(\d{1,2})-(\d{1,2})-(\d{2,4})/g,                     // DD-MM-YYYY
-            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{2,4})/gi, // DD Month YYYY
-            /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{1,2}),?\s+(\d{2,4})/gi, // Month DD, YYYY
-            /(\d{2,4})-(\d{1,2})-(\d{1,2})/g,                     // YYYY-MM-DD
-            // Relative dates
-            /(next|this)\s+(week|month|year)/gi,
-            /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi
-        ];
-
-        for (const pattern of datePatterns) {
-            const matches = text.match(pattern);
-            if (matches) {
-                for (const match of matches) {
-                    try {
-                        const parsedDate = new Date(match);
-                        if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() >= 2024) {
-                            return parsedDate;
+            // Find all Register buttons or links
+            const registerButtons = await page.$$eval('a, button, input[type="submit"], input[type="button"]', (elements) => {
+                return elements
+                    .map((el, index) => {
+                        const text = el.textContent?.trim().toLowerCase() || '';
+                        const value = el.value?.trim().toLowerCase() || '';
+                        const type = el.type || '';
+                        
+                        // Look for Register-related text
+                        if (text.includes('register') || value.includes('register') || 
+                            text.includes('sign up') || text.includes('signup') ||
+                            text.includes('enter') || text.includes('join')) {
+                            
+                            return {
+                                index,
+                                tagName: el.tagName,
+                                text: el.textContent?.trim() || el.value?.trim() || '',
+                                href: el.href || null,
+                                onclick: el.onclick ? el.onclick.toString() : null,
+                                formAction: el.form ? el.form.action : null,
+                                className: el.className,
+                                id: el.id,
+                                dataset: Object.keys(el.dataset).length > 0 ? el.dataset : null
+                            };
                         }
-                    } catch (error) {
+                        return null;
+                    })
+                    .filter(Boolean);
+            });
+
+            console.log(`Found ${registerButtons.length} potential registration buttons`);
+            
+            const capturedLinks = [];
+            
+            for (const button of registerButtons) {
+                try {
+                    console.log(`📋 Processing button: "${button.text}" (${button.tagName})`);
+                    
+                    // Extract event context (look for nearby event info)
+                    const eventContext = await page.evaluate((buttonIndex) => {
+                        const elements = document.querySelectorAll('a, button, input[type="submit"], input[type="button"]');
+                        const buttonEl = elements[buttonIndex];
+                        
+                        if (!buttonEl) return null;
+                        
+                        // Find the closest event container
+                        let container = buttonEl.closest('.event-item, .event-card, .event-row, tr, .search-result, .listing-item');
+                        if (!container) {
+                            // Fallback: look for parent containers
+                            container = buttonEl.closest('div[class*="event"], div[class*="result"], div[class*="item"]');
+                        }
+                        
+                        if (!container) {
+                            container = buttonEl.parentElement;
+                        }
+                        
+                        // Extract event information from the container
+                        const eventTitle = container.querySelector('h1, h2, h3, h4, .title, .event-title, .name')?.textContent?.trim();
+                        const eventDate = container.querySelector('.date, .event-date, [class*="date"]')?.textContent?.trim();
+                        const eventLocation = container.querySelector('.location, .venue, [class*="location"]')?.textContent?.trim();
+                        
+                        return {
+                            title: eventTitle,
+                            date: eventDate,
+                            location: eventLocation,
+                            containerHTML: container.outerHTML.substring(0, 500) // Truncated for logging
+                        };
+                    }, button.index);
+                    
+                    // If button has a direct href, capture it
+                    if (button.href && button.href !== 'javascript:void(0)' && button.href !== '#') {
+                        capturedLinks.push({
+                            eventTitle: eventContext?.title,
+                            eventDate: eventContext?.date,
+                            eventLocation: eventContext?.location,
+                            registrationLink: button.href,
+                            buttonText: button.text,
+                            captureMethod: 'direct_href'
+                        });
                         continue;
                     }
-                }
-            }
-        }
-        
-        return null;
-    }
-
-    /**
-     * Extract location from text
-     */
-    extractLocationFromText(text) {
-        if (!text) return null;
-        
-        // Look for location indicators
-        const locationPatterns = [
-            /(?:at|@|venue|location):\s*([^,\n]+)/gi,
-            /(?:held\s+at|taking\s+place\s+at)\s+([^,\n]+)/gi,
-            /(NSW|New South Wales|QLD|Queensland|VIC|Victoria|WA|Western Australia|SA|South Australia|TAS|Tasmania|NT|Northern Territory|ACT|Australian Capital Territory)/gi,
-            /(Sydney|Melbourne|Brisbane|Perth|Adelaide|Hobart|Darwin|Canberra)/gi,
-            /([A-Z][a-z]+\s+(Stadium|Park|Ground|Field|Centre|Complex|Oval))/g
-        ];
-
-        for (const pattern of locationPatterns) {
-            const matches = text.match(pattern);
-            if (matches && matches[0]) {
-                return matches[0].replace(/^(at|@|venue|location|held\s+at|taking\s+place\s+at):\s*/gi, '').trim();
-            }
-        }
-        
-        return null;
-    }
-
-    /**
-     * Extract state from text
-     */
-    extractStateFromText(text) {
-        if (!text) return null;
-        
-        const stateMap = {
-            'NSW': 'NSW', 'New South Wales': 'NSW',
-            'QLD': 'QLD', 'Queensland': 'QLD',
-            'VIC': 'VIC', 'Victoria': 'VIC',
-            'WA': 'WA', 'Western Australia': 'WA',
-            'SA': 'SA', 'South Australia': 'SA',
-            'TAS': 'TAS', 'Tasmania': 'TAS',
-            'NT': 'NT', 'Northern Territory': 'NT',
-            'ACT': 'ACT', 'Australian Capital Territory': 'ACT'
-        };
-
-        const lowerText = text.toLowerCase();
-        for (const [key, value] of Object.entries(stateMap)) {
-            if (lowerText.includes(key.toLowerCase())) {
-                return value;
-            }
-        }
-
-        // Try city to state mapping
-        const cityStateMap = {
-            'sydney': 'NSW', 'melbourne': 'VIC', 'brisbane': 'QLD',
-            'perth': 'WA', 'adelaide': 'SA', 'hobart': 'TAS',
-            'darwin': 'NT', 'canberra': 'ACT'
-        };
-
-        for (const [city, state] of Object.entries(cityStateMap)) {
-            if (lowerText.includes(city)) {
-                return state;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get a default future date (6 months from now)
-     */
-    getDefaultFutureDate() {
-        const defaultDate = new Date();
-        defaultDate.setMonth(defaultDate.getMonth() + 6);
-        return defaultDate;
-    }
-
-    /**
-     * Validate event and filter out non-Masters Rugby League events
-     * @param {Object} event - Event object to validate
-     * @returns {boolean} - True if valid Masters Rugby League event, false otherwise
-     */
-    isValidEvent(event) {
-        if (!event || !event.title || event.title.length <= 3 || !event.date || !event.mySidelineId) {
-            return false;
-        }
-
-        // Filter out Touch events - check for specific Touch indicators
-        
-        // 1. Check for "Touch" in email addresses
-        const emailText = event.contactInfo?.email || '';
-        if (emailText.toLowerCase().includes('touch')) {
-            console.log(`⚠️ Filtering out Touch event (email contains 'touch'): ${event.title}`);
-            return false;
-        }
-        
-        // 2. Check for "Touch" in title/subtitle (CSS ID context)
-        // Look for Touch in the main title or any subtitle-like content
-        const titleText = (event.title || '').toLowerCase();
-        if (titleText.includes('touch')) {
-            console.log(`⚠️ Filtering out Touch event (title contains 'touch'): ${event.title}`);
-            return false;
-        }
-        
-        // 3. Check for standalone "Touch" in the raw HTML/text content
-        // This looks for "Touch" as a complete word, not part of another word
-        const fullText = (event.description || '') + ' ' + (event.source || '');
-        const touchWordPattern = /\btouch\b/gi; // Word boundary ensures it's standalone
-        
-        if (touchWordPattern.test(fullText)) {
-            console.log(`⚠️ Filtering out Touch event (contains standalone 'Touch'): ${event.title}`);
-            return false;
-        }
-
-        return true;
-    }
-
-    // Process scraped events and update database
-    async processScrapedEvents(scrapedEvents) {
-        const processedEvents = [];
-
-        for (const scrapedEvent of scrapedEvents) {
-            try {
-                const processedEvent = await this.processIndividualEvent(scrapedEvent);
-                if (processedEvent) {
-                    processedEvents.push(processedEvent);
-                }
-            } catch (error) {
-                console.error(`Failed to process event ${scrapedEvent.mySidelineId}:`, error);
-            }
-        }
-
-        return processedEvents;
-    }
-
-    /**
-     * Process a single scraped MySideline event.
-     * Handles both direct ID matches and fuzzy duplicate detection for manual carnivals.
-     * @param {Object} scrapedEvent - The event data scraped from MySideline
-     * @returns {Promise<Object>} - The updated or created carnival
-     */
-    async processIndividualEvent(scrapedEvent) {
-        try {
-            // 1. Check for direct MySideline ID match
-            let existingCarnival = await Carnival.findOne({
-                where: { mySidelineEventId: scrapedEvent.mySidelineId }
-            });
-
-            if (existingCarnival) {
-                // Update existing event if data has changed
-                return await this.updateExistingEvent(existingCarnival, scrapedEvent);
-            }
-
-            // 2. Fuzzy duplicate detection for manual carnivals (no mySidelineEventId)
-            const fuzzyDuplicate = await this.detectPotentialDuplicate({
-                title: scrapedEvent.title,
-                date: scrapedEvent.date,
-                locationAddress: scrapedEvent.location,
-                state: scrapedEvent.state
-            });
-
-            if (fuzzyDuplicate && !fuzzyDuplicate.mySidelineEventId) {
-                // Merge MySideline data into the manual event
-                await fuzzyDuplicate.update({
-                    mySidelineEventId: scrapedEvent.mySidelineId,
-                    // Prefer MySideline data for schedule/registration if not present
-                    scheduleDetails: fuzzyDuplicate.scheduleDetails || scrapedEvent.description,
-                    registrationLink: fuzzyDuplicate.registrationLink || scrapedEvent.registrationLink,
-                    organiserContactName: fuzzyDuplicate.organiserContactName || scrapedEvent.contactInfo?.name,
-                    organiserContactEmail: fuzzyDuplicate.organiserContactEmail || scrapedEvent.contactInfo?.email,
-                    organiserContactPhone: fuzzyDuplicate.organiserContactPhone || scrapedEvent.contactInfo?.phone,
-                    lastMySidelineSync: new Date()
-                });
-                // Optionally, update other fields if you want to always prefer MySideline data
-                // ...
-                // Send notification if claimed
-                if (fuzzyDuplicate.createdByUserId) {
-                    try {
-                        await emailService.sendCarnivalNotification(fuzzyDuplicate, 'merged');
-                    } catch (emailError) {
-                        console.error('Failed to send merge notification:', emailError);
+                    
+                    // For JavaScript-driven buttons, we need to simulate a click
+                    // and capture the navigation or form submission
+                    if (button.onclick || button.tagName === 'BUTTON' || button.tagName === 'INPUT') {
+                        const navigationPromise = page.waitForNavigation({ 
+                            waitUntil: 'networkidle0', 
+                            timeout: 5000 
+                        }).catch(() => null);
+                        
+                        // Click the button
+                        await page.evaluate((buttonIndex) => {
+                            const elements = document.querySelectorAll('a, button, input[type="submit"], input[type="button"]');
+                            const buttonEl = elements[buttonIndex];
+                            if (buttonEl) {
+                                buttonEl.click();
+                            }
+                        }, button.index);
+                        
+                        // Wait for potential navigation
+                        const response = await navigationPromise;
+                        
+                        if (response) {
+                            const newUrl = page.url();
+                            capturedLinks.push({
+                                eventTitle: eventContext?.title,
+                                eventDate: eventContext?.date,
+                                eventLocation: eventContext?.location,
+                                registrationLink: newUrl,
+                                buttonText: button.text,
+                                captureMethod: 'click_navigation'
+                            });
+                            
+                            // Go back to the search results
+                            await page.goBack();
+                            await page.waitForTimeout(1000);
+                        } else {
+                            // Check for form submission or popup
+                            const currentUrl = page.url();
+                            if (currentUrl !== page.url()) {
+                                capturedLinks.push({
+                                    eventTitle: eventContext?.title,
+                                    eventDate: eventContext?.date,
+                                    eventLocation: eventContext?.location,
+                                    registrationLink: currentUrl,
+                                    buttonText: button.text,
+                                    captureMethod: 'form_submission'
+                                });
+                            }
+                        }
                     }
+                } catch (buttonError) {
+                    console.error(`Error processing button "${button.text}":`, buttonError.message);
                 }
-                return fuzzyDuplicate;
             }
-
-            // 3. No duplicates found, create new event
-            return await this.createNewEvent(scrapedEvent);
+            
+            // Extract event IDs from captured links
+            const eventsWithIds = capturedLinks.map(link => {
+                const eventId = this.extractEventIdFromUrl(link.registrationLink);
+                return {
+                    ...link,
+                    mySidelineEventId: eventId
+                };
+            }).filter(event => event.mySidelineEventId);
+            
+            console.log(`✅ Successfully captured ${eventsWithIds.length} registration links with event IDs`);
+            return eventsWithIds;
+            
         } catch (error) {
-            console.error(`Error processing event ${scrapedEvent.mySidelineId}:`, error);
-            throw error;
+            console.error('Error capturing registration links:', error);
+            return [];
         }
     }
 
-    async updateExistingEvent(existingCarnival, scrapedEvent) {
-        const hasChanges = 
-            existingCarnival.title !== scrapedEvent.title ||
-            existingCarnival.date.getTime() !== scrapedEvent.date.getTime() ||
-            existingCarnival.locationAddress !== scrapedEvent.location;
-
-        if (hasChanges) {
-            await existingCarnival.update({
-                title: scrapedEvent.title,
-                date: scrapedEvent.date,
-                locationAddress: scrapedEvent.location,
-                scheduleDetails: scrapedEvent.description || 'Event details to be confirmed',
-                registrationLink: scrapedEvent.registrationLink,
-                organiserContactName: scrapedEvent.contactInfo?.name || 'Event Organiser',
-                organiserContactEmail: scrapedEvent.contactInfo?.email || 'contact@example.com',
-                organiserContactPhone: scrapedEvent.contactInfo?.phone || '0400000000',
-                lastMySidelineSync: new Date()
-            });
-
-            // Send update notifications if event has an owner
-            if (existingCarnival.createdByUserId) {
-                try {
-                    await emailService.sendCarnivalNotification(existingCarnival, 'updated');
-                } catch (emailError) {
-                    console.error('Failed to send update notification:', emailError);
-                }
+    /**
+     * Extract MySideline event ID from various URL formats
+     */
+    extractEventIdFromUrl(url) {
+        if (!url) return null;
+        
+        // Common MySideline URL patterns for event IDs
+        const patterns = [
+            /\/register\/(\d+)/,                    // /register/12345
+            /\/event\/(\d+)/,                       // /event/12345
+            /eventid[=:](\d+)/i,                    // eventid=12345 or eventid:12345
+            /event_id[=:](\d+)/i,                   // event_id=12345
+            /id[=:](\d+)/i,                         // id=12345
+            /\/(\d+)(?:\/|$)/,                      // /12345/ or /12345 at end
+            /[?&]e(?:vent)?(?:_)?id[=:](\d+)/i,     // ?eid=12345, ?eventid=12345, etc.
+        ];
+        
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                return match[1];
             }
-
-            console.log(`Updated existing carnival: ${existingCarnival.title}`);
-            return existingCarnival;
         }
-
-        return null; // No changes
+        
+        // If no pattern matches, try to extract any number from the URL
+        // that looks like it could be an event ID (4+ digits)
+        const numberMatch = url.match(/(\d{4,})/);
+        if (numberMatch) {
+            return numberMatch[1];
+        }
+        
+        return null;
     }
 
-    async createNewEvent(scrapedEvent) {
-        const newCarnival = await Carnival.create({
-            title: scrapedEvent.title,
-            date: scrapedEvent.date,
-            locationAddress: scrapedEvent.location,
-            state: scrapedEvent.state,
-            scheduleDetails: scrapedEvent.description || 'Event details to be confirmed',
-            registrationLink: scrapedEvent.registrationLink,
-            organiserContactName: scrapedEvent.contactInfo?.name || 'Event Organiser',
-            organiserContactEmail: scrapedEvent.contactInfo?.email || 'contact@example.com',
-            organiserContactPhone: scrapedEvent.contactInfo?.phone || '0400000000',
-            mySidelineEventId: scrapedEvent.mySidelineId,
-            isManuallyEntered: false,
-            isActive: true,
-            lastMySidelineSync: new Date()
+    /**
+     * Enhanced scraping method that includes registration link capture
+     */
+    async scrapeEventsWithRegistrationLinks(searchUrl) {
+        const browser = await puppeteer.launch({
+            headless: 'new',
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-blink-features=AutomationControlled',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor'
+            ]
         });
 
-        // Send new carnival notifications
         try {
-            await emailService.sendCarnivalNotification(newCarnival, 'new');
-        } catch (emailError) {
-            console.error('Failed to send new carnival notification:', emailError);
-        }
-
-        console.log(`Created new carnival from MySideline: ${newCarnival.title}`);
-        return newCarnival;
-    }
-
-    /**
-     * Detect potential duplicate carnivals based on title, date, and location
-     * @param {Object} carnivalData - New carnival data to check
-     * @returns {Promise<Object|null>} - Existing carnival if duplicate found, null otherwise
-     */
-    async detectPotentialDuplicate(carnivalData) {
-        try {
-            const { title, date, locationAddress, state } = carnivalData;
-            
-            // Look for exact matches first
-            const exactMatch = await Carnival.findOne({
-                where: {
-                    title: title,
-                    date: date,
-                    state: state,
-                    isActive: true
-                }
-            });
-
-            if (exactMatch) {
-                return exactMatch;
-            }
-
-            // Look for potential matches with similar criteria
-            const dateObj = new Date(date);
-            const dayBefore = new Date(dateObj);
-            dayBefore.setDate(dateObj.getDate() - 1);
-            const dayAfter = new Date(dateObj);
-            dayAfter.setDate(dateObj.getDate() + 1);
-
-            // SQLite-compatible case-insensitive search
-            const potentialMatches = await Carnival.findAll({
-                where: {
-                    state: state,
-                    date: {
-                        [Op.between]: [dayBefore, dayAfter]
-                    },
-                    isActive: true,
-                    [Op.or]: [
-                        // Similar title (SQLite-compatible case-insensitive search)
-                        { title: { [Op.like]: `%${title.split(' ')[0]}%` } },
-                        // Similar location (SQLite-compatible case-insensitive search)
-                        { locationAddress: { [Op.like]: `%${locationAddress}%` } }
-                    ]
-                }
-            });
-
-            // Calculate similarity scores
-            for (const match of potentialMatches) {
-                const titleSimilarity = this.calculateSimilarity(title.toLowerCase(), match.title.toLowerCase());
-                const locationSimilarity = this.calculateSimilarity(
-                    locationAddress.toLowerCase(), 
-                    match.locationAddress.toLowerCase()
-                );
-                
-                // If similarity is high enough, consider it a potential duplicate
-                if (titleSimilarity > 0.7 || locationSimilarity > 0.8) {
-                    return match;
-                }
-            }
-
-            return null;
-        } catch (error) {
-            console.error('Error detecting potential duplicates:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Calculate string similarity using Levenshtein distance
-     * @param {string} str1 - First string
-     * @param {string} str2 - Second string
-     * @returns {number} - Similarity score between 0 and 1
-     */
-    calculateSimilarity(str1, str2) {
-        const matrix = [];
-        const len1 = str1.length;
-        const len2 = str2.length;
-
-        if (len1 === 0) return len2 === 0 ? 1 : 0;
-        if (len2 === 0) return 0;
-
-        // Create matrix
-        for (let i = 0; i <= len2; i++) {
-            matrix[i] = [i];
-        }
-        for (let j = 0; j <= len1; j++) {
-            matrix[0][j] = j;
-        }
-
-        // Fill matrix
-        for (let i = 1; i <= len2; i++) {
-            for (let j = 1; j <= len1; j++) {
-                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-                    matrix[i][j] = matrix[i - 1][j - 1];
-                } else {
-                    matrix[i][j] = Math.min(
-                        matrix[i - 1][j - 1] + 1,
-                        matrix[i][j - 1] + 1,
-                        matrix[i - 1][j] + 1
-                    );
-                }
-            }
-        }
-
-        const distance = matrix[len2][len1];
-        const maxLength = Math.max(len1, len2);
-        return (maxLength - distance) / maxLength;
-    }
-
-    /**
-     * Merge manual carnival data with existing MySideline event
-     * @param {Object} existingCarnival - Existing carnival from MySideline
-     * @param {Object} manualData - Manual carnival data from user
-     * @param {number} userId - User ID creating the manual carnival
-     * @returns {Promise<Object>} - Updated carnival with merged data
-     */
-    async mergeWithExistingEvent(existingCarnival, manualData, userId) {
-        try {
-            // Prioritize manual data over MySideline data for most fields
-            const mergedData = {
-                // User-provided data takes priority
-                title: manualData.title || existingCarnival.title,
-                date: manualData.date || existingCarnival.date,
-                locationAddress: manualData.locationAddress || existingCarnival.locationAddress,
-                organiserContactName: manualData.organiserContactName || existingCarnival.organiserContactName,
-                organiserContactEmail: manualData.organiserContactEmail || existingCarnival.organiserContactEmail,
-                organiserContactPhone: manualData.organiserContactPhone || existingCarnival.organiserContactPhone,
-                scheduleDetails: manualData.scheduleDetails || existingCarnival.scheduleDetails,
-                registrationLink: manualData.registrationLink || existingCarnival.registrationLink,
-                feesDescription: manualData.feesDescription || existingCarnival.feesDescription,
-                callForVolunteers: manualData.callForVolunteers || existingCarnival.callForVolunteers,
-                state: manualData.state || existingCarnival.state,
-                
-                // File uploads from manual entry
-                clubLogoURL: manualData.clubLogoURL || existingCarnival.clubLogoURL,
-                promotionalImageURL: manualData.promotionalImageURL || existingCarnival.promotionalImageURL,
-                additionalImages: manualData.additionalImages || existingCarnival.additionalImages,
-                drawFiles: manualData.drawFiles || existingCarnival.drawFiles,
-                drawFileURL: manualData.drawFileURL || existingCarnival.drawFileURL,
-                drawFileName: manualData.drawFileName || existingCarnival.drawFileName,
-                drawTitle: manualData.drawTitle || existingCarnival.drawTitle,
-                drawDescription: manualData.drawDescription || existingCarnival.drawDescription,
-                
-                // Social media from manual entry
-                socialMediaFacebook: manualData.socialMediaFacebook || existingCarnival.socialMediaFacebook,
-                socialMediaInstagram: manualData.socialMediaInstagram || existingCarnival.socialMediaInstagram,
-                socialMediaTwitter: manualData.socialMediaTwitter || existingCarnival.socialMediaTwitter,
-                socialMediaWebsite: manualData.socialMediaWebsite || existingCarnival.socialMediaWebsite,
-                
-                // Ownership and management
-                createdByUserId: userId,
-                isManuallyEntered: true, // Now manually managed
-                claimedAt: new Date(),
-                lastMySidelineSync: existingCarnival.lastMySidelineSync || new Date()
-            };
-
-            await existingCarnival.update(mergedData);
-
-            console.log(`Merged manual carnival data with MySideline event: ${existingCarnival.title}`);
-            
-            // Send notification about the merge
-            try {
-                await emailService.sendCarnivalNotification(existingCarnival, 'merged');
-            } catch (emailError) {
-                console.error('Failed to send merge notification:', emailError);
-            }
-
-            return existingCarnival;
-        } catch (error) {
-            console.error('Error merging carnival data:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Check for duplicates and handle creation or merging
-     * @param {Object} carnivalData - Carnival data to create
-     * @param {number} userId - User ID creating the carnival
-     * @returns {Promise<Object>} - Created or merged carnival
-     */
-    async createOrMergeEvent(carnivalData, userId) {
-        try {
-            // Check for potential duplicates
-            const existingCarnival = await this.detectPotentialDuplicate(carnivalData);
-            
-            if (existingCarnival) {
-                // Check if it's a MySideline event without an owner
-                if (existingCarnival.mySidelineEventId && !existingCarnival.createdByUserId) {
-                    // Merge with existing MySideline event
-                    return await this.mergeWithExistingEvent(existingCarnival, carnivalData, userId);
-                } else {
-                    // Return information about the duplicate for user decision
-                    throw new Error(`A similar carnival already exists: "${existingCarnival.title}" on ${new Date(existingCarnival.date).toLocaleDateString()}. Please check if this is a duplicate.`);
-                }
-            }
-
-            // No duplicates found, create new carnival
-            const newCarnival = await Carnival.create({
-                ...carnivalData,
-                createdByUserId: userId,
-                isManuallyEntered: true
-            });
-
-            return newCarnival;
-        } catch (error) {
-            console.error('Error in createOrMergeEvent:', error);
-            throw error;
-        }
-    }
-
-    // Manual sync trigger for admin users
-    async triggerManualSync() {
-        if (this.isRunning) {
-            return {
-                success: false,
-                message: 'Sync already in progress'
-            };
-        }
-
-        return await this.syncMySidelineEvents();
-    }
-
-    // Get sync status
-    getSyncStatus() {
-        return {
-            isRunning: this.isRunning,
-            lastSyncDate: this.lastSyncDate,
-            nextScheduledSync: this.getNextScheduledSync()
-        };
-    }
-
-    getNextScheduledSync() {
-        const now = new Date();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(3, 0, 0, 0);
-        return tomorrow;
-    }
-
-    // Take ownership of MySideline event
-    async takeOwnership(carnivalId, userId) {
-        try {
-            const carnival = await Carnival.findByPk(carnivalId);
-            const user = await User.findByPk(userId, {
-                include: [{
-                    model: Club,
-                    as: 'club'
-                }]
-            });
-
-            if (!carnival || !user) {
-                throw new Error('Carnival or user not found');
-            }
-
-            if (carnival.createdByUserId) {
-                throw new Error('Carnival already has an owner');
-            }
-
-            if (!carnival.mySidelineEventId) {
-                throw new Error('Not a MySideline imported event');
-            }
-
-            await carnival.update({
-                createdByUserId: userId,
-                isManuallyEntered: true // Now managed manually
-            });
-
-            console.log(`User ${user.email} took ownership of carnival: ${carnival.title}`);
-            
-            return {
-                success: true,
-                message: 'Ownership taken successfully',
-                carnival: carnival
-            };
-        } catch (error) {
-            console.error('Failed to take ownership:', error);
-            throw error;
-        }
-    }
-
-    // Enhanced method using Puppeteer for JavaScript-heavy pages
-    async fetchEventsWithBrowser() {
-        let browser = null;
-        try {
-            console.log('Launching browser for MySideline event scraping...');
-            
-            browser = await puppeteer.launch({
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--single-process',
-                    '--disable-gpu'
-                ]
-            });
-
             const page = await browser.newPage();
             
-            // Set a realistic user agent
+            // Set user agent to avoid bot detection
             await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
             
-            // Set viewport
-            await page.setViewport({ width: 1280, height: 720 });
-
-            console.log(`Navigating to MySideline search: ${this.searchUrl}`);
+            console.log(`🌐 Navigating to: ${searchUrl}`);
+            await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 30000 });
             
-            // Navigate to the search page
-            await page.goto(this.searchUrl, { 
-                waitUntil: 'networkidle2',
-                timeout: 30000 
-            });
-
-            // Wait for content to load
-            console.log('Waiting for search results to load...');
-            await page.waitForTimeout(5000);
-
-            // Try to find search results or any content with "Masters"
-            const events = await page.evaluate(() => {
-                const foundElements = [];
+            // First, scrape the basic event information
+            const basicEvents = await this.scrapeSearchResults(page);
+            
+            // Then, capture the registration links
+            const registrationLinks = await this.captureRegistrationLinks(page);
+            
+            // Merge the data
+            const mergedEvents = basicEvents.map(event => {
+                const matchingLink = registrationLinks.find(link => 
+                    link.eventTitle && event.title && 
+                    link.eventTitle.toLowerCase().includes(event.title.toLowerCase().substring(0, 20))
+                );
                 
-                // Look for various selectors that might contain event data
-                const selectors = [
-                    '.search-result',
-                    '.club-item',
-                    '.event-item',
-                    '.result-item',
-                    '[data-club]',
-                    '[data-event]',
-                    'article',
-                    '.card',
-                    '.listing',
-                    'li',
-                    '.row',
-                    'div[class*="result"]',
-                    'div[class*="club"]',
-                    'div[class*="event"]'
-                ];
-                
-                selectors.forEach(selector => {
-                    try {
-                        const elements = document.querySelectorAll(selector);
-                        elements.forEach((el, index) => {
-                            const text = el.textContent?.trim() || '';
-                            
-                            // Check if this element contains "Masters" (case insensitive)
-                            if (text.toLowerCase().includes('masters') && text.length > 20) {
-                                // Extract links
-                                const links = el.querySelectorAll('a');
-                                const href = links.length > 0 ? links[0].href : null;
-                                
-                                foundElements.push({
-                                    selector: selector,
-                                    text: text,
-                                    href: href,
-                                    html: el.innerHTML,
-                                    id: el.id || `found-${Date.now()}-${index}`
-                                });
-                                
-                                console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
-                            }
-                        });
-                    } catch (err) {
-                        console.error(`Error with selector ${selector}:`, err.message);
-                    }
-                });
-                
-                // Also check the entire page content for "Masters"
-                const pageText = document.body.textContent || '';
-                if (pageText.toLowerCase().includes('masters')) {
-                    console.log('Page contains "Masters" - content is loading');
-                    
-                    // If we found Masters but no specific elements, try broader search
-                    if (foundElements.length === 0) {
-                        const allDivs = document.querySelectorAll('div');
-                        allDivs.forEach((div, index) => {
-                            const text = div.textContent?.trim() || '';
-                            if (text.toLowerCase().includes('masters') && 
-                                text.length > 30 && 
-                                text.length < 1000) {
-                                foundElements.push({
-                                    selector: 'div-fallback',
-                                    text: text,
-                                    href: div.querySelector('a')?.href || null,
-                                    id: `fallback-${index}`
-                                });
-                            }
-                        });
-                    }
-                } else {
-                    console.log('Page does not contain "Masters" - may not have loaded properly');
+                if (matchingLink) {
+                    return {
+                        ...event,
+                        registrationLink: matchingLink.registrationLink,
+                        mySidelineEventId: matchingLink.mySidelineEventId || event.mySidelineEventId
+                    };
                 }
                 
-                return foundElements;
-            });
-
-            console.log(`Browser found ${events.length} potential Masters events`);
-            
-            // Convert browser events to standard format
-            const standardEvents = [];
-            for (const browserEvent of events) {
-                try {
-                    const standardEvent = this.convertBrowserEventToStandardFormat(browserEvent);
-                    if (standardEvent) {
-                        standardEvents.push(standardEvent);
-                    }
-                } catch (error) {
-                    console.error('Error converting browser event:', error);
-                }
-            }
-
-            return standardEvents;
-
-        } catch (error) {
-            console.error('Browser automation failed:', error);
-            throw error;
-        } finally {
-            if (browser) {
-                try {
-                    await browser.close();
-                } catch (closeError) {
-                    console.error('Error closing browser:', closeError);
-                }
-            }
-        }
-    }
-
-    /**
-     * Convert browser-found event to standard format
-     */
-    convertBrowserEventToStandardFormat(browserEvent) {
-        try {
-            const text = browserEvent.text || '';
-            const href = browserEvent.href || '';
-            
-            // Extract event title (first substantial line)
-            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 3);
-            const title = lines[0] || 'Masters Rugby League Event';
-            
-            // Try to extract date from text
-            const date = this.extractDateFromText(text) || this.getDefaultFutureDate();
-            
-            // Try to extract location
-            const location = this.extractLocationFromText(text) || 'Location TBD';
-            
-            // Determine state from location or default
-            const state = this.extractStateFromText(text) || 'NSW';
-            
-            // Extract contact info
-            const contact = this.extractContact(text);
-            
-            // Create standardized event object
-            const event = {
-                mySidelineEventId: browserEvent.id || `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                title: title,
-                description: text.length > 200 ? text.substring(0, 200) + '...' : text,
-                date: date,
-                location: location,
-                state: state,
-                registrationLink: href && href.startsWith('http') ? href : null,
-                contactInfo: {
-                    name: 'Event Organiser',
-                    email: contact && contact.includes('@') ? contact : null,
-                    phone: contact && !contact.includes('@') ? contact : null
-                },
-                source: 'MySideline Browser',
-                lastUpdated: new Date()
-            };
-            
-            // Validate the event before returning
-            if (this.isValidEvent(event)) {
                 return event;
-            } else {
-                console.log(`⚠️ Invalid event filtered out: ${title}`);
-                return null;
-            }
+            });
             
-        } catch (error) {
-            console.error('Error converting browser event:', error);
-            return null;
+            console.log(`📊 Scraped ${mergedEvents.length} events with ${registrationLinks.length} registration links captured`);
+            return mergedEvents;
+            
+        } finally {
+            await browser.close();
         }
     }
-
-    /**
-     * Extract date from text using various patterns
-     */
-    extractDateFromText(text) {
-        if (!text) return null;
-        
-        const datePatterns = [
-            // Australian date formats
-            /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g,                    // DD/MM/YYYY
-            /(\d{1,2})-(\d{1,2})-(\d{2,4})/g,                     // DD-MM-YYYY
-            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{2,4})/gi, // DD Month YYYY
-            /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{1,2}),?\s+(\d{2,4})/gi, // Month DD, YYYY
-            /(\d{2,4})-(\d{1,2})-(\d{1,2})/g,                     // YYYY-MM-DD
-            // Relative dates
-            /(next|this)\s+(week|month|year)/gi,
-            /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi
-        ];
-
-        for (const pattern of datePatterns) {
-            const matches = text.match(pattern);
-            if (matches) {
-                for (const match of matches) {
-                    try {
-                        const parsedDate = new Date(match);
-                        if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() >= 2024) {
-                            return parsedDate;
-                        }
-                    } catch (error) {
-                        continue;
-                    }
-                }
-            }
-        }
-        
-        return null;
-    }
-
-    /**
-     * Extract location from text
-     */
-    extractLocationFromText(text) {
-        if (!text) return null;
-        
-        // Look for location indicators
-        const locationPatterns = [
-            /(?:at|@|venue|location):\s*([^,\n]+)/gi,
-            /(?:held\s+at|taking\s+place\s+at)\s+([^,\n]+)/gi,
-            /(NSW|New South Wales|QLD|Queensland|VIC|Victoria|WA|Western Australia|SA|South Australia|TAS|Tasmania|NT|Northern Territory|ACT|Australian Capital Territory)/gi,
-            /(Sydney|Melbourne|Brisbane|Perth|Adelaide|Hobart|Darwin|Canberra)/gi,
-            /([A-Z][a-z]+\s+(Stadium|Park|Ground|Field|Centre|Complex|Oval))/g
-        ];
-
-        for (const pattern of locationPatterns) {
-            const matches = text.match(pattern);
-            if (matches && matches[0]) {
-                return matches[0].replace(/^(at|@|venue|location|held\s+at|taking\s+place\s+at):\s*/gi, '').trim();
-            }
-        }
-        
-        return null;
-    }
-
-    /**
-     * Extract state from text
-     */
-    extractStateFromText(text) {
-        if (!text) return null;
-        
-        const stateMap = {
-            'NSW': 'NSW', 'New South Wales': 'NSW',
-            'QLD': 'QLD', 'Queensland': 'QLD',
-            'VIC': 'VIC', 'Victoria': 'VIC',
-            'WA': 'WA', 'Western Australia': 'WA',
-            'SA': 'SA', 'South Australia': 'SA',
-            'TAS': 'TAS', 'Tasmania': 'TAS',
-            'NT': 'NT', 'Northern Territory': 'NT',
-            'ACT': 'ACT', 'Australian Capital Territory': 'ACT'
-        };
-
-        const lowerText = text.toLowerCase();
-        for (const [key, value] of Object.entries(stateMap)) {
-            if (lowerText.includes(key.toLowerCase())) {
-                return value;
-            }
-        }
-
-        // Try city to state mapping
-        const cityStateMap = {
-            'sydney': 'NSW', 'melbourne': 'VIC', 'brisbane': 'QLD',
-            'perth': 'WA', 'adelaide': 'SA', 'hobart': 'TAS',
-            'darwin': 'NT', 'canberra': 'ACT'
-        };
-
-        for (const [city, state] of Object.entries(cityStateMap)) {
-            if (lowerText.includes(city)) {
-                return state;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get a default future date (6 months from now)
-     */
-    getDefaultFutureDate() {
-        const defaultDate = new Date();
-        defaultDate.setMonth(defaultDate.getMonth() + 6);
-        return defaultDate;
-    }
-
-    /**
-     * Validate event data structure
-     */
-    static validateEventData(eventData) {
-        if (!eventData || typeof eventData !== 'object') {
-            return false;
-        }
-
-        // Check required fields
-        const requiredFields = ['title', 'date'];
-        for (const field of requiredFields) {
-            if (!eventData[field] || eventData[field] === '') {
-                return false;
-            }
-        }
-
-        // Validate date
-        if (!(eventData.date instanceof Date) && isNaN(new Date(eventData.date).getTime())) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Handle scraping errors gracefully
-     */
-    static handleScrapingError(error, operation) {
-        const result = {
-            success: false,
-            error: error.message,
-            operation: operation
-        };
-
-        // Provide specific recommendations based on error type
-        if (error.message.includes('timeout') || error.message.includes('Network timeout')) {
-            result.fallbackRecommendation = [
-                'Increase timeout duration',
-                'Check network connectivity', 
-                'Try during off-peak hours'
-            ];
-        } else if (error.message.includes('Network')) {
-            result.fallbackRecommendation = [
-                'Check internet connection',
-                'Verify MySideline website is accessible',
-                'Try again later'
-            ];
-        } else {
-            result.fallbackRecommendation = [
-                'Check service configuration',
-                'Verify API endpoints',
-                'Review error logs'
-            ];
-        }
-
-        return result;
-    }
-}
-
-module.exports = MySidelineIntegrationService;
-
-// Also export the class for accessing static methods
-module.exports.MySidelineIntegrationService = MySidelineIntegrationService;
-module.exports.validateEventData = MySidelineIntegrationService.validateEventData;
-module.exports.handleScrapingError = MySidelineIntegrationService.handleScrapingError;
