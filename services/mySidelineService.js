@@ -87,13 +87,15 @@ class MySidelineIntegrationService {
         try {
             console.log('Scraping MySideline Masters events from search page...');
             
-            const events = await this.scrapeSearchPage();
+            // Use browser automation as primary method since MySideline requires JavaScript
+            const events = await this.fetchEventsWithBrowser();
             
             console.log(`Found ${events.length} Masters events from MySideline`);
             return events;
         } catch (error) {
             console.error('Failed to scrape MySideline events:', error);
             // Fall back to mock data for development
+            console.log('Falling back to mock events for development...');
             return this.generateMockEvents('NSW').concat(
                 this.generateMockEvents('QLD'),
                 this.generateMockEvents('VIC')
@@ -101,379 +103,309 @@ class MySidelineIntegrationService {
         }
     }
 
-    async scrapeSearchPage() {
+    /**
+     * Fetch events from MySideline
+     * @returns {Promise<Array>} Array of standardized event objects
+     */
+    async fetchEvents() {
         try {
-            console.log(`Fetching MySideline search page: ${this.searchUrl}`);
+            console.log('Starting MySideline event sync...');
             
-            // First, get the initial page to look for API endpoints
-            const response = await axios.get(this.searchUrl, {
-                timeout: 15000,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1'
-                }
-            });
-
-            if (response.status !== 200) {
-                throw new Error(`MySideline returned status ${response.status}`);
+            // Use browser automation as primary method since MySideline requires JavaScript
+            console.log('Using browser automation for MySideline (JavaScript required)...');
+            const events = await this.fetchEventsWithBrowser();
+            
+            if (events && events.length > 0) {
+                console.log(`MySideline sync completed successfully. Found ${events.length} events.`);
+                return events;
+            } else {
+                console.log('MySideline sync completed but no events found.');
+                return [];
             }
-
-            const $ = cheerio.load(response.data);
-            console.log('Page title:', $('title').text());
-            console.log('Page length:', response.data.length, 'characters');
-
-            // Look for API endpoints in the page source
-            const pageSource = response.data;
-            console.log('\n=== LOOKING FOR API ENDPOINTS ===');
             
-            // Common patterns for API endpoints
-            const apiPatterns = [
-                /\/api\/[^"'\s]+/g,
-                /\/rest\/[^"'\s]+/g,
-                /\/search\/[^"'\s]+/g,
-                /\/club[^"'\s]*\/[^"'\s]+/g,
-                /\/register\/[^"'\s]+/g,
-                /https?:\/\/[^"'\s]*api[^"'\s]*/g,
-                /https?:\/\/[^"'\s]*mysideline[^"'\s]*/g
-            ];
-
-            const foundEndpoints = new Set();
-            apiPatterns.forEach(pattern => {
-                const matches = pageSource.match(pattern);
-                if (matches) {
-                    matches.forEach(match => {
-                        // Clean up the match
-                        const cleanMatch = match.replace(/['"<>]/g, '');
-                        if (cleanMatch.length > 5) {
-                            foundEndpoints.add(cleanMatch);
-                        }
-                    });
-                }
-            });
-
-            if (foundEndpoints.size > 0) {
-                console.log('Found potential API endpoints:');
-                Array.from(foundEndpoints).forEach(endpoint => {
-                    console.log(`  ${endpoint}`);
-                });
-
-                // Try to call the most promising endpoints
-                for (const endpoint of foundEndpoints) {
-                    if (endpoint.includes('search') || endpoint.includes('club')) {
-                        console.log(`\n🔍 Trying endpoint: ${endpoint}`);
-                        try {
-                            const fullUrl = endpoint.startsWith('http') ? endpoint : `https://profile.mysideline.com.au${endpoint}`;
-                            
-                            // Try both GET and POST for search endpoints
-                            const searchParams = {
-                                criteria: 'Masters',
-                                source: 'rugby-league',
-                                type: '',
-                                activity: '',
-                                gender: '',
-                                agemin: '',
-                                agemax: '',
-                                comptype: ''
-                            };
-
-                            // Try GET with query params
-                            const getUrl = `${fullUrl}?${new URLSearchParams(searchParams).toString()}`;
-                            console.log(`  GET: ${getUrl}`);
-                            
-                            const apiResponse = await axios.get(getUrl, {
-                                timeout: 10000,
-                                headers: {
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                    'Accept': 'application/json, text/html, */*',
-                                    'Referer': this.searchUrl
-                                }
-                            }).catch(err => {
-                                console.log(`    GET failed: ${err.message}`);
-                                return null;
-                            });
-
-                            if (apiResponse && apiResponse.data) {
-                                console.log(`    ✅ GET Success! Response length: ${JSON.stringify(apiResponse.data).length}`);
-                                
-                                // Check if response looks like JSON with club/event data
-                                if (typeof apiResponse.data === 'object') {
-                                    console.log(`    Response keys:`, Object.keys(apiResponse.data));
-                                    
-                                    // Look for array properties that might contain events
-                                    Object.entries(apiResponse.data).forEach(([key, value]) => {
-                                        if (Array.isArray(value) && value.length > 0) {
-                                            console.log(`    Array "${key}" has ${value.length} items`);
-                                            if (value.length > 0 && typeof value[0] === 'object') {
-                                                console.log(`    Sample item keys:`, Object.keys(value[0]));
-                                                
-                                                // Check if any items contain "Masters"
-                                                const mastersItems = value.filter(item => 
-                                                    JSON.stringify(item).toLowerCase().includes('masters')
-                                                );
-                                                if (mastersItems.length > 0) {
-                                                    console.log(`    🎯 Found ${mastersItems.length} Masters items!`);
-                                                    console.log(`    Sample Masters item:`, JSON.stringify(mastersItems[0], null, 2));
-                                                    
-                                                    // Try to parse these as events
-                                                    return this.parseApiResponse(apiResponse.data);
-                                                }
-                                            }
-                                        }
-                                    });
-                                } else if (typeof apiResponse.data === 'string') {
-                                    // Might be HTML or text response
-                                    const mastersCount = (apiResponse.data.match(/masters/gi) || []).length;
-                                    console.log(`    Text response with ${mastersCount} "Masters" mentions`);
-                                    if (mastersCount > 0) {
-                                        console.log(`    Sample content: "${apiResponse.data.substring(0, 200)}..."`);
-                                    }
-                                }
-                            }
-
-                            // Try POST
-                            try {
-                                console.log(`  POST: ${fullUrl}`);
-                                const postResponse = await axios.post(fullUrl, searchParams, {
-                                    timeout: 10000,
-                                    headers: {
-                                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                        'Accept': 'application/json, text/html, */*',
-                                        'Content-Type': 'application/x-www-form-urlencoded',
-                                        'Referer': this.searchUrl
-                                    }
-                                });
-
-                                if (postResponse && postResponse.data) {
-                                    console.log(`    ✅ POST Success! Response length: ${JSON.stringify(postResponse.data).length}`);
-                                    // Similar analysis as GET response...
-                                }
-                            } catch (postErr) {
-                                console.log(`    POST failed: ${postErr.message}`);
-                            }
-
-                        } catch (error) {
-                            console.log(`    Error: ${error.message}`);
-                        }
-                    }
-                }
-            }
-
-            // Look for JavaScript that might reveal how the search works
-            console.log('\n=== JAVASCRIPT ANALYSIS ===');
-            const scriptTags = $('script');
-            console.log(`Found ${scriptTags.length} script tags`);
+        } catch (error) {
+            console.error('MySideline sync failed:', error);
             
-            scriptTags.each((index, script) => {
-                const $script = $(script);
-                const src = $script.attr('src');
-                const content = $script.html();
-                
-                if (src) {
-                    console.log(`Script ${index}: ${src}`);
-                } else if (content && content.length > 0) {
-                    // Look for interesting patterns in inline scripts
-                    const patterns = [
-                        /fetch\s*\(\s*['"`]([^'"`]+)['"`]/g,
-                        /ajax\s*\(\s*['"`]([^'"`]+)['"`]/g,
-                        /url\s*:\s*['"`]([^'"`]+)['"`]/g,
-                        /endpoint\s*[:=]\s*['"`]([^'"`]+)['"`]/g,
-                        /api\s*[:=]\s*['"`]([^'"`]+)['"`]/g
-                    ];
-                    
-                    patterns.forEach(pattern => {
-                        const matches = content.match(pattern);
-                        if (matches) {
-                            console.log(`Inline script ${index} contains API calls:`, matches);
-                        }
-                    });
-                }
-            });
-
-            console.log(`\n=== FINAL RESULTS ===`);
-            console.log(`Events found: 0 (page appears to use dynamic loading)`);
-
-            // For now, return empty array but log that we need a different approach
-            console.log('\n💡 RECOMMENDATION:');
-            console.log('MySideline appears to load search results dynamically with JavaScript.');
-            console.log('Consider these alternatives:');
-            console.log('1. Use a headless browser (Puppeteer/Playwright) to wait for JS to load');
-            console.log('2. Find the actual API endpoints MySideline uses');
-            console.log('3. Contact MySideline for API access');
-            console.log('4. Monitor network traffic in browser dev tools to find the real endpoints');
-
+            // If browser automation fails, log the error but don't crash the entire sync
+            console.log('MySideline browser automation failed, but continuing with other sync operations...');
             return [];
-            
-        } catch (error) {
-            console.error('Error scraping MySideline search page:', error.message);
-            throw error;
         }
     }
 
-    // Helper method to parse API responses
-    parseApiResponse(data) {
-        const events = [];
-        
+    // Enhanced method using Puppeteer for JavaScript-heavy pages
+    async fetchEventsWithBrowser() {
+        let browser = null;
         try {
-            // Look for arrays that might contain events
-            const processArray = (arr, context = '') => {
-                arr.forEach((item, index) => {
-                    if (typeof item === 'object' && item !== null) {
-                        const itemStr = JSON.stringify(item).toLowerCase();
-                        if (itemStr.includes('masters')) {
-                            console.log(`Found Masters item in ${context}[${index}]:`, item);
-                            
-                            // Try to extract event data from this object
-                            const event = {
-                                title: item.name || item.title || item.club_name || item.event_name || 'Masters Event',
-                                description: item.description || item.details || '',
-                                location: item.location || item.address || item.suburb || item.state || '',
-                                date: item.date || item.start_date || item.registration_date || new Date().toISOString(),
-                                contact: item.contact || item.email || item.phone || '',
-                                registrationUrl: item.url || item.link || item.registration_url || '',
-                                source: 'MySideline API',
-                                mySidelineEventId: item.id || item.club_id || `masters-${Date.now()}-${index}`
-                            };
-                            
-                            if (this.isValidEvent(event)) {
-                                events.push(event);
-                            }
-                        }
-                    }
-                });
-            };
+            console.log('Launching browser for MySideline event scraping...');
+            
+            browser = await puppeteer.launch({
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--single-process',
+                    '--disable-gpu'
+                ]
+            });
 
-            if (Array.isArray(data)) {
-                processArray(data, 'root');
-            } else if (typeof data === 'object') {
-                Object.entries(data).forEach(([key, value]) => {
-                    if (Array.isArray(value)) {
-                        processArray(value, key);
+            const page = await browser.newPage();
+            
+            // Set a realistic user agent
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            
+            // Set viewport
+            await page.setViewport({ width: 1280, height: 720 });
+
+            console.log(`Navigating to MySideline search: ${this.searchUrl}`);
+            
+            // Navigate to the search page
+            await page.goto(this.searchUrl, { 
+                waitUntil: 'networkidle2',
+                timeout: 30000 
+            });
+
+            // Wait for content to load
+            console.log('Waiting for search results to load...');
+            await page.waitForTimeout(5000);
+
+            // Try to find search results or any content with "Masters"
+            const events = await page.evaluate(() => {
+                const foundElements = [];
+                
+                // Look for various selectors that might contain event data
+                const selectors = [
+                    '.search-result',
+                    '.club-item',
+                    '.event-item',
+                    '.result-item',
+                    '[data-club]',
+                    '[data-event]',
+                    'article',
+                    '.card',
+                    '.listing',
+                    'li',
+                    '.row',
+                    'div[class*="result"]',
+                    'div[class*="club"]',
+                    'div[class*="event"]'
+                ];
+                
+                selectors.forEach(selector => {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach((el, index) => {
+                            const text = el.textContent?.trim() || '';
+                            
+                            // Check if this element contains "Masters" (case insensitive)
+                            if (text.toLowerCase().includes('masters') && text.length > 20) {
+                                // Extract links
+                                const links = el.querySelectorAll('a');
+                                const href = links.length > 0 ? links[0].href : null;
+                                
+                                foundElements.push({
+                                    selector: selector,
+                                    text: text,
+                                    href: href,
+                                    html: el.innerHTML,
+                                    id: el.id || `found-${Date.now()}-${index}`
+                                });
+                                
+                                console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
+                            }
+                        });
+                    } catch (err) {
+                        console.error(`Error with selector ${selector}:`, err.message);
                     }
                 });
+                
+                // Also check the entire page content for "Masters"
+                const pageText = document.body.textContent || '';
+                if (pageText.toLowerCase().includes('masters')) {
+                    console.log('Page contains "Masters" - content is loading');
+                    
+                    // If we found Masters but no specific elements, try broader search
+                    if (foundElements.length === 0) {
+                        const allDivs = document.querySelectorAll('div');
+                        allDivs.forEach((div, index) => {
+                            const text = div.textContent?.trim() || '';
+                            if (text.toLowerCase().includes('masters') && 
+                                text.length > 30 && 
+                                text.length < 1000) {
+                                foundElements.push({
+                                    selector: 'div-fallback',
+                                    text: text,
+                                    href: div.querySelector('a')?.href || null,
+                                    id: `fallback-${index}`
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    console.log('Page does not contain "Masters" - may not have loaded properly');
+                }
+                
+                return foundElements;
+            });
+
+            console.log(`Browser found ${events.length} potential Masters events`);
+            
+            // Convert browser events to standard format
+            const standardEvents = [];
+            for (const browserEvent of events) {
+                try {
+                    const standardEvent = this.convertBrowserEventToStandardFormat(browserEvent);
+                    if (standardEvent) {
+                        standardEvents.push(standardEvent);
+                    }
+                } catch (error) {
+                    console.error('Error converting browser event:', error);
+                }
+            }
+
+            return standardEvents;
+
+        } catch (error) {
+            console.error('Browser automation failed:', error);
+            throw error;
+        } finally {
+            if (browser) {
+                try {
+                    await browser.close();
+                } catch (closeError) {
+                    console.error('Error closing browser:', closeError);
+                }
+            }
+        }
+    }
+
+    /**
+     * Convert browser-found event to standard format
+     */
+    convertBrowserEventToStandardFormat(browserEvent) {
+        try {
+            const text = browserEvent.text || '';
+            const href = browserEvent.href || '';
+            
+            // Extract event title (first substantial line)
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 3);
+            const title = lines[0] || 'Masters Rugby League Event';
+            
+            // Try to extract date from text
+            const date = this.extractDateFromText(text) || this.getDefaultFutureDate();
+            
+            // Try to extract location
+            const location = this.extractLocationFromText(text) || 'Location TBD';
+            
+            // Determine state from location or default
+            const state = this.extractStateFromText(text) || 'NSW';
+            
+            // Extract contact info
+            const contact = this.extractContact(text);
+            
+            // Create standardized event object
+            const event = {
+                mySidelineEventId: browserEvent.id || `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                title: title,
+                description: text.length > 200 ? text.substring(0, 200) + '...' : text,
+                date: date,
+                location: location,
+                state: state,
+                registrationLink: href && href.startsWith('http') ? href : null,
+                contactInfo: {
+                    name: 'Event Organiser',
+                    email: contact && contact.includes('@') ? contact : null,
+                    phone: contact && !contact.includes('@') ? contact : null
+                },
+                source: 'MySideline Browser',
+                lastUpdated: new Date()
+            };
+            
+            // Validate the event before returning
+            if (this.isValidEvent(event)) {
+                return event;
+            } else {
+                console.log(`⚠️ Invalid event filtered out: ${title}`);
+                return null;
             }
             
         } catch (error) {
-            console.error('Error parsing API response:', error);
-        }
-        
-        return events;
-    }
-
-    parseEventElement($, element, selectorUsed) {
-        const $element = $(element);
-        
-        // Extract text content and attributes
-        const elementText = $element.text().trim();
-        const elementHtml = $element.html();
-        
-        // Only process if it contains "Masters" and looks like an event
-        if (!elementText.toLowerCase().includes('masters')) {
+            console.error('Error converting browser event:', error);
             return null;
         }
-
-        console.log(`Parsing potential Masters event with selector ${selectorUsed}:`, elementText.substring(0, 100));
-
-        // Try to extract event data using various strategies
-        const event = {
-            mySidelineId: this.extractEventId($element),
-            title: this.extractTitle($element, elementText),
-            date: this.extractDate($element, elementText),
-            location: this.extractLocation($element, elementText),
-            state: this.extractState($element, elementText),
-            description: this.extractDescription($element, elementText),
-            registrationLink: this.extractRegistrationLink($element),
-            contactInfo: this.extractContactInfo($element, elementText),
-            lastUpdated: new Date(),
-            sourceSelector: selectorUsed
-        };
-
-        return event;
     }
 
-    extractEventId($element) {
-        // Try various methods to get a unique ID
-        return $element.attr('id') || 
-               $element.attr('data-id') || 
-               $element.attr('data-event-id') || 
-               $element.find('[data-id]').attr('data-id') ||
-               $element.find('a[href*="club"]').attr('href')?.split('/').pop() ||
-               `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    }
-
-    extractTitle($element, elementText) {
-        // Try to find the title in various ways
-        const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '.name', '.event-title', 'strong', 'b'];
+    /**
+     * Extract date from text using various patterns
+     */
+    extractDateFromText(text) {
+        if (!text) return null;
         
-        for (const selector of titleSelectors) {
-            const titleElement = $element.find(selector).first();
-            if (titleElement.length && titleElement.text().trim()) {
-                return titleElement.text().trim();
-            }
-        }
-
-        // Extract from links
-        const linkText = $element.find('a').first().text().trim();
-        if (linkText && linkText.length > 5) {
-            return linkText;
-        }
-
-        // Use the first substantial text content
-        const lines = elementText.split('\n').map(line => line.trim()).filter(line => line.length > 5);
-        return lines[0] || 'Masters Event';
-    }
-
-    extractDate($element, elementText) {
-        // Look for date patterns in the text
         const datePatterns = [
-            /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/g,
-            /(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{2,4})/gi,
-            /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2},?\s+\d{2,4}/gi,
-            /\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2}/g
+            // Australian date formats
+            /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g,                    // DD/MM/YYYY
+            /(\d{1,2})-(\d{1,2})-(\d{2,4})/g,                     // DD-MM-YYYY
+            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{2,4})/gi, // DD Month YYYY
+            /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{1,2}),?\s+(\d{2,4})/gi, // Month DD, YYYY
+            /(\d{2,4})-(\d{1,2})-(\d{1,2})/g,                     // YYYY-MM-DD
+            // Relative dates
+            /(next|this)\s+(week|month|year)/gi,
+            /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi
         ];
 
         for (const pattern of datePatterns) {
-            const matches = elementText.match(pattern);
+            const matches = text.match(pattern);
             if (matches) {
-                try {
-                    const parsedDate = new Date(matches[0]);
-                    if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() >= 2024) {
-                        return parsedDate;
+                for (const match of matches) {
+                    try {
+                        const parsedDate = new Date(match);
+                        if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() >= 2024) {
+                            return parsedDate;
+                        }
+                    } catch (error) {
+                        continue;
                     }
-                } catch (error) {
-                    continue;
                 }
             }
         }
-
-        // Default to 6 months from now if no date found
-        const defaultDate = new Date();
-        defaultDate.setMonth(defaultDate.getMonth() + 6);
-        return defaultDate;
+        
+        return null;
     }
 
-    extractLocation($element, elementText) {
-        // Australian state/city patterns
+    /**
+     * Extract location from text
+     */
+    extractLocationFromText(text) {
+        if (!text) return null;
+        
+        // Look for location indicators
         const locationPatterns = [
+            /(?:at|@|venue|location):\s*([^,\n]+)/gi,
+            /(?:held\s+at|taking\s+place\s+at)\s+([^,\n]+)/gi,
             /(NSW|New South Wales|QLD|Queensland|VIC|Victoria|WA|Western Australia|SA|South Australia|TAS|Tasmania|NT|Northern Territory|ACT|Australian Capital Territory)/gi,
             /(Sydney|Melbourne|Brisbane|Perth|Adelaide|Hobart|Darwin|Canberra)/gi,
-            /([A-Z][a-z]+\s+(Stadium|Park|Ground|Field|Centre|Complex))/g
+            /([A-Z][a-z]+\s+(Stadium|Park|Ground|Field|Centre|Complex|Oval))/g
         ];
 
         for (const pattern of locationPatterns) {
-            const matches = elementText.match(pattern);
-            if (matches) {
-                return matches[0];
+            const matches = text.match(pattern);
+            if (matches && matches[0]) {
+                return matches[0].replace(/^(at|@|venue|location|held\s+at|taking\s+place\s+at):\s*/gi, '').trim();
             }
         }
-
-        return 'Location TBD';
+        
+        return null;
     }
 
-    extractState($element, elementText) {
+    /**
+     * Extract state from text
+     */
+    extractStateFromText(text) {
+        if (!text) return null;
+        
         const stateMap = {
             'NSW': 'NSW', 'New South Wales': 'NSW',
             'QLD': 'QLD', 'Queensland': 'QLD',
@@ -485,13 +417,14 @@ class MySidelineIntegrationService {
             'ACT': 'ACT', 'Australian Capital Territory': 'ACT'
         };
 
+        const lowerText = text.toLowerCase();
         for (const [key, value] of Object.entries(stateMap)) {
-            if (elementText.toLowerCase().includes(key.toLowerCase())) {
+            if (lowerText.includes(key.toLowerCase())) {
                 return value;
             }
         }
 
-        // Try to extract from city names
+        // Try city to state mapping
         const cityStateMap = {
             'sydney': 'NSW', 'melbourne': 'VIC', 'brisbane': 'QLD',
             'perth': 'WA', 'adelaide': 'SA', 'hobart': 'TAS',
@@ -499,36 +432,8 @@ class MySidelineIntegrationService {
         };
 
         for (const [city, state] of Object.entries(cityStateMap)) {
-            if (elementText.toLowerCase().includes(city)) {
+            if (lowerText.includes(city)) {
                 return state;
-            }
-        }
-
-        return 'NSW'; // Default state
-    }
-
-    extractDescription($element, elementText) {
-        // Get the full text but limit it to a reasonable length
-        const description = elementText.replace(/\s+/g, ' ').trim();
-        return description.length > 500 ? description.substring(0, 500) + '...' : description;
-    }
-
-    extractRegistrationLink($element) {
-        // Look for registration or event links
-        const linkSelectors = [
-            'a[href*="register"]',
-            'a[href*="event"]',
-            'a[href*="club"]',
-            'a[href*="mysideline"]'
-        ];
-
-        for (const selector of linkSelectors) {
-            const link = $element.find(selector).first();
-            if (link.length) {
-                const href = link.attr('href');
-                if (href) {
-                    return href.startsWith('http') ? href : `https://profile.mysideline.com.au${href}`;
-                }
             }
         }
 
@@ -536,50 +441,52 @@ class MySidelineIntegrationService {
     }
 
     /**
-     * Extract contact information from HTML element
+     * Get a default future date (6 months from now)
      */
-    extractContactInfo(element) {
-        if (!element) {
-            return { name: null, email: null, phone: null };
-        }
-
-        // Mock implementation for testing
-        if (typeof element === 'object' && element.mockData) {
-            return {
-                name: 'Test Organiser',
-                email: 'test@example.com', 
-                phone: '0400 123 456'
-            };
-        }
-
-        try {
-            const text = element.textContent || element.innerText || '';
-            
-            // Extract email
-            const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-            const email = emailMatch ? emailMatch[1] : null;
-            
-            // Extract phone
-            const phoneMatch = text.match(/(0[2-9]\d{8}|\+61[2-9]\d{8}|04\d{8})/);
-            const phone = phoneMatch ? phoneMatch[1] : null;
-            
-            // Extract name (simplified)
-            const nameMatch = text.match(/Contact:\s*([A-Za-z\s]+)/);
-            const name = nameMatch ? nameMatch[1].trim() : null;
-            
-            return { name, email, phone };
-        } catch (error) {
-            console.error('Error extracting contact info:', error);
-            return { name: null, email: null, phone: null };
-        }
+    getDefaultFutureDate() {
+        const defaultDate = new Date();
+        defaultDate.setMonth(defaultDate.getMonth() + 6);
+        return defaultDate;
     }
 
+    /**
+     * Validate event and filter out non-Masters Rugby League events
+     * @param {Object} event - Event object to validate
+     * @returns {boolean} - True if valid Masters Rugby League event, false otherwise
+     */
     isValidEvent(event) {
-        return event && 
-               event.title && 
-               event.title.length > 3 && 
-               event.date && 
-               event.mySidelineId;
+        if (!event || !event.title || event.title.length <= 3 || !event.date || !event.mySidelineId) {
+            return false;
+        }
+
+        // Filter out Touch events - check for specific Touch indicators
+        
+        // 1. Check for "Touch" in email addresses
+        const emailText = event.contactInfo?.email || '';
+        if (emailText.toLowerCase().includes('touch')) {
+            console.log(`⚠️ Filtering out Touch event (email contains 'touch'): ${event.title}`);
+            return false;
+        }
+        
+        // 2. Check for "Touch" in title/subtitle (CSS ID context)
+        // Look for Touch in the main title or any subtitle-like content
+        const titleText = (event.title || '').toLowerCase();
+        if (titleText.includes('touch')) {
+            console.log(`⚠️ Filtering out Touch event (title contains 'touch'): ${event.title}`);
+            return false;
+        }
+        
+        // 3. Check for standalone "Touch" in the raw HTML/text content
+        // This looks for "Touch" as a complete word, not part of another word
+        const fullText = (event.description || '') + ' ' + (event.source || '');
+        const touchWordPattern = /\btouch\b/gi; // Word boundary ensures it's standalone
+        
+        if (touchWordPattern.test(fullText)) {
+            console.log(`⚠️ Filtering out Touch event (contains standalone 'Touch'): ${event.title}`);
+            return false;
+        }
+
+        return true;
     }
 
     // Process scraped events and update database
@@ -1005,298 +912,236 @@ class MySidelineIntegrationService {
 
     // Enhanced method using Puppeteer for JavaScript-heavy pages
     async fetchEventsWithBrowser() {
-        console.log('🚀 Using headless browser to fetch MySideline events...');
-        
-        // Run both browser automation and traditional scraping in parallel
-        const [browserResults, traditionalResults] = await Promise.all([
-            this.browserAutomation(),
-            this.scrapeMySidelineEvents()
-        ]);
-        
-        console.log('📊 Results Comparison:');
-        console.log(`  Browser automation: ${browserResults.length} events`);
-        console.log(`  Traditional scraping: ${traditionalResults.length} events`);
-        
-        // Return the method that found more events, or browser results if tied
-        return browserResults.length >= traditionalResults.length ? browserResults : traditionalResults;
-    }
-    
-    async browserAutomation() {
-        const puppeteer = require('puppeteer');
         let browser = null;
-        
         try {
-            console.log('🌐 Starting browser automation...');
-            
-            // Only run headless in production mode
-            const isProduction = process.env.NODE_ENV === 'production';
-            console.log(`🖥️  Browser mode: ${isProduction ? 'headless (production)' : 'visible (development)'}`);
+            console.log('Launching browser for MySideline event scraping...');
             
             browser = await puppeteer.launch({
-                headless: isProduction,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--single-process',
+                    '--disable-gpu'
+                ]
             });
-            
+
             const page = await browser.newPage();
             
-            const url = 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&type=&activity=&gender=&agemin=&agemax=&comptype=&source=rugby-league';
-            console.log(`🔗 Navigating to: ${url}`);
+            // Set a realistic user agent
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
             
-            await page.goto(url, { waitUntil: 'networkidle2' });
+            // Set viewport
+            await page.setViewport({ width: 1280, height: 720 });
+
+            console.log(`Navigating to MySideline search: ${this.searchUrl}`);
             
-            // Wait for content to load using a more compatible method
-            await page.evaluate(() => {
-                return new Promise((resolve) => {
-                    setTimeout(resolve, 3000);
-                });
+            // Navigate to the search page
+            await page.goto(this.searchUrl, { 
+                waitUntil: 'networkidle2',
+                timeout: 30000 
             });
-            
-            // Try to find event elements after JS has loaded
+
+            // Wait for content to load
+            console.log('Waiting for search results to load...');
+            await page.waitForTimeout(5000);
+
+            // Try to find search results or any content with "Masters"
             const events = await page.evaluate(() => {
-                const eventElements = document.querySelectorAll('.event-card, .club-card, .search-result, [data-club], [data-event]');
-                return Array.from(eventElements).map(el => ({
-                    text: el.textContent?.trim(),
-                    html: el.innerHTML
-                }));
+                const foundElements = [];
+                
+                // Look for various selectors that might contain event data
+                const selectors = [
+                    '.search-result',
+                    '.club-item',
+                    '.event-item',
+                    '.result-item',
+                    '[data-club]',
+                    '[data-event]',
+                    'article',
+                    '.card',
+                    '.listing',
+                    'li',
+                    '.row',
+                    'div[class*="result"]',
+                    'div[class*="club"]',
+                    'div[class*="event"]'
+                ];
+                
+                selectors.forEach(selector => {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach((el, index) => {
+                            const text = el.textContent?.trim() || '';
+                            
+                            // Check if this element contains "Masters" (case insensitive)
+                            if (text.toLowerCase().includes('masters') && text.length > 20) {
+                                // Extract links
+                                const links = el.querySelectorAll('a');
+                                const href = links.length > 0 ? links[0].href : null;
+                                
+                                foundElements.push({
+                                    selector: selector,
+                                    text: text,
+                                    href: href,
+                                    html: el.innerHTML,
+                                    id: el.id || `found-${Date.now()}-${index}`
+                                });
+                                
+                                console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
+                            }
+                        });
+                    } catch (err) {
+                        console.error(`Error with selector ${selector}:`, err.message);
+                    }
+                });
+                
+                // Also check the entire page content for "Masters"
+                const pageText = document.body.textContent || '';
+                if (pageText.toLowerCase().includes('masters')) {
+                    console.log('Page contains "Masters" - content is loading');
+                    
+                    // If we found Masters but no specific elements, try broader search
+                    if (foundElements.length === 0) {
+                        const allDivs = document.querySelectorAll('div');
+                        allDivs.forEach((div, index) => {
+                            const text = div.textContent?.trim() || '';
+                            if (text.toLowerCase().includes('masters') && 
+                                text.length > 30 && 
+                                text.length < 1000) {
+                                foundElements.push({
+                                    selector: 'div-fallback',
+                                    text: text,
+                                    href: div.querySelector('a')?.href || null,
+                                    id: `fallback-${index}`
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    console.log('Page does not contain "Masters" - may not have loaded properly');
+                }
+                
+                return foundElements;
             });
+
+            console.log(`Browser found ${events.length} potential Masters events`);
             
-            console.log(`🎯 Browser found ${events.length} potential events`);
-            
-            return events.filter(event => 
-                event.text && 
-                event.text.toLowerCase().includes('masters') &&
-                event.text.length > 10
-            ).map(event => this.convertToStandardEvent(event.text));
+            // Convert browser events to standard format
+            const standardEvents = [];
+            for (const browserEvent of events) {
+                try {
+                    const standardEvent = this.convertBrowserEventToStandardFormat(browserEvent);
+                    if (standardEvent) {
+                        standardEvents.push(standardEvent);
+                    }
+                } catch (error) {
+                    console.error('Error converting browser event:', error);
+                }
+            }
+
+            return standardEvents;
 
         } catch (error) {
-            console.error('❌ Browser automation failed:', error.message);
-            
-            // Fallback to traditional scraping
-            console.log('🔄 Falling back to traditional scraping...');
-            return await this.scrapeMySidelineEvents();
-            
+            console.error('Browser automation failed:', error);
+            throw error;
         } finally {
             if (browser) {
-                await browser.close();
+                try {
+                    await browser.close();
+                } catch (closeError) {
+                    console.error('Error closing browser:', closeError);
+                }
             }
         }
     }
 
     /**
-     * Fetch events using the primary method
+     * Convert browser-found event to standard format
      */
-    async fetchEvents(options = {}) {
-        return await this.scrapeMySidelineEvents();
-    }
-
-    /**
-     * Scrape events for a specific state
-     */
-    async scrapeStateEvents(state) {
-        console.log(`🏉 Scraping ${state} Masters events...`);
-        
-        // Use the main scraping method but filter by state if possible
-        const events = await this.scrapeMySidelineEvents();
-        
-        // Filter events by state if location information is available
-        if (state && events.length > 0) {
-            return events.filter(event => {
-                return event.location && event.location.toUpperCase().includes(state.toUpperCase());
-            });
-        }
-        
-        return events;
-    }
-
-    /**
-     * Convert raw event data to standard format
-     */
-    convertToStandardEvent(rawData) {
-        if (!rawData) return null;
-        
+    convertBrowserEventToStandardFormat(browserEvent) {
         try {
-            return {
-                title: rawData.title || rawData.name || 'Masters Event',
-                description: rawData.description || '',
-                date: rawData.date || rawData.start_date || new Date().toISOString(),
-                location: rawData.location || '',
-                contact: rawData.contact || '',
-                source: 'MySideline',
-                rawData: rawData
-            };
-        } catch (error) {
-            console.error('Error converting event data:', error);
-            return null;
-        }
-    }
-
-    /**
-     * Fix extractLocation method to handle jQuery properly
-     */
-    extractLocation($element) {
-        if (!$element) return '';
-        
-        const selectors = [
-            '.location', '.address', '.venue', '.suburb', '.city',
-            '.event-location', '.club-location', '[data-location]'
-        ];
-
-        // Handle both jQuery objects and raw elements
-        for (const selector of selectors) {
-            let locationEl;
+            const text = browserEvent.text || '';
+            const href = browserEvent.href || '';
             
-            if (typeof $element.find === 'function') {
-                // It's a jQuery object
-                locationEl = $element.find(selector).first();
-                if (locationEl && locationEl.length && locationEl.text().trim()) {
-                    return locationEl.text().trim();
-                }
-            } else if ($element.querySelector) {
-                // It's a DOM element
-                locationEl = $element.querySelector(selector);
-                if (locationEl && locationEl.textContent && locationEl.textContent.trim()) {
-                    return locationEl.textContent.trim();
-                }
+            // Extract event title (first substantial line)
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 3);
+            const title = lines[0] || 'Masters Rugby League Event';
+            
+            // Try to extract date from text
+            const date = this.extractDateFromText(text) || this.getDefaultFutureDate();
+            
+            // Try to extract location
+            const location = this.extractLocationFromText(text) || 'Location TBD';
+            
+            // Determine state from location or default
+            const state = this.extractStateFromText(text) || 'NSW';
+            
+            // Extract contact info
+            const contact = this.extractContact(text);
+            
+            // Create standardized event object
+            const event = {
+                mySidelineEventId: browserEvent.id || `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                title: title,
+                description: text.length > 200 ? text.substring(0, 200) + '...' : text,
+                date: date,
+                location: location,
+                state: state,
+                registrationLink: href && href.startsWith('http') ? href : null,
+                contactInfo: {
+                    name: 'Event Organiser',
+                    email: contact && contact.includes('@') ? contact : null,
+                    phone: contact && !contact.includes('@') ? contact : null
+                },
+                source: 'MySideline Browser',
+                lastUpdated: new Date()
+            };
+            
+            // Validate the event before returning
+            if (this.isValidEvent(event)) {
+                return event;
+            } else {
+                console.log(`⚠️ Invalid event filtered out: ${title}`);
+                return null;
             }
+            
+        } catch (error) {
+            console.error('Error converting browser event:', error);
+            return null;
         }
-
-        // Fallback: try to extract from text content
-        const text = typeof $element.text === 'function' ? $element.text() : 
-                    ($element.textContent || $element.innerText || '');
-        
-        // Look for location patterns in text
-        const locationPatterns = [
-            /(?:at|@)\s*([^,\n]+)/i,
-            /(?:venue|location):\s*([^,\n]+)/i,
-            /(?:address):\s*([^,\n]+)/i
-        ];
-        
-        for (const pattern of locationPatterns) {
-            const match = text.match(pattern);
-            if (match && match[1]) {
-                return match[1].trim();
-            }
-        }
-        
-        return '';
     }
 
     /**
-     * Extract contact information from text
-     * @param {string} text - Text to extract contact from
-     * @returns {string|null} - Extracted contact information
+     * Extract date from text using various patterns
      */
-    extractContact(text) {
-        if (!text || typeof text !== 'string') {
-            return null;
-        }
-
-        // Phone number patterns
-        const phonePatterns = [
-            /\b\d{4}\s?\d{3}\s?\d{3}\b/g,           // 0412 345 678
-            /\b\(\d{2}\)\s?\d{4}\s?\d{4}\b/g,      // (02) 1234 5678
-            /\b\d{2}\s?\d{4}\s?\d{4}\b/g,          // 02 1234 5678
-            /\b\d{10}\b/g                           // 0123456789
+    extractDateFromText(text) {
+        if (!text) return null;
+        
+        const datePatterns = [
+            // Australian date formats
+            /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g,                    // DD/MM/YYYY
+            /(\d{1,2})-(\d{1,2})-(\d{2,4})/g,                     // DD-MM-YYYY
+            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{2,4})/gi, // DD Month YYYY
+            /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{1,2}),?\s+(\d{2,4})/gi, // Month DD, YYYY
+            /(\d{2,4})-(\d{1,2})-(\d{1,2})/g,                     // YYYY-MM-DD
+            // Relative dates
+            /(next|this)\s+(week|month|year)/gi,
+            /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi
         ];
 
-        // Email patterns
-        const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-
-        // Find phone numbers
-        const phones = [];
-        phonePatterns.forEach(pattern => {
+        for (const pattern of datePatterns) {
             const matches = text.match(pattern);
             if (matches) {
-                phones.push(...matches);
-            }
-        });
-
-        // Find emails
-        const emails = text.match(emailPattern) || [];
-
-        // Combine all contact info
-        const contacts = [...phones, ...emails];
-        
-        if (contacts.length > 0) {
-            return contacts[0]; // Return the first contact found
-        }
-
-        // Look for contact keywords
-        const contactKeywords = ['contact', 'phone', 'email', 'call', 'enquiries'];
-        const lines = text.split(/[\n\r]+/);
-        
-        for (const line of lines) {
-            const lowerLine = line.toLowerCase();
-            if (contactKeywords.some(keyword => lowerLine.includes(keyword))) {
-                // Extract the line that contains contact keywords
-                const cleanLine = line.replace(/[^\w\s@.-]/g, ' ').trim();
-                if (cleanLine.length > 5 && cleanLine.length < 100) {
-                    return cleanLine;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Generate mock events for testing when MySideline is unavailable
-     */
-    generateMockEvents(state) {
-        const mockEvents = [{
-            mySidelineId: `mock-${state}-001`,
-            mySidelineEventId: `mock-${state}-001`, // Add this property for test compatibility
-            title: `${state} Masters Rugby League Carnival`,
-            description: `Annual Masters Rugby League tournament for ${state}`,
-            date: new Date('2025-08-15'),
-            location: state === 'NSW' ? 'NSW Sports Complex' : `${state} Sports Centre`, // Fix location for NSW
-            state: state,
-            contact: 'organiser@example.com',
-            registrationUrl: `https://example.com/register/${state.toLowerCase()}`,
-            source: 'MySideline Mock'
-        }];
-
-        return mockEvents;
-    }
-
-    /**
-     * Parse event date from various formats
-     * @param {string|Date} dateInput - Date input to parse
-     * @returns {Date} - Parsed date object
-     */
-    parseEventDate(dateInput) {
-        if (!dateInput) {
-            // Default to 6 months from now if no date provided
-            const defaultDate = new Date();
-            defaultDate.setMonth(defaultDate.getMonth() + 6);
-            return defaultDate;
-        }
-
-        if (dateInput instanceof Date) {
-            return dateInput;
-        }
-
-        if (typeof dateInput === 'string') {
-            // Try to parse the string as a date
-            const parsed = new Date(dateInput);
-            if (!isNaN(parsed.getTime())) {
-                return parsed;
-            }
-
-            // Try common Australian date formats
-            const dateFormats = [
-                /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/,  // DD/MM/YYYY or MM/DD/YYYY
-                /(\d{1,2})-(\d{1,2})-(\d{2,4})/,   // DD-MM-YYYY or MM-DD-YYYY
-                /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{2,4})/i
-            ];
-
-            for (const format of dateFormats) {
-                const match = dateInput.match(format);
-                if (match) {
+                for (const match of matches) {
                     try {
-                        const parsed = new Date(match[0]);
-                        if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= 2024) {
-                            return parsed;
+                        const parsedDate = new Date(match);
+                        if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() >= 2024) {
+                            return parsedDate;
                         }
                     } catch (error) {
                         continue;
@@ -1304,21 +1149,82 @@ class MySidelineIntegrationService {
                 }
             }
         }
-
-        // If all parsing fails, return a default date
-        const defaultDate = new Date();
-        defaultDate.setMonth(defaultDate.getMonth() + 6);
-        return defaultDate;
+        
+        return null;
     }
 
     /**
-     * Get the appropriate environment URL
+     * Extract location from text
      */
-    getEnvironmentUrl() {
-        if (process.env.NODE_ENV === 'test') {
-            return 'https://test.mysideline.com.au';
+    extractLocationFromText(text) {
+        if (!text) return null;
+        
+        // Look for location indicators
+        const locationPatterns = [
+            /(?:at|@|venue|location):\s*([^,\n]+)/gi,
+            /(?:held\s+at|taking\s+place\s+at)\s+([^,\n]+)/gi,
+            /(NSW|New South Wales|QLD|Queensland|VIC|Victoria|WA|Western Australia|SA|South Australia|TAS|Tasmania|NT|Northern Territory|ACT|Australian Capital Territory)/gi,
+            /(Sydney|Melbourne|Brisbane|Perth|Adelaide|Hobart|Darwin|Canberra)/gi,
+            /([A-Z][a-z]+\s+(Stadium|Park|Ground|Field|Centre|Complex|Oval))/g
+        ];
+
+        for (const pattern of locationPatterns) {
+            const matches = text.match(pattern);
+            if (matches && matches[0]) {
+                return matches[0].replace(/^(at|@|venue|location|held\s+at|taking\s+place\s+at):\s*/gi, '').trim();
+            }
         }
-        return process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au';
+        
+        return null;
+    }
+
+    /**
+     * Extract state from text
+     */
+    extractStateFromText(text) {
+        if (!text) return null;
+        
+        const stateMap = {
+            'NSW': 'NSW', 'New South Wales': 'NSW',
+            'QLD': 'QLD', 'Queensland': 'QLD',
+            'VIC': 'VIC', 'Victoria': 'VIC',
+            'WA': 'WA', 'Western Australia': 'WA',
+            'SA': 'SA', 'South Australia': 'SA',
+            'TAS': 'TAS', 'Tasmania': 'TAS',
+            'NT': 'NT', 'Northern Territory': 'NT',
+            'ACT': 'ACT', 'Australian Capital Territory': 'ACT'
+        };
+
+        const lowerText = text.toLowerCase();
+        for (const [key, value] of Object.entries(stateMap)) {
+            if (lowerText.includes(key.toLowerCase())) {
+                return value;
+            }
+        }
+
+        // Try city to state mapping
+        const cityStateMap = {
+            'sydney': 'NSW', 'melbourne': 'VIC', 'brisbane': 'QLD',
+            'perth': 'WA', 'adelaide': 'SA', 'hobart': 'TAS',
+            'darwin': 'NT', 'canberra': 'ACT'
+        };
+
+        for (const [city, state] of Object.entries(cityStateMap)) {
+            if (lowerText.includes(city)) {
+                return state;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get a default future date (6 months from now)
+     */
+    getDefaultFutureDate() {
+        const defaultDate = new Date();
+        defaultDate.setMonth(defaultDate.getMonth() + 6);
+        return defaultDate;
     }
 
     /**
@@ -1380,7 +1286,7 @@ class MySidelineIntegrationService {
     }
 }
 
-module.exports = new MySidelineIntegrationService();
+module.exports = MySidelineIntegrationService;
 
 // Also export the class for accessing static methods
 module.exports.MySidelineIntegrationService = MySidelineIntegrationService;
