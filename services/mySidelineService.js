@@ -229,8 +229,7 @@ class MySidelineIntegrationService {
             // Try multiple approaches to get the data
             const approaches = [
                 () => this.tryDirectNavigation(page),
-                () => this.tryStepByStepNavigation(page),
-                () => this.tryAlternativeUrls(page)
+                () => this.tryStepByStepNavigation(page)
             ];
 
             let events = [];
@@ -310,42 +309,6 @@ class MySidelineIntegrationService {
         return await this.extractEventsFromPage(page);
     }
 
-    /**
-     * Try alternative URLs or search methods
-     * @param {Page} page - Puppeteer page object
-     * @returns {Promise<Array>} Array of events
-     */
-    async tryAlternativeUrls(page) {
-        console.log('Attempting alternative URLs...');
-        
-        const alternativeUrls = [
-            'https://profile.mysideline.com.au/register/clubsearch/?criteria=Rugby+League+Masters',
-            'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters+Rugby',
-            'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&type=Club'
-        ];
-
-        for (const url of alternativeUrls) {
-            try {
-                console.log(`Trying alternative URL: ${url}`);
-                await page.goto(url, { 
-                    waitUntil: 'networkidle2',
-                    timeout: 30000 
-                });
-
-                await page.waitForTimeout(3000);
-
-                const events = await this.extractEventsFromPage(page);
-                if (events && events.length > 0) {
-                    return events;
-                }
-            } catch (error) {
-                console.log(`Alternative URL failed: ${error.message}`);
-                continue;
-            }
-        }
-
-        return [];
-    }
 
     /**
      * Extract events from the current page
