@@ -108,32 +108,50 @@ const registerUser = async (req, res) => {
 
         // Check if club already exists
         let club = await Club.findOne({ where: { clubName: clubName.trim() } });
+        let clubClaimed = false; // Track if we're claiming an existing club
         
         if (club) {
-            // Club exists - check if it already has a primary delegate
-            const existingPrimaryDelegate = await User.findOne({
+            console.log(`🏆 Found existing club: ${club.clubName} (ID: ${club.id})`);
+            
+            // Club exists - check if it has any delegates at all
+            const existingDelegates = await User.findAll({
                 where: {
                     clubId: club.id,
-                    isPrimaryDelegate: true,
                     isActive: true
                 }
             });
 
-            if (existingPrimaryDelegate) {
-                // Fetch clubs for autocomplete when re-rendering form with errors
-                const clubs = await Club.findAll({
-                    where: { isActive: true },
-                    order: [['clubName', 'ASC']]
-                });
+            if (existingDelegates.length > 0) {
+                // Club has existing delegates - check if there's a primary delegate
+                const existingPrimaryDelegate = existingDelegates.find(user => user.isPrimaryDelegate);
+                
+                if (existingPrimaryDelegate) {
+                    console.log(`❌ Club ${club.clubName} already has primary delegate: ${existingPrimaryDelegate.email}`);
+                    
+                    // Fetch clubs for autocomplete when re-rendering form with errors
+                    const clubs = await Club.findAll({
+                        where: { isActive: true },
+                        order: [['clubName', 'ASC']]
+                    });
 
-                return res.render('auth/register', {
-                    title: 'Register as Club Delegate',
-                    errors: [{ msg: 'This club already has a primary delegate. Please contact them for an invitation.' }],
-                    formData: req.body,
-                    clubs
-                });
+                    return res.render('auth/register', {
+                        title: 'Register as Club Delegate',
+                        errors: [{ msg: 'This club already has a primary delegate. Please contact them for an invitation.' }],
+                        formData: req.body,
+                        clubs
+                    });
+                }
+                console.log(`⚠️ Club ${club.clubName} has delegates but no primary delegate - user will become primary`);
+                // If there are delegates but no primary delegate, this user becomes primary
+                // (This handles edge cases where data integrity might be compromised)
+            } else {
+                console.log(`✅ Club ${club.clubName} exists but has no delegates - user will claim as primary delegate`);
+                clubClaimed = true;
             }
+            // Existing club will be claimed by this user as primary delegate
         } else {
+            console.log(`🆕 Club ${clubName.trim()} does not exist - creating new club`);
+            
             // Create new club
             club = await Club.create({
                 clubName: clubName.trim(),
@@ -141,6 +159,8 @@ const registerUser = async (req, res) => {
                 address: clubAddress,
                 isActive: true
             });
+            
+            console.log(`✅ New club created: ${club.clubName} (ID: ${club.id})`);
         }
 
         // Hash password
@@ -158,7 +178,14 @@ const registerUser = async (req, res) => {
             isActive: true
         });
 
-        req.flash('success_msg', 'Registration successful! You can now log in as the primary delegate for your club.');
+        if (clubClaimed) {
+            console.log(`🎉 Club ${club.clubName} successfully claimed by ${newUser.email} as primary delegate`);
+            req.flash('success_msg', `Registration successful! You have claimed ${club.clubName} and are now the primary delegate.`);
+        } else {
+            console.log(`🎉 User ${newUser.email} registered as primary delegate for ${club.clubName}`);
+            req.flash('success_msg', 'Registration successful! You can now log in as the primary delegate for your club.');
+        }
+        
         res.redirect('/auth/login');
 
     } catch (error) {
