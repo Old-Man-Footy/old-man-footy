@@ -144,6 +144,28 @@ const showCarnival = async (req, res) => {
                                 req.user && 
                                 req.user.clubId;
 
+        // Check if user's club is already registered for this carnival
+        let userClubRegistration = null;
+        let canRegisterClub = false;
+        
+        if (req.user && req.user.clubId) {
+            // Check if user's club is already registered
+            userClubRegistration = await CarnivalClub.findOne({
+                where: {
+                    carnivalId: carnival.id,
+                    clubId: req.user.clubId,
+                    isActive: true
+                }
+            });
+
+            // User can register if:
+            // 1. They have a club
+            // 2. Their club is not already registered
+            // 3. They are not the carnival owner
+            canRegisterClub = !userClubRegistration && 
+                             carnival.createdByUserId !== req.user.id;
+        }
+
         // Sort sponsors hierarchically using the sorting service
         const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
 
@@ -151,7 +173,9 @@ const showCarnival = async (req, res) => {
             title: carnival.title,
             carnival,
             sponsors: sortedSponsors,
-            canTakeOwnership
+            canTakeOwnership,
+            userClubRegistration,
+            canRegisterClub
         });
     } catch (error) {
         console.error('Error fetching carnival:', error);

@@ -234,6 +234,148 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
+            <!-- Club Registration Section (for delegates) -->
+            <% if (user && canRegisterClub) { %>
+                <div class="card shadow mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Register Your Club</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Register your club to attend this carnival event.</p>
+                        
+                        <!-- Registration Form -->
+                        <form action="/carnivals/<%= carnival.id %>/register" method="POST" id="clubRegistrationForm">
+                            <div class="mb-3">
+                                <label for="playerCount" class="form-label">Expected Player Count</label>
+                                <input type="number" class="form-control" id="playerCount" name="playerCount" 
+                                       min="1" max="100" placeholder="e.g. 15">
+                                <div class="form-text">Approximate number of players attending</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="teamName" class="form-label">Team Name</label>
+                                <input type="text" class="form-control" id="teamName" name="teamName" 
+                                       maxlength="100" placeholder="Optional team name">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="contactPerson" class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                       value="<%= user.firstName %> <%= user.lastName %>" maxlength="100">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="contactEmail" class="form-label">Contact Email</label>
+                                <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                       value="<%= user.email %>">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="contactPhone" class="form-label">Contact Phone</label>
+                                <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                       maxlength="20" placeholder="Optional phone number">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="specialRequirements" class="form-label">Special Requirements</label>
+                                <textarea class="form-control" id="specialRequirements" name="specialRequirements" 
+                                          rows="3" maxlength="500" placeholder="Any special requirements or notes..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle"></i> Register My Club
+                            </button>
+                        </form>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                You will be registered as unpaid. The organiser will contact you with payment details.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            <% } else if (user && userClubRegistration) { %>
+                <!-- Show registration status for already registered clubs -->
+                <div class="card shadow mb-4 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Your Club is Registered</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Registration Status:</strong>
+                            <% if (userClubRegistration.isPaid) { %>
+                                <span class="badge bg-success ms-2">Paid</span>
+                            <% } else { %>
+                                <span class="badge bg-warning text-dark ms-2">Pending Payment</span>
+                            <% } %>
+                        </div>
+                        
+                        <% if (userClubRegistration.playerCount) { %>
+                            <div class="mb-2">
+                                <strong>Player Count:</strong> <%= userClubRegistration.playerCount %>
+                            </div>
+                        <% } %>
+                        
+                        <% if (userClubRegistration.teamName) { %>
+                            <div class="mb-2">
+                                <strong>Team Name:</strong> <%= userClubRegistration.teamName %>
+                            </div>
+                        <% } %>
+                        
+                        <% if (userClubRegistration.contactPerson) { %>
+                            <div class="mb-2">
+                                <strong>Contact:</strong> <%= userClubRegistration.contactPerson %>
+                            </div>
+                        <% } %>
+                        
+                        <% if (userClubRegistration.registrationDate) { %>
+                            <div class="mb-3">
+                                <strong>Registered:</strong> <%= new Date(userClubRegistration.registrationDate).toLocaleDateString('en-AU') %>
+                            </div>
+                        <% } %>
+                        
+                        <!-- Allow unregistration only if not paid -->
+                        <% if (!userClubRegistration.isPaid) { %>
+                            <button type="button" class="btn btn-outline-danger btn-sm w-100" 
+                                    onclick="unregisterFromCarnival()">
+                                <i class="bi bi-x-circle"></i> Unregister My Club
+                            </button>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    You can unregister before payment is made.
+                                </small>
+                            </div>
+                        <% } else { %>
+                            <div class="alert alert-info mb-0">
+                                <small>
+                                    <i class="bi bi-info-circle"></i> 
+                                    Contact the organiser to make changes after payment.
+                                </small>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% } else if (user && !user.clubId) { %>
+                <!-- Message for users without a club -->
+                <div class="card shadow mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Club Registration</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">To register for carnivals, you need to be associated with a club.</p>
+                        <a href="/clubs" class="btn btn-primary btn-sm">
+                            <i class="bi bi-search"></i> Find Your Club
+                        </a>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Contact your club delegate to get added to your club's member list.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
             <!-- Sponsors Section -->
             <% if (sponsors && sponsors.length > 0) { %>
                 <div class="card shadow mb-4">
@@ -447,3 +589,83 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript for Club Registration -->
+<script>
+/**
+ * Handle club unregistration from carnival
+ */
+function unregisterFromCarnival() {
+    if (confirm('Are you sure you want to unregister your club from this carnival? This action cannot be undone.')) {
+        fetch(`/carnivals/<%= carnival.id %>/register`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message and refresh the page
+                alert(data.message);
+                window.location.reload();
+            } else {
+                // Show error message
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while unregistering. Please try again.');
+        });
+    }
+}
+
+/**
+ * Form validation for club registration
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const registrationForm = document.getElementById('clubRegistrationForm');
+    
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', function(e) {
+            const playerCount = document.getElementById('playerCount').value;
+            const contactEmail = document.getElementById('contactEmail').value;
+            
+            // Basic validation
+            if (playerCount && (parseInt(playerCount) < 1 || parseInt(playerCount) > 100)) {
+                e.preventDefault();
+                alert('Player count must be between 1 and 100.');
+                return false;
+            }
+            
+            if (contactEmail && !isValidEmail(contactEmail)) {
+                e.preventDefault();
+                alert('Please enter a valid email address.');
+                return false;
+            }
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Registering...';
+            submitButton.disabled = true;
+            
+            // Re-enable button after a delay in case of errors
+            setTimeout(() => {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }, 10000);
+        });
+    }
+});
+
+/**
+ * Email validation helper
+ */
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+</script>

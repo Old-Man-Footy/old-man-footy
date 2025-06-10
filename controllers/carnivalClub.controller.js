@@ -488,6 +488,183 @@ const reorderAttendingClubs = async (req, res) => {
     }
 };
 
+/**
+ * Register delegate's own club for a carnival (self-service registration)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const registerMyClubForCarnival = async (req, res) => {
+    try {
+        const { carnivalId } = req.params;
+        const user = req.user;
+
+        // Ensure user has a club and is a delegate
+        if (!user.clubId) {
+            req.flash('error_msg', 'You must be associated with a club to register for carnivals.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please correct the validation errors.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
+        // Get carnival and ensure it exists and is active
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            req.flash('error_msg', 'Carnival not found.');
+            return res.redirect('/carnivals');
+        }
+
+        // Check if user's club is already registered
+        const existingRegistration = await CarnivalClub.findOne({
+            where: {
+                carnivalId,
+                clubId: user.clubId,
+                isActive: true
+            }
+        });
+
+        if (existingRegistration) {
+            req.flash('error_msg', 'Your club is already registered for this carnival.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
+        // Get user's club for success message
+        const club = await Club.findByPk(user.clubId, {
+            attributes: ['clubName']
+        });
+
+        const {
+            playerCount,
+            teamName,
+            contactPerson,
+            contactEmail,
+            contactPhone,
+            specialRequirements
+        } = req.body;
+
+        // Get current count for display order
+        const currentCount = await CarnivalClub.count({
+            where: {
+                carnivalId,
+                isActive: true
+            }
+        });
+
+        // Create the registration with delegate's information
+        const registrationData = {
+            carnivalId: parseInt(carnivalId),
+            clubId: user.clubId,
+            playerCount: playerCount ? parseInt(playerCount) : null,
+            teamName: teamName?.trim() || null,
+            contactPerson: contactPerson?.trim() || `${user.firstName} ${user.lastName}`,
+            contactEmail: contactEmail?.trim() || user.email,
+            contactPhone: contactPhone?.trim() || null,
+            specialRequirements: specialRequirements?.trim() || null,
+            registrationNotes: `Self-registered by ${user.firstName} ${user.lastName} (${user.email})`,
+            isPaid: false, // Delegates register unpaid by default
+            paymentDate: null,
+            displayOrder: currentCount + 1,
+            registrationDate: new Date()
+        };
+
+        await CarnivalClub.create(registrationData);
+
+        req.flash('success_msg', `${club.clubName} has been successfully registered for ${carnival.title}! The carnival organiser will contact you with payment details.`);
+        res.redirect(`/carnivals/${carnivalId}`);
+    } catch (error) {
+        console.error('Error registering club for carnival:', error);
+        req.flash('error_msg', 'Error registering your club for the carnival.');
+        res.redirect(`/carnivals/${req.params.carnivalId}`);
+    }
+};
+
+/**
+ * Unregister delegate's own club from a carnival
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const unregisterMyClubFromCarnival = async (req, res) => {
+    try {
+        const { carnivalId } = req.params;
+        const user = req.user;
+
+        // Ensure user has a club
+        if (!user.clubId) {
+            return res.status(403).json({
+                success: false,
+                message: 'You must be associated with a club to manage registrations.'
+            });
+        }
+
+        // Get carnival and ensure it exists
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            return res.status(404).json({
+                success: false,
+                message: 'Carnival not found.'
+            });
+        }
+
+        // Find the registration
+        const registration = await CarnivalClub.findOne({
+            where: {
+                carnivalId,
+                clubId: user.clubId,
+                isActive: true
+            }
+        });
+
+        if (!registration) {
+            return res.status(404).json({
+                success: false,
+                message: 'Your club is not registered for this carnival.'
+            });
+        }
+
+        // Check if payment has been made - prevent unregistration if paid
+        if (registration.isPaid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot unregister from a carnival after payment has been made. Please contact the organiser.'
+            });
+        }
+
+        // Soft delete the registration
+        await registration.update({ isActive: false });
+
+        // Get club name for response
+        const club = await Club.findByPk(user.clubId, {
+            attributes: ['clubName']
+        });
+
+        res.json({
+            success: true,
+            message: `${club.clubName} has been unregistered from ${carnival.title}.`
+        });
+    } catch (error) {
+        console.error('Error unregistering club from carnival:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error unregistering from carnival.'
+        });
+    }
+};
+
 module.exports = {
     showCarnivalAttendees,
     showAddClubToCarnival,
@@ -495,5 +672,7 @@ module.exports = {
     showEditRegistration,
     updateRegistration,
     removeClubFromCarnival,
-    reorderAttendingClubs
+    reorderAttendingClubs,
+    registerMyClubForCarnival,
+    unregisterMyClubFromCarnival
 };
