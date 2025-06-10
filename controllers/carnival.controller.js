@@ -821,5 +821,76 @@ module.exports = {
             req.flash('error_msg', 'Error removing sponsor from carnival.');
             res.redirect(`/carnivals/${req.params.id}/sponsors`);
         }
+    },
+
+    /**
+     * Send carnival information email to attendee clubs
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    sendEmailToAttendees: async (req, res) => {
+        try {
+            const carnival = await Carnival.findByPk(req.params.id, {
+                include: [
+                    {
+                        model: Club,
+                        as: 'attendingClubs',
+                        through: { 
+                            attributes: [],
+                            where: { isActive: true }
+                        },
+                        required: false
+                    },
+                    {
+                        model: User,
+                        as: 'creator',
+                        attributes: ['firstName', 'lastName']
+                    }
+                ]
+            });
+
+            if (!carnival) {
+                req.flash('error_msg', 'Carnival not found.');
+                return res.redirect('/carnivals');
+            }
+
+            // Check if user can edit this carnival (using async method for club delegate checking)
+            const canEdit = await carnival.canUserEditAsync(req.user);
+            if (!canEdit) {
+                req.flash('error_msg', 'You can only send emails for carnivals hosted by your club.');
+                return res.redirect(`/carnivals/${carnival.id}`);
+            }
+
+            // Check if there are any attendee clubs
+            if (!carnival.attendingClubs || carnival.attendingClubs.length === 0) {
+                req.flash('error_msg', 'No clubs are currently registered for this carnival.');
+                return res.redirect(`/carnivals/${carnival.id}`);
+            }
+
+            const { message } = req.body;
+            const senderName = `${req.user.firstName} ${req.user.lastName}`;
+
+            // Send emails to attendee clubs
+            const emailService = require('../services/emailService');
+            const result = await emailService.sendCarnivalInfoToAttendees(
+                carnival, 
+                carnival.attendingClubs, 
+                senderName, 
+                message || ''
+            );
+
+            if (result.success) {
+                req.flash('success_msg', result.message);
+            } else {
+                req.flash('error_msg', 'Failed to send emails to attendee clubs.');
+            }
+
+            res.redirect(`/carnivals/${carnival.id}`);
+
+        } catch (error) {
+            console.error('Error sending carnival emails to attendees:', error);
+            req.flash('error_msg', 'An error occurred while sending emails.');
+            res.redirect(`/carnivals/${req.params.id}`);
+        }
     }
 };

@@ -369,6 +369,144 @@ class EmailService {
         }
     }
 
+    // Send carnival information to attendee clubs
+    async sendCarnivalInfoToAttendees(carnival, attendeeClubs, senderName, customMessage = '') {
+        try {
+            if (!attendeeClubs || attendeeClubs.length === 0) {
+                return { success: true, emailsSent: 0, message: 'No attendee clubs to email' };
+            }
+
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
+            
+            const promises = attendeeClubs.map(club => {
+                // Get primary delegate email or use a fallback
+                const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
+                if (!recipientEmail) {
+                    console.warn(`No email found for club: ${club.clubName}`);
+                    return Promise.resolve({ status: 'rejected', reason: 'No email address' });
+                }
+
+                const mailOptions = {
+                    from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                    to: recipientEmail,
+                    subject: `Important Update: ${carnival.title}`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
+                                <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                                <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
+                            </div>
+                            
+                            <div style="padding: 30px; background: #f9f9f9;">
+                                <h2 style="color: #006837;">📢 Carnival Information Update</h2>
+                                
+                                <p>Hello <strong>${club.clubName}</strong>,</p>
+                                
+                                <p><strong>${senderName}</strong> from the hosting club has sent you important information about the carnival you're attending:</p>
+                                
+                                ${customMessage ? `
+                                    <div style="background: #e8f5e8; border-left: 4px solid #006837; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                                        <h4 style="color: #006837; margin-top: 0;">Message from the Organiser:</h4>
+                                        <p style="margin: 0; white-space: pre-line;">${customMessage}</p>
+                                    </div>
+                                ` : ''}
+                                
+                                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                    <h3 style="color: #006837; margin-top: 0;">${carnival.title}</h3>
+                                    
+                                    <p><strong>📅 Date:</strong> ${carnival.date.toLocaleDateString('en-AU', { 
+                                        weekday: 'long', 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    })}</p>
+                                    
+                                    <p><strong>📍 Location:</strong> ${carnival.locationAddress}</p>
+                                    <p><strong>🏟️ State:</strong> ${carnival.state}</p>
+                                    
+                                    ${carnival.scheduleDetails ? `<p><strong>📋 Schedule:</strong></p><div style="background: #f8f9fa; padding: 10px; border-radius: 4px; white-space: pre-line;">${carnival.scheduleDetails}</div>` : ''}
+                                    
+                                    <p><strong>📞 Contact:</strong> ${carnival.organiserContactName}</p>
+                                    <p><strong>📧 Email:</strong> <a href="mailto:${carnival.organiserContactEmail}">${carnival.organiserContactEmail}</a></p>
+                                    <p><strong>📱 Phone:</strong> <a href="tel:${carnival.organiserContactPhone}">${carnival.organiserContactPhone}</a></p>
+                                    
+                                    ${carnival.registrationLink ? `
+                                        <div style="margin: 15px 0;">
+                                            <a href="${carnival.registrationLink}" 
+                                               style="background: #FFD700; color: #006837; padding: 10px 20px; 
+                                                      text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                                Registration Link
+                                            </a>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${carnival.drawFileURL ? `
+                                        <div style="margin: 15px 0;">
+                                            <a href="${carnival.drawFileURL}" 
+                                               style="background: #006837; color: white; padding: 10px 20px; 
+                                                      text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                                📋 Download Draw
+                                            </a>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${carnival.feesDescription ? `<p><strong>💰 Fees:</strong> ${carnival.feesDescription}</p>` : ''}
+                                    
+                                    ${carnival.callForVolunteers ? `
+                                        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 15px 0;">
+                                            <p style="margin: 0;"><strong>🙋 Volunteers Needed:</strong> ${carnival.callForVolunteers}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                
+                                <div style="text-align: center; margin: 30px 0;">
+                                    <a href="${carnivalUrl}" 
+                                       style="background: #006837; color: white; padding: 15px 30px; 
+                                              text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                        View Full Carnival Details
+                                    </a>
+                                </div>
+                                
+                                <p style="font-size: 14px; color: #666;">
+                                    Have questions? Reply to this email or contact the organiser directly using the details above.
+                                </p>
+                                
+                                <p style="font-size: 14px; color: #666; text-align: center;">
+                                    See you on the field! 🏉
+                                </p>
+                            </div>
+                            
+                            <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+                                <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
+                                <p>This email was sent by the carnival organiser to all attending clubs.</p>
+                            </div>
+                        </div>
+                    `
+                };
+
+                return this.transporter.sendMail(mailOptions);
+            });
+
+            const results = await Promise.allSettled(promises);
+            const successful = results.filter(result => result.status === 'fulfilled').length;
+            const failed = results.filter(result => result.status === 'rejected').length;
+
+            console.log(`Carnival info emails sent to attendees: ${successful} successful, ${failed} failed`);
+            
+            return { 
+                success: true, 
+                emailsSent: successful, 
+                emailsFailed: failed,
+                totalRecipients: attendeeClubs.length,
+                message: `Successfully sent carnival information to ${successful} attendee clubs${failed > 0 ? ` (${failed} failed)` : ''}`
+            };
+
+        } catch (error) {
+            console.error('Failed to send carnival info emails to attendees:', error);
+            throw error;
+        }
+    }
+
     // Test email configuration
     async testEmailConfiguration() {
         try {

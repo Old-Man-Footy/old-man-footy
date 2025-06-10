@@ -70,4 +70,9 @@ router.post('/:id/sponsors/add', ensureAuthenticated, carnivalController.addSpon
 // Remove sponsor from carnival
 router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, carnivalController.removeSponsorFromCarnival);
 
+// Send email to attendee clubs
+router.post('/:id/email-attendees', ensureAuthenticated, [
+    body('message').optional().trim().isLength({ max: 2000 }).withMessage('Message must be 2000 characters or less')
+], carnivalController.sendEmailToAttendees);
+
 module.exports = router;

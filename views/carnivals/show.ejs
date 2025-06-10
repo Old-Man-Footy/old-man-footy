@@ -559,6 +559,14 @@
                                 <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-sm btn-primary">
                                     <i class="bi bi-people"></i> Manage Attendees
                                 </a>
+                                
+                                <!-- Email Attendees button (only if there are attendee clubs) -->
+                                <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
+                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
+                                        <i class="bi bi-envelope"></i> Email Attendees
+                                    </button>
+                                <% } %>
+                                
                                 <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i> Edit
                                 </a>
@@ -668,4 +676,127 @@ function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
+</script>
+
+<!-- Email Attendees Modal -->
+<% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId && carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
+<div class="modal fade" id="emailAttendeesModal" tabindex="-1" aria-labelledby="emailAttendeesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailAttendeesModalLabel">
+                    <i class="bi bi-envelope"></i> Email Carnival Information to Attendees
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="/carnivals/<%= carnival.id %>/email-attendees" id="emailAttendeesForm">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        This will send the carnival details along with your custom message to all attending clubs.
+                        The email will include a link back to this carnival page.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Recipients (<%= carnival.attendingClubs.length %> clubs):</h6>
+                        <div class="bg-light p-3 rounded">
+                            <% carnival.attendingClubs.forEach((club, index) => { %>
+                                <span class="badge bg-primary me-2 mb-1">
+                                    <%= club.clubName %>
+                                </span>
+                            <% }); %>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">
+                            <strong>Your Message to Attendees</strong>
+                        </label>
+                        <textarea class="form-control" id="message" name="message" rows="6" 
+                                  maxlength="2000" placeholder="Enter your message to the attending clubs...
+
+Examples:
+- Important schedule changes
+- Parking instructions
+- Canteen information
+- Weather updates
+- Last-minute announcements"></textarea>
+                        <div class="form-text">
+                            Optional custom message (max 2000 characters). The carnival details will be automatically included.
+                        </div>
+                        <div class="text-end mt-1">
+                            <small class="text-muted">
+                                <span id="charCount">0</span>/2000 characters
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Email will include:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check text-success"></i> Your custom message (if provided)</li>
+                            <li><i class="bi bi-check text-success"></i> Complete carnival details</li>
+                            <li><i class="bi bi-check text-success"></i> Schedule information</li>
+                            <li><i class="bi bi-check text-success"></i> Contact information</li>
+                            <li><i class="bi bi-check text-success"></i> Link back to carnival page</li>
+                            <li><i class="bi bi-check text-success"></i> Registration and draw links (if available)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-send"></i> Send to All Attendees
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<!-- JavaScript for Email Attendees -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for message textarea
+    const messageTextarea = document.getElementById('message');
+    const charCount = document.getElementById('charCount');
+    
+    if (messageTextarea && charCount) {
+        messageTextarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCount.textContent = currentLength;
+            
+            // Change color based on character count
+            if (currentLength > 1800) {
+                charCount.className = 'text-warning';
+            } else if (currentLength > 1900) {
+                charCount.className = 'text-danger';
+            } else {
+                charCount.className = 'text-muted';
+            }
+        });
+    }
+    
+    // Form submission handling
+    const emailForm = document.getElementById('emailAttendeesForm');
+    if (emailForm) {
+        emailForm.addEventListener('submit', function(e) {
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            // Show loading state
+            submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+            submitButton.disabled = true;
+            
+            // Re-enable button after a delay in case of errors
+            setTimeout(() => {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }, 10000);
+        });
+    }
+});
 </script>
