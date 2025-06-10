@@ -1790,16 +1790,16 @@ button[type="submit"]:contains("Complete Registration"):focus {
 }
 
 .btn-twitter {
-    background-color: #1da1f2;
-    border-color: #1da1f2;
+    background-color: #000000;
+    border-color: #000000;
     color: white;
 }
 
 .btn-twitter:hover,
 .btn-twitter:focus,
 .btn-twitter:active {
-    background-color: #0d8bd9;
-    border-color: #0d8bd9;
+    background-color: #1a1a1a;
+    border-color: #1a1a1a;
     color: white;
 }
 
@@ -2006,4 +2006,38 @@ button[type="submit"]:contains("Complete Registration"):focus {
         color: black !important;
         border: 1px solid #ccc !important;
     }
+}
+
+/* Ensure X/Twitter icon stays white */
+.btn-twitter i,
+.btn-x i,
+.social-links .btn-twitter i,
+.social-links .btn-x i,
+social-links a.btn-twitter i,
+social-links a.btn-x i {
+    color: white !important;
+}
+
+/* Twitter/X button specific styling - override general social-links hover */
+.social-links .btn-twitter,
+.social-links a.btn-twitter,
+.btn-twitter {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: white !important;
+}
+
+.social-links .btn-twitter:hover,
+.social-links a.btn-twitter:hover,
+.btn-twitter:hover,
+.social-links .btn-twitter:focus,
+.social-links a.btn-twitter:focus,
+.btn-twitter:focus,
+.social-links .btn-twitter:active,
+.social-links a.btn-twitter:active,
+.btn-twitter:active {
+    background-color: #1a1a1a !important;
+    border-color: #1a1a1a !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
 }
