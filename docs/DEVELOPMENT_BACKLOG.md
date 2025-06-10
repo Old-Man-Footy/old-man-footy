@@ -69,7 +69,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, The user guide should explain the process of sending correspondence to carnival attendees. | ✅ Completed |
 | As a developer, I want to create a dedicated Contact Us page with a contact form to replace the contact details on the About page. | ✅ Completed |
 | As a club delegate, When I mark my club as inactive, it should be removed from the "Find Clubs" interface (it can show up on historical pages but should clearly show the club is no longer active). | ✅ Completed |
-| As a developer, I want random images uploaded by users (not icons) to be used in the home page carousel. Prioritising recent images. | ⭕ Not Started |
+| As a developer, I want random images uploaded by users (not icons) to be used in the home page carousel. Prioritising recent images. | ✅ Completed |
 | As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
