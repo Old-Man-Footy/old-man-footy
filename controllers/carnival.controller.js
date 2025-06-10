@@ -362,9 +362,10 @@ const showEditForm = async (req, res) => {
             return res.redirect('/dashboard');
         }
 
-        // Check if user owns this carnival
-        if (carnival.createdByUserId !== req.user.id) {
-            req.flash('error_msg', 'You can only edit your own carnivals.');
+        // Check if user can edit this carnival (using async method for club delegate checking)
+        const canEdit = await carnival.canUserEditAsync(req.user);
+        if (!canEdit) {
+            req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
             return res.redirect('/dashboard');
         }
 
@@ -395,9 +396,10 @@ const updateCarnival = async (req, res) => {
             return res.redirect('/dashboard');
         }
 
-        // Check if user owns this carnival
-        if (carnival.createdByUserId !== req.user.id) {
-            req.flash('error_msg', 'You can only edit your own carnivals.');
+        // Check if user can edit this carnival (using async method for club delegate checking)
+        const canEdit = await carnival.canUserEditAsync(req.user);
+        if (!canEdit) {
+            req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
             return res.redirect('/dashboard');
         }
 
@@ -432,7 +434,7 @@ const updateCarnival = async (req, res) => {
             socialMediaWebsite: req.body.socialMediaWebsite || ''
         };
 
-        // Handle structured file uploads
+        // Handle structured file uploads (including draw documents)
         if (req.structuredUploads && req.structuredUploads.length > 0) {
             const existingAdditionalImages = carnival.additionalImages || [];
             const existingDrawFiles = carnival.drawFiles || [];
@@ -501,9 +503,10 @@ const deleteCarnival = async (req, res) => {
             return res.redirect('/dashboard');
         }
 
-        // Check if user owns this carnival
-        if (carnival.createdByUserId !== req.user.id) {
-            req.flash('error_msg', 'You can only delete your own carnivals.');
+        // Check if user can edit this carnival (using async method for club delegate checking)
+        const canEdit = await carnival.canUserEditAsync(req.user);
+        if (!canEdit) {
+            req.flash('error_msg', 'You can only delete carnivals hosted by your club.');
             return res.redirect('/dashboard');
         }
 
@@ -680,9 +683,10 @@ module.exports = {
                 return res.redirect('/carnivals');
             }
 
-            // Check if user can edit this carnival
-            if (!carnival.canUserEdit(req.user)) {
-                req.flash('error_msg', 'You can only manage sponsors for your own carnivals.');
+            // Check if user can edit this carnival (using async method for club delegate checking)
+            const canEdit = await carnival.canUserEditAsync(req.user);
+            if (!canEdit) {
+                req.flash('error_msg', 'You can only manage sponsors for carnivals hosted by your club.');
                 return res.redirect(`/carnivals/${carnival.id}`);
             }
 
@@ -731,9 +735,10 @@ module.exports = {
                 return res.redirect('/carnivals');
             }
 
-            // Check if user can edit this carnival
-            if (!carnival.canUserEdit(req.user)) {
-                req.flash('error_msg', 'You can only manage sponsors for your own carnivals.');
+            // Check if user can edit this carnival (using async method for club delegate checking)
+            const canEdit = await carnival.canUserEditAsync(req.user);
+            if (!canEdit) {
+                req.flash('error_msg', 'You can only manage sponsors for carnivals hosted by your club.');
                 return res.redirect(`/carnivals/${carnival.id}`);
             }
 
@@ -791,9 +796,10 @@ module.exports = {
                 return res.redirect('/carnivals');
             }
 
-            // Check if user can edit this carnival
-            if (!carnival.canUserEdit(req.user)) {
-                req.flash('error_msg', 'You can only manage sponsors for your own carnivals.');
+            // Check if user can edit this carnival (using async method for club delegate checking)
+            const canEdit = await carnival.canUserEditAsync(req.user);
+            if (!canEdit) {
+                req.flash('error_msg', 'You can only manage sponsors for carnivals hosted by your club.');
                 return res.redirect(`/carnivals/${carnival.id}`);
             }
 

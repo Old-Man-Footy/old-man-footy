@@ -74,6 +74,46 @@ class Carnival extends Model {
     // Users can edit their own carnivals
     if (this.createdByUserId && this.createdByUserId === user.id) return true;
     
+    // Allow any delegate from the hosting club to edit carnivals their club is hosting
+    if (user.clubId && this.createdByUserId) {
+      // We need to check if the carnival creator belongs to the same club as the current user
+      // This requires a database lookup, so we'll need to handle this asynchronously
+      return 'async_check_needed';
+    }
+    
+    return false;
+  }
+
+  /**
+   * Check if user can edit this carnival (async version for club delegate checking)
+   * @param {Object} user - User object to check permissions
+   * @returns {Promise<boolean>} Edit permission status
+   */
+  async canUserEditAsync(user) {
+    if (!user) return false;
+    
+    // Admin users can edit any carnival
+    if (user.isAdmin) return true;
+    
+    // Primary delegates can edit any carnival
+    if (user.isPrimaryDelegate) return true;
+    
+    // Users can edit their own carnivals
+    if (this.createdByUserId && this.createdByUserId === user.id) return true;
+    
+    // Allow any delegate from the hosting club to edit carnivals their club is hosting
+    if (user.clubId && this.createdByUserId) {
+      const User = require('./User');
+      const carnivalCreator = await User.findByPk(this.createdByUserId, {
+        attributes: ['clubId']
+      });
+      
+      // If the carnival creator and current user belong to the same club, allow editing
+      if (carnivalCreator && carnivalCreator.clubId === user.clubId) {
+        return true;
+      }
+    }
+    
     return false;
   }
 

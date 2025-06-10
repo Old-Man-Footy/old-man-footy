@@ -54,9 +54,10 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a user, I don't want links to be underlined on hover if they already move or change colour. | ✅ Completed |
 | As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ✅ Completed |
 | As a developer, I want to be able to link other clubs to Carnivals as attendees. Creating a new route CarnivalClub for 1:N relationships. | ✅ Completed |
-| As a club delegate, I want to be able to mark my club as attending a Carnival run by another club. | ⭕ Not Started |
-| As a club delegate, I want clubs who have marked as coming to a carnival to be displayed on the Carnival information page in a list, with links to their club page. | ⭕ Not Started |
-| As a club delegate, I want to be able to upload a Draw for a Carnival and have it displayed on the Carnival page. | ⭕ Not Started |
+| As a club delegate, I want to be able to mark my club as attending a Carnival run by another club. | ✅ Completed |
+| As a club delegate, I want clubs who have marked as coming to a carnival to be displayed on the Carnival information page in a list, with links to their club page. | ✅ Completed |
+| As a club delegate, I want to be able to upload a Draw for a Carnival and have it displayed on the Carnival page. | ✅ Completed |
+| As a club delegate, I want to be able to email information on the carnival to attendee clubs directly from the Carnival page when logged in, email should have a link back to the carnival page. | ⭕ Not Started |
 | As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |
