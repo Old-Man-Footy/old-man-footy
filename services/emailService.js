@@ -610,6 +610,228 @@ class EmailService {
         }
     }
 
+    // Send contact form email to support team
+    async sendContactFormEmail(contactData) {
+        const {
+            firstName,
+            lastName,
+            email,
+            phone,
+            subject,
+            clubName,
+            message,
+            newsletter,
+            userAgent,
+            ipAddress
+        } = contactData;
+
+        const subjectMapping = {
+            'general': 'General Inquiry',
+            'technical': 'Technical Support',
+            'carnival': 'Carnival Information',
+            'delegate': 'Club Delegate Support',
+            'registration': 'Registration Help',
+            'feedback': 'Feedback/Suggestions',
+            'other': 'Other'
+        };
+
+        const emailSubject = `Contact Form: ${subjectMapping[subject] || 'General Inquiry'} - ${firstName} ${lastName}`;
+
+        const htmlContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: #006837; color: white; padding: 20px; text-align: center;">
+                    <h1 style="margin: 0;">Old Man Footy - Contact Form</h1>
+                </div>
+                
+                <div style="padding: 30px; background: #f8f9fa;">
+                    <h2 style="color: #006837; margin-top: 0;">New Contact Form Submission</h2>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #006837; margin-top: 0;">Contact Information</h3>
+                        <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+                        <p><strong>Email:</strong> ${email}</p>
+                        ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
+                        <p><strong>Subject:</strong> ${subjectMapping[subject] || 'Other'}</p>
+                        ${clubName ? `<p><strong>Club:</strong> ${clubName}</p>` : ''}
+                        <p><strong>Newsletter Subscription:</strong> ${newsletter ? 'Yes' : 'No'}</p>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #006837; margin-top: 0;">Message</h3>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: Arial, sans-serif;">${message}</div>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #006837; margin-top: 0;">Technical Information</h3>
+                        <p><strong>Submitted:</strong> ${new Date().toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}</p>
+                        <p><strong>IP Address:</strong> ${ipAddress}</p>
+                        <p><strong>User Agent:</strong> ${userAgent}</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="mailto:${email}?subject=Re: ${encodeURIComponent(emailSubject)}" 
+                           style="background: #006837; color: white; padding: 15px 30px; 
+                                  text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Reply to ${firstName}
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+                    <p>This email was sent from the Old Man Footy contact form.</p>
+                </div>
+            </div>
+        `;
+
+        const textContent = `
+Old Man Footy - Contact Form Submission
+
+Contact Information:
+Name: ${firstName} ${lastName}
+Email: ${email}
+${phone ? `Phone: ${phone}` : ''}
+Subject: ${subjectMapping[subject] || 'Other'}
+${clubName ? `Club: ${clubName}` : ''}
+Newsletter Subscription: ${newsletter ? 'Yes' : 'No'}
+
+Message:
+${message}
+
+Technical Information:
+Submitted: ${new Date().toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })}
+IP Address: ${ipAddress}
+User Agent: ${userAgent}
+
+Reply to: ${email}
+        `;
+
+        const mailOptions = {
+            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.com.au',
+            to: process.env.SUPPORT_EMAIL || 'support@oldmanfooty.com.au',
+            replyTo: email,
+            subject: emailSubject,
+            text: textContent,
+            html: htmlContent
+        };
+
+        try {
+            await this.transporter.sendMail(mailOptions);
+            console.log(`✅ Contact form email sent successfully from ${email}`);
+            
+            // Send auto-reply to the user
+            await this.sendContactFormAutoReply(email, firstName, subject);
+            
+        } catch (error) {
+            console.error('❌ Error sending contact form email:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Send auto-reply to contact form submitter
+     * @param {string} email - User's email address
+     * @param {string} firstName - User's first name
+     * @param {string} subject - Contact subject
+     */
+    async sendContactFormAutoReply(email, firstName, subject) {
+        const subjectMapping = {
+            'general': 'General Inquiry',
+            'technical': 'Technical Support',
+            'carnival': 'Carnival Information',
+            'delegate': 'Club Delegate Support',
+            'registration': 'Registration Help',
+            'feedback': 'Feedback/Suggestions',
+            'other': 'Other'
+        };
+
+        const htmlContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: #006837; color: white; padding: 20px; text-align: center;">
+                    <h1 style="margin: 0;">Thank You for Contacting Us</h1>
+                </div>
+                
+                <div style="padding: 30px; background: #f8f9fa;">
+                    <h2 style="color: #006837; margin-top: 0;">Hi ${firstName},</h2>
+                    
+                    <p>Thank you for reaching out to the Old Man Footy team regarding your <strong>${subjectMapping[subject] || 'inquiry'}</strong>.</p>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #006837; margin-top: 0;">What happens next?</h3>
+                        <ul style="line-height: 1.6;">
+                            <li>We've received your message and it's been forwarded to the appropriate team member</li>
+                            <li>We typically respond to inquiries within 1-2 business days</li>
+                            <li>You'll receive a response at this email address: <strong>${email}</strong></li>
+                            <li>If your inquiry is urgent, you can also email us directly at support@oldmanfooty.com.au</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #006837; margin-top: 0;">While you wait...</h3>
+                        <p>Feel free to explore more of what Old Man Footy has to offer:</p>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/carnivals" 
+                               style="background: #006837; color: white; padding: 12px 24px; 
+                                      text-decoration: none; border-radius: 5px; margin: 0 10px; display: inline-block;">
+                                Browse Carnivals
+                            </a>
+                            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/clubs" 
+                               style="background: #006837; color: white; padding: 12px 24px; 
+                                      text-decoration: none; border-radius: 5px; margin: 0 10px; display: inline-block;">
+                                Find Clubs
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <p style="color: #666; font-style: italic;">
+                        This is an automated response. Please do not reply to this email. 
+                        We'll respond to your inquiry from our support team shortly.
+                    </p>
+                </div>
+                
+                <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+                    <p>&copy; ${new Date().getFullYear()} Old Man Footy. All rights reserved.</p>
+                </div>
+            </div>
+        `;
+
+        const textContent = `
+Hi ${firstName},
+
+Thank you for reaching out to the Old Man Footy team regarding your ${subjectMapping[subject] || 'inquiry'}.
+
+What happens next?
+- We've received your message and it's been forwarded to the appropriate team member
+- We typically respond to inquiries within 1-2 business days
+- You'll receive a response at this email address: ${email}
+- If your inquiry is urgent, you can also email us directly at support@oldmanfooty.com.au
+
+While you wait, feel free to explore more of what Old Man Footy has to offer:
+- Browse Carnivals: ${process.env.BASE_URL || 'http://localhost:3000'}/carnivals
+- Find Clubs: ${process.env.BASE_URL || 'http://localhost:3000'}/clubs
+
+This is an automated response. Please do not reply to this email. 
+We'll respond to your inquiry from our support team shortly.
+
+© ${new Date().getFullYear()} Old Man Footy. All rights reserved.
+        `;
+
+        const mailOptions = {
+            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.com.au',
+            to: email,
+            subject: `Thank you for contacting Old Man Footy - ${subjectMapping[subject] || 'Your Inquiry'}`,
+            text: textContent,
+            html: htmlContent
+        };
+
+        try {
+            await this.transporter.sendMail(mailOptions);
+            console.log(`✅ Contact form auto-reply sent to ${email}`);
+        } catch (error) {
+            console.error('❌ Error sending contact form auto-reply:', error);
+            // Don't throw error here as it's not critical
+        }
+    }
+
     // Test email configuration
     async testEmailConfiguration() {
         try {

@@ -1,0 +1,244 @@
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <i class="bi bi-envelope display-3 text-primary mb-3"></i>
+            <h1 class="display-4 fw-bold mb-3">Contact Us</h1>
+            <p class="lead text-muted">Get in touch with the Old Man Footy team</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Contact Form -->
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">Send us a Message</h2>
+                    <p class="text-muted mb-4">Whether you're a player looking for carnivals or a club delegate needing help with the platform, we're here to assist.</p>
+                    
+                    <form id="contactForm" method="POST" action="/contact">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required maxlength="50">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" required maxlength="50">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required maxlength="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" maxlength="20">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
+                            <select class="form-select" id="subject" name="subject" required>
+                                <option value="">Please select a subject...</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="carnival">Carnival Information</option>
+                                <option value="delegate">Club Delegate Support</option>
+                                <option value="registration">Registration Help</option>
+                                <option value="feedback">Feedback/Suggestions</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <% if (user && user.clubId) { %>
+                        <div class="mb-3">
+                            <label for="clubName" class="form-label">Club Name</label>
+                            <input type="text" class="form-control" id="clubName" name="clubName" 
+                                   value="<%= user.clubId.clubName %>" readonly>
+                            <div class="form-text">Your associated club (automatically filled)</div>
+                        </div>
+                        <% } %>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="message" name="message" rows="6" required 
+                                      maxlength="2000" placeholder="Please describe your inquiry or issue in detail..."></textarea>
+                            <div class="form-text">
+                                <span id="charCount">0</span>/2000 characters
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter">
+                                <label class="form-check-label" for="newsletter">
+                                    I would like to receive updates about new carnivals and platform features
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise"></i> Clear Form
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contact Information -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">Other Ways to Reach Us</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-envelope text-primary me-2"></i>Email Support</h5>
+                            <p class="mb-3">
+                                For direct email support: 
+                                <a href="mailto:support@oldmanfooty.com.au">support@oldmanfooty.com.au</a>
+                            </p>
+                            
+                            <h5><i class="bi bi-clock text-primary me-2"></i>Response Time</h5>
+                            <p class="mb-3">We typically respond to inquiries within 1-2 business days.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-question-circle text-primary me-2"></i>Quick Links</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <a href="/carnivals" class="text-decoration-none">
+                                        <i class="bi bi-calendar3 me-1"></i> Browse Carnivals
+                                    </a>
+                                </li>
+                                <% if (user) { %>
+                                    <li class="mb-2">
+                                        <a href="/user-guide" class="text-decoration-none">
+                                            <i class="bi bi-book me-1"></i> User Guide
+                                        </a>
+                                    </li>
+                                <% } else { %>
+                                    <li class="mb-2">
+                                        <a href="/auth/register" class="text-decoration-none">
+                                            <i class="bi bi-person-plus me-1"></i> Register as Delegate
+                                        </a>
+                                    </li>
+                                <% } %>
+                                <li class="mb-0">
+                                    <a href="/about" class="text-decoration-none">
+                                        <i class="bi bi-info-circle me-1"></i> About Old Man Footy
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FAQ Section -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h2 class="h4 text-primary mb-3">Frequently Asked Questions</h2>
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq1">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse1" aria-expanded="false">
+                                    How do I register my club for a carnival?
+                                </button>
+                            </h3>
+                            <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    First, register as a club delegate if you haven't already. Then browse carnivals and use the registration links provided for each event. Most carnivals use the official MySideline registration system.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse2" aria-expanded="false">
+                                    How do I add my carnival to the platform?
+                                </button>
+                            </h3>
+                            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Register as a club delegate, then use the "Add Carnival" feature from your dashboard. Make sure to also register your event officially with the NRL if it's an official Masters competition.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq3">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse3" aria-expanded="false">
+                                    What is MySideline and how does it relate to this platform?
+                                </button>
+                            </h3>
+                            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    MySideline is the official registration platform for rugby league in Australia. Our platform complements MySideline by providing comprehensive carnival information while directing players to the official registration system.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for message textarea
+    const messageTextarea = document.getElementById('message');
+    const charCount = document.getElementById('charCount');
+    
+    if (messageTextarea && charCount) {
+        messageTextarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCount.textContent = currentLength;
+            
+            // Change color based on character count
+            if (currentLength > 1800) {
+                charCount.className = 'text-warning';
+            } else if (currentLength > 1900) {
+                charCount.className = 'text-danger';
+            } else {
+                charCount.className = 'text-muted';
+            }
+        });
+    }
+    
+    // Form validation
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            // Show loading state
+            submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+            submitButton.disabled = true;
+            
+            // Re-enable button after a delay in case of errors
+            setTimeout(() => {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }, 10000);
+        });
+    }
+});
+</script>

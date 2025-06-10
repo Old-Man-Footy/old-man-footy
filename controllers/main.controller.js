@@ -323,6 +323,101 @@ const sendNewsletter = async (req, res) => {
     }
 };
 
+/**
+ * Display contact page
+ */
+const getContact = (req, res) => {
+    res.render('contact', { title: 'Contact Us' });
+};
+
+/**
+ * Handle contact form submission
+ */
+const postContact = async (req, res) => {
+    try {
+        const { validationResult } = require('express-validator');
+        const errors = validationResult(req);
+        
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please correct the validation errors and try again.');
+            return res.render('contact', {
+                title: 'Contact Us',
+                errors: errors.array(),
+                formData: req.body
+            });
+        }
+
+        const {
+            firstName,
+            lastName,
+            email,
+            phone,
+            subject,
+            clubName,
+            message,
+            newsletter
+        } = req.body;
+
+        // Send contact email using the email service
+        try {
+            const emailService = require('../services/emailService');
+            await emailService.sendContactFormEmail({
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                email: email.trim().toLowerCase(),
+                phone: phone?.trim(),
+                subject,
+                clubName: clubName?.trim(),
+                message: message.trim(),
+                newsletter: newsletter === 'on',
+                userAgent: req.get('User-Agent'),
+                ipAddress: req.ip
+            });
+
+            // If user wants newsletter and isn't already subscribed, add them
+            if (newsletter === 'on') {
+                try {
+                    const existingSubscription = await EmailSubscription.findOne({
+                        where: { email: email.trim().toLowerCase() }
+                    });
+
+                    if (!existingSubscription) {
+                        await EmailSubscription.create({
+                            email: email.trim().toLowerCase(),
+                            subscribedStates: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'], // Subscribe to all states
+                            isActive: true,
+                            subscribedAt: new Date(),
+                            source: 'contact_form'
+                        });
+                    }
+                } catch (subscriptionError) {
+                    console.error('Error adding contact form newsletter subscription:', subscriptionError);
+                    // Don't fail the contact form if newsletter subscription fails
+                }
+            }
+
+            req.flash('success_msg', 'Thank you for contacting us! We\'ll get back to you within 1-2 business days.');
+            res.redirect('/contact');
+
+        } catch (emailError) {
+            console.error('Error sending contact form email:', emailError);
+            req.flash('error_msg', 'Sorry, there was an error sending your message. Please try again or email us directly at support@oldmanfooty.com.au');
+            res.render('contact', {
+                title: 'Contact Us',
+                formData: req.body
+            });
+        }
+
+    } catch (error) {
+        console.error('Error processing contact form:', error);
+        req.flash('error_msg', 'An unexpected error occurred. Please try again.');
+        res.render('contact', {
+            title: 'Contact Us',
+            formData: req.body
+        });
+    }
+};
+
 module.exports = {
     getIndex,
     getDashboard,
@@ -331,5 +426,7 @@ module.exports = {
     getUnsubscribe,
     postUnsubscribe,
     getStats,
-    sendNewsletter
+    sendNewsletter,
+    getContact,
+    postContact
 };

@@ -15,6 +15,46 @@ router.get('/dashboard', ensureAuthenticated, mainController.getDashboard);
 // About page
 router.get('/about', mainController.getAbout);
 
+// Contact page routes
+router.get('/contact', mainController.getContact);
+
+// Contact form submission with validation
+router.post('/contact', [
+    body('firstName')
+        .trim()
+        .isLength({ min: 1, max: 50 })
+        .withMessage('First name is required and must be less than 50 characters'),
+    body('lastName')
+        .trim()
+        .isLength({ min: 1, max: 50 })
+        .withMessage('Last name is required and must be less than 50 characters'),
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Valid email address is required'),
+    body('phone')
+        .optional()
+        .trim()
+        .isLength({ max: 20 })
+        .withMessage('Phone number must be less than 20 characters'),
+    body('subject')
+        .isIn(['general', 'technical', 'carnival', 'delegate', 'registration', 'feedback', 'other'])
+        .withMessage('Please select a valid subject'),
+    body('clubName')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Club name must be less than 100 characters'),
+    body('message')
+        .trim()
+        .isLength({ min: 10, max: 2000 })
+        .withMessage('Message is required and must be between 10-2000 characters'),
+    body('newsletter')
+        .optional()
+        .isIn(['on'])
+        .withMessage('Invalid newsletter subscription value')
+], mainController.postContact);
+
 // Email subscription
 router.post('/subscribe', [
     body('email').isEmail().withMessage('Valid email is required'),
