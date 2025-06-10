@@ -8,18 +8,26 @@ const emailService = require('./emailService');
 
 class MySidelineIntegrationService {
     constructor() {
-        this.baseUrl = process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au';
-        this.timeout = 30000;
-        this.retryCount = 3;
+        this.timeout = parseInt(process.env.MYSIDELINE_REQUEST_TIMEOUT) || 30000;
+        this.retryCount = parseInt(process.env.MYSIDELINE_RETRY_ATTEMPTS) || 3;
         this.rateLimit = 1000; // 1 second between requests
-        this.searchUrl = 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&type=Contact';
+        this.searchUrl = process.env.MYSIDELINE_URL;
         this.lastSyncDate = null;
         this.isRunning = false;
         this.requestDelay = 2000; // 2 second delay between requests to be respectful
         
-        // Configuration for development vs production
+        // Use existing environment variables
+        this.syncEnabled = process.env.MYSIDELINE_SYNC_ENABLED === 'true';
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true' || process.env.NODE_ENV === 'development';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
+        
+        // Log configuration on startup
+        console.log('MySideline Service Configuration:', {
+            syncEnabled: this.syncEnabled,
+            useMockData: this.useMockData,
+            enableScraping: this.enableScraping,
+            environment: process.env.NODE_ENV || 'development'
+        });
     }
 
     // Initialize the scheduled sync
@@ -88,6 +96,16 @@ class MySidelineIntegrationService {
 
     // Main sync function
     async syncMySidelineEvents() {
+        // Check if sync is enabled at all
+        if (!this.syncEnabled) {
+            console.log('MySideline sync is disabled via MYSIDELINE_SYNC_ENABLED configuration');
+            return {
+                success: true,
+                eventsProcessed: 0,
+                message: 'Sync disabled via configuration'
+            };
+        }
+
         if (this.isRunning) {
             console.log('MySideline sync already running, skipping...');
             return;
@@ -125,10 +143,12 @@ class MySidelineIntegrationService {
             // Check if we should use mock data instead of scraping
             if (this.useMockData) {
                 console.log('Using mock MySideline data (development mode)...');
-                return this.generateMockEvents('NSW').concat(
+                const mockEvents = this.generateMockEvents('NSW').concat(
                     this.generateMockEvents('QLD'),
                     this.generateMockEvents('VIC')
                 );
+                console.log(`Generated ${mockEvents.length} mock events for development`);
+                return mockEvents;
             }
 
             // Check if scraping is disabled
@@ -142,16 +162,23 @@ class MySidelineIntegrationService {
             // Use browser automation as primary method since MySideline requires JavaScript
             const events = await this.fetchEventsWithBrowser();
             
-            console.log(`Found ${events.length} Masters events from MySideline`);
-            return events;
+            if (events && events.length > 0) {
+                console.log(`Found ${events.length} Masters events from MySideline`);
+                return events;
+            } else {
+                console.log('No events found via browser automation');
+                return [];
+            }
         } catch (error) {
-            console.error('Failed to scrape MySideline events:', error);
-            // Fall back to mock data for development
-            console.log('Falling back to mock events for development...');
-            return this.generateMockEvents('NSW').concat(
-                this.generateMockEvents('QLD'),
-                this.generateMockEvents('VIC')
-            );
+            console.error('Failed to scrape MySideline events:', error.message);
+            
+            // In development, always fall back to mock data on error
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Browser automation failed in development...');               
+            }
+            
+            // In production, just return empty array
+            return [];
         }
     }
 
