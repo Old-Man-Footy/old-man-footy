@@ -51,11 +51,12 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want my sponsors sorted by most important at the top on my club and carnival pages. | ✅ Completed |
 | As a user, when I click on a sponsor, it should open a sponsor page with full details about the sponsor, logo, name, location, description etc.  All the information in the sponsor model should be on this screen. | ✅ Completed |
 | As a club delegate, I want to add 1:N alternate names to my club which are used when searching. | ✅ Completed |
-| As a user, I don't want links to be underlined on hover if they already move or change colour. | ⭕ Not Started |
-| As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ⭕ Not Started |
+| As a user, I don't want links to be underlined on hover if they already move or change colour. | ✅ Completed |
+| As a club delegate, I want to see a list of my sponsors on my club page with prominent Logo, Name, Location (and optional socials and contact details) and be able to order them by priority | ✅ Completed |
 | As a developer, I want to be able to link other clubs to Carnivals as attendees. Creating a new route CarnivalClub for 1:N relationships. | ⭕ Not Started |
 | As a club delegate, I want to be able to mark my club as attending a Carnival run by another club. | ⭕ Not Started |
 | As a club delegate, I want clubs who have marked as coming to a carnival to be displayed on the Carnival information page in a list, with links to their club page. | ⭕ Not Started |
+| As a club delegate, I want to be able to upload a Draw for a Carnival and have it displayed on the Carnival page. | ⭕ Not Started |
 | As a club delegate, when I log in, I want to be able to access a user guide that helps me understand how the site works. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
 | As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |
@@ -102,8 +103,11 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for `views/auth/accept-invitation.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/auth/login.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/auth/register.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/add-club.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/attendees.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/carnivals/edit.ejs`  | ⭕ Not Started |
-| As a tester, I want comprehensive unit tests for `views/carnivals/list.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/edit-registration.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for `views/carnivals/list.ejs`  | ⭕ Not Started | 
 | As a tester, I want comprehensive unit tests for `views/carnivals/new.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/carnivals/show.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for `views/carnivals/sponsors.ejs`  | ⭕ Not Started |

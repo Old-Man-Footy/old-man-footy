@@ -9,7 +9,7 @@
  */
 
 const bcrypt = require('bcrypt');
-const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor, ClubSponsor, CarnivalSponsor } = require('../models');
+const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub } = require('../models');
 const MySidelineService = require('../services/mySidelineService');
 
 // Load environment variables
@@ -1280,6 +1280,288 @@ class DatabaseSeeder {
     }
 
     /**
+     * Link clubs to carnivals as attendees with realistic registration data
+     */
+    async linkClubsToCarnivals() {
+        console.log('🎪 Registering clubs as carnival attendees...');
+        
+        let totalRegistrations = 0;
+        
+        // Process each carnival to add realistic club attendance
+        for (const carnival of this.createdCarnivals) {
+            // Skip past events (older than 3 months ago) - limited attendees for historical data
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            
+            const isPastEvent = carnival.date < threeMonthsAgo;
+            const isUpcomingEvent = carnival.date > new Date();
+            
+            // Determine number of attending clubs based on carnival type and timing
+            let minClubs, maxClubs;
+            
+            if (carnival.title.includes('Grand Final') || carnival.title.includes('Championship')) {
+                // Major events get more attendees
+                minClubs = isPastEvent ? 4 : 8;
+                maxClubs = isPastEvent ? 8 : 16;
+            } else if (carnival.title.includes('Cup') || carnival.title.includes('Carnival')) {
+                // Medium events
+                minClubs = isPastEvent ? 3 : 5;
+                maxClubs = isPastEvent ? 6 : 12;
+            } else {
+                // Regular tournaments
+                minClubs = isPastEvent ? 2 : 3;
+                maxClubs = isPastEvent ? 5 : 8;
+            }
+            
+            const numAttendees = Math.floor(Math.random() * (maxClubs - minClubs + 1)) + minClubs;
+            
+            // Get potential attending clubs - prefer same state with some interstate
+            const localClubs = this.createdClubs.filter(club => 
+                club.state === carnival.state && club.isPubliclyListed
+            );
+            const interstateClubs = this.createdClubs.filter(club => 
+                club.state !== carnival.state && club.isPubliclyListed
+            );
+            
+            const selectedClubs = [];
+            
+            // 75% local clubs, 25% interstate for major events
+            const localCount = Math.ceil(numAttendees * 0.75);
+            const interstateCount = numAttendees - localCount;
+            
+            // Select local clubs
+            const availableLocalClubs = [...localClubs];
+            for (let i = 0; i < localCount && availableLocalClubs.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * availableLocalClubs.length);
+                const selectedClub = availableLocalClubs.splice(randomIndex, 1)[0];
+                selectedClubs.push(selectedClub);
+            }
+            
+            // Select interstate clubs for major events
+            const availableInterstateClubs = [...interstateClubs];
+            for (let i = 0; i < interstateCount && availableInterstateClubs.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * availableInterstateClubs.length);
+                const selectedClub = availableInterstateClubs.splice(randomIndex, 1)[0];
+                selectedClubs.push(selectedClub);
+            }
+            
+            // Create realistic registrations for each attending club
+            for (let i = 0; i < selectedClubs.length; i++) {
+                const club = selectedClubs[i];
+                
+                // Generate registration date (1-60 days before carnival)
+                const registrationDate = new Date(carnival.date);
+                const daysBeforeEvent = Math.floor(Math.random() * 60) + 1;
+                registrationDate.setDate(registrationDate.getDate() - daysBeforeEvent);
+                
+                // Team name variations
+                const teamNames = [
+                    null, // Use club name
+                    `${club.clubName.split(' ')[0]} Warriors`,
+                    `${club.clubName.split(' ')[0]} Legends`,
+                    `${club.clubName.split(' ')[0]} Masters`,
+                    `${club.location} ${club.clubName.split(' ')[club.clubName.split(' ').length - 1]}`,
+                ];
+                const teamName = Math.random() < 0.3 ? teamNames[Math.floor(Math.random() * teamNames.length)] : null;
+                
+                // Player count (realistic for masters teams)
+                const playerCount = Math.floor(Math.random() * 8) + 13; // 13-20 players
+                
+                // Contact person (use club contact or generate variant)
+                const contactVariants = [
+                    club.contactPerson,
+                    `${club.contactPerson?.split(' ')[0]} ${club.contactPerson?.split(' ')[1]}`,
+                    'Team Manager',
+                    'Club Secretary',
+                    'Team Captain'
+                ];
+                const contactPerson = contactVariants[Math.floor(Math.random() * contactVariants.length)];
+                
+                // Contact details
+                const contactEmail = club.contactEmail || `team@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`;
+                const contactPhone = club.contactPhone || this.generatePhoneNumber();
+                
+                // Special requirements (20% of teams have special requirements)
+                const specialRequirements = Math.random() < 0.2 ? this.generateSpecialRequirements() : null;
+                
+                // Registration notes (30% have notes)
+                const registrationNotes = Math.random() < 0.3 ? this.generateRegistrationNotes(club, carnival) : null;
+                
+                // Payment details
+                const registrationFees = {
+                    'Grand Final': { min: 120, max: 200 },
+                    'Championship': { min: 100, max: 180 },
+                    'Cup': { min: 80, max: 150 },
+                    'Carnival': { min: 70, max: 120 },
+                    'Tournament': { min: 60, max: 100 },
+                    'Festival': { min: 50, max: 90 },
+                    'Derby': { min: 80, max: 130 }
+                };
+                
+                let feeRange = { min: 60, max: 100 }; // Default
+                for (const [eventType, range] of Object.entries(registrationFees)) {
+                    if (carnival.title.includes(eventType)) {
+                        feeRange = range;
+                        break;
+                    }
+                }
+                
+                const paymentAmount = Math.floor(Math.random() * (feeRange.max - feeRange.min + 1)) + feeRange.min;
+                
+                // Payment status - past events are mostly paid, future events have mixed status
+                let isPaid;
+                let paymentDate = null;
+                
+                if (isPastEvent) {
+                    isPaid = Math.random() < 0.95; // 95% of past events are paid
+                } else if (isUpcomingEvent) {
+                    isPaid = Math.random() < 0.6; // 60% of future events are already paid
+                } else {
+                    isPaid = Math.random() < 0.8; // 80% of recent events are paid
+                }
+                
+                if (isPaid) {
+                    paymentDate = new Date(registrationDate);
+                    paymentDate.setDate(paymentDate.getDate() + Math.floor(Math.random() * 14)); // Paid within 2 weeks of registration
+                }
+                
+                // Create the carnival-club registration
+                await CarnivalClub.create({
+                    carnivalId: carnival.id,
+                    clubId: club.id,
+                    registrationDate: registrationDate,
+                    teamName: teamName,
+                    playerCount: playerCount,
+                    contactPerson: contactPerson,
+                    contactEmail: contactEmail,
+                    contactPhone: contactPhone,
+                    specialRequirements: specialRequirements,
+                    registrationNotes: registrationNotes,
+                    paymentAmount: paymentAmount,
+                    isPaid: isPaid,
+                    paymentDate: paymentDate,
+                    isActive: true
+                });
+                
+                totalRegistrations++;
+            }
+        }
+        
+        console.log(`✅ Created ${totalRegistrations} club-carnival registrations`);
+    }
+
+    /**
+     * Generate realistic special requirements for teams
+     */
+    generateSpecialRequirements() {
+        const requirements = [
+            'Dietary requirements: 2 vegetarian meals needed',
+            'Wheelchair accessibility required for one player',
+            'Early departure needed - must finish by 4:00 PM',
+            'Medical officer on standby required for player with heart condition',
+            'Gluten-free meal options needed',
+            'Parking for team bus required',
+            'Late arrival - team arriving after 10:00 AM',
+            'Photography restrictions - no social media photos of certain players',
+            'Temperature controlled changing rooms needed',
+            'Injury support - physiotherapy services required',
+            'Religious dietary requirements - halal meals needed',
+            'Medication storage - refrigeration required for player medications'
+        ];
+        
+        return requirements[Math.floor(Math.random() * requirements.length)];
+    }
+
+    /**
+     * Generate realistic registration notes for internal use
+     */
+    generateRegistrationNotes(club, carnival) {
+        const notes = [
+            `Strong team this year - won ${club.state} championship last season`,
+            'New club to the competition - first time attending',
+            'Regular attendees - 5th consecutive year participating',
+            'Late registration due to player availability issues',
+            'Traveling team - accommodation assistance provided',
+            'Club celebrating 25th anniversary this year',
+            'Merged team with local rival club due to numbers',
+            'Young masters team - most players aged 35-40',
+            'Veteran team - experienced players, competitive group',
+            'Social players - here for fun and camaraderie',
+            'Former NRL players in the squad',
+            'Club fundraising for new jerseys through tournament',
+            'Interstate rivals - traditional rivalry with host club',
+            'Weather-dependent attendance - may withdraw if conditions poor',
+            'Sponsored team - major local business backing'
+        ];
+        
+        return notes[Math.floor(Math.random() * notes.length)];
+    }
+
+    /**
+     * Generate realistic Australian phone numbers
+     */
+    generatePhoneNumber() {
+        const areaCodes = ['02', '03', '07', '08'];
+        const mobilePrefix = '04';
+        
+        // 70% mobile, 30% landline
+        if (Math.random() < 0.7) {
+            // Mobile number
+            const remainder = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+            return `${mobilePrefix}${remainder.substring(0, 2)} ${remainder.substring(2, 5)} ${remainder.substring(5, 8)}`;
+        } else {
+            // Landline number
+            const areaCode = areaCodes[Math.floor(Math.random() * areaCodes.length)];
+            const number = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+            return `(${areaCode}) ${number.substring(0, 4)} ${number.substring(4, 8)}`;
+        }
+    }
+
+    /**
+     * Generate summary statistics using Sequelize
+     */
+    async generateSummary() {
+        const stats = {
+            clubs: await Club.count({ where: { isActive: true } }),
+            users: await User.count({ where: { isActive: true } }),
+            carnivals: await Carnival.count({ where: { isActive: true } }),
+            manualCarnivals: await Carnival.count({ where: { isManuallyEntered: true, isActive: true } }),
+            mySidelineCarnivals: await Carnival.count({ where: { isManuallyEntered: false, isActive: true } }),
+            subscriptions: await EmailSubscription.count({ where: { isActive: true } }),
+            sponsors: await Sponsor.count({ where: { isActive: true } }),
+            clubSponsors: await ClubSponsor.count({ where: { isActive: true } }),
+            carnivalSponsors: await CarnivalSponsor.count({ where: { isActive: true } }),
+            carnivalRegistrations: await CarnivalClub.count({ where: { isActive: true } }),
+            paidRegistrations: await CarnivalClub.count({ where: { isPaid: true, isActive: true } }),
+            upcomingCarnivals: await Carnival.count({ 
+                where: { 
+                    date: { [require('sequelize').Op.gte]: new Date() }, 
+                    isActive: true 
+                }
+            })
+        };
+
+        console.log('\n📊 DATABASE SEEDING SUMMARY');
+        console.log('=' .repeat(50));
+        console.log(`👥 Users: ${stats.users} (including admin)`);
+        console.log(`🏢 Clubs: ${stats.clubs}`);
+        console.log(`🤝 Sponsors: ${stats.sponsors}`);
+        console.log(`🔗 Club-Sponsor Relationships: ${stats.clubSponsors}`);
+        console.log(`🎪 Total Carnivals: ${stats.carnivals}`);
+        console.log(`   ✏️  Manual: ${stats.manualCarnivals}`);
+        console.log(`   🔄 MySideline: ${stats.mySidelineCarnivals}`);
+        console.log(`   📅 Upcoming: ${stats.upcomingCarnivals}`);
+        console.log(`🎪 Carnival-Sponsor Relationships: ${stats.carnivalSponsors}`);
+        console.log(`🎟️ Carnival Registrations: ${stats.carnivalRegistrations}`);
+        console.log(`   💰 Paid: ${stats.paidRegistrations}`);
+        console.log(`   ⏳ Pending: ${stats.carnivalRegistrations - stats.paidRegistrations}`);
+        console.log(`📧 Email Subscriptions: ${stats.subscriptions}`);
+        console.log('=' .repeat(50));
+        
+        return stats;
+    }
+
+    /**
      * Generate realistic contract details for club sponsorships
      */
     generateContractDetails(level, businessType) {
@@ -1359,41 +1641,6 @@ class DatabaseSeeder {
     }
 
     /**
-     * Generate summary statistics using Sequelize
-     */
-    async generateSummary() {
-        const stats = {
-            clubs: await Club.count({ where: { isActive: true } }),
-            users: await User.count({ where: { isActive: true } }),
-            carnivals: await Carnival.count({ where: { isActive: true } }),
-            manualCarnivals: await Carnival.count({ where: { isManuallyEntered: true, isActive: true } }),
-            mySidelineCarnivals: await Carnival.count({ where: { isManuallyEntered: false, isActive: true } }),
-            subscriptions: await EmailSubscription.count({ where: { isActive: true } }),
-            sponsors: await Sponsor.count({ where: { isActive: true } }),
-            upcomingCarnivals: await Carnival.count({ 
-                where: { 
-                    date: { [require('sequelize').Op.gte]: new Date() }, 
-                    isActive: true 
-                }
-            })
-        };
-
-        console.log('\n📊 DATABASE SEEDING SUMMARY');
-        console.log('=' .repeat(50));
-        console.log(`👥 Users: ${stats.users} (including admin)`);
-        console.log(`🏢 Clubs: ${stats.clubs}`);
-        console.log(`🤝 Sponsors: ${stats.sponsors}`);
-        console.log(`🎪 Total Carnivals: ${stats.carnivals}`);
-        console.log(`   ✏️  Manual: ${stats.manualCarnivals}`);
-        console.log(`   🔄 MySideline: ${stats.mySidelineCarnivals}`);
-        console.log(`   📅 Upcoming: ${stats.upcomingCarnivals}`);
-        console.log(`📧 Email Subscriptions: ${stats.subscriptions}`);
-        console.log('=' .repeat(50));
-        
-        return stats;
-    }
-
-    /**
      * Run the complete seeding process
      */
     async seed() {
@@ -1408,6 +1655,7 @@ class DatabaseSeeder {
             await this.linkSponsorsToClubs();
             await this.createManualCarnivals();
             await this.linkSponsorsToCarnivals();
+            await this.linkClubsToCarnivals();
             await this.importMySidelineData();
             await this.createEmailSubscriptions();
             await this.generateSummary();

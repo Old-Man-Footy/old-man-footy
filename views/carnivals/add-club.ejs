@@ -1,0 +1,237 @@
+<%- include('../layout', { title: title }) %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals">Carnivals</a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>"><%= carnival.carnivalName %></a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>/attendees">Attendees</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Club</li>
+                </ol>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Add Club to <%= carnival.carnivalName %></h2>
+                    <p class="text-muted">Register a club to attend your carnival</p>
+                </div>
+                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Attendees
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Registration Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-plus-circle"></i> Club Registration
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (availableClubs.length === 0) { %>
+                                <div class="text-center py-4">
+                                    <div class="mb-3">
+                                        <i class="bi bi-info-circle text-muted" style="font-size: 3rem;"></i>
+                                    </div>
+                                    <h5 class="text-muted">No Available Clubs</h5>
+                                    <p class="text-muted">All publicly listed clubs are either already registered for this carnival or there are no active clubs in the system.</p>
+                                    <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-primary">
+                                        <i class="bi bi-arrow-left"></i> Back to Attendees
+                                    </a>
+                                </div>
+                            <% } else { %>
+                                <form method="POST" action="/carnivals/<%= carnival.id %>/attendees/add">
+                                    <!-- Club Selection -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-primary mb-3">
+                                                <i class="bi bi-shield"></i> Select Club
+                                            </h6>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="clubId" class="form-label">Club *</label>
+                                            <select class="form-select" id="clubId" name="clubId" required>
+                                                <option value="">Choose a club...</option>
+                                                <% availableClubs.forEach(club => { %>
+                                                    <option value="<%= club.id %>">
+                                                        <%= club.clubName %> 
+                                                        (<%= club.state %><% if (club.location) { %> - <%= club.location %><% } %>)
+                                                    </option>
+                                                <% }); %>
+                                            </select>
+                                            <div class="form-text">Select the club that will be attending this carnival</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Team Details -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-primary mb-3">
+                                                <i class="bi bi-people"></i> Team Details
+                                            </h6>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="teamName" class="form-label">Team Name</label>
+                                            <input type="text" class="form-control" id="teamName" name="teamName" 
+                                                   placeholder="e.g., Warriors A-Team" maxlength="100">
+                                            <div class="form-text">Optional team name if different from club name</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="playerCount" class="form-label">Number of Players</label>
+                                            <input type="number" class="form-control" id="playerCount" name="playerCount" 
+                                                   min="1" max="100" placeholder="e.g., 15">
+                                            <div class="form-text">Expected number of players attending</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contact Information -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-primary mb-3">
+                                                <i class="bi bi-person"></i> Contact Information
+                                            </h6>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="contactPerson" class="form-label">Contact Person</label>
+                                            <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                                   placeholder="e.g., John Smith" maxlength="100">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="contactEmail" class="form-label">Contact Email</label>
+                                            <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                                   placeholder="e.g., john@warriors.com" maxlength="100">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="contactPhone" class="form-label">Contact Phone</label>
+                                            <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                                   placeholder="e.g., 0412 345 678" maxlength="20">
+                                        </div>
+                                    </div>
+
+                                    <!-- Additional Information -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-primary mb-3">
+                                                <i class="bi bi-info-circle"></i> Additional Information
+                                            </h6>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="specialRequirements" class="form-label">Special Requirements</label>
+                                            <textarea class="form-control" id="specialRequirements" name="specialRequirements" 
+                                                      rows="3" maxlength="500" 
+                                                      placeholder="Any special accommodations needed (dietary, accessibility, etc.)"></textarea>
+                                            <div class="form-text">Maximum 500 characters</div>
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <label for="registrationNotes" class="form-label">Registration Notes</label>
+                                            <textarea class="form-control" id="registrationNotes" name="registrationNotes" 
+                                                      rows="3" maxlength="1000" 
+                                                      placeholder="Internal notes about this registration"></textarea>
+                                            <div class="form-text">Internal notes visible only to carnival organizers (max 1000 characters)</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Information -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <h6 class="text-primary mb-3">
+                                                <i class="bi bi-credit-card"></i> Payment Information
+                                            </h6>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="paymentAmount" class="form-label">Registration Fee</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" id="paymentAmount" name="paymentAmount" 
+                                                       step="0.01" min="0" placeholder="0.00">
+                                            </div>
+                                            <div class="form-text">Enter the registration fee amount</div>
+                                        </div>
+                                        <div class="col-md-6 d-flex align-items-end">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="isPaid" name="isPaid">
+                                                <label class="form-check-label" for="isPaid">
+                                                    <strong>Payment Received</strong>
+                                                </label>
+                                                <div class="form-text">Check if payment has already been received</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Form Actions -->
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-secondary">
+                                            Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle"></i> Register Club
+                                        </button>
+                                    </div>
+                                </form>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-lightbulb"></i> Registration Tips
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Complete Contact Details</strong> - Ensure you have accurate contact information for communication
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Player Count</strong> - Accurate numbers help with planning and catering
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Special Requirements</strong> - Note any dietary restrictions or accessibility needs
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Payment Tracking</strong> - Keep track of registration fees for financial planning
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Carnival Information -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calendar-event"></i> Carnival Details
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6><%= carnival.carnivalName %></h6>
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-calendar"></i> <%= new Date(carnival.date).toLocaleDateString() %>
+                            </p>
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-geo-alt"></i> <%= carnival.location %>
+                            </p>
+                            <% if (carnival.description) { %>
+                                <p class="small"><%= carnival.description %></p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

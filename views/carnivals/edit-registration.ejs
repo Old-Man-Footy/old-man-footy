@@ -1,0 +1,312 @@
+<%- include('../layout', { title: title }) %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals">Carnivals</a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>"><%= carnival.carnivalName %></a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>/attendees">Attendees</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Registration</li>
+                </ol>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Edit Registration - <%= registration.club.clubName %></h2>
+                    <p class="text-muted">Update registration details for <%= carnival.carnivalName %></p>
+                </div>
+                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Attendees
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Edit Registration Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-pencil"></i> Registration Details
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/edit">
+                                <!-- Club Information (Read-only) -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-shield"></i> Club Information
+                                        </h6>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="alert alert-light border">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-3">
+                                                    <% if (registration.club.logoUrl) { %>
+                                                        <img src="<%= registration.club.logoUrl %>" 
+                                                             alt="<%= registration.club.clubName %>" 
+                                                             class="rounded" 
+                                                             style="width: 50px; height: 50px; object-fit: contain;">
+                                                    <% } else { %>
+                                                        <div class="bg-light border rounded d-flex align-items-center justify-content-center" 
+                                                             style="width: 50px; height: 50px;">
+                                                            <i class="bi bi-shield text-muted"></i>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1"><%= registration.club.clubName %></h6>
+                                                    <small class="text-muted">
+                                                        <%= registration.club.state %>
+                                                        <% if (registration.club.location) { %> - <%= registration.club.location %><% } %>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Team Details -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-people"></i> Team Details
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="teamName" class="form-label">Team Name</label>
+                                        <input type="text" class="form-control" id="teamName" name="teamName" 
+                                               value="<%= registration.teamName || '' %>"
+                                               placeholder="e.g., Warriors A-Team" maxlength="100">
+                                        <div class="form-text">Optional team name if different from club name</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="playerCount" class="form-label">Number of Players</label>
+                                        <input type="number" class="form-control" id="playerCount" name="playerCount" 
+                                               value="<%= registration.playerCount || '' %>"
+                                               min="1" max="100" placeholder="e.g., 15">
+                                        <div class="form-text">Expected number of players attending</div>
+                                    </div>
+                                </div>
+
+                                <!-- Contact Information -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-person"></i> Contact Information
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="contactPerson" class="form-label">Contact Person</label>
+                                        <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                               value="<%= registration.contactPerson || '' %>"
+                                               placeholder="e.g., John Smith" maxlength="100">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="contactEmail" class="form-label">Contact Email</label>
+                                        <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                               value="<%= registration.contactEmail || '' %>"
+                                               placeholder="e.g., john@warriors.com" maxlength="100">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="contactPhone" class="form-label">Contact Phone</label>
+                                        <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                               value="<%= registration.contactPhone || '' %>"
+                                               placeholder="e.g., 0412 345 678" maxlength="20">
+                                    </div>
+                                </div>
+
+                                <!-- Additional Information -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-info-circle"></i> Additional Information
+                                        </h6>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="specialRequirements" class="form-label">Special Requirements</label>
+                                        <textarea class="form-control" id="specialRequirements" name="specialRequirements" 
+                                                  rows="3" maxlength="500" 
+                                                  placeholder="Any special accommodations needed (dietary, accessibility, etc.)"><%= registration.specialRequirements || '' %></textarea>
+                                        <div class="form-text">Maximum 500 characters</div>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <label for="registrationNotes" class="form-label">Registration Notes</label>
+                                        <textarea class="form-control" id="registrationNotes" name="registrationNotes" 
+                                                  rows="3" maxlength="1000" 
+                                                  placeholder="Internal notes about this registration"><%= registration.registrationNotes || '' %></textarea>
+                                        <div class="form-text">Internal notes visible only to carnival organizers (max 1000 characters)</div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Information -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-credit-card"></i> Payment Information
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="paymentAmount" class="form-label">Registration Fee</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="paymentAmount" name="paymentAmount" 
+                                                   value="<%= registration.paymentAmount || '' %>"
+                                                   step="0.01" min="0" placeholder="0.00">
+                                        </div>
+                                        <div class="form-text">Enter the registration fee amount</div>
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-end">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="isPaid" name="isPaid" 
+                                                   <%= registration.isPaid ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="isPaid">
+                                                <strong>Payment Received</strong>
+                                            </label>
+                                            <div class="form-text">
+                                                <% if (registration.isPaid && registration.paymentDate) { %>
+                                                    Paid on <%= new Date(registration.paymentDate).toLocaleDateString() %>
+                                                <% } else { %>
+                                                    Check if payment has been received
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Registration History -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-clock-history"></i> Registration History
+                                        </h6>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="alert alert-light border">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <strong>Registered:</strong> 
+                                                    <%= new Date(registration.registrationDate).toLocaleDateString() %>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>Last Updated:</strong> 
+                                                    <%= new Date(registration.updatedAt).toLocaleDateString() %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Form Actions -->
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-secondary">
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle"></i> Update Registration
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle"></i> Registration Summary
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>Club:</strong> <%= registration.club.clubName %>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Carnival:</strong> <%= carnival.carnivalName %>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Registration Date:</strong> 
+                                <%= new Date(registration.registrationDate).toLocaleDateString() %>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Payment Status:</strong>
+                                <% if (registration.isPaid) { %>
+                                    <span class="badge bg-success">Paid</span>
+                                    <% if (registration.paymentAmount) { %>
+                                        ($<%= registration.paymentAmount %>)
+                                    <% } %>
+                                <% } else { %>
+                                    <span class="badge bg-warning">Pending</span>
+                                <% } %>
+                            </div>
+                            <% if (registration.playerCount) { %>
+                                <div class="mb-3">
+                                    <strong>Players:</strong> <%= registration.playerCount %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Actions Card -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-tools"></i> Actions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button type="button" 
+                                        class="btn btn-outline-danger remove-registration"
+                                        data-registration-id="<%= registration.id %>"
+                                        data-club-name="<%= registration.club.clubName %>">
+                                    <i class="bi bi-trash"></i> Remove from Carnival
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove registration functionality
+    document.querySelector('.remove-registration')?.addEventListener('click', function() {
+        const registrationId = this.dataset.registrationId;
+        const clubName = this.dataset.clubName;
+        
+        if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {
+            removeRegistration(registrationId);
+        }
+    });
+
+    async function removeRegistration(registrationId) {
+        try {
+            const response = await fetch(`/carnivals/<%= carnival.id %>/attendees/${registrationId}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                window.location.href = '/carnivals/<%= carnival.id %>/attendees';
+            } else {
+                alert(result.message || 'Error removing registration');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error removing registration');
+        }
+    }
+});
+</script>

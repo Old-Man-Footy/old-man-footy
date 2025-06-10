@@ -5,7 +5,7 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Carnival, User, Club, Sponsor } = require('../models');
+const { Carnival, User, Club, Sponsor, CarnivalClub } = require('../models');
 const { validationResult } = require('express-validator');
 const mySidelineService = require('../services/mySidelineService');
 const emailService = require('../services/emailService');
@@ -122,6 +122,13 @@ const showCarnival = async (req, res) => {
                     where: { isActive: true },
                     required: false,
                     through: { attributes: ['displayOrder'] }
+                },
+                // Include attendees relationship
+                {
+                    model: Club,
+                    as: 'attendingClubs',
+                    through: { attributes: [] },
+                    required: false
                 }
             ]
         });

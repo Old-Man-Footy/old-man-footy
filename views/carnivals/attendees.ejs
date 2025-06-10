@@ -1,0 +1,271 @@
+<%- include('../layout', { title: title }) %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals">Carnivals</a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>"><%= carnival.carnivalName %></a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Attendees</li>
+                </ol>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><%= carnival.carnivalName %> - Attendees</h2>
+                    <p class="text-muted">Manage club registrations and attendance for your carnival</p>
+                </div>
+                <div class="btn-group">
+                    <a href="/carnivals/<%= carnival.id %>/attendees/add" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Club
+                    </a>
+                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Carnival
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 bg-primary text-white">
+                        <div class="card-body text-center">
+                            <div class="display-6 fw-bold"><%= totalAttendees %></div>
+                            <small>Total Clubs</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-success text-white">
+                        <div class="card-body text-center">
+                            <div class="display-6 fw-bold"><%= paidAttendees %></div>
+                            <small>Paid Registrations</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-info text-white">
+                        <div class="card-body text-center">
+                            <div class="display-6 fw-bold"><%= totalPlayerCount %></div>
+                            <small>Total Players</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <div class="display-6 fw-bold"><%= totalAttendees - paidAttendees %></div>
+                            <small>Pending Payment</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attending Clubs -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i> Registered Clubs
+                        <span class="badge bg-secondary ms-2"><%= attendingClubs.length %></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (attendingClubs.length === 0) { %>
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+                            </div>
+                            <h5 class="text-muted">No Clubs Registered Yet</h5>
+                            <p class="text-muted">Start building your carnival by adding clubs that will be attending.</p>
+                            <a href="/carnivals/<%= carnival.id %>/attendees/add" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Add First Club
+                            </a>
+                        </div>
+                    <% } else { %>
+                        <!-- Club List -->
+                        <div id="attendeesList" class="row">
+                            <% attendingClubs.forEach(registration => { %>
+                                <div class="col-lg-6 mb-3" data-registration-id="<%= registration.id %>">
+                                    <div class="card attendee-card">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-start">
+                                                <!-- Club Logo -->
+                                                <div class="me-3">
+                                                    <% if (registration.club.logoUrl) { %>
+                                                        <img src="<%= registration.club.logoUrl %>" 
+                                                             alt="<%= registration.club.clubName %>" 
+                                                             class="attendee-logo">
+                                                    <% } else { %>
+                                                        <div class="attendee-logo-placeholder d-flex align-items-center justify-content-center">
+                                                            <i class="bi bi-shield text-muted"></i>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+
+                                                <!-- Club Details -->
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="card-title mb-1">
+                                                                <%= registration.club.clubName %>
+                                                                <% if (registration.teamName) { %>
+                                                                    <small class="text-muted">(<%= registration.teamName %>)</small>
+                                                                <% } %>
+                                                            </h6>
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-geo-alt"></i> 
+                                                                <%= registration.club.state %>
+                                                                <% if (registration.club.location) { %>
+                                                                    · <%= registration.club.location %>
+                                                                <% } %>
+                                                            </small>
+                                                        </div>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/edit" 
+                                                               class="btn btn-outline-primary btn-sm" title="Edit Registration">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </a>
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-danger btn-sm remove-attendee"
+                                                                    data-registration-id="<%= registration.id %>"
+                                                                    data-club-name="<%= registration.club.clubName %>"
+                                                                    title="Remove Club">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Registration Details -->
+                                                    <div class="row g-2 small">
+                                                        <div class="col-6">
+                                                            <strong>Registered:</strong> 
+                                                            <%= new Date(registration.registrationDate).toLocaleDateString() %>
+                                                        </div>
+                                                        <% if (registration.playerCount) { %>
+                                                            <div class="col-6">
+                                                                <strong>Players:</strong> <%= registration.playerCount %>
+                                                            </div>
+                                                        <% } %>
+                                                        <% if (registration.contactPerson) { %>
+                                                            <div class="col-6">
+                                                                <strong>Contact:</strong> <%= registration.contactPerson %>
+                                                            </div>
+                                                        <% } %>
+                                                        <div class="col-6">
+                                                            <strong>Payment:</strong>
+                                                            <% if (registration.isPaid) { %>
+                                                                <span class="badge bg-success">Paid</span>
+                                                                <% if (registration.paymentAmount) { %>
+                                                                    $<%= registration.paymentAmount %>
+                                                                <% } %>
+                                                            <% } else { %>
+                                                                <span class="badge bg-warning">Pending</span>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+
+                                                    <% if (registration.specialRequirements) { %>
+                                                        <div class="mt-2">
+                                                            <small class="text-info">
+                                                                <i class="bi bi-info-circle"></i> 
+                                                                <strong>Special Requirements:</strong> <%= registration.specialRequirements %>
+                                                            </small>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-4">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Tip:</strong> You can drag and drop club cards to reorder them for display purposes.
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove attendee functionality
+    document.querySelectorAll('.remove-attendee').forEach(button => {
+        button.addEventListener('click', function() {
+            const registrationId = this.dataset.registrationId;
+            const clubName = this.dataset.clubName;
+            
+            if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {
+                removeAttendee(registrationId);
+            }
+        });
+    });
+
+    async function removeAttendee(registrationId) {
+        try {
+            const response = await fetch(`/carnivals/<%= carnival.id %>/attendees/${registrationId}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload(); // Refresh to show updated list
+            } else {
+                alert(result.message || 'Error removing club from carnival');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error removing club from carnival');
+        }
+    }
+
+    // Sortable functionality for reordering (if needed in future)
+    // This would require additional JavaScript library like SortableJS
+});
+</script>
+
+<style>
+.attendee-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.attendee-logo-placeholder {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1.5rem;
+}
+
+.attendee-card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.attendee-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>

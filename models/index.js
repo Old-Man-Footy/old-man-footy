@@ -16,6 +16,7 @@ const Sponsor = require('./Sponsor');
 const ClubSponsor = require('./ClubSponsor');
 const CarnivalSponsor = require('./CarnivalSponsor');
 const ClubAlternateName = require('./ClubAlternateName');
+const CarnivalClub = require('./CarnivalClub');
 
 /**
  * Define model associations/relationships
@@ -57,6 +58,21 @@ User.hasMany(Carnival, {
   as: 'carnivals'
 });
 
+// Carnival and Club many-to-many relationship through CarnivalClub
+Carnival.belongsToMany(Club, {
+  through: CarnivalClub,
+  foreignKey: 'carnivalId',
+  otherKey: 'clubId',
+  as: 'attendingClubs'
+});
+
+Club.belongsToMany(Carnival, {
+  through: CarnivalClub,
+  foreignKey: 'clubId',
+  otherKey: 'carnivalId',
+  as: 'attendingCarnivals'
+});
+
 // Club and Sponsor many-to-many relationship through ClubSponsor
 Club.belongsToMany(Sponsor, {
   through: ClubSponsor,
@@ -88,6 +104,16 @@ Sponsor.belongsToMany(Carnival, {
 });
 
 // Direct associations for junction tables
+CarnivalClub.belongsTo(Carnival, {
+  foreignKey: 'carnivalId',
+  as: 'carnival'
+});
+
+CarnivalClub.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'club'
+});
+
 ClubSponsor.belongsTo(Club, {
   foreignKey: 'clubId',
   as: 'club'
@@ -106,6 +132,16 @@ CarnivalSponsor.belongsTo(Carnival, {
 CarnivalSponsor.belongsTo(Sponsor, {
   foreignKey: 'sponsorId',
   as: 'sponsor'
+});
+
+Carnival.hasMany(CarnivalClub, {
+  foreignKey: 'carnivalId',
+  as: 'carnivalClubs'
+});
+
+Club.hasMany(CarnivalClub, {
+  foreignKey: 'clubId',
+  as: 'carnivalClubs'
 });
 
 Club.hasMany(ClubSponsor, {
@@ -140,5 +176,6 @@ module.exports = {
   Sponsor,
   ClubSponsor,
   CarnivalSponsor,
-  ClubAlternateName
+  ClubAlternateName,
+  CarnivalClub
 };

@@ -384,6 +384,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     font-weight: 600;
 }
 
+.card-header.bg-info, 
 .card-header.bg-primary {
     background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green)) !important;
     color: white;
