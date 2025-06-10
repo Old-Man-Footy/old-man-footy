@@ -33,8 +33,7 @@ class MySidelineIntegrationService {
                 MYSIDELINE_SYNC_ENABLED: process.env.MYSIDELINE_SYNC_ENABLED,
                 NODE_ENV: process.env.NODE_ENV,
                 syncEnabledCheck1: process.env.MYSIDELINE_SYNC_ENABLED === 'true',
-                syncEnabledCheck2: process.env.NODE_ENV === 'development',
-                finalSyncEnabled: process.env.MYSIDELINE_SYNC_ENABLED === 'true' || process.env.NODE_ENV === 'development'
+                syncEnabledCheck2: process.env.NODE_ENV === 'development'
             }
         });
     }
@@ -300,125 +299,275 @@ class MySidelineIntegrationService {
     }
 
     /**
-     * Try direct navigation to the search page
+     * Try direct navigation to the search page with improved waiting
      * @param {Page} page - Puppeteer page object
      * @returns {Promise<Array>} Array of events
      */
     async tryDirectNavigation(page) {
         console.log('Attempting direct navigation...');
         
-        await page.goto(this.searchUrl, { 
-            waitUntil: 'networkidle2',
-            timeout: 30000 
-        });
+        try {
+            // Navigate to the page and wait for multiple conditions
+            await page.goto(this.searchUrl, { 
+                waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
+                timeout: 45000 
+            });
 
-        // Wait for content to stabilize
-        await page.waitForTimeout(5000);
+            // Wait for common content indicators to appear
+            await this.waitForPageContent(page);
 
-        return await this.extractEventsFromPage(page);
+            return await this.extractEventsFromPage(page);
+        } catch (error) {
+            console.log(`Direct navigation failed: ${error.message}`);
+            throw error;
+        }
     }
 
     /**
-     * Try step-by-step navigation to avoid frame issues
+     * Try step-by-step navigation to avoid frame issues with improved waiting
      * @param {Page} page - Puppeteer page object
      * @returns {Promise<Array>} Array of events
      */
     async tryStepByStepNavigation(page) {
         console.log('Attempting step-by-step navigation...');
         
-        // Start from the main MySideline page
-        await page.goto('https://profile.mysideline.com.au', { 
-            waitUntil: 'networkidle2',
-            timeout: 30000 
-        });
+        try {
+            // Start from the main MySideline page
+            await page.goto('https://profile.mysideline.com.au', { 
+                waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
+                timeout: 45000 
+            });
 
-        await page.waitForTimeout(3000);
+            // Wait for initial page to stabilize
+            await page.waitForTimeout(3000);
 
-        // Navigate to search page
-        await page.goto(this.searchUrl, { 
-            waitUntil: 'networkidle2',
-            timeout: 30000 
-        });
+            // Navigate to search page
+            await page.goto(this.searchUrl, { 
+                waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
+                timeout: 45000 
+            });
 
-        await page.waitForTimeout(5000);
+            // Wait for search page content to be available
+            await this.waitForPageContent(page);
 
-        return await this.extractEventsFromPage(page);
+            return await this.extractEventsFromPage(page);
+        } catch (error) {
+            console.log(`Step-by-step navigation failed: ${error.message}`);
+            throw error;
+        }
     }
 
+    /**
+     * Wait for page content to be properly loaded
+     * @param {Page} page - Puppeteer page object
+     * @returns {Promise<void>}
+     */
+    async waitForPageContent(page) {
+        console.log('Waiting for page content to load...');
+        
+        try {
+            // Wait for body to be present
+            await page.waitForSelector('body', { timeout: 30000 });
+            
+            // Wait for any of these common content selectors to appear
+            const contentSelectors = [
+                '.search-result',
+                '.club-item', 
+                '.event-item',
+                '.result-item',
+                '[data-club]',
+                '[data-event]',
+                'article',
+                '.card',
+                '.listing',
+                '.content',
+                '.main',
+                '#content',
+                '#main'
+            ];
+
+            // Try to wait for any content selector (with shorter timeout per selector)
+            let contentFound = false;
+            for (const selector of contentSelectors) {
+                try {
+                    await page.waitForSelector(selector, { timeout: 2000 });
+                    console.log(`Found content with selector: ${selector}`);
+                    contentFound = true;
+                    break;
+                } catch (error) {
+                    // Continue to next selector
+                }
+            }
+
+            if (!contentFound) {
+                console.log('No specific content selectors found, waiting for page to stabilize...');
+                // Wait for any JavaScript to execute
+                await page.waitForTimeout(5000);
+                
+                // Check if page has meaningful content
+                const hasContent = await page.evaluate(() => {
+                    const body = document.body;
+                    return body && body.textContent && body.textContent.trim().length > 100;
+                });
+
+                if (!hasContent) {
+                    console.log('Warning: Page appears to have minimal content');
+                }
+            }
+
+            // Additional wait for dynamic content
+            await page.waitForTimeout(3000);
+            
+            console.log('Page content loading complete');
+        } catch (error) {
+            console.log(`Warning: Content waiting failed: ${error.message}, proceeding anyway...`);
+            // Don't throw - proceed with extraction attempt
+        }
+    }
 
     /**
-     * Extract events from the current page
+     * Extract events from the current page with improved content detection
      * @param {Page} page - Puppeteer page object
      * @returns {Promise<Array>} Array of events
      */
     async extractEventsFromPage(page) {
-        // Enhanced event extraction with better error handling
-        const events = await page.evaluate(() => {
-            const foundElements = [];
+        console.log('Extracting events from page...');
+        
+        try {
+            // First, get page information for debugging
+            const pageInfo = await page.evaluate(() => {
+                return {
+                    url: window.location.href,
+                    title: document.title,
+                    bodyTextLength: document.body ? document.body.textContent.length : 0,
+                    hasContent: document.body && document.body.textContent.trim().length > 100
+                };
+            });
             
-            try {
-                // Look for various selectors that might contain event data
-                const selectors = [
-                    '.search-result',
-                    '.club-item', 
-                    '.event-item',
-                    '.result-item',
-                    '[data-club]',
-                    '[data-event]',
-                    'article',
-                    '.card',
-                    '.listing',
-                    'li',
-                    '.row',
-                    'div[class*="result"]',
-                    'div[class*="club"]',
-                    'div[class*="event"]',
-                    'div[class*="search"]'
-                ];
+            console.log('Page info:', pageInfo);
+
+            if (!pageInfo.hasContent) {
+                console.log('Warning: Page has minimal content, extraction may not find events');
+            }
+
+            // Enhanced event extraction with better error handling
+            const events = await page.evaluate(() => {
+                const foundElements = [];
                 
-                selectors.forEach(selector => {
-                    try {
-                        const elements = document.querySelectorAll(selector);
-                        elements.forEach((el, index) => {
-                            const text = el.textContent?.trim() || '';
+                try {
+                    // Look for various selectors that might contain event data
+                    const selectors = [
+                        '.search-result',
+                        '.club-item', 
+                        '.event-item',
+                        '.result-item',
+                        '[data-club]',
+                        '[data-event]',
+                        'article',
+                        '.card',
+                        '.listing',
+                        'li',
+                        '.row',
+                        'div[class*="result"]',
+                        'div[class*="club"]',
+                        'div[class*="event"]',
+                        'div[class*="search"]',
+                        'div[class*="item"]',
+                        'div[class*="entry"]'
+                    ];
+                    
+                    console.log('Searching for content with selectors...');
+                    
+                    selectors.forEach(selector => {
+                        try {
+                            const elements = document.querySelectorAll(selector);
+                            console.log(`Found ${elements.length} elements with selector: ${selector}`);
                             
-                            // Check if this element contains "Masters" (case insensitive)
-                            if (text.toLowerCase().includes('masters') && text.length > 20) {
-                                foundElements.push({
-                                    selector: selector,
-                                    text: text,
-                                    id: el.id || `found-${Date.now()}-${index}`,
-                                    innerHTML: el.innerHTML.substring(0, 500)
-                                });
+                            elements.forEach((el, index) => {
+                                const text = el.textContent?.trim() || '';
                                 
-                                console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
+                                // Check if this element contains "Masters" (case insensitive)
+                                if (text.toLowerCase().includes('masters') && text.length > 20) {
+                                    foundElements.push({
+                                        selector: selector,
+                                        text: text,
+                                        id: el.id || `found-${Date.now()}-${index}`,
+                                        innerHTML: el.innerHTML.substring(0, 500),
+                                        href: el.href || el.querySelector('a')?.href || null
+                                    });
+                                    
+                                    console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
+                                }
+                            });
+                        } catch (err) {
+                            console.log(`Error with selector ${selector}:`, err.message);
+                        }
+                    });
+
+                    // If no Masters content found, look for any rugby league content
+                    if (foundElements.length === 0) {
+                        console.log('No Masters content found, searching for rugby league content...');
+                        
+                        const rugbyTerms = ['rugby', 'league', 'tournament', 'championship', 'competition'];
+                        
+                        selectors.forEach(selector => {
+                            try {
+                                const elements = document.querySelectorAll(selector);
+                                elements.forEach((el, index) => {
+                                    const text = el.textContent?.trim() || '';
+                                    
+                                    if (text.length > 50) {
+                                        for (const term of rugbyTerms) {
+                                            if (text.toLowerCase().includes(term)) {
+                                                foundElements.push({
+                                                    selector: selector,
+                                                    text: text,
+                                                    id: el.id || `rugby-${Date.now()}-${index}`,
+                                                    innerHTML: el.innerHTML.substring(0, 500),
+                                                    href: el.href || el.querySelector('a')?.href || null
+                                                });
+                                                console.log(`Found rugby league content: ${text.substring(0, 100)}`);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                });
+                            } catch (err) {
+                                // Continue with next selector
                             }
                         });
-                    } catch (err) {
-                        // Continue with next selector
                     }
-                });
 
-                return foundElements;
-            } catch (error) {
-                return [];
-            }
-        });
-
-        // Convert browser events to standard format
-        const standardEvents = [];
-        for (const event of events) {
-            try {
-                const standardEvent = this.parseEventFromElement(event);
-                if (standardEvent) {
-                    standardEvents.push(standardEvent);
+                    console.log(`Total elements found: ${foundElements.length}`);
+                    return foundElements;
+                } catch (error) {
+                    console.log('Error in page evaluation:', error.message);
+                    return [];
                 }
-            } catch (parseError) {
-                // Continue with next event
-            }
-        }
+            });
 
-        return standardEvents;
+            console.log(`Extracted ${events.length} potential events from page`);
+
+            // Convert browser events to standard format
+            const standardEvents = [];
+            for (const event of events) {
+                try {
+                    const standardEvent = this.parseEventFromElement(event);
+                    if (standardEvent) {
+                        standardEvents.push(standardEvent);
+                        console.log(`Successfully parsed event: ${standardEvent.title}`);
+                    }
+                } catch (parseError) {
+                    console.log(`Failed to parse event: ${parseError.message}`);
+                }
+            }
+
+            console.log(`Converted ${standardEvents.length} events to standard format`);
+            return standardEvents;
+        } catch (error) {
+            console.error('Error extracting events from page:', error.message);
+            return [];
+        }
     }
 
     /**
