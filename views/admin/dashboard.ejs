@@ -1,0 +1,300 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="page-title">
+                    <i class="bi bi-shield-check text-danger"></i>
+                    Administrator Dashboard
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="/admin/reports" class="btn btn-outline-info">
+                        <i class="bi bi-graph-up"></i> Reports
+                    </a>
+                    <a href="/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Main Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Users</h6>
+                            <h2 class="mb-0"><%= stats.totalUsers %></h2>
+                            <small><%= stats.inactiveUsers %> inactive</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-people fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="/admin/users" class="text-white text-decoration-none">
+                        <small>Manage Users <i class="bi bi-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Clubs</h6>
+                            <h2 class="mb-0"><%= stats.totalClubs %></h2>
+                            <small><%= stats.inactiveClubs %> inactive</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-building fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="/admin/clubs" class="text-white text-decoration-none">
+                        <small>Manage Clubs <i class="bi bi-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Carnivals</h6>
+                            <h2 class="mb-0"><%= stats.totalCarnivals %></h2>
+                            <small><%= stats.upcomingCarnivals %> upcoming</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-calendar-event fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="/admin/carnivals" class="text-white text-decoration-none">
+                        <small>Manage Carnivals <i class="bi bi-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">System Activity</h6>
+                            <h2 class="mb-0"><%= stats.recentUsers + stats.recentCarnivals %></h2>
+                            <small>New this week</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-activity fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="/admin/reports" class="text-dark text-decoration-none">
+                        <small>View Reports <i class="bi bi-arrow-right"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning-charge"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="/admin/users" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                <i class="bi bi-person-plus fs-3 mb-2"></i>
+                                <strong>User Management</strong>
+                                <small class="text-muted">Manage accounts and permissions</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="/admin/clubs" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                <i class="bi bi-building-add fs-3 mb-2"></i>
+                                <strong>Club Management</strong>
+                                <small class="text-muted">Oversee club operations</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="/admin/carnivals" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                <i class="bi bi-calendar-plus fs-3 mb-2"></i>
+                                <strong>Carnival Management</strong>
+                                <small class="text-muted">Manage events and activities</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="/admin/reports" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                <i class="bi bi-graph-up-arrow fs-3 mb-2"></i>
+                                <strong>System Reports</strong>
+                                <small class="text-muted">Analytics and insights</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Users
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (recentActivity.users && recentActivity.users.length > 0) { %>
+                        <div class="list-group list-group-flush">
+                            <% recentActivity.users.forEach(user => { %>
+                                <div class="list-group-item border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <%= user.firstName %> <%= user.lastName %>
+                                                <% if (user.isAdmin) { %>
+                                                    <span class="badge bg-danger ms-1">Admin</span>
+                                                <% } else if (user.isPrimaryDelegate) { %>
+                                                    <span class="badge bg-primary ms-1">Primary</span>
+                                                <% } %>
+                                                <% if (!user.isActive) { %>
+                                                    <span class="badge bg-secondary ms-1">Inactive</span>
+                                                <% } %>
+                                            </h6>
+                                            <p class="mb-1"><%= user.email %></p>
+                                            <% if (user.club) { %>
+                                                <small class="text-muted"><%= user.club.clubName %></small>
+                                            <% } %>
+                                        </div>
+                                        <small class="text-muted">
+                                            <%= new Date(user.createdAt).toLocaleDateString('en-AU') %>
+                                        </small>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/admin/users" class="btn btn-sm btn-outline-primary">View All Users</a>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted text-center">No recent user activity</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-check"></i> Recent Carnivals
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (recentActivity.carnivals && recentActivity.carnivals.length > 0) { %>
+                        <div class="list-group list-group-flush">
+                            <% recentActivity.carnivals.forEach(carnival => { %>
+                                <div class="list-group-item border-0 px-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1"><%= carnival.title %></h6>
+                                            <p class="mb-1">
+                                                <i class="bi bi-geo-alt"></i> <%= carnival.state %>
+                                                <span class="ms-2">
+                                                    <i class="bi bi-calendar"></i> 
+                                                    <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
+                                                </span>
+                                            </p>
+                                            <% if (carnival.creator) { %>
+                                                <small class="text-muted">
+                                                    Created by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
+                                                </small>
+                                            <% } %>
+                                        </div>
+                                        <small class="text-muted">
+                                            <%= new Date(carnival.createdAt).toLocaleDateString('en-AU') %>
+                                        </small>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/admin/carnivals" class="btn btn-sm btn-outline-info">View All Carnivals</a>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted text-center">No recent carnival activity</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Statistics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart"></i> Additional Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-envelope fs-3 text-info"></i>
+                                <h4 class="mt-2"><%= stats.totalSubscriptions %></h4>
+                                <p class="text-muted mb-0">Email Subscriptions</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-award fs-3 text-warning"></i>
+                                <h4 class="mt-2"><%= stats.totalSponsors %></h4>
+                                <p class="text-muted mb-0">Total Sponsors</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-person-check fs-3 text-success"></i>
+                                <h4 class="mt-2"><%= stats.recentUsers %></h4>
+                                <p class="text-muted mb-0">New Users (7 days)</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-calendar-plus fs-3 text-primary"></i>
+                                <h4 class="mt-2"><%= stats.recentCarnivals %></h4>
+                                <p class="text-muted mb-0">New Carnivals (7 days)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

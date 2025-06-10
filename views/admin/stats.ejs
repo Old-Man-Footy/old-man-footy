@@ -1,251 +1,462 @@
-<%- contentFor('body') %>
-<div class="container">
-    <div class="admin-header mb-4">
-        <h1><i class="fas fa-chart-bar"></i> Admin Statistics</h1>
-        <p class="lead">System overview and analytics</p>
-    </div>
+<%- include('../partials/header') %>
 
-    <!-- Overview Statistics -->
-    <div class="row mb-5">
-        <div class="col-md-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div class="stat-content">
-                    <h3><%= stats.totalCarnivals %></h3>
-                    <p>Total Carnivals</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-content">
-                    <h3><%= stats.upcomingCarnivals %></h3>
-                    <p>Upcoming Events</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-content">
-                    <h3><%= stats.totalUsers %></h3>
-                    <p>Registered Users</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-envelope"></i>
-                </div>
-                <div class="stat-content">
-                    <h3><%= stats.emailSubscriptions %></h3>
-                    <p>Email Subscribers</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Detailed Breakdowns -->
+<div class="container-fluid">
     <div class="row">
-        <!-- Carnival Statistics -->
-        <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h4><i class="fas fa-trophy"></i> Carnival Breakdown</h4>
-                </div>
-                <div class="card-body">
-                    <div class="stat-breakdown">
-                        <div class="stat-item">
-                            <span class="label">MySideline Events:</span>
-                            <span class="value"><%= stats.mySidelineCarnivals %></span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="label">Manual Entries:</span>
-                            <span class="value"><%= stats.manualCarnivals %></span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="label">Club Delegates:</span>
-                            <span class="value"><%= stats.clubDelegates %></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Carnivals by State -->
-        <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h4><i class="fas fa-map-marker-alt"></i> Carnivals by State</h4>
-                </div>
-                <div class="card-body">
-                    <% if (stats.carnivalsByState && stats.carnivalsByState.length > 0) { %>
-                        <% stats.carnivalsByState.forEach(function(item) { %>
-                            <div class="state-stat">
-                                <span class="state-name"><%= item._id %></span>
-                                <span class="state-count"><%= item.count %> events</span>
-                                <div class="state-bar">
-                                    <div class="state-fill" style="width: <%= (item.count / stats.totalCarnivals * 100) %>%"></div>
-                                </div>
-                            </div>
-                        <% }); %>
-                    <% } else { %>
-                        <p class="text-muted">No carnival data available.</p>
-                    <% } %>
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="page-title">
+                    <i class="bi bi-graph-up text-info"></i>
+                    System Reports & Statistics
+                </h1>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="exportReport()">
+                        <i class="bi bi-download"></i> Export Report
+                    </button>
+                    <a href="/admin/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Email Subscriptions by State -->
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h4><i class="fas fa-mail-bulk"></i> Email Subscriptions by State</h4>
-                </div>
-                <div class="card-body">
-                    <% if (stats.subscriptionsByState && stats.subscriptionsByState.length > 0) { %>
-                        <div class="row">
-                            <% stats.subscriptionsByState.forEach(function(item) { %>
-                                <div class="col-md-3 mb-3">
-                                    <div class="subscription-stat">
-                                        <h5><%= item._id %></h5>
-                                        <p class="subscription-count"><%= item.count %> subscribers</p>
-                                    </div>
-                                </div>
-                            <% }); %>
-                        </div>
-                    <% } else { %>
-                        <p class="text-muted">No subscription data available.</p>
-                    <% } %>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Actions -->
-    <div class="row">
+    <!-- Time Period Filter -->
+    <div class="row mb-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h4><i class="fas fa-cogs"></i> Admin Actions</h4>
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-range"></i> Report Period
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="admin-actions">
-                        <form action="/carnivals/admin/sync-mysideline" method="POST" class="d-inline">
-                            <button type="submit" class="btn btn-primary me-2">
-                                <i class="fas fa-sync"></i> Trigger MySideline Sync
+                    <form method="GET" action="/admin/reports" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="period" class="form-label">Time Period</label>
+                            <select class="form-select" id="period" name="period" onchange="toggleCustomDates()">
+                                <option value="7" <%= filters.period === '7' ? 'selected' : '' %>>Last 7 days</option>
+                                <option value="30" <%= filters.period === '30' ? 'selected' : '' %>>Last 30 days</option>
+                                <option value="90" <%= filters.period === '90' ? 'selected' : '' %>>Last 3 months</option>
+                                <option value="365" <%= filters.period === '365' ? 'selected' : '' %>>Last year</option>
+                                <option value="custom" <%= filters.period === 'custom' ? 'selected' : '' %>>Custom range</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="startDateGroup" style="display: <%= filters.period === 'custom' ? 'block' : 'none' %>">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate" 
+                                   value="<%= filters.startDate || '' %>">
+                        </div>
+                        <div class="col-md-3" id="endDateGroup" style="display: <%= filters.period === 'custom' ? 'block' : 'none' %>">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate" 
+                                   value="<%= filters.endDate || '' %>">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Update Report
                             </button>
-                        </form>
-                        <a href="/dashboard" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
-                        </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-1 mb-3"></i>
+                    <h3><%= stats.totalUsers %></h3>
+                    <p class="mb-0">Total Users</p>
+                    <small>+<%= stats.newUsers %> this period</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-building fs-1 mb-3"></i>
+                    <h3><%= stats.totalClubs %></h3>
+                    <p class="mb-0">Total Clubs</p>
+                    <small>+<%= stats.newClubs %> this period</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-event fs-1 mb-3"></i>
+                    <h3><%= stats.totalCarnivals %></h3>
+                    <p class="mb-0">Total Carnivals</p>
+                    <small>+<%= stats.newCarnivals %> this period</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-award fs-1 mb-3"></i>
+                    <h3><%= stats.totalSponsors %></h3>
+                    <p class="mb-0">Total Sponsors</p>
+                    <small>+<%= stats.newSponsors %> this period</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Activity -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-check"></i> User Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="p-3">
+                                <h4 class="text-success"><%= stats.activeUsers %></h4>
+                                <p class="mb-0">Active Users</p>
+                                <small class="text-muted"><%= ((stats.activeUsers / stats.totalUsers) * 100).toFixed(1) %>% of total</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3">
+                                <h4 class="text-warning"><%= stats.inactiveUsers %></h4>
+                                <p class="mb-0">Inactive Users</p>
+                                <small class="text-muted"><%= ((stats.inactiveUsers / stats.totalUsers) * 100).toFixed(1) %>% of total</small>
+                            </div>
+                        </div>
                     </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="p-2">
+                                <h5 class="text-danger"><%= stats.adminUsers %></h5>
+                                <small>Administrators</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2">
+                                <h5 class="text-primary"><%= stats.primaryDelegates %></h5>
+                                <small>Primary Delegates</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2">
+                                <h5 class="text-secondary"><%= stats.regularUsers %></h5>
+                                <small>Regular Delegates</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-geo-alt"></i> Geographic Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (stats.stateDistribution && stats.stateDistribution.length > 0) { %>
+                        <% stats.stateDistribution.forEach(state => { %>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span><%= state.state %></span>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress me-2" style="width: 100px; height: 8px;">
+                                        <div class="progress-bar" style="width: <%= (state.count / stats.totalClubs * 100) %>%"></div>
+                                    </div>
+                                    <small><%= state.count %> clubs</small>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p class="text-muted text-center">No geographic data available</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carnival Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event"></i> Carnival Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-info"><%= stats.upcomingCarnivals %></h4>
+                            <small>Upcoming</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-success"><%= stats.activeCarnivals %></h4>
+                            <small>Active</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-secondary"><%= stats.completedCarnivals %></h4>
+                            <small>Completed</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h4 class="text-primary"><%= stats.averageAttendees %></h4>
+                            <small>Avg. Attendees</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Recent Carnival Activity</h6>
+                    <% if (stats.recentCarnivals && stats.recentCarnivals.length > 0) { %>
+                        <div class="list-group list-group-flush">
+                            <% stats.recentCarnivals.forEach(carnival => { %>
+                                <div class="list-group-item border-0 px-0">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong><%= carnival.title %></strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <%= carnival.state %> • 
+                                                <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-primary"><%= carnival.attendeeCount %> attendees</span>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted">No recent carnival activity</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope"></i> Email Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <h4 class="text-info"><%= stats.totalSubscriptions %></h4>
+                        <p class="mb-0">Email Subscriptions</p>
+                        <small class="text-muted">+<%= stats.newSubscriptions %> this period</small>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="p-2">
+                                <h5 class="text-success"><%= stats.emailsSent %></h5>
+                                <small>Emails Sent</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2">
+                                <h5 class="text-primary"><%= stats.invitationsSent %></h5>
+                                <small>Invitations</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-heartbeat"></i> System Health & Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-database fs-3 text-primary"></i>
+                                <h5 class="mt-2">Database</h5>
+                                <span class="badge bg-success">Healthy</span>
+                                <br>
+                                <small class="text-muted"><%= stats.dbSize %> records</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-cloud-upload fs-3 text-info"></i>
+                                <h5 class="mt-2">Storage</h5>
+                                <span class="badge bg-success">Normal</span>
+                                <br>
+                                <small class="text-muted"><%= stats.storageUsed %> used</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-shield-check fs-3 text-success"></i>
+                                <h5 class="mt-2">Security</h5>
+                                <span class="badge bg-success">Secure</span>
+                                <br>
+                                <small class="text-muted">No issues detected</small>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <i class="bi bi-speedometer2 fs-3 text-warning"></i>
+                                <h5 class="mt-2">Performance</h5>
+                                <span class="badge bg-success">Good</span>
+                                <br>
+                                <small class="text-muted">Avg response: <%= stats.avgResponseTime %>ms</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Tables -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy"></i> Top Clubs by Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (stats.topClubs && stats.topClubs.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Club</th>
+                                        <th>Carnivals</th>
+                                        <th>Members</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% stats.topClubs.forEach((club, index) => { %>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-secondary me-2"><%= index + 1 %></span>
+                                                    <div>
+                                                        <strong><%= club.clubName %></strong>
+                                                        <br>
+                                                        <small class="text-muted"><%= club.state %></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><%= club.carnivalCount %></td>
+                                            <td><%= club.memberCount %></td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted text-center">No club activity data available</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-star"></i> Top Sponsors by Involvement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (stats.topSponsors && stats.topSponsors.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Sponsor</th>
+                                        <th>Clubs</th>
+                                        <th>Carnivals</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% stats.topSponsors.forEach((sponsor, index) => { %>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-secondary me-2"><%= index + 1 %></span>
+                                                    <strong><%= sponsor.sponsorName %></strong>
+                                                </div>
+                                            </td>
+                                            <td><%= sponsor.clubCount %></td>
+                                            <td><%= sponsor.carnivalCount %></td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted text-center">No sponsor activity data available</p>
+                    <% } %>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.stat-card {
-    background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
-    color: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+<script>
+/**
+ * Toggle custom date fields based on period selection
+ */
+function toggleCustomDates() {
+    const period = document.getElementById('period').value;
+    const startDateGroup = document.getElementById('startDateGroup');
+    const endDateGroup = document.getElementById('endDateGroup');
+    
+    if (period === 'custom') {
+        startDateGroup.style.display = 'block';
+        endDateGroup.style.display = 'block';
+    } else {
+        startDateGroup.style.display = 'none';
+        endDateGroup.style.display = 'none';
+    }
 }
 
-.stat-icon {
-    font-size: 2.5rem;
-    margin-right: 1rem;
-    opacity: 0.8;
+/**
+ * Export report functionality
+ */
+async function exportReport() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const response = await fetch('/admin/reports/export?' + params.toString());
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `system-report-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } else {
+            alert('Error exporting report. Please try again.');
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Error exporting report. Please try again.');
+    }
 }
+</script>
 
-.stat-content h3 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: bold;
-}
-
-.stat-content p {
-    margin: 0;
-    opacity: 0.9;
-}
-
-.stat-breakdown .stat-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
-}
-
-.stat-breakdown .stat-item:last-child {
-    border-bottom: none;
-}
-
-.state-stat {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.state-name {
-    width: 60px;
-    font-weight: bold;
-}
-
-.state-count {
-    width: 100px;
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.state-bar {
-    flex: 1;
-    height: 8px;
-    background: #eee;
-    border-radius: 4px;
-    margin-left: 1rem;
-}
-
-.state-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-green), var(--gold));
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-
-.subscription-stat {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.subscription-count {
-    color: var(--primary-green);
-    font-weight: bold;
-    margin: 0;
-}
-
-.admin-actions {
-    padding: 1rem 0;
-}
-
-.admin-header {
-    border-bottom: 3px solid var(--primary-green);
-    padding-bottom: 1rem;
-}
-</style>
+<%- include('../partials/footer') %>

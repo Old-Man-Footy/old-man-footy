@@ -239,6 +239,74 @@
         </div>
     </div>
 
+    <!-- Admin Section -->
+    <% if (user.isAdmin) { %>
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-check"></i> Administrator Dashboard
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">As an administrator, you have full system access and management capabilities:</p>
+                        <div class="row">
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="/admin/dashboard" class="btn btn-outline-danger w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                    <i class="bi bi-speedometer2 fs-3 mb-2"></i>
+                                    <strong>Admin Dashboard</strong>
+                                    <small class="text-muted">System overview and statistics</small>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="/admin/users" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                    <i class="bi bi-people fs-3 mb-2"></i>
+                                    <strong>User Management</strong>
+                                    <small class="text-muted">Edit users, reset passwords</small>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="/admin/clubs" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                    <i class="bi bi-building fs-3 mb-2"></i>
+                                    <strong>Club Management</strong>
+                                    <small class="text-muted">Manage club details and status</small>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="/admin/carnivals" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                    <i class="bi bi-calendar-event fs-3 mb-2"></i>
+                                    <strong>Carnival Management</strong>
+                                    <small class="text-muted">Edit events and details</small>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Quick Admin Actions:</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-check-circle text-success"></i> Reset user passwords</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Activate/deactivate accounts</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Edit all clubs and carnivals</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Generate system reports</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">System Management:</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-check-circle text-success"></i> Full database access</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> User role management</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Club ownership transfers</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Carnival moderation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
     <!-- Primary Delegate Section -->
     <% if (user.isPrimaryDelegate && user.clubId && user.clubId.clubName) { %>
         <div class="row mt-5">

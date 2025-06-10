@@ -106,6 +106,7 @@ const carnivalClubRoutes = require('./routes/carnivalClubs');
 const carnivalSponsorRoutes = require('./routes/carnivalSponsors');
 const clubRoutes = require('./routes/clubs');
 const sponsorRoutes = require('./routes/sponsors');
+const adminRoutes = require('./routes/admin');
 
 app.use('/', indexRoutes);
 app.use('/auth', authRoutes);
@@ -114,6 +115,7 @@ app.use('/carnivals', carnivalClubRoutes);
 app.use('/carnival-sponsors', carnivalSponsorRoutes);
 app.use('/clubs', clubRoutes);
 app.use('/sponsors', sponsorRoutes);
+app.use('/admin', adminRoutes);
 
 // Error handling middleware
 app.use((req, res, next) => {

@@ -832,6 +832,72 @@ We'll respond to your inquiry from our support team shortly.
         }
     }
 
+    // Send password reset email
+    async sendPasswordResetEmail(email, resetToken, firstName) {
+        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/reset-password/${resetToken}`;
+        
+        const mailOptions = {
+            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Password Reset Request - Old Man Footy',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
+                        <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                        <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
+                    </div>
+                    
+                    <div style="padding: 30px; background: #f9f9f9;">
+                        <h2 style="color: #006837;">🔐 Password Reset Request</h2>
+                        
+                        <p>Hello <strong>${firstName}</strong>,</p>
+                        
+                        <p>We received a request to reset your password for your Old Man Footy account. If you made this request, please click the button below to reset your password:</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${resetUrl}" 
+                               style="background: #006837; color: white; padding: 15px 30px; 
+                                      text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                Reset My Password
+                            </a>
+                        </div>
+                        
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                            <h4 style="color: #856404; margin-top: 0;">Security Information</h4>
+                            <ul style="color: #856404; margin: 10px 0 0 0;">
+                                <li>This link will expire in 24 hours</li>
+                                <li>If you didn't request this reset, please ignore this email</li>
+                                <li>Your password will remain unchanged if you don't click the link</li>
+                                <li>For security, this request was initiated by an administrator</li>
+                            </ul>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666;">
+                            If the button doesn't work, you can copy and paste this link into your browser:<br>
+                            <a href="${resetUrl}" style="color: #006837;">${resetUrl}</a>
+                        </p>
+                        
+                        <p style="font-size: 14px; color: #666; text-align: center; margin-top: 30px;">
+                            If you have any questions, please contact our support team.
+                        </p>
+                    </div>
+                    
+                    <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+                        <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
+                    </div>
+                </div>
+            `
+        };
+
+        try {
+            await this.transporter.sendMail(mailOptions);
+            console.log(`✅ Password reset email sent to ${email}`);
+        } catch (error) {
+            console.error('❌ Error sending password reset email:', error);
+            throw new Error('Failed to send password reset email');
+        }
+    }
+
     // Test email configuration
     async testEmailConfiguration() {
         try {
