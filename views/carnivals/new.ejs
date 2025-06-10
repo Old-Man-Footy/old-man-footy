@@ -67,7 +67,11 @@
                             <h5 class="text-primary mb-3">Basic Information</h5>
                             
                             <div class="mb-3">
-                                <label for="title" class="form-label">Carnival Title *</label>
+                                <label for="title" class="form-label">
+                                    Carnival Title *
+                                    <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
+                                       title="Use a descriptive name that includes the location and any special theme (e.g., 'Gold Coast Masters Carnival 2025')"></i>
+                                </label>
                                 <input type="text" class="form-control" id="title" name="title" 
                                        value="<%= typeof formData !== 'undefined' ? formData.title : '' %>" required>
                                 <div class="invalid-feedback">Please provide a carnival title.</div>
@@ -75,7 +79,11 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="date" class="form-label">Date *</label>
+                                    <label for="date" class="form-label">
+                                        Date *
+                                        <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
+                                           title="Select the main carnival date. For multi-day events, use the first day."></i>
+                                    </label>
                                     <input type="date" class="form-control" id="date" name="date" 
                                            value="<%= typeof formData !== 'undefined' ? formData.date : '' %>" required>
                                     <div class="invalid-feedback">Please select a date.</div>
@@ -96,13 +104,21 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="locationAddress" class="form-label">Location Address *</label>
+                                <label for="locationAddress" class="form-label">
+                                    Location Address *
+                                    <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
+                                       title="Include the venue name, street address, and any specific field information. Be as detailed as possible for participants to find the location."></i>
+                                </label>
                                 <textarea class="form-control" id="locationAddress" name="locationAddress" rows="2" required><%= typeof formData !== 'undefined' ? formData.locationAddress : '' %></textarea>
                                 <div class="invalid-feedback">Please provide the location address.</div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="scheduleDetails" class="form-label">Schedule Details *</label>
+                                <label for="scheduleDetails" class="form-label">
+                                    Schedule Details *
+                                    <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
+                                       title="Include game times, age groups, format details, registration deadlines, and any special tournament rules."></i>
+                                </label>
                                 <textarea class="form-control" id="scheduleDetails" name="scheduleDetails" rows="4" 
                                           placeholder="Include game times, age groups, format details, etc." required><%= typeof formData !== 'undefined' ? formData.scheduleDetails : '' %></textarea>
                                 <div class="invalid-feedback">Please provide schedule details.</div>
@@ -129,9 +145,13 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="organiserContactEmail" class="form-label">Contact Email *</label>
-                                <input type="email" class="form-control" id="organiserContactEmail" name="organiserContactEmail" 
-                                       value="<%= typeof formData !== 'undefined' ? formData.organiserContactEmail : user.email %>" required>
+                                <label for="contactEmail" class="form-label">
+                                    Contact Email *
+                                    <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
+                                       title="This email will be visible to clubs and used for carnival-related communications."></i>
+                                </label>
+                                <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.contactEmail : '' %>" required>
                                 <div class="invalid-feedback">Please provide a valid contact email.</div>
                             </div>
                         </div>

@@ -53,6 +53,35 @@
         </div>
     </div>
 
+    <!-- User Guide Card (for Club Delegates) -->
+    <% if (!user.isAdmin && user.clubId) { %>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="bi bi-book text-primary" style="font-size: 2rem;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">
+                                <i class="bi bi-question-circle"></i> New to the platform?
+                            </h5>
+                            <p class="card-text mb-2">
+                                Access our comprehensive user guide to learn how to manage your club's carnival participation, 
+                                update club information, and navigate all the features available to you.
+                            </p>
+                            <a href="/user-guide" class="btn btn-primary">
+                                <i class="bi bi-book-half"></i> View User Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
     <!-- Stats Cards -->
     <div class="row mb-4 dashboard-stats">
         <div class="col-md-4 mb-3">
@@ -249,6 +278,76 @@
             </div>
         </div>
     <% } %>
+
+    <!-- Quick Start Checklist for New Users -->
+    <% if (user.createdAt && new Date() - new Date(user.createdAt) < 7 * 24 * 60 * 60 * 1000) { %>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check"></i> Quick Start Checklist
+                        <small class="opacity-75">(New User)</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Complete these steps to get the most out of your account:</p>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-center">
+                            <input type="checkbox" class="form-check-input me-3" id="step1" <%= clubs && clubs.length > 0 ? 'checked' : '' %>>
+                            <label for="step1" class="flex-grow-1">
+                                <strong>Register your first club</strong>
+                                <small class="d-block text-muted">Add your rugby league club to start managing carnivals</small>
+                            </label>
+                            <% if (!clubs || clubs.length === 0) { %>
+                                <a href="/clubs/manage" class="btn btn-outline-primary btn-sm ms-2">
+                                    <i class="bi bi-plus"></i> Add Club
+                                </a>
+                            <% } %>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center">
+                            <input type="checkbox" class="form-check-input me-3" id="step2" <%= carnivals && carnivals.length > 0 ? 'checked' : '' %>>
+                            <label for="step2" class="flex-grow-1">
+                                <strong>Create or join your first carnival</strong>
+                                <small class="d-block text-muted">Either organize a new carnival or register for an existing one</small>
+                            </label>
+                            <% if (!carnivals || carnivals.length === 0) { %>
+                                <a href="/carnivals" class="btn btn-outline-primary btn-sm ms-2">
+                                    <i class="bi bi-search"></i> Browse
+                                </a>
+                            <% } %>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center">
+                            <input type="checkbox" class="form-check-input me-3" id="step3">
+                            <label for="step3" class="flex-grow-1">
+                                <strong>Read the user guide</strong>
+                                <small class="d-block text-muted">Learn about all features and best practices</small>
+                            </label>
+                            <a href="/user-guide" class="btn btn-outline-info btn-sm ms-2">
+                                <i class="bi bi-book"></i> Guide
+                            </a>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center">
+                            <input type="checkbox" class="form-check-input me-3" id="step4">
+                            <label for="step4" class="flex-grow-1">
+                                <strong>Add sponsors to your club</strong>
+                                <small class="d-block text-muted">Showcase your club's supporters and partners</small>
+                            </label>
+                            <a href="/sponsors" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="bi bi-building"></i> Sponsors
+                            </a>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="dismissChecklist()">
+                            <i class="bi bi-x"></i> Dismiss Checklist
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
 </div>
 
 <!-- Invite Delegate Modal -->
@@ -425,6 +524,14 @@ function confirmTransfer() {
         return true;
     } else {
         return false;
+    }
+}
+
+// Dismiss checklist for new users
+function dismissChecklist() {
+    const checklistCard = document.querySelector('.card.border-info');
+    if (checklistCard) {
+        checklistCard.style.display = 'none';
     }
 }
 </script>

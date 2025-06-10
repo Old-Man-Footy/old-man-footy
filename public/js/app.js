@@ -254,3 +254,66 @@ document.addEventListener('DOMContentLoaded', initializeImageCarousel);
 
 // Handle window resize
 window.addEventListener('resize', handleCarouselResize);
+
+// Quick Start Checklist functionality
+function dismissChecklist() {
+    const checklist = document.querySelector('.card.border-info');
+    if (checklist) {
+        checklist.style.transition = 'opacity 0.3s ease';
+        checklist.style.opacity = '0';
+        setTimeout(() => {
+            checklist.remove();
+        }, 300);
+        
+        // Store dismissal in localStorage
+        localStorage.setItem('quickStartDismissed', 'true');
+    }
+}
+
+// Check if user has previously dismissed the checklist
+document.addEventListener('DOMContentLoaded', function() {
+    const dismissed = localStorage.getItem('quickStartDismissed');
+    if (dismissed === 'true') {
+        const checklist = document.querySelector('.card.border-info');
+        if (checklist) {
+            checklist.style.display = 'none';
+        }
+    }
+    
+    // Make checklist items interactive
+    const checkboxes = document.querySelectorAll('.list-group-item input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.style.opacity = '0.7';
+                label.style.textDecoration = 'line-through';
+            } else {
+                label.style.opacity = '1';
+                label.style.textDecoration = 'none';
+            }
+            
+            // Check if all steps are completed
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            if (allChecked) {
+                setTimeout(() => {
+                    showCompletionMessage();
+                }, 500);
+            }
+        });
+    });
+});
+
+function showCompletionMessage() {
+    const checklist = document.querySelector('.card.border-info .card-body');
+    if (checklist) {
+        const message = document.createElement('div');
+        message.className = 'alert alert-success mt-3';
+        message.innerHTML = `
+            <i class="bi bi-check-circle"></i>
+            <strong>Congratulations!</strong> You've completed all the quick start steps. 
+            You're ready to make the most of Old Man Footy!
+        `;
+        checklist.appendChild(message);
+    }
+}
