@@ -777,40 +777,71 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: white;
 }
 
-/* Override any conflicting social-links styles for Facebook */
-.social-links .btn-facebook,
-.social-links .btn-facebook:not(:disabled):not(.disabled) {
-    background-color: #1877f2;
-    border-color: #1877f2;
+/* YouTube button styling */
+.btn-youtube,
+.btn-youtube:not(:disabled):not(.disabled) {
+    background-color: #ff0000;
+    border-color: #ff0000;
     color: white;
 }
 
-.social-links .btn-facebook:hover,
-.social-links .btn-facebook:focus,
-.social-links .btn-facebook:active {
-    background-color: #166fe5;
-    border-color: #166fe5;
+.btn-youtube:hover,
+.btn-youtube:focus,
+.btn-youtube:active,
+.btn-youtube:not(:disabled):not(.disabled):hover,
+.btn-youtube:not(:disabled):not(.disabled):focus,
+.btn-youtube:not(:disabled):not(.disabled):active {
+    background-color: #cc0000;
+    border-color: #cc0000;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+}
+
+.btn-youtube i {
     color: white;
 }
 
-/* Remove conflicting hover styles that might override Facebook styling */
-.social-links.btn-facebook:hover {
-    background-color: #166fe5 !important;
-    border-color: #166fe5 !important;
+/* Override any conflicting social-links styles for YouTube */
+.social-links .btn-youtube,
+.social-links .btn-youtube:not(:disabled):not(.disabled) {
+    background-color: #ff0000;
+    border-color: #ff0000;
+    color: white;
+}
+
+.social-links .btn-youtube:hover,
+.social-links .btn-youtube:focus,
+.social-links .btn-youtube:active {
+    background-color: #cc0000;
+    border-color: #cc0000;
+    color: white;
+}
+
+/* Ensure YouTube icon stays white */
+.btn-youtube i,
+.social-links .btn-youtube i,
+.social-links a.btn-youtube i {
     color: white !important;
 }
 
-.social-links a.btn-facebook:hover {
-    background-color: #166fe5 !important;
-    border-color: #166fe5 !important;
+/* YouTube button specific styling - override general social-links hover */
+.social-links .btn-youtube,
+.social-links a.btn-youtube {
+    background-color: #ff0000 !important;
+    border-color: #ff0000 !important;
     color: white !important;
 }
 
-/* Ensure Facebook icon stays white */
-.btn-facebook i,
-.social-links .btn-facebook i,
-.social-links a.btn-facebook i {
+.social-links .btn-youtube:hover,
+.social-links a.btn-youtube:hover,
+.social-links .btn-youtube:focus,
+.social-links a.btn-youtube:focus,
+.social-links .btn-youtube:active,
+.social-links a.btn-youtube:active {
+    background-color: #cc0000 !important;
+    border-color: #cc0000 !important;
     color: white !important;
+    transform: translateY(-1px) !important;
 }
 
 /* Footer Enhancements */
@@ -2031,7 +2062,7 @@ social-links a.btn-x i {
 .social-links a.btn-twitter:hover,
 .btn-twitter:hover,
 .social-links .btn-twitter:focus,
-.social-links a.btn-twitter:focus,
+social-links a.btn-twitter:focus,
 .btn-twitter:focus,
 .social-links .btn-twitter:active,
 .social-links a.btn-twitter:active,
