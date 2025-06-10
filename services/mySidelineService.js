@@ -21,6 +21,8 @@ class MySidelineIntegrationService {
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true' || process.env.NODE_ENV === 'development';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         
+        this.useHeadlessBrowser = process.env.NODE_ENV !== 'development'
+        
         // Log configuration on startup
         console.log('MySideline Service Configuration:', {
             syncEnabled: this.syncEnabled,
@@ -218,7 +220,7 @@ class MySidelineIntegrationService {
             console.log('Launching browser for MySideline event scraping...');
             
             browser = await puppeteer.launch({
-                headless: true,
+                headless: useHeadlessBrowser,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
