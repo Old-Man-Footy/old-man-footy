@@ -366,284 +366,352 @@ class MySidelineIntegrationService {
             
             // Convert browser events to standard format
             const standardEvents = [];
-            for (const browserEvent of events) {
+            
+            for (const event of events) {
                 try {
-                    const standardEvent = this.convertBrowserEventToStandardFormat(browserEvent, capturedLinks);
+                    const standardEvent = this.parseEventFromElement(event);
                     if (standardEvent) {
                         standardEvents.push(standardEvent);
                     }
-                } catch (error) {
-                    console.error('Error converting browser event:', error);
+                } catch (parseError) {
+                    console.error('Error parsing event:', parseError);
                 }
             }
 
             return standardEvents;
 
         } catch (error) {
-            console.error('Browser automation failed:', error);
+            console.error('Browser automation error:', error);
             throw error;
         } finally {
             if (browser) {
-                try {
-                    await browser.close();
-                } catch (closeError) {
-                    console.error('Error closing browser:', closeError);
-                }
+                await browser.close();
             }
         }
     }
 
     /**
-     * Capture hidden registration links from Register buttons
-     * This method clicks on Register buttons to reveal their actual destination URLs
-     */
-    async captureRegistrationLinks(page) {
-        try {
-            console.log('🔍 Searching for Register buttons and capturing their links...');
-            
-            // Wait for any potential dynamic content to load
-            await page.waitForTimeout(2000);
-            
-            // Find all Register buttons or links
-            const registerButtons = await page.$$eval('a, button, input[type="submit"], input[type="button"]', (elements) => {
-                return elements
-                    .map((el, index) => {
-                        const text = el.textContent?.trim().toLowerCase() || '';
-                        const value = el.value?.trim().toLowerCase() || '';
-                        const type = el.type || '';
-                        
-                        // Look for Register-related text
-                        if (text.includes('register') || value.includes('register') || 
-                            text.includes('sign up') || text.includes('signup') ||
-                            text.includes('enter') || text.includes('join')) {
-                            
-                            return {
-                                index,
-                                tagName: el.tagName,
-                                text: el.textContent?.trim() || el.value?.trim() || '',
-                                href: el.href || null,
-                                onclick: el.onclick ? el.onclick.toString() : null,
-                                formAction: el.form ? el.form.action : null,
-                                className: el.className,
-                                id: el.id,
-                                dataset: Object.keys(el.dataset).length > 0 ? el.dataset : null
-                            };
-                        }
-                        return null;
-                    })
-                    .filter(Boolean);
-            });
-
-            console.log(`Found ${registerButtons.length} potential registration buttons`);
-            
-            const capturedLinks = [];
-            
-            for (const button of registerButtons) {
-                try {
-                    console.log(`📋 Processing button: "${button.text}" (${button.tagName})`);
-                    
-                    // Extract event context (look for nearby event info)
-                    const eventContext = await page.evaluate((buttonIndex) => {
-                        const elements = document.querySelectorAll('a, button, input[type="submit"], input[type="button"]');
-                        const buttonEl = elements[buttonIndex];
-                        
-                        if (!buttonEl) return null;
-                        
-                        // Find the closest event container
-                        let container = buttonEl.closest('.event-item, .event-card, .event-row, tr, .search-result, .listing-item');
-                        if (!container) {
-                            // Fallback: look for parent containers
-                            container = buttonEl.closest('div[class*="event"], div[class*="result"], div[class*="item"]');
-                        }
-                        
-                        if (!container) {
-                            container = buttonEl.parentElement;
-                        }
-                        
-                        // Extract event information from the container
-                        const eventTitle = container.querySelector('h1, h2, h3, h4, .title, .event-title, .name')?.textContent?.trim();
-                        const eventDate = container.querySelector('.date, .event-date, [class*="date"]')?.textContent?.trim();
-                        const eventLocation = container.querySelector('.location, .venue, [class*="location"]')?.textContent?.trim();
-                        
-                        return {
-                            title: eventTitle,
-                            date: eventDate,
-                            location: eventLocation,
-                            containerHTML: container.outerHTML.substring(0, 500) // Truncated for logging
-                        };
-                    }, button.index);
-                    
-                    // If button has a direct href, capture it
-                    if (button.href && button.href !== 'javascript:void(0)' && button.href !== '#') {
-                        capturedLinks.push({
-                            eventTitle: eventContext?.title,
-                            eventDate: eventContext?.date,
-                            eventLocation: eventContext?.location,
-                            registrationLink: button.href,
-                            buttonText: button.text,
-                            captureMethod: 'direct_href'
-                        });
-                        continue;
-                    }
-                    
-                    // For JavaScript-driven buttons, we need to simulate a click
-                    // and capture the navigation or form submission
-                    if (button.onclick || button.tagName === 'BUTTON' || button.tagName === 'INPUT') {
-                        const navigationPromise = page.waitForNavigation({ 
-                            waitUntil: 'networkidle0', 
-                            timeout: 5000 
-                        }).catch(() => null);
-                        
-                        // Click the button
-                        await page.evaluate((buttonIndex) => {
-                            const elements = document.querySelectorAll('a, button, input[type="submit"], input[type="button"]');
-                            const buttonEl = elements[buttonIndex];
-                            if (buttonEl) {
-                                buttonEl.click();
-                            }
-                        }, button.index);
-                        
-                        // Wait for potential navigation
-                        const response = await navigationPromise;
-                        
-                        if (response) {
-                            const newUrl = page.url();
-                            capturedLinks.push({
-                                eventTitle: eventContext?.title,
-                                eventDate: eventContext?.date,
-                                eventLocation: eventContext?.location,
-                                registrationLink: newUrl,
-                                buttonText: button.text,
-                                captureMethod: 'click_navigation'
-                            });
-                            
-                            // Go back to the search results
-                            await page.goBack();
-                            await page.waitForTimeout(1000);
-                        } else {
-                            // Check for form submission or popup
-                            const currentUrl = page.url();
-                            if (currentUrl !== page.url()) {
-                                capturedLinks.push({
-                                    eventTitle: eventContext?.title,
-                                    eventDate: eventContext?.date,
-                                    eventLocation: eventContext?.location,
-                                    registrationLink: currentUrl,
-                                    buttonText: button.text,
-                                    captureMethod: 'form_submission'
-                                });
-                            }
-                        }
-                    }
-                } catch (buttonError) {
-                    console.error(`Error processing button "${button.text}":`, buttonError.message);
-                }
-            }
-            
-            // Extract event IDs from captured links
-            const eventsWithIds = capturedLinks.map(link => {
-                const eventId = this.extractEventIdFromUrl(link.registrationLink);
-                return {
-                    ...link,
-                    mySidelineEventId: eventId
-                };
-            }).filter(event => event.mySidelineEventId);
-            
-            console.log(`✅ Successfully captured ${eventsWithIds.length} registration links with event IDs`);
-            return eventsWithIds;
-            
-        } catch (error) {
-            console.error('Error capturing registration links:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Extract MySideline event ID from various URL formats
+     * Extract event ID from MySideline URL
+     * @param {string} url - The URL to extract event ID from
+     * @returns {string|null} - The extracted event ID or null
      */
     extractEventIdFromUrl(url) {
-        if (!url) return null;
-        
-        // Common MySideline URL patterns for event IDs
-        const patterns = [
-            /\/register\/(\d+)/,                    // /register/12345
-            /\/event\/(\d+)/,                       // /event/12345
-            /eventid[=:](\d+)/i,                    // eventid=12345 or eventid:12345
-            /event_id[=:](\d+)/i,                   // event_id=12345
-            /id[=:](\d+)/i,                         // id=12345
-            /\/(\d+)(?:\/|$)/,                      // /12345/ or /12345 at end
-            /[?&]e(?:vent)?(?:_)?id[=:](\d+)/i,     // ?eid=12345, ?eventid=12345, etc.
-        ];
-        
-        for (const pattern of patterns) {
-            const match = url.match(pattern);
-            if (match && match[1]) {
-                return match[1];
+        try {
+            // Look for common patterns in MySideline URLs
+            const patterns = [
+                /event[\/=](\d+)/i,
+                /id[\/=](\d+)/i,
+                /register[\/=](\d+)/i,
+                /\/(\d+)(?:\/|$)/
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error extracting event ID from URL:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Parse event information from scraped element
+     * @param {Object} element - The scraped element data
+     * @returns {Object|null} - Standardized event object or null
+     */
+    parseEventFromElement(element) {
+        try {
+            const text = element.text || '';
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+
+            // Extract basic information
+            const name = this.extractEventName(lines);
+            const location = this.extractLocation(lines);
+            const date = this.extractDate(lines);
+            const description = lines.join(' ').substring(0, 500);
+
+            // Skip if we don't have minimum required info
+            if (!name || name.length < 5) {
+                return null;
+            }
+
+            // Determine state from location or use default
+            let state = 'NSW';
+            if (location) {
+                const stateMatch = location.match(/(NSW|QLD|VIC|SA|WA|NT|ACT|TAS)/i);
+                if (stateMatch) {
+                    state = stateMatch[1].toUpperCase();
+                }
+            }
+
+            return {
+                title: name,
+                date: date || new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)), // Default to 30 days from now
+                locationAddress: location || 'TBA',
+                organiserContactName: 'MySideline Event Organiser',
+                organiserContactEmail: 'events@mysideline.com.au',
+                organiserContactPhone: '1300 000 000',
+                scheduleDetails: description || 'Event details to be confirmed. Please check MySideline for updates.',
+                state: state,
+                registrationLink: element.href || element.registrationInfo?.href || null,
+                mySidelineEventId: element.mySidelineEventId || this.extractEventIdFromUrl(element.href || ''),
+                isManuallyEntered: false,
+                maxTeams: 16,
+                feesDescription: 'Entry fees TBA - check registration link for details',
+                registrationDeadline: date ? new Date(date.getTime() + (7 * 24 * 60 * 60 * 1000)) : new Date(Date.now() + (23 * 24 * 60 * 60 * 1000)),
+                ageCategories: ['35+', '40+', '45+', '50+'],
+                isRegistrationOpen: true,
+                isActive: true
+            };
+        } catch (error) {
+            console.error('Error parsing event element:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Extract event name from text lines
+     * @param {Array} lines - Array of text lines
+     * @returns {string} - Extracted event name
+     */
+    extractEventName(lines) {
+        // Look for lines that contain "Masters" and seem like titles
+        for (const line of lines) {
+            if (line.toLowerCase().includes('masters') && 
+                line.length > 10 && 
+                line.length < 100 &&
+                !line.toLowerCase().includes('register') &&
+                !line.toLowerCase().includes('location')) {
+                return line.trim();
             }
         }
+
+        // Fallback to first substantial line
+        return lines.find(line => line.length > 10 && line.length < 100) || 'Masters Event';
+    }
+
+    /**
+     * Extract location from text lines
+     * @param {Array} lines - Array of text lines
+     * @returns {string|null} - Extracted location or null
+     */
+    extractLocation(lines) {
+        // Look for location indicators
+        const locationIndicators = ['location:', 'venue:', 'at ', 'held at', 'address:'];
         
-        // If no pattern matches, try to extract any number from the URL
-        // that looks like it could be an event ID (4+ digits)
-        const numberMatch = url.match(/(\d{4,})/);
-        if (numberMatch) {
-            return numberMatch[1];
+        for (const line of lines) {
+            const lowerLine = line.toLowerCase();
+            for (const indicator of locationIndicators) {
+                if (lowerLine.includes(indicator)) {
+                    return line.replace(new RegExp(indicator, 'i'), '').trim();
+                }
+            }
         }
-        
+
+        // Look for patterns that might be locations (contains state abbreviations)
+        const statePattern = /(NSW|QLD|VIC|SA|WA|NT|ACT|TAS)/i;
+        for (const line of lines) {
+            if (statePattern.test(line) && line.length < 100) {
+                return line.trim();
+            }
+        }
+
         return null;
     }
 
     /**
-     * Enhanced scraping method that includes registration link capture
+     * Extract date from text lines
+     * @param {Array} lines - Array of text lines
+     * @returns {Date|null} - Extracted date or null
      */
-    async scrapeEventsWithRegistrationLinks(searchUrl) {
-        const browser = await puppeteer.launch({
-            headless: 'new',
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-blink-features=AutomationControlled',
-                '--disable-web-security',
-                '--disable-features=VizDisplayCompositor'
-            ]
-        });
+    extractDate(lines) {
+        const datePatterns = [
+            /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/,
+            /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/,
+            /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/i,
+            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/i
+        ];
 
-        try {
-            const page = await browser.newPage();
-            
-            // Set user agent to avoid bot detection
-            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-            
-            console.log(`🌐 Navigating to: ${searchUrl}`);
-            await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 30000 });
-            
-            // First, scrape the basic event information
-            const basicEvents = await this.scrapeSearchResults(page);
-            
-            // Then, capture the registration links
-            const registrationLinks = await this.captureRegistrationLinks(page);
-            
-            // Merge the data
-            const mergedEvents = basicEvents.map(event => {
-                const matchingLink = registrationLinks.find(link => 
-                    link.eventTitle && event.title && 
-                    link.eventTitle.toLowerCase().includes(event.title.toLowerCase().substring(0, 20))
-                );
-                
-                if (matchingLink) {
-                    return {
-                        ...event,
-                        registrationLink: matchingLink.registrationLink,
-                        mySidelineEventId: matchingLink.mySidelineEventId || event.mySidelineEventId
-                    };
+        for (const line of lines) {
+            for (const pattern of datePatterns) {
+                const match = line.match(pattern);
+                if (match) {
+                    try {
+                        const date = new Date(line);
+                        if (!isNaN(date.getTime()) && date.getFullYear() >= 2024) {
+                            return date;
+                        }
+                    } catch (error) {
+                        // Continue to next pattern
+                    }
                 }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Process scraped events and sync with database
+     * @param {Array} scrapedEvents - Array of scraped events
+     * @returns {Array} - Array of processed events
+     */
+    async processScrapedEvents(scrapedEvents) {
+        const processedEvents = [];
+
+        for (const eventData of scrapedEvents) {
+            try {
+                // Check if event already exists
+                let existingEvent = null;
                 
-                return event;
+                if (eventData.mySidelineEventId) {
+                    existingEvent = await Carnival.findOne({
+                        where: { mySidelineEventId: eventData.mySidelineEventId }
+                    });
+                }
+
+                if (!existingEvent && eventData.title) {
+                    // Check by title similarity
+                    existingEvent = await Carnival.findOne({
+                        where: {
+                            title: {
+                                [Op.like]: `%${eventData.title.substring(0, 20)}%`
+                            }
+                        }
+                    });
+                }
+
+                if (existingEvent) {
+                    // Update existing event
+                    await existingEvent.update({
+                        registrationLink: eventData.registrationLink || existingEvent.registrationLink,
+                        mySidelineEventId: eventData.mySidelineEventId || existingEvent.mySidelineEventId,
+                        description: eventData.description || existingEvent.description,
+                        lastSyncDate: new Date()
+                    });
+                    
+                    processedEvents.push(existingEvent);
+                    console.log(`Updated existing carnival: ${existingEvent.title}`);
+                } else {
+                    // Create new event
+                    const newEvent = await Carnival.create({
+                        ...eventData,
+                        createdBy: 1, // System user
+                        lastSyncDate: new Date(),
+                        isPublic: true
+                    });
+                    
+                    processedEvents.push(newEvent);
+                    console.log(`Created new carnival: ${newEvent.title}`);
+                }
+
+                // Add delay to respect rate limits
+                await this.delay(this.requestDelay);
+
+            } catch (error) {
+                console.error('Error processing event:', error);
+            }
+        }
+
+        return processedEvents;
+    }
+
+    /**
+     * Generate mock events for development/testing
+     * @param {string} state - State abbreviation
+     * @returns {Array} - Array of mock events
+     */
+    generateMockEvents(state) {
+        const stateNames = {
+            'NSW': 'New South Wales',
+            'QLD': 'Queensland', 
+            'VIC': 'Victoria'
+        };
+
+        const mockEvents = [
+            {
+                title: `${stateNames[state]} Masters Rugby League Championship`,
+                date: new Date(Date.now() + (Math.random() * 90 + 30) * 24 * 60 * 60 * 1000),
+                locationAddress: `Rugby League Park, ${stateNames[state]}, Australia`,
+                organiserContactName: `${state} Masters Committee`,
+                organiserContactEmail: `contact@${state.toLowerCase()}masters.com.au`,
+                organiserContactPhone: `0${Math.floor(Math.random() * 9) + 1}${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
+                scheduleDetails: `Annual Masters Rugby League tournament for ${stateNames[state]}. Open to all Masters teams. Games start at 9:00 AM with finals at 3:00 PM.`,
+                state: state,
+                registrationLink: `https://profile.mysideline.com.au/register/event/${Math.floor(Math.random() * 10000)}`,
+                mySidelineEventId: `mock-${state.toLowerCase()}-${Date.now()}`,
+                isManuallyEntered: false,
+                maxTeams: 16,
+                feesDescription: `Entry fee: $200 per team. Includes lunch and presentation.`,
+                registrationDeadline: new Date(Date.now() + (Math.random() * 60 + 15) * 24 * 60 * 60 * 1000),
+                ageCategories: ['35+', '40+', '45+', '50+'],
+                isRegistrationOpen: true,
+                isActive: true
+            }
+        ];
+
+        return mockEvents;
+    }
+
+    /**
+     * Utility function to add delay
+     * @param {number} ms - Milliseconds to delay
+     * @returns {Promise} - Promise that resolves after delay
+     */
+    async delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Get sync status and statistics
+     * @returns {Object} - Sync status information
+     */
+    async getSyncStatus() {
+        try {
+            const totalCarnivals = await Carnival.count();
+            const mySidelineCarnivals = await Carnival.count({
+                where: {
+                    mySidelineEventId: { [Op.ne]: null }
+                }
             });
-            
-            console.log(`📊 Scraped ${mergedEvents.length} events with ${registrationLinks.length} registration links captured`);
-            return mergedEvents;
-            
-        } finally {
-            await browser.close();
+
+            const lastSyncedCarnival = await Carnival.findOne({
+                where: {
+                    lastSyncDate: { [Op.ne]: null }
+                },
+                order: [['lastSyncDate', 'DESC']]
+            });
+
+            return {
+                isRunning: this.isRunning,
+                lastSync: lastSyncedCarnival?.lastSyncDate || null,
+                totalCarnivals: totalCarnivals,
+                mySidelineCarnivals: mySidelineCarnivals,
+                syncPercentage: totalCarnivals > 0 ? ((mySidelineCarnivals / totalCarnivals) * 100).toFixed(1) : 0
+            };
+        } catch (error) {
+            console.error('Error getting sync status:', error);
+            return {
+                isRunning: this.isRunning,
+                lastSync: null,
+                error: error.message
+            };
         }
     }
+
+    /**
+     * Manual trigger for sync (for admin use)
+     * @returns {Promise<Object>} - Sync result
+     */
+    async triggerManualSync() {
+        console.log('Manual sync triggered by admin');
+        return await this.syncMySidelineEvents();
+    }
+}
+
+module.exports = new MySidelineIntegrationService();
