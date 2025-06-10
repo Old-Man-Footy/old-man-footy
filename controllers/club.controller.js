@@ -242,15 +242,16 @@ const updateClubProfile = async (req, res) => {
 
         const {
             location,
+            description,
+            contactPerson,
             contactEmail,
             contactPhone,
-            contactPerson,
-            description,
             website,
             facebookUrl,
             instagramUrl,
             twitterUrl,
-            isPubliclyListed
+            isPubliclyListed,
+            isActive
         } = req.body;
 
         // Prepare update data
@@ -264,7 +265,8 @@ const updateClubProfile = async (req, res) => {
             facebookUrl: facebookUrl?.trim(),
             instagramUrl: instagramUrl?.trim(),
             twitterUrl: twitterUrl?.trim(),
-            isPubliclyListed: isPubliclyListed === 'on'
+            isPubliclyListed: isPubliclyListed === 'on',
+            isActive: isActive === 'on'
         };
 
         // Handle structured file uploads

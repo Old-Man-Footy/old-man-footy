@@ -59,16 +59,16 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, I want to be able to upload a Draw for a Carnival and have it displayed on the Carnival page. | ✅ Completed |
 | As a club delegate, I want to be able to email information on the carnival to attendee clubs directly from the Carnival page when logged in, email should have a link back to the carnival page. | ✅ Completed |
 | As a club delegate, when I log in, I want to be able to access a Markdown user guide that helps me understand how the site works. | ✅ Completed |
-| As a club delegate, The user guide should explain the process of creating carnivals. | ⭕ Not Started |
-| As a club delegate, The user guide should explain the process of creating clubs on behalf of other clubs. | ⭕ Not Started |
-| As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ⭕ Not Started |
-| As a club delegate, The user guide should explain the process of how imported carnivals will merge with my created ones later. | ⭕ Not Started |
-| As a club delegate, The user guide should explain the process of how to update the club profile including logo. | ⭕ Not Started |
-| As a club delegate, The user guide should explain the process of how to add images to my club profile. | ⭕ Not Started |
-| As a club delegate, The user guide should explain the process of how to upload images to my carnival. | ⭕ Not Started |
-| As a club delegate, The user guide should explain the process of sending correspondence to carnival attendees. | ⭕ Not Started |
-| As a club delegate, I want the ability to opt-out of my images being used on the home page carousel. | ⭕ Not Started |
-| As a club delegate, When I mark a club as inactive, it should be removed from the "Find Clubs" interface. | ⭕ Not Started |
+| As a club delegate, The user guide should explain the process of creating carnivals. | ✅ Completed |
+| As a club delegate, The user guide should explain the process of creating clubs on behalf of other clubs. | ✅ Completed |
+| As a club delegate, The user guide should explain the process of claiming imported carnivals from MySideline. | ✅ Completed |
+| As a club delegate, The user guide should explain the process of how imported carnivals will merge with my created ones later. | ✅ Completed |
+| As a club delegate, The user guide should explain the process of how to update the club profile including logo. | ✅ Completed |
+| As a club delegate, The user guide should explain the process of how to add images to my club profile. | ✅ Completed |
+| As a club delegate, The user guide should explain the process of how to upload images to my carnival. | ✅ Completed |
+| As a club delegate, The user guide should explain the process of sending correspondence to carnival attendees. | ✅ Completed |
+| As a club delegate, When I mark my club as inactive, it should be removed from the "Find Clubs" interface (it can show up on historical pages but should clearly show the club is no longer active). | ⭕ Not Started |
+| As a developer, I want random images uploaded by users (not icons) to be used in the home page carousel. Prioritising recent images. | ⭕ Not Started |
 | As an administrator, I want to be able to edit clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. | ⭕ Not Started |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |

@@ -144,7 +144,7 @@
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <h6 class="text-primary mb-3"><i class="bi bi-eye"></i> Visibility Settings</h6>
-                                    <div class="form-check">
+                                    <div class="form-check mb-3">
                                         <input class="form-check-input" type="checkbox" id="isPubliclyListed" name="isPubliclyListed" 
                                                <%= club.isPubliclyListed ? 'checked' : '' %>>
                                         <label class="form-check-label" for="isPubliclyListed">
@@ -153,6 +153,18 @@
                                         <div class="form-text">
                                             When enabled, your club will appear in public club listings and search results. 
                                             Players looking for a team will be able to find and contact your club.
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="isActive" name="isActive" 
+                                               <%= club.isActive ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="isActive">
+                                            <strong>Club is currently active</strong>
+                                        </label>
+                                        <div class="form-text">
+                                            <strong>Important:</strong> When unchecked, your club will be marked as inactive and removed from public listings. 
+                                            Your club will still appear on historical carnival pages but will be clearly marked as inactive.
                                         </div>
                                     </div>
                                 </div>
@@ -233,6 +245,16 @@
                         <h5 class="mb-0"><i class="bi bi-graph-up"></i> Profile Status</h5>
                     </div>
                     <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Club Status:</strong>
+                            <% if (club.isActive) { %>
+                                <span class="badge bg-success ms-2">Active</span>
+                                <div class="form-text">Your club is currently active and operational</div>
+                            <% } else { %>
+                                <span class="badge bg-danger ms-2">Inactive</span>
+                                <div class="form-text">Your club is marked as inactive and will not appear in public listings</div>
+                            <% } %>
+                        </div>
                         <div class="mb-3">
                             <strong>Public Listing:</strong>
                             <% if (club.isPubliclyListed) { %>

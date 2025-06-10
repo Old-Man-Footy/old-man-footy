@@ -185,12 +185,17 @@
                                             </div>
                                         <% } %>
                                         <div class="flex-grow-1">
-                                            <% if (club.isPubliclyListed) { %>
+                                            <% if (club.isPubliclyListed && club.isActive) { %>
                                                 <a href="/clubs/<%= club.id %>" class="text-decoration-none fw-bold h6 mb-1 d-block">
                                                     <%= club.clubName %>
                                                 </a>
                                             <% } else { %>
-                                                <span class="fw-bold h6 mb-1 d-block"><%= club.clubName %></span>
+                                                <span class="fw-bold h6 mb-1 d-block">
+                                                    <%= club.clubName %>
+                                                    <% if (!club.isActive) { %>
+                                                        <span class="badge bg-secondary ms-2">Inactive</span>
+                                                    <% } %>
+                                                </span>
                                             <% } %>
                                             <% if (club.state) { %>
                                                 <div class="text-muted"><%= club.state %></div>

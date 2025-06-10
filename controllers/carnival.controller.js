@@ -127,6 +127,7 @@ const showCarnival = async (req, res) => {
                 {
                     model: Club,
                     as: 'attendingClubs',
+                    attributes: ['id', 'clubName', 'state', 'location', 'logoUrl', 'isActive', 'isPubliclyListed'],
                     through: { attributes: [] },
                     required: false
                 }
