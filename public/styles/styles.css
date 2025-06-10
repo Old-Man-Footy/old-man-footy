@@ -915,509 +915,241 @@ button[type="submit"]:contains("Complete Registration"):focus {
 
 /* Image Carousel Styles */
 .image-carousel-container {
-    overflow: hidden;
-    width: 100%;
-    height: 200px;
     position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: white;
 }
 
 .image-carousel {
-    display: flex;
-    width: fit-content;
-    height: 200px;
-    animation: scroll-left 30s linear infinite;
+    position: relative;
+    height: 400px;
+    width: 100%;
+    overflow: hidden;
 }
 
-.image-carousel img {
-    height: 200px;
-    width: auto;
-    object-fit: cover;
-    margin-right: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes scroll-left {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%);
-    }
-}
-
-/* Pause animation on hover */
-.image-carousel-container:hover .image-carousel {
-    animation-play-state: paused;
-}
-
-/* Club Listings Styles */
-.rugby-masters-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.rugby-masters-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
-
-.stat-item-small {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.stat-number-small {
-    font-size: 1.5rem;
-    font-weight: bold;
-    line-height: 1;
-}
-
-.stat-label-small {
-    font-size: 0.75rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.social-links a {
-    display: inline-block;
-    padding: 0.25rem;
-    color: #6c757d;
-    font-size: 1.2rem;
-    transition: color 0.2s ease;
-}
-
-.social-links a:hover {
-    color: #0d6efd;
-    text-decoration: none;
-}
-
-/* Club Profile Styles */
-.club-profile-header {
-    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-}
-
-.club-stat-card {
-    border-left: 4px solid #0d6efd;
+.carousel-track-container {
     background: #f8f9fa;
-}
-
-.club-contact-card {
-    border-left: 4px solid #198754;
-}
-
-.club-social-card {
-    border-left: 4px solid #ffc107;
-}
-
-/* Club Management Form Styles */
-.form-section-header {
-    border-bottom: 2px solid #e9ecef;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.club-management-form .form-label {
-    font-weight: 600;
-    color: #495057;
-}
-
-.club-management-form .form-text {
-    font-size: 0.8rem;
-}
-
-/* Enhanced button styles for club actions */
-.btn-club-primary {
-    background: linear-gradient(45deg, #0d6efd, #0a58ca);
-    border: none;
-    color: white;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.btn-club-primary:hover {
-    background: linear-gradient(45deg, #0a58ca, #084298);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
-    color: white;
-}
-
-/* Club search and filter styles */
-.club-search-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-/* Club logo in associated clubs section */
-.club-logo-small {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-}
-
-/* Club card hover effects for sponsor page */
-.club-card-hover {
-    transition: all 0.3s ease;
-    border: 1px solid #dee2e6;
-}
-
-.club-card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: var(--rugby-green);
-}
-
-.club-card-hover .card-title {
-    transition: color 0.3s ease;
-}
-
-.club-card-hover:hover .card-title {
-    color: var(--rugby-green) !important;
-}
-
-/* ==================================================
-   SPONSOR PAGE STYLES
-   ================================================== */
-
-/* Sponsor Header Section */
-.sponsor-header {
-    background: linear-gradient(180deg, var(--rugby-gold) 0%, var(--rugby-green) 100%) !important;
-    color: white;
-    padding: 3rem 0;
-    margin-bottom: 2rem;
+    height: 100%;
     position: relative;
     overflow: hidden;
 }
 
-.sponsor-header .container {
+.carousel-track {
+    padding: 0;
+    margin: 0;
+    list-style: none;
     position: relative;
-    z-index: 1;
+    height: 100%;
+    transition: transform 250ms ease-in;
 }
 
-/* Sponsor Logo Styling */
-.sponsor-logo-large {
-    width: 150px;
-    height: 150px;
-    object-fit: contain;
-    background: white;
-    border-radius: 12px;
-    padding: 1rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+.carousel-slide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 250ms ease-in-out;
+}
+
+.carousel-slide.current-slide {
+    opacity: 1;
+}
+
+.carousel-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
     transition: transform 0.3s ease;
 }
 
-.sponsor-logo-large:hover {
+.carousel-image-wrapper:hover .carousel-image {
     transform: scale(1.05);
 }
 
-/* Fallback icon styling - Fix oversized icon issue */
-.sponsor-logo-large.d-flex {
-    font-size: 3rem !important;
-}
-
-.sponsor-logo-large .fa-4x {
-    font-size: 3rem !important;
-}
-
-.sponsor-logo-large i {
-    font-size: 3rem !important;
-}
-
-/* Sponsor Tier Badges */
-.sponsor-tier-badge {
-    display: inline-block;
-    padding: 0.5rem 1.5rem;
-    border-radius: 25px;
-    font-size: 1rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.tier-platinum { 
-    background: linear-gradient(45deg, #e5e4e2, #d3d3d3); 
-    color: #333; 
-}
-
-.tier-gold { 
-    background: linear-gradient(45deg, var(--rugby-gold), #e6c200); 
-    color: #333; 
-}
-
-.tier-silver { 
-    background: linear-gradient(45deg, #c0c0c0, #a8a8a8); 
-    color: #333; 
-}
-
-.tier-bronze { 
-    background: linear-gradient(45deg, #cd7f32, #b8722c); 
-    color: white; 
-}
-
-.tier-community { 
-    background: linear-gradient(45deg, #28a745, #1e7e34); 
-    color: white; 
-}
-
-.tier-supporting { 
-    background: linear-gradient(45deg, #6c757d, #545b62); 
-    color: white; 
-}
-
-.tier-in-kind { 
-    background: linear-gradient(45deg, #17a2b8, #138496); 
-    color: white; 
-}
-
-/* Information Cards */
-.info-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border-left: 4px solid var(--rugby-green);
-    transition: all 0.3s ease;
-}
-
-.info-card:hover {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
-}
-
-.info-card h3, .info-card h4 {
-    color: var(--rugby-dark-green);
-    font-weight: 600;
-}
-
-/* Information Items */
-.info-item {
+.carousel-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
     display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 3px solid var(--rugby-green);
+    align-items: flex-end;
+    padding: 1rem;
 }
 
-.info-item i {
-    color: var(--rugby-green);
-    margin-right: 1rem;
-    font-size: 1.2rem;
-    min-width: 20px;
+.carousel-image-wrapper:hover .carousel-image-overlay {
+    opacity: 1;
 }
 
-.info-item strong {
-    color: var(--rugby-dark-green);
-    margin-right: 0.5rem;
-}
-
-/* Accept Invitation Form Styles */
-.accept-invitation-container {
-    min-height: 70vh;
+.carousel-image-info {
     display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, var(--rugby-light-green) 0%, #f8f9fa 100%);
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.accept-invitation-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    padding: 3rem;
-    border-top: 4px solid var(--rugby-green);
-    max-width: 500px;
-    margin: 0 auto;
+.carousel-image-info .badge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.25rem;
+    text-transform: capitalize;
 }
 
-.accept-invitation-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.accept-invitation-header .icon-wrapper {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 1rem;
+    cursor: pointer;
+    z-index: 2;
     border-radius: 50%;
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,104,55,0.3);
-}
-
-.accept-invitation-header .icon-wrapper i {
-    color: white;
-    font-size: 2rem;
-}
-
-.accept-invitation-header h2 {
-    color: var(--rugby-dark-green);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.accept-invitation-header .lead {
-    color: #6c757d;
-    font-size: 1.1rem;
-}
-
-.invitation-details {
-    background: var(--rugby-light-green);
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border-left: 4px solid var(--rugby-green);
-}
-
-.invitation-details h5 {
-    color: var(--rugby-dark-green);
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.invitation-info {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.invitation-info i {
-    color: var(--rugby-green);
-    margin-right: 0.75rem;
-    font-size: 1.1rem;
-    min-width: 16px;
-}
-
-.invitation-info strong {
-    color: var(--rugby-dark-green);
-    margin-right: 0.5rem;
-}
-
-.accept-form .form-label {
-    font-weight: 600;
-    color: var(--rugby-dark-green);
-    margin-bottom: 0.5rem;
-}
-
-.accept-form .form-control {
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
-.accept-form .form-control:focus {
-    border-color: var(--rugby-green);
-    box-shadow: 0 0 0 0.2rem rgba(0,104,55,0.25);
+.carousel-button:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: translateY(-50%) scale(1.1);
 }
 
-.btn-accept-invitation {
-    background: linear-gradient(45deg, var(--rugby-green), var(--rugby-dark-green));
-    border: none;
-    color: white;
-    font-weight: 600;
-    padding: 0.75rem 2rem;
-    border-radius: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    width: 100%;
-    margin-top: 1rem;
+.carousel-button--left {
+    left: 1rem;
 }
 
-.btn-accept-invitation:hover {
-    background: linear-gradient(45deg, var(--rugby-dark-green), var(--rugby-green));
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,104,55,0.3);
+.carousel-button--right {
+    right: 1rem;
 }
 
-.btn-accept-invitation:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0,104,55,0.25);
-    color: white;
+.carousel-button i {
+    font-size: 1.2rem;
 }
 
-/* Responsive adjustments */
-@media (max-width: 576px) {
-    .accept-invitation-card {
-        padding: 2rem 1.5rem;
-        margin: 1rem;
-    }
-    
-    .accept-invitation-header .icon-wrapper {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .accept-invitation-header .icon-wrapper i {
-        font-size: 1.5rem;
-    }
-}
-
-/* Social Media Button Styles */
-.btn-facebook {
-    background-color: #1877f2;
-    border-color: #1877f2;
-    color: white;
-}
-
-.btn-facebook:hover {
-    background-color: #166fe5;
-    border-color: #166fe5;
-    color: white;
-}
-
-.btn-instagram {
-    background: #e1306c;
-    border-color: #e1306c;
-    color: white;
-}
-
-.btn-instagram:hover {
-    background: #e1306c;
-    border-color: #d4285f;
-    color: white;
-}
-
-.btn-twitter {
-    background-color: #1da1f2;
-    border-color: #1da1f2;
-    color: white;
-}
-
-.btn-twitter:hover {
-    background-color: #1a91da;
-    border-color: #1a91da;
-    color: white;
-}
-
-.btn-linkedin {
-    background-color: #0077b5;
-    border-color: #0077b5;
-    color: white;
-}
-
-.btn-linkedin:hover {
-    background-color: #006ba1;
-    border-color: #006ba1;
-    color: white;
-}
-
-/* Social Links Container Styling */
-.social-links {
+.carousel-nav {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    flex-wrap: wrap;
     gap: 0.5rem;
+    z-index: 2;
 }
 
-.social-links .btn {
-    flex: 1;
-    min-width: fit-content;
+.carousel-indicator {
+    border: none;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-indicator.current-slide,
+.carousel-indicator:hover {
+    background: white;
+    transform: scale(1.2);
+}
+
+/* Auto-play animation */
+.carousel-track.auto-playing {
+    animation: none;
+}
+
+/* Responsive carousel */
+@media (max-width: 768px) {
+    .image-carousel {
+        height: 300px;
+    }
+    
+    .carousel-button {
+        width: 40px;
+        height: 40px;
+        padding: 0.75rem;
+    }
+    
+    .carousel-button--left {
+        left: 0.5rem;
+    }
+    
+    .carousel-button--right {
+        right: 0.5rem;
+    }
+    
+    .carousel-image-overlay {
+        padding: 0.75rem;
+    }
+    
+    .carousel-image-info .badge {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .image-carousel {
+        height: 250px;
+    }
+    
+    .carousel-button {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .carousel-button i {
+        font-size: 1rem;
+    }
+}
+
+/* Loading state for carousel */
+.image-carousel.loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Community Gallery section styling */
+.community-gallery {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.community-gallery h3 {
+    color: var(--rugby-green);
+    font-weight: 600;
+}
+
+.community-gallery .text-muted {
+    color: #6c757d !important;
 }

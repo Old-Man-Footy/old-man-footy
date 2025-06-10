@@ -138,13 +138,62 @@
 </section>
 
 <!-- Image Carousel Section -->
-<% if (typeof carouselImages !== 'undefined' && carouselImages && carouselImages.length > 0) { %>
-<section class="py-3 bg-light">
-    <div class="container-fluid">
+<% if (carouselImages && carouselImages.length > 0) { %>
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h3 class="text-center mb-4">Community Gallery</h3>
+                <p class="text-center text-muted mb-4">Recent photos from our Masters Rugby League community</p>
+            </div>
+        </div>
+        
         <div class="image-carousel-container">
             <div class="image-carousel" id="imageCarousel">
-                <!-- Images will be populated by JavaScript -->
+                <div class="carousel-track-container">
+                    <div class="carousel-track">
+                        <% carouselImages.forEach((image, index) => { %>
+                            <div class="carousel-slide <%= index === 0 ? 'current-slide' : '' %>" data-source="<%= image.source %>" data-type="<%= image.type %>">
+                                <div class="carousel-image-wrapper">
+                                    <img src="<%= image.url %>" alt="<%= image.source %> photo" class="carousel-image" loading="lazy">
+                                    <div class="carousel-image-overlay">
+                                        <div class="carousel-image-info">
+                                            <span class="badge bg-primary"><%= image.source %></span>
+                                            <% if (image.type === 'gallery') { %>
+                                                <span class="badge bg-secondary">Gallery</span>
+                                            <% } else if (image.type === 'promotional') { %>
+                                                <span class="badge bg-success">Promo</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+                
+                <!-- Navigation buttons -->
+                <button class="carousel-button carousel-button--left" id="carouselPrev">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="carousel-button carousel-button--right" id="carouselNext">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                
+                <!-- Dots indicator -->
+                <div class="carousel-nav">
+                    <% carouselImages.forEach((image, index) => { %>
+                        <button class="carousel-indicator <%= index === 0 ? 'current-slide' : '' %>" data-slide="<%= index %>"></button>
+                    <% }) %>
+                </div>
             </div>
+        </div>
+        
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                Showing recent photos from carnivals, clubs, and sponsors • 
+                <span id="carouselStats"><%= carouselImages.length %> images</span>
+            </small>
         </div>
     </div>
 </section>

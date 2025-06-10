@@ -8,6 +8,7 @@
 const { Carnival, Club, User, EmailSubscription } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('../services/emailService');
+const carouselImageService = require('../services/carouselImageService');
 const crypto = require('crypto');
 
 /**
@@ -46,11 +47,15 @@ const getIndex = async (req, res) => {
             })
         };
 
+        // Get carousel images for the homepage
+        const carouselImages = await carouselImageService.getCarouselImages(8);
+
         res.render('index', { 
             title: 'Old Man Footy',
             upcomingCarnivals,
             carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
-            stats
+            stats,
+            carouselImages
         });
     } catch (error) {
         console.error('Error loading homepage:', error);
@@ -62,7 +67,8 @@ const getIndex = async (req, res) => {
                 totalCarnivals: 0,
                 upcomingCount: 0,
                 clubsCount: 0
-            }
+            },
+            carouselImages: []
         });
     }
 };
