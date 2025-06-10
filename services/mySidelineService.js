@@ -258,10 +258,90 @@ class MySidelineIntegrationService {
             page.setDefaultTimeout(180000); // 3 minutes for any single operation
             page.setDefaultNavigationTimeout(180000);
 
-            // Enhanced logging for debugging
-            page.on('console', msg => console.log(`Browser console: ${msg.text()}`));
+            // Block tracking and analytics requests to improve performance and reduce noise
+            await page.route('**/*', (route) => {
+                const url = route.request().url();
+                const resourceType = route.request().resourceType();
+                
+                // Define patterns for requests to block
+                const blockedPatterns = [
+                    // Google Analytics
+                    'google-analytics.com',
+                    'googletagmanager.com',
+                    'doubleclick.net',
+                    'google.com/analytics',
+                    'google.com/ccm/collect',
+                    'google.com/g/collect',
+                    
+                    // Facebook tracking
+                    'facebook.com/tr',
+                    'connect.facebook.net',
+                    
+                    // Other common tracking services
+                    'hotjar.com',
+                    'fullstory.com',
+                    'mixpanel.com',
+                    'segment.com',
+                    'amplitude.com',
+                    'intercom.io',
+                    'zendesk.com',
+                    
+                    // Ad networks
+                    'googlesyndication.com',
+                    'adsystem.com',
+                    'amazon-adsystem.com',
+                    
+                    // Social media widgets (non-essential)
+                    'twitter.com/widgets',
+                    'instagram.com/embed',
+                    'youtube.com/embed',
+                    
+                    // Common tracking pixels and beacons
+                    '/collect?',
+                    '/track?',
+                    '/pixel?',
+                    '/beacon?',
+                    '/analytics?'
+                ];
+                
+                // Check if URL matches any blocked patterns
+                const shouldBlock = blockedPatterns.some(pattern => url.includes(pattern));
+                
+                // Also block certain resource types that aren't needed for scraping
+                const blockedResourceTypes = ['font', 'media'];
+                const shouldBlockResourceType = blockedResourceTypes.includes(resourceType);
+                
+                if (shouldBlock || shouldBlockResourceType) {
+                    console.log(`Blocked request: ${resourceType} - ${url.substring(0, 100)}...`);
+                    route.abort();
+                } else {
+                    route.continue();
+                }
+            });
+
+            // Enhanced logging for debugging (only log meaningful events)
+            page.on('console', msg => {
+                // Filter out noise from tracking scripts
+                const text = msg.text();
+                if (!text.includes('Google Analytics') && 
+                    !text.includes('gtag') && 
+                    !text.includes('Facebook') &&
+                    !text.includes('tracking')) {
+                    console.log(`Browser console: ${text}`);
+                }
+            });
+            
             page.on('pageerror', error => console.log(`Browser error: ${error.message}`));
-            page.on('requestfailed', request => console.log(`Failed request: ${request.url()}`));
+            
+            // Only log failed requests that aren't blocked tracking requests
+            page.on('requestfailed', request => {
+                const url = request.url();
+                const isTrackingRequest = ['google-analytics.com', 'googletagmanager.com', 'facebook.com'].some(domain => url.includes(domain));
+                
+                if (!isTrackingRequest) {
+                    console.log(`Failed request (non-tracking): ${url}`);
+                }
+            });
 
             // Try multiple navigation strategies
             const strategies = [
@@ -434,18 +514,25 @@ class MySidelineIntegrationService {
         console.log('Waiting for page structure...');
         
         try {
-            // Wait for essential page elements
+            // Wait for essential page elements (but don't check visibility for head since it's always hidden)
             await page.waitForSelector('body', { timeout: 30000 });
-            await page.waitForSelector('head', { timeout: 30000 });
+            console.log('Body element found');
+            
+            // Just check that head exists (don't wait for visibility)
+            const headExists = await page.locator('head').count() > 0;
+            if (headExists) {
+                console.log('Head element confirmed');
+            }
             
             // Wait for page to have meaningful structure
             await page.waitForFunction(() => {
                 return document.querySelectorAll('*').length > 50;
             }, { timeout: 45000 });
             
-            console.log('Page structure confirmed');
+            console.log('Page structure confirmed - found substantial DOM elements');
         } catch (error) {
             console.log(`Page structure waiting failed: ${error.message}`);
+            // Don't throw - continue with the process since content is loading
         }
     }
 
