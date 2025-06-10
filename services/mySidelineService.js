@@ -17,7 +17,7 @@ class MySidelineIntegrationService {
         this.requestDelay = 2000; // 2 second delay between requests to be respectful
         
         // Use existing environment variables
-        this.syncEnabled = process.env.MYSIDELINE_SYNC_ENABLED === 'true';
+        this.syncEnabled = process.env.MYSIDELINE_SYNC_ENABLED === 'true' || process.env.NODE_ENV === 'development';
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true' || process.env.NODE_ENV === 'development';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         
