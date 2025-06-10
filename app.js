@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
@@ -8,7 +10,6 @@ const helmet = require('helmet');
 const expressLayouts = require('express-ejs-layouts');
 const mySidelineService = require('./services/mySidelineService');
 const { sequelize } = require('./models');
-require('dotenv').config();
 
 const app = express();
 

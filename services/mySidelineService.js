@@ -17,18 +17,25 @@ class MySidelineIntegrationService {
         this.requestDelay = 2000; // 2 second delay between requests to be respectful
         
         // Use existing environment variables
-        this.syncEnabled = process.env.MYSIDELINE_SYNC_ENABLED === 'true' || process.env.NODE_ENV === 'development';
-        this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true' || process.env.NODE_ENV === 'development';
+        this.syncEnabled = process.env.MYSIDELINE_SYNC_ENABLED === 'true';
+        this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         
         this.useHeadlessBrowser = process.env.NODE_ENV !== 'development'
         
-        // Log configuration on startup
+        // Log configuration on startup with debugging info
         console.log('MySideline Service Configuration:', {
             syncEnabled: this.syncEnabled,
             useMockData: this.useMockData,
             enableScraping: this.enableScraping,
-            environment: process.env.NODE_ENV || 'development'
+            environment: process.env.NODE_ENV || 'development',
+            debug: {
+                MYSIDELINE_SYNC_ENABLED: process.env.MYSIDELINE_SYNC_ENABLED,
+                NODE_ENV: process.env.NODE_ENV,
+                syncEnabledCheck1: process.env.MYSIDELINE_SYNC_ENABLED === 'true',
+                syncEnabledCheck2: process.env.NODE_ENV === 'development',
+                finalSyncEnabled: process.env.MYSIDELINE_SYNC_ENABLED === 'true' || process.env.NODE_ENV === 'development'
+            }
         });
     }
 
@@ -220,7 +227,7 @@ class MySidelineIntegrationService {
             console.log('Launching browser for MySideline event scraping...');
             
             browser = await puppeteer.launch({
-                headless: useHeadlessBrowser,
+                headless: this.useHeadlessBrowser,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
