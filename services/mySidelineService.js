@@ -16,6 +16,10 @@ class MySidelineIntegrationService {
         this.lastSyncDate = null;
         this.isRunning = false;
         this.requestDelay = 2000; // 2 second delay between requests to be respectful
+        
+        // Configuration for development vs production
+        this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true' || process.env.NODE_ENV === 'development';
+        this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
     }
 
     // Initialize the scheduled sync
@@ -47,12 +51,22 @@ class MySidelineIntegrationService {
                         order: [['createdAt', 'DESC']]
                     });
 
-                    if (!lastImportedCarnival || 
-                        (new Date() - lastImportedCarnival.createdAt) > 24 * 60 * 60 * 1000) {
-                        console.log('Running initial MySideline sync...');
+                    // In development mode, always run sync regardless of last sync time
+                    const isDevelopment = process.env.NODE_ENV !== 'production';
+                    const hasRecentSync = lastImportedCarnival && 
+                        (new Date() - lastImportedCarnival.createdAt) <= 24 * 60 * 60 * 1000;
+
+                    if (!lastImportedCarnival || !hasRecentSync || isDevelopment) {
+                        if (isDevelopment && hasRecentSync) {
+                            console.log('Running MySideline sync in development mode (ignoring recent sync)...');
+                        } else if (!lastImportedCarnival) {
+                            console.log('Running initial MySideline sync (no previous sync found)...');
+                        } else {
+                            console.log('Running initial MySideline sync (last sync > 24 hours ago)...');
+                        }
                         await this.syncMySidelineEvents();
                     } else {
-                        console.log('MySideline sync skipped - recent sync found');
+                        console.log('MySideline sync skipped - recent sync found (production mode)');
                     }
                     return; // Success, exit retry loop
                 } catch (dbError) {
@@ -108,6 +122,21 @@ class MySidelineIntegrationService {
     // Scrape MySideline website for events
     async scrapeMySidelineEvents() {
         try {
+            // Check if we should use mock data instead of scraping
+            if (this.useMockData) {
+                console.log('Using mock MySideline data (development mode)...');
+                return this.generateMockEvents('NSW').concat(
+                    this.generateMockEvents('QLD'),
+                    this.generateMockEvents('VIC')
+                );
+            }
+
+            // Check if scraping is disabled
+            if (!this.enableScraping) {
+                console.log('MySideline scraping is disabled via configuration');
+                return [];
+            }
+
             console.log('Scraping MySideline Masters events from search page...');
             
             // Use browser automation as primary method since MySideline requires JavaScript
@@ -173,333 +202,56 @@ class MySidelineIntegrationService {
                     '--single-process',
                     '--disable-gpu',
                     '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor'
+                    '--disable-features=VizDisplayCompositor',
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-extensions'
                 ],
                 timeout: 60000
             });
 
             const page = await browser.newPage();
             
-            // Set a realistic user agent
-            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            // Enhanced stealth configuration
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            await page.setViewport({ width: 1366, height: 768 });
             
-            // Set viewport
-            await page.setViewport({ width: 1280, height: 720 });
-
-            // Set default navigation timeout
-            page.setDefaultNavigationTimeout(30000);
-            page.setDefaultTimeout(30000);
-
-            // Track all network requests to capture form submissions and AJAX calls
-            const capturedRequests = [];
-            
-            // Monitor network requests for registration endpoints
-            await page.setRequestInterception(true);
-            page.on('request', (request) => {
-                try {
-                    const url = request.url();
-                    const method = request.method();
-                    const postData = request.postData();
-                    
-                    // Look for registration-related URLs or form submissions
-                    if (url.includes('register') || url.includes('signup') || url.includes('event') || 
-                        url.includes('form') || method === 'POST') {
-                        console.log(`🔗 Captured ${method} request: ${url}`);
-                        capturedRequests.push({
-                            url: url,
-                            method: method,
-                            postData: postData,
-                            timestamp: new Date()
-                        });
-                    }
-                    
-                    // Continue the request
-                    request.continue();
-                } catch (error) {
-                    console.log(`Request interception error: ${error.message}`);
-                    try {
-                        request.continue();
-                    } catch (continueError) {
-                        // Request may have already been handled
-                    }
-                }
-            });
-
-            console.log(`Navigating to MySideline search: ${this.searchUrl}`);
-            
-            // Navigate to the search page with retry logic
-            let navigationSuccess = false;
-            let retryCount = 0;
-            const maxRetries = 3;
-            
-            while (!navigationSuccess && retryCount < maxRetries) {
-                try {
-                    await page.goto(this.searchUrl, { 
-                        waitUntil: 'domcontentloaded',
-                        timeout: 30000 
-                    });
-                    navigationSuccess = true;
-                    console.log('Successfully navigated to MySideline search page');
-                } catch (navError) {
-                    retryCount++;
-                    console.log(`Navigation attempt ${retryCount} failed: ${navError.message}`);
-                    if (retryCount < maxRetries) {
-                        console.log('Retrying navigation...');
-                        await this.delay(2000);
-                    } else {
-                        throw new Error(`Failed to navigate after ${maxRetries} attempts: ${navError.message}`);
-                    }
-                }
-            }
-
-            // Wait for content to load
-            console.log('Waiting for search results to load...');
-            await page.waitForTimeout(3000);
-
-            // Enhanced event extraction with proper form and button handling
-            const events = await page.evaluate(() => {
-                const foundElements = [];
-                
-                try {
-                    // Look for various selectors that might contain event data
-                    const selectors = [
-                        '.search-result',
-                        '.club-item',
-                        '.event-item',
-                        '.result-item',
-                        '[data-club]',
-                        '[data-event]',
-                        'article',
-                        '.card',
-                        '.listing',
-                        'li',
-                        '.row',
-                        'div[class*="result"]',
-                        'div[class*="club"]',
-                        'div[class*="event"]'
-                    ];
-                    
-                    selectors.forEach(selector => {
-                        try {
-                            const elements = document.querySelectorAll(selector);
-                            elements.forEach((el, index) => {
-                                const text = el.textContent?.trim() || '';
-                                
-                                // Check if this element contains "Masters" (case insensitive)
-                                if (text.toLowerCase().includes('masters') && text.length > 20) {
-                                    // Look for registration forms and buttons
-                                    const forms = el.querySelectorAll('form');
-                                    const buttons = el.querySelectorAll('button, input[type="button"], input[type="submit"]');
-                                    const links = el.querySelectorAll('a');
-                                    
-                                    let registrationInfo = null;
-                                    
-                                    // Check for forms with registration-related actions
-                                    forms.forEach(form => {
-                                        const action = form.action || form.getAttribute('action');
-                                        const method = form.method || form.getAttribute('method') || 'GET';
-                                        
-                                        if (action && (action.includes('register') || action.includes('signup') || action.includes('event'))) {
-                                            registrationInfo = {
-                                                type: 'form',
-                                                action: action,
-                                                method: method.toUpperCase(),
-                                                formId: form.id,
-                                                formClass: form.className
-                                            };
-                                            console.log(`🎯 Found registration form: ${action}`);
-                                        }
-                                    });
-                                    
-                                    // Check for buttons with registration-related functionality
-                                    buttons.forEach(btn => {
-                                        const btnText = (btn.textContent || btn.value || '').toLowerCase();
-                                        if (btnText.includes('register') || btnText.includes('sign up') || btnText.includes('join')) {
-                                            const onclick = btn.getAttribute('onclick');
-                                            const dataUrl = btn.getAttribute('data-url') || btn.getAttribute('data-href');
-                                            const formAction = btn.closest('form')?.action;
-                                            const buttonType = btn.type || 'button';
-                                            
-                                            registrationInfo = {
-                                                type: 'button',
-                                                buttonText: btn.textContent || btn.value,
-                                                onclick: onclick,
-                                                dataUrl: dataUrl,
-                                                formAction: formAction,
-                                                buttonType: buttonType,
-                                                buttonClass: btn.className,
-                                                buttonId: btn.id
-                                            };
-                                            
-                                            console.log(`🎯 Found register button: ${btn.textContent || btn.value}`);
-                                        }
-                                    });
-                                    
-                                    // Fallback to any links that might be registration-related
-                                    if (!registrationInfo) {
-                                        links.forEach(link => {
-                                            const href = link.href;
-                                            const linkText = link.textContent?.toLowerCase() || '';
-                                            
-                                            if (href && (href.includes('register') || href.includes('signup') || 
-                                                        linkText.includes('register') || linkText.includes('more info'))) {
-                                                registrationInfo = {
-                                                    type: 'link',
-                                                    href: href,
-                                                    linkText: link.textContent
-                                                };
-                                                console.log(`🎯 Found registration link: ${href}`);
-                                            }
-                                        });
-                                    }
-                                    
-                                    foundElements.push({
-                                        selector: selector,
-                                        text: text,
-                                        id: el.id || `found-${Date.now()}-${index}`,
-                                        registrationInfo: registrationInfo,
-                                        innerHTML: el.innerHTML.substring(0, 500) // First 500 chars for analysis
-                                    });
-                                    
-                                    console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
-                                }
-                            });
-                        } catch (err) {
-                            console.error(`Error with selector ${selector}:`, err.message);
-                        }
-                    });
-                    
-                    // Also check the entire page content for "Masters"
-                    const pageText = document.body.textContent || '';
-                    if (pageText.toLowerCase().includes('masters')) {
-                        console.log('Page contains "Masters" - content is loading');
-                        
-                        // If we found Masters but no specific elements, try broader search
-                        if (foundElements.length === 0) {
-                            const allDivs = document.querySelectorAll('div');
-                            let fallbackCount = 0;
-                            allDivs.forEach((div, index) => {
-                                const text = div.textContent?.trim() || '';
-                                if (text.toLowerCase().includes('masters') && 
-                                    text.length > 30 && 
-                                    text.length < 1000 &&
-                                    fallbackCount < 5) { // Limit fallback elements
-                                    
-                                    // Check for any forms or buttons in this div
-                                    const hasForm = div.querySelector('form') !== null;
-                                    const hasButton = div.querySelector('button, input[type="button"], input[type="submit"]') !== null;
-                                    
-                                    foundElements.push({
-                                        selector: 'div-fallback',
-                                        text: text,
-                                        id: `fallback-${index}`,
-                                        registrationInfo: hasForm || hasButton ? { type: 'detected', hasForm, hasButton } : null,
-                                        innerHTML: div.innerHTML.substring(0, 300)
-                                    });
-                                    fallbackCount++;
-                                }
-                            });
-                        }
-                    } else {
-                        console.log('Page does not contain "Masters" - may not have loaded properly');
-                    }
-                } catch (evaluationError) {
-                    console.error('Error during page evaluation:', evaluationError.message);
-                }
-                
-                return foundElements;
-            });
-
-            // Try to interact with registration forms/buttons to capture endpoints
-            console.log('Attempting to analyze registration mechanisms...');
-            
-            for (const event of events) {
-                if (event.registrationInfo) {
-                    try {
-                        if (event.registrationInfo.type === 'form') {
-                            // For forms, we can extract the action URL directly
-                            const formAction = event.registrationInfo.action;
-                            if (formAction) {
-                                console.log(`📋 Form action found: ${formAction}`);
-                                const eventId = this.extractEventIdFromUrl(formAction);
-                                if (eventId) {
-                                    event.mySidelineEventId = eventId;
-                                    event.registrationLink = formAction;
-                                }
-                            }
-                        } else if (event.registrationInfo.type === 'button') {
-                            // For buttons, check if they have data attributes or onclick handlers
-                            const dataUrl = event.registrationInfo.dataUrl;
-                            const onclick = event.registrationInfo.onclick;
-                            
-                            if (dataUrl) {
-                                console.log(`📋 Button data-url found: ${dataUrl}`);
-                                const eventId = this.extractEventIdFromUrl(dataUrl);
-                                if (eventId) {
-                                    event.mySidelineEventId = eventId;
-                                    event.registrationLink = dataUrl;
-                                }
-                            } else if (onclick) {
-                                // Try to extract URLs from onclick JavaScript
-                                const urlMatch = onclick.match(/['"`](https?:\/\/[^'"`]+)['"`]/);
-                                if (urlMatch) {
-                                    console.log(`📋 Button onclick URL found: ${urlMatch[1]}`);
-                                    const eventId = this.extractEventIdFromUrl(urlMatch[1]);
-                                    if (eventId) {
-                                        event.mySidelineEventId = eventId;
-                                        event.registrationLink = urlMatch[1];
-                                    }
-                                }
-                            }
-                        } else if (event.registrationInfo.type === 'link') {
-                            // For links, use the href directly
-                            const href = event.registrationInfo.href;
-                            console.log(`📋 Registration link found: ${href}`);
-                            const eventId = this.extractEventIdFromUrl(href);
-                            if (eventId) {
-                                event.mySidelineEventId = eventId;
-                                event.registrationLink = href;
-                            }
-                        }
-                    } catch (analysisError) {
-                        console.log(`⚠️ Could not analyze registration mechanism: ${analysisError.message}`);
-                    }
-                }
-            }
-
-            // Log all captured requests for analysis
-            if (capturedRequests.length > 0) {
-                console.log(`📋 Captured ${capturedRequests.length} network requests:`);
-                capturedRequests.forEach(req => {
-                    console.log(`  - ${req.method} ${req.url}`);
-                    if (req.postData) {
-                        console.log(`    Data: ${req.postData.substring(0, 100)}...`);
-                    }
+            // Remove webdriver property
+            await page.evaluateOnNewDocument(() => {
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined,
                 });
-            }
+            });
 
-            console.log(`Browser found ${events.length} potential Masters events`);
-            
-            // Convert browser events to standard format
-            const standardEvents = [];
-            
-            for (const event of events) {
+            // Increase timeouts
+            page.setDefaultNavigationTimeout(60000);
+            page.setDefaultTimeout(60000);
+
+            // Try multiple approaches to get the data
+            const approaches = [
+                () => this.tryDirectNavigation(page),
+                () => this.tryStepByStepNavigation(page),
+                () => this.tryAlternativeUrls(page)
+            ];
+
+            let events = [];
+            for (const approach of approaches) {
                 try {
-                    const standardEvent = this.parseEventFromElement(event);
-                    if (standardEvent) {
-                        standardEvents.push(standardEvent);
+                    console.log('Trying navigation approach...');
+                    events = await approach();
+                    if (events && events.length > 0) {
+                        console.log(`Success! Found ${events.length} events`);
+                        break;
                     }
-                } catch (parseError) {
-                    console.error('Error parsing event:', parseError);
+                } catch (error) {
+                    console.log(`Approach failed: ${error.message}`);
+                    // Continue to next approach
                 }
             }
 
-            return standardEvents;
+            return events;
 
         } catch (error) {
-            console.error('Browser automation error:', error);
-            // Don't throw - let it fall back to mock data
-            console.log('Browser automation failed, will use mock data instead');
+            console.error('All browser automation approaches failed:', error.message);
             return [];
         } finally {
             if (browser) {
@@ -510,6 +262,164 @@ class MySidelineIntegrationService {
                 }
             }
         }
+    }
+
+    /**
+     * Try direct navigation to the search page
+     * @param {Page} page - Puppeteer page object
+     * @returns {Promise<Array>} Array of events
+     */
+    async tryDirectNavigation(page) {
+        console.log('Attempting direct navigation...');
+        
+        await page.goto(this.searchUrl, { 
+            waitUntil: 'networkidle2',
+            timeout: 30000 
+        });
+
+        // Wait for content to stabilize
+        await page.waitForTimeout(5000);
+
+        return await this.extractEventsFromPage(page);
+    }
+
+    /**
+     * Try step-by-step navigation to avoid frame issues
+     * @param {Page} page - Puppeteer page object
+     * @returns {Promise<Array>} Array of events
+     */
+    async tryStepByStepNavigation(page) {
+        console.log('Attempting step-by-step navigation...');
+        
+        // Start from the main MySideline page
+        await page.goto('https://profile.mysideline.com.au', { 
+            waitUntil: 'networkidle2',
+            timeout: 30000 
+        });
+
+        await page.waitForTimeout(3000);
+
+        // Navigate to search page
+        await page.goto(this.searchUrl, { 
+            waitUntil: 'networkidle2',
+            timeout: 30000 
+        });
+
+        await page.waitForTimeout(5000);
+
+        return await this.extractEventsFromPage(page);
+    }
+
+    /**
+     * Try alternative URLs or search methods
+     * @param {Page} page - Puppeteer page object
+     * @returns {Promise<Array>} Array of events
+     */
+    async tryAlternativeUrls(page) {
+        console.log('Attempting alternative URLs...');
+        
+        const alternativeUrls = [
+            'https://profile.mysideline.com.au/register/clubsearch/?criteria=Rugby+League+Masters',
+            'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters+Rugby',
+            'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&type=Club'
+        ];
+
+        for (const url of alternativeUrls) {
+            try {
+                console.log(`Trying alternative URL: ${url}`);
+                await page.goto(url, { 
+                    waitUntil: 'networkidle2',
+                    timeout: 30000 
+                });
+
+                await page.waitForTimeout(3000);
+
+                const events = await this.extractEventsFromPage(page);
+                if (events && events.length > 0) {
+                    return events;
+                }
+            } catch (error) {
+                console.log(`Alternative URL failed: ${error.message}`);
+                continue;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Extract events from the current page
+     * @param {Page} page - Puppeteer page object
+     * @returns {Promise<Array>} Array of events
+     */
+    async extractEventsFromPage(page) {
+        // Enhanced event extraction with better error handling
+        const events = await page.evaluate(() => {
+            const foundElements = [];
+            
+            try {
+                // Look for various selectors that might contain event data
+                const selectors = [
+                    '.search-result',
+                    '.club-item', 
+                    '.event-item',
+                    '.result-item',
+                    '[data-club]',
+                    '[data-event]',
+                    'article',
+                    '.card',
+                    '.listing',
+                    'li',
+                    '.row',
+                    'div[class*="result"]',
+                    'div[class*="club"]',
+                    'div[class*="event"]',
+                    'div[class*="search"]'
+                ];
+                
+                selectors.forEach(selector => {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach((el, index) => {
+                            const text = el.textContent?.trim() || '';
+                            
+                            // Check if this element contains "Masters" (case insensitive)
+                            if (text.toLowerCase().includes('masters') && text.length > 20) {
+                                foundElements.push({
+                                    selector: selector,
+                                    text: text,
+                                    id: el.id || `found-${Date.now()}-${index}`,
+                                    innerHTML: el.innerHTML.substring(0, 500)
+                                });
+                                
+                                console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
+                            }
+                        });
+                    } catch (err) {
+                        // Continue with next selector
+                    }
+                });
+
+                return foundElements;
+            } catch (error) {
+                return [];
+            }
+        });
+
+        // Convert browser events to standard format
+        const standardEvents = [];
+        for (const event of events) {
+            try {
+                const standardEvent = this.parseEventFromElement(event);
+                if (standardEvent) {
+                    standardEvents.push(standardEvent);
+                }
+            } catch (parseError) {
+                // Continue with next event
+            }
+        }
+
+        return standardEvents;
     }
 
     /**
