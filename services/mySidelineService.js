@@ -12,7 +12,7 @@ class MySidelineIntegrationService {
         this.timeout = 30000;
         this.retryCount = 3;
         this.rateLimit = 1000; // 1 second between requests
-        this.searchUrl = 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&type=&activity=&gender=&agemin=&agemax=&comptype=&source=rugby-league';
+        this.searchUrl = 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&type=Contact';
         this.lastSyncDate = null;
         this.isRunning = false;
         this.requestDelay = 2000; // 2 second delay between requests to be respectful
@@ -26,26 +26,49 @@ class MySidelineIntegrationService {
             await this.syncMySidelineEvents();
         });
 
-        // Also run on startup if not synced in last 24 hours
-        this.checkAndRunInitialSync();
+        // Also run on startup if not synced in last 24 hours - with delay to ensure DB is ready
+        setTimeout(() => {
+            this.checkAndRunInitialSync();
+        }, 2000); // 2 second delay to ensure database is fully initialized
     }
 
     async checkAndRunInitialSync() {
         try {
-            const lastImportedCarnival = await Carnival.findOne({ 
-                where: {
-                    mySidelineEventId: { [Op.ne]: null }
-                },
-                order: [['createdAt', 'DESC']]
-            });
+            // Add a small delay and retry logic to ensure database is ready
+            let retries = 3;
+            let lastError = null;
 
-            if (!lastImportedCarnival || 
-                (new Date() - lastImportedCarnival.createdAt) > 24 * 60 * 60 * 1000) {
-                console.log('Running initial MySideline sync...');
-                await this.syncMySidelineEvents();
+            while (retries > 0) {
+                try {
+                    const lastImportedCarnival = await Carnival.findOne({ 
+                        where: {
+                            mySidelineEventId: { [Op.ne]: null }
+                        },
+                        order: [['createdAt', 'DESC']]
+                    });
+
+                    if (!lastImportedCarnival || 
+                        (new Date() - lastImportedCarnival.createdAt) > 24 * 60 * 60 * 1000) {
+                        console.log('Running initial MySideline sync...');
+                        await this.syncMySidelineEvents();
+                    } else {
+                        console.log('MySideline sync skipped - recent sync found');
+                    }
+                    return; // Success, exit retry loop
+                } catch (dbError) {
+                    lastError = dbError;
+                    retries--;
+                    if (retries > 0) {
+                        console.log(`Database not ready, retrying in 3 seconds... (${3 - retries}/3)`);
+                        await this.delay(3000);
+                    }
+                }
             }
+
+            throw lastError; // Re-throw the last error if all retries failed
         } catch (error) {
-            console.error('Failed to check for initial sync:', error);
+            console.error('Failed to check for initial sync:', error.message);
+            console.log('Initial MySideline sync will be skipped. You can manually trigger it from the admin panel.');
         }
     }
 
