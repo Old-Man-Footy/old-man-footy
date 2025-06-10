@@ -1,14 +1,14 @@
 const cron = require('node-cron');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const { Carnival, User, Club } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('./emailService');
 
 class MySidelineIntegrationService {
     constructor() {
-        this.timeout = parseInt(process.env.MYSIDELINE_REQUEST_TIMEOUT) || 30000;
+        this.timeout = parseInt(process.env.MYSIDELINE_REQUEST_TIMEOUT) || 60000;
         this.retryCount = parseInt(process.env.MYSIDELINE_RETRY_ATTEMPTS) || 3;
         this.rateLimit = 1000; // 1 second between requests
         this.searchUrl = process.env.MYSIDELINE_URL;
@@ -219,138 +219,179 @@ class MySidelineIntegrationService {
         }
     }
 
-    // Enhanced method using Puppeteer for JavaScript-heavy pages
+    /**
+     * Enhanced method using Playwright for JavaScript-heavy pages
+     * @returns {Promise<Array>} Array of standardized event objects
+     */
     async fetchEventsWithBrowser() {
         let browser = null;
+        let context = null;
+        let page = null;
+        
         try {
-            console.log('Launching browser for MySideline event scraping...');
+            console.log('Launching Playwright browser for MySideline event scraping...');
             
-            browser = await puppeteer.launch({
+            // Launch browser with comprehensive configuration
+            browser = await chromium.launch({
                 headless: this.useHeadlessBrowser,
+                timeout: 120000,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--single-process',
-                    '--disable-gpu',
                     '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor',
-                    '--disable-blink-features=AutomationControlled',
-                    '--disable-extensions'
-                ],
-                timeout: 60000
+                    '--disable-features=VizDisplayCompositor'
+                ]
             });
 
-            const page = await browser.newPage();
-            
-            // Enhanced stealth configuration
-            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-            await page.setViewport({ width: 1366, height: 768 });
-            
-            // Remove webdriver property
-            await page.evaluateOnNewDocument(() => {
-                Object.defineProperty(navigator, 'webdriver', {
-                    get: () => undefined,
-                });
+            // Create context with realistic browser settings
+            context = await browser.newContext({
+                viewport: { width: 1366, height: 768 },
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                javaScriptEnabled: true,
+                acceptDownloads: false,
+                ignoreHTTPSErrors: true
             });
 
-            // Increase timeouts
-            page.setDefaultNavigationTimeout(60000);
-            page.setDefaultTimeout(60000);
+            // Create page with extended timeouts
+            page = await context.newPage();
+            page.setDefaultTimeout(180000); // 3 minutes for any single operation
+            page.setDefaultNavigationTimeout(180000);
 
-            // Try multiple approaches to get the data
-            const approaches = [
-                () => this.tryDirectNavigation(page),
-                () => this.tryStepByStepNavigation(page)
+            // Enhanced logging for debugging
+            page.on('console', msg => console.log(`Browser console: ${msg.text()}`));
+            page.on('pageerror', error => console.log(`Browser error: ${error.message}`));
+            page.on('requestfailed', request => console.log(`Failed request: ${request.url()}`));
+
+            // Try multiple navigation strategies
+            const strategies = [
+                () => this.tryComprehensivePlaywrightNavigation(page),
+                () => this.tryStepByStepPlaywrightNavigation(page),
+                () => this.tryDirectPlaywrightNavigation(page)
             ];
 
             let events = [];
-            for (const approach of approaches) {
+            for (let i = 0; i < strategies.length; i++) {
                 try {
-                    console.log('Trying navigation approach...');
-                    events = await approach();
+                    console.log(`Trying Playwright strategy ${i + 1}...`);
+                    events = await strategies[i]();
                     if (events && events.length > 0) {
-                        console.log(`Success! Found ${events.length} events`);
+                        console.log(`Success! Found ${events.length} events with strategy ${i + 1}`);
                         break;
                     }
                 } catch (error) {
-                    console.log(`Approach failed: ${error.message}`);
-                    // Continue to next approach
+                    console.log(`Playwright strategy ${i + 1} failed: ${error.message}`);
+                    if (i < strategies.length - 1) {
+                        console.log('Retrying with next strategy...');
+                        await this.delay(5000);
+                    }
                 }
             }
 
             return events;
 
         } catch (error) {
-            console.error('All browser automation approaches failed:', error.message);
+            console.error('All Playwright strategies failed:', error.message);
             return [];
         } finally {
+            // Clean up resources
+            if (page) {
+                try {
+                    await page.close();
+                } catch (e) {
+                    console.log('Error closing page:', e.message);
+                }
+            }
+            if (context) {
+                try {
+                    await context.close();
+                } catch (e) {
+                    console.log('Error closing context:', e.message);
+                }
+            }
             if (browser) {
                 try {
                     await browser.close();
-                } catch (closeError) {
-                    console.error('Error closing browser:', closeError.message);
+                } catch (e) {
+                    console.log('Error closing browser:', e.message);
                 }
             }
         }
     }
 
     /**
-     * Try direct navigation to the search page with improved waiting
-     * @param {Page} page - Puppeteer page object
+     * Comprehensive Playwright navigation with maximum waiting
+     * @param {Page} page - Playwright page object
      * @returns {Promise<Array>} Array of events
      */
-    async tryDirectNavigation(page) {
-        console.log('Attempting direct navigation...');
+    async tryComprehensivePlaywrightNavigation(page) {
+        console.log('Starting comprehensive Playwright navigation...');
         
         try {
-            // Navigate to the page and wait for multiple conditions
-            await page.goto(this.searchUrl, { 
-                waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
-                timeout: 45000 
+            console.log(`Navigating to: ${this.searchUrl}`);
+            
+            // Navigate with all wait conditions
+            await page.goto(this.searchUrl, {
+                waitUntil: 'networkidle',
+                timeout: 120000
             });
 
-            // Wait for common content indicators to appear
-            await this.waitForPageContent(page);
+            console.log('Navigation complete, implementing comprehensive waiting...');
 
-            return await this.extractEventsFromPage(page);
+            // Stage 1: Wait for basic page structure
+            await this.waitForPageStructure(page);
+            
+            // Stage 2: Wait for JavaScript frameworks to initialize
+            await this.waitForJavaScriptInitialization(page);
+            
+            // Stage 3: Wait for dynamic content to load
+            await this.waitForDynamicContentLoading(page);
+            
+            // Stage 4: Wait for search results or content
+            await this.waitForSearchResults(page);
+            
+            // Stage 5: Final content validation
+            await this.validatePageContent(page);
+
+            return await this.extractEventsFromPlaywrightPage(page);
+            
         } catch (error) {
-            console.log(`Direct navigation failed: ${error.message}`);
+            console.log(`Comprehensive navigation failed: ${error.message}`);
             throw error;
         }
     }
 
     /**
-     * Try step-by-step navigation to avoid frame issues with improved waiting
-     * @param {Page} page - Puppeteer page object
+     * Step-by-step navigation with session establishment
+     * @param {Page} page - Playwright page object
      * @returns {Promise<Array>} Array of events
      */
-    async tryStepByStepNavigation(page) {
-        console.log('Attempting step-by-step navigation...');
+    async tryStepByStepPlaywrightNavigation(page) {
+        console.log('Starting step-by-step Playwright navigation...');
         
         try {
-            // Start from the main MySideline page
-            await page.goto('https://profile.mysideline.com.au', { 
-                waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
-                timeout: 45000 
+            // Step 1: Visit main MySideline page to establish session
+            console.log('Step 1: Establishing session...');
+            await page.goto('https://mysideline.com.au', {
+                waitUntil: 'networkidle',
+                timeout: 60000
+            });
+            
+            await page.waitForTimeout(5000);
+            
+            // Step 2: Navigate to search page
+            console.log('Step 2: Navigating to search page...');
+            await page.goto(this.searchUrl, {
+                waitUntil: 'networkidle',
+                timeout: 90000
             });
 
-            // Wait for initial page to stabilize
-            await page.waitForTimeout(3000);
+            // Step 3: Extended waiting for content
+            console.log('Step 3: Waiting for content to stabilize...');
+            await this.waitForContentStabilization(page);
 
-            // Navigate to search page
-            await page.goto(this.searchUrl, { 
-                waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
-                timeout: 45000 
-            });
-
-            // Wait for search page content to be available
-            await this.waitForPageContent(page);
-
-            return await this.extractEventsFromPage(page);
+            return await this.extractEventsFromPlaywrightPage(page);
+            
         } catch (error) {
             console.log(`Step-by-step navigation failed: ${error.message}`);
             throw error;
@@ -358,214 +399,488 @@ class MySidelineIntegrationService {
     }
 
     /**
-     * Wait for page content to be properly loaded
-     * @param {Page} page - Puppeteer page object
-     * @returns {Promise<void>}
+     * Direct navigation with extended timeouts
+     * @param {Page} page - Playwright page object
+     * @returns {Promise<Array>} Array of events
      */
-    async waitForPageContent(page) {
-        console.log('Waiting for page content to load...');
+    async tryDirectPlaywrightNavigation(page) {
+        console.log('Starting direct Playwright navigation...');
         
         try {
-            // Wait for body to be present
-            await page.waitForSelector('body', { timeout: 30000 });
-            
-            // Wait for any of these common content selectors to appear
-            const contentSelectors = [
-                '.search-result',
-                '.club-item', 
-                '.event-item',
-                '.result-item',
-                '[data-club]',
-                '[data-event]',
-                'article',
-                '.card',
-                '.listing',
-                '.content',
-                '.main',
-                '#content',
-                '#main'
-            ];
+            await page.goto(this.searchUrl, {
+                waitUntil: 'networkidle',
+                timeout: 90000
+            });
 
-            // Try to wait for any content selector (with shorter timeout per selector)
-            let contentFound = false;
-            for (const selector of contentSelectors) {
+            // Extended wait for dynamic content
+            await page.waitForTimeout(30000);
+            
+            // Wait for content to be meaningful
+            await this.waitForMeaningfulContent(page);
+
+            return await this.extractEventsFromPlaywrightPage(page);
+            
+        } catch (error) {
+            console.log(`Direct navigation failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    /**
+     * Wait for basic page structure to be established
+     * @param {Page} page - Playwright page object
+     */
+    async waitForPageStructure(page) {
+        console.log('Waiting for page structure...');
+        
+        try {
+            // Wait for essential page elements
+            await page.waitForSelector('body', { timeout: 30000 });
+            await page.waitForSelector('head', { timeout: 30000 });
+            
+            // Wait for page to have meaningful structure
+            await page.waitForFunction(() => {
+                return document.querySelectorAll('*').length > 50;
+            }, { timeout: 45000 });
+            
+            console.log('Page structure confirmed');
+        } catch (error) {
+            console.log(`Page structure waiting failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Wait for JavaScript frameworks to initialize
+     * @param {Page} page - Playwright page object
+     */
+    async waitForJavaScriptInitialization(page) {
+        console.log('Waiting for JavaScript initialization...');
+        
+        try {
+            // Wait for common framework indicators
+            await page.waitForFunction(() => {
+                // Check for common framework globals or initialized content
+                const hasInteractiveElements = document.querySelectorAll('button, input, select, a').length > 5;
+                const hasSubstantialContent = document.body.textContent.trim().length > 500;
+                const scriptsLoaded = document.querySelectorAll('script').length > 0;
+                
+                return hasInteractiveElements && hasSubstantialContent && scriptsLoaded;
+            }, { timeout: 60000 });
+            
+            // Additional wait for async operations
+            await page.waitForTimeout(10000);
+            
+            console.log('JavaScript initialization confirmed');
+        } catch (error) {
+            console.log(`JavaScript initialization waiting failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Wait for dynamic content to finish loading
+     * @param {Page} page - Playwright page object
+     */
+    async waitForDynamicContentLoading(page) {
+        console.log('Waiting for dynamic content loading...');
+        
+        try {
+            // Monitor content stability over time
+            let previousLength = 0;
+            let stableCount = 0;
+            const requiredStableChecks = 3;
+            
+            for (let i = 0; i < 10; i++) {
+                const currentLength = await page.evaluate(() => {
+                    return document.body ? document.body.textContent.length : 0;
+                });
+                
+                console.log(`Content check ${i + 1}: ${currentLength} characters`);
+                
+                if (currentLength === previousLength && currentLength > 1000) {
+                    stableCount++;
+                    if (stableCount >= requiredStableChecks) {
+                        console.log('Content appears stable');
+                        break;
+                    }
+                } else {
+                    stableCount = 0;
+                }
+                
+                previousLength = currentLength;
+                await page.waitForTimeout(3000);
+            }
+            
+            // Final wait for any remaining dynamic operations
+            await page.waitForTimeout(8000);
+            
+        } catch (error) {
+            console.log(`Dynamic content loading wait failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Wait specifically for MySideline search results to appear
+     * @param {Page} page - Playwright page object
+     */
+    async waitForSearchResults(page) {
+        console.log('Waiting for MySideline search results...');
+        
+        try {
+            // Wait for the page title to confirm we're on the right page
+            await page.waitForFunction(() => {
+                return document.title.includes('Club Finder') || 
+                       document.title.includes('MySideline') ||
+                       document.title.includes('Search');
+            }, { timeout: 30000 });
+
+            console.log('Page title confirmed, waiting for search content...');
+
+            // MySideline-specific selectors based on typical club search pages
+            const mySidelineSelectors = [
+                '.club-search-results',
+                '.search-results',
+                '.club-listing',
+                '.club-item',
+                '.search-item',
+                '.result-item',
+                '.listing-container',
+                '.search-container',
+                '.club-container',
+                '.results-container',
+                '[data-testid*="search"]',
+                '[data-testid*="club"]',
+                '[data-testid*="result"]',
+                '.MuiGrid-container', // Material-UI grid (common in React apps)
+                '.ant-list', // Ant Design list
+                '.card-container',
+                '.list-group',
+                'table tbody', // Table-based results
+                '.table-responsive'
+            ];
+            
+            // Try to wait for any MySideline-specific content
+            let contentSelector = null;
+            for (const selector of mySidelineSelectors) {
                 try {
-                    await page.waitForSelector(selector, { timeout: 2000 });
-                    console.log(`Found content with selector: ${selector}`);
-                    contentFound = true;
+                    await page.waitForSelector(selector, { timeout: 8000 });
+                    contentSelector = selector;
+                    console.log(`Found content with MySideline selector: ${selector}`);
                     break;
                 } catch (error) {
                     // Continue to next selector
                 }
             }
 
-            if (!contentFound) {
-                console.log('No specific content selectors found, waiting for page to stabilize...');
-                // Wait for any JavaScript to execute
-                await page.waitForTimeout(5000);
-                
-                // Check if page has meaningful content
-                const hasContent = await page.evaluate(() => {
-                    const body = document.body;
-                    return body && body.textContent && body.textContent.trim().length > 100;
-                });
+            // Additional wait for dynamic content loading after initial selectors appear
+            await page.waitForTimeout(10000);
 
-                if (!hasContent) {
-                    console.log('Warning: Page appears to have minimal content');
+            // Wait for search results to actually populate with content
+            await page.waitForFunction(() => {
+                // Look for elements that likely contain club or event information
+                const potentialResults = document.querySelectorAll('div, li, tr, article, section');
+                let relevantContent = 0;
+
+                for (let element of potentialResults) {
+                    const text = element.textContent?.toLowerCase() || '';
+                    if (text.includes('masters') || 
+                        text.includes('rugby') || 
+                        text.includes('league') ||
+                        text.includes('club') ||
+                        text.includes('tournament') ||
+                        text.includes('competition')) {
+                        relevantContent++;
+                    }
                 }
-            }
 
-            // Additional wait for dynamic content
-            await page.waitForTimeout(3000);
+                console.log(`Found ${relevantContent} elements with relevant content`);
+                return relevantContent >= 3; // Require at least 3 relevant elements
+            }, { timeout: 45000 });
+
+            // Final wait for any lazy-loaded content
+            await page.waitForTimeout(8000);
             
-            console.log('Page content loading complete');
+            console.log('MySideline search results waiting complete');
+
         } catch (error) {
-            console.log(`Warning: Content waiting failed: ${error.message}, proceeding anyway...`);
-            // Don't throw - proceed with extraction attempt
+            console.log(`MySideline search results waiting failed: ${error.message}`);
+            // Continue anyway - we'll try to extract what we can
         }
     }
 
     /**
-     * Extract events from the current page with improved content detection
-     * @param {Page} page - Puppeteer page object
-     * @returns {Promise<Array>} Array of events
+     * Enhanced content validation specifically for MySideline
+     * @param {Page} page - Playwright page object
      */
-    async extractEventsFromPage(page) {
-        console.log('Extracting events from page...');
+    async validatePageContent(page) {
+        console.log('Validating MySideline page content...');
         
         try {
-            // First, get page information for debugging
+            const contentValidation = await page.evaluate(() => {
+                const bodyText = document.body ? document.body.textContent.toLowerCase() : '';
+                const url = window.location.href.toLowerCase();
+                
+                // MySideline-specific validation
+                const isMySidelinePage = url.includes('mysideline.com.au');
+                const hasSearchParams = url.includes('criteria=masters') || url.includes('source=rugby-league');
+                
+                // Content validation
+                const hasRelevantTerms = bodyText.includes('masters') || 
+                                       bodyText.includes('rugby') || 
+                                       bodyText.includes('league') ||
+                                       bodyText.includes('tournament') ||
+                                       bodyText.includes('competition') ||
+                                       bodyText.includes('club') ||
+                                       bodyText.includes('sport') ||
+                                       bodyText.includes('search') ||
+                                       bodyText.includes('finder');
+                
+                const hasStructure = document.querySelectorAll('div, article, section, li, tr').length > 20;
+                const hasLinks = document.querySelectorAll('a').length > 5;
+                const hasInteractiveElements = document.querySelectorAll('button, input, select').length > 0;
+                const textLength = bodyText.length;
+                
+                // Check for potential search results or listings
+                const hasListStructure = document.querySelectorAll('ul li, ol li, table tr, .card, .item, .listing').length > 0;
+                
+                // Look for MySideline-specific elements
+                const hasMySidelineElements = document.querySelector('[href*="mysideline"]') !== null ||
+                                           document.querySelector('[src*="mysideline"]') !== null ||
+                                           bodyText.includes('mysideline');
+                
+                return {
+                    isMySidelinePage,
+                    hasSearchParams,
+                    hasRelevantTerms,
+                    hasStructure,
+                    hasLinks,
+                    hasInteractiveElements,
+                    hasListStructure,
+                    hasMySidelineElements,
+                    textLength,
+                    isValid: isMySidelinePage && hasRelevantTerms && hasStructure && textLength > 1000,
+                    pageLoadComplete: textLength > 2000 && hasInteractiveElements
+                };
+            });
+            
+            console.log('MySideline content validation result:', contentValidation);
+            
+            if (!contentValidation.isValid) {
+                console.log('Warning: MySideline page content validation indicates incomplete loading');
+            }
+
+            if (!contentValidation.pageLoadComplete) {
+                console.log('Warning: Page may not be fully loaded, waiting additional time...');
+                await page.waitForTimeout(15000);
+            }
+            
+        } catch (error) {
+            console.log(`MySideline content validation failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Enhanced event extraction specifically optimized for MySideline
+     * @param {Page} page - Playwright page object
+     * @returns {Promise<Array>} Array of events
+     */
+    async extractEventsFromPlaywrightPage(page) {
+        console.log('Extracting events from MySideline page...');
+        
+        try {
+            // Get comprehensive page information
             const pageInfo = await page.evaluate(() => {
                 return {
                     url: window.location.href,
                     title: document.title,
                     bodyTextLength: document.body ? document.body.textContent.length : 0,
-                    hasContent: document.body && document.body.textContent.trim().length > 100
+                    elementCount: document.querySelectorAll('*').length,
+                    linkCount: document.querySelectorAll('a').length,
+                    formCount: document.querySelectorAll('form, input, button').length,
+                    hasContent: document.body && document.body.textContent.trim().length > 1000,
+                    hasMasters: document.body ? document.body.textContent.toLowerCase().includes('masters') : false
                 };
             });
             
-            console.log('Page info:', pageInfo);
+            console.log('MySideline page info:', pageInfo);
 
-            if (!pageInfo.hasContent) {
-                console.log('Warning: Page has minimal content, extraction may not find events');
+            // Take a screenshot for debugging (if not headless)
+            if (!this.useHeadlessBrowser) {
+                try {
+                    await page.screenshot({ 
+                        path: 'debug-mysideline-page.png', 
+                        fullPage: true 
+                    });
+                    console.log('Debug screenshot saved as debug-mysideline-page.png');
+                } catch (screenshotError) {
+                    console.log('Could not save screenshot:', screenshotError.message);
+                }
             }
 
-            // Enhanced event extraction with better error handling
+            // Extract potential events with MySideline-optimized selectors
             const events = await page.evaluate(() => {
                 const foundElements = [];
                 
-                try {
-                    // Look for various selectors that might contain event data
-                    const selectors = [
-                        '.search-result',
-                        '.club-item', 
-                        '.event-item',
-                        '.result-item',
-                        '[data-club]',
-                        '[data-event]',
-                        'article',
-                        '.card',
-                        '.listing',
-                        'li',
-                        '.row',
-                        'div[class*="result"]',
-                        'div[class*="club"]',
-                        'div[class*="event"]',
-                        'div[class*="search"]',
-                        'div[class*="item"]',
-                        'div[class*="entry"]'
-                    ];
+                // MySideline-specific selector patterns
+                const mySidelineSelectors = [
+                    // Specific MySideline patterns
+                    '.club-search-result',
+                    '.search-result-item',
+                    '.club-listing-item',
+                    '.club-card',
+                    '.search-card',
+                    '.result-card',
                     
-                    console.log('Searching for content with selectors...');
+                    // Common listing patterns
+                    '.club-item',
+                    '.event-item',
+                    '.listing-item',
+                    '.search-item',
+                    '.result-item',
                     
-                    selectors.forEach(selector => {
-                        try {
-                            const elements = document.querySelectorAll(selector);
-                            console.log(`Found ${elements.length} elements with selector: ${selector}`);
+                    // Generic container patterns
+                    '[data-testid*="club"]',
+                    '[data-testid*="search"]',
+                    '[data-testid*="result"]',
+                    '[data-testid*="listing"]',
+                    
+                    // Material-UI and common React patterns
+                    '.MuiGrid-item',
+                    '.MuiCard-root',
+                    '.ant-card',
+                    '.card',
+                    '.item',
+                    '.listing',
+                    
+                    // Table-based results
+                    'table tbody tr',
+                    '.table-row',
+                    
+                    // List-based results
+                    'ul li',
+                    'ol li',
+                    '.list-item',
+                    
+                    // Generic containers that might contain clubs/events
+                    'article',
+                    'section',
+                    '.row',
+                    '.col',
+                    '.container > div',
+                    '.content > div',
+                    
+                    // Fallback to all divs, spans, and paragraphs
+                    'div',
+                    'span',
+                    'p'
+                ];
+                
+                console.log('Starting MySideline-optimized content extraction...');
+                
+                mySidelineSelectors.forEach((selector, selectorIndex) => {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        console.log(`Selector ${selectorIndex + 1}/${mySidelineSelectors.length} (${selector}): found ${elements.length} elements`);
+                        
+                        elements.forEach((el, index) => {
+                            const text = el.textContent?.trim() || '';
+                            const innerHTML = el.innerHTML || '';
                             
-                            elements.forEach((el, index) => {
-                                const text = el.textContent?.trim() || '';
-                                
-                                // Check if this element contains "Masters" (case insensitive)
-                                if (text.toLowerCase().includes('masters') && text.length > 20) {
-                                    foundElements.push({
-                                        selector: selector,
-                                        text: text,
-                                        id: el.id || `found-${Date.now()}-${index}`,
-                                        innerHTML: el.innerHTML.substring(0, 500),
-                                        href: el.href || el.querySelector('a')?.href || null
-                                    });
-                                    
-                                    console.log(`Found Masters content with ${selector}: ${text.substring(0, 100)}`);
-                                }
-                            });
-                        } catch (err) {
-                            console.log(`Error with selector ${selector}:`, err.message);
+                            // Enhanced content detection for MySideline
+                            const containsMasters = text.toLowerCase().includes('masters');
+                            const containsRugby = text.toLowerCase().includes('rugby');
+                            const containsLeague = text.toLowerCase().includes('league');
+                            const containsClub = text.toLowerCase().includes('club');
+                            const containsTournament = text.toLowerCase().includes('tournament');
+                            const containsChampionship = text.toLowerCase().includes('championship');
+                            const containsCompetition = text.toLowerCase().includes('competition');
+                            const containsEvent = text.toLowerCase().includes('event');
+                            
+                            // Check for contact information patterns
+                            const hasEmail = text.includes('@') || innerHTML.includes('mailto:');
+                            const hasPhone = /\b(\d{4}\s?\d{3}\s?\d{3}|\(\d{2}\)\s?\d{4}\s?\d{4}|04\d{2}\s?\d{3}\s?\d{3})\b/.test(text);
+                            const hasLocation = /\b(NSW|QLD|VIC|SA|WA|NT|ACT|TAS|Australia)\b/i.test(text);
+                            
+                            // Check if element has clickable content
+                            const hasLinks = el.querySelectorAll('a').length > 0;
+                            const hasButtons = el.querySelectorAll('button').length > 0;
+                            
+                            // Size validation - not too small, not too large
+                            const isSubstantialSize = text.length > 20 && text.length < 5000;
+                            
+                            // Relevance scoring
+                            let relevanceScore = 0;
+                            if (containsMasters) relevanceScore += 10;
+                            if (containsRugby || containsLeague) relevanceScore += 8;
+                            if (containsClub) relevanceScore += 6;
+                            if (containsTournament || containsChampionship || containsCompetition) relevanceScore += 7;
+                            if (containsEvent) relevanceScore += 5;
+                            if (hasEmail || hasPhone) relevanceScore += 4;
+                            if (hasLocation) relevanceScore += 3;
+                            if (hasLinks || hasButtons) relevanceScore += 2;
+                            
+                            // Only include elements with sufficient relevance and size
+                            if (relevanceScore >= 5 && isSubstantialSize) {
+                                const elementData = {
+                                    selector: selector,
+                                    text: text,
+                                    id: el.id || `found-${Date.now()}-${selectorIndex}-${index}`,
+                                    innerHTML: innerHTML.substring(0, 1000),
+                                    href: el.href || el.querySelector('a')?.href || null,
+                                    className: el.className || '',
+                                    parentText: el.parentElement ? el.parentElement.textContent.substring(0, 300) : '',
+                                    relevanceScore: relevanceScore,
+                                    hasEmail: hasEmail,
+                                    hasPhone: hasPhone,
+                                    hasLocation: hasLocation,
+                                    hasLinks: hasLinks
+                                };
+
+                                foundElements.push(elementData);
+                                console.log(`Found relevant content (score: ${relevanceScore}): ${text.substring(0, 100)}...`);
+                            }
+                        });
+                    } catch (err) {
+                        console.log(`Error with selector ${selector}:`, err.message);
+                    }
+                });
+
+                // Sort by relevance score and remove duplicates
+                const uniqueElements = [];
+                const seenTexts = new Set();
+                
+                foundElements
+                    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+                    .forEach(element => {
+                        const textKey = element.text.substring(0, 150).toLowerCase();
+                        if (!seenTexts.has(textKey)) {
+                            seenTexts.add(textKey);
+                            uniqueElements.push(element);
                         }
                     });
 
-                    // If no Masters content found, look for any rugby league content
-                    if (foundElements.length === 0) {
-                        console.log('No Masters content found, searching for rugby league content...');
-                        
-                        const rugbyTerms = ['rugby', 'league', 'tournament', 'championship', 'competition'];
-                        
-                        selectors.forEach(selector => {
-                            try {
-                                const elements = document.querySelectorAll(selector);
-                                elements.forEach((el, index) => {
-                                    const text = el.textContent?.trim() || '';
-                                    
-                                    if (text.length > 50) {
-                                        for (const term of rugbyTerms) {
-                                            if (text.toLowerCase().includes(term)) {
-                                                foundElements.push({
-                                                    selector: selector,
-                                                    text: text,
-                                                    id: el.id || `rugby-${Date.now()}-${index}`,
-                                                    innerHTML: el.innerHTML.substring(0, 500),
-                                                    href: el.href || el.querySelector('a')?.href || null
-                                                });
-                                                console.log(`Found rugby league content: ${text.substring(0, 100)}`);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                });
-                            } catch (err) {
-                                // Continue with next selector
-                            }
-                        });
-                    }
-
-                    console.log(`Total elements found: ${foundElements.length}`);
-                    return foundElements;
-                } catch (error) {
-                    console.log('Error in page evaluation:', error.message);
-                    return [];
-                }
+                console.log(`Total relevant elements found: ${foundElements.length}, unique: ${uniqueElements.length}`);
+                return uniqueElements.slice(0, 50); // Limit to top 50 results
             });
 
-            console.log(`Extracted ${events.length} potential events from page`);
-
-            // Convert browser events to standard format
+            // Convert to standard format with enhanced parsing
             const standardEvents = [];
             for (const event of events) {
                 try {
                     const standardEvent = this.parseEventFromElement(event);
                     if (standardEvent) {
                         standardEvents.push(standardEvent);
-                        console.log(`Successfully parsed event: ${standardEvent.title}`);
+                        console.log(`Successfully parsed MySideline event: ${standardEvent.title}`);
                     }
                 } catch (parseError) {
-                    console.log(`Failed to parse event: ${parseError.message}`);
+                    console.log(`Failed to parse MySideline event: ${parseError.message}`);
                 }
             }
 
-            console.log(`Converted ${standardEvents.length} events to standard format`);
+            console.log(`Successfully extracted ${standardEvents.length} events from MySideline using enhanced Playwright extraction`);
             return standardEvents;
+            
         } catch (error) {
-            console.error('Error extracting events from page:', error.message);
+            console.error('MySideline Playwright event extraction failed:', error.message);
             return [];
         }
     }
@@ -891,6 +1206,50 @@ class MySidelineIntegrationService {
     async triggerManualSync() {
         console.log('Manual sync triggered by admin');
         return await this.syncMySidelineEvents();
+    }
+
+    /**
+     * Wait for content stabilization
+     * @param {Page} page - Playwright page object
+     */
+    async waitForContentStabilization(page) {
+        console.log('Waiting for content stabilization...');
+        
+        try {
+            // Wait for network to be idle
+            await page.waitForLoadState('networkidle');
+            
+            // Extended wait for any remaining dynamic content
+            await page.waitForTimeout(20000);
+            
+            // Check content stability
+            await this.waitForDynamicContentLoading(page);
+            
+        } catch (error) {
+            console.log(`Content stabilization failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Wait for meaningful content to be present
+     * @param {Page} page - Playwright page object
+     */
+    async waitForMeaningfulContent(page) {
+        console.log('Waiting for meaningful content...');
+        
+        try {
+            await page.waitForFunction(() => {
+                const bodyText = document.body ? document.body.textContent : '';
+                const hasSubstantialContent = bodyText.length > 2000;
+                const hasMultipleElements = document.querySelectorAll('div, p, article, section').length > 30;
+                
+                return hasSubstantialContent && hasMultipleElements;
+            }, { timeout: 60000 });
+            
+            console.log('Meaningful content confirmed');
+        } catch (error) {
+            console.log(`Meaningful content wait failed: ${error.message}`);
+        }
     }
 }
 
