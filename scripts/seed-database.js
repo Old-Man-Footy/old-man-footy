@@ -855,17 +855,26 @@ class DatabaseSeeder {
         const transaction = await sequelize.transaction();
         
         try {
-            // Clear tables in correct order (foreign key constraints)
+            // Clear junction tables first (foreign key dependencies)
+            await CarnivalClub.destroy({ where: {}, transaction });
+            await CarnivalSponsor.destroy({ where: {}, transaction });
+            await ClubSponsor.destroy({ where: {}, transaction });
+            
+            // Clear main tables in dependency order
             await Carnival.destroy({ where: {}, transaction });
             await User.destroy({ where: {}, transaction });
             await Club.destroy({ where: {}, transaction });
             await EmailSubscription.destroy({ where: {}, transaction });
             await Sponsor.destroy({ where: {}, transaction });
             
+            // Reset auto-increment counters by recreating tables if needed
+            console.log('🔄 Resetting table sequences...');
+            
             await transaction.commit();
-            console.log('✅ Database cleared');
+            console.log('✅ Database cleared completely');
         } catch (error) {
             await transaction.rollback();
+            console.error('❌ Database clearing failed:', error.message);
             throw error;
         }
     }

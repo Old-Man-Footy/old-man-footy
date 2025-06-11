@@ -706,6 +706,155 @@ class MySidelineIntegrationService {
     }
 
     /**
+     * Validate that page content has meaningful MySideline data
+     * @param {Page} page - Playwright page object
+     */
+    async validatePageContent(page) {
+        console.log('Validating page content...');
+        
+        try {
+            await page.waitForFunction(() => {
+                const bodyText = document.body ? document.body.textContent : '';
+                const hasTitle = document.title && document.title.length > 0;
+                const hasMeaningfulContent = bodyText.length > 500;
+                const hasNavigationElements = document.querySelectorAll('nav, .nav, .navigation, header, .header').length > 0;
+                const hasCards = document.querySelectorAll('.el-card, [id^="clubsearch_"], .card, .search-result').length > 0;
+                
+                return hasTitle && hasMeaningfulContent && (hasNavigationElements || hasCards);
+            }, { timeout: 30000 });
+            
+            console.log('Page content validation passed');
+        } catch (error) {
+            console.log(`Page content validation failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Wait for content to stabilize over multiple checks
+     * @param {Page} page - Playwright page object
+     */
+    async waitForContentStabilization(page) {
+        console.log('Waiting for content stabilization...');
+        
+        try {
+            let previousContentLength = 0;
+            let stableChecks = 0;
+            const requiredStableChecks = 4;
+            
+            for (let i = 0; i < 15; i++) {
+                const currentContentLength = await page.evaluate(() => {
+                    return document.body ? document.body.textContent.length : 0;
+                });
+                
+                console.log(`Stabilization check ${i + 1}: ${currentContentLength} characters`);
+                
+                if (Math.abs(currentContentLength - previousContentLength) < 100 && currentContentLength > 1000) {
+                    stableChecks++;
+                    if (stableChecks >= requiredStableChecks) {
+                        console.log('Content stabilized successfully');
+                        return;
+                    }
+                } else {
+                    stableChecks = 0;
+                }
+                
+                previousContentLength = currentContentLength;
+                await this.delay(2000);
+            }
+            
+            console.log('Content stabilization timeout reached');
+        } catch (error) {
+            console.log(`Content stabilization failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Wait for meaningful content to appear on the page
+     * @param {Page} page - Playwright page object
+     */
+    async waitForMeaningfulContent(page) {
+        console.log('Waiting for meaningful content...');
+        
+        try {
+            await page.waitForFunction(() => {
+                const bodyText = document.body ? document.body.textContent.toLowerCase() : '';
+                const hasSubstantialText = bodyText.length > 2000;
+                const hasInteractiveElements = document.querySelectorAll('button, input, select, a').length > 10;
+                const hasStructuredContent = document.querySelectorAll('div, section, article, main').length > 20;
+                const hasMastersContent = bodyText.includes('masters') || bodyText.includes('rugby') || bodyText.includes('league');
+                
+                return hasSubstantialText && hasInteractiveElements && hasStructuredContent && hasMastersContent;
+            }, { timeout: 45000 });
+            
+            console.log('Meaningful content found');
+        } catch (error) {
+            console.log(`Meaningful content wait failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Utility method to add delays
+     * @param {number} ms - Milliseconds to delay
+     * @returns {Promise} Promise that resolves after the delay
+     */
+    async delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Process scraped events and save to database
+     * @param {Array} scrapedEvents - Array of scraped event objects
+     * @returns {Promise<Array>} Array of processed event objects
+     */
+    async processScrapedEvents(scrapedEvents) {
+        console.log(`Processing ${scrapedEvents.length} scraped MySideline events...`);
+        
+        const processedEvents = [];
+        
+        for (const eventData of scrapedEvents) {
+            try {
+                // Check if event already exists
+                const existingEvent = await Carnival.findOne({
+                    where: {
+                        mySidelineEventId: eventData.mySidelineEventId
+                    }
+                });
+                
+                if (existingEvent) {
+                    console.log(`Event already exists: ${eventData.title}`);
+                    // Update existing event with any new information
+                    await existingEvent.update({
+                        title: eventData.title,
+                        date: eventData.date,
+                        locationAddress: eventData.locationAddress,
+                        scheduleDetails: eventData.scheduleDetails,
+                        state: eventData.state,
+                        updatedAt: new Date()
+                    });
+                    processedEvents.push(existingEvent);
+                } else {
+                    // Create new event
+                    const newEvent = await Carnival.create({
+                        ...eventData,
+                        isManuallyEntered: false,
+                        isActive: true,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    });
+                    
+                    console.log(`Created new MySideline event: ${newEvent.title}`);
+                    processedEvents.push(newEvent);
+                }
+            } catch (error) {
+                console.error(`Failed to process event "${eventData.title}":`, error.message);
+            }
+        }
+        
+        console.log(`Successfully processed ${processedEvents.length} MySideline events`);
+        return processedEvents;
+    }
+
+    /**
      * Enhanced event extraction specifically optimized for MySideline Vue.js structure
      * @param {Page} page - Playwright page object
      * @returns {Promise<Array>} Array of events
@@ -1103,6 +1252,49 @@ class MySidelineIntegrationService {
             return null;
         } catch (error) {
             return null;
+        }
+    }
+
+    /**
+     * Public method for scraping state events (for seed database)
+     * @param {string} state - State abbreviation
+     * @returns {Promise<Array>} Array of events for the state
+     */
+    async scrapeStateEvents(state) {
+        try {
+            console.log(`Fetching ${state} events from MySideline...`);
+            
+            if (this.useMockData) {
+                return this.generateMockEvents(state);
+            }
+            
+            // For real scraping, filter events by state from the main scrape
+            const allEvents = await this.scrapeMySidelineEvents();
+            return allEvents.filter(event => event.state === state);
+            
+        } catch (error) {
+            console.error(`Failed to scrape ${state} events:`, error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Create new event in database (for seed database)
+     * @param {Object} eventData - Event data object
+     * @returns {Promise<Object>} Created carnival object
+     */
+    async createNewEvent(eventData) {
+        try {
+            return await Carnival.create({
+                ...eventData,
+                isManuallyEntered: false,
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+        } catch (error) {
+            console.error('Failed to create new MySideline event:', error.message);
+            throw error;
         }
     }
 
