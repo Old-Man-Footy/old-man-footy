@@ -22,6 +22,11 @@ class MySidelineEventParserService {
             const expandedDetails = element.expandedDetails || '';
             const dates = element.dates || [];
             
+            // Early filtering for Touch events - check before any processing
+            if (this.shouldFilterTouchContent(element)) {
+                return null;
+            }
+
             // Extract and clean the event name - ensure subtitle is NOT included
             let eventName = title;
             let extractedDate = null;
@@ -102,13 +107,15 @@ class MySidelineEventParserService {
                 return null;
             }
 
-            return {
+            // Build the event object
+            const eventData = {
                 title: eventName.trim(),
                 date: eventDate, // Don't set a default date if none found
                 locationAddress: location && location !== 'TBA - Check MySideline for details' ? location : null,
                 organiserContactName: enhancedContact.name || null,
                 organiserContactEmail: enhancedContact.email || null,
                 organiserContactPhone: enhancedContact.phone || null,
+                organiserContactWebsite: null, // Will be populated if found in contact extraction
                 scheduleDetails: description && description !== 'Event details available on MySideline' ? description : null,
                 state: state,
                 registrationLink: `https://profile.mysideline.com.au/register/${element.id || 'event'}`,
@@ -137,13 +144,67 @@ class MySidelineEventParserService {
                     enhancedSchedule: enhancedSchedule,
                     enhancedContact: enhancedContact,
                     enhancedFees: enhancedFees,
-                    fullContent: fullText
+                    fullContent: fullText,
+                    // Include original element for additional filtering
+                    originalElement: element
                 }
             };
+
+            // Final Touch filtering check on the processed event data
+            if (this.dataService.shouldFilterTouchEvent(eventData, element)) {
+                return null;
+            }
+
+            return eventData;
         } catch (error) {
             console.error('Error parsing MySideline element:', error);
             return null;
         }
+    }
+
+    /**
+     * Check if scraped element content should be filtered out for Touch events
+     * @param {Object} element - The scraped element data
+     * @returns {boolean} - True if should be filtered out
+     */
+    shouldFilterTouchContent(element) {
+        const checkText = (text) => {
+            if (!text || typeof text !== 'string') return false;
+            return text.toLowerCase().includes('touch');
+        };
+
+        // Check title and subtitle
+        if (checkText(element.title)) {
+            console.log(`Filtering out Touch event at parser stage (title): ${element.title}`);
+            return true;
+        }
+
+        if (checkText(element.subtitle)) {
+            console.log(`Filtering out Touch event at parser stage (subtitle): ${element.subtitle}`);
+            return true;
+        }
+
+        // Check full content and expanded details
+        if (checkText(element.fullContent || element.text)) {
+            console.log(`Filtering out Touch event at parser stage (content): Contains 'touch'`);
+            return true;
+        }
+
+        if (checkText(element.expandedDetails)) {
+            console.log(`Filtering out Touch event at parser stage (expanded): Contains 'touch'`);
+            return true;
+        }
+
+        // Check for div elements with class="right" containing only "Touch"
+        if (element.innerHTML) {
+            const rightDivMatch = element.innerHTML.match(/<div[^>]*class="right"[^>]*>\s*touch\s*<\/div>/i);
+            if (rightDivMatch) {
+                console.log(`Filtering out Touch event at parser stage (right div): Found touch in right div`);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

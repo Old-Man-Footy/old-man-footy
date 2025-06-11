@@ -456,6 +456,18 @@ class MySidelineScraperService {
                         if (relevanceScore >= 10 && hasSubstantialContent) {
                             const cardId = card.id || card.getAttribute('id') || `mysideline-card-${index}`;
                             
+                            // Filter out Touch events at the scraping stage
+                            const containsTouch = fullContent.toLowerCase().includes('touch');
+                            const titleContainsTouch = title.toLowerCase().includes('touch');
+                            const subtitleContainsTouch = subtitle.toLowerCase().includes('touch');
+                            const rightDivTouch = card.innerHTML.match(/<div[^>]*class="right"[^>]*>\s*touch\s*<\/div>/i);
+                            
+
+                            if (containsTouch || titleContainsTouch || subtitleContainsTouch || rightDivTouch) {
+                                console.log(`Filtering out Touch event at scraper stage: ${title || 'Unknown'}`);
+                                return; // Skip this card
+                            }
+                            
                             const elementData = {
                                 selector: '.el-card.is-always-shadow',
                                 text: cardText,

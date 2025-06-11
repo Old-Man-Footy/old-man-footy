@@ -20,9 +20,16 @@ class MySidelineDataService {
         console.log(`Processing ${scrapedEvents.length} scraped MySideline events...`);
         
         const processedEvents = [];
+        let filteredCount = 0;
         
         for (const eventData of scrapedEvents) {
             try {
+                // Filter out Touch events before processing
+                if (this.shouldFilterTouchEvent(eventData, eventData.sourceData)) {
+                    filteredCount++;
+                    continue;
+                }
+
                 // Check if event already exists
                 const existingEvent = await Carnival.findOne({
                     where: {
@@ -61,6 +68,9 @@ class MySidelineDataService {
         }
         
         console.log(`Successfully processed ${processedEvents.length} MySideline events`);
+        if (filteredCount > 0) {
+            console.log(`Filtered out ${filteredCount} Touch events`);
+        }
         return processedEvents;
     }
 
@@ -273,6 +283,73 @@ class MySidelineDataService {
         });
 
         return mockEvents;
+    }
+
+    /**
+     * Check if an event should be filtered out based on "Touch" content
+     * @param {Object} eventData - Event data to check
+     * @param {Object} sourceElement - Original scraped element data (optional)
+     * @returns {boolean} - True if event should be filtered out (contains Touch)
+     */
+    shouldFilterTouchEvent(eventData, sourceElement = null) {
+        const checkText = (text) => {
+            if (!text || typeof text !== 'string') return false;
+            return text.toLowerCase().includes('touch');
+        };
+
+        // Check title and subtitle
+        if (checkText(eventData.title)) {
+            console.log(`Filtering out Touch event (title): ${eventData.title}`);
+            return true;
+        }
+
+        // Check contact email and website URLs
+        if (checkText(eventData.organiserContactEmail)) {
+            console.log(`Filtering out Touch event (email): ${eventData.organiserContactEmail}`);
+            return true;
+        }
+
+        if (checkText(eventData.organiserContactWebsite)) {
+            console.log(`Filtering out Touch event (website): ${eventData.organiserContactWebsite}`);
+            return true;
+        }
+
+        if (checkText(eventData.registrationLink)) {
+            console.log(`Filtering out Touch event (registration link): ${eventData.registrationLink}`);
+            return true;
+        }
+
+        // Check source element data if available
+        if (sourceElement) {
+            // Check subtitle from source
+            if (checkText(sourceElement.subtitle)) {
+                console.log(`Filtering out Touch event (source subtitle): ${sourceElement.subtitle}`);
+                return true;
+            }
+
+            // Check for div elements with class="right" containing only "Touch"
+            if (sourceElement.innerHTML) {
+                const rightDivMatch = sourceElement.innerHTML.match(/<div[^>]*class="right"[^>]*>\s*touch\s*<\/div>/i);
+                if (rightDivMatch) {
+                    console.log(`Filtering out Touch event (right div): Found touch in right div`);
+                    return true;
+                }
+            }
+
+            // Check expanded content
+            if (checkText(sourceElement.expandedDetails)) {
+                console.log(`Filtering out Touch event (expanded details): Contains touch in expanded content`);
+                return true;
+            }
+
+            // Check full content
+            if (checkText(sourceElement.fullContent || sourceElement.text)) {
+                console.log(`Filtering out Touch event (full content): Contains touch in full content`);
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

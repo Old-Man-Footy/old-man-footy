@@ -779,4 +779,235 @@ describe('MySidelineDataService', () => {
             });
         });
     });
+
+    describe('shouldFilterTouchEvent', () => {
+        it('should filter out events with "Touch" in title', () => {
+            // Arrange
+            const eventData = {
+                title: 'Touch Rugby Tournament',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://example.com/register'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should filter out events with "touch" in email (case insensitive)', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'contact@touchrugby.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://example.com/register'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should filter out events with "Touch" in website URL', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.touch-rugby.com',
+                registrationLink: 'https://example.com/register'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should filter out events with "touch" in registration link', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://mysideline.com/register/touch-event'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should filter out events with "Touch" in source subtitle', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://example.com/register'
+            };
+            const sourceElement = {
+                subtitle: 'Touch Rugby Competition',
+                innerHTML: '<div>Some content</div>',
+                expandedDetails: 'Event details',
+                fullContent: 'Event information'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData, sourceElement);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should filter out events with Touch in div class="right"', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://example.com/register'
+            };
+            const sourceElement = {
+                subtitle: 'Competition',
+                innerHTML: '<div class="left">Rugby</div><div class="right">Touch</div><div>More content</div>',
+                expandedDetails: 'Event details',
+                fullContent: 'Event information'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData, sourceElement);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should filter out events with "touch" in expanded details', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://example.com/register'
+            };
+            const sourceElement = {
+                subtitle: 'Competition',
+                innerHTML: '<div>Some content</div>',
+                expandedDetails: 'This is a touch rugby event with special rules',
+                fullContent: 'Event information'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData, sourceElement);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should filter out events with "Touch" in full content', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://example.com/register'
+            };
+            const sourceElement = {
+                subtitle: 'Competition',
+                innerHTML: '<div>Some content</div>',
+                expandedDetails: 'Event details',
+                fullContent: 'This event features Touch Rugby rules and regulations'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData, sourceElement);
+            
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should NOT filter out events without "Touch" content', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters Carnival',
+                organiserContactEmail: 'contact@masters.com',
+                organiserContactWebsite: 'www.masters-rugby.com',
+                registrationLink: 'https://mysideline.com/register/masters-event'
+            };
+            const sourceElement = {
+                subtitle: 'Masters Competition',
+                innerHTML: '<div class="left">Rugby</div><div class="right">Masters</div><div>More content</div>',
+                expandedDetails: 'Annual masters rugby league tournament',
+                fullContent: 'Rugby League Masters event with full contact rules'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData, sourceElement);
+            
+            // Assert
+            expect(result).toBe(false);
+        });
+
+        it('should handle null or undefined source element', () => {
+            // Arrange
+            const eventData = {
+                title: 'Rugby League Masters',
+                organiserContactEmail: 'test@example.com',
+                organiserContactWebsite: 'www.example.com',
+                registrationLink: 'https://example.com/register'
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData, null);
+            
+            // Assert
+            expect(result).toBe(false);
+        });
+
+        it('should handle empty or missing fields gracefully', () => {
+            // Arrange
+            const eventData = {
+                title: '',
+                organiserContactEmail: null,
+                organiserContactWebsite: undefined,
+                registrationLink: ''
+            };
+            const sourceElement = {
+                subtitle: '',
+                innerHTML: null,
+                expandedDetails: undefined,
+                fullContent: ''
+            };
+            
+            // Act
+            const result = service.shouldFilterTouchEvent(eventData, sourceElement);
+            
+            // Assert
+            expect(result).toBe(false);
+        });
+
+        it('should be case insensitive for all Touch variations', () => {
+            // Arrange & Act & Assert
+            const touchVariations = ['touch', 'Touch', 'TOUCH', 'ToUcH'];
+            
+            touchVariations.forEach(touchVariant => {
+                const eventData = {
+                    title: `${touchVariant} Rugby Tournament`,
+                    organiserContactEmail: 'test@example.com',
+                    organiserContactWebsite: 'www.example.com',
+                    registrationLink: 'https://example.com/register'
+                };
+                
+                const result = service.shouldFilterTouchEvent(eventData);
+                expect(result).toBe(true);
+            });
+        });
+    });
 });
