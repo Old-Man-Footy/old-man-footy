@@ -607,7 +607,7 @@ class MySidelineScraperService {
         try {
             console.log(`Extracting registration URL${cardIndex !== null ? ` from card ${cardIndex + 1}` : ''}...`);
             
-            const registrationUrl = await page.evaluate((sel, index) => {
+            const registrationUrl = await page.evaluate(({ selector: sel, cardIndex: index }) => {
                 let cards;
                 if (index !== null) {
                     const allCards = document.querySelectorAll(sel);
@@ -659,7 +659,7 @@ class MySidelineScraperService {
                 }
                 
                 return null;
-            }, selector, cardIndex);
+            }, { selector, cardIndex });
             
             if (registrationUrl) {
                 console.log(`✅ Found registration URL: ${registrationUrl}`);
@@ -1153,22 +1153,26 @@ class MySidelineScraperService {
                 const card = document.querySelector(selector);
                 if (!card) return false;
                 
-                const expandedContentSelectors = [
-                    '.expanded-content',
-                    '.click-expand-content', 
-                    '.expanded-details',
-                    '.show-more-content',
-                    '.additional-details',
-                    '.full-details',
-                    '.event-details',
-                    '.expanded',
-                    '[style*="display: block"]',
-                    '[style*="height: auto"]'
-                ];
+                // Look for the actual MySideline expanded content selectors
+                const customExpandElements = card.querySelectorAll('.custom-expand');
                 
-                return expandedContentSelectors.some(sel => 
-                    card.querySelectorAll(sel).length > 0
-                );
+                // Check if any custom-expand elements have expanded (height: auto and content)
+                for (let expandElement of customExpandElements) {
+                    const style = expandElement.getAttribute('style') || '';
+                    const hasAutoHeight = style.includes('height: auto') || style.includes('height:auto');
+                    const hasContent = expandElement.textContent && expandElement.textContent.trim().length > 50;
+                    
+                    if (hasAutoHeight && hasContent) {
+                        return true;
+                    }
+                }
+                
+                // Also check for other potential expanded content indicators
+                const hasVisibleExpandedContent = card.querySelectorAll('.custom-expand p, .custom-expand div, .custom-expand a').length > 3;
+                const hasContactInfo = card.textContent.includes('Club Contact') || card.textContent.includes('Email:') || card.textContent.includes('Number:');
+                const hasAddressInfo = card.textContent.includes('maps.google.com') || card.querySelector('a[href*="maps.google.com"]');
+                
+                return hasVisibleExpandedContent || hasContactInfo || hasAddressInfo;
             }, { timeout: 5000 }, cardSelector);
             
             console.log(`✅ Expanded content detected in card ${cardIndex + 1}, element ${elementIndex + 1}`);
