@@ -485,7 +485,7 @@ class MySidelineScraperService {
      */
     async extractSingleCardData(page, cardIndex, wasExpanded) {
         try {
-            const cardData = await page.evaluate((index, expanded) => {
+            const cardData = await page.evaluate(({ index, expanded }) => {
                 const cards = document.querySelectorAll('.el-card.is-always-shadow, [id^="clubsearch_"]');
                 const card = cards[index];
                 
@@ -500,7 +500,7 @@ class MySidelineScraperService {
                 const titleElement = card.querySelector('.title, h3.title');
                 const subtitleElement = card.querySelector('.subtitle, h4.subtitle, #subtitle');
                 const imageElement = card.querySelector('.image__item, img');
-                const registerButton = card.querySelector('button.el-button--primary, button[id="cardButton"], button:has-text("Register")');
+                const registerButton = card.querySelector('button.el-button--primary, button[id="cardButton"], button');
                 
                 const title = titleElement ? titleElement.textContent.trim() : '';
                 const subtitle = subtitleElement ? subtitleElement.textContent.trim() : '';
@@ -510,17 +510,27 @@ class MySidelineScraperService {
                 // Extract registration URL from button attributes
                 let registrationUrl = null;
                 if (registerButton) {
-                    registrationUrl = registerButton.getAttribute('data-url') || 
-                                   registerButton.getAttribute('data-href') || 
-                                   registerButton.getAttribute('data-link') ||
-                                   registerButton.getAttribute('data-registration-url');
+                    // Check if button text contains "Register" or similar terms
+                    const buttonText = registerButton.textContent?.toLowerCase() || '';
+                    const isRegisterButton = buttonText.includes('register') || 
+                                           buttonText.includes('join') || 
+                                           buttonText.includes('sign up') ||
+                                           registerButton.classList.contains('el-button--primary') ||
+                                           registerButton.id === 'cardButton';
                     
-                    if (!registrationUrl) {
-                        const onclickContent = registerButton.getAttribute('onclick');
-                        if (onclickContent) {
-                            const urlMatch = onclickContent.match(/['"](https?:\/\/[^'"]+)['"]/);
-                            if (urlMatch && urlMatch[1]) {
-                                registrationUrl = urlMatch[1];
+                    if (isRegisterButton) {
+                        registrationUrl = registerButton.getAttribute('data-url') || 
+                                       registerButton.getAttribute('data-href') || 
+                                       registerButton.getAttribute('data-link') ||
+                                       registerButton.getAttribute('data-registration-url');
+                        
+                        if (!registrationUrl) {
+                            const onclickContent = registerButton.getAttribute('onclick');
+                            if (onclickContent) {
+                                const urlMatch = onclickContent.match(/['"](https?:\/\/[^'"]+)['"]/);
+                                if (urlMatch && urlMatch[1]) {
+                                    registrationUrl = urlMatch[1];
+                                }
                             }
                         }
                     }
@@ -576,7 +586,7 @@ class MySidelineScraperService {
                     registrationUrl: registrationUrl
                 };
                 
-            }, cardIndex, wasExpanded);
+            }, { index: cardIndex, expanded: wasExpanded });
             
             return cardData;
             
