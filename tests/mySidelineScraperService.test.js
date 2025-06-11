@@ -364,7 +364,7 @@ describe('MySidelineScraperService', () => {
             // Assert
             expect(result).toBe('https://registration.com');
             expect(console.log).toHaveBeenCalledWith('Extracting registration URL from card 1...');
-            expect(console.log).toHaveBeenCalledWith('✅ Found registration URL: https://registration.com');
+            expect(console.log).toHaveBeenCalledWith('✅ Found registration URL from attributes: https://registration.com');
         });
 
         it('should return null when no register button exists', async () => {
