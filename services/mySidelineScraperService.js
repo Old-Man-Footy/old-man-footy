@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const MySidelineDataService = require('./mySidelineDataService');
 const MySidelineEventParserService = require('./mySidelineEventParserService');
 
 /**
@@ -17,6 +18,7 @@ class MySidelineScraperService {
         
         // Initialize the parser service
         this.parserService = new MySidelineEventParserService();
+        this.dataService = new MySidelineDataService();
     }
 
     /**
@@ -477,16 +479,301 @@ class MySidelineScraperService {
     }
 
     /**
-     * Extract data from a single card
+     * Extract data from a single MySideline event card
      * @param {Page} page - Playwright page object
      * @param {number} cardIndex - Index of the card to extract data from
      * @param {boolean} wasExpanded - Whether the card was successfully expanded
      * @returns {Promise<Object|null>} Extracted card data or null
      */
-    async extractSingleCardData(page, cardIndex, wasExpanded) {
+    async extractSingleCardData(page, cardIndex, wasExpanded = false) {
         try {
-            const cardData = await page.evaluate(({ index, expanded }) => {
+            console.log(`Extracting data from card ${cardIndex + 1}${wasExpanded ? ' (expanded)' : ''}...`);
+            
+            const cardData = await page.evaluate(({ index }) => {
                 const cards = document.querySelectorAll('.el-card.is-always-shadow, [id^="clubsearch_"]');
+                const card = cards[index];
+                
+                if (!card) {
+                    console.log(`Card ${index + 1} not found`);
+                    return null;
+                }
+
+                // Extract carnival logo/image (to be used as carnival icon)
+                const logoImg = card.querySelector('.image__wrapper img[data-url], .image__wrapper img[src]');
+                let carnivalIcon = '';
+                if (logoImg) {
+                    // Prefer data-url attribute (CloudFront CDN URL), fallback to src
+                    carnivalIcon = logoImg.getAttribute('data-url') || logoImg.getAttribute('src') || '';
+                }
+
+                // Extract title and date from h3.title
+                const titleElement = card.querySelector('h3.title');
+                const fullTitle = titleElement ? titleElement.textContent.trim() : null;
+                
+                // Extract subtitle/category from h4.subtitle
+                const subtitleElement = card.querySelector('h4.subtitle, h4#subtitle');
+                const category = subtitleElement ? subtitleElement.textContent.trim() : null;
+
+                // Extract venue address from Google Maps link
+                let locationAddress = '';
+                let googleMapsUrl = '';
+                const addressLink = card.querySelector('a[href*="maps.google.com"]');
+                if (addressLink) {
+                    googleMapsUrl = addressLink.href;
+                    const addressParts = Array.from(addressLink.querySelectorAll('p.m-0'))
+                        .map(p => p.textContent.trim())
+                        .filter(text => text.length > 0);
+                    locationAddress = addressParts.join(', ');
+                }
+
+                // Extract event description (first substantial paragraph not containing contact info)
+                const descriptionElements = card.querySelectorAll('p[data-v-06457438]');
+                let description = '';
+                for (const p of descriptionElements) {
+                    const text = p.textContent.trim();
+                    // Skip contact info paragraph (contains "Club Contact")
+                    if (text && !text.includes('Club Contact') && text.length > 20) {
+                        description = text;
+                        break;
+                    }
+                }
+
+                // Extract contact information from structured paragraph
+                let contactName = '';
+                let contactPhone = '';
+                let contactEmail = '';
+                const contactParagraph = Array.from(card.querySelectorAll('p')).find(p => 
+                    p.textContent.includes('Club Contact')
+                );
+                if (contactParagraph) {
+                    const contactText = contactParagraph.textContent;
+                    
+                    // Extract name (after "Name: " and before "Number:")
+                    const nameMatch = contactText.match(/Name:\s*([^\n\r]*?)(?:\s*Number:|$)/);
+                    if (nameMatch) contactName = nameMatch[1].trim();
+                    
+                    // Extract phone from tel: link
+                    const phoneLink = contactParagraph.querySelector('a[href^="tel:"]');
+                    if (phoneLink) contactPhone = phoneLink.textContent.trim();
+                    
+                    // Extract email from mailto: link
+                    const emailLink = contactParagraph.querySelector('a[href^="mailto:"]');
+                    if (emailLink) contactEmail = emailLink.textContent.trim();
+                }
+
+                // Extract event type from structured data (filter out "Touch" events)
+                let eventType = '';
+                const typeItems = card.querySelectorAll('.item');
+                for (const item of typeItems) {
+                    const label = item.querySelector('.list-item');
+                    const value = item.querySelector('.right');
+                    if (label && value && label.textContent.trim() === 'Type') {
+                        eventType = value.textContent.trim();
+                        break;
+                    }
+                }
+
+                // Check if registration button exists (indicates active event)
+                const registerButton = card.querySelector('button#cardButton, button.el-button--primary');
+                const hasRegistration = !!registerButton;
+
+                return {
+                    carnivalIcon,
+                    fullTitle,
+                    category,
+                    locationAddress,
+                    googleMapsUrl,
+                    description,
+                    contactName,
+                    contactPhone,
+                    contactEmail,
+                    eventType,
+                    hasRegistration,
+                    cardText: card.textContent?.trim() || ''
+                };
+                
+            }, { index: cardIndex });
+
+            if (!cardData) {
+                console.log(`❌ No data extracted from card ${cardIndex + 1}`);
+                return null;
+            }
+
+            // Skip Touch events as per requirements
+            if (cardData.eventType === 'Touch') {
+                console.log(`⏭️  Skipping Touch event: ${cardData.fullTitle}`);
+                return null;
+            }
+
+            // Parse title to extract carnival name and date
+            if (!cardData.fullTitle) {
+                console.log('⚠️  No title found, skipping event');
+                return null;
+            }
+
+            const { carnivalName, eventDate } = this.parserService.extractAndStripDateFromTitle(cardData.fullTitle);
+            if (!carnivalName || !eventDate) {
+                console.log(`⚠️  Could not parse carnival name or date from: ${cardData.fullTitle}`);
+                return null;
+            }
+
+            // Generate unique event ID
+            const mySidelineEventId = this.generateEventId(carnivalName, eventDate);
+
+            // Determine Australian state from address
+            const state = this.extractStateFromAddress(cardData.locationAddress);
+
+            const processedCardData = {
+                title: cardData.fullTitle,
+                carnivalName: carnivalName,
+                date: eventDate,
+                state: state,
+                locationAddress: cardData.locationAddress || '',
+                googleMapsUrl: cardData.googleMapsUrl || '',
+                description: cardData.description || '',
+                contactName: cardData.contactName || '',
+                contactPhone: cardData.contactPhone || '',
+                contactEmail: cardData.contactEmail || '',
+                category: cardData.category || '',
+                eventType: cardData.eventType || '',
+                carnivalIcon: cardData.carnivalIcon || '', // Carnival logo URL for use as carnival icon
+                registrationLink: cardData.googleMapsUrl || '', // Use Google Maps as fallback
+                mySidelineEventId: mySidelineEventId,
+                isActive: cardData.hasRegistration,
+                source: 'MySideline',
+                scrapedAt: new Date(),
+                isMySidelineCard: true,
+                wasExpanded: wasExpanded,
+                cardText: cardData.cardText
+            };
+
+            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${cardData.carnivalIcon ? '[ICON]' : '[NO-ICON]'}`);
+            return processedCardData;
+
+        } catch (error) {
+            console.error(`❌ Error extracting data from card ${cardIndex + 1}:`, error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Extract events using the browser automation (legacy method)
+     * @returns {Promise<Array>} Array of fetched event objects
+     */
+    async fetchEventsWithBrowserLegacy() {
+        let browser = null;
+        let context = null;
+
+        try {
+            // Launch browser
+            browser = await chromium.launch({
+                headless: this.useHeadlessBrowser,
+                timeout: this.timeout
+            });
+            
+            context = await browser.newContext();
+            const page = await context.newPage();
+            
+            // Set a longer timeout for navigation and actions
+            page.setDefaultTimeout(this.timeout);
+            page.setDefaultNavigationTimeout(this.timeout);
+            
+            console.log(`Navigating to MySideline search URL: ${this.searchUrl}`);
+            await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded' });
+            console.log('Page loaded, waiting for content...');
+            
+            // Wait for the essential page structure and content
+            await this.waitForPageStructure(page);
+            await this.waitForJavaScriptInitialization(page);
+            await this.waitForDynamicContentLoading(page);
+            await this.waitForSearchResults(page);
+            await this.validatePageContent(page);
+            await this.waitForContentStabilization(page);
+            await this.waitForMeaningfulContent(page);
+            
+            // Extract events from the page using legacy method
+            const events = await this.extractEventsLegacy(page);
+            return events;
+                
+        } catch (error) {
+            console.error('Error during browser fetching (legacy):', error.message);
+            return [];
+        } finally {
+            try {
+                if (context) {
+                    await context.close();
+                }
+                if (browser) {
+                    await browser.close();
+                }
+            } catch (closeError) {
+                console.log('Error closing browser resources (legacy):', closeError.message);
+            }
+        }
+    }
+
+    /**
+     * Extract events from the page using legacy method (for older HTML structure)
+     * @param {Page} page - Playwright page object
+     * @returns {Promise<Array>} Array of extracted events
+     */
+    async extractEventsLegacy(page) {
+        console.log('Extracting events from MySideline page using legacy method...');
+        
+        try {
+            // Get all MySideline cards first
+            const cardElements = await page.locator('.el-card.is-always-shadow, [id^="clubsearch_"]').all();
+            console.log(`Found ${cardElements.length} MySideline cards to process`);
+
+            const extractedEvents = [];
+
+            // Process each card: extract data -> parse event
+            for (let cardIndex = 0; cardIndex < cardElements.length; cardIndex++) {
+                try {
+                    console.log(`\n--- Processing card ${cardIndex + 1}/${cardElements.length} ---`);
+                    
+                    // Extract data from this specific card using legacy structure
+                    const cardData = await this.extractSingleCardDataLegacy(page, cardIndex);
+                    
+                    if (cardData && this.isRelevantMastersEvent(cardData)) {
+                        // Parse the event data
+                        try {
+                            const standardEvent = this.parserService.parseEventFromElement(cardData);
+                            if (standardEvent) {
+                                extractedEvents.push(standardEvent);
+                                console.log(`✅ Successfully parsed event: ${standardEvent.title} ${cardData.registrationUrl ? '[REG_URL]' : ''}`);
+                            }
+                        } catch (parseError) {
+                            console.log(`Failed to parse MySideline event (legacy): ${parseError.message}`);
+                        }
+                    } else {
+                        console.log(`⏭️  Skipping card ${cardIndex + 1} - not relevant or insufficient data`);
+                    }
+                    
+                } catch (cardError) {
+                    console.log(`Error processing card ${cardIndex + 1} (legacy): ${cardError.message}`);
+                }
+            }
+
+            console.log(`\n🎯 Legacy processing completed: ${extractedEvents.length} events extracted from ${cardElements.length} cards`);
+            return extractedEvents;
+            
+        } catch (error) {
+            console.error('MySideline Playwright event extraction (legacy) failed:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Extract data from a single MySideline event card (legacy method)
+     * @param {Page} page - Playwright page object
+     * @param {number} cardIndex - Index of the card to extract data from
+     * @returns {Promise<Object|null>} Extracted card data or null
+     */
+    async extractSingleCardDataLegacy(page, cardIndex) {
+        try {
+            const cardData = await page.evaluate(({ index }) => {
+                const cards = document.querySelectorAll('.el-card.is-always-shadow, [id^="clubsearch_"], .el-card__body');
                 const card = cards[index];
                 
                 if (!card) {
@@ -496,102 +783,154 @@ class MySidelineScraperService {
                 
                 const cardText = card.textContent?.trim() || '';
                 
-                // Extract basic card information
-                const titleElement = card.querySelector('.title, h3.title');
-                const subtitleElement = card.querySelector('.subtitle, h4.subtitle, #subtitle');
-                const imageElement = card.querySelector('.image__item, img');
-                const registerButton = card.querySelector('button.el-button--primary, button[id="cardButton"], button');
+                // Extract carnival logo/image (to be used as carnival icon)
+                const logoImg = card.querySelector('.image__wrapper img[data-url]');
+                const carnivalIcon = logoImg ? logoImg.getAttribute('data-url') : null;
                 
-                const title = titleElement ? titleElement.textContent.trim() : '';
-                const subtitle = subtitleElement ? subtitleElement.textContent.trim() : '';
-                const imageSrc = imageElement ? imageElement.src : '';
-                const imageAlt = imageElement ? imageElement.alt : '';
+                // Extract title and date from h3.title
+                const titleElement = card.querySelector('h3.title');
+                const fullTitle = titleElement ? titleElement.textContent.trim() : null;
                 
-                // Extract registration URL from button attributes
-                let registrationUrl = null;
-                if (registerButton) {
-                    // Check if button text contains "Register" or similar terms
-                    const buttonText = registerButton.textContent?.toLowerCase() || '';
-                    const isRegisterButton = buttonText.includes('register') || 
-                                           buttonText.includes('join') || 
-                                           buttonText.includes('sign up') ||
-                                           registerButton.classList.contains('el-button--primary') ||
-                                           registerButton.id === 'cardButton';
-                    
-                    if (isRegisterButton) {
-                        registrationUrl = registerButton.getAttribute('data-url') || 
-                                       registerButton.getAttribute('data-href') || 
-                                       registerButton.getAttribute('data-link') ||
-                                       registerButton.getAttribute('data-registration-url');
-                        
-                        if (!registrationUrl) {
-                            const onclickContent = registerButton.getAttribute('onclick');
-                            if (onclickContent) {
-                                const urlMatch = onclickContent.match(/['"](https?:\/\/[^'"]+)['"]/);
-                                if (urlMatch && urlMatch[1]) {
-                                    registrationUrl = urlMatch[1];
-                                }
-                            }
-                        }
+                // Extract subtitle/category from h4.subtitle
+                const subtitleElement = card.querySelector('h4.subtitle, h4#subtitle');
+                const category = subtitleElement ? subtitleElement.textContent.trim() : null;
+                
+                // Extract venue address from Google Maps link
+                let locationAddress = '';
+                let googleMapsUrl = '';
+                const addressLink = card.querySelector('a[href*="maps.google.com"]');
+                if (addressLink) {
+                    googleMapsUrl = addressLink.href;
+                    const addressParts = Array.from(addressLink.querySelectorAll('p.m-0'))
+                        .map(p => p.textContent.trim())
+                        .filter(text => text.length > 0);
+                    locationAddress = addressParts.join(', ');
+                }
+                
+                // Extract event description
+                const descriptionElements = card.querySelectorAll('p[data-v-06457438]');
+                let description = '';
+                for (const p of descriptionElements) {
+                    const text = p.textContent.trim();
+                    // Skip contact info paragraph (contains "Club Contact")
+                    if (text && !text.includes('Club Contact') && text.length > 20) {
+                        description = text;
+                        break;
                     }
                 }
                 
-                // Extract expanded content if available
-                const expandedElements = card.querySelectorAll('.expanded-content, .click-expand-content, .expanded-details, .show-more-content, .additional-details, .full-details, .event-details, .expanded');
-                let expandedDetails = '';
-                
-                if (expandedElements.length > 0) {
-                    expandedDetails = Array.from(expandedElements)
-                        .map(el => el.textContent?.trim() || '')
-                        .filter(text => text.length > 0)
-                        .join(' ');
+                // Extract contact information
+                let contactName = '';
+                let contactPhone = '';
+                let contactEmail = '';
+                const contactParagraph = Array.from(card.querySelectorAll('p')).find(p => 
+                    p.textContent.includes('Club Contact')
+                );
+                if (contactParagraph) {
+                    const contactText = contactParagraph.textContent;
+                    
+                    // Extract name (after "Name: ")
+                    const nameMatch = contactText.match(/Name:\s*([^\n\r]*?)(?:\s*Number:|$)/);
+                    if (nameMatch) contactName = nameMatch[1].trim();
+                    
+                    // Extract phone from tel: link
+                    const phoneLink = contactParagraph.querySelector('a[href^="tel:"]');
+                    if (phoneLink) contactPhone = phoneLink.textContent.trim();
+                    
+                    // Extract email from mailto: link
+                    const emailLink = contactParagraph.querySelector('a[href^="mailto:"]');
+                    if (emailLink) contactEmail = emailLink.textContent.trim();
                 }
                 
-                const fullContent = cardText + ' ' + expandedDetails;
-                const cardId = card.id || card.getAttribute('id') || `mysideline-card-${index}`;
+                // Extract event type (filter out "Touch" events)
+                let eventType = '';
+                const typeItems = card.querySelectorAll('.item');
+                for (const item of typeItems) {
+                    const label = item.querySelector('.list-item');
+                    const value = item.querySelector('.right');
+                    if (label && value && label.textContent.trim() === 'Type') {
+                        eventType = value.textContent.trim();
+                        break;
+                    }
+                }
                 
-                // Extract dates and other metadata
-                const dateMatches = fullContent.match(/(\d{1,2}[\s\/\-]\w+[\s\/\-]\d{4}|\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|20\d{2})/gi) || [];
-                const hasLocation = /\b(NSW|QLD|VIC|SA|WA|NT|ACT|TAS|Australia|Brisbane|Sydney|Melbourne|Perth|Adelaide|Darwin|Hobart|Canberra)\b/i.test(fullContent);
-                const hasVenue = /\b(venue|ground|park|stadium|field|centre|center|club|oval)\b/i.test(fullContent);
-                const hasTime = /\b(\d{1,2}:\d{2}|\d{1,2}(am|pm))\b/i.test(fullContent);
-                const hasContact = /\b(contact|email|phone|mobile|call)\b/i.test(fullContent);
-                const hasFees = /\b(fee|cost|price|\$\d+|entry|registration)\b/i.test(fullContent);
-                
-                console.log(`Extracted data from card ${index + 1}: "${title}" (${fullContent.length} chars) ${expanded ? '[EXPANDED]' : '[NOT_EXPANDED]'}`);
+                // Check if registration button exists (indicates active event)
+                const registerButton = card.querySelector('button#cardButton, button.el-button--primary');
+                const hasRegistration = !!registerButton;
                 
                 return {
-                    selector: '.el-card.is-always-shadow',
-                    text: cardText,
-                    title: title,
-                    subtitle: subtitle,
-                    id: cardId,
-                    innerHTML: card.innerHTML.substring(0, 4000),
-                    href: null,
-                    imageSrc: imageSrc,
-                    imageAlt: imageAlt,
-                    className: card.className || '',
-                    dates: dateMatches,
-                    hasLocation: hasLocation,
-                    cardIndex: index,
-                    isMySidelineCard: true,
-                    expandedDetails: expandedDetails,
-                    hasExpandedContent: expandedElements.length > 0,
-                    wasExpanded: expanded,
-                    hasVenue: hasVenue,
-                    hasTime: hasTime,
-                    hasContact: hasContact,
-                    hasFees: hasFees,
-                    fullContent: fullContent,
-                    registrationUrl: registrationUrl
+                    carnivalIcon,
+                    fullTitle,
+                    category,
+                    locationAddress,
+                    googleMapsUrl,
+                    description,
+                    contactName,
+                    contactPhone,
+                    contactEmail,
+                    eventType,
+                    hasRegistration
                 };
                 
-            }, { index: cardIndex, expanded: wasExpanded });
+            }, { index: cardIndex });
             
             return cardData;
+        } catch (error) {
+            console.log(`Error extracting data from card ${cardIndex + 1} (legacy): ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
+     * Capture registration URL by monitoring navigation and popup events
+     * @param {Page} page - Playwright page object
+     * @param {string} selector - CSS selector for the cards
+     * @param {number} cardIndex - Optional specific card index
+     * @returns {Promise<string|null>} Registration URL or null
+     */
+    async captureEventBasedRegistrationUrl(page, selector, cardIndex = null) {
+        try {
+            console.log('Attempting to capture registration URL via navigation/popup events...');
+            
+            const buttonSelector = cardIndex !== null 
+                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"]`
+                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"]`;
+            
+            const button = page.locator(buttonSelector).first();
+            const isVisible = await button.isVisible();
+            
+            if (!isVisible) {
+                console.log('No visible registration button found for event-based extraction');
+                return null;
+            }
+            
+            // Check button text
+            const buttonText = await button.textContent() || '';
+            const isRegisterButton = buttonText.toLowerCase().includes('register') ||
+                               buttonText.toLowerCase().includes('join') ||
+                               buttonText.toLowerCase().includes('sign up');
+        
+            if (!isRegisterButton) {
+                console.log('Button does not appear to be a registration button');
+                return null;
+            }
+            
+            // Try popup monitoring first
+            const popupUrl = await this.extractRegistrationUrlViaPopup(page, buttonSelector);
+            if (popupUrl) {
+                return popupUrl;
+            }
+            
+            // Try navigation monitoring as fallback
+            const navigationUrl = await this.extractRegistrationUrlViaNavigation(page, buttonSelector);
+            if (navigationUrl) {
+                return navigationUrl;
+            }
+            
+            return null;
             
         } catch (error) {
-            console.log(`Error extracting data from card ${cardIndex + 1}: ${error.message}`);
+            console.log(`Error in event-based registration URL capture: ${error.message}`);
             return null;
         }
     }
@@ -895,1439 +1234,7 @@ class MySidelineScraperService {
     }
 
     /**
-     * Capture registration URL by monitoring navigation and popup events
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async captureEventBasedRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Attempting to capture registration URL via navigation/popup events...');
-            
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"]`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"]`;
-            
-            const button = page.locator(buttonSelector).first();
-            const isVisible = await button.isVisible();
-            
-            if (!isVisible) {
-                console.log('No visible registration button found for event-based extraction');
-                return null;
-            }
-            
-            // Check button text
-            const buttonText = await button.textContent() || '';
-            const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                   buttonText.toLowerCase().includes('join') ||
-                                   buttonText.toLowerCase().includes('sign up');
-            
-            if (!isRegisterButton) {
-                console.log('Button does not appear to be a registration button');
-                return null;
-            }
-            
-            // Try popup monitoring first
-            const popupUrl = await this.extractRegistrationUrlViaPopup(page, buttonSelector);
-            if (popupUrl) {
-                return popupUrl;
-            }
-            
-            // Try navigation monitoring as fallback
-            const navigationUrl = await this.extractRegistrationUrlViaNavigation(page, buttonSelector);
-            if (navigationUrl) {
-                return navigationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error in event-based registration URL capture: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from MySideline cards
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log(`Extracting registration URL${cardIndex !== null ? ` from card ${cardIndex + 1}` : ''}...`);
-            
-            // First try: Extract from static attributes and onclick handlers
-            const staticUrl = await this.extractStaticRegistrationUrl(page, selector, cardIndex);
-            if (staticUrl) {
-                return staticUrl;
-            }
-            
-            // Second try: Intercept dynamic event listeners
-            const dynamicUrl = await this.interceptDynamicRegistrationUrl(page, selector, cardIndex);
-            if (dynamicUrl) {
-                return dynamicUrl;
-            }
-            
-            // Third try: Monitor navigation/popup events
-            const eventUrl = await this.captureEventBasedRegistrationUrl(page, selector, cardIndex);
-            if (eventUrl) {
-                return eventUrl;
-            }
-            
-            console.log(`❌ No registration URL found${cardIndex !== null ? ` in card ${cardIndex + 1}` : ''}`);
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from static attributes and onclick handlers
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractStaticRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            const registrationUrl = await page.evaluate(({ selector: sel, cardIndex: index }) => {
-                let cards;
-                if (index !== null) {
-                    const allCards = document.querySelectorAll(sel);
-                    cards = allCards[index] ? [allCards[index]] : [];
-                } else {
-                    cards = document.querySelectorAll(sel);
-                }
-                
-                for (let card of cards) {
-                    // Look for registration buttons with various attributes
-                    const registerButtons = card.querySelectorAll('button.el-button--primary, button[id="cardButton"], button:contains("Register"), .register-button, .registration-link');
-                    
-                    for (let button of registerButtons) {
-                        // Check various attributes that might contain the registration URL
-                        const urlSources = [
-                            button.getAttribute('data-url'),
-                            button.getAttribute('data-href'),
-                            button.getAttribute('data-link'),
-                            button.getAttribute('data-registration-url'),
-                            button.getAttribute('href'),
-                            button.getAttribute('onclick')
-                        ];
-                        
-                        for (let urlSource of urlSources) {
-                            if (urlSource) {
-                                // If it's an onclick handler, extract URL from it
-                                if (urlSource.includes('window.open') || urlSource.includes('location.href')) {
-                                    const urlMatch = urlSource.match(/['"](https?:\/\/[^'"]+)['"]/);
-                                    if (urlMatch && urlMatch[1]) {
-                                        return urlMatch[1];
-                                    }
-                                }
-                                // If it's already a URL
-                                if (urlSource.startsWith('http')) {
-                                    return urlSource;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Look for any links that might be registration related
-                    const registrationLinks = card.querySelectorAll('a[href*="register"], a[href*="signup"], a[href*="join"]');
-                    for (let link of registrationLinks) {
-                        const href = link.getAttribute('href');
-                        if (href && href.startsWith('http')) {
-                            return href;
-                        }
-                    }
-                }
-                
-                return null;
-            }, { selector, cardIndex });
-            
-            if (registrationUrl) {
-                console.log(`✅ Found static registration URL: ${registrationUrl}`);
-                return registrationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting static registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Intercept dynamic JavaScript event listeners to capture registration URLs
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async interceptDynamicRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Intercepting dynamic event listeners for registration URL...');
-            
-            // Set up click event interception before interacting with buttons
-            let capturedUrls = [];
-            
-            // Intercept all click events and capture potential registration URLs
-            await page.evaluate(() => {
-                // Store original methods
-                window.__originalWindowOpen = window.open;
-                window.__originalLocationHref = window.location.href;
-                window.__capturedUrls = [];
-                
-                // Override window.open to capture URLs
-                window.open = function(url, target, features) {
-                    console.log('window.open intercepted:', url);
-                    if (url && url.startsWith('http')) {
-                        window.__capturedUrls.push({
-                            type: 'window.open',
-                            url: url,
-                            timestamp: Date.now()
-                        });
-                    }
-                    // Still call the original to maintain functionality
-                    return window.__originalWindowOpen.call(this, url, target, features);
-                };
-                
-                // Override location.href setter
-                Object.defineProperty(window.location, 'href', {
-                    set: function(url) {
-                        console.log('location.href intercepted:', url);
-                        if (url && url.startsWith('http')) {
-                            window.__capturedUrls.push({
-                                type: 'location.href',
-                                url: url,
-                                timestamp: Date.now()
-                            });
-                        }
-                        // Set the actual location
-                        window.__originalLocationHref = url;
-                    },
-                    get: function() {
-                        return window.__originalLocationHref;
-                    }
-                });
-                
-                // Add global click listener to capture dynamically bound events
-                document.addEventListener('click', function(event) {
-                    const target = event.target;
-                    
-                    // Check if clicked element is a registration button
-                    const isRegisterButton = target.textContent?.toLowerCase().includes('register') ||
-                                           target.classList.contains('el-button--primary') ||
-                                           target.id === 'cardButton' ||
-                                           target.closest('.register-button');
-                    
-                    if (isRegisterButton) {
-                        console.log('Registration button clicked:', target);
-                        
-                        // Try to extract URL from Vue.js data attributes or component props
-                        if (target.__vue__ || target._vueParentNode) {
-                            try {
-                                const vueInstance = target.__vue__ || target._vueParentNode;
-                                if (vueInstance && vueInstance.$data) {
-                                    // Look for registration URL in Vue component data
-                                    const data = vueInstance.$data;
-                                    const possibleUrls = [
-                                        data.registrationUrl,
-                                        data.registerUrl,
-                                        data.url,
-                                        data.href,
-                                        data.link
-                                    ].filter(url => url && typeof url === 'string' && url.startsWith('http'));
-                                    
-                                    possibleUrls.forEach(url => {
-                                        window.__capturedUrls.push({
-                                            type: 'vue.data',
-                                            url: url,
-                                            timestamp: Date.now()
-                                        });
-                                    });
-                                }
-                            } catch (vueError) {
-                                console.log('Error accessing Vue data:', vueError);
-                            }
-                        }
-                        
-                        // Also check for data attributes that might contain URLs
-                        const dataAttributes = target.dataset;
-                        Object.keys(dataAttributes).forEach(key => {
-                            const value = dataAttributes[key];
-                            if (value && value.startsWith('http')) {
-                                window.__capturedUrls.push({
-                                    type: 'data-attribute',
-                                    url: value,
-                                    attribute: key,
-                                    timestamp: Date.now()
-                                });
-                            }
-                        });
-                    }
-                }, true); // Use capture phase to catch events before they bubble
-            });
-            
-            // Now find and click registration buttons
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"], ${selector}:nth-child(${cardIndex + 1}) button`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"], ${selector} button`;
-            
-            const buttons = await page.locator(buttonSelector).all();
-            
-            for (let i = 0; i < Math.min(buttons.length, 3); i++) { // Limit to first 3 buttons to avoid excessive clicking
-                try {
-                    const button = buttons[i];
-                    const isVisible = await button.isVisible();
-                    
-                    if (!isVisible) continue;
-                    
-                    // Check if button text suggests it's a registration button
-                    const buttonText = await button.textContent() || '';
-                    const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                           buttonText.toLowerCase().includes('join') ||
-                                           buttonText.toLowerCase().includes('sign up');
-                    
-                    if (!isRegisterButton) continue;
-                    
-                    console.log(`Clicking potential registration button: "${buttonText}"`);
-                    
-                    // Click the button and wait briefly for any dynamic behavior
-                    await button.click({ timeout: 5000 });
-                    await this.delay(2000);
-                    
-                    // Check if any URLs were captured
-                    capturedUrls = await page.evaluate(() => {
-                        return window.__capturedUrls || [];
-                    });
-                    
-                    if (capturedUrls.length > 0) {
-                        // Found URLs, break out of button clicking loop
-                        break;
-                    }
-                    
-                } catch (buttonError) {
-                    console.log(`Error clicking button ${i + 1}: ${buttonError.message}`);
-                }
-            }
-            
-            // Clean up event listeners
-            await page.evaluate(() => {
-                if (window.__originalWindowOpen) {
-                    window.open = window.__originalWindowOpen;
-                }
-                if (window.__originalLocationHref) {
-                    window.location.href = window.__originalLocationHref;
-                }
-            });
-            
-            // Return the most likely registration URL
-            if (capturedUrls.length > 0) {
-                // Sort by timestamp and prioritize certain types
-                const sortedUrls = capturedUrls.sort((a, b) => {
-                    // Prioritize window.open and vue.data types
-                    if (a.type === 'window.open' && b.type !== 'window.open') return -1;
-                    if (b.type === 'window.open' && a.type !== 'window.open') return 1;
-                    if (a.type === 'vue.data' && b.type !== 'vue.data') return -1;
-                    if (b.type === 'vue.data' && a.type !== 'vue.data') return 1;
-                    return b.timestamp - a.timestamp; // Most recent first
-                });
-                
-                const selectedUrl = sortedUrls[0];
-                console.log(`✅ Found dynamic registration URL (${selectedUrl.type}): ${selectedUrl.url}`);
-                return selectedUrl.url;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error intercepting dynamic registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Capture registration URL by monitoring navigation and popup events
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async captureEventBasedRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Attempting to capture registration URL via navigation/popup events...');
-            
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"]`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"]`;
-            
-            const button = page.locator(buttonSelector).first();
-            const isVisible = await button.isVisible();
-            
-            if (!isVisible) {
-                console.log('No visible registration button found for event-based extraction');
-                return null;
-            }
-            
-            // Check button text
-            const buttonText = await button.textContent() || '';
-            const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                   buttonText.toLowerCase().includes('join') ||
-                                   buttonText.toLowerCase().includes('sign up');
-            
-            if (!isRegisterButton) {
-                console.log('Button does not appear to be a registration button');
-                return null;
-            }
-            
-            // Try popup monitoring first
-            const popupUrl = await this.extractRegistrationUrlViaPopup(page, buttonSelector);
-            if (popupUrl) {
-                return popupUrl;
-            }
-            
-            // Try navigation monitoring as fallback
-            const navigationUrl = await this.extractRegistrationUrlViaNavigation(page, buttonSelector);
-            if (navigationUrl) {
-                return navigationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error in event-based registration URL capture: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from MySideline cards
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log(`Extracting registration URL${cardIndex !== null ? ` from card ${cardIndex + 1}` : ''}...`);
-            
-            // First try: Extract from static attributes and onclick handlers
-            const staticUrl = await this.extractStaticRegistrationUrl(page, selector, cardIndex);
-            if (staticUrl) {
-                return staticUrl;
-            }
-            
-            // Second try: Intercept dynamic event listeners
-            const dynamicUrl = await this.interceptDynamicRegistrationUrl(page, selector, cardIndex);
-            if (dynamicUrl) {
-                return dynamicUrl;
-            }
-            
-            // Third try: Monitor navigation/popup events
-            const eventUrl = await this.captureEventBasedRegistrationUrl(page, selector, cardIndex);
-            if (eventUrl) {
-                return eventUrl;
-            }
-            
-            console.log(`❌ No registration URL found${cardIndex !== null ? ` in card ${cardIndex + 1}` : ''}`);
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from static attributes and onclick handlers
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractStaticRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            const registrationUrl = await page.evaluate(({ selector: sel, cardIndex: index }) => {
-                let cards;
-                if (index !== null) {
-                    const allCards = document.querySelectorAll(sel);
-                    cards = allCards[index] ? [allCards[index]] : [];
-                } else {
-                    cards = document.querySelectorAll(sel);
-                }
-                
-                for (let card of cards) {
-                    // Look for registration buttons with various attributes
-                    const registerButtons = card.querySelectorAll('button.el-button--primary, button[id="cardButton"], button:contains("Register"), .register-button, .registration-link');
-                    
-                    for (let button of registerButtons) {
-                        // Check various attributes that might contain the registration URL
-                        const urlSources = [
-                            button.getAttribute('data-url'),
-                            button.getAttribute('data-href'),
-                            button.getAttribute('data-link'),
-                            button.getAttribute('data-registration-url'),
-                            button.getAttribute('href'),
-                            button.getAttribute('onclick')
-                        ];
-                        
-                        for (let urlSource of urlSources) {
-                            if (urlSource) {
-                                // If it's an onclick handler, extract URL from it
-                                if (urlSource.includes('window.open') || urlSource.includes('location.href')) {
-                                    const urlMatch = urlSource.match(/['"](https?:\/\/[^'"]+)['"]/);
-                                    if (urlMatch && urlMatch[1]) {
-                                        return urlMatch[1];
-                                    }
-                                }
-                                // If it's already a URL
-                                if (urlSource.startsWith('http')) {
-                                    return urlSource;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Look for any links that might be registration related
-                    const registrationLinks = card.querySelectorAll('a[href*="register"], a[href*="signup"], a[href*="join"]');
-                    for (let link of registrationLinks) {
-                        const href = link.getAttribute('href');
-                        if (href && href.startsWith('http')) {
-                            return href;
-                        }
-                    }
-                }
-                
-                return null;
-            }, { selector, cardIndex });
-            
-            if (registrationUrl) {
-                console.log(`✅ Found static registration URL: ${registrationUrl}`);
-                return registrationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting static registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Intercept dynamic JavaScript event listeners to capture registration URLs
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async interceptDynamicRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Intercepting dynamic event listeners for registration URL...');
-            
-            // Set up click event interception before interacting with buttons
-            let capturedUrls = [];
-            
-            // Intercept all click events and capture potential registration URLs
-            await page.evaluate(() => {
-                // Store original methods
-                window.__originalWindowOpen = window.open;
-                window.__originalLocationHref = window.location.href;
-                window.__capturedUrls = [];
-                
-                // Override window.open to capture URLs
-                window.open = function(url, target, features) {
-                    console.log('window.open intercepted:', url);
-                    if (url && url.startsWith('http')) {
-                        window.__capturedUrls.push({
-                            type: 'window.open',
-                            url: url,
-                            timestamp: Date.now()
-                        });
-                    }
-                    // Still call the original to maintain functionality
-                    return window.__originalWindowOpen.call(this, url, target, features);
-                };
-                
-                // Override location.href setter
-                Object.defineProperty(window.location, 'href', {
-                    set: function(url) {
-                        console.log('location.href intercepted:', url);
-                        if (url && url.startsWith('http')) {
-                            window.__capturedUrls.push({
-                                type: 'location.href',
-                                url: url,
-                                timestamp: Date.now()
-                            });
-                        }
-                        // Set the actual location
-                        window.__originalLocationHref = url;
-                    },
-                    get: function() {
-                        return window.__originalLocationHref;
-                    }
-                });
-                
-                // Add global click listener to capture dynamically bound events
-                document.addEventListener('click', function(event) {
-                    const target = event.target;
-                    
-                    // Check if clicked element is a registration button
-                    const isRegisterButton = target.textContent?.toLowerCase().includes('register') ||
-                                           target.classList.contains('el-button--primary') ||
-                                           target.id === 'cardButton' ||
-                                           target.closest('.register-button');
-                    
-                    if (isRegisterButton) {
-                        console.log('Registration button clicked:', target);
-                        
-                        // Try to extract URL from Vue.js data attributes or component props
-                        if (target.__vue__ || target._vueParentNode) {
-                            try {
-                                const vueInstance = target.__vue__ || target._vueParentNode;
-                                if (vueInstance && vueInstance.$data) {
-                                    // Look for registration URL in Vue component data
-                                    const data = vueInstance.$data;
-                                    const possibleUrls = [
-                                        data.registrationUrl,
-                                        data.registerUrl,
-                                        data.url,
-                                        data.href,
-                                        data.link
-                                    ].filter(url => url && typeof url === 'string' && url.startsWith('http'));
-                                    
-                                    possibleUrls.forEach(url => {
-                                        window.__capturedUrls.push({
-                                            type: 'vue.data',
-                                            url: url,
-                                            timestamp: Date.now()
-                                        });
-                                    });
-                                }
-                            } catch (vueError) {
-                                console.log('Error accessing Vue data:', vueError);
-                            }
-                        }
-                        
-                        // Also check for data attributes that might contain URLs
-                        const dataAttributes = target.dataset;
-                        Object.keys(dataAttributes).forEach(key => {
-                            const value = dataAttributes[key];
-                            if (value && value.startsWith('http')) {
-                                window.__capturedUrls.push({
-                                    type: 'data-attribute',
-                                    url: value,
-                                    attribute: key,
-                                    timestamp: Date.now()
-                                });
-                            }
-                        });
-                    }
-                }, true); // Use capture phase to catch events before they bubble
-            });
-            
-            // Now find and click registration buttons
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"], ${selector}:nth-child(${cardIndex + 1}) button`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"], ${selector} button`;
-            
-            const buttons = await page.locator(buttonSelector).all();
-            
-            for (let i = 0; i < Math.min(buttons.length, 3); i++) { // Limit to first 3 buttons to avoid excessive clicking
-                try {
-                    const button = buttons[i];
-                    const isVisible = await button.isVisible();
-                    
-                    if (!isVisible) continue;
-                    
-                    // Check if button text suggests it's a registration button
-                    const buttonText = await button.textContent() || '';
-                    const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                           buttonText.toLowerCase().includes('join') ||
-                                           buttonText.toLowerCase().includes('sign up');
-                    
-                    if (!isRegisterButton) continue;
-                    
-                    console.log(`Clicking potential registration button: "${buttonText}"`);
-                    
-                    // Click the button and wait briefly for any dynamic behavior
-                    await button.click({ timeout: 5000 });
-                    await this.delay(2000);
-                    
-                    // Check if any URLs were captured
-                    capturedUrls = await page.evaluate(() => {
-                        return window.__capturedUrls || [];
-                    });
-                    
-                    if (capturedUrls.length > 0) {
-                        // Found URLs, break out of button clicking loop
-                        break;
-                    }
-                    
-                } catch (buttonError) {
-                    console.log(`Error clicking button ${i + 1}: ${buttonError.message}`);
-                }
-            }
-            
-            // Clean up event listeners
-            await page.evaluate(() => {
-                if (window.__originalWindowOpen) {
-                    window.open = window.__originalWindowOpen;
-                }
-                if (window.__originalLocationHref) {
-                    window.location.href = window.__originalLocationHref;
-                }
-            });
-            
-            // Return the most likely registration URL
-            if (capturedUrls.length > 0) {
-                // Sort by timestamp and prioritize certain types
-                const sortedUrls = capturedUrls.sort((a, b) => {
-                    // Prioritize window.open and vue.data types
-                    if (a.type === 'window.open' && b.type !== 'window.open') return -1;
-                    if (b.type === 'window.open' && a.type !== 'window.open') return 1;
-                    if (a.type === 'vue.data' && b.type !== 'vue.data') return -1;
-                    if (b.type === 'vue.data' && a.type !== 'vue.data') return 1;
-                    return b.timestamp - a.timestamp; // Most recent first
-                });
-                
-                const selectedUrl = sortedUrls[0];
-                console.log(`✅ Found dynamic registration URL (${selectedUrl.type}): ${selectedUrl.url}`);
-                return selectedUrl.url;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error intercepting dynamic registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Capture registration URL by monitoring navigation and popup events
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async captureEventBasedRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Attempting to capture registration URL via navigation/popup events...');
-            
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"]`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"]`;
-            
-            const button = page.locator(buttonSelector).first();
-            const isVisible = await button.isVisible();
-            
-            if (!isVisible) {
-                console.log('No visible registration button found for event-based extraction');
-                return null;
-            }
-            
-            // Check button text
-            const buttonText = await button.textContent() || '';
-            const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                   buttonText.toLowerCase().includes('join') ||
-                                   buttonText.toLowerCase().includes('sign up');
-            
-            if (!isRegisterButton) {
-                console.log('Button does not appear to be a registration button');
-                return null;
-            }
-            
-            // Try popup monitoring first
-            const popupUrl = await this.extractRegistrationUrlViaPopup(page, buttonSelector);
-            if (popupUrl) {
-                return popupUrl;
-            }
-            
-            // Try navigation monitoring as fallback
-            const navigationUrl = await this.extractRegistrationUrlViaNavigation(page, buttonSelector);
-            if (navigationUrl) {
-                return navigationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error in event-based registration URL capture: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from MySideline cards
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log(`Extracting registration URL${cardIndex !== null ? ` from card ${cardIndex + 1}` : ''}...`);
-            
-            // First try: Extract from static attributes and onclick handlers
-            const staticUrl = await this.extractStaticRegistrationUrl(page, selector, cardIndex);
-            if (staticUrl) {
-                return staticUrl;
-            }
-            
-            // Second try: Intercept dynamic event listeners
-            const dynamicUrl = await this.interceptDynamicRegistrationUrl(page, selector, cardIndex);
-            if (dynamicUrl) {
-                return dynamicUrl;
-            }
-            
-            // Third try: Monitor navigation/popup events
-            const eventUrl = await this.captureEventBasedRegistrationUrl(page, selector, cardIndex);
-            if (eventUrl) {
-                return eventUrl;
-            }
-            
-            console.log(`❌ No registration URL found${cardIndex !== null ? ` in card ${cardIndex + 1}` : ''}`);
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from static attributes and onclick handlers
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractStaticRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            const registrationUrl = await page.evaluate(({ selector: sel, cardIndex: index }) => {
-                let cards;
-                if (index !== null) {
-                    const allCards = document.querySelectorAll(sel);
-                    cards = allCards[index] ? [allCards[index]] : [];
-                } else {
-                    cards = document.querySelectorAll(sel);
-                }
-                
-                for (let card of cards) {
-                    // Look for registration buttons with various attributes
-                    const registerButtons = card.querySelectorAll('button.el-button--primary, button[id="cardButton"], button:contains("Register"), .register-button, .registration-link');
-                    
-                    for (let button of registerButtons) {
-                        // Check various attributes that might contain the registration URL
-                        const urlSources = [
-                            button.getAttribute('data-url'),
-                            button.getAttribute('data-href'),
-                            button.getAttribute('data-link'),
-                            button.getAttribute('data-registration-url'),
-                            button.getAttribute('href'),
-                            button.getAttribute('onclick')
-                        ];
-                        
-                        for (let urlSource of urlSources) {
-                            if (urlSource) {
-                                // If it's an onclick handler, extract URL from it
-                                if (urlSource.includes('window.open') || urlSource.includes('location.href')) {
-                                    const urlMatch = urlSource.match(/['"](https?:\/\/[^'"]+)['"]/);
-                                    if (urlMatch && urlMatch[1]) {
-                                        return urlMatch[1];
-                                    }
-                                }
-                                // If it's already a URL
-                                if (urlSource.startsWith('http')) {
-                                    return urlSource;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Look for any links that might be registration related
-                    const registrationLinks = card.querySelectorAll('a[href*="register"], a[href*="signup"], a[href*="join"]');
-                    for (let link of registrationLinks) {
-                        const href = link.getAttribute('href');
-                        if (href && href.startsWith('http')) {
-                            return href;
-                        }
-                    }
-                }
-                
-                return null;
-            }, { selector, cardIndex });
-            
-            if (registrationUrl) {
-                console.log(`✅ Found static registration URL: ${registrationUrl}`);
-                return registrationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting static registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Intercept dynamic JavaScript event listeners to capture registration URLs
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async interceptDynamicRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Intercepting dynamic event listeners for registration URL...');
-            
-            // Set up click event interception before interacting with buttons
-            let capturedUrls = [];
-            
-            // Intercept all click events and capture potential registration URLs
-            await page.evaluate(() => {
-                // Store original methods
-                window.__originalWindowOpen = window.open;
-                window.__originalLocationHref = window.location.href;
-                window.__capturedUrls = [];
-                
-                // Override window.open to capture URLs
-                window.open = function(url, target, features) {
-                    console.log('window.open intercepted:', url);
-                    if (url && url.startsWith('http')) {
-                        window.__capturedUrls.push({
-                            type: 'window.open',
-                            url: url,
-                            timestamp: Date.now()
-                        });
-                    }
-                    // Still call the original to maintain functionality
-                    return window.__originalWindowOpen.call(this, url, target, features);
-                };
-                
-                // Override location.href setter
-                Object.defineProperty(window.location, 'href', {
-                    set: function(url) {
-                        console.log('location.href intercepted:', url);
-                        if (url && url.startsWith('http')) {
-                            window.__capturedUrls.push({
-                                type: 'location.href',
-                                url: url,
-                                timestamp: Date.now()
-                            });
-                        }
-                        // Set the actual location
-                        window.__originalLocationHref = url;
-                    },
-                    get: function() {
-                        return window.__originalLocationHref;
-                    }
-                });
-                
-                // Add global click listener to capture dynamically bound events
-                document.addEventListener('click', function(event) {
-                    const target = event.target;
-                    
-                    // Check if clicked element is a registration button
-                    const isRegisterButton = target.textContent?.toLowerCase().includes('register') ||
-                                           target.classList.contains('el-button--primary') ||
-                                           target.id === 'cardButton' ||
-                                           target.closest('.register-button');
-                    
-                    if (isRegisterButton) {
-                        console.log('Registration button clicked:', target);
-                        
-                        // Try to extract URL from Vue.js data attributes or component props
-                        if (target.__vue__ || target._vueParentNode) {
-                            try {
-                                const vueInstance = target.__vue__ || target._vueParentNode;
-                                if (vueInstance && vueInstance.$data) {
-                                    // Look for registration URL in Vue component data
-                                    const data = vueInstance.$data;
-                                    const possibleUrls = [
-                                        data.registrationUrl,
-                                        data.registerUrl,
-                                        data.url,
-                                        data.href,
-                                        data.link
-                                    ].filter(url => url && typeof url === 'string' && url.startsWith('http'));
-                                    
-                                    possibleUrls.forEach(url => {
-                                        window.__capturedUrls.push({
-                                            type: 'vue.data',
-                                            url: url,
-                                            timestamp: Date.now()
-                                        });
-                                    });
-                                }
-                            } catch (vueError) {
-                                console.log('Error accessing Vue data:', vueError);
-                            }
-                        }
-                        
-                        // Also check for data attributes that might contain URLs
-                        const dataAttributes = target.dataset;
-                        Object.keys(dataAttributes).forEach(key => {
-                            const value = dataAttributes[key];
-                            if (value && value.startsWith('http')) {
-                                window.__capturedUrls.push({
-                                    type: 'data-attribute',
-                                    url: value,
-                                    attribute: key,
-                                    timestamp: Date.now()
-                                });
-                            }
-                        });
-                    }
-                }, true); // Use capture phase to catch events before they bubble
-            });
-            
-            // Now find and click registration buttons
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"], ${selector}:nth-child(${cardIndex + 1}) button`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"], ${selector} button`;
-            
-            const buttons = await page.locator(buttonSelector).all();
-            
-            for (let i = 0; i < Math.min(buttons.length, 3); i++) { // Limit to first 3 buttons to avoid excessive clicking
-                try {
-                    const button = buttons[i];
-                    const isVisible = await button.isVisible();
-                    
-                    if (!isVisible) continue;
-                    
-                    // Check if button text suggests it's a registration button
-                    const buttonText = await button.textContent() || '';
-                    const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                           buttonText.toLowerCase().includes('join') ||
-                                           buttonText.toLowerCase().includes('sign up');
-                    
-                    if (!isRegisterButton) continue;
-                    
-                    console.log(`Clicking potential registration button: "${buttonText}"`);
-                    
-                    // Click the button and wait briefly for any dynamic behavior
-                    await button.click({ timeout: 5000 });
-                    await this.delay(2000);
-                    
-                    // Check if any URLs were captured
-                    capturedUrls = await page.evaluate(() => {
-                        return window.__capturedUrls || [];
-                    });
-                    
-                    if (capturedUrls.length > 0) {
-                        // Found URLs, break out of button clicking loop
-                        break;
-                    }
-                    
-                } catch (buttonError) {
-                    console.log(`Error clicking button ${i + 1}: ${buttonError.message}`);
-                }
-            }
-            
-            // Clean up event listeners
-            await page.evaluate(() => {
-                if (window.__originalWindowOpen) {
-                    window.open = window.__originalWindowOpen;
-                }
-                if (window.__originalLocationHref) {
-                    window.location.href = window.__originalLocationHref;
-                }
-            });
-            
-            // Return the most likely registration URL
-            if (capturedUrls.length > 0) {
-                // Sort by timestamp and prioritize certain types
-                const sortedUrls = capturedUrls.sort((a, b) => {
-                    // Prioritize window.open and vue.data types
-                    if (a.type === 'window.open' && b.type !== 'window.open') return -1;
-                    if (b.type === 'window.open' && a.type !== 'window.open') return 1;
-                    if (a.type === 'vue.data' && b.type !== 'vue.data') return -1;
-                    if (b.type === 'vue.data' && a.type !== 'vue.data') return 1;
-                    return b.timestamp - a.timestamp; // Most recent first
-                });
-                
-                const selectedUrl = sortedUrls[0];
-                console.log(`✅ Found dynamic registration URL (${selectedUrl.type}): ${selectedUrl.url}`);
-                return selectedUrl.url;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error intercepting dynamic registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Capture registration URL by monitoring navigation and popup events
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async captureEventBasedRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Attempting to capture registration URL via navigation/popup events...');
-            
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"]`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"]`;
-            
-            const button = page.locator(buttonSelector).first();
-            const isVisible = await button.isVisible();
-            
-            if (!isVisible) {
-                console.log('No visible registration button found for event-based extraction');
-                return null;
-            }
-            
-            // Check button text
-            const buttonText = await button.textContent() || '';
-            const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                   buttonText.toLowerCase().includes('join') ||
-                                   buttonText.toLowerCase().includes('sign up');
-            
-            if (!isRegisterButton) {
-                console.log('Button does not appear to be a registration button');
-                return null;
-            }
-            
-            // Try popup monitoring first
-            const popupUrl = await this.extractRegistrationUrlViaPopup(page, buttonSelector);
-            if (popupUrl) {
-                return popupUrl;
-            }
-            
-            // Try navigation monitoring as fallback
-            const navigationUrl = await this.extractRegistrationUrlViaNavigation(page, buttonSelector);
-            if (navigationUrl) {
-                return navigationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error in event-based registration URL capture: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from MySideline cards
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log(`Extracting registration URL${cardIndex !== null ? ` from card ${cardIndex + 1}` : ''}...`);
-            
-            // First try: Extract from static attributes and onclick handlers
-            const staticUrl = await this.extractStaticRegistrationUrl(page, selector, cardIndex);
-            if (staticUrl) {
-                return staticUrl;
-            }
-            
-            // Second try: Intercept dynamic event listeners
-            const dynamicUrl = await this.interceptDynamicRegistrationUrl(page, selector, cardIndex);
-            if (dynamicUrl) {
-                return dynamicUrl;
-            }
-            
-            // Third try: Monitor navigation/popup events
-            const eventUrl = await this.captureEventBasedRegistrationUrl(page, selector, cardIndex);
-            if (eventUrl) {
-                return eventUrl;
-            }
-            
-            console.log(`❌ No registration URL found${cardIndex !== null ? ` in card ${cardIndex + 1}` : ''}`);
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL from static attributes and onclick handlers
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractStaticRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            const registrationUrl = await page.evaluate(({ selector: sel, cardIndex: index }) => {
-                let cards;
-                if (index !== null) {
-                    const allCards = document.querySelectorAll(sel);
-                    cards = allCards[index] ? [allCards[index]] : [];
-                } else {
-                    cards = document.querySelectorAll(sel);
-                }
-                
-                for (let card of cards) {
-                    // Look for registration buttons with various attributes
-                    const registerButtons = card.querySelectorAll('button.el-button--primary, button[id="cardButton"], button:contains("Register"), .register-button, .registration-link');
-                    
-                    for (let button of registerButtons) {
-                        // Check various attributes that might contain the registration URL
-                        const urlSources = [
-                            button.getAttribute('data-url'),
-                            button.getAttribute('data-href'),
-                            button.getAttribute('data-link'),
-                            button.getAttribute('data-registration-url'),
-                            button.getAttribute('href'),
-                            button.getAttribute('onclick')
-                        ];
-                        
-                        for (let urlSource of urlSources) {
-                            if (urlSource) {
-                                // If it's an onclick handler, extract URL from it
-                                if (urlSource.includes('window.open') || urlSource.includes('location.href')) {
-                                    const urlMatch = urlSource.match(/['"](https?:\/\/[^'"]+)['"]/);
-                                    if (urlMatch && urlMatch[1]) {
-                                        return urlMatch[1];
-                                    }
-                                }
-                                // If it's already a URL
-                                if (urlSource.startsWith('http')) {
-                                    return urlSource;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Look for any links that might be registration related
-                    const registrationLinks = card.querySelectorAll('a[href*="register"], a[href*="signup"], a[href*="join"]');
-                    for (let link of registrationLinks) {
-                        const href = link.getAttribute('href');
-                        if (href && href.startsWith('http')) {
-                            return href;
-                        }
-                    }
-                }
-                
-                return null;
-            }, { selector, cardIndex });
-            
-            if (registrationUrl) {
-                console.log(`✅ Found static registration URL: ${registrationUrl}`);
-                return registrationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting static registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Intercept dynamic JavaScript event listeners to capture registration URLs
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async interceptDynamicRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            console.log('Intercepting dynamic event listeners for registration URL...');
-            
-            // Set up click event interception before interacting with buttons
-            let capturedUrls = [];
-            
-            // Intercept all click events and capture potential registration URLs
-            await page.evaluate(() => {
-                // Store original methods
-                window.__originalWindowOpen = window.open;
-                window.__originalLocationHref = window.location.href;
-                window.__capturedUrls = [];
-                
-                // Override window.open to capture URLs
-                window.open = function(url, target, features) {
-                    console.log('window.open intercepted:', url);
-                    if (url && url.startsWith('http')) {
-                        window.__capturedUrls.push({
-                            type: 'window.open',
-                            url: url,
-                            timestamp: Date.now()
-                        });
-                    }
-                    // Still call the original to maintain functionality
-                    return window.__originalWindowOpen.call(this, url, target, features);
-                };
-                
-                // Override location.href setter
-                Object.defineProperty(window.location, 'href', {
-                    set: function(url) {
-                        console.log('location.href intercepted:', url);
-                        if (url && url.startsWith('http')) {
-                            window.__capturedUrls.push({
-                                type: 'location.href',
-                                url: url,
-                                timestamp: Date.now()
-                            });
-                        }
-                        // Set the actual location
-                        window.__originalLocationHref = url;
-                    },
-                    get: function() {
-                        return window.__originalLocationHref;
-                    }
-                });
-                
-                // Add global click listener to capture dynamically bound events
-                document.addEventListener('click', function(event) {
-                    const target = event.target;
-                    
-                    // Check if clicked element is a registration button
-                    const isRegisterButton = target.textContent?.toLowerCase().includes('register') ||
-                                           target.classList.contains('el-button--primary') ||
-                                           target.id === 'cardButton' ||
-                                           target.closest('.register-button');
-                    
-                    if (isRegisterButton) {
-                        console.log('Registration button clicked:', target);
-                        
-                        // Try to extract URL from Vue.js data attributes or component props
-                        if (target.__vue__ || target._vueParentNode) {
-                            try {
-                                const vueInstance = target.__vue__ || target._vueParentNode;
-                                if (vueInstance && vueInstance.$data) {
-                                    // Look for registration URL in Vue component data
-                                    const data = vueInstance.$data;
-                                    const possibleUrls = [
-                                        data.registrationUrl,
-                                        data.registerUrl,
-                                        data.url,
-                                        data.href,
-                                        data.link
-                                    ].filter(url => url && typeof url === 'string' && url.startsWith('http'));
-                                    
-                                    possibleUrls.forEach(url => {
-                                        window.__capturedUrls.push({
-                                            type: 'vue.data',
-                                            url: url,
-                                            timestamp: Date.now()
-                                        });
-                                    });
-                                }
-                            } catch (vueError) {
-                                console.log('Error accessing Vue data:', vueError);
-                            }
-                        }
-                        
-                        // Also check for data attributes that might contain URLs
-                        const dataAttributes = target.dataset;
-                        Object.keys(dataAttributes).forEach(key => {
-                            const value = dataAttributes[key];
-                            if (value && value.startsWith('http')) {
-                                window.__capturedUrls.push({
-                                    type: 'data-attribute',
-                                    url: value,
-                                    attribute: key,
-                                    timestamp: Date.now()
-                                });
-                            }
-                        });
-                    }
-                }, true); // Use capture phase to catch events before they bubble
-            });
-            
-            // Now find and click registration buttons
-            const buttonSelector = cardIndex !== null 
-                ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"], ${selector}:nth-child(${cardIndex + 1}) button`
-                : `${selector} button.el-button--primary, ${selector} button[id="cardButton"], ${selector} button`;
-            
-            const buttons = await page.locator(buttonSelector).all();
-            
-            for (let i = 0; i < Math.min(buttons.length, 3); i++) { // Limit to first 3 buttons to avoid excessive clicking
-                try {
-                    const button = buttons[i];
-                    const isVisible = await button.isVisible();
-                    
-                    if (!isVisible) continue;
-                    
-                    // Check if button text suggests it's a registration button
-                    const buttonText = await button.textContent() || '';
-                    const isRegisterButton = buttonText.toLowerCase().includes('register') ||
-                                           buttonText.toLowerCase().includes('join') ||
-                                           buttonText.toLowerCase().includes('sign up');
-                    
-                    if (!isRegisterButton) continue;
-                    
-                    console.log(`Clicking potential registration button: "${buttonText}"`);
-                    
-                    // Click the button and wait briefly for any dynamic behavior
-                    await button.click({ timeout: 5000 });
-                    await this.delay(2000);
-                    
-                    // Check if any URLs were captured
-                    capturedUrls = await page.evaluate(() => {
-                        return window.__capturedUrls || [];
-                    });
-                    
-                    if (capturedUrls.length > 0) {
-                        // Found URLs, break out of button clicking loop
-                        break;
-                    }
-                    
-                } catch (buttonError) {
-                    console.log(`Error clicking button ${i + 1}: ${buttonError.message}`);
-                }
-            }
-            
-            // Clean up event listeners
-            await page.evaluate(() => {
-                if (window.__originalWindowOpen) {
-                    window.open = window.__originalWindowOpen;
-                }
-                if (window.__originalLocationHref) {
-                    window.location.href = window.__originalLocationHref;
-                }
-            });
-            
-            // Return the most likely registration URL
-            if (capturedUrls.length > 0) {
-                // Sort by timestamp and prioritize certain types
-                const sortedUrls = capturedUrls.sort((a, b) => {
-                    // Prioritize window.open and vue.data types
-                    if (a.type === 'window.open' && b.type !== 'window.open') return -1;
-                    if (b.type === 'window.open' && a.type !== 'window.open') return 1;
-                    if (a.type === 'vue.data' && b.type !== 'vue.data') return -1;
-                    if (b.type === 'vue.data' && a.type !== 'vue.data') return 1;
-                    return b.timestamp - a.timestamp; // Most recent first
-                });
-                
-                const selectedUrl = sortedUrls[0];
-                console.log(`✅ Found dynamic registration URL (${selectedUrl.type}): ${selectedUrl.url}`);
-                return selectedUrl.url;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error intercepting dynamic registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
-     * Extract registration URL by monitoring navigation events
+     * Capture registration URL by monitoring navigation events
      * @param {Page} page - Playwright page object
      * @param {string} buttonSelector - Selector for the registration button
      * @returns {Promise<string|null>} Registration URL or null
@@ -2926,59 +1833,6 @@ class MySidelineScraperService {
     }
 
     /**
-     * Extract date information from text
-     * @param {string} text - Text to extract dates from
-     * @returns {Array} Array of extracted dates
-     */
-    extractDatesFromText(text) {
-        const dates = [];
-        
-        // Common date patterns
-        const datePatterns = [
-            /(\d{1,2})\/(\d{1,2})\/(\d{4})/g,           // MM/DD/YYYY or DD/MM/YYYY
-            /(\d{1,2})-(\d{1,2})-(\d{4})/g,            // MM-DD-YYYY or DD-MM-YYYY
-            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/gi,
-            /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})/gi,
-            /(\d{1,2})(st|nd|rd|th)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/gi
-        ];
-        
-        datePatterns.forEach(pattern => {
-            let match;
-            while ((match = pattern.exec(text)) !== null) {
-                dates.push(match[0]);
-            }
-        });
-        
-        return [...new Set(dates)]; // Remove duplicates
-    }
-
-    /**
-     * Extract time information from text
-     * @param {string} text - Text to extract times from
-     * @returns {Array} Array of extracted times
-     */
-    extractTimesFromText(text) {
-        const times = [];
-        
-        // Time patterns
-        const timePatterns = [
-            /\b(\d{1,2}):(\d{2})\s*(am|pm|AM|PM)\b/g,
-            /\b(\d{1,2})(\d{2})\s*(am|pm|AM|PM)\b/g,
-            /\b(\d{1,2}):(\d{2})\s*(hours?|hrs?)\b/gi,
-            /\b(\d{1,2}):(\d{2})\b/g
-        ];
-        
-        timePatterns.forEach(pattern => {
-            let match;
-            while ((match = pattern.exec(text)) !== null) {
-                times.push(match[0]);
-            }
-        });
-        
-        return [...new Set(times)]; // Remove duplicates
-    }
-
-    /**
      * Extract contact information from text
      * @param {string} text - Text to extract contact info from
      * @returns {Object} Extracted contact information
@@ -3100,6 +1954,173 @@ class MySidelineScraperService {
 
         const score = matches / keywords.length;
         return score > 0.5;
+    }
+
+    /**
+     * Parse event data from MySideline card elements
+     * @param {Page} page - Playwright page object
+     * @param {string} selector - CSS selector for the cards
+     * @returns {Promise<Array>} Array of parsed event objects
+     */
+    async parseEventData(page, selector) {
+        try {
+            console.log('🔍 Parsing event data from MySideline cards...');
+            
+            const events = await page.evaluate((cardSelector) => {
+                const cards = document.querySelectorAll(cardSelector);
+                const eventData = [];
+                
+                cards.forEach((card, index) => {
+                    try {
+                        const event = {
+                            cardIndex: index,
+                            title: null,
+                            subtitle: null,
+                            description: null,
+                            address: {
+                                line1: null,
+                                line2: null,
+                                cityStatePostal: null,
+                                country: null,
+                                googleMapsUrl: null
+                            },
+                            contact: {
+                                name: null,
+                                phone: null,
+                                email: null
+                            },
+                            eventType: null,
+                            carnivalIcon: null,
+                            registrationUrl: null
+                        };
+                        
+                        // Extract carnival icon from logo image
+                        const logoImg = card.querySelector('.image__wrapper img[data-url]');
+                        if (logoImg) {
+                            event.carnivalIcon = logoImg.getAttribute('data-url');
+                        }
+                        
+                        // Extract title from h3.title
+                        const titleElement = card.querySelector('h3.title');
+                        if (titleElement) {
+                            event.title = titleElement.textContent?.trim();
+                        }
+                        
+                        // Extract subtitle from h4.subtitle
+                        const subtitleElement = card.querySelector('h4.subtitle, h4#subtitle');
+                        if (subtitleElement) {
+                            event.subtitle = subtitleElement.textContent?.trim();
+                        }
+                        
+                        // Extract address information from Google Maps link
+                        const addressLink = card.querySelector('a[href*="maps.google.com"]');
+                        if (addressLink) {
+                            event.address.googleMapsUrl = addressLink.getAttribute('href');
+                            
+                            // Extract address components from nested p elements
+                            const addressParagraphs = addressLink.querySelectorAll('p.m-0');
+                            if (addressParagraphs.length >= 3) {
+                                event.address.line1 = addressParagraphs[0]?.textContent?.trim() || null;
+                                event.address.line2 = addressParagraphs[1]?.textContent?.trim() || null;
+                                event.address.cityStatePostal = addressParagraphs[2]?.textContent?.trim() || null;
+                                if (addressParagraphs[3]) {
+                                    event.address.country = addressParagraphs[3]?.textContent?.trim() || null;
+                                }
+                            }
+                        }
+                        
+                        // Extract event description (first paragraph after address)
+                        const descriptionElements = card.querySelectorAll('p[data-v-06457438]');
+                        for (let p of descriptionElements) {
+                            const text = p.textContent?.trim();
+                            // Skip empty paragraphs and contact info paragraphs
+                            if (text && !text.includes('Club Contact') && !text.includes('Name:') && text.length > 20) {
+                                event.description = text;
+                                break;
+                            }
+                        }
+                        
+                        // Extract contact information
+                        const contactParagraphs = card.querySelectorAll('p[data-v-06457438]');
+                        for (let p of contactParagraphs) {
+                            const text = p.textContent;
+                            if (text && text.includes('Club Contact')) {
+                                // Extract contact name
+                                const nameMatch = text.match(/Name:\s*([^\n\r]+)/);
+                                if (nameMatch) {
+                                    event.contact.name = nameMatch[1].trim();
+                                }
+                                
+                                // Extract phone number from tel: link
+                                const phoneLink = p.querySelector('a[href^="tel:"]');
+                                if (phoneLink) {
+                                    event.contact.phone = phoneLink.textContent?.trim();
+                                }
+                                
+                                // Extract email from mailto: link
+                                const emailLink = p.querySelector('a[href^="mailto:"]');
+                                if (emailLink) {
+                                    event.contact.email = emailLink.textContent?.trim();
+                                }
+                                break;
+                            }
+                        }
+                        
+                        // Extract event type from the details list
+                        const typeItems = card.querySelectorAll('.item.d-flex');
+                        for (let item of typeItems) {
+                            const label = item.querySelector('.list-item');
+                            const value = item.querySelector('.right');
+                            
+                            if (label && value && label.textContent?.trim().toLowerCase() === 'type') {
+                                event.eventType = value.textContent?.trim();
+                                break;
+                            }
+                        }
+                        
+                        // Only include events that are not "Touch" type
+                        if (!event.eventType || event.eventType.toLowerCase() !== 'touch') {
+                            eventData.push(event);
+                        } else {
+                            console.log(`Skipping "Touch" event: ${event.title}`);
+                        }
+                        
+                    } catch (cardError) {
+                        console.error(`Error parsing card ${index}:`, cardError);
+                    }
+                });
+                
+                return eventData;
+            }, selector);
+            
+            console.log(`✅ Parsed ${events.length} events from MySideline cards`);
+            
+            // Extract registration URLs for each event
+            for (let i = 0; i < events.length; i++) {
+                const event = events[i];
+                console.log(`\n🎯 Processing event ${i + 1}/${events.length}: ${event.title}`);
+                
+                // Extract registration URL using the updated method
+                const registrationUrl = await this.extractRegistrationUrl(page, selector, event.cardIndex);
+                event.registrationUrl = registrationUrl;
+                
+                // Log extracted data
+                console.log(`📝 Event Details:`);
+                console.log(`   Title: ${event.title}`);
+                console.log(`   Subtitle: ${event.subtitle}`);
+                console.log(`   Carnival Icon: ${event.carnivalIcon}`);
+                console.log(`   Event Type: ${event.eventType}`);
+                console.log(`   Contact: ${event.contact.name} (${event.contact.phone})`);
+                console.log(`   Address: ${event.address.line1}, ${event.address.cityStatePostal}`);
+                console.log(`   Registration URL: ${event.registrationUrl || 'Not found'}`);
+            }
+            
+            return events;
+            
+        } catch (error) {
+            console.error('❌ Error parsing event data:', error);
+            throw error;
+        }
     }
 }
 

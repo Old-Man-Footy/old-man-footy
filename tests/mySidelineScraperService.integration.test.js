@@ -50,276 +50,274 @@ describe('MySidelineScraperService Integration Tests', () => {
             let browser, context, page;
 
             try {
-                // Act - Test basic connectivity
-                browser = await chromium.launch({ 
-                    headless: service.useHeadlessBrowser,
-                    timeout: service.timeout 
-                });
+                // Act
+                browser = await chromium.launch({ headless: service.useHeadlessBrowser });
                 context = await browser.newContext();
                 page = await context.newPage();
                 
-                console.log(`🌐 Connecting to: ${service.searchUrl}`);
                 const response = await page.goto(service.searchUrl, { 
                     waitUntil: 'domcontentloaded',
-                    timeout: 30000 
+                    timeout: service.timeout 
                 });
 
                 // Assert
-                expect(response.status()).toBeLessThan(400);
-                expect(page.url()).toContain('mysideline.com');
+                expect(response.status()).toBe(200);
+                expect(await page.title()).toBeTruthy();
                 
-                const title = await page.title();
-                expect(title).toBeTruthy();
-                expect(title.length).toBeGreaterThan(0);
+                console.log(`✅ Successfully connected to MySideline website`);
+                console.log(`📄 Page title: ${await page.title()}`);
                 
-                console.log(`✅ Successfully connected to MySideline`);
-                console.log(`📄 Page title: "${title}"`);
-                console.log(`🔗 Final URL: ${page.url()}`);
-
             } finally {
                 // Cleanup
+                if (page) await page.close();
                 if (context) await context.close();
                 if (browser) await browser.close();
             }
         }, INTEGRATION_TIMEOUT);
 
-        it('should detect MySideline page structure', async () => {
+        it('should find event cards on the MySideline website', async () => {
             // Arrange
             const { chromium } = require('playwright');
             let browser, context, page;
 
             try {
-                browser = await chromium.launch({ 
-                    headless: service.useHeadlessBrowser,
-                    timeout: service.timeout 
-                });
+                // Act
+                browser = await chromium.launch({ headless: service.useHeadlessBrowser });
                 context = await browser.newContext();
                 page = await context.newPage();
                 
                 await page.goto(service.searchUrl, { 
                     waitUntil: 'domcontentloaded',
-                    timeout: 30000 
+                    timeout: service.timeout 
                 });
 
-                // Act - Check for expected MySideline elements
-                const pageStructure = await page.evaluate(() => {
-                    return {
-                        bodyExists: !!document.body,
-                        totalElements: document.querySelectorAll('*').length,
-                        hasCards: document.querySelectorAll('.el-card, [id^="clubsearch_"]').length,
-                        hasClickExpand: document.querySelectorAll('.click-expand').length,
-                        hasButtons: document.querySelectorAll('button').length,
-                        bodyTextLength: document.body ? document.body.textContent.length : 0,
-                        containsMasters: document.body ? document.body.textContent.toLowerCase().includes('masters') : false,
-                        containsRugby: document.body ? document.body.textContent.toLowerCase().includes('rugby') : false
-                    };
+                // Wait for event cards to load
+                await page.waitForSelector('.el-card.is-always-shadow, [id^="clubsearch_"]', { 
+                    timeout: 10000 
                 });
+
+                const cardCount = await page.$$eval(
+                    '.el-card.is-always-shadow, [id^="clubsearch_"]', 
+                    cards => cards.length
+                );
 
                 // Assert
-                expect(pageStructure.bodyExists).toBe(true);
-                expect(pageStructure.totalElements).toBeGreaterThan(50);
-                expect(pageStructure.bodyTextLength).toBeGreaterThan(500);
-                
-                console.log(`📊 Page structure analysis:`);
-                console.log(`   - Total elements: ${pageStructure.totalElements}`);
-                console.log(`   - Cards found: ${pageStructure.hasCards}`);
-                console.log(`   - Click-expand elements: ${pageStructure.hasClickExpand}`);
-                console.log(`   - Buttons: ${pageStructure.hasButtons}`);
-                console.log(`   - Body text length: ${pageStructure.bodyTextLength} chars`);
-                console.log(`   - Contains 'masters': ${pageStructure.containsMasters}`);
-                console.log(`   - Contains 'rugby': ${pageStructure.containsRugby}`);
-
-                // MySideline should have some basic structure
-                expect(pageStructure.hasCards).toBeGreaterThan(0);
+                expect(cardCount).toBeGreaterThan(0);
+                console.log(`✅ Found ${cardCount} event cards on MySideline website`);
                 
             } finally {
+                // Cleanup
+                if (page) await page.close();
                 if (context) await context.close();
                 if (browser) await browser.close();
             }
         }, INTEGRATION_TIMEOUT);
 
-        it('should successfully fetch events from live MySideline site', async () => {
-            // Arrange
-            console.log(`🚀 Starting live data fetch from MySideline...`);
-            
-            // Act
-            const events = await service.fetchEventsWithBrowser();
+        it('should extract carnival icon from event cards', async () => {
+            // Arrange & Act
+            const events = await service.scrapeEvents();
 
             // Assert
             expect(Array.isArray(events)).toBe(true);
-            
-            console.log(`📋 Fetched ${events.length} events from live MySideline site`);
-            
-            if (events.length > 0) {
-                const firstEvent = events[0];
-                console.log(`📝 Sample event structure:`, {
-                    title: firstEvent.title,
-                    date: firstEvent.date,
-                    state: firstEvent.state,
-                    hasRegistrationLink: !!firstEvent.registrationLink,
-                    isActive: firstEvent.isActive
-                });
+            expect(events.length).toBeGreaterThan(0);
 
-                // Validate event structure
-                expect(firstEvent).toHaveProperty('title');
-                expect(firstEvent).toHaveProperty('date');
-                expect(firstEvent.title).toBeTruthy();
-                expect(firstEvent.title.length).toBeGreaterThan(5);
-                
-                // Check for Masters-related content
-                const hasRelevantContent = events.some(event => 
-                    event.title?.toLowerCase().includes('masters') ||
-                    event.title?.toLowerCase().includes('rugby') ||
-                    event.title?.toLowerCase().includes('league')
-                );
-                
-                if (hasRelevantContent) {
-                    console.log(`✅ Found relevant Masters/Rugby League content`);
-                } else {
-                    console.log(`ℹ️  No Masters/Rugby League content found in current results`);
+            // Check that at least some events have carnival icons
+            const eventsWithIcons = events.filter(event => event.carnivalIcon && event.carnivalIcon.length > 0);
+            console.log(`📊 Events with carnival icons: ${eventsWithIcons.length}/${events.length}`);
+
+            // Validate carnival icon structure for events that have them
+            eventsWithIcons.forEach(event => {
+                expect(event.carnivalIcon).toMatch(/^https?:\/\//); // Should be a valid URL
+                expect(event.carnivalIcon).toContain('cloudfront'); // Should be CloudFront CDN URL
+                console.log(`🎨 Carnival icon found: ${event.carnivalName} -> ${event.carnivalIcon.substring(0, 50)}...`);
+            });
+
+            // At least 50% of events should have carnival icons
+            expect(eventsWithIcons.length).toBeGreaterThan(events.length * 0.5);
+        }, INTEGRATION_TIMEOUT);
+
+        it('should extract structured event data with new HTML format', async () => {
+            // Arrange & Act
+            const events = await service.scrapeEvents();
+
+            // Assert
+            expect(Array.isArray(events)).toBe(true);
+            expect(events.length).toBeGreaterThan(0);
+
+            // Test the first event for all expected fields from new HTML structure
+            const firstEvent = events[0];
+            console.log(`🔍 Testing first event: ${firstEvent.carnivalName}`);
+
+            // Core fields that should always be present
+            expect(firstEvent).toHaveProperty('title');
+            expect(firstEvent).toHaveProperty('carnivalName');
+            expect(firstEvent).toHaveProperty('date');
+            expect(firstEvent).toHaveProperty('mySidelineEventId');
+            expect(firstEvent).toHaveProperty('source', 'MySideline');
+            expect(firstEvent).toHaveProperty('isMySidelineCard', true);
+
+            // New structure fields
+            expect(firstEvent).toHaveProperty('carnivalIcon'); // May be empty string
+            expect(firstEvent).toHaveProperty('category');
+            expect(firstEvent).toHaveProperty('eventType');
+            expect(firstEvent).toHaveProperty('googleMapsUrl');
+            expect(firstEvent).toHaveProperty('hasRegistration');
+
+            // Contact information fields
+            expect(firstEvent).toHaveProperty('contactName');
+            expect(firstEvent).toHaveProperty('contactPhone');
+            expect(firstEvent).toHaveProperty('contactEmail');
+
+            // Validate data types
+            expect(typeof firstEvent.title).toBe('string');
+            expect(typeof firstEvent.carnivalName).toBe('string');
+            expect(typeof firstEvent.carnivalIcon).toBe('string');
+            expect(typeof firstEvent.isActive).toBe('boolean');
+            expect(firstEvent.scrapedAt).toBeInstanceOf(Date);
+
+            console.log(`✅ Event structure validation passed for: ${firstEvent.carnivalName}`);
+        }, INTEGRATION_TIMEOUT);
+
+        it('should extract Google Maps URLs from venue addresses', async () => {
+            // Arrange & Act
+            const events = await service.scrapeEvents();
+
+            // Assert
+            expect(Array.isArray(events)).toBe(true);
+            expect(events.length).toBeGreaterThan(0);
+
+            // Check Google Maps URL extraction
+            const eventsWithMaps = events.filter(event => 
+                event.googleMapsUrl && 
+                event.googleMapsUrl.includes('maps.google.com')
+            );
+
+            console.log(`🗺️  Events with Google Maps URLs: ${eventsWithMaps.length}/${events.length}`);
+
+            // Validate Google Maps URLs
+            eventsWithMaps.forEach(event => {
+                expect(event.googleMapsUrl).toMatch(/^https:\/\/maps\.google\.com/);
+                console.log(`📍 Maps URL found: ${event.carnivalName} -> ${event.locationAddress}`);
+            });
+
+            // Most events should have location addresses
+            const eventsWithAddress = events.filter(event => 
+                event.locationAddress && event.locationAddress.length > 0
+            );
+            expect(eventsWithAddress.length).toBeGreaterThan(events.length * 0.7);
+        }, INTEGRATION_TIMEOUT);
+
+        it('should extract contact information from structured paragraphs', async () => {
+            // Arrange & Act
+            const events = await service.scrapeEvents();
+
+            // Assert
+            expect(Array.isArray(events)).toBe(true);
+            expect(events.length).toBeGreaterThan(0);
+
+            // Check contact information extraction
+            const eventsWithContact = events.filter(event => 
+                event.contactName || event.contactPhone || event.contactEmail
+            );
+
+            console.log(`📞 Events with contact info: ${eventsWithContact.length}/${events.length}`);
+
+            // Validate contact information formats
+            eventsWithContact.forEach(event => {
+                if (event.contactPhone) {
+                    // Phone should be reasonably formatted
+                    expect(event.contactPhone.length).toBeGreaterThan(8);
                 }
-            } else {
-                console.log(`ℹ️  No events found - this could be normal if no Masters events are currently listed`);
-            }
+                if (event.contactEmail) {
+                    // Email should contain @ symbol
+                    expect(event.contactEmail).toContain('@');
+                }
+                console.log(`👤 Contact: ${event.carnivalName} -> ${event.contactName} | ${event.contactPhone} | ${event.contactEmail}`);
+            });
 
-            // The test should pass regardless of event count since MySideline content varies
-            expect(events).toBeDefined();
-            
+            // Most events should have some contact information
+            expect(eventsWithContact.length).toBeGreaterThan(events.length * 0.8);
         }, INTEGRATION_TIMEOUT);
 
-        it('should handle live site errors gracefully', async () => {
-            // Arrange
-            const originalUrl = service.searchUrl;
-            service.searchUrl = 'https://profile.mysideline.com.au/nonexistent-page-12345';
-
-            try {
-                // Act
-                const events = await service.fetchEventsWithBrowser();
-
-                // Assert - Should handle errors gracefully
-                expect(Array.isArray(events)).toBe(true);
-                expect(events.length).toBe(0);
-                
-                console.log(`✅ Gracefully handled invalid URL scenario`);
-                
-            } finally {
-                // Restore original URL
-                service.searchUrl = originalUrl;
-            }
-        }, INTEGRATION_TIMEOUT);
-    });
-
-    describe('End-to-End Integration', () => {
-        it('should complete full scraping workflow with live data', async () => {
-            // Arrange
-            console.log(`🔄 Testing complete end-to-end scraping workflow...`);
-            
-            // Act
+        it('should filter out Touch events as specified', async () => {
+            // Arrange & Act
             const events = await service.scrapeEvents();
 
             // Assert
             expect(Array.isArray(events)).toBe(true);
             
-            console.log(`🎯 End-to-end workflow completed successfully`);
-            console.log(`📊 Total events processed: ${events.length}`);
-            
-            if (events.length > 0) {
-                // Validate that events have been properly parsed
-                const validEvents = events.filter(event => 
-                    event.title && 
-                    event.date && 
-                    event.title.length > 5
-                );
-                
-                expect(validEvents.length).toBeGreaterThan(0);
-                
-                console.log(`✅ ${validEvents.length} valid events found`);
-                
-                // Log sample event details for verification
-                const sampleEvent = validEvents[0];
-                console.log(`📋 Sample parsed event:`, {
-                    title: sampleEvent.title,
-                    date: sampleEvent.date?.toISOString?.() || sampleEvent.date,
-                    state: sampleEvent.state,
-                    locationAddress: sampleEvent.locationAddress,
-                    registrationLink: sampleEvent.registrationLink ? '✅' : '❌',
-                    mySidelineEventId: sampleEvent.mySidelineEventId,
-                    isActive: sampleEvent.isActive
-                });
-            }
+            // Verify no Touch events are included
+            const touchEvents = events.filter(event => event.eventType === 'Touch');
+            expect(touchEvents.length).toBe(0);
+
+            console.log(`✅ Touch events filtered: 0 Touch events found in ${events.length} total events`);
+
+            // Log event types found
+            const eventTypes = [...new Set(events.map(e => e.eventType).filter(t => t))];
+            console.log(`📊 Event types found: ${eventTypes.join(', ')}`);
         }, INTEGRATION_TIMEOUT);
 
-        it('should maintain service state consistency during live testing', async () => {
-            // Arrange
-            const initialConfig = {
-                timeout: service.timeout,
-                retryCount: service.retryCount,
-                searchUrl: service.searchUrl,
-                enableScraping: service.enableScraping,
-                useMockData: service.useMockData
-            };
+        it('should generate unique event IDs', async () => {
+            // Arrange & Act
+            const events = await service.scrapeEvents();
 
-            // Act - Run multiple operations
-            const mockEvents = service.generateMockEvents();
-            const liveEvents = await service.fetchEventsWithBrowser();
-            
-            // Assert - Configuration should remain consistent
-            expect(service.timeout).toBe(initialConfig.timeout);
-            expect(service.retryCount).toBe(initialConfig.retryCount);
-            expect(service.searchUrl).toBe(initialConfig.searchUrl);
-            expect(service.enableScraping).toBe(initialConfig.enableScraping);
-            expect(service.useMockData).toBe(initialConfig.useMockData);
-            
-            expect(Array.isArray(mockEvents)).toBe(true);
-            expect(Array.isArray(liveEvents)).toBe(true);
-            expect(mockEvents.length).toBeGreaterThan(0); // Mock should always have events
-            
-            console.log(`✅ Service state consistency maintained`);
-            console.log(`📊 Mock events: ${mockEvents.length}, Live events: ${liveEvents.length}`);
+            // Assert
+            expect(Array.isArray(events)).toBe(true);
+            expect(events.length).toBeGreaterThan(0);
+
+            // Check for unique event IDs
+            const eventIds = events.map(event => event.mySidelineEventId);
+            const uniqueEventIds = new Set(eventIds);
+
+            expect(uniqueEventIds.size).toBe(eventIds.length);
+            console.log(`✅ All ${events.length} events have unique IDs`);
+
+            // Validate ID format (should contain carnival name and date)
+            events.forEach(event => {
+                expect(event.mySidelineEventId).toBeTruthy();
+                expect(typeof event.mySidelineEventId).toBe('string');
+                expect(event.mySidelineEventId.length).toBeGreaterThan(10);
+            });
         }, INTEGRATION_TIMEOUT);
     });
 
-    describe('Live Data Quality Validation', () => {
-        it('should validate data quality from live site', async () => {
-            // Skip if no events are available
-            const events = await service.fetchEventsWithBrowser();
-            
-            if (events.length === 0) {
-                console.log(`⏭️  Skipping data quality validation - no events available`);
-                return;
-            }
+    describe('End-to-End Scraping Process', () => {
+        it('should complete full scraping process successfully', async () => {
+            // Arrange
+            console.log('\n🚀 Starting full end-to-end scraping test...');
 
-            console.log(`🔍 Validating data quality for ${events.length} events...`);
-            
-            let validationResults = {
-                hasTitle: 0,
-                hasDate: 0,
-                hasState: 0,
-                hasLocation: 0,
-                hasRegistrationInfo: 0,
-                hasValidId: 0
-            };
+            // Act
+            const events = await service.scrapeEvents();
 
-            events.forEach(event => {
-                if (event.title && event.title.length > 5) validationResults.hasTitle++;
-                if (event.date) validationResults.hasDate++;
-                if (event.state) validationResults.hasState++;
-                if (event.locationAddress) validationResults.hasLocation++;
-                if (event.registrationLink || event.registrationDeadline) validationResults.hasRegistrationInfo++;
-                if (event.mySidelineEventId) validationResults.hasValidId++;
-            });
+            // Assert
+            expect(Array.isArray(events)).toBe(true);
+            expect(events.length).toBeGreaterThan(0);
 
-            console.log(`📊 Data quality results:`);
-            console.log(`   - Events with title: ${validationResults.hasTitle}/${events.length}`);
-            console.log(`   - Events with date: ${validationResults.hasDate}/${events.length}`);
-            console.log(`   - Events with state: ${validationResults.hasState}/${events.length}`);
-            console.log(`   - Events with location: ${validationResults.hasLocation}/${events.length}`);
-            console.log(`   - Events with registration info: ${validationResults.hasRegistrationInfo}/${events.length}`);
-            console.log(`   - Events with valid ID: ${validationResults.hasValidId}/${events.length}`);
+            console.log(`\n📊 SCRAPING RESULTS SUMMARY:`);
+            console.log(`├── Total Events: ${events.length}`);
+            console.log(`├── Events with Icons: ${events.filter(e => e.carnivalIcon).length}`);
+            console.log(`├── Events with Maps: ${events.filter(e => e.googleMapsUrl?.includes('maps.google.com')).length}`);
+            console.log(`├── Events with Contact: ${events.filter(e => e.contactName || e.contactPhone || e.contactEmail).length}`);
+            console.log(`├── Active Events: ${events.filter(e => e.isActive).length}`);
+            console.log(`└── Australian States: ${[...new Set(events.map(e => e.state).filter(s => s))].join(', ')}`);
 
-            // Most events should have at least title and some basic info
-            expect(validationResults.hasTitle).toBeGreaterThan(events.length * 0.8); // 80% should have titles
-            
+            // Validate overall data quality
+            const dataQualityScore = events.reduce((score, event) => {
+                let eventScore = 0;
+                if (event.carnivalName) eventScore += 1;
+                if (event.date) eventScore += 1;
+                if (event.locationAddress) eventScore += 1;
+                if (event.carnivalIcon) eventScore += 0.5;
+                if (event.contactName || event.contactPhone || event.contactEmail) eventScore += 0.5;
+                return score + eventScore;
+            }, 0);
+
+            const avgQuality = dataQualityScore / (events.length * 4);
+            console.log(`📈 Data Quality Score: ${(avgQuality * 100).toFixed(1)}%`);
+
+            // Expect at least 75% data quality
+            expect(avgQuality).toBeGreaterThan(0.75);
+
         }, INTEGRATION_TIMEOUT);
     });
 });

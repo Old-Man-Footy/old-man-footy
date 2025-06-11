@@ -154,3 +154,8 @@ config/keys.js
 
 # PM2 process file
 ecosystem.config.js
+
+#Images
+*.png
+*.jpg 
+*.jpeg
