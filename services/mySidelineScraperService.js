@@ -405,11 +405,59 @@ class MySidelineScraperService {
                         const subtitleElement = card.querySelector('.subtitle, h4.subtitle, #subtitle');
                         const imageElement = card.querySelector('.image__item, img');
                         const buttonElement = card.querySelector('.button-no-style');
+                        const registerButton = card.querySelector('button.el-button--primary, button[id="cardButton"], button:has-text("Register")');
                         
                         const title = titleElement ? titleElement.textContent.trim() : '';
                         const subtitle = subtitleElement ? subtitleElement.textContent.trim() : '';
                         const imageSrc = imageElement ? imageElement.src : '';
                         const imageAlt = imageElement ? imageElement.alt : '';
+                        
+                        // Extract potential registration URL from button attributes
+                        let registrationUrl = null;
+                        if (registerButton) {
+                            // Check for data attributes that might contain the URL
+                            registrationUrl = registerButton.getAttribute('data-url') || 
+                                           registerButton.getAttribute('data-href') || 
+                                           registerButton.getAttribute('data-link') ||
+                                           registerButton.getAttribute('data-registration-url') ||
+                                           registerButton.getAttribute('onclick');
+                            
+                            // Check parent elements for URLs
+                            if (!registrationUrl) {
+                                let parent = registerButton.parentElement;
+                                while (parent && parent !== document.body) {
+                                    const parentHref = parent.getAttribute('href') || 
+                                                     parent.getAttribute('data-url') ||
+                                                     parent.getAttribute('data-href');
+                                    if (parentHref) {
+                                        registrationUrl = parentHref;
+                                        break;
+                                    }
+                                    parent = parent.parentElement;
+                                }
+                            }
+                            
+                            // Look for nearby anchor tags
+                            if (!registrationUrl) {
+                                const nearbyLink = registerButton.closest('a') || 
+                                                 registerButton.parentElement?.querySelector('a') ||
+                                                 registerButton.nextElementSibling?.querySelector('a');
+                                
+                                if (nearbyLink && nearbyLink.href) {
+                                    registrationUrl = nearbyLink.href;
+                                }
+                            }
+                            
+                            // Extract URL from onclick if it contains navigation
+                            if (!registrationUrl && registerButton.getAttribute('onclick')) {
+                                const onclickContent = registerButton.getAttribute('onclick');
+                                const urlMatch = onclickContent.match(/(?:window\.open|location\.href|navigate)\s*\(\s*['"](.*?)['"]/) ||
+                                               onclickContent.match(/['"](https?:\/\/[^'"]+)['"]/);
+                                if (urlMatch && urlMatch[1]) {
+                                    registrationUrl = urlMatch[1];
+                                }
+                            }
+                        }
                         
                         const hasExpandedContent = card.querySelector('.expanded-content, .click-expand-content, .expanded-details');
                         let expandedDetails = '';
@@ -490,11 +538,12 @@ class MySidelineScraperService {
                                 hasTime: hasTime,
                                 hasContact: hasContact,
                                 hasFees: hasFees,
-                                fullContent: fullContent
+                                fullContent: fullContent,
+                                registrationUrl: registrationUrl // Add extracted registration URL
                             };
 
                             foundElements.push(elementData);
-                            console.log(`Found MySideline Masters card (score: ${relevanceScore}): ${title} ${hasExpandedContent ? '[EXPANDED]' : ''}`);
+                            console.log(`Found MySideline Masters card (score: ${relevanceScore}): ${title} ${hasExpandedContent ? '[EXPANDED]' : ''} ${registrationUrl ? '[REG_URL]' : ''}`);
                         }
                     } catch (err) {
                         console.log(`Error processing MySideline card ${index}:`, err.message);
@@ -556,13 +605,38 @@ class MySidelineScraperService {
                 return uniqueElements.slice(0, 25);
             });
 
-            const standardEvents = [];
+            // Now extract registration URLs by clicking buttons for events that don't have them
+            const eventsWithRegistrationUrls = [];
             for (const event of events) {
+                try {
+                    let finalRegistrationUrl = event.registrationUrl;
+                    
+                    // If we didn't extract a URL from attributes, try clicking the button
+                    if (!finalRegistrationUrl && event.isMySidelineCard) {
+                        finalRegistrationUrl = await this.extractRegistrationUrl(page, '.el-card.is-always-shadow', event.cardIndex);
+                    }
+                    
+                    // Create a new event object with the registration URL
+                    const eventWithUrl = {
+                        ...event,
+                        registrationUrl: finalRegistrationUrl
+                    };
+                    
+                    eventsWithRegistrationUrls.push(eventWithUrl);
+                    
+                } catch (error) {
+                    console.log(`Error processing registration URL for event: ${error.message}`);
+                    eventsWithRegistrationUrls.push(event);
+                }
+            }
+
+            const standardEvents = [];
+            for (const event of eventsWithRegistrationUrls) {
                 try {
                     const standardEvent = this.parserService.parseEventFromElement(event);
                     if (standardEvent) {
                         standardEvents.push(standardEvent);
-                        console.log(`Successfully parsed MySideline event: ${standardEvent.title} ${event.hasExpandedContent ? '[WITH EXPANDED DETAILS]' : ''}`);
+                        console.log(`Successfully parsed MySideline event: ${standardEvent.title} ${event.hasExpandedContent ? '[WITH EXPANDED DETAILS]' : ''} ${event.registrationUrl ? '[REG_URL: ' + event.registrationUrl + ']' : ''}`);
                     }
                 } catch (parseError) {
                     console.log(`Failed to parse MySideline event: ${parseError.message}`);
@@ -575,6 +649,109 @@ class MySidelineScraperService {
         } catch (error) {
             console.error('MySideline Playwright event extraction failed:', error.message);
             return [];
+        }
+    }
+
+    /**
+     * Extract registration URL from register button click
+     * @param {Page} page - Playwright page object
+     * @param {string} cardSelector - The card selector to target
+     * @param {number} cardIndex - Index of the card to extract URL from
+     * @returns {Promise<string|null>} The registration URL or null if not found
+     */
+    async extractRegistrationUrl(page, cardSelector, cardIndex) {
+        try {
+            // Look for register button within the specific card
+            const registerButtonSelector = `${cardSelector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${cardSelector}:nth-child(${cardIndex + 1}) button[id="cardButton"], ${cardSelector}:nth-child(${cardIndex + 1}) button:has-text("Register")`;
+            
+            console.log(`Looking for register button in card ${cardIndex + 1}...`);
+            
+            // Check if register button exists
+            const buttonExists = await page.locator(registerButtonSelector).count() > 0;
+            if (!buttonExists) {
+                console.log(`No register button found in card ${cardIndex + 1}`);
+                return null;
+            }
+            
+            // Set up navigation listener before clicking
+            let registrationUrl = null;
+            const navigationPromise = page.waitForEvent('popup', { timeout: 10000 }).catch(() => null);
+            
+            // Also listen for navigation on the current page
+            const currentPageNavigation = page.waitForNavigation({ timeout: 10000 }).catch(() => null);
+            
+            console.log(`Clicking register button in card ${cardIndex + 1}...`);
+            
+            // Click the register button
+            await page.locator(registerButtonSelector).first().click();
+            await this.delay(2000);
+            
+            // Check for popup window (new tab/window)
+            const popup = await navigationPromise;
+            if (popup) {
+                registrationUrl = popup.url();
+                console.log(`Register button opened popup with URL: ${registrationUrl}`);
+                await popup.close();
+                return registrationUrl;
+            }
+            
+            // Check for navigation on current page
+            const navigation = await currentPageNavigation;
+            if (navigation) {
+                registrationUrl = page.url();
+                console.log(`Register button navigated to: ${registrationUrl}`);
+                // Navigate back to the original page
+                await page.goBack();
+                await this.delay(2000);
+                return registrationUrl;
+            }
+            
+            // Check for JavaScript-based redirects or data attributes
+            const urlFromButton = await page.evaluate((selector) => {
+                const button = document.querySelector(selector);
+                if (!button) return null;
+                
+                // Check for data attributes that might contain the URL
+                const dataUrl = button.getAttribute('data-url') || 
+                               button.getAttribute('data-href') || 
+                               button.getAttribute('data-link') ||
+                               button.getAttribute('data-registration-url');
+                
+                if (dataUrl) return dataUrl;
+                
+                // Check parent elements for URLs
+                let parent = button.parentElement;
+                while (parent && parent !== document.body) {
+                    const parentHref = parent.getAttribute('href') || 
+                                     parent.getAttribute('data-url') ||
+                                     parent.getAttribute('data-href');
+                    if (parentHref) return parentHref;
+                    parent = parent.parentElement;
+                }
+                
+                // Look for nearby anchor tags
+                const nearbyLink = button.closest('a') || 
+                                 button.parentElement?.querySelector('a') ||
+                                 button.nextElementSibling?.querySelector('a');
+                
+                if (nearbyLink && nearbyLink.href) {
+                    return nearbyLink.href;
+                }
+                
+                return null;
+            }, registerButtonSelector);
+            
+            if (urlFromButton) {
+                console.log(`Found registration URL from button attributes: ${urlFromButton}`);
+                return urlFromButton;
+            }
+            
+            console.log(`Could not extract registration URL from card ${cardIndex + 1}`);
+            return null;
+            
+        } catch (error) {
+            console.log(`Error extracting registration URL from card ${cardIndex + 1}: ${error.message}`);
+            return null;
         }
     }
 

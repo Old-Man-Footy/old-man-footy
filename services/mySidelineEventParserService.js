@@ -118,7 +118,7 @@ class MySidelineEventParserService {
                 organiserContactWebsite: null, // Will be populated if found in contact extraction
                 scheduleDetails: description && description !== 'Event details available on MySideline' ? description : null,
                 state: state,
-                registrationLink: `https://profile.mysideline.com.au/register/${element.id || 'event'}`,
+                registrationLink: element.registrationUrl || null,
                 mySidelineEventId: element.id || `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 isManuallyEntered: false,
                 maxTeams: 16,
@@ -146,7 +146,9 @@ class MySidelineEventParserService {
                     enhancedFees: enhancedFees,
                     fullContent: fullText,
                     // Include original element for additional filtering
-                    originalElement: element
+                    originalElement: element,
+                    // Include extracted registration URL
+                    extractedRegistrationUrl: element.registrationUrl
                 }
             };
 
