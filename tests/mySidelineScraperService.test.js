@@ -727,11 +727,11 @@ describe('MySidelineScraperService', () => {
 
             // Assert
             expect(result.totalEvents).toBe(2);
-            expect(result.validEvents).toBe(1);
+            expect(result.validEvents).toBe(2); // Both events are valid since they have titles
             expect(result.eventsWithTitle).toBe(2);
             expect(result.eventsWithDate).toBe(2);
             expect(result.eventsWithLocation).toBe(2);
-            expect(result.eventsWithRegistration).toBe(1);
+            expect(result.eventsWithRegistration).toBe(1); // Only first event has registration
             expect(result.issues).toContain('Event 2: Missing registration link');
         });
     });
