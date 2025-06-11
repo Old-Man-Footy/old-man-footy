@@ -76,43 +76,44 @@ class MySidelineScraperService {
                 timeout: this.timeout
             });
             
+            context = await browser.newContext();
+            const page = await context.newPage();
+            
+            // Set a longer timeout for navigation and actions
+            page.setDefaultTimeout(this.timeout);
+            page.setDefaultNavigationTimeout(this.timeout);
+            
+            console.log(`Navigating to MySideline search URL: ${this.searchUrl}`);
+            await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded' });
+            console.log('Page loaded, waiting for content...');
+            
+            // Wait for the essential page structure and content
+            await this.waitForPageStructure(page);
+            await this.waitForJavaScriptInitialization(page);
+            await this.waitForDynamicContentLoading(page);
+            await this.waitForSearchResults(page);
+            await this.validatePageContent(page);
+            await this.waitForContentStabilization(page);
+            await this.waitForMeaningfulContent(page);
+            
+            // Extract events from the page
+            const events = await this.extractEvents(page);
+            return events;
+                
+        } catch (error) {
+            console.error('Error during browser fetching:', error.message);
+            return [];
+        } finally {
             try {
-                context = await browser.newContext();
-                const page = await context.newPage();
-                
-                // Set a longer timeout for navigation and actions
-                page.setDefaultTimeout(this.timeout);
-                page.setDefaultNavigationTimeout(this.timeout);
-                
-                console.log(`Navigating to MySideline search URL: ${this.searchUrl}`);
-                await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded' });
-                console.log('Page loaded, waiting for content...');
-                
-                // Wait for the essential page structure and content
-                await this.waitForPageStructure(page);
-                await this.waitForJavaScriptInitialization(page);
-                await this.waitForDynamicContentLoading(page);
-                await this.waitForSearchResults(page);
-                await this.validatePageContent(page);
-                await this.waitForContentStabilization(page);
-                await this.waitForMeaningfulContent(page);
-                
-                // Extract events from the page
-                const events = await this.extractEvents(page);
-                return events;
-                
-            } catch (error) {
-                console.error('Error during browser fetching:', error.message);
-                throw error;
-            } finally {
                 if (context) {
                     await context.close();
                 }
-                await browser.close();
+                if (browser) {
+                    await browser.close();
+                }
+            } catch (closeError) {
+                console.log('Error closing browser resources:', closeError.message);
             }
-        } catch (error) {
-            console.error('Failed to launch browser:', error.message);
-            throw error;
         }
     }
 
@@ -276,24 +277,49 @@ class MySidelineScraperService {
     /**
      * Validate that page content has meaningful MySideline data
      * @param {Page} page - Playwright page object
+     * @returns {Promise<Object>} Validation results object
      */
     async validatePageContent(page) {
         console.log('Validating page content...');
         
         try {
-            await page.waitForFunction(() => {
+            const validation = await page.evaluate(() => {
                 const bodyText = document.body ? document.body.textContent : '';
                 const hasTitle = document.title && document.title.length > 0;
                 const hasMeaningfulContent = bodyText.length > 500;
                 const hasNavigationElements = document.querySelectorAll('nav, .nav, .navigation, header, .header').length > 0;
                 const hasCards = document.querySelectorAll('.el-card, [id^="clubsearch_"], .card, .search-result').length > 0;
                 
-                return hasTitle && hasMeaningfulContent && (hasNavigationElements || hasCards);
-            }, { timeout: 30000 });
+                return {
+                    isValid: hasTitle && hasMeaningfulContent && (hasNavigationElements || hasCards),
+                    hasTitle,
+                    hasMeaningfulContent,
+                    hasNavigationElements,
+                    hasCards,
+                    contentLength: bodyText.length,
+                    elementCount: document.querySelectorAll('*').length
+                };
+            });
             
-            console.log('Page content validation passed');
+            if (validation.isValid) {
+                console.log('Page content validation passed');
+            } else {
+                console.log('Page content validation failed');
+            }
+            
+            return validation;
         } catch (error) {
             console.log(`Page content validation failed: ${error.message}`);
+            return {
+                isValid: false,
+                hasTitle: false,
+                hasMeaningfulContent: false,
+                hasNavigationElements: false,
+                hasCards: false,
+                contentLength: 0,
+                elementCount: 0,
+                error: error.message
+            };
         }
     }
 
@@ -1070,7 +1096,7 @@ class MySidelineScraperService {
         
         // Require minimum content length and relevance score
         const hasMinimumContent = cardData.fullContent && cardData.fullContent.length > 50;
-        const isRelevant = relevanceScore >= 15 && hasMinimumContent;
+        const isRelevant = relevanceScore >= 25 && hasMinimumContent; // Increased threshold from 15 to 25
         
         if (isRelevant) {
             console.log(`✅ Card ${cardData.cardIndex + 1} is relevant (score: ${relevanceScore}): ${cardData.title}`);
