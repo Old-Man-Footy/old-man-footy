@@ -17,12 +17,16 @@ router.get('/new', ensureAuthenticated, carnivalController.getNew);
 // Create carnival POST with validation
 router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
     body('title').trim().notEmpty().withMessage('Title is required'),
-    body('date').isISO8601().withMessage('Valid date is required'),
-    body('locationAddress').trim().notEmpty().withMessage('Location address is required'),
-    body('organiserContactName').trim().notEmpty().withMessage('Organiser contact name is required'),
-    body('organiserContactEmail').isEmail().withMessage('Valid organiser email is required'),
-    body('organiserContactPhone').trim().notEmpty().withMessage('Organiser phone is required'),
-    body('scheduleDetails').trim().notEmpty().withMessage('Schedule details are required'),
+    // Date is optional for MySideline imports but will be validated at model level
+    body('date').optional().isISO8601().withMessage('Valid date is required when provided'),
+    // Location is optional for MySideline imports but will be validated at model level
+    body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
+    // Contact details are optional for MySideline imports but will be validated at model level
+    body('organiserContactName').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Organiser contact name must be between 2 and 100 characters when provided'),
+    body('organiserContactEmail').optional().isEmail().withMessage('Valid organiser email is required when provided'),
+    body('organiserContactPhone').optional().trim().isLength({ min: 10, max: 20 }).withMessage('Organiser phone must be between 10 and 20 characters when provided'),
+    // Schedule details are optional for MySideline imports but will be validated at model level
+    body('scheduleDetails').optional().trim().isLength({ min: 10 }).withMessage('Schedule details must be at least 10 characters when provided'),
     body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
     body('socialMediaFacebook').optional().isURL().withMessage('Facebook URL must be valid'),
     body('socialMediaInstagram').optional().isURL().withMessage('Instagram URL must be valid'),
@@ -37,12 +41,16 @@ router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 // Update carnival POST with validation
 router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError, [
     body('title').trim().notEmpty().withMessage('Title is required'),
-    body('date').isISO8601().withMessage('Valid date is required'),
-    body('locationAddress').trim().notEmpty().withMessage('Location address is required'),
-    body('organiserContactName').trim().notEmpty().withMessage('Organiser contact name is required'),
-    body('organiserContactEmail').isEmail().withMessage('Valid organiser email is required'),
-    body('organiserContactPhone').trim().notEmpty().withMessage('Organiser phone is required'),
-    body('scheduleDetails').trim().notEmpty().withMessage('Schedule details are required'),
+    // Date is optional for MySideline imports but will be validated at model level
+    body('date').optional().isISO8601().withMessage('Valid date is required when provided'),
+    // Location is optional for MySideline imports but will be validated at model level
+    body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
+    // Contact details are optional for MySideline imports but will be validated at model level
+    body('organiserContactName').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Organiser contact name must be between 2 and 100 characters when provided'),
+    body('organiserContactEmail').optional().isEmail().withMessage('Valid organiser email is required when provided'),
+    body('organiserContactPhone').optional().trim().isLength({ min: 10, max: 20 }).withMessage('Organiser phone must be between 10 and 20 characters when provided'),
+    // Schedule details are optional for MySideline imports but will be validated at model level
+    body('scheduleDetails').optional().trim().isLength({ min: 10 }).withMessage('Schedule details must be at least 10 characters when provided'),
     body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
     body('socialMediaFacebook').optional().isURL().withMessage('Facebook URL must be valid'),
     body('socialMediaInstagram').optional().isURL().withMessage('Instagram URL must be valid'),

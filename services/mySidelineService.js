@@ -1069,24 +1069,43 @@ class MySidelineIntegrationService {
             const fullText = element.text || '';
             const dates = element.dates || [];
             
-            // Extract event name - prefer the title from the card
+            // Extract and clean the event name - ensure subtitle is NOT included
             let eventName = title;
-            if (!eventName || eventName.length < 5) {
-                eventName = this.extractEventName(fullText.split('\n').filter(line => line.trim()));
+            let extractedDate = null;
+            
+            // First, try to extract date from title and remove it
+            if (eventName) {
+                const dateExtractionResult = this.extractAndStripDateFromTitle(eventName);
+                eventName = dateExtractionResult.cleanTitle;
+                extractedDate = dateExtractionResult.extractedDate;
             }
             
-            // Extract date from the title or dates array
-            let eventDate = null;
-            if (dates.length > 0) {
-                // Try to parse the first date found
+            // If no title or title too short after cleaning, use extractEventName method
+            if (!eventName || eventName.length < 5) {
+                eventName = this.extractEventName(fullText.split('\n').filter(line => line.trim()));
+                // Try to extract date from the extracted event name as well
+                if (eventName) {
+                    const dateExtractionResult = this.extractAndStripDateFromTitle(eventName);
+                    eventName = dateExtractionResult.cleanTitle;
+                    if (!extractedDate) {
+                        extractedDate = dateExtractionResult.extractedDate;
+                    }
+                }
+            }
+            
+            // If we still don't have a date, try other sources
+            let eventDate = extractedDate;
+            
+            if (!eventDate && dates.length > 0) {
+                // Try to parse the first date found in the content
                 eventDate = this.parseDate(dates[0]);
             }
             
             if (!eventDate) {
-                // Try to extract date from title (common in MySideline format)
-                const titleDateMatch = title.match(/(\d{1,2}[\s\/\-]\w+[\s\/\-]\d{4}|\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})/);
-                if (titleDateMatch) {
-                    eventDate = this.parseDate(titleDateMatch[0]);
+                // Try to extract date from subtitle (but don't include subtitle in title)
+                const subtitleDateMatch = subtitle.match(/(\d{1,2}[\s\/\-]\w+[\s\/\-]\d{4}|\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})/);
+                if (subtitleDateMatch) {
+                    eventDate = this.parseDate(subtitleDateMatch[0]);
                 }
             }
             
@@ -1094,8 +1113,14 @@ class MySidelineIntegrationService {
             const location = this.extractLocationFromMySidelineText(fullText);
             const state = this.extractStateFromMySidelineText(fullText, subtitle);
             
-            // Generate description combining title and subtitle
-            const description = [title, subtitle, 'Event details available on MySideline'].filter(Boolean).join('. ').substring(0, 500);
+            // Generate description - DO NOT include subtitle in main title, but can use it for description
+            const descriptionParts = [];
+            if (subtitle && subtitle.trim() && !subtitle.toLowerCase().includes('masters rugby league')) {
+                // Only include subtitle in description if it adds meaningful information
+                descriptionParts.push(subtitle);
+            }
+            descriptionParts.push('Event details available on MySideline');
+            const description = descriptionParts.join('. ').substring(0, 500);
             
             // Skip if we don't have minimum required info
             if (!eventName || eventName.length < 5) {
@@ -1103,20 +1128,20 @@ class MySidelineIntegrationService {
             }
 
             return {
-                title: eventName,
-                date: eventDate || new Date(Date.now() + (Math.random() * 180 + 30) * 24 * 60 * 60 * 1000), // Random date 30-210 days from now
-                locationAddress: location || 'TBA - Check MySideline for details',
-                organiserContactName: 'MySideline Event Organiser',
-                organiserContactEmail: 'events@mysideline.com.au',
-                organiserContactPhone: '1300 000 000',
-                scheduleDetails: description,
+                title: eventName.trim(),
+                date: eventDate, // Don't set a default date if none found
+                locationAddress: location && location !== 'TBA - Check MySideline for details' ? location : null,
+                organiserContactName: null, // Let delegates fill this in when they claim the event
+                organiserContactEmail: null, // Let delegates fill this in when they claim the event
+                organiserContactPhone: null, // Let delegates fill this in when they claim the event
+                scheduleDetails: description && description !== 'Event details available on MySideline' ? description : null,
                 state: state,
                 registrationLink: `https://profile.mysideline.com.au/register/${element.id || 'event'}`,
                 mySidelineEventId: element.id || `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 isManuallyEntered: false,
                 maxTeams: 16,
                 feesDescription: 'Entry fees TBA - check MySideline registration for details',
-                registrationDeadline: eventDate ? new Date(eventDate.getTime() - (7 * 24 * 60 * 60 * 1000)) : new Date(Date.now() + (14 * 24 * 60 * 60 * 1000)),
+                registrationDeadline: eventDate ? new Date(eventDate.getTime() - (7 * 24 * 60 * 60 * 1000)) : null,
                 ageCategories: ['35+', '40+', '45+', '50+'],
                 isRegistrationOpen: true,
                 isActive: true,
@@ -1126,7 +1151,10 @@ class MySidelineIntegrationService {
                     relevanceScore: element.relevanceScore,
                     extractedTitle: title,
                     extractedSubtitle: subtitle,
-                    extractedDates: dates
+                    extractedDates: dates,
+                    originalTitle: title,
+                    cleanedTitle: eventName,
+                    extractedDateFromTitle: extractedDate
                 }
             };
         } catch (error) {
@@ -1136,169 +1164,144 @@ class MySidelineIntegrationService {
     }
 
     /**
-     * Extract location from MySideline text content
-     * @param {string} text - The text content to extract location from
-     * @returns {string|null} - Extracted location or null
+     * Extract date from title and return both the clean title and extracted date
+     * @param {string} title - The title containing potential date information
+     * @returns {Object} - Object with cleanTitle and extractedDate properties
      */
-    extractLocationFromMySidelineText(text) {
-        // Look for Australian cities and states
-        const locationPatterns = [
-            /\b(Brisbane|Sydney|Melbourne|Perth|Adelaide|Darwin|Hobart|Canberra|Gold Coast|Newcastle|Wollongong|Geelong|Townsville|Cairns|Toowoomba|Ballarat|Bendigo|Albury|Launceston|Rockhampton|Bundaberg|Hervey Bay|Mackay|Gladstone|Mount Gambier|Warrnambool|Shepparton|Wagga Wagga|Orange|Bathurst|Dubbo|Tamworth|Armidale|Lismore|Coffs Harbour|Port Macquarie|Grafton|Tweed Heads|Byron Bay|Ballina|Casino|Murwillumbah|Kyogle|Maroochydore|Nambour|Caloundra|Caboolture|Ipswich|Logan|Redlands|Moreton Bay|Pine Rivers|Redcliffe|Maroochy|Noosa|Fraser Coast|Bundaberg|Gladstone|Rockhampton|Mackay|Whitsunday|Bowen|Townsville|Thuringowa|Cairns|Cook|Tablelands|Cassowary Coast|Hinchinbrook|Cardwell|Tully|Innisfail|Mareeba|Atherton|Kuranda|Port Douglas|Mossman|Daintree|Cooktown|Weipa|Thursday Island|Mount Isa|Cloncurry|Richmond|Winton|Longreach|Barcaldine|Charleville|Roma|Dalby|Chinchilla|Miles|Wandoan|Taroom|Theodore|Biloela|Emerald|Clermont|Moranbah|Dysart|Nebo|Sarina|Proserpine|Cannonvale|Airlie Beach|Hamilton Island|Ayr|Home Hill|Ingham|Cardwell|Tully|Mission Beach|Innisfail|Babinda|Gordonvale|Smithfield|Trinity Beach|Palm Cove|Port Douglas|Mossman|Daintree|Cooktown)\b/gi,
-            /\b(NSW|QLD|VIC|SA|WA|NT|ACT|TAS)\b/gi
+    extractAndStripDateFromTitle(title) {
+        if (!title || typeof title !== 'string') {
+            return { cleanTitle: title, extractedDate: null };
+        }
+
+        let cleanTitle = title.trim();
+        let extractedDate = null;
+
+        // Enhanced date patterns to match various formats in titles
+        const datePatterns = [
+            // Dates in brackets: (DD/MM/YYYY), (DD-MM-YYYY), (DD Month YYYY)
+            {
+                pattern: /\s*\((\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})\)\s*/gi,
+                extract: (match) => match[1]
+            },
+            {
+                pattern: /\s*\((\d{1,2}[\s]+\w+[\s]+\d{4})\)\s*/gi,
+                extract: (match) => match[1]
+            },
+            {
+                pattern: /\s*\((\w+[\s]+\d{1,2},?[\s]+\d{4})\)\s*/gi,
+                extract: (match) => match[1]
+            },
+            
+            // Dates without brackets but with separators: - DD/MM/YYYY, | DD Month YYYY
+            {
+                pattern: /\s*[\-\|]\s*(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})\s*/gi,
+                extract: (match) => match[1]
+            },
+            {
+                pattern: /\s*[\-\|]\s*(\d{1,2}[\s]+\w+[\s]+\d{4})\s*/gi,
+                extract: (match) => match[1]
+            },
+            {
+                pattern: /\s*[\-\|]\s*(\w+[\s]+\d{1,2},?[\s]+\d{4})\s*/gi,
+                extract: (match) => match[1]
+            },
+            
+            // Dates at the end of title: Title DD/MM/YYYY, Title DD Month YYYY
+            {
+                pattern: /\s+(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})\s*$/gi,
+                extract: (match) => match[1]
+            },
+            {
+                pattern: /\s+(\d{1,2}[\s]+\w+[\s]+\d{4})\s*$/gi,
+                extract: (match) => match[1]
+            },
+            {
+                pattern: /\s+(\w+[\s]+\d{1,2},?[\s]+\d{4})\s*$/gi,
+                extract: (match) => match[1]
+            },
+            
+            // Year only patterns: (2024), (2025), - 2024, | 2025
+            {
+                pattern: /\s*\((20\d{2})\)\s*/gi,
+                extract: (match) => match[1]
+            },
+            {
+                pattern: /\s*[\-\|]\s*(20\d{2})\s*$/gi,
+                extract: (match) => match[1]
+            }
         ];
-        
-        for (const pattern of locationPatterns) {
-            const matches = text.match(pattern);
-            if (matches && matches.length > 0) {
-                return matches[0];
-            }
-        }
-        
-        return null;
-    }
 
-    /**
-     * Extract state from MySideline text content
-     * @param {string} text - The text content
-     * @param {string} subtitle - The subtitle content
-     * @returns {string} - Extracted state or default
-     */
-    extractStateFromMySidelineText(text, subtitle = '') {
-        const combinedText = `${text} ${subtitle}`.toLowerCase();
-        
-        // Direct state abbreviation matches
-        if (combinedText.includes('qld') || combinedText.includes('queensland') || 
-            combinedText.includes('brisbane') || combinedText.includes('gold coast') ||
-            combinedText.includes('townsville') || combinedText.includes('cairns') ||
-            combinedText.includes('toowoomba') || combinedText.includes('rockhampton')) {
-            return 'QLD';
-        }
-        
-        if (combinedText.includes('nsw') || combinedText.includes('new south wales') ||
-            combinedText.includes('sydney') || combinedText.includes('newcastle') ||
-            combinedText.includes('wollongong') || combinedText.includes('canberra') ||
-            combinedText.includes('albury') || combinedText.includes('wagga')) {
-            return 'NSW';
-        }
-        
-        if (combinedText.includes('vic') || combinedText.includes('victoria') ||
-            combinedText.includes('melbourne') || combinedText.includes('geelong') ||
-            combinedText.includes('ballarat') || combinedText.includes('bendigo')) {
-            return 'VIC';
-        }
-        
-        if (combinedText.includes('sa') || combinedText.includes('south australia') ||
-            combinedText.includes('adelaide') || combinedText.includes('mount gambier')) {
-            return 'SA';
-        }
-        
-        if (combinedText.includes('wa') || combinedText.includes('western australia') ||
-            combinedText.includes('perth')) {
-            return 'WA';
-        }
-        
-        if (combinedText.includes('nt') || combinedText.includes('northern territory') ||
-            combinedText.includes('darwin')) {
-            return 'NT';
-        }
-        
-        if (combinedText.includes('act') || combinedText.includes('australian capital territory') ||
-            combinedText.includes('canberra')) {
-            return 'ACT';
-        }
-        
-        if (combinedText.includes('tas') || combinedText.includes('tasmania') ||
-            combinedText.includes('hobart') || combinedText.includes('launceston')) {
-            return 'TAS';
-        }
-        
-        // Default to NSW if no state detected
-        return 'NSW';
-    }
-
-    /**
-     * Parse date string into Date object
-     * @param {string} dateString - The date string to parse
-     * @returns {Date|null} - Parsed date or null
-     */
-    parseDate(dateString) {
-        try {
-            // Try various date formats
-            const formats = [
-                // DD/MM/YYYY or DD-MM-YYYY
-                /(\d{1,2})[\s\/\-](\d{1,2})[\s\/\-](\d{4})/,
-                // DD Month YYYY
-                /(\d{1,2})[\s]+(\w+)[\s]+(\d{4})/,
-                // Month DD, YYYY
-                /(\w+)[\s]+(\d{1,2}),?[\s]+(\d{4})/
-            ];
-            
-            for (const format of formats) {
-                const match = dateString.match(format);
-                if (match) {
-                    const parsed = new Date(dateString);
-                    if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= 2024 && parsed.getFullYear() <= 2030) {
-                        return parsed;
-                    }
+        // Try each pattern to find and extract date
+        for (const { pattern, extract } of datePatterns) {
+            const match = pattern.exec(cleanTitle);
+            if (match) {
+                const dateString = extract(match);
+                const parsedDate = this.parseDate(dateString);
+                
+                if (parsedDate) {
+                    // Remove the matched date pattern from the title
+                    cleanTitle = cleanTitle.replace(pattern, ' ').trim();
+                    // Clean up any double spaces
+                    cleanTitle = cleanTitle.replace(/\s+/g, ' ').trim();
+                    extractedDate = parsedDate;
+                    console.log(`Extracted date "${dateString}" from title. Clean title: "${cleanTitle}"`);
+                    break;
                 }
+                
+                // Reset the regex lastIndex for next iteration
+                pattern.lastIndex = 0;
             }
-            
-            // Fallback: try direct Date parsing
-            const directParse = new Date(dateString);
-            if (!isNaN(directParse.getTime()) && directParse.getFullYear() >= 2024) {
-                return directParse;
-            }
-            
-            return null;
-        } catch (error) {
-            return null;
         }
+
+        // Additional cleanup for common title artifacts
+        cleanTitle = cleanTitle
+            .replace(/\s*[\-\|]\s*$/, '') // Remove trailing dashes or pipes
+            .replace(/^\s*[\-\|]\s*/, '') // Remove leading dashes or pipes
+            .replace(/\(\s*\)/, '') // Remove empty brackets
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+
+        return {
+            cleanTitle: cleanTitle,
+            extractedDate: extractedDate
+        };
     }
 
     /**
-     * Public method for scraping state events (for seed database)
-     * @param {string} state - State abbreviation
-     * @returns {Promise<Array>} Array of events for the state
+     * Extract event name from text lines (enhanced to avoid subtitle contamination)
+     * @param {Array} lines - Array of text lines
+     * @returns {string} - Extracted event name
      */
-    async scrapeStateEvents(state) {
-        try {
-            console.log(`Fetching ${state} events from MySideline...`);
-            
-            if (this.useMockData) {
-                return this.generateMockEvents(state);
+    extractEventName(lines) {
+        if (!lines || lines.length === 0) return 'MySideline Masters Event';
+        
+        // Look for the most descriptive line as event name, but avoid subtitle-like content
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.length > 5 && trimmed.length < 100 && 
+                (trimmed.toLowerCase().includes('masters') || 
+                 trimmed.toLowerCase().includes('tournament') || 
+                 trimmed.toLowerCase().includes('carnival') ||
+                 trimmed.toLowerCase().includes('championship')) &&
+                !trimmed.toLowerCase().includes('rugby league') && // Avoid generic subtitle text
+                !trimmed.toLowerCase().includes('click to expand')) { // Avoid UI text
+                return trimmed;
             }
-            
-            // For real scraping, filter events by state from the main scrape
-            const allEvents = await this.scrapeMySidelineEvents();
-            return allEvents.filter(event => event.state === state);
-            
-        } catch (error) {
-            console.error(`Failed to scrape ${state} events:`, error.message);
-            return [];
         }
-    }
-
-    /**
-     * Create new event in database (for seed database)
-     * @param {Object} eventData - Event data object
-     * @returns {Promise<Object>} Created carnival object
-     */
-    async createNewEvent(eventData) {
-        try {
-            return await Carnival.create({
-                ...eventData,
-                isManuallyEntered: false,
-                isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-        } catch (error) {
-            console.error('Failed to create new MySideline event:', error.message);
-            throw error;
+        
+        // Fallback to first substantial line that doesn't look like a subtitle
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.length > 10 && trimmed.length < 150 &&
+                !trimmed.toLowerCase().includes('click to expand') &&
+                !trimmed.toLowerCase().includes('more details') &&
+                !trimmed.toLowerCase().includes('show more')) {
+                return trimmed;
+            }
         }
+        
+        return lines[0]?.trim() || 'MySideline Masters Event';
     }
-
-    // ...existing code...
 }
 
 module.exports = new MySidelineIntegrationService();
