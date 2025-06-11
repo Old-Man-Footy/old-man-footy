@@ -10,7 +10,7 @@
 
 const bcrypt = require('bcrypt');
 const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub } = require('../models');
-const MySidelineService = require('../services/mySidelineService');
+const MySidelineService = require('../services/mySidelineIntegrationService');
 
 // Load environment variables
 require('dotenv').config();
@@ -992,29 +992,40 @@ class DatabaseSeeder {
         
         try {
             // Import events from each state
-            const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS'];
+            const states = ['NSW', 'QLD', 'VIC'];
             let totalImported = 0;
 
             for (const state of states) {
                 console.log(`  📡 Fetching ${state} events...`);
                 
                 try {
-                    const events = await MySidelineService.scrapeStateEvents(state);
+                    // Use the new fetchEvents method instead of scrapeStateEvents
+                    const events = await MySidelineService.fetchEvents();
                     
-                    for (const event of events) {
-                        // Check if event already exists
-                        const existingCarnival = await Carnival.findOne({ 
-                            where: { mySidelineEventId: event.mySidelineId }
-                        });
-                        
-                        if (!existingCarnival) {
-                            const carnival = await MySidelineService.createNewEvent(event);
-                            this.createdCarnivals.push(carnival);
-                            totalImported++;
+                    // Filter events by state if needed
+                    const stateEvents = events.filter(event => event.state === state);
+                    
+                    console.log(`Found ${stateEvents.length} events for ${state}`);
+                    
+                    for (const event of stateEvents) {
+                        try {
+                            // The events are already processed by the integration service
+                            // Just need to save them to database
+                            const carnival = await Carnival.create({
+                                ...event,
+                                isManuallyEntered: false,
+                                isActive: true,
+                                createdAt: new Date(),
+                                updatedAt: new Date()
+                            });
+                            
+                            console.log(`Created carnival: ${carnival.title}`);
+                        } catch (createError) {
+                            console.error(`Failed to create carnival for ${event.title}:`, createError.message);
                         }
                     }
                 } catch (stateError) {
-                    console.log(`  ⚠️  ${state} import failed: ${stateError.message}`);
+                    console.error(`Failed to fetch ${state} events:`, stateError.message);
                 }
             }
             

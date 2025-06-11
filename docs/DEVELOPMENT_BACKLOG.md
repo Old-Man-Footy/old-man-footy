@@ -88,6 +88,10 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `models/EmailSubscription.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/ClubAlternateName.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/emailService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineDataService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineEventParserService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineIntegrationService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineScraperService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/imageNamingService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `contollers/auth.controller.js`  | ⭕ Not Started |

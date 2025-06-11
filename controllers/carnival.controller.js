@@ -7,7 +7,7 @@
 
 const { Carnival, User, Club, Sponsor, CarnivalClub } = require('../models');
 const { validationResult } = require('express-validator');
-const mySidelineService = require('../services/mySidelineService');
+const mySidelineService = require('../services/mySidelineIntegrationService');
 const emailService = require('../services/emailService');
 const ImageNamingService = require('../services/imageNamingService');
 const { sortSponsorsHierarchically } = require('../services/sponsorSortingService');
@@ -638,7 +638,8 @@ module.exports = {
                 });
             }
 
-            const result = await mySidelineService.syncEvents();
+            // Call the manual sync method (fetchEvents) which maintains the same API
+            const result = await mySidelineService.fetchEvents();
             
             res.json({
                 success: true,

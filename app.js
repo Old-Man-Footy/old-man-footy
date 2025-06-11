@@ -8,7 +8,7 @@ const flash = require('connect-flash');
 const path = require('path');
 const helmet = require('helmet');
 const expressLayouts = require('express-ejs-layouts');
-const mySidelineService = require('./services/mySidelineService');
+const mySidelineService = require('./services/mySidelineIntegrationService');
 const { sequelize } = require('./models');
 
 const app = express();
