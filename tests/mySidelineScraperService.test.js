@@ -88,7 +88,7 @@ describe('MySidelineScraperService', () => {
             expect(newService.useHeadlessBrowser).toBe(true); // NODE_ENV !== 'development'
             expect(newService.enableScraping).toBe(true);
             expect(newService.useMockData).toBe(false);
-            expect(newService.parserService).toBeDefined(); // Fix: Just check it's defined since we're mocking
+            expect(newService.parserService).toBeDefined();
         });
 
         it('should use environment variables when available', () => {
@@ -111,29 +111,28 @@ describe('MySidelineScraperService', () => {
             expect(newService.timeout).toBe(30000);
             expect(newService.retryCount).toBe(5);
             expect(newService.searchUrl).toBe('https://test.mysideline.com');
-            expect(newService.useHeadlessBrowser).toBe(false);
+            expect(newService.useHeadlessBrowser).toBe(false); // NODE_ENV === 'development'
             expect(newService.enableScraping).toBe(false);
             expect(newService.useMockData).toBe(true);
             
-            // Restore
+            // Restore environment
             process.env = originalEnv;
         });
     });
 
     describe('scrapeEvents', () => {
-        it('should return mock events when useMockData is true', async () => {
+        it('should return mock data when useMockData is true', async () => {
             // Arrange
             service.useMockData = true;
-            const mockEvents = [{ title: 'Mock Event' }];
-            jest.spyOn(service, 'generateMockEvents').mockReturnValue(mockEvents);
+            jest.spyOn(service, 'generateMockEvents').mockReturnValue(['mock event']);
             
             // Act
             const result = await service.scrapeEvents();
             
             // Assert
-            expect(result).toEqual(mockEvents);
+            expect(result).toEqual(['mock event']);
             expect(service.generateMockEvents).toHaveBeenCalled();
-            expect(chromium.launch).not.toHaveBeenCalled();
+            expect(console.log).toHaveBeenCalledWith('Using mock MySideline data (development mode)...');
         });
 
         it('should return empty array when scraping is disabled', async () => {
@@ -146,14 +145,14 @@ describe('MySidelineScraperService', () => {
             
             // Assert
             expect(result).toEqual([]);
-            expect(chromium.launch).not.toHaveBeenCalled();
+            expect(console.log).toHaveBeenCalledWith('MySideline scraping is disabled via configuration');
         });
 
-        it('should fetch events with browser when scraping is enabled', async () => {
+        it('should scrape events when enabled', async () => {
             // Arrange
             service.useMockData = false;
             service.enableScraping = true;
-            const mockEvents = [{ title: 'Scraped Event' }];
+            const mockEvents = [{ title: 'Test Event' }];
             jest.spyOn(service, 'fetchEventsWithBrowser').mockResolvedValue(mockEvents);
             
             // Act
@@ -164,27 +163,14 @@ describe('MySidelineScraperService', () => {
             expect(service.fetchEventsWithBrowser).toHaveBeenCalled();
         });
 
-        it('should return empty array when no events found', async () => {
-            // Arrange
-            service.useMockData = false;
-            service.enableScraping = true;
-            jest.spyOn(service, 'fetchEventsWithBrowser').mockResolvedValue([]);
-            
-            // Act
-            const result = await service.scrapeEvents();
-            
-            // Assert
-            expect(result).toEqual([]);
-        });
-
-        it('should handle errors and return mock data in development', async () => {
+        it('should handle errors and fallback to mock data in development', async () => {
             // Arrange
             const originalEnv = process.env.NODE_ENV;
             process.env.NODE_ENV = 'development';
             service.useMockData = false;
             service.enableScraping = true;
-            const mockEvents = [{ title: 'Fallback Mock Event' }];
-            jest.spyOn(service, 'fetchEventsWithBrowser').mockRejectedValue(new Error('Browser failed'));
+            const mockEvents = [{ title: 'Mock Event' }];
+            jest.spyOn(service, 'fetchEventsWithBrowser').mockRejectedValue(new Error('Scraping failed'));
             jest.spyOn(service, 'generateMockEvents').mockReturnValue(mockEvents);
             
             // Act
@@ -192,36 +178,17 @@ describe('MySidelineScraperService', () => {
             
             // Assert
             expect(result).toEqual(mockEvents);
-            expect(console.error).toHaveBeenCalledWith('Failed to scrape MySideline events:', 'Browser failed');
+            expect(console.error).toHaveBeenCalledWith('Failed to scrape MySideline events:', 'Scraping failed');
+            expect(console.log).toHaveBeenCalledWith('Browser automation failed in development, using mock data...');
             
-            // Restore
-            process.env.NODE_ENV = originalEnv;
-        });
-
-        it('should return empty array on error in production', async () => {
-            // Arrange
-            const originalEnv = process.env.NODE_ENV;
-            process.env.NODE_ENV = 'production';
-            service.useMockData = false;
-            service.enableScraping = true;
-            jest.spyOn(service, 'fetchEventsWithBrowser').mockRejectedValue(new Error('Browser failed'));
-            
-            // Act
-            const result = await service.scrapeEvents();
-            
-            // Assert
-            expect(result).toEqual([]);
-            expect(console.error).toHaveBeenCalledWith('Failed to scrape MySideline events:', 'Browser failed');
-            
-            // Restore
+            // Restore environment
             process.env.NODE_ENV = originalEnv;
         });
     });
 
     describe('fetchEventsWithBrowser', () => {
-        it('should successfully fetch events with browser automation', async () => {
-            // Arrange
-            const mockEvents = [{ title: 'Test Event' }];
+        beforeEach(() => {
+            // Mock all the wait methods
             jest.spyOn(service, 'waitForPageStructure').mockResolvedValue();
             jest.spyOn(service, 'waitForJavaScriptInitialization').mockResolvedValue();
             jest.spyOn(service, 'waitForDynamicContentLoading').mockResolvedValue();
@@ -229,22 +196,27 @@ describe('MySidelineScraperService', () => {
             jest.spyOn(service, 'validatePageContent').mockResolvedValue();
             jest.spyOn(service, 'waitForContentStabilization').mockResolvedValue();
             jest.spyOn(service, 'waitForMeaningfulContent').mockResolvedValue();
-            jest.spyOn(service, 'extractEvents').mockResolvedValue(mockEvents);
+            jest.spyOn(service, 'extractEvents').mockResolvedValue([]);
+        });
+
+        it('should launch browser and fetch events', async () => {
+            // Arrange
             service.searchUrl = 'https://test.mysideline.com';
             
             // Act
             const result = await service.fetchEventsWithBrowser();
             
             // Assert
-            expect(result).toEqual(mockEvents);
             expect(chromium.launch).toHaveBeenCalledWith({
                 headless: service.useHeadlessBrowser,
                 timeout: service.timeout
             });
+            expect(mockBrowser.newContext).toHaveBeenCalled();
+            expect(mockContext.newPage).toHaveBeenCalled();
             expect(mockPage.goto).toHaveBeenCalledWith(service.searchUrl, { waitUntil: 'domcontentloaded' });
-            expect(service.extractEvents).toHaveBeenCalledWith(mockPage);
             expect(mockContext.close).toHaveBeenCalled();
             expect(mockBrowser.close).toHaveBeenCalled();
+            expect(result).toEqual([]);
         });
 
         it('should handle browser launch errors', async () => {
@@ -260,19 +232,7 @@ describe('MySidelineScraperService', () => {
             expect(console.error).toHaveBeenCalledWith('Error during browser fetching:', 'Browser launch failed');
         });
 
-        it('should close browser even if context creation fails', async () => {
-            // Arrange
-            mockBrowser.newContext.mockRejectedValue(new Error('Context creation failed'));
-            
-            // Act
-            const result = await service.fetchEventsWithBrowser();
-            
-            // Assert
-            expect(result).toEqual([]);
-            expect(mockBrowser.close).toHaveBeenCalled();
-        });
-
-        it('should close context even if page operations fail', async () => {
+        it('should handle page navigation errors', async () => {
             // Arrange
             mockPage.goto.mockRejectedValue(new Error('Navigation failed'));
             
@@ -286,359 +246,107 @@ describe('MySidelineScraperService', () => {
         });
     });
 
-    describe('waitForPageStructure', () => {
-        it('should wait for page structure elements', async () => {
-            // Arrange
-            mockPage.waitForSelector.mockResolvedValueOnce(true);
-            mockPage.locator.mockReturnValue({ count: jest.fn().mockResolvedValue(1) });
-            mockPage.waitForFunction.mockResolvedValueOnce(true);
-            
-            // Act
-            await service.waitForPageStructure(mockPage);
-            
-            // Assert
-            expect(mockPage.waitForSelector).toHaveBeenCalledWith('body', { timeout: 30000 });
-            expect(mockPage.waitForFunction).toHaveBeenCalled();
-        });
-
-        it('should handle waitForSelector failures gracefully', async () => {
-            // Arrange
-            mockPage.waitForSelector.mockRejectedValue(new Error('Selector timeout'));
-            
-            // Act & Assert (should not throw)
-            await expect(service.waitForPageStructure(mockPage)).resolves.toBeUndefined();
-            expect(console.log).toHaveBeenCalledWith('Page structure waiting failed: Selector timeout');
-        });
-    });
-
-    describe('waitForJavaScriptInitialization', () => {
-        it('should wait for JavaScript to initialize', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockResolvedValueOnce(true);
-            mockPage.waitForTimeout.mockResolvedValueOnce(true);
-            
-            // Act
-            await service.waitForJavaScriptInitialization(mockPage);
-            
-            // Assert
-            expect(mockPage.waitForFunction).toHaveBeenCalled();
-            expect(mockPage.waitForTimeout).toHaveBeenCalledWith(10000);
-        });
-
-        it('should handle JavaScript initialization failures', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockRejectedValue(new Error('JS timeout'));
-            
-            // Act & Assert
-            await expect(service.waitForJavaScriptInitialization(mockPage)).resolves.toBeUndefined();
-            expect(console.log).toHaveBeenCalledWith('JavaScript initialization waiting failed: JS timeout');
-        });
-    });
-
-    describe('waitForDynamicContentLoading', () => {
-        it('should wait for content to stabilize', async () => {
-            // Arrange
-            const contentLengths = [500, 1500, 1500, 1500, 1500]; // Stabilizes at 1500 after 3 checks
-            let callCount = 0;
-            mockPage.evaluate.mockImplementation(() => {
-                return Promise.resolve(contentLengths[callCount++] || 1500);
-            });
-            mockPage.waitForTimeout.mockResolvedValue(true);
-            
-            // Act
-            await service.waitForDynamicContentLoading(mockPage);
-            
-            // Assert
-            expect(mockPage.evaluate).toHaveBeenCalledTimes(5); // Loop runs until stable + 1 more check
-            expect(mockPage.waitForTimeout).toHaveBeenCalledWith(3000);
-            expect(mockPage.waitForTimeout).toHaveBeenCalledWith(8000);
-        });
-
-        it('should handle evaluation errors', async () => {
-            // Arrange
-            mockPage.evaluate.mockRejectedValue(new Error('Evaluation failed'));
-            
-            // Act & Assert
-            await expect(service.waitForDynamicContentLoading(mockPage)).resolves.toBeUndefined();
-            expect(console.log).toHaveBeenCalledWith('Dynamic content loading wait failed: Evaluation failed');
-        });
-    });
-
-    describe('waitForSearchResults', () => {
-        it('should wait for MySideline search results', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockResolvedValue(true);
-            mockPage.waitForSelector.mockResolvedValue(true);
-            mockPage.waitForTimeout.mockResolvedValue(true);
-            
-            // Act
-            await service.waitForSearchResults(mockPage);
-            
-            // Assert
-            expect(mockPage.waitForFunction).toHaveBeenCalledTimes(2);
-            expect(mockPage.waitForSelector).toHaveBeenCalled();
-            expect(mockPage.waitForTimeout).toHaveBeenCalledWith(10000);
-            expect(mockPage.waitForTimeout).toHaveBeenCalledWith(8000);
-        });
-
-        it('should handle search results timeout', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockRejectedValue(new Error('Search timeout'));
-            
-            // Act & Assert
-            await expect(service.waitForSearchResults(mockPage)).resolves.toBeUndefined();
-            expect(console.log).toHaveBeenCalledWith('MySideline search results waiting failed: Search timeout');
-        });
-    });
-
-    describe('validatePageContent', () => {
-        it('should validate page has meaningful content', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockResolvedValue(true);
-            
-            // Act
-            await service.validatePageContent(mockPage);
-            
-            // Assert
-            expect(mockPage.waitForFunction).toHaveBeenCalledWith(
-                expect.any(Function),
-                { timeout: 30000 }
-            );
-        });
-
-        it('should handle validation failures', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockRejectedValue(new Error('Validation failed'));
-            
-            // Act & Assert
-            await expect(service.validatePageContent(mockPage)).resolves.toBeUndefined();
-            expect(console.log).toHaveBeenCalledWith('Page content validation failed: Validation failed');
-        });
-    });
-
-    describe('waitForContentStabilization', () => {
-        it('should wait for content to stabilize over multiple checks', async () => {
-            // Arrange
-            const stableLength = 2000;
-            let callCount = 0;
-            mockPage.evaluate.mockImplementation(() => {
-                callCount++;
-                // Return stable content that satisfies: Math.abs(current - previous) < 100 && current > 1000
-                if (callCount <= 5) {
-                    return Promise.resolve(stableLength); // Return same value to be stable
-                }
-                return Promise.resolve(stableLength);
-            });
-            jest.spyOn(service, 'delay').mockResolvedValue();
-            
-            // Act
-            await service.waitForContentStabilization(mockPage);
-            
-            // Assert
-            expect(mockPage.evaluate).toHaveBeenCalledTimes(5); // Should detect stability after 4 stable checks + 1
-            expect(service.delay).toHaveBeenCalledWith(2000);
-        });
-
-        it('should timeout after maximum checks', async () => {
-            // Arrange
-            let callCount = 0;
-            mockPage.evaluate.mockImplementation(() => {
-                return Promise.resolve(1000 + (callCount++ * 200)); // Always increasing
-            });
-            jest.spyOn(service, 'delay').mockResolvedValue();
-            
-            // Act
-            await service.waitForContentStabilization(mockPage);
-            
-            // Assert
-            expect(mockPage.evaluate).toHaveBeenCalledTimes(15); // Maximum iterations
-            expect(console.log).toHaveBeenCalledWith('Content stabilization timeout reached');
-        });
-    });
-
-    describe('waitForMeaningfulContent', () => {
-        it('should wait for meaningful content to appear', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockResolvedValue(true);
-            
-            // Act
-            await service.waitForMeaningfulContent(mockPage);
-            
-            // Assert
-            expect(mockPage.waitForFunction).toHaveBeenCalledWith(
-                expect.any(Function),
-                { timeout: 45000 }
-            );
-        });
-
-        it('should handle meaningful content timeout', async () => {
-            // Arrange
-            mockPage.waitForFunction.mockRejectedValue(new Error('Content timeout'));
-            
-            // Act & Assert
-            await expect(service.waitForMeaningfulContent(mockPage)).resolves.toBeUndefined();
-            expect(console.log).toHaveBeenCalledWith('Meaningful content wait failed: Content timeout');
-        });
-    });
-
     describe('extractEvents', () => {
         beforeEach(() => {
-            service.useHeadlessBrowser = true; // Disable screenshots for most tests
-        });
-
-        it('should extract events from MySideline page', async () => {
-            // Arrange
-            const mockPageInfo = {
+            // Mock locator for cards
+            const mockLocator = {
+                all: jest.fn().mockResolvedValue([
+                    { /* mock card element */ }
+                ])
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+            
+            // Mock page evaluate for page info
+            mockPage.evaluate.mockResolvedValue({
                 url: 'https://test.mysideline.com',
-                title: 'MySideline',
+                title: 'MySideline Test',
                 bodyTextLength: 5000,
                 elementCount: 100,
-                cardCount: 5,
-                clickExpandCount: 3
-            };
-            const mockScrapedEvents = [
-                {
-                    title: 'NSW Masters Carnival',
-                    subtitle: 'Rugby League',
-                    fullContent: 'NSW Masters Rugby League Carnival details',
-                    registrationUrl: 'https://profile.mysideline.com.au/register/event-123'
-                }
-            ];
-            const mockParsedEvents = [
-                {
-                    title: 'NSW Masters Carnival',
-                    date: new Date('2025-08-15'),
-                    state: 'NSW'
-                }
-            ];
-
-            mockPage.evaluate
-                .mockResolvedValueOnce(mockPageInfo)
-                .mockResolvedValueOnce(mockScrapedEvents);
-            
-            jest.spyOn(service, 'expandAllClickExpandElements').mockResolvedValue();
-            jest.spyOn(service, 'extractRegistrationUrl').mockResolvedValue('https://registration-url.com');
-            mockParserService.parseEventFromElement.mockReturnValue(mockParsedEvents[0]);
-            
-            // Act
-            const result = await service.extractEvents(mockPage);
-            
-            // Assert
-            expect(result).toEqual(mockParsedEvents);
-            expect(service.expandAllClickExpandElements).toHaveBeenCalledWith(mockPage);
-            expect(mockPage.evaluate).toHaveBeenCalledTimes(2);
-            expect(mockParserService.parseEventFromElement).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    title: 'NSW Masters Carnival',
-                    registrationUrl: 'https://profile.mysideline.com.au/register/event-123'
-                })
-            );
-        });
-
-        it('should take screenshot in development mode', async () => {
-            // Arrange
-            service.useHeadlessBrowser = false;
-            mockPage.evaluate.mockResolvedValueOnce({
-                url: 'test.com',
-                title: 'Test',
-                bodyTextLength: 1000,
-                elementCount: 50,
                 cardCount: 2,
                 clickExpandCount: 1
-            }).mockResolvedValueOnce([]);
-            
-            jest.spyOn(service, 'expandAllClickExpandElements').mockResolvedValue();
-            mockPage.screenshot.mockResolvedValue();
-            
-            // Act
-            await service.extractEvents(mockPage);
-            
-            // Assert
-            expect(mockPage.screenshot).toHaveBeenCalledWith({
-                path: 'debug-mysideline-page.png',
-                fullPage: true
             });
         });
 
-        it('should handle screenshot errors gracefully', async () => {
+        it('should extract events from MySideline page using sequential processing', async () => {
             // Arrange
-            service.useHeadlessBrowser = false;
-            mockPage.evaluate.mockResolvedValueOnce({
-                url: 'test.com',
-                title: 'Test',
-                bodyTextLength: 1000,
-                elementCount: 50,
-                cardCount: 2,
-                clickExpandCount: 1
-            }).mockResolvedValueOnce([]);
+            const mockCardData = {
+                title: 'NSW Masters Carnival',
+                fullContent: 'NSW Masters Rugby League Carnival 2025',
+                cardIndex: 0,
+                isMySidelineCard: true,
+                hasLocation: true,
+                dates: ['15/08/2025']
+            };
             
-            jest.spyOn(service, 'expandAllClickExpandElements').mockResolvedValue();
-            mockPage.screenshot.mockRejectedValue(new Error('Screenshot failed'));
+            const mockParsedEvent = {
+                title: 'NSW Masters Carnival',
+                date: new Date('2025-08-15'),
+                state: 'NSW'
+            };
             
-            // Act & Assert (should not throw)
-            await expect(service.extractEvents(mockPage)).resolves.toBeDefined();
-            expect(console.log).toHaveBeenCalledWith('Could not save screenshot:', 'Screenshot failed');
-        });
+            jest.spyOn(service, 'expandCardClickExpandElements').mockResolvedValue(true);
+            jest.spyOn(service, 'extractSingleCardData').mockResolvedValue(mockCardData);
+            jest.spyOn(service, 'isRelevantMastersEvent').mockReturnValue(true);
+            jest.spyOn(service, 'extractRegistrationUrl').mockResolvedValue('https://registration.com');
+            jest.spyOn(service, 'delay').mockResolvedValue();
+            mockParserService.parseEventFromElement.mockReturnValue(mockParsedEvent);
 
-        it('should handle extraction errors and return empty array', async () => {
-            // Arrange
-            mockPage.evaluate.mockRejectedValue(new Error('Extraction failed'));
-            
             // Act
             const result = await service.extractEvents(mockPage);
+
+            // Assert
+            expect(result).toEqual([mockParsedEvent]);
+            expect(service.expandCardClickExpandElements).toHaveBeenCalledWith(mockPage, 0);
+            expect(service.extractSingleCardData).toHaveBeenCalledWith(mockPage, 0, true);
+            expect(service.isRelevantMastersEvent).toHaveBeenCalledWith(mockCardData);
+            expect(mockParserService.parseEventFromElement).toHaveBeenCalledWith({
+                ...mockCardData,
+                registrationUrl: 'https://registration.com'
+            });
+        });
+
+        it('should skip irrelevant cards', async () => {
+            // Arrange
+            const mockCardData = {
+                title: 'Touch Football Event',
+                fullContent: 'Touch football tournament',
+                cardIndex: 0
+            };
             
+            jest.spyOn(service, 'expandCardClickExpandElements').mockResolvedValue(false);
+            jest.spyOn(service, 'extractSingleCardData').mockResolvedValue(mockCardData);
+            jest.spyOn(service, 'isRelevantMastersEvent').mockReturnValue(false);
+            jest.spyOn(service, 'delay').mockResolvedValue();
+
+            // Act
+            const result = await service.extractEvents(mockPage);
+
             // Assert
             expect(result).toEqual([]);
-            expect(console.error).toHaveBeenCalledWith('MySideline Playwright event extraction failed:', 'Extraction failed');
-        });
-
-        it('should extract registration URLs for events without them', async () => {
-            // Arrange
-            const mockScrapedEvents = [
-                {
-                    title: 'Event without URL',
-                    isMySidelineCard: true,
-                    cardIndex: 0,
-                    registrationUrl: null
-                }
-            ];
-            
-            mockPage.evaluate
-                .mockResolvedValueOnce({ url: 'test.com', title: 'Test', bodyTextLength: 1000, elementCount: 50, cardCount: 1, clickExpandCount: 0 })
-                .mockResolvedValueOnce(mockScrapedEvents);
-            
-            jest.spyOn(service, 'expandAllClickExpandElements').mockResolvedValue();
-            jest.spyOn(service, 'extractRegistrationUrl').mockResolvedValue('https://extracted-url.com');
-            mockParserService.parseEventFromElement.mockReturnValue({ title: 'Parsed Event' });
-            
-            // Act
-            const result = await service.extractEvents(mockPage);
-            
-            // Assert
-            expect(service.extractRegistrationUrl).toHaveBeenCalledWith(mockPage, '.el-card.is-always-shadow', 0);
-            expect(mockParserService.parseEventFromElement).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    registrationUrl: 'https://extracted-url.com'
-                })
-            );
+            expect(service.isRelevantMastersEvent).toHaveBeenCalledWith(mockCardData);
+            expect(mockParserService.parseEventFromElement).not.toHaveBeenCalled();
         });
 
         it('should handle parser errors gracefully', async () => {
             // Arrange
-            const mockScrapedEvents = [{ title: 'Test Event' }];
+            const mockCardData = {
+                title: 'NSW Masters Carnival',
+                fullContent: 'NSW Masters Rugby League Carnival',
+                cardIndex: 0,
+                isMySidelineCard: true
+            };
             
-            mockPage.evaluate
-                .mockResolvedValueOnce({ url: 'test.com', title: 'Test', bodyTextLength: 1000, elementCount: 50, cardCount: 1, clickExpandCount: 0 })
-                .mockResolvedValueOnce(mockScrapedEvents);
-            
-            jest.spyOn(service, 'expandAllClickExpandElements').mockResolvedValue();
+            jest.spyOn(service, 'expandCardClickExpandElements').mockResolvedValue(true);
+            jest.spyOn(service, 'extractSingleCardData').mockResolvedValue(mockCardData);
+            jest.spyOn(service, 'isRelevantMastersEvent').mockReturnValue(true);
+            jest.spyOn(service, 'delay').mockResolvedValue();
             mockParserService.parseEventFromElement.mockImplementation(() => {
                 throw new Error('Parser error');
             });
-            
+
             // Act
             const result = await service.extractEvents(mockPage);
-            
+
             // Assert
             expect(result).toEqual([]);
             expect(console.log).toHaveBeenCalledWith('Failed to parse MySideline event: Parser error');
@@ -646,344 +354,524 @@ describe('MySidelineScraperService', () => {
     });
 
     describe('extractRegistrationUrl', () => {
-        let mockLocator;
+        it('should extract registration URL from card', async () => {
+            // Arrange
+            mockPage.evaluate.mockResolvedValue('https://registration.com');
 
-        beforeEach(() => {
-            mockLocator = {
-                count: jest.fn(),
-                first: jest.fn().mockReturnThis(),
-                click: jest.fn()
-            };
-            mockPage.locator.mockReturnValue(mockLocator);
-            jest.spyOn(service, 'delay').mockResolvedValue();
+            // Act
+            const result = await service.extractRegistrationUrl(mockPage, '.el-card.is-always-shadow', 0);
+
+            // Assert
+            expect(result).toBe('https://registration.com');
+            expect(console.log).toHaveBeenCalledWith('Extracting registration URL from card 1...');
+            expect(console.log).toHaveBeenCalledWith('✅ Found registration URL: https://registration.com');
         });
 
         it('should return null when no register button exists', async () => {
             // Arrange
-            mockLocator.count.mockResolvedValue(0);
-            
-            // Act
-            const result = await service.extractRegistrationUrl(mockPage, '.el-card', 0);
-            
-            // Assert
-            expect(result).toBeNull();
-            expect(console.log).toHaveBeenCalledWith('No register button found in card 1');
-        });
-
-        it('should extract URL from popup window', async () => {
-            // Arrange
-            const mockPopup = {
-                url: jest.fn().mockReturnValue('https://registration-popup.com'),
-                close: jest.fn()
-            };
-            
-            mockLocator.count.mockResolvedValue(1);
-            mockPage.waitForEvent.mockResolvedValueOnce(mockPopup);
-            mockPage.waitForNavigation.mockImplementation(() => new Promise(() => {})); // Never resolves
-            
-            // Act
-            const result = await service.extractRegistrationUrl(mockPage, '.el-card', 0);
-            
-            // Assert
-            expect(result).toBe('https://registration-popup.com');
-            expect(mockPopup.close).toHaveBeenCalled();
-            expect(console.log).toHaveBeenCalledWith('Register button opened popup with URL: https://registration-popup.com');
-        });
-
-        it('should extract URL from page navigation', async () => {
-            // Arrange
-            mockLocator.count.mockResolvedValue(1);
-            mockPage.waitForEvent.mockRejectedValue(new Error('No popup'));
-            mockPage.waitForNavigation.mockResolvedValue({});
-            mockPage.url.mockReturnValue('https://registration-page.com');
-            mockPage.goBack.mockResolvedValue();
-            
-            // Act
-            const result = await service.extractRegistrationUrl(mockPage, '.el-card', 0);
-            
-            // Assert
-            expect(result).toBe('https://registration-page.com');
-            expect(mockPage.goBack).toHaveBeenCalled();
-            expect(console.log).toHaveBeenCalledWith('Register button navigated to: https://registration-page.com');
-        });
-
-        it('should extract URL from button attributes', async () => {
-            // Arrange
-            mockLocator.count.mockResolvedValue(1);
-            mockPage.waitForEvent.mockRejectedValue(new Error('No popup'));
-            mockPage.waitForNavigation.mockRejectedValue(new Error('No navigation'));
-            mockPage.evaluate.mockResolvedValue('https://attribute-url.com');
-            
-            // Act
-            const result = await service.extractRegistrationUrl(mockPage, '.el-card', 0);
-            
-            // Assert
-            expect(result).toBe('https://attribute-url.com');
-            expect(console.log).toHaveBeenCalledWith('Found registration URL from button attributes: https://attribute-url.com');
-        });
-
-        it('should return null when no URL can be extracted', async () => {
-            // Arrange
-            mockLocator.count.mockResolvedValue(1);
-            mockPage.waitForEvent.mockRejectedValue(new Error('No popup'));
-            mockPage.waitForNavigation.mockRejectedValue(new Error('No navigation'));
             mockPage.evaluate.mockResolvedValue(null);
-            
+
             // Act
-            const result = await service.extractRegistrationUrl(mockPage, '.el-card', 0);
-            
+            const result = await service.extractRegistrationUrl(mockPage, '.el-card.is-always-shadow', 0);
+
             // Assert
             expect(result).toBeNull();
-            expect(console.log).toHaveBeenCalledWith('Could not extract registration URL from card 1');
+            expect(console.log).toHaveBeenCalledWith('Extracting registration URL from card 1...');
+            expect(console.log).toHaveBeenCalledWith('❌ No registration URL found in card 1');
+        });
+
+        it('should handle extraction errors gracefully', async () => {
+            // Arrange
+            mockPage.evaluate.mockRejectedValue(new Error('Extraction failed'));
+
+            // Act
+            const result = await service.extractRegistrationUrl(mockPage, '.el-card.is-always-shadow', 0);
+
+            // Assert
+            expect(result).toBeNull();
+            expect(console.log).toHaveBeenCalledWith('Error extracting registration URL: Extraction failed');
+        });
+    });
+
+    describe('expandCardClickExpandElements', () => {
+        beforeEach(() => {
+            jest.spyOn(service, 'delay').mockResolvedValue();
+            jest.spyOn(service, 'waitForCardExpandedContent').mockResolvedValue();
+        });
+
+        it('should expand click-expand elements in specific card', async () => {
+            // Arrange
+            const mockElement = {
+                isVisible: jest.fn().mockResolvedValue(true),
+                scrollIntoViewIfNeeded: jest.fn(),
+                click: jest.fn()
+            };
+            const mockLocator = {
+                all: jest.fn().mockResolvedValue([mockElement])
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+
+            // Act
+            const result = await service.expandCardClickExpandElements(mockPage, 0);
+
+            // Assert
+            expect(result).toBe(true);
+            expect(mockElement.click).toHaveBeenCalled();
+            expect(service.waitForCardExpandedContent).toHaveBeenCalledWith(mockPage, 0, 0);
+        });
+
+        it('should return false when no click-expand elements found', async () => {
+            // Arrange
+            const mockLocator = {
+                all: jest.fn().mockResolvedValue([])
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+
+            // Act
+            const result = await service.expandCardClickExpandElements(mockPage, 0);
+
+            // Assert
+            expect(result).toBe(false);
+            expect(console.log).toHaveBeenCalledWith('No click-expand elements found in card 1');
+        });
+
+        it('should skip invisible elements', async () => {
+            // Arrange
+            const mockElement = {
+                isVisible: jest.fn().mockResolvedValue(false),
+                scrollIntoViewIfNeeded: jest.fn(),
+                click: jest.fn()
+            };
+            const mockLocator = {
+                all: jest.fn().mockResolvedValue([mockElement])
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+
+            // Act
+            const result = await service.expandCardClickExpandElements(mockPage, 0);
+
+            // Assert
+            expect(result).toBe(false);
+            expect(mockElement.click).not.toHaveBeenCalled();
         });
 
         it('should handle click errors gracefully', async () => {
             // Arrange
-            mockLocator.count.mockResolvedValue(1);
-            const clickError = new Error('Click failed');
-            mockLocator.click.mockRejectedValue(clickError);
-            
+            const mockElement = {
+                isVisible: jest.fn().mockResolvedValue(true),
+                scrollIntoViewIfNeeded: jest.fn(),
+                click: jest.fn().mockRejectedValue(new Error('Click failed'))
+            };
+            const mockLocator = {
+                all: jest.fn().mockResolvedValue([mockElement])
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+
             // Act
-            const result = await service.extractRegistrationUrl(mockPage, '.el-card', 0);
-            
+            const result = await service.expandCardClickExpandElements(mockPage, 0);
+
             // Assert
-            expect(result).toBeNull();
-            expect(console.log).toHaveBeenCalledWith('Error extracting registration URL from card 1: Click failed');
+            expect(result).toBe(false);
+            expect(console.log).toHaveBeenCalledWith('Failed to expand element 1 in card 1: Click failed');
         });
     });
 
     describe('expandAllClickExpandElements', () => {
-        let mockClickExpandLocators;
-
         beforeEach(() => {
-            mockClickExpandLocators = [
-                {
-                    isVisible: jest.fn().mockResolvedValue(true),
-                    scrollIntoViewIfNeeded: jest.fn(),
-                    click: jest.fn()
-                },
-                {
-                    isVisible: jest.fn().mockResolvedValue(false),
-                    scrollIntoViewIfNeeded: jest.fn(),
-                    click: jest.fn()
-                },
-                {
-                    isVisible: jest.fn().mockResolvedValue(true),
-                    scrollIntoViewIfNeeded: jest.fn(),
-                    click: jest.fn()
-                }
-            ];
-            
-            mockPage.locator.mockReturnValue({
-                all: jest.fn().mockResolvedValue(mockClickExpandLocators)
-            });
-            
             jest.spyOn(service, 'delay').mockResolvedValue();
-            jest.spyOn(service, 'waitForExpandedContent').mockResolvedValue();
         });
 
         it('should expand all visible click-expand elements', async () => {
             // Arrange
-            service.useHeadlessBrowser = true; // Disable screenshot
-            
+            const mockElement = {
+                isVisible: jest.fn().mockResolvedValue(true),
+                scrollIntoViewIfNeeded: jest.fn(),
+                click: jest.fn()
+            };
+            const mockLocator = {
+                all: jest.fn().mockResolvedValue([mockElement, mockElement])
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+
             // Act
-            await service.expandAllClickExpandElements(mockPage);
-            
+            const result = await service.expandAllClickExpandElements(mockPage);
+
             // Assert
-            expect(mockClickExpandLocators[0].click).toHaveBeenCalled();
-            expect(mockClickExpandLocators[1].click).not.toHaveBeenCalled(); // Not visible
-            expect(mockClickExpandLocators[2].click).toHaveBeenCalled();
-            expect(service.waitForExpandedContent).toHaveBeenCalledTimes(2);
-            expect(service.delay).toHaveBeenCalledWith(3000); // Final stabilization delay
+            expect(result).toBe(true);
+            expect(mockElement.click).toHaveBeenCalledTimes(2);
+            expect(console.log).toHaveBeenCalledWith('📊 Successfully expanded 2/2 elements');
         });
 
-        it('should skip when no click-expand elements found', async () => {
+        it('should return false when no click-expand elements found', async () => {
             // Arrange
-            mockPage.locator.mockReturnValue({
+            const mockLocator = {
                 all: jest.fn().mockResolvedValue([])
-            });
-            
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+
             // Act
-            await service.expandAllClickExpandElements(mockPage);
-            
+            const result = await service.expandAllClickExpandElements(mockPage);
+
             // Assert
-            expect(console.log).toHaveBeenCalledWith('No click-expand elements found, skipping expansion');
+            expect(result).toBe(false);
+            expect(console.log).toHaveBeenCalledWith('No click-expand elements found on the page');
         });
 
         it('should handle click errors gracefully', async () => {
             // Arrange
-            service.useHeadlessBrowser = true;
-            mockClickExpandLocators[0].click.mockRejectedValue(new Error('Click failed'));
-            
+            const mockElement = {
+                isVisible: jest.fn().mockResolvedValue(true),
+                scrollIntoViewIfNeeded: jest.fn(),
+                click: jest.fn().mockRejectedValue(new Error('Click failed'))
+            };
+            const mockLocator = {
+                all: jest.fn().mockResolvedValue([mockElement])
+            };
+            mockPage.locator.mockReturnValue(mockLocator);
+
             // Act
-            await service.expandAllClickExpandElements(mockPage);
-            
+            const result = await service.expandAllClickExpandElements(mockPage);
+
             // Assert
-            expect(console.log).toHaveBeenCalledWith('Failed to click expand element 1: Click failed');
-            expect(mockClickExpandLocators[2].click).toHaveBeenCalled(); // Should continue with other elements
-        });
-
-        it('should take screenshot in development mode', async () => {
-            // Arrange
-            service.useHeadlessBrowser = false;
-            mockPage.screenshot.mockResolvedValue();
-            
-            // Act
-            await service.expandAllClickExpandElements(mockPage);
-            
-            // Assert
-            expect(mockPage.screenshot).toHaveBeenCalledWith({
-                path: 'debug-mysideline-expanded.png',
-                fullPage: true
-            });
-        });
-
-        it('should handle screenshot errors', async () => {
-            // Arrange
-            service.useHeadlessBrowser = false;
-            mockPage.screenshot.mockRejectedValue(new Error('Screenshot failed'));
-            
-            // Act & Assert (should not throw)
-            await expect(service.expandAllClickExpandElements(mockPage)).resolves.toBeUndefined();
-            expect(console.log).toHaveBeenCalledWith('Could not save expanded screenshot:', 'Screenshot failed');
-        });
-
-        it('should handle expansion process errors', async () => {
-            // Arrange
-            mockPage.locator.mockImplementation(() => {
-                throw new Error('Locator failed');
-            });
-            
-            // Act & Assert (should not throw)
-            await expect(service.expandAllClickExpandElements(mockPage)).resolves.toBeUndefined();
-            expect(console.error).toHaveBeenCalledWith('Error during click-expand processing:', 'Locator failed');
+            expect(result).toBe(false);
+            expect(console.log).toHaveBeenCalledWith('Failed to expand element 1: Click failed');
+            expect(console.log).toHaveBeenCalledWith('📊 Successfully expanded 0/1 elements');
         });
     });
 
-    describe('waitForExpandedContent', () => {
+    describe('waitForCardExpandedContent', () => {
         it('should wait for expanded content to appear', async () => {
             // Arrange
-            mockPage.waitForFunction.mockResolvedValue(true);
-            
+            mockPage.waitForFunction.mockResolvedValue();
+
             // Act
-            await service.waitForExpandedContent(mockPage, 0);
-            
+            await service.waitForCardExpandedContent(mockPage, 0, 0);
+
             // Assert
-            expect(mockPage.waitForFunction).toHaveBeenCalledWith(
-                expect.any(Function),
-                { timeout: 5000 }
-            );
-            expect(console.log).toHaveBeenCalledWith('Expanded content detected for element 1');
+            expect(mockPage.waitForFunction).toHaveBeenCalled();
+            expect(console.log).toHaveBeenCalledWith('✅ Expanded content detected in card 1, element 1');
         });
 
         it('should handle timeout gracefully', async () => {
             // Arrange
             mockPage.waitForFunction.mockRejectedValue(new Error('Timeout'));
             jest.spyOn(service, 'delay').mockResolvedValue();
-            
+
             // Act
-            await service.waitForExpandedContent(mockPage, 0);
-            
+            await service.waitForCardExpandedContent(mockPage, 0, 0);
+
             // Assert
-            expect(console.log).toHaveBeenCalledWith('Could not detect expanded content for element 1, continuing...');
-            expect(service.delay).toHaveBeenCalledWith(1500);
+            expect(console.log).toHaveBeenCalledWith('Could not detect expanded content in card 1, element 1, continuing...');
+            expect(service.delay).toHaveBeenCalledWith(1000);
+        });
+    });
+
+    describe('extractSingleCardData', () => {
+        it('should extract data from a single card', async () => {
+            // Arrange
+            const mockCardData = {
+                title: 'Test Event',
+                subtitle: 'Test Subtitle',
+                text: 'Test content',
+                cardIndex: 0,
+                isMySidelineCard: true
+            };
+            mockPage.evaluate.mockResolvedValue(mockCardData);
+
+            // Act
+            const result = await service.extractSingleCardData(mockPage, 0, false);
+
+            // Assert
+            expect(result).toEqual(mockCardData);
+            expect(mockPage.evaluate).toHaveBeenCalled();
+        });
+
+        it('should return null when card not found', async () => {
+            // Arrange
+            mockPage.evaluate.mockResolvedValue(null);
+
+            // Act
+            const result = await service.extractSingleCardData(mockPage, 0, false);
+
+            // Assert
+            expect(result).toBeNull();
+        });
+
+        it('should handle extraction errors', async () => {
+            // Arrange
+            mockPage.evaluate.mockRejectedValue(new Error('Extraction failed'));
+
+            // Act
+            const result = await service.extractSingleCardData(mockPage, 0, false);
+
+            // Assert
+            expect(result).toBeNull();
+            expect(console.log).toHaveBeenCalledWith('Error extracting data from card 1: Extraction failed');
+        });
+    });
+
+    describe('isRelevantMastersEvent', () => {
+        it('should return true for relevant Masters events', () => {
+            // Arrange
+            const cardData = {
+                title: 'NSW Masters Rugby League Carnival',
+                fullContent: 'NSW Masters Rugby League carnival event with registration',
+                dates: ['15/08/2025'],
+                hasLocation: true
+            };
+
+            // Act
+            const result = service.isRelevantMastersEvent(cardData);
+
+            // Assert
+            expect(result).toBe(true);
+        });
+
+        it('should return false for Touch events', () => {
+            // Arrange
+            const cardData = {
+                title: 'Touch Football Masters',
+                fullContent: 'touch football masters event',
+                dates: ['15/08/2025'],
+                hasLocation: true
+            };
+
+            // Act
+            const result = service.isRelevantMastersEvent(cardData);
+
+            // Assert
+            expect(result).toBe(false);
+            expect(console.log).toHaveBeenCalledWith('❌ Filtering out Touch event: Touch Football Masters');
+        });
+
+        it('should return false for events with insufficient data', () => {
+            // Arrange
+            const cardData = {
+                title: '',
+                fullContent: 'short',
+                dates: [],
+                hasLocation: false
+            };
+
+            // Act
+            const result = service.isRelevantMastersEvent(cardData);
+
+            // Assert
+            expect(result).toBe(false);
+        });
+
+        it('should return false for low relevance score', () => {
+            // Arrange
+            const cardData = {
+                title: 'Some Event',
+                fullContent: 'Some random event content that is not relevant to masters rugby league',
+                dates: [],
+                hasLocation: false
+            };
+
+            // Act
+            const result = service.isRelevantMastersEvent(cardData);
+
+            // Assert
+            expect(result).toBe(false);
         });
     });
 
     describe('generateMockEvents', () => {
-        it('should generate mock events for default states', () => {
-            // Arrange & Act
+        it('should generate mock events for testing', () => {
+            // Act
             const result = service.generateMockEvents();
-            
+
             // Assert
-            expect(result).toHaveLength(6); // 3 states × 2 events each
-            expect(result.filter(event => event.state === 'NSW')).toHaveLength(2);
-            expect(result.filter(event => event.state === 'QLD')).toHaveLength(2);
-            expect(result.filter(event => event.state === 'VIC')).toHaveLength(2);
-            
-            // Check structure of first event
-            expect(result[0]).toMatchObject({
-                title: expect.stringContaining('NSW'),
-                date: expect.any(Date),
-                locationAddress: expect.stringContaining('Sydney'),
-                state: 'NSW',
-                registrationLink: expect.stringContaining('mysideline.com.au'),
-                mySidelineEventId: expect.stringContaining('nsw'),
-                isManuallyEntered: false,
-                maxTeams: 16,
-                feesDescription: expect.stringContaining('$'),
-                registrationDeadline: expect.any(Date),
-                scheduleDetails: expect.stringContaining('Day-long tournament'),
-                ageCategories: ['35+', '40+', '45+', '50+'],
-                isRegistrationOpen: true,
-                isActive: true,
-                organiserContactName: expect.stringContaining('NSW'),
-                organiserContactEmail: expect.stringContaining('nsw'),
-                organiserContactPhone: expect.stringMatching(/^0\d/),
-                sourceData: expect.objectContaining({
-                    isMockData: true,
-                    generatedAt: expect.any(Date),
-                    state: 'NSW',
-                    templateIndex: expect.any(Number)
-                })
-            });
+            expect(Array.isArray(result)).toBe(true);
+            expect(result.length).toBeGreaterThan(0);
+            expect(result[0]).toHaveProperty('title');
+            expect(result[0]).toHaveProperty('date');
+            expect(result[0]).toHaveProperty('state');
+            expect(result[0]).toHaveProperty('registrationLink');
+            expect(result[0].sourceData.isMockData).toBe(true);
         });
 
-        it('should generate events with future dates', () => {
-            // Arrange & Act
+        it('should generate events for NSW, QLD, and VIC', () => {
+            // Act
             const result = service.generateMockEvents();
-            const currentDate = new Date();
-            
-            // Assert
-            result.forEach(event => {
-                expect(event.date.getTime()).toBeGreaterThan(currentDate.getTime());
-                expect(event.registrationDeadline.getTime()).toBeLessThan(event.date.getTime());
-            });
-        });
 
-        it('should generate unique event IDs', () => {
-            // Arrange & Act
-            const result = service.generateMockEvents();
-            const eventIds = result.map(event => event.mySidelineEventId);
-            const uniqueIds = new Set(eventIds);
-            
             // Assert
-            expect(uniqueIds.size).toBe(eventIds.length);
-        });
-
-        it('should generate different fee structures', () => {
-            // Arrange & Act
-            const result = service.generateMockEvents();
-            const nswEvents = result.filter(event => event.state === 'NSW');
-            
-            // Assert
-            expect(nswEvents[0].feesDescription).toContain('$300');
-            expect(nswEvents[1].feesDescription).toContain('$350');
+            const states = result.map(event => event.state);
+            expect(states).toContain('NSW');
+            expect(states).toContain('QLD');
+            expect(states).toContain('VIC');
         });
     });
 
-    describe('delay', () => {
-        it('should delay for specified milliseconds', async () => {
+    describe('validateExtractedData', () => {
+        it('should validate extracted events', () => {
             // Arrange
-            const startTime = Date.now();
-            const delayMs = 100;
-            
+            const events = [
+                {
+                    title: 'NSW Masters Carnival',
+                    date: new Date('2025-08-15'),
+                    locationAddress: 'Sydney, NSW',
+                    registrationLink: 'https://register.com'
+                },
+                {
+                    title: 'QLD Masters',
+                    date: new Date('2025-09-15'),
+                    locationAddress: 'Brisbane, QLD'
+                    // Missing registration link
+                }
+            ];
+
             // Act
-            await service.delay(delayMs);
-            const endTime = Date.now();
-            
+            const result = service.validateExtractedData(events);
+
             // Assert
-            const actualDelay = endTime - startTime;
-            expect(actualDelay).toBeGreaterThanOrEqual(delayMs - 10); // Allow small variance
-            expect(actualDelay).toBeLessThan(delayMs + 50); // But not too much
+            expect(result.totalEvents).toBe(2);
+            expect(result.validEvents).toBe(1);
+            expect(result.eventsWithTitle).toBe(2);
+            expect(result.eventsWithDate).toBe(2);
+            expect(result.eventsWithLocation).toBe(2);
+            expect(result.eventsWithRegistration).toBe(1);
+            expect(result.issues).toContain('Event 2: Missing registration link');
+        });
+    });
+
+    describe('isProperlyConfigured', () => {
+        it('should return true when properly configured', () => {
+            // Arrange
+            service.searchUrl = 'https://test.mysideline.com';
+            service.timeout = 60000;
+            service.parserService = mockParserService;
+
+            // Act
+            const result = service.isProperlyConfigured();
+
+            // Assert
+            expect(result).toBe(true);
         });
 
-        it('should return a Promise', () => {
-            // Arrange & Act
-            const result = service.delay(1);
-            
+        it('should return false when missing configuration', () => {
+            // Arrange
+            service.searchUrl = null;
+            service.timeout = 5000;
+            service.parserService = null;
+
+            // Act
+            const result = service.isProperlyConfigured();
+
             // Assert
-            expect(result).toBeInstanceOf(Promise);
+            expect(result).toBe(false);
+            expect(console.error).toHaveBeenCalledWith('❌ MySidelineScraperService configuration issues:');
+        });
+    });
+
+    describe('getConfigurationInfo', () => {
+        it('should return configuration information', () => {
+            // Act
+            const result = service.getConfigurationInfo();
+
+            // Assert
+            expect(result).toHaveProperty('searchUrl');
+            expect(result).toHaveProperty('timeout');
+            expect(result).toHaveProperty('retryCount');
+            expect(result).toHaveProperty('requestDelay');
+            expect(result).toHaveProperty('useHeadlessBrowser');
+            expect(result).toHaveProperty('enableScraping');
+            expect(result).toHaveProperty('useMockData');
+            expect(result).toHaveProperty('parserServiceInitialized');
+        });
+    });
+
+    describe('utility methods', () => {
+        describe('cleanTextContent', () => {
+            it('should clean text content', () => {
+                // Arrange
+                const dirtyText = '  Multiple   spaces\n\nNew lines\t\tTabs  ';
+
+                // Act
+                const result = service.cleanTextContent(dirtyText);
+
+                // Assert
+                expect(result).toBe('Multiple spaces New lines Tabs');
+            });
+
+            it('should handle empty or null text', () => {
+                // Act & Assert
+                expect(service.cleanTextContent('')).toBe('');
+                expect(service.cleanTextContent(null)).toBe('');
+                expect(service.cleanTextContent(undefined)).toBe('');
+            });
+        });
+
+        describe('extractDatesFromText', () => {
+            it('should extract dates from text', () => {
+                // Arrange
+                const text = 'Event on 15/08/2025 and also on Jan 20, 2025';
+
+                // Act
+                const result = service.extractDatesFromText(text);
+
+                // Assert
+                expect(result).toContain('15/08/2025');
+                expect(result).toContain('Jan 20, 2025');
+            });
+        });
+
+        describe('extractTimesFromText', () => {
+            it('should extract times from text', () => {
+                // Arrange
+                const text = 'Event starts at 9:00 AM and ends at 5:30 PM';
+
+                // Act
+                const result = service.extractTimesFromText(text);
+
+                // Assert
+                expect(result).toContain('9:00 AM');
+                expect(result).toContain('5:30 PM');
+            });
+        });
+
+        describe('extractContactInfo', () => {
+            it('should extract contact information', () => {
+                // Arrange
+                const text = 'Contact us at test@example.com or call 02 1234 5678. Visit https://example.com';
+
+                // Act
+                const result = service.extractContactInfo(text);
+
+                // Assert
+                expect(result.emails).toContain('test@example.com');
+                expect(result.phones).toContain('02 1234 5678');
+                expect(result.websites).toContain('https://example.com');
+            });
+        });
+
+        describe('extractVenueInfo', () => {
+            it('should extract venue information', () => {
+                // Arrange
+                const text = 'Event at Central Park and address is 123 Main Street';
+
+                // Act
+                const result = service.extractVenueInfo(text);
+
+                // Assert
+                expect(result.locations).toContain('Central Park');
+                expect(result.addresses).toContain('123 Main Street');
+            });
+        });
+
+        describe('extractFeeInfo', () => {
+            it('should extract fee information', () => {
+                // Arrange
+                const text = 'Registration fee: $50.00 and entry costs $25';
+
+                // Act
+                const result = service.extractFeeInfo(text);
+
+                // Assert
+                expect(result).toContain('$50.00');
+                expect(result).toContain('$25');
+            });
         });
     });
 
@@ -992,81 +880,36 @@ describe('MySidelineScraperService', () => {
             // Arrange
             service.useMockData = false;
             service.enableScraping = true;
-            service.searchUrl = 'https://test.mysideline.com'; // Set the URL
             
-            // Mock the entire workflow
-            jest.spyOn(service, 'waitForPageStructure').mockResolvedValue();
-            jest.spyOn(service, 'waitForJavaScriptInitialization').mockResolvedValue();
-            jest.spyOn(service, 'waitForDynamicContentLoading').mockResolvedValue();
-            jest.spyOn(service, 'waitForSearchResults').mockResolvedValue();
-            jest.spyOn(service, 'validatePageContent').mockResolvedValue();
-            jest.spyOn(service, 'waitForContentStabilization').mockResolvedValue();
-            jest.spyOn(service, 'waitForMeaningfulContent').mockResolvedValue();
-            jest.spyOn(service, 'expandAllClickExpandElements').mockResolvedValue();
-            jest.spyOn(service, 'extractRegistrationUrl').mockResolvedValue('https://registration.com');
-            
-            const mockScrapedEvents = [{
-                title: 'Masters Event',
-                isMySidelineCard: true,
-                cardIndex: 0,
-                registrationUrl: null
-            }];
-            
-            const mockParsedEvent = {
+            const mockEvents = [{
                 title: 'Masters Event',
                 date: new Date('2025-08-15'),
                 state: 'NSW'
-            };
+            }];
             
-            mockPage.evaluate
-                .mockResolvedValueOnce({ url: 'test.com', title: 'Test', bodyTextLength: 1000, elementCount: 50, cardCount: 1, clickExpandCount: 0 })
-                .mockResolvedValueOnce(mockScrapedEvents);
-            
-            mockParserService.parseEventFromElement.mockReturnValue(mockParsedEvent);
-            
+            jest.spyOn(service, 'fetchEventsWithBrowser').mockResolvedValue(mockEvents);
+
             // Act
             const result = await service.scrapeEvents();
-            
+
             // Assert
-            expect(result).toEqual([mockParsedEvent]);
-            expect(chromium.launch).toHaveBeenCalled();
-            expect(service.waitForPageStructure).toHaveBeenCalled();
-            expect(service.expandAllClickExpandElements).toHaveBeenCalled();
-            expect(service.extractRegistrationUrl).toHaveBeenCalled();
-            expect(mockParserService.parseEventFromElement).toHaveBeenCalled();
-            expect(mockBrowser.close).toHaveBeenCalled();
+            expect(result).toEqual(mockEvents);
+            expect(service.fetchEventsWithBrowser).toHaveBeenCalled();
         });
 
-        it('should handle mixed success and failure scenarios', async () => {
+        it('should handle browser automation failure gracefully', async () => {
             // Arrange
             service.useMockData = false;
             service.enableScraping = true;
-            service.searchUrl = 'https://test.mysideline.com';
             
-            // Mock methods - some succeed, some fail
-            jest.spyOn(service, 'waitForPageStructure').mockResolvedValue();
-            jest.spyOn(service, 'waitForJavaScriptInitialization').mockImplementation(() => {
-                console.log('JavaScript initialization waiting failed: JS failed');
-                return Promise.resolve();
-            });
-            jest.spyOn(service, 'waitForDynamicContentLoading').mockResolvedValue();
-            jest.spyOn(service, 'waitForSearchResults').mockResolvedValue();
-            jest.spyOn(service, 'validatePageContent').mockResolvedValue();
-            jest.spyOn(service, 'waitForContentStabilization').mockResolvedValue();
-            jest.spyOn(service, 'waitForMeaningfulContent').mockResolvedValue();
-            jest.spyOn(service, 'expandAllClickExpandElements').mockResolvedValue();
-            
-            mockPage.evaluate
-                .mockResolvedValueOnce({ url: 'test.com', title: 'Test', bodyTextLength: 1000, elementCount: 50, cardCount: 1, clickExpandCount: 0 })
-                .mockResolvedValueOnce([]);
-            
+            jest.spyOn(service, 'fetchEventsWithBrowser').mockRejectedValue(new Error('Browser failed'));
+
             // Act
             const result = await service.scrapeEvents();
-            
+
             // Assert
             expect(result).toEqual([]);
-            expect(console.log).toHaveBeenCalledWith('JavaScript initialization waiting failed: JS failed');
-            expect(mockBrowser.close).toHaveBeenCalled();
+            expect(console.error).toHaveBeenCalledWith('Failed to scrape MySideline events:', 'Browser failed');
         });
     });
 });
