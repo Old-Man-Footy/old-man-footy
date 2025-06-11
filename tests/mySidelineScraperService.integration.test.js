@@ -14,7 +14,9 @@ const MySidelineScraperService = require('../services/mySidelineScraperService')
  * - Network connectivity issues
  * - Website maintenance/downtime
  */
-describe('MySidelineScraperService Integration Tests', () => {
+
+// Remove the 'only' from the describe block to run all tests after debugging
+describe.only('MySidelineScraperService Integration Tests', () => {
     let service;
     const INTEGRATION_TIMEOUT = 120000; // 2 minutes for integration tests
 

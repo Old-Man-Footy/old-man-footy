@@ -422,36 +422,48 @@ class MySidelineScraperService {
                 }
             }
 
-            // Get all MySideline cards first
-            const cardElements = await page.locator('.el-card.is-always-shadow, [id^="clubsearch_"]').all();
-            console.log(`Found ${cardElements.length} MySideline cards to process sequentially`);
+            // Locate all the card elements on the page once.
+            // This returns a single Locator object that points to all matching cards.
+            const cardLocator = page.locator('.el-card.is-always-shadow, [id^="clubsearch_"]');
+
+            // Get the number of cards found.
+            const cardCount = await cardLocator.count();
+            console.log(`Found ${cardCount} MySideline cards to process sequentially`);
 
             const extractedEvents = [];
 
             // Process each card sequentially: expand -> extract -> move to next
-            for (let cardIndex = 0; cardIndex < cardElements.length; cardIndex++) {
+            for (let cardIndex = 0; cardIndex < cardCount; cardIndex++) {
                 try {
-                    console.log(`\n--- Processing card ${cardIndex + 1}/${cardElements.length} ---`);
+                    console.log(`\n--- Processing card ${cardIndex + 1}/${cardCount} ---`);
                     
-                    // Step 1: Expand any click-expand elements within this specific card
-                    const expandedSuccessfully = await this.expandCardClickExpandElements(page, cardIndex);
-                    
+                    // Get the card elements as an array for sequential processing
+                    const currentCard = cardLocator.nth(cardIndex);
+
+                    // This scopes the search within the card, making it robust.
+                    const clickExpandElement = currentCard.locator('.click-expand');
+
+                    // Click the element.
+                    // Playwright's auto-waiting will ensure the element is ready before clicking.
+                    await clickExpandElement.click();
+             
                     // Step 2: Extract data from this specific card
-                    const cardData = await this.extractSingleCardData(page, cardIndex, expandedSuccessfully);
+                    const cardData = await this.extractSingleCardData(currentCard, cardIndex);
                     
                     if (cardData && this.isRelevantMastersEvent(cardData)) {
                         // Step 3: Extract registration URL if needed
                         if (!cardData.registrationUrl && cardData.isMySidelineCard) {
-                            cardData.registrationUrl = await this.extractRegistrationUrl(page, '.el-card.is-always-shadow', cardIndex);
+                            cardData.registrationUrl = this.extractRegistrationUrl(currentCard, '.el-card.is-always-shadow', cardIndex);
                         }
                         
                         // Step 4: Parse the event data
                         try {
-                            const standardEvent = this.parserService.parseEventFromElement(cardData);
-                            if (standardEvent) {
-                                extractedEvents.push(standardEvent);
-                                console.log(`✅ Successfully parsed event: ${standardEvent.title} ${expandedSuccessfully ? '[EXPANDED]' : ''} ${cardData.registrationUrl ? '[REG_URL]' : ''}`);
-                            }
+                            //TODO: DO WE NEED THIS WE ALREADCY HAVE THE DATA???
+                            // const standardEvent = this.parserService.parseEventFromElement(cardData);
+                            // if (standardEvent) {
+                            //     extractedEvents.push(standardEvent);
+                            //     console.log(`✅ Successfully parsed event: ${standardEvent.title} ${expandedSuccessfully ? '[EXPANDED]' : ''} ${cardData.registrationUrl ? '[REG_URL]' : ''}`);
+                            // }
                         } catch (parseError) {
                             console.log(`Failed to parse MySideline event: ${parseError.message}`);
                         }
@@ -463,7 +475,8 @@ class MySidelineScraperService {
                     if (cardIndex < cardElements.length - 1) {
                         await this.delay(1000);
                     }
-                    
+
+                    await clickExpandElement.click();                    
                 } catch (cardError) {
                     console.log(`Error processing card ${cardIndex + 1}: ${cardError.message}`);
                 }
@@ -479,148 +492,133 @@ class MySidelineScraperService {
     }
 
     /**
-     * Extract data from a single MySideline event card
-     * @param {Page} page - Playwright page object
-     * @param {number} cardIndex - Index of the card to extract data from
-     * @param {boolean} wasExpanded - Whether the card was successfully expanded
-     * @returns {Promise<Object|null>} Extracted card data or null
+     * Extracts structured data from a single card locator using Playwright's API.
+     * This is an async function and should be awaited.
+     * @param {import('playwright').Locator} currentCard - The Playwright locator for the specific card element.
+     * @param {number} cardIndex - The index of the card, used for logging purposes.
+     * @param {boolean} wasExpanded - A boolean indicating if the card was expanded to get all data.
+     * @returns {Promise<object|null>} A promise that resolves to an object with the extracted card data, or null if extraction fails or the card is skipped.
      */
-    async extractSingleCardData(page, cardIndex, wasExpanded = false) {
+    async extractSingleCardData(currentCard, cardIndex) {
         try {
-            console.log(`Extracting data from card ${cardIndex + 1}${wasExpanded ? ' (expanded)' : ''}...`);
-            
-            const cardData = await page.evaluate(({ index }) => {
-                const cards = document.querySelectorAll('.el-card.is-always-shadow, [id^="clubsearch_"]');
-                const card = cards[index];
-                
-                if (!card) {
-                    console.log(`Card ${index + 1} not found`);
-                    return null;
-                }
+            console.log(`Extracting data from card ${cardIndex + 1}...`);
 
-                // Extract carnival logo/image (to be used as carnival icon)
-                const logoImg = card.querySelector('.image__wrapper img[data-url], .image__wrapper img[src]');
-                let carnivalIcon = '';
-                if (logoImg) {
-                    // Prefer data-url attribute (CloudFront CDN URL), fallback to src
-                    carnivalIcon = logoImg.getAttribute('data-url') || logoImg.getAttribute('src') || '';
-                }
+            // --- Data Extraction using Playwright Locators ---
 
-                // Extract title and date from h3.title
-                const titleElement = card.querySelector('h3.title');
-                const fullTitle = titleElement ? titleElement.textContent.trim() : null;
-                
-                // Extract subtitle/category from h4.subtitle
-                const subtitleElement = card.querySelector('h4.subtitle, h4#subtitle');
-                const category = subtitleElement ? subtitleElement.textContent.trim() : null;
-
-                // Extract venue address from Google Maps link
-                let locationAddress = '';
-                let googleMapsUrl = '';
-                const addressLink = card.querySelector('a[href*="maps.google.com"]');
-                if (addressLink) {
-                    googleMapsUrl = addressLink.href;
-                    const addressParts = Array.from(addressLink.querySelectorAll('p.m-0'))
-                        .map(p => p.textContent.trim())
-                        .filter(text => text.length > 0);
-                    locationAddress = addressParts.join(', ');
-                }
-
-                // Extract event description (first substantial paragraph not containing contact info)
-                const descriptionElements = card.querySelectorAll('p[data-v-06457438]');
-                let description = '';
-                for (const p of descriptionElements) {
-                    const text = p.textContent.trim();
-                    // Skip contact info paragraph (contains "Club Contact")
-                    if (text && !text.includes('Club Contact') && text.length > 20) {
-                        description = text;
-                        break;
-                    }
-                }
-
-                // Extract contact information from structured paragraph
-                let contactName = '';
-                let contactPhone = '';
-                let contactEmail = '';
-                const contactParagraph = Array.from(card.querySelectorAll('p')).find(p => 
-                    p.textContent.includes('Club Contact')
-                );
-                if (contactParagraph) {
-                    const contactText = contactParagraph.textContent;
-                    
-                    // Extract name (after "Name: " and before "Number:")
-                    const nameMatch = contactText.match(/Name:\s*([^\n\r]*?)(?:\s*Number:|$)/);
-                    if (nameMatch) contactName = nameMatch[1].trim();
-                    
-                    // Extract phone from tel: link
-                    const phoneLink = contactParagraph.querySelector('a[href^="tel:"]');
-                    if (phoneLink) contactPhone = phoneLink.textContent.trim();
-                    
-                    // Extract email from mailto: link
-                    const emailLink = contactParagraph.querySelector('a[href^="mailto:"]');
-                    if (emailLink) contactEmail = emailLink.textContent.trim();
-                }
-
-                // Extract event type from structured data (filter out "Touch" events)
-                let eventType = '';
-                const typeItems = card.querySelectorAll('.item');
-                for (const item of typeItems) {
-                    const label = item.querySelector('.list-item');
-                    const value = item.querySelector('.right');
-                    if (label && value && label.textContent.trim() === 'Type') {
-                        eventType = value.textContent.trim();
-                        break;
-                    }
-                }
-
-                // Check if registration button exists (indicates active event)
-                const registerButton = card.querySelector('button#cardButton, button.el-button--primary');
-                const hasRegistration = !!registerButton;
-
-                return {
-                    carnivalIcon,
-                    fullTitle,
-                    category,
-                    locationAddress,
-                    googleMapsUrl,
-                    description,
-                    contactName,
-                    contactPhone,
-                    contactEmail,
-                    eventType,
-                    hasRegistration,
-                    cardText: card.textContent?.trim() || ''
-                };
-                
-            }, { index: cardIndex });
-
-            if (!cardData) {
-                console.log(`❌ No data extracted from card ${cardIndex + 1}`);
-                return null;
+            // Extract carnival logo/image.
+            // We find the locator first, then check if it exists before getting attributes.
+            const logoLocator = currentCard.locator('.image__wrapper img');
+            let carnivalIcon = '';
+            if (await logoLocator.count() > 0) {
+                // Prefer data-url, then src, then an empty string.
+                carnivalIcon = (await logoLocator.getAttribute('data-url')) || (await logoLocator.getAttribute('src')) || '';
             }
 
-            // Skip Touch events as per requirements
+            // Extract title and category.
+            const titleLocator = currentCard.locator('h3.title');
+            const fullTitle = await titleLocator.count() > 0 ? (await titleLocator.textContent()).trim() : null;
+
+            const subtitleLocator = currentCard.locator('h4.subtitle, h4#subtitle');
+            const category = await subtitleLocator.count() > 0 ? (await subtitleLocator.textContent()).trim() : null;
+
+            // Extract venue address from Google Maps link.
+            const addressLinkLocator = currentCard.locator('a[href*="maps.google.com"]');
+            let locationAddress = '';
+            let googleMapsUrl = '';
+            if (await addressLinkLocator.count() > 0) {
+                googleMapsUrl = await addressLinkLocator.getAttribute('href');
+                // Get all text from child <p> elements and join them.
+                const addressParts = await addressLinkLocator.locator('p.m-0').allTextContents();
+                locationAddress = addressParts.map(p => p.trim()).filter(Boolean).join(', ');
+            }
+            
+            // Extract event description.
+            // We get all potential description paragraphs and find the first suitable one.
+            // const descriptionParagraphs = await currentCard.locator('p[data-v-06457438]').all();
+            const descriptionParagraphs = await currentCard.locator('p:not(a > p)').all();
+            let description = '';
+            for (const pLocator of descriptionParagraphs) {
+                const text = (await pLocator.textContent()).trim();
+                // Skip paragraphs that are empty, short, or contain contact info.
+                if (text && !text.includes('Club Contact') && text.length > 20) {
+                    description = text;
+                    break; // Stop after finding the first valid description.
+                }
+            }
+
+            // Extract contact information.
+            // We find the specific paragraph that contains the "Club Contact" text.
+            const contactParagraphLocator = currentCard.locator('p:has-text("Club Contact")');
+            let contactName = '';
+            let contactPhone = '';
+            let contactEmail = '';
+            let facebookUrl = ''
+            let websiteUrl = '';
+            if (await contactParagraphLocator.count() > 0) {
+                const contactText = await contactParagraphLocator.textContent();
+
+                // Extract name using regex on the paragraph's text.
+                const nameMatch = contactText.match(/Name:\s*([^]*?)(?:\s*Number:|$)/);
+                if (nameMatch && nameMatch[1]) contactName = nameMatch[1].trim();
+
+                // Extract phone from the nested tel: link.
+                const phoneLocator = contactParagraphLocator.locator('a[href^="tel:"]');
+                if (await phoneLocator.count() > 0) contactPhone = (await phoneLocator.textContent()).trim();
+
+                // Extract email from the nested mailto: link.
+                const emailLocator = contactParagraphLocator.locator('a[href^="mailto:"]');
+                if (await emailLocator.count() > 0) contactEmail = (await emailLocator.textContent()).trim();
+
+                // Extract Facebook from the contact paragraph if it exists.
+                const facebookLocator = contactParagraphLocator.locator('a[href^="https://facebook.com/"], a[href^="https://www.facebook.com/"]');
+                if (await facebookLocator.count() > 0) facebookUrl = (await facebookLocator.getAttribute('href')).trim();
+
+                // Extract other URLs from the contact paragraph.
+                const websiteLocator = contactParagraphLocator.locator('a[href^="http"]:not([href*="facebook.com"])');
+                if (await websiteLocator.count() > 0) websiteUrl = (await websiteLocator.getAttribute('href')).trim();
+            }
+
+            // Extract event type.
+            let eventType = '';
+            const typeItems = await currentCard.locator('.item').all();
+            for (const itemLocator of typeItems) {
+                const labelLocator = itemLocator.locator('.list-item');
+                const labelText = await labelLocator.count() > 0 ? (await labelLocator.textContent()).trim() : '';
+                if (labelText === 'Type') {
+                    const valueLocator = itemLocator.locator('.right');
+                    eventType = await valueLocator.count() > 0 ? (await valueLocator.textContent()).trim() : '';
+                    break; // Stop after finding the type.
+                }
+            }
+
+            // Check if registration button exists.
+            const registerButtonLocator = currentCard.locator('button#cardButton, button.el-button--primary');
+            const hasRegistration = await registerButtonLocator.count() > 0;
+            
+            // --- Post-Processing ---
+
+            const cardData = {
+                carnivalIcon, fullTitle, category, locationAddress, googleMapsUrl,
+                description, contactName, contactPhone, contactEmail, eventType, 
+                hasRegistration, facebookUrl, websiteUrl
+            };
+            
             if (cardData.eventType === 'Touch') {
                 console.log(`⏭️  Skipping Touch event: ${cardData.fullTitle}`);
                 return null;
             }
 
-            // Parse title to extract carnival name and date
             if (!cardData.fullTitle) {
                 console.log('⚠️  No title found, skipping event');
                 return null;
             }
 
-            const { carnivalName, eventDate } = this.parserService.extractAndStripDateFromTitle(cardData.fullTitle);
+            const { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(cardData.fullTitle);
             if (!carnivalName || !eventDate) {
                 console.log(`⚠️  Could not parse carnival name or date from: ${cardData.fullTitle}`);
                 return null;
             }
 
-            // Generate unique event ID
-            const mySidelineEventId = this.generateEventId(carnivalName, eventDate);
-
-            // Determine Australian state from address
             const state = this.extractStateFromAddress(cardData.locationAddress);
 
             const processedCardData = {
@@ -628,23 +626,23 @@ class MySidelineScraperService {
                 carnivalName: carnivalName,
                 date: eventDate,
                 state: state,
-                locationAddress: cardData.locationAddress || '',
-                googleMapsUrl: cardData.googleMapsUrl || '',
-                description: cardData.description || '',
-                contactName: cardData.contactName || '',
-                contactPhone: cardData.contactPhone || '',
-                contactEmail: cardData.contactEmail || '',
-                category: cardData.category || '',
-                eventType: cardData.eventType || '',
-                carnivalIcon: cardData.carnivalIcon || '', // Carnival logo URL for use as carnival icon
-                registrationLink: cardData.googleMapsUrl || '', // Use Google Maps as fallback
-                mySidelineEventId: mySidelineEventId,
+                locationAddress: cardData.locationAddress,
+                googleMapsUrl: cardData.googleMapsUrl,
+                description: cardData.description,
+                contactName: cardData.contactName,
+                contactPhone: cardData.contactPhone,
+                contactEmail: cardData.contactEmail,
+                contactFacebook: cardData.facebookUrl,
+                contactWebsite: cardData.websiteUrl,
+                category: cardData.category,
+                eventType: cardData.eventType,
+                carnivalIcon: cardData.carnivalIcon,
+                registrationLink: cardData.googleMapsUrl,
                 isActive: cardData.hasRegistration,
                 source: 'MySideline',
                 scrapedAt: new Date(),
                 isMySidelineCard: true,
-                wasExpanded: wasExpanded,
-                cardText: cardData.cardText
+                fullContent: cardData.cardText
             };
 
             console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${cardData.carnivalIcon ? '[ICON]' : '[NO-ICON]'}`);
@@ -652,233 +650,49 @@ class MySidelineScraperService {
 
         } catch (error) {
             console.error(`❌ Error extracting data from card ${cardIndex + 1}:`, error.message);
+            // Log the state of the card's HTML for debugging if an error occurs.
+            console.error("Card HTML on error:", await currentCard.innerHTML());
             return null;
         }
     }
 
     /**
-     * Extract events using the browser automation (legacy method)
-     * @returns {Promise<Array>} Array of fetched event objects
+     * Extracts an Australian state or territory from a given address string.
+     * It checks against a comprehensive list of names and abbreviations.
+     * @param {string} addressString - The address string to parse.
+     * @returns {string|null} The full name of the state/territory (e.g., "New South Wales"), or null if no match is found.
      */
-    async fetchEventsWithBrowserLegacy() {
-        let browser = null;
-        let context = null;
-
-        try {
-            // Launch browser
-            browser = await chromium.launch({
-                headless: this.useHeadlessBrowser,
-                timeout: this.timeout
-            });
-            
-            context = await browser.newContext();
-            const page = await context.newPage();
-            
-            // Set a longer timeout for navigation and actions
-            page.setDefaultTimeout(this.timeout);
-            page.setDefaultNavigationTimeout(this.timeout);
-            
-            console.log(`Navigating to MySideline search URL: ${this.searchUrl}`);
-            await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded' });
-            console.log('Page loaded, waiting for content...');
-            
-            // Wait for the essential page structure and content
-            await this.waitForPageStructure(page);
-            await this.waitForJavaScriptInitialization(page);
-            await this.waitForDynamicContentLoading(page);
-            await this.waitForSearchResults(page);
-            await this.validatePageContent(page);
-            await this.waitForContentStabilization(page);
-            await this.waitForMeaningfulContent(page);
-            
-            // Extract events from the page using legacy method
-            const events = await this.extractEventsLegacy(page);
-            return events;
-                
-        } catch (error) {
-            console.error('Error during browser fetching (legacy):', error.message);
-            return [];
-        } finally {
-            try {
-                if (context) {
-                    await context.close();
-                }
-                if (browser) {
-                    await browser.close();
-                }
-            } catch (closeError) {
-                console.log('Error closing browser resources (legacy):', closeError.message);
-            }
-        }
-    }
-
-    /**
-     * Extract events from the page using legacy method (for older HTML structure)
-     * @param {Page} page - Playwright page object
-     * @returns {Promise<Array>} Array of extracted events
-     */
-    async extractEventsLegacy(page) {
-        console.log('Extracting events from MySideline page using legacy method...');
-        
-        try {
-            // Get all MySideline cards first
-            const cardElements = await page.locator('.el-card.is-always-shadow, [id^="clubsearch_"]').all();
-            console.log(`Found ${cardElements.length} MySideline cards to process`);
-
-            const extractedEvents = [];
-
-            // Process each card: extract data -> parse event
-            for (let cardIndex = 0; cardIndex < cardElements.length; cardIndex++) {
-                try {
-                    console.log(`\n--- Processing card ${cardIndex + 1}/${cardElements.length} ---`);
-                    
-                    // Extract data from this specific card using legacy structure
-                    const cardData = await this.extractSingleCardDataLegacy(page, cardIndex);
-                    
-                    if (cardData && this.isRelevantMastersEvent(cardData)) {
-                        // Parse the event data
-                        try {
-                            const standardEvent = this.parserService.parseEventFromElement(cardData);
-                            if (standardEvent) {
-                                extractedEvents.push(standardEvent);
-                                console.log(`✅ Successfully parsed event: ${standardEvent.title} ${cardData.registrationUrl ? '[REG_URL]' : ''}`);
-                            }
-                        } catch (parseError) {
-                            console.log(`Failed to parse MySideline event (legacy): ${parseError.message}`);
-                        }
-                    } else {
-                        console.log(`⏭️  Skipping card ${cardIndex + 1} - not relevant or insufficient data`);
-                    }
-                    
-                } catch (cardError) {
-                    console.log(`Error processing card ${cardIndex + 1} (legacy): ${cardError.message}`);
-                }
-            }
-
-            console.log(`\n🎯 Legacy processing completed: ${extractedEvents.length} events extracted from ${cardElements.length} cards`);
-            return extractedEvents;
-            
-        } catch (error) {
-            console.error('MySideline Playwright event extraction (legacy) failed:', error.message);
-            return [];
-        }
-    }
-
-    /**
-     * Extract data from a single MySideline event card (legacy method)
-     * @param {Page} page - Playwright page object
-     * @param {number} cardIndex - Index of the card to extract data from
-     * @returns {Promise<Object|null>} Extracted card data or null
-     */
-    async extractSingleCardDataLegacy(page, cardIndex) {
-        try {
-            const cardData = await page.evaluate(({ index }) => {
-                const cards = document.querySelectorAll('.el-card.is-always-shadow, [id^="clubsearch_"], .el-card__body');
-                const card = cards[index];
-                
-                if (!card) {
-                    console.log(`Card ${index + 1} not found`);
-                    return null;
-                }
-                
-                const cardText = card.textContent?.trim() || '';
-                
-                // Extract carnival logo/image (to be used as carnival icon)
-                const logoImg = card.querySelector('.image__wrapper img[data-url]');
-                const carnivalIcon = logoImg ? logoImg.getAttribute('data-url') : null;
-                
-                // Extract title and date from h3.title
-                const titleElement = card.querySelector('h3.title');
-                const fullTitle = titleElement ? titleElement.textContent.trim() : null;
-                
-                // Extract subtitle/category from h4.subtitle
-                const subtitleElement = card.querySelector('h4.subtitle, h4#subtitle');
-                const category = subtitleElement ? subtitleElement.textContent.trim() : null;
-                
-                // Extract venue address from Google Maps link
-                let locationAddress = '';
-                let googleMapsUrl = '';
-                const addressLink = card.querySelector('a[href*="maps.google.com"]');
-                if (addressLink) {
-                    googleMapsUrl = addressLink.href;
-                    const addressParts = Array.from(addressLink.querySelectorAll('p.m-0'))
-                        .map(p => p.textContent.trim())
-                        .filter(text => text.length > 0);
-                    locationAddress = addressParts.join(', ');
-                }
-                
-                // Extract event description
-                const descriptionElements = card.querySelectorAll('p[data-v-06457438]');
-                let description = '';
-                for (const p of descriptionElements) {
-                    const text = p.textContent.trim();
-                    // Skip contact info paragraph (contains "Club Contact")
-                    if (text && !text.includes('Club Contact') && text.length > 20) {
-                        description = text;
-                        break;
-                    }
-                }
-                
-                // Extract contact information
-                let contactName = '';
-                let contactPhone = '';
-                let contactEmail = '';
-                const contactParagraph = Array.from(card.querySelectorAll('p')).find(p => 
-                    p.textContent.includes('Club Contact')
-                );
-                if (contactParagraph) {
-                    const contactText = contactParagraph.textContent;
-                    
-                    // Extract name (after "Name: ")
-                    const nameMatch = contactText.match(/Name:\s*([^\n\r]*?)(?:\s*Number:|$)/);
-                    if (nameMatch) contactName = nameMatch[1].trim();
-                    
-                    // Extract phone from tel: link
-                    const phoneLink = contactParagraph.querySelector('a[href^="tel:"]');
-                    if (phoneLink) contactPhone = phoneLink.textContent.trim();
-                    
-                    // Extract email from mailto: link
-                    const emailLink = contactParagraph.querySelector('a[href^="mailto:"]');
-                    if (emailLink) contactEmail = emailLink.textContent.trim();
-                }
-                
-                // Extract event type (filter out "Touch" events)
-                let eventType = '';
-                const typeItems = card.querySelectorAll('.item');
-                for (const item of typeItems) {
-                    const label = item.querySelector('.list-item');
-                    const value = item.querySelector('.right');
-                    if (label && value && label.textContent.trim() === 'Type') {
-                        eventType = value.textContent.trim();
-                        break;
-                    }
-                }
-                
-                // Check if registration button exists (indicates active event)
-                const registerButton = card.querySelector('button#cardButton, button.el-button--primary');
-                const hasRegistration = !!registerButton;
-                
-                return {
-                    carnivalIcon,
-                    fullTitle,
-                    category,
-                    locationAddress,
-                    googleMapsUrl,
-                    description,
-                    contactName,
-                    contactPhone,
-                    contactEmail,
-                    eventType,
-                    hasRegistration
-                };
-                
-            }, { index: cardIndex });
-            
-            return cardData;
-        } catch (error) {
-            console.log(`Error extracting data from card ${cardIndex + 1} (legacy): ${error.message}`);
+    extractStateFromAddress(addressString) {
+        if (!addressString || typeof addressString !== 'string') {
             return null;
         }
+
+        // A list of states and territories with their names and abbreviations.
+        const states = [
+            { name: 'New South Wales', abbreviations: ['NSW', 'N.S.W.'] },
+            { name: 'Victoria', abbreviations: ['VIC', 'Vic.'] },
+            { name: 'Queensland', abbreviations: ['QLD', 'Qld.'] },
+            { name: 'Western Australia', abbreviations: ['WA', 'W.A.'] },
+            { name: 'South Australia', abbreviations: ['SA', 'S.A.'] },
+            { name: 'Tasmania', abbreviations: ['TAS', 'Tas.'] },
+            { name: 'Australian Capital Territory', abbreviations: ['ACT', 'A.C.T.'] },
+            { name: 'Northern Territory', abbreviations: ['NT', 'N.T.'] }
+        ];
+
+        const lowerCaseAddress = addressString.toLowerCase();
+
+        for (const state of states) {
+            // Create a regex pattern to match the full name or any abbreviation as a whole word.
+            // Example for NSW: /\b(new south wales|nsw|n\.s\.w\.)\b/i
+            const patterns = [state.name.toLowerCase(), ...state.abbreviations.map(abbr => abbr.toLowerCase().replace(/\./g, '\\.'))];
+            const regex = new RegExp(`\\b(${patterns.join('|')})\\b`, 'i');
+
+            if (regex.test(lowerCaseAddress)) {
+                return state.name; // Return the full, properly cased name.
+            }
+        }
+
+        return null; // Return null if no state is found.
     }
 
     /**
@@ -888,7 +702,7 @@ class MySidelineScraperService {
      * @param {number} cardIndex - Optional specific card index
      * @returns {Promise<string|null>} Registration URL or null
      */
-    async captureEventBasedRegistrationUrl(page, selector, cardIndex = null) {
+    captureEventBasedRegistrationUrl(currentCard, selector, cardIndex = null) {
         try {
             console.log('Attempting to capture registration URL via navigation/popup events...');
             
@@ -896,8 +710,8 @@ class MySidelineScraperService {
                 ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"]`
                 : `${selector} button.el-button--primary, ${selector} button[id="cardButton"]`;
             
-            const button = page.locator(buttonSelector).first();
-            const isVisible = await button.isVisible();
+            const button = currentCard.locator(buttonSelector).first();
+            const isVisible = button.isVisible();
             
             if (!isVisible) {
                 console.log('No visible registration button found for event-based extraction');
@@ -905,7 +719,7 @@ class MySidelineScraperService {
             }
             
             // Check button text
-            const buttonText = await button.textContent() || '';
+            const buttonText = button.textContent() || '';
             const isRegisterButton = buttonText.toLowerCase().includes('register') ||
                                buttonText.toLowerCase().includes('join') ||
                                buttonText.toLowerCase().includes('sign up');
@@ -916,13 +730,13 @@ class MySidelineScraperService {
             }
             
             // Try popup monitoring first
-            const popupUrl = await this.extractRegistrationUrlViaPopup(page, buttonSelector);
+            const popupUrl = this.extractRegistrationUrlViaPopup(page, buttonSelector);
             if (popupUrl) {
                 return popupUrl;
             }
             
             // Try navigation monitoring as fallback
-            const navigationUrl = await this.extractRegistrationUrlViaNavigation(page, buttonSelector);
+            const navigationUrl = this.extractRegistrationUrlViaNavigation(page, buttonSelector);
             if (navigationUrl) {
                 return navigationUrl;
             }
@@ -942,18 +756,20 @@ class MySidelineScraperService {
      * @param {number} cardIndex - Optional specific card index
      * @returns {Promise<string|null>} Registration URL or null
      */
-    async extractRegistrationUrl(page, selector, cardIndex = null) {
+    extractRegistrationUrl(currentCard, selector, cardIndex = null) {
         try {
             console.log(`Extracting registration URL${cardIndex !== null ? ` from card ${cardIndex + 1}` : ''}...`);
             
             // First try: Intercept dynamic event listeners
-            const dynamicUrl = await this.interceptDynamicRegistrationUrl(page, selector, cardIndex);
+            // TODO: CHANGE TO USE CURRENT CARD
+            const dynamicUrl = this.interceptDynamicRegistrationUrl(currentCard, selector, cardIndex);
             if (dynamicUrl) {
                 return dynamicUrl;
             }
             
             // Third try: Monitor navigation/popup events
-            const eventUrl = await this.captureEventBasedRegistrationUrl(page, selector, cardIndex);
+            // TODO: CHANGE TO USE CURRENT CARD
+            const eventUrl = this.captureEventBasedRegistrationUrl(currentCard, selector, cardIndex);
             if (eventUrl) {
                 return eventUrl;
             }
@@ -1050,7 +866,7 @@ class MySidelineScraperService {
      * @param {number} cardIndex - Optional specific card index
      * @returns {Promise<string|null>} Registration URL or null
      */
-    async interceptDynamicRegistrationUrl(page, selector, cardIndex = null) {
+    interceptDynamicRegistrationUrl(currentCard, selector, cardIndex = null) {
         try {
             console.log('Intercepting dynamic event listeners for registration URL...');
             
@@ -1058,7 +874,7 @@ class MySidelineScraperService {
             let capturedUrls = [];
             
             // Intercept all click events and capture potential registration URLs
-            await page.evaluate(() => {
+            currentCard.evaluate(() => {
                 // Store original methods
                 window.__originalWindowOpen = window.open;
                 window.__originalLocationHref = window.location.href;
@@ -1160,17 +976,17 @@ class MySidelineScraperService {
                 ? `${selector}:nth-child(${cardIndex + 1}) button.el-button--primary, ${selector}:nth-child(${cardIndex + 1}) button[id="cardButton"], ${selector}:nth-child(${cardIndex + 1}) button`
                 : `${selector} button.el-button--primary, ${selector} button[id="cardButton"], ${selector} button`;
             
-            const buttons = await page.locator(buttonSelector).all();
+            const buttons = page.locator(buttonSelector).all();
             
             for (let i = 0; i < Math.min(buttons.length, 3); i++) { // Limit to first 3 buttons to avoid excessive clicking
                 try {
                     const button = buttons[i];
-                    const isVisible = await button.isVisible();
+                    const isVisible = button.isVisible();
                     
                     if (!isVisible) continue;
                     
                     // Check if button text suggests it's a registration button
-                    const buttonText = await button.textContent() || '';
+                    const buttonText = button.textContent() || '';
                     const isRegisterButton = buttonText.toLowerCase().includes('register') ||
                                            buttonText.toLowerCase().includes('join') ||
                                            buttonText.toLowerCase().includes('sign up');
@@ -1180,11 +996,11 @@ class MySidelineScraperService {
                     console.log(`Clicking potential registration button: "${buttonText}"`);
                     
                     // Click the button and wait briefly for any dynamic behavior
-                    await button.click({ timeout: 5000 });
-                    await this.delay(2000);
-                    
+                    button.click({ timeout: 5000 });
+                    this.delay(2000);
+
                     // Check if any URLs were captured
-                    capturedUrls = await page.evaluate(() => {
+                    capturedUrls = page.evaluate(() => {
                         return window.__capturedUrls || [];
                     });
                     
@@ -1199,7 +1015,7 @@ class MySidelineScraperService {
             }
             
             // Clean up event listeners
-            await page.evaluate(() => {
+            page.evaluate(() => {
                 if (window.__originalWindowOpen) {
                     window.open = window.__originalWindowOpen;
                 }
@@ -1239,12 +1055,12 @@ class MySidelineScraperService {
      * @param {string} buttonSelector - Selector for the registration button
      * @returns {Promise<string|null>} Registration URL or null
      */
-    async extractRegistrationUrlViaNavigation(page, buttonSelector) {
+    extractRegistrationUrlViaNavigation(page, buttonSelector) {
         try {
             console.log('Attempting to extract registration URL via navigation monitoring...');
             
             const registrationButton = page.locator(buttonSelector).first();
-            const isVisible = await registrationButton.isVisible();
+            const isVisible = registrationButton.isVisible();
             
             if (!isVisible) {
                 console.log('Registration button not visible for navigation extraction');
@@ -1258,17 +1074,17 @@ class MySidelineScraperService {
             }).catch(() => null);
             
             // Click the button
-            await registrationButton.click();
+            registrationButton.click();
             
             // Wait for navigation or timeout
-            const navigationResponse = await navigationPromise;
+            const navigationResponse = navigationPromise;
             
             if (navigationResponse) {
                 const registrationUrl = navigationResponse.url();
                 console.log(`✅ Registration URL extracted via navigation: ${registrationUrl}`);
                 
                 // Navigate back to the original page
-                await page.goBack({ waitUntil: 'domcontentloaded' });
+                page.goBack({ waitUntil: 'domcontentloaded' });
                 
                 return registrationUrl;
             } else {
@@ -1288,13 +1104,13 @@ class MySidelineScraperService {
      * @param {string} buttonSelector - Selector for the registration button
      * @returns {Promise<string|null>} Registration URL or null
      */
-    async extractRegistrationUrlViaPopup(page, buttonSelector) {
+    extractRegistrationUrlViaPopup(page, buttonSelector) {
         try {
             console.log('Attempting to extract registration URL via popup monitoring...');
             
             
             const registrationButton = page.locator(buttonSelector).first();
-            const isVisible = await registrationButton.isVisible();
+            const isVisible = registrationButton.isVisible();
             
             if (!isVisible) {
                 console.log('Registration button not visible for popup extraction');
@@ -1305,17 +1121,17 @@ class MySidelineScraperService {
             const popupPromise = page.waitForEvent('popup', { timeout: 10000 }).catch(() => null);
             
             // Click the button
-            await registrationButton.click();
+            registrationButton.click();
             
             // Wait for popup or timeout
-            const popup = await popupPromise;
+            const popup = popupPromise;
             
             if (popup) {
                 const registrationUrl = popup.url();
                 console.log(`✅ Registration URL extracted via popup: ${registrationUrl}`);
                 
                 // Close the popup
-                await popup.close();
+                popup.close();
                 
                 return registrationUrl;
             } else {
@@ -1608,69 +1424,6 @@ class MySidelineScraperService {
     }
 
     /**
-     * Expand click-expand elements within a specific card
-     * @param {Page} page - Playwright page object
-     * @param {number} cardIndex - Index of the card to expand
-     * @returns {Promise<boolean>} True if expansion was successful
-     */
-    async expandCardClickExpandElements(page, cardIndex) {
-        try {
-            // Target click-expand elements within the specific card
-            const cardSelector = `.el-card.is-always-shadow:nth-child(${cardIndex + 1}), [id^="clubsearch_"]:nth-child(${cardIndex + 1})`;
-            const clickExpandSelector = `${cardSelector} .click-expand`;
-            
-            const clickExpandElements = await page.locator(clickExpandSelector).all();
-            
-            if (clickExpandElements.length === 0) {
-                console.log(`No click-expand elements found in card ${cardIndex + 1}`);
-                return false;
-            }
-            
-            console.log(`Found ${clickExpandElements.length} click-expand elements in card ${cardIndex + 1}`);
-            
-            let expandedCount = 0;
-            for (let i = 0; i < clickExpandElements.length; i++) {
-                try {
-                    const element = clickExpandElements[i];
-                    
-                    const isVisible = await element.isVisible();
-                    if (!isVisible) {
-                        console.log(`Click-expand element ${i + 1} in card ${cardIndex + 1} is not visible, skipping`);
-                        continue;
-                    }
-                    
-                    console.log(`Expanding element ${i + 1} in card ${cardIndex + 1}...`);
-                    
-                    await element.scrollIntoViewIfNeeded();
-                    await this.delay(300);
-                    await element.click();
-                    await this.delay(800);
-                    
-                    // Wait for the specific expanded content to appear
-                    await this.waitForCardExpandedContent(page, cardIndex, i);
-                    expandedCount++;
-                    
-                    console.log(`✅ Expanded element ${i + 1} in card ${cardIndex + 1}`);
-                    
-                } catch (clickError) {
-                    console.log(`Failed to expand element ${i + 1} in card ${cardIndex + 1}: ${clickError.message}`);
-                }
-            }
-            
-            if (expandedCount > 0) {
-                console.log(`🔄 Waiting for expanded content to stabilize in card ${cardIndex + 1}...`);
-                await this.delay(2000);
-            }
-            
-            return expandedCount > 0;
-            
-        } catch (error) {
-            console.log(`Error expanding card ${cardIndex + 1}: ${error.message}`);
-            return false;
-        }
-    }
-
-    /**
      * Check if card data represents a relevant Masters event
      * @param {Object} cardData - The extracted card data
      * @returns {boolean} True if relevant
@@ -1680,65 +1433,20 @@ class MySidelineScraperService {
             return false;
         }
         
-        const fullContent = (cardData.fullContent || '').toLowerCase();
+        const url = cardData.contactWebsite?.toLowerCase() || '';
+        const email = cardData.contactEmail?.toLowerCase() || '';
+        const facebook = cardData.contactFacebook?.toLowerCase() || '';
         const title = cardData.title.toLowerCase();
         const subtitle = (cardData.subtitle || '').toLowerCase();
         
         // Filter out Touch events at the scraping stage
-        const containsTouch = fullContent.includes('touch') || title.includes('touch') || subtitle.includes('touch');
+        const containsTouch = url.includes('touch') || email.includes('touch') ||facebook.includes('touch') || title.includes('touch') || subtitle.includes('touch');
         if (containsTouch) {
             console.log(`❌ Filtering out Touch event: ${cardData.title}`);
             return false;
         }
         
-        // Basic validation - just need minimum content and a title
-        const hasMinimumContent = cardData.fullContent && cardData.fullContent.length > 50;
-        
-        return hasMinimumContent;
-    }
-
-    /**
-     * Wait for expanded content to load within a specific card
-     * @param {Page} page - Playwright page object
-     * @param {number} cardIndex - Index of the card
-     * @param {number} elementIndex - Index of the expand element within the card
-     */
-    async waitForCardExpandedContent(page, cardIndex, elementIndex) {
-        try {
-            const cardSelector = `.el-card.is-always-shadow:nth-child(${cardIndex + 1}), [id^="clubsearch_"]:nth-child(${cardIndex + 1})`;
-            
-            await page.waitForFunction((selector) => {
-                const card = document.querySelector(selector);
-                if (!card) return false;
-                
-                // Look for the actual MySideline expanded content selectors
-                const customExpandElements = card.querySelectorAll('.custom-expand');
-                
-                // Check if any custom-expand elements have expanded (height: auto and content)
-                for (let expandElement of customExpandElements) {
-                    const style = expandElement.getAttribute('style') || '';
-                    const hasAutoHeight = style.includes('height: auto') || style.includes('height:auto');
-                    const hasContent = expandElement.textContent && expandElement.textContent.trim().length > 50;
-                    
-                    if (hasAutoHeight && hasContent) {
-                        return true;
-                    }
-                }
-                
-                // Also check for other potential expanded content indicators
-                const hasVisibleExpandedContent = card.querySelectorAll('.custom-expand p, .custom-expand div, .custom-expand a').length > 3;
-                const hasContactInfo = card.textContent.includes('Club Contact') || card.textContent.includes('Email:') || card.textContent.includes('Number:');
-                const hasAddressInfo = card.textContent.includes('maps.google.com') || card.querySelector('a[href*="maps.google.com"]');
-                
-                return hasVisibleExpandedContent || hasContactInfo || hasAddressInfo;
-            }, { timeout: 5000 }, cardSelector);
-            
-            console.log(`✅ Expanded content detected in card ${cardIndex + 1}, element ${elementIndex + 1}`);
-            
-        } catch (waitError) {
-            console.log(`Could not detect expanded content in card ${cardIndex + 1}, element ${elementIndex + 1}, continuing...`);
-            await this.delay(1000);
-        }
+        return true;
     }
 
     /**
@@ -2101,7 +1809,7 @@ class MySidelineScraperService {
                 console.log(`\n🎯 Processing event ${i + 1}/${events.length}: ${event.title}`);
                 
                 // Extract registration URL using the updated method
-                const registrationUrl = await this.extractRegistrationUrl(page, selector, event.cardIndex);
+                const registrationUrl = this.extractRegistrationUrl(page, selector, event.cardIndex);
                 event.registrationUrl = registrationUrl;
                 
                 // Log extracted data
