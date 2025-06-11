@@ -660,11 +660,11 @@ describe('MySidelineScraperService', () => {
             expect(result).toBe(false);
         });
 
-        it('should return false for low relevance score', () => {
+        it('should return true for non-Touch events with sufficient content', () => {
             // Arrange
             const cardData = {
                 title: 'Some Event',
-                fullContent: 'Some random event content that is not relevant to masters rugby league',
+                fullContent: 'Some random event content that has enough characters to meet minimum requirements',
                 dates: [],
                 hasLocation: false
             };
@@ -673,7 +673,7 @@ describe('MySidelineScraperService', () => {
             const result = service.isRelevantMastersEvent(cardData);
 
             // Assert
-            expect(result).toBe(false);
+            expect(result).toBe(true);
         });
     });
 

@@ -823,65 +823,111 @@ class MySidelineScraperService {
     /**
      * Validate extracted event data
      * @param {Array} events - Array of event objects
-     * @returns {Array} Validated events with proper data types
+     * @returns {Object} Validation results object
      */
     validateExtractedData(events) {
         if (!Array.isArray(events)) {
-            return [];
+            return {
+                totalEvents: 0,
+                validEvents: 0,
+                eventsWithTitle: 0,
+                eventsWithDate: 0,
+                eventsWithLocation: 0,
+                eventsWithRegistration: 0,
+                issues: ['Input is not an array']
+            };
         }
 
-        return events.filter(event => {
+        const validation = {
+            totalEvents: events.length,
+            validEvents: 0,
+            eventsWithTitle: 0,
+            eventsWithDate: 0,
+            eventsWithLocation: 0,
+            eventsWithRegistration: 0,
+            issues: []
+        };
+        
+        for (let i = 0; i < events.length; i++) {
+            const event = events[i];
+            const eventNum = i + 1;
+            let isValid = true;
+            
             try {
                 // Basic validation
                 if (!event || typeof event !== 'object') {
-                    return false;
+                    validation.issues.push(`Event ${eventNum}: Invalid event object`);
+                    continue;
                 }
 
-                // Title is required
-                if (!event.title || typeof event.title !== 'string' || !event.title.trim()) {
-                    return false;
+                // Title validation
+                if (event.title && typeof event.title === 'string' && event.title.trim()) {
+                    validation.eventsWithTitle++;
+                } else {
+                    validation.issues.push(`Event ${eventNum}: Missing or invalid title`);
+                    isValid = false;
                 }
 
-                // Date validation - handle both string and Date objects
+                // Date validation
                 if (event.date) {
-                    let dateStr = '';
-                    if (event.date instanceof Date) {
-                        dateStr = event.date.toISOString();
-                    } else if (typeof event.date === 'string') {
-                        dateStr = event.date.trim();
+                    let dateValid = false;
+                    if (event.date instanceof Date && !isNaN(event.date.getTime())) {
+                        dateValid = true;
+                    } else if (typeof event.date === 'string' && event.date.trim()) {
+                        const parsedDate = new Date(event.date.trim());
+                        if (!isNaN(parsedDate.getTime())) {
+                            event.date = parsedDate;
+                            dateValid = true;
+                        }
+                    }
+                    
+                    if (dateValid) {
+                        validation.eventsWithDate++;
                     } else {
-                        return false; // Invalid date type
+                        validation.issues.push(`Event ${eventNum}: Invalid date format`);
+                        isValid = false;
                     }
-
-                    if (!dateStr) {
-                        return false;
-                    }
-
-                    // Try to parse the date
-                    const parsedDate = new Date(dateStr);
-                    if (isNaN(parsedDate.getTime())) {
-                        return false;
-                    }
-
-                    // Update the event date to be consistent
-                    event.date = parsedDate;
+                } else {
+                    validation.issues.push(`Event ${eventNum}: Missing date`);
+                    isValid = false;
                 }
 
-                // Ensure other string fields are properly formatted
+                // Location validation
+                if (event.locationAddress || event.location) {
+                    const location = event.locationAddress || event.location;
+                    if (typeof location === 'string' && location.trim()) {
+                        validation.eventsWithLocation++;
+                    }
+                } else {
+                    validation.issues.push(`Event ${eventNum}: Missing location information`);
+                }
+
+                // Registration validation
+                if (event.registrationLink || event.registrationUrl) {
+                    const regLink = event.registrationLink || event.registrationUrl;
+                    if (typeof regLink === 'string' && regLink.trim()) {
+                        validation.eventsWithRegistration++;
+                    }
+                } else {
+                    validation.issues.push(`Event ${eventNum}: Missing registration link`);
+                }
+
+                // Clean up string fields
                 if (event.description && typeof event.description === 'string') {
                     event.description = event.description.trim();
                 }
 
-                if (event.location && typeof event.location === 'string') {
-                    event.location = event.location.trim();
+                if (isValid) {
+                    validation.validEvents++;
                 }
-
-                return true;
+                
             } catch (error) {
-                console.error('Error validating event data:', error);
-                return false;
+                console.error(`Error validating event ${eventNum}:`, error);
+                validation.issues.push(`Event ${eventNum}: Validation error - ${error.message}`);
             }
-        });
+        }
+        
+        return validation;
     }
 
     /**
@@ -1077,34 +1123,10 @@ class MySidelineScraperService {
             return false;
         }
         
-        // Calculate relevance score
-        let relevanceScore = 0;
-        if (fullContent.includes('masters')) relevanceScore += 15;
-        if (fullContent.includes('nrl')) relevanceScore += 12;
-        if (fullContent.includes('rugby') || fullContent.includes('league')) relevanceScore += 10;
-        if (fullContent.includes('carnival') || fullContent.includes('tournament') || fullContent.includes('championship')) relevanceScore += 8;
-        if (fullContent.includes('event') || fullContent.includes('gala')) relevanceScore += 6;
-        if (cardData.dates && cardData.dates.length > 0) relevanceScore += 5;
-        if (cardData.hasLocation) relevanceScore += 4;
-        if (cardData.title.length > 10) relevanceScore += 3;
-        if (subtitle.includes('masters') || subtitle.includes('nrl')) relevanceScore += 7;
-        if (cardData.hasExpandedContent) relevanceScore += 5;
-        if (cardData.hasVenue) relevanceScore += 3;
-        if (cardData.hasTime) relevanceScore += 2;
-        if (cardData.hasContact) relevanceScore += 3;
-        if (cardData.hasFees) relevanceScore += 2;
-        
-        // Require minimum content length and relevance score
+        // Basic validation - just need minimum content and a title
         const hasMinimumContent = cardData.fullContent && cardData.fullContent.length > 50;
-        const isRelevant = relevanceScore >= 25 && hasMinimumContent; // Increased threshold from 15 to 25
         
-        if (isRelevant) {
-            console.log(`✅ Card ${cardData.cardIndex + 1} is relevant (score: ${relevanceScore}): ${cardData.title}`);
-        } else {
-            console.log(`❌ Card ${cardData.cardIndex + 1} not relevant (score: ${relevanceScore}): ${cardData.title}`);
-        }
-        
-        return isRelevant;
+        return hasMinimumContent;
     }
 
     /**
