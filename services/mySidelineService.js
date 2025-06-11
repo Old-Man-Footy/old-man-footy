@@ -856,6 +856,7 @@ class MySidelineIntegrationService {
 
     /**
      * Enhanced event extraction specifically optimized for MySideline Vue.js structure
+     * Now includes click-to-expand functionality for full event details
      * @param {Page} page - Playwright page object
      * @returns {Promise<Array>} Array of events
      */
@@ -874,7 +875,8 @@ class MySidelineIntegrationService {
                     formCount: document.querySelectorAll('form, input, button').length,
                     hasContent: document.body && document.body.textContent.trim().length > 1000,
                     hasMasters: document.body ? document.body.textContent.toLowerCase().includes('masters') : false,
-                    cardCount: document.querySelectorAll('.el-card, [id^="clubsearch_"]').length
+                    cardCount: document.querySelectorAll('.el-card, [id^="clubsearch_"]').length,
+                    clickExpandCount: document.querySelectorAll('.click-expand').length
                 };
             });
             
@@ -892,6 +894,9 @@ class MySidelineIntegrationService {
                     console.log('Could not save screenshot:', screenshotError.message);
                 }
             }
+
+            // First, expand all click-expand elements to get full details
+            await this.expandAllClickExpandElements(page);
 
             // Extract potential events using MySideline-specific Vue.js selectors
             const events = await page.evaluate(() => {
@@ -918,27 +923,42 @@ class MySidelineIntegrationService {
                         const imageSrc = imageElement ? imageElement.src : '';
                         const imageAlt = imageElement ? imageElement.alt : '';
                         
-                        // Enhanced content detection for MySideline Masters events
-                        const containsMasters = cardText.toLowerCase().includes('masters');
-                        const containsRugby = cardText.toLowerCase().includes('rugby');
-                        const containsLeague = cardText.toLowerCase().includes('league');
-                        const containsNRL = cardText.toLowerCase().includes('nrl');
-                        const containsCarnival = cardText.toLowerCase().includes('carnival');
-                        const containsTournament = cardText.toLowerCase().includes('tournament');
-                        const containsChampionship = cardText.toLowerCase().includes('championship');
-                        const containsEvent = cardText.toLowerCase().includes('event');
-                        const containsGala = cardText.toLowerCase().includes('gala');
+                        // Check if this card had expanded content
+                        const hasExpandedContent = card.querySelector('.expanded-content, .click-expand-content, .expanded-details');
+                        let expandedDetails = '';
                         
-                        // Look for dates in the title or text
-                        const dateMatches = cardText.match(/(\d{1,2}[\s\/\-]\w+[\s\/\-]\d{4}|\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|20\d{2})/gi) || [];
+                        if (hasExpandedContent) {
+                            expandedDetails = hasExpandedContent.textContent?.trim() || '';
+                        }
+                        
+                        // Enhanced content detection for MySideline Masters events
+                        const fullContent = cardText + ' ' + expandedDetails;
+                        const containsMasters = fullContent.toLowerCase().includes('masters');
+                        const containsRugby = fullContent.toLowerCase().includes('rugby');
+                        const containsLeague = fullContent.toLowerCase().includes('league');
+                        const containsNRL = fullContent.toLowerCase().includes('nrl');
+                        const containsCarnival = fullContent.toLowerCase().includes('carnival');
+                        const containsTournament = fullContent.toLowerCase().includes('tournament');
+                        const containsChampionship = fullContent.toLowerCase().includes('championship');
+                        const containsEvent = fullContent.toLowerCase().includes('event');
+                        const containsGala = fullContent.toLowerCase().includes('gala');
+                        
+                        // Look for dates in the title or text (including expanded content)
+                        const dateMatches = fullContent.match(/(\d{1,2}[\s\/\-]\w+[\s\/\-]\d{4}|\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|20\d{2})/gi) || [];
                         
                         // Look for locations (Australian states/territories)
-                        const hasLocation = /\b(NSW|QLD|VIC|SA|WA|NT|ACT|TAS|Australia|Brisbane|Sydney|Melbourne|Perth|Adelaide|Darwin|Hobart|Canberra)\b/i.test(cardText);
+                        const hasLocation = /\b(NSW|QLD|VIC|SA|WA|NT|ACT|TAS|Australia|Brisbane|Sydney|Melbourne|Perth|Adelaide|Darwin|Hobart|Canberra)\b/i.test(fullContent);
+                        
+                        // Look for additional details that might be in expanded content
+                        const hasVenue = /\b(venue|ground|park|stadium|field|centre|center|club|oval)\b/i.test(fullContent);
+                        const hasTime = /\b(\d{1,2}:\d{2}|\d{1,2}(am|pm))\b/i.test(fullContent);
+                        const hasContact = /\b(contact|email|phone|mobile|call)\b/i.test(fullContent);
+                        const hasFees = /\b(fee|cost|price|\$\d+|entry|registration)\b/i.test(fullContent);
                         
                         // Size validation
-                        const hasSubstantialContent = title.length > 5 && cardText.length > 20;
+                        const hasSubstantialContent = title.length > 5 && fullContent.length > 20;
                         
-                        // Relevance scoring for MySideline Masters events
+                        // Relevance scoring for MySideline Masters events (enhanced with expanded content)
                         let relevanceScore = 0;
                         if (containsMasters) relevanceScore += 15; // Higher score for Masters
                         if (containsNRL) relevanceScore += 12;
@@ -950,6 +970,13 @@ class MySidelineIntegrationService {
                         if (title.length > 10) relevanceScore += 3;
                         if (subtitle.includes('Masters') || subtitle.includes('NRL')) relevanceScore += 7;
                         
+                        // Bonus points for expanded content details
+                        if (hasExpandedContent) relevanceScore += 5;
+                        if (hasVenue) relevanceScore += 3;
+                        if (hasTime) relevanceScore += 2;
+                        if (hasContact) relevanceScore += 3;
+                        if (hasFees) relevanceScore += 2;
+                        
                         // Only include MySideline cards with Masters relevance
                         if (relevanceScore >= 10 && hasSubstantialContent) {
                             const cardId = card.id || card.getAttribute('id') || `mysideline-card-${index}`;
@@ -960,7 +987,7 @@ class MySidelineIntegrationService {
                                 title: title,
                                 subtitle: subtitle,
                                 id: cardId,
-                                innerHTML: card.innerHTML.substring(0, 2000),
+                                innerHTML: card.innerHTML.substring(0, 4000), // Increased to capture expanded content
                                 href: null, // MySideline cards don't seem to have direct links in this structure
                                 imageSrc: imageSrc,
                                 imageAlt: imageAlt,
@@ -969,11 +996,19 @@ class MySidelineIntegrationService {
                                 dates: dateMatches,
                                 hasLocation: hasLocation,
                                 cardIndex: index,
-                                isMySidelineCard: true
+                                isMySidelineCard: true,
+                                // New expanded content fields
+                                expandedDetails: expandedDetails,
+                                hasExpandedContent: !!hasExpandedContent,
+                                hasVenue: hasVenue,
+                                hasTime: hasTime,
+                                hasContact: hasContact,
+                                hasFees: hasFees,
+                                fullContent: fullContent
                             };
 
                             foundElements.push(elementData);
-                            console.log(`Found MySideline Masters card (score: ${relevanceScore}): ${title}`);
+                            console.log(`Found MySideline Masters card (score: ${relevanceScore}): ${title} ${hasExpandedContent ? '[EXPANDED]' : ''}`);
                         }
                     } catch (err) {
                         console.log(`Error processing MySideline card ${index}:`, err.message);
@@ -1006,7 +1041,10 @@ class MySidelineIntegrationService {
                                         title: text.split('\n')[0] || text.substring(0, 100),
                                         id: `fallback-${selectorIndex}-${index}`,
                                         relevanceScore: 5,
-                                        isFallback: true
+                                        isFallback: true,
+                                        expandedDetails: '',
+                                        hasExpandedContent: false,
+                                        fullContent: text
                                     });
                                 }
                             });
@@ -1041,14 +1079,14 @@ class MySidelineIntegrationService {
                     const standardEvent = this.parseEventFromMySidelineElement(event);
                     if (standardEvent) {
                         standardEvents.push(standardEvent);
-                        console.log(`Successfully parsed MySideline event: ${standardEvent.title}`);
+                        console.log(`Successfully parsed MySideline event: ${standardEvent.title} ${event.hasExpandedContent ? '[WITH EXPANDED DETAILS]' : ''}`);
                     }
                 } catch (parseError) {
                     console.log(`Failed to parse MySideline event: ${parseError.message}`);
                 }
             }
 
-            console.log(`Successfully extracted ${standardEvents.length} events from MySideline using Vue.js-optimized extraction`);
+            console.log(`Successfully extracted ${standardEvents.length} events from MySideline using Vue.js-optimized extraction with click-expand functionality`);
             return standardEvents;
             
         } catch (error) {
@@ -1058,7 +1096,128 @@ class MySidelineIntegrationService {
     }
 
     /**
-     * Parse event information from MySideline Vue.js card element
+     * Click on all elements with class="click-expand" to reveal full event details
+     * @param {Page} page - Playwright page object
+     */
+    async expandAllClickExpandElements(page) {
+        console.log('Expanding all click-expand elements to get full event details...');
+        
+        try {
+            // Find all click-expand elements
+            const clickExpandElements = await page.locator('.click-expand').all();
+            console.log(`Found ${clickExpandElements.length} click-expand elements`);
+            
+            if (clickExpandElements.length === 0) {
+                console.log('No click-expand elements found, skipping expansion');
+                return;
+            }
+            
+            // Click each expand element and wait for content to load
+            for (let i = 0; i < clickExpandElements.length; i++) {
+                try {
+                    const element = clickExpandElements[i];
+                    
+                    // Check if element is visible and clickable
+                    const isVisible = await element.isVisible();
+                    if (!isVisible) {
+                        console.log(`Click-expand element ${i + 1} is not visible, skipping`);
+                        continue;
+                    }
+                    
+                    console.log(`Clicking expand element ${i + 1} of ${clickExpandElements.length}...`);
+                    
+                    // Scroll element into view if needed
+                    await element.scrollIntoViewIfNeeded();
+                    
+                    // Wait a moment for any scroll animations
+                    await this.delay(500);
+                    
+                    // Click the element
+                    await element.click();
+                    
+                    // Wait for content to expand
+                    await this.delay(1000);
+                    
+                    // Wait for any dynamic content loading after click
+                    await this.waitForExpandedContent(page, i);
+                    
+                    console.log(`Successfully expanded element ${i + 1}`);
+                    
+                } catch (clickError) {
+                    console.log(`Failed to click expand element ${i + 1}: ${clickError.message}`);
+                    // Continue with other elements even if one fails
+                }
+                
+                // Add delay between clicks to be respectful
+                if (i < clickExpandElements.length - 1) {
+                    await this.delay(800);
+                }
+            }
+            
+            // Final wait for all expanded content to stabilize
+            console.log('Waiting for all expanded content to stabilize...');
+            await this.delay(3000);
+            
+            // Take a screenshot after expansion for debugging
+            if (!this.useHeadlessBrowser) {
+                try {
+                    await page.screenshot({ 
+                        path: 'debug-mysideline-expanded.png', 
+                        fullPage: true 
+                    });
+                    console.log('Debug screenshot after expansion saved as debug-mysideline-expanded.png');
+                } catch (screenshotError) {
+                    console.log('Could not save expanded screenshot:', screenshotError.message);
+                }
+            }
+            
+            console.log('Click-expand element processing completed');
+            
+        } catch (error) {
+            console.error('Error during click-expand processing:', error.message);
+            // Don't throw error - continue with extraction even if expansion fails
+        }
+    }
+
+    /**
+     * Wait for expanded content to load after clicking a click-expand element
+     * @param {Page} page - Playwright page object
+     * @param {number} elementIndex - Index of the element that was clicked
+     */
+    async waitForExpandedContent(page, elementIndex) {
+        try {
+            // Wait for common expanded content indicators
+            await page.waitForFunction(() => {
+                // Look for common expanded content selectors
+                const expandedContentSelectors = [
+                    '.expanded-content',
+                    '.click-expand-content', 
+                    '.expanded-details',
+                    '.show-more-content',
+                    '.additional-details',
+                    '.full-details',
+                    '.event-details',
+                    '.expanded',
+                    '[style*="display: block"]',
+                    '[style*="height: auto"]'
+                ];
+                
+                return expandedContentSelectors.some(selector => 
+                    document.querySelectorAll(selector).length > 0
+                );
+            }, { timeout: 5000 });
+            
+            console.log(`Expanded content detected for element ${elementIndex + 1}`);
+            
+        } catch (waitError) {
+            // If we can't detect expanded content, just wait a bit and continue
+            console.log(`Could not detect expanded content for element ${elementIndex + 1}, continuing...`);
+            await this.delay(1500);
+        }
+    }
+
+    /**
+     * Parse event information from MySideline Vue.js card element (enhanced with expanded content)
      * @param {Object} element - The scraped MySideline card element data
      * @returns {Object|null} - Standardized event object or null
      */
@@ -1066,7 +1225,8 @@ class MySidelineIntegrationService {
         try {
             const title = element.title || '';
             const subtitle = element.subtitle || '';
-            const fullText = element.text || '';
+            const fullText = element.fullContent || element.text || '';
+            const expandedDetails = element.expandedDetails || '';
             const dates = element.dates || [];
             
             // Extract and clean the event name - ensure subtitle is NOT included
@@ -1093,7 +1253,7 @@ class MySidelineIntegrationService {
                 }
             }
             
-            // If we still don't have a date, try other sources
+            // If we still don't have a date, try other sources including expanded content
             let eventDate = extractedDate;
             
             if (!eventDate && dates.length > 0) {
@@ -1109,17 +1269,39 @@ class MySidelineIntegrationService {
                 }
             }
             
-            // Extract location and state
-            const location = this.extractLocationFromMySidelineText(fullText);
+            // Try to extract additional details from expanded content
+            const enhancedLocation = this.extractLocationFromExpandedContent(fullText, expandedDetails);
+            const enhancedSchedule = this.extractScheduleFromExpandedContent(fullText, expandedDetails);
+            const enhancedContact = this.extractContactFromExpandedContent(expandedDetails);
+            const enhancedFees = this.extractFeesFromExpandedContent(expandedDetails);
+            
+            // Extract location and state (using enhanced location if available)
+            const location = enhancedLocation || this.extractLocationFromMySidelineText(fullText);
             const state = this.extractStateFromMySidelineText(fullText, subtitle);
             
-            // Generate description - DO NOT include subtitle in main title, but can use it for description
+            // Generate enhanced description using expanded content
             const descriptionParts = [];
             if (subtitle && subtitle.trim() && !subtitle.toLowerCase().includes('masters rugby league')) {
                 // Only include subtitle in description if it adds meaningful information
                 descriptionParts.push(subtitle);
             }
-            descriptionParts.push('Event details available on MySideline');
+            if (enhancedSchedule) {
+                descriptionParts.push(enhancedSchedule);
+            }
+            if (expandedDetails && expandedDetails.length > 20) {
+                // Include relevant parts of expanded details
+                const cleanedExpandedDetails = expandedDetails
+                    .replace(/click to expand/gi, '')
+                    .replace(/show more/gi, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (cleanedExpandedDetails.length > 10) {
+                    descriptionParts.push(cleanedExpandedDetails.substring(0, 200));
+                }
+            }
+            if (descriptionParts.length === 0) {
+                descriptionParts.push('Event details available on MySideline');
+            }
             const description = descriptionParts.join('. ').substring(0, 500);
             
             // Skip if we don't have minimum required info
@@ -1131,16 +1313,16 @@ class MySidelineIntegrationService {
                 title: eventName.trim(),
                 date: eventDate, // Don't set a default date if none found
                 locationAddress: location && location !== 'TBA - Check MySideline for details' ? location : null,
-                organiserContactName: null, // Let delegates fill this in when they claim the event
-                organiserContactEmail: null, // Let delegates fill this in when they claim the event
-                organiserContactPhone: null, // Let delegates fill this in when they claim the event
+                organiserContactName: enhancedContact.name || null,
+                organiserContactEmail: enhancedContact.email || null,
+                organiserContactPhone: enhancedContact.phone || null,
                 scheduleDetails: description && description !== 'Event details available on MySideline' ? description : null,
                 state: state,
                 registrationLink: `https://profile.mysideline.com.au/register/${element.id || 'event'}`,
                 mySidelineEventId: element.id || `mysideline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 isManuallyEntered: false,
                 maxTeams: 16,
-                feesDescription: 'Entry fees TBA - check MySideline registration for details',
+                feesDescription: enhancedFees || 'Entry fees TBA - check MySideline registration for details',
                 registrationDeadline: eventDate ? new Date(eventDate.getTime() - (7 * 24 * 60 * 60 * 1000)) : null,
                 ageCategories: ['35+', '40+', '45+', '50+'],
                 isRegistrationOpen: true,
@@ -1154,13 +1336,77 @@ class MySidelineIntegrationService {
                     extractedDates: dates,
                     originalTitle: title,
                     cleanedTitle: eventName,
-                    extractedDateFromTitle: extractedDate
+                    extractedDateFromTitle: extractedDate,
+                    // Enhanced with expanded content data
+                    hasExpandedContent: element.hasExpandedContent,
+                    expandedDetails: expandedDetails,
+                    enhancedLocation: enhancedLocation,
+                    enhancedSchedule: enhancedSchedule,
+                    enhancedContact: enhancedContact,
+                    enhancedFees: enhancedFees,
+                    fullContent: fullText
                 }
             };
         } catch (error) {
             console.error('Error parsing MySideline element:', error);
             return null;
         }
+    }
+
+    /**
+     * Extract enhanced location information from expanded content
+     * @param {string} fullText - The full text content
+     * @param {string} expandedDetails - The expanded details content
+     * @returns {string|null} - Enhanced location or null
+     */
+    extractLocationFromExpandedContent(fullText, expandedDetails) {
+        const content = (fullText + ' ' + expandedDetails).toLowerCase();
+        
+        // Look for specific venue patterns in expanded content
+        const venuePatterns = [
+            /venue:\s*([^,\n]+)/i,
+            /location:\s*([^,\n]+)/i,
+            /address:\s*([^,\n]+)/i,
+            /at\s+([^,\n]+(?:park|ground|stadium|field|centre|center|oval|club))/i,
+            /([^,\n]+(?:park|ground|stadium|field|centre|center|oval|club))/i
+        ];
+        
+        for (const pattern of venuePatterns) {
+            const match = content.match(pattern);
+            if (match && match[1] && match[1].trim().length > 5) {
+                return match[1].trim();
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Extract enhanced schedule information from expanded content
+     * @param {string} fullText - The full text content
+     * @param {string} expandedDetails - The expanded details content
+     * @returns {string|null} - Enhanced schedule or null
+     */
+    extractScheduleFromExpandedContent(fullText, expandedDetails) {
+        const content = fullText + ' ' + expandedDetails;
+        
+        // Look for schedule patterns
+        const schedulePatterns = [
+            /schedule:\s*([^,\n]+)/i,
+            /time:\s*([^,\n]+)/i,
+            /(\d{1,2}:\d{2}(?:\s*[ap]m)?(?:\s*-\s*\d{1,2}:\d{2}(?:\s*[ap]m)?)?)/i,
+            /start(?:s)?:\s*([^,\n]+)/i,
+            /kick(?:\s*off)?:\s*([^,\n]+)/i
+        ];
+        
+        for (const pattern of schedulePatterns) {
+            const match = content.match(pattern);
+            if (match && match[1] && match[1].trim().length > 3) {
+                return match[1].trim();
+            }
+        }
+        
+        return null;
     }
 
     /**
@@ -1252,14 +1498,13 @@ class MySidelineIntegrationService {
                 pattern.lastIndex = 0;
             }
         }
-
         // Additional cleanup for common title artifacts
         cleanTitle = cleanTitle
-            .replace(/\s*[\-\|]\s*$/, '') // Remove trailing dashes or pipes
-            .replace(/^\s*[\-\|]\s*/, '') // Remove leading dashes or pipes
-            .replace(/\(\s*\)/, '') // Remove empty brackets
-            .replace(/\s+/g, ' ') // Normalize whitespace
-            .trim();
+        .replace(/\s*[\-\|]\s*$/, '') // Remove trailing dashes or pipes
+        .replace(/^\s*[\-\|]\s*/, '') // Remove leading dashes or pipes
+        .replace(/\(\s*\)/, '') // Remove empty brackets
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
 
         return {
             cleanTitle: cleanTitle,
@@ -1267,40 +1512,67 @@ class MySidelineIntegrationService {
         };
     }
 
+
     /**
-     * Extract event name from text lines (enhanced to avoid subtitle contamination)
-     * @param {Array} lines - Array of text lines
-     * @returns {string} - Extracted event name
+     * Extract contact information from expanded content
+     * @param {string} expandedDetails - The expanded details content
+     * @returns {Object} - Contact information object
      */
-    extractEventName(lines) {
-        if (!lines || lines.length === 0) return 'MySideline Masters Event';
+    extractContactFromExpandedContent(expandedDetails) {
+        const contact = {
+            name: null,
+            email: null,
+            phone: null
+        };
         
-        // Look for the most descriptive line as event name, but avoid subtitle-like content
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.length > 5 && trimmed.length < 100 && 
-                (trimmed.toLowerCase().includes('masters') || 
-                 trimmed.toLowerCase().includes('tournament') || 
-                 trimmed.toLowerCase().includes('carnival') ||
-                 trimmed.toLowerCase().includes('championship')) &&
-                !trimmed.toLowerCase().includes('rugby league') && // Avoid generic subtitle text
-                !trimmed.toLowerCase().includes('click to expand')) { // Avoid UI text
-                return trimmed;
+        if (!expandedDetails) return contact;
+        
+        // Extract email
+        const emailMatch = expandedDetails.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+        if (emailMatch) {
+            contact.email = emailMatch[1];
+        }
+        
+        // Extract phone
+        const phoneMatch = expandedDetails.match(/(?:phone|mobile|call|contact):\s*([0-9\s\-\(\)]+)/i);
+        if (phoneMatch && phoneMatch[1].trim().length > 8) {
+            contact.phone = phoneMatch[1].trim();
+        }
+        
+        // Extract contact name
+        const nameMatch = expandedDetails.match(/contact:\s*([^,\n]+)/i);
+        if (nameMatch && nameMatch[1] && !nameMatch[1].includes('@') && !nameMatch[1].match(/\d{8,}/)) {
+            contact.name = nameMatch[1].trim();
+        }
+        
+        return contact;
+    }
+
+    /**
+     * Extract fees information from expanded content
+     * @param {string} expandedDetails - The expanded details content
+     * @returns {string|null} - Fees information or null
+     */
+    extractFeesFromExpandedContent(expandedDetails) {
+        if (!expandedDetails) return null;
+        
+        // Look for fee patterns
+        const feePatterns = [
+            /fee[s]?:\s*([^,\n]+)/i,
+            /cost:\s*([^,\n]+)/i,
+            /price:\s*([^,\n]+)/i,
+            /entry:\s*([^,\n]+)/i,
+            /(\$\d+(?:\.\d{2})?[^,\n]*)/i
+        ];
+        
+        for (const pattern of feePatterns) {
+            const match = expandedDetails.match(pattern);
+            if (match && match[1] && match[1].trim().length > 2) {
+                return match[1].trim();
             }
         }
         
-        // Fallback to first substantial line that doesn't look like a subtitle
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.length > 10 && trimmed.length < 150 &&
-                !trimmed.toLowerCase().includes('click to expand') &&
-                !trimmed.toLowerCase().includes('more details') &&
-                !trimmed.toLowerCase().includes('show more')) {
-                return trimmed;
-            }
-        }
-        
-        return lines[0]?.trim() || 'MySideline Masters Event';
+        return null;
     }
 }
 
