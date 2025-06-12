@@ -73,6 +73,8 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | 🔄 In Progress |
 | As a developer, I want to store the MySideline title in a separate hidden field that never changes, for use when matching MySideline carnivals.<br>It should:<br>- Populate on create from MySideline<br>- Be used for matching Carnival records instead of using `title` | ⭕ Not Started |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. | ⭕ Not Started |
+| As a delegate, I want to be able to merge (unclaimed) carnivals with one I own if for some reason a duplicate is imported and does not match an already created carnival.<br> option to select which carnival to merge with. Default to the latest | ⭕ Not Started |
+| As a delegate, when I claim a carnival and I already have a carnival created, i should get the option to merge it with that carnival. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
 | As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
