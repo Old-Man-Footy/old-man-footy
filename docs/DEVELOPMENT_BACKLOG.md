@@ -71,14 +71,15 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, When I mark my club as inactive, it should be removed from the "Find Clubs" interface (it can show up on historical pages but should clearly show the club is no longer active). | ✅ Completed |
 | As a developer, I want random images uploaded by users (not icons) to be used in the home page carousel. Prioritising recent images. | ✅ Completed |
 | As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | 🔄 In Progress |
+| As a developer, MySideline Sync should only update 'Active' carnivals | ⭕ Not Started |
 | As a developer, I want to store the MySideline title in a separate hidden field that never changes, for use when matching MySideline carnivals.<br>It should:<br>- Populate on create from MySideline<br>- Be used for matching Carnival records instead of using `title` | ⭕ Not Started |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. | ⭕ Not Started |
-| As a delegate, I want to be able to merge (unclaimed) carnivals with one I own if for some reason a duplicate is imported and does not match an already created carnival.<br> option to select which carnival to merge with. Default to the latest | ⭕ Not Started |
-| As a delegate, when I claim a carnival and I already have a carnival created, i should get the option to merge it with that carnival. | ⭕ Not Started |
+| As a delegate, I want to be able to merge (unclaimed) carnivals with one I own if for some reason a duplicate is imported and does not match an already created carnival.<br> option to select which carnival to merge with. Default to the latest.<br>Merging will:<br>- Populate all MySideline related fields.<br>- Set only empty fields from the 'source' carnival<br>- Deactivate the old Carnvial. | ⭕ Not Started |
+| As a delegate, when I claim a carnival and I already have at least one carnival created, i should get the option to merge it with that/or another carnival. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
+| As a developer, I want the Go Back button on error screens to navigate 'back' to the previous page. | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
-| As a developer, I want the Go Back button on error screens to navigate 'back' | ⭕ Not Started |
-| As a user, When I click on Register on an Event, it should take me to the register page for that event on MySideline (this register link is on the MySideline event page). | ⭕ Not Started |
+| As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ⭕ Not Started |
 | **Testing** | |
 | As a tester, I want comprehensive unit tests for, and limited to `models/Carnival.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/Club.js`  | ⭕ Not Started |
@@ -139,7 +140,6 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `views/contact.ejs`  | ⭕ Not Started |
 | **Enhancements** | |
 | As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
-| As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
 | As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
 | As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
