@@ -111,10 +111,12 @@
                                     </div>
                                     <div class="mb-2">
                                         <small class="text-muted">
-                                            <i class="bi bi-geo-alt"></i> 
-                                            <%= carnival.locationAddress.length > 30 ? 
-                                                carnival.locationAddress.substring(0, 30) + '...' : 
-                                                carnival.locationAddress %>
+                                            <%- include('../partials/carnival-address', { 
+                                                carnival: carnival, 
+                                                layout: 'inline',
+                                                truncate: 30,
+                                                addressClass: 'text-muted'
+                                            }) %>
                                         </small>
                                     </div>
                                     

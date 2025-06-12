@@ -73,8 +73,8 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a developer, I want to store the MySideline title in a separate hidden field that never changes, for use when matching MySideline carnivals.<br>It should:<br>- Populate on create from MySideline<br>- Be used for matching Carnival records instead of using `title` | ✅ Completed |
 | As a developer, MySideline Sync should only update 'Active' carnivals | ✅ Completed |
 | As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | ✅ Completed |
-| As a user, I should not see inactive Carnivals on the front or 'All Carnivals' pages. | ⭕ Not Started |
-| As a user, I would like addresses on Carnivals to be clickable, opening a link to a Google Maps location. `https://maps.google.com/maps?q=<address>` and have it rendered neatly. | ⭕ Not Started |
+| As a user, I should not see inactive Carnivals on the front or 'All Carnivals' pages. | ✅ Completed |
+| As a user, I would like addresses on Carnivals to be clickable, opening a link to a Google Maps location. `https://maps.google.com/maps?q=<locationAddress>` and have it rendered neatly using locationAddressPart1-4 fields. | ✅ Completed |
 | As a delegate, I should see a warning about deactivating a Carnival, or Club stating they will "no longer be visible on the site" before I can save it. | ⭕ Not Started |
 | As a delegate, if I deactivate my Club, I expect the Club will remain visible only for historical carnivals, but the link to the club page itself will no longer open, and the link will look disabled. | ⭕ Not Started |
 | As a delegate, when signing up, deactivated clubs are able to be chosen from. If I select a club which is deactivated, an option to reactivate is offered. If reactivated, the new user will be added as a Primary Delegate. The original delegate will be notified via email, with a link to respond if believed fraudulent. | ⭕ Not Started |
@@ -144,6 +144,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `views/layout.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/user-guide.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/contact.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `views/partials/carnival-address.ejs`  | ⭕ Not Started |
 | **Enhancements** | |
 | As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
