@@ -193,6 +193,14 @@ Carnival.init({
       this.setDataValue('title', value.trim());
     }
   },
+  mySidelineTitle: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [3, 200]
+    },
+    comment: 'Original MySideline title for matching purposes - never changes once set'
+  },
   date: {
     type: DataTypes.DATE,
     allowNull: true, // Allow null for MySideline imports

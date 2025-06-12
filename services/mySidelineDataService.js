@@ -12,6 +12,55 @@ class MySidelineDataService {
     }
 
     /**
+     * Find existing MySideline event using flexible matching
+     * @param {Object} eventData - Event data to match against
+     * @returns {Promise<Carnival|null>} Existing carnival or null
+     */
+    async findExistingMySidelineEvent(eventData) {
+        // Primary match: Use mySidelineTitle (this is the most reliable for MySideline events)
+        if (eventData.title) {
+            const primaryMatch = await Carnival.findOne({
+                where: {
+                    mySidelineTitle: eventData.title,
+                    isManuallyEntered: false // Only match MySideline events
+                }
+            });
+            
+            if (primaryMatch) {
+                return primaryMatch;
+            }
+        }
+        
+        // Secondary match: Use combination of available fields
+        const whereConditions = {
+            isManuallyEntered: false
+        };
+        
+        // Add title condition
+        if (eventData.title) {
+            whereConditions.mySidelineTitle = eventData.title;
+        }
+        
+        // Add date condition if available
+        if (eventData.date) {
+            whereConditions.date = eventData.date;
+        }
+        
+        // Add location condition if available
+        if (eventData.locationAddress) {
+            whereConditions.locationAddress = eventData.locationAddress;
+        }
+        
+        // Only search if we have meaningful criteria
+        if (Object.keys(whereConditions).length > 1) { 
+            // More than just isManuallyEntered
+            return await Carnival.findOne({ where: whereConditions });
+        }
+        
+        return null;
+    }
+
+    /**
      * Process scraped events and save to database
      * @param {Array} scrapedEvents - Array of scraped event objects
      * @returns {Promise<Array>} Array of processed event objects
@@ -23,16 +72,11 @@ class MySidelineDataService {
         for (const eventData of scrapedEvents) {
             try {
                 // Check if event already exists
-                const existingEvent = await Carnival.findOne({
-                    where: {
-                        title: eventData.title,
-                        date: eventData.date,
-                    }
-                });
+                const existingEvent = await this.findExistingMySidelineEvent(eventData);
                 
                 if (existingEvent) {
                     if (eventData.date < new Date()) {
-                        console.log(`Skipping update of past event: ${eventData.title} on ${eventData.date}`);
+                        console.log(`Skipping update of past event: ${eventData.title} on ${eventData.date} at ${eventData.locationAddress}`);
                         continue; // Skip to next event
                     }
 
@@ -103,6 +147,7 @@ class MySidelineDataService {
                         socialMediaWebsite: eventData.socialMediaWebsite,
                         state: eventData.state,
                         title: eventData.title,
+                        mySidelineTitle: eventData.title, // Populate mySidelineTitle with the title
                     });
 
                     // If the event is more than 7 days in the future, set registration open
