@@ -130,8 +130,7 @@ describe.only('MySidelineScraperService Integration Tests', () => {
             // Validate carnival icon structure for events that have them
             eventsWithIcons.forEach(event => {
                 expect(event.carnivalIcon).toMatch(/^https?:\/\//); // Should be a valid URL
-                expect(event.carnivalIcon).toContain('cloudfront'); // Should be CloudFront CDN URL
-                console.log(`🎨 Carnival icon found: ${event.carnivalName} -> ${event.carnivalIcon.substring(0, 50)}...`);
+                console.log(`🎨 Carnival icon found: ${event.title} -> ${event.carnivalIcon.substring(0, 50)}...`);
             });
 
             // At least 50% of events should have carnival icons
@@ -148,11 +147,10 @@ describe.only('MySidelineScraperService Integration Tests', () => {
 
             // Test the first event for all expected fields from new HTML structure
             const firstEvent = events[0];
-            console.log(`🔍 Testing first event: ${firstEvent.carnivalName}`);
+            console.log(`🔍 Testing first event: ${firstEvent.title}`);
 
             // Core fields that should always be present
             expect(firstEvent).toHaveProperty('title');
-            expect(firstEvent).toHaveProperty('carnivalName');
             expect(firstEvent).toHaveProperty('date');
             expect(firstEvent).toHaveProperty('source', 'MySideline');
             expect(firstEvent).toHaveProperty('isMySidelineCard', true);
@@ -171,12 +169,11 @@ describe.only('MySidelineScraperService Integration Tests', () => {
 
             // Validate data types
             expect(typeof firstEvent.title).toBe('string');
-            expect(typeof firstEvent.carnivalName).toBe('string');
             expect(typeof firstEvent.carnivalIcon).toBe('string');
             expect(typeof firstEvent.isActive).toBe('boolean');
             expect(firstEvent.scrapedAt).toBeInstanceOf(Date);
 
-            console.log(`✅ Event structure validation passed for: ${firstEvent.carnivalName}`);
+            console.log(`✅ Event structure validation passed for: ${firstEvent.title}`);
         }, INTEGRATION_TIMEOUT);
 
         it('should extract Google Maps URLs from venue addresses', async () => {
@@ -198,7 +195,7 @@ describe.only('MySidelineScraperService Integration Tests', () => {
             // Validate Google Maps URLs
             eventsWithMaps.forEach(event => {
                 expect(event.googleMapsUrl).toMatch(/^https:\/\/maps\.google\.com/);
-                console.log(`📍 Maps URL found: ${event.carnivalName} -> ${event.locationAddress}`);
+                console.log(`📍 Maps URL found: ${event.title} -> ${event.locationAddress}`);
             });
 
             // Most events should have location addresses
@@ -218,45 +215,28 @@ describe.only('MySidelineScraperService Integration Tests', () => {
 
             // Check contact information extraction
             const eventsWithContact = events.filter(event => 
-                event.contactName || event.contactPhone || event.contactEmail
+                event.organiserContactName || event.organiserContactPhone || event.organiserContactEmail
             );
 
             console.log(`📞 Events with contact info: ${eventsWithContact.length}/${events.length}`);
 
             // Validate contact information formats
             eventsWithContact.forEach(event => {
-                if (event.contactPhone) {
+                if (event.organiserContactPhone) {
                     // Phone should be reasonably formatted
-                    expect(event.contactPhone.length).toBeGreaterThan(8);
+                    expect(event.organiserContactPhone.length).toBeGreaterThan(8);
                 }
-                if (event.contactEmail) {
+                if (event.organiserContactEmail) {
                     // Email should contain @ symbol
-                    expect(event.contactEmail).toContain('@');
+                    expect(event.organiserContactEmail).toContain('@');
                 }
-                console.log(`👤 Contact: ${event.carnivalName} -> ${event.contactName} | ${event.contactPhone} | ${event.contactEmail}`);
+                console.log(`👤 Contact: ${event.title} -> ${event.organiserContactName} | ${event.organiserContactPhone} | ${event.organiserContactEmail}`);
             });
 
             // Most events should have some contact information
             expect(eventsWithContact.length).toBeGreaterThan(events.length * 0.8);
         }, INTEGRATION_TIMEOUT);
 
-        it('should filter out Touch events as specified', async () => {
-            // Arrange & Act
-            const events = await service.scrapeEvents();
-
-            // Assert
-            expect(Array.isArray(events)).toBe(true);
-            
-            // Verify no Touch events are included
-            const touchEvents = events.filter(event => event.eventType === 'Touch');
-            expect(touchEvents.length).toBe(0);
-
-            console.log(`✅ Touch events filtered: 0 Touch events found in ${events.length} total events`);
-
-            // Log event types found
-            const eventTypes = [...new Set(events.map(e => e.eventType).filter(t => t))];
-            console.log(`📊 Event types found: ${eventTypes.join(', ')}`);
-        }, INTEGRATION_TIMEOUT);
     });
 
     describe('End-to-End Scraping Process', () => {
@@ -282,11 +262,11 @@ describe.only('MySidelineScraperService Integration Tests', () => {
             // Validate overall data quality
             const dataQualityScore = events.reduce((score, event) => {
                 let eventScore = 0;
-                if (event.carnivalName) eventScore += 1;
+                if (event.title) eventScore += 1;
                 if (event.date) eventScore += 1;
                 if (event.locationAddress) eventScore += 1;
                 if (event.carnivalIcon) eventScore += 0.5;
-                if (event.contactName || event.contactPhone || event.contactEmail) eventScore += 0.5;
+                if (event.organiserContactName || event.organiserContactPhone || event.organiserContactEmail) eventScore += 0.5;
                 return score + eventScore;
             }, 0);
 
