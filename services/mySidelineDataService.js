@@ -19,9 +19,7 @@ class MySidelineDataService {
     async processScrapedEvents(scrapedEvents) {
         console.log(`Processing ${scrapedEvents.length} scraped MySideline events...`);
         
-        const processedEvents = [];
-        let filteredCount = 0;
-        
+        const processedEvents = [];        
         for (const eventData of scrapedEvents) {
             try {
                 // Check if event already exists
@@ -111,9 +109,6 @@ class MySidelineDataService {
         }
         
         console.log(`Successfully processed ${processedEvents.length} MySideline events`);
-        if (filteredCount > 0) {
-            console.log(`Filtered out ${filteredCount} Touch events`);
-        }
         return processedEvents;
     }
 
