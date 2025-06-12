@@ -46,6 +46,7 @@ const userUpdateValidation = [
 router.post('/users/:id/edit', userUpdateValidation, adminController.updateUser);
 router.post('/users/:id/password-reset', adminController.issuePasswordReset);
 router.post('/users/:id/toggle-status', adminController.toggleUserStatus);
+router.delete('/users/:id', adminController.deleteUser);
 
 /**
  * Club Management Routes

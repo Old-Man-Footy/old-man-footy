@@ -75,7 +75,8 @@ class MySidelineDataService {
                 const existingEvent = await this.findExistingMySidelineEvent(eventData);
                 
                 if (existingEvent) {
-                    if (eventData.date < new Date()) {
+                    if (eventData.date < new Date() || existingEvent.isActive === false) {
+                        // If the event date is in the past or already marked as inactive, skip it
                         console.log(`Skipping update of past event: ${eventData.title} on ${eventData.date} at ${eventData.locationAddress}`);
                         continue; // Skip to next event
                     }

@@ -673,6 +673,102 @@ const generateReport = async (req, res) => {
     }
 };
 
+/**
+ * Delete User
+ */
+const deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const currentUser = req.user;
+        
+        const user = await User.findByPk(userId, {
+            include: [{ model: Club, as: 'club' }]
+        });
+
+        if (!user) {
+            return res.json({ success: false, message: 'User not found' });
+        }
+
+        // Prevent self-deletion
+        if (user.id === currentUser.id) {
+            return res.json({ 
+                success: false, 
+                message: 'You cannot delete your own account' 
+            });
+        }
+
+        // Prevent non-admin from deleting admin users
+        if (user.isAdmin && !currentUser.isAdmin) {
+            return res.json({ 
+                success: false, 
+                message: 'Only administrators can delete admin accounts' 
+            });
+        }
+
+        const { sequelize } = require('../config/database');
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Handle primary delegate transfer if user is primary delegate
+            if (user.isPrimaryDelegate && user.clubId) {
+                // Find another delegate in the same club to transfer role to
+                const alternateDelegate = await User.findOne({
+                    where: {
+                        clubId: user.clubId,
+                        isActive: true,
+                        isPrimaryDelegate: false,
+                        id: { [Op.ne]: user.id }
+                    },
+                    transaction
+                });
+
+                if (alternateDelegate) {
+                    // Transfer primary delegate role
+                    await alternateDelegate.update({
+                        isPrimaryDelegate: true
+                    }, { transaction });
+
+                    console.log(`✅ Primary delegate role transferred from ${user.email} to ${alternateDelegate.email}`);
+                } else {
+                    // No other delegates available - log warning but allow deletion
+                    console.log(`⚠️ Warning: Deleting primary delegate ${user.email} with no alternate delegates available for club ${user.club?.clubName}`);
+                }
+            }
+
+            // Soft delete user by setting isActive to false and clearing sensitive data
+            await user.update({
+                isActive: false,
+                email: `deleted_${user.id}_${user.email}`, // Preserve for audit but make unique
+                passwordHash: null,
+                invitationToken: null,
+                tokenExpires: null,
+                passwordResetToken: null,
+                passwordResetExpiry: null
+            }, { transaction });
+
+            await transaction.commit();
+
+            console.log(`✅ User ${user.firstName} ${user.lastName} (${user.email}) has been deleted by admin ${currentUser.email}`);
+
+            res.json({ 
+                success: true, 
+                message: `User ${user.firstName} ${user.lastName} has been deleted successfully` 
+            });
+
+        } catch (transactionError) {
+            await transaction.rollback();
+            throw transactionError;
+        }
+
+    } catch (error) {
+        console.error('❌ Error deleting user:', error);
+        res.json({ 
+            success: false, 
+            message: 'Error deleting user' 
+        });
+    }
+};
+
 module.exports = {
     getAdminDashboard,
     getUserManagement,
@@ -680,6 +776,7 @@ module.exports = {
     updateUser,
     issuePasswordReset,
     toggleUserStatus,
+    deleteUser,
     getClubManagement,
     showEditClub,
     updateClub,

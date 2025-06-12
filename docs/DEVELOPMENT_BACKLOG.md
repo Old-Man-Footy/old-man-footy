@@ -71,9 +71,9 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, When I mark my club as inactive, it should be removed from the "Find Clubs" interface (it can show up on historical pages but should clearly show the club is no longer active). | ✅ Completed |
 | As a developer, I want random images uploaded by users (not icons) to be used in the home page carousel. Prioritising recent images. | ✅ Completed |
 | As a developer, I want to store the MySideline title in a separate hidden field that never changes, for use when matching MySideline carnivals.<br>It should:<br>- Populate on create from MySideline<br>- Be used for matching Carnival records instead of using `title` | ✅ Completed |
-| As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | 🔄 In Progress |
-| As a user, I should not see inactive Carnivals on the front, or 'All Carnivals' page. | ⭕ Not Started |
-| As a developer, MySideline Sync should only update 'Active' carnivals | ⭕ Not Started |
+| As a developer, MySideline Sync should only update 'Active' carnivals | ✅ Completed |
+| As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | ✅ Completed |
+| As a user, I should not see inactive Carnivals on the front or 'All Carnivals' pages. | ⭕ Not Started |
 | As a delegate, I should see a warning about deactivating a Carnival, or Club stating they will "no longer be visible on the site" before I can save it. | ⭕ Not Started |
 | As a delegate, if I deactivate my Club, I expect the Club will remain visible only for historical carnivals, but the link to the club page itself will no longer open, and the link will look disabled. | ⭕ Not Started |
 | As a delegate, when signing up, deactivated clubs are able to be chosen from. If I select a club which is deactivated, an option to reactivate is offered. If reactivated, the new user will be added as a Primary Delegate. The original delegate will be notified via email, with a link to respond if believed fraudulent. | ⭕ Not Started |
