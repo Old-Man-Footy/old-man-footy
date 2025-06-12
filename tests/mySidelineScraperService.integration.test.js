@@ -154,7 +154,6 @@ describe.only('MySidelineScraperService Integration Tests', () => {
             expect(firstEvent).toHaveProperty('title');
             expect(firstEvent).toHaveProperty('carnivalName');
             expect(firstEvent).toHaveProperty('date');
-            expect(firstEvent).toHaveProperty('mySidelineEventId');
             expect(firstEvent).toHaveProperty('source', 'MySideline');
             expect(firstEvent).toHaveProperty('isMySidelineCard', true);
 
@@ -257,29 +256,6 @@ describe.only('MySidelineScraperService Integration Tests', () => {
             // Log event types found
             const eventTypes = [...new Set(events.map(e => e.eventType).filter(t => t))];
             console.log(`📊 Event types found: ${eventTypes.join(', ')}`);
-        }, INTEGRATION_TIMEOUT);
-
-        it('should generate unique event IDs', async () => {
-            // Arrange & Act
-            const events = await service.scrapeEvents();
-
-            // Assert
-            expect(Array.isArray(events)).toBe(true);
-            expect(events.length).toBeGreaterThan(0);
-
-            // Check for unique event IDs
-            const eventIds = events.map(event => event.mySidelineEventId);
-            const uniqueEventIds = new Set(eventIds);
-
-            expect(uniqueEventIds.size).toBe(eventIds.length);
-            console.log(`✅ All ${events.length} events have unique IDs`);
-
-            // Validate ID format (should contain carnival name and date)
-            events.forEach(event => {
-                expect(event.mySidelineEventId).toBeTruthy();
-                expect(typeof event.mySidelineEventId).toBe('string');
-                expect(event.mySidelineEventId.length).toBeGreaterThan(10);
-            });
         }, INTEGRATION_TIMEOUT);
     });
 

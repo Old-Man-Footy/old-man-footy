@@ -59,12 +59,6 @@ class DatabaseOptimizer {
             `);
 
             await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_carnivals_mysideline 
-                ON Carnivals(mySidelineEventId) 
-                WHERE mySidelineEventId IS NOT NULL;
-            `);
-
-            await sequelize.query(`
                 CREATE INDEX IF NOT EXISTS idx_carnivals_created 
                 ON Carnivals(createdAt DESC);
             `);

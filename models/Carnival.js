@@ -54,7 +54,7 @@ class Carnival extends Model {
    * @returns {boolean} MySideline event status
    */
   get isMySidelineEvent() {
-    return !!(!this.isManuallyEntered);
+    return !this.isManuallyEntered;
   }
 
   /**
@@ -166,9 +166,7 @@ class Carnival extends Model {
     return await this.findAll({
       where: {
         isActive: true,
-        mySidelineEventId: {
-          [require('sequelize').Op.ne]: null
-        }
+        isManuallyEntered: false
       },
       order: [['date', 'ASC']]
     });
@@ -380,20 +378,8 @@ Carnival.init({
     defaultValue: true,
     allowNull: false
   },
-  // MySideline Integration Fields
-  // TODO: REMOVE AS THIS DOES NOT EXIST IN MYSIDELINE
-  mySidelineEventId: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    unique: true
-  },
   lastMySidelineSync: {
     type: DataTypes.DATE,
-    allowNull: true
-  },
-  // TODO: REMOVE THIS FIELD, NO DIRECT URL DUE TO VUE.JS ROUTING
-  mySidelineSourceUrl: {
-    type: DataTypes.STRING,
     allowNull: true
   },
   state: {
@@ -429,22 +415,6 @@ Carnival.init({
       min: 0
     }
   },
-  // TODO: REMOVE THIS FIELD, IT'S ALWAYS 35+
-  ageCategories: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: [],
-    validate: {
-      isValidCategories(value) {
-        if (!Array.isArray(value)) return;
-        const validCategories = ['35+', '40+', '45+', '50+', '55+', '60+', 'Open'];
-        const invalid = value.filter(cat => !validCategories.includes(cat));
-        if (invalid.length > 0) {
-          throw new Error(`Invalid age categories: ${invalid.join(', ')}`);
-        }
-      }
-    }
-  },
   isRegistrationOpen: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
@@ -452,16 +422,6 @@ Carnival.init({
   },
   registrationDeadline: {
     type: DataTypes.DATE,
-    allowNull: true
-  },
-  // Weather and ground conditions
-  // TODO: REMOVE WEATHER CONDITIONS, NOT NEEDED
-  weatherConditions: {
-    type: DataTypes.TEXT,
-    allowNull: true
-  },
-  groundConditions: {
-    type: DataTypes.TEXT,
     allowNull: true
   },
   // Admin notes (only visible to carnival owner and primary delegates)
@@ -500,9 +460,9 @@ Carnival.init({
       if (carnival.maxTeams && carnival.currentRegistrations > carnival.maxTeams) {
         carnival.currentRegistrations = carnival.maxTeams;
       }
-      
+
       // If this is a MySideline event being manually managed, update the flag
-      if (carnival.mySidelineEventId && carnival.changed('createdByUserId') && carnival.createdByUserId) {
+      if (carnival.isManuallyEntered === false && carnival.changed('createdByUserId') && carnival.createdByUserId) {
         carnival.isManuallyEntered = true;
       }
     }

@@ -126,7 +126,7 @@
                                         <% } else { %>
                                             <span class="badge bg-secondary me-1">Past Event</span>
                                         <% } %>
-                                        <% if (!carnival.isManuallyEntered && carnival.mySidelineEventId) { %>
+                                        <% if (!carnival.isManuallyEntered && carnival.lastMySidelineSync) { %>
                                             <span class="badge bg-warning text-dark">MySideline</span>
                                         <% } %>
                                     </div>
@@ -164,7 +164,7 @@
                                     <% } %>
 
                                     <!-- Take Ownership for unclaimed MySideline events -->
-                                    <% if (user && user.clubId && !carnival.isManuallyEntered && carnival.mySidelineEventId && !carnival.createdByUserId) { %>
+                                    <% if (user && user.clubId && !carnival.isManuallyEntered && carnival.lastMySidelineSync && !carnival.createdByUserId) { %>
                                         <div class="mt-1">
                                             <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership">
                                                 <button type="submit" class="btn btn-warning btn-sm" 

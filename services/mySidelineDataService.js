@@ -120,9 +120,8 @@ class MySidelineDataService {
         try {
             const lastImportedCarnival = await Carnival.findOne({ 
                 where: {
-                    mySidelineEventId: { [Op.ne]: null }
-                },
-                order: [['createdAt', 'DESC']]
+                    lastMySidelineSync: { [Op.ne]: null }
+                }
             });
 
             // In development mode, always run sync regardless of last sync time
@@ -261,13 +260,11 @@ class MySidelineDataService {
                 locationAddress: `${template.locationSuffix} Sports Complex, ${state}`,
                 state: state,
                 registrationLink: `https://profile.mysideline.com.au/register/mock-${state.toLowerCase()}-${index + 1}`,
-                mySidelineEventId: `mock-${state.toLowerCase()}-${currentYear}-${index + 1}`,
                 isManuallyEntered: false,
                 maxTeams: 16,
                 feesDescription: `$${300 + (index * 50)} per team (Early bird discount available)`,
                 registrationDeadline: new Date(eventDate.getTime() - (14 * 24 * 60 * 60 * 1000)), // 2 weeks before
                 scheduleDetails: `Day-long tournament starting at ${8 + index}:00 AM. Multiple age divisions available.`,
-                ageCategories: ['35+', '40+', '45+', '50+'],
                 isRegistrationOpen: true,
                 isActive: true,
                 organiserContactName: `${state} Rugby League Masters`,

@@ -174,7 +174,7 @@ class EmailService {
                                         </div>
                                     ` : ''}
                                     
-                                    ${type === 'merged' && carnival.mySidelineEventId ? `
+                                    ${type === 'merged' && carnival.lastMySidelineSync ? `
                                         <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
                                             <small style="color: #666;">
                                                 <strong>Data Source:</strong> Enhanced with MySideline integration • 

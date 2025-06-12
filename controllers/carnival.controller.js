@@ -42,9 +42,9 @@ const listCarnivals = async (req, res) => {
 
         // MySideline filter
         if (mysideline === 'true') {
-            whereClause.mySidelineEventId = { [Op.ne]: null };
+            whereClause.lastMySidelineSync = { [Op.ne]: null };
         } else if (mysideline === 'false') {
-            whereClause.mySidelineEventId = null;
+            whereClause.lastMySidelineSync = null;
         }
 
         // Search filter
@@ -140,7 +140,7 @@ const showCarnival = async (req, res) => {
         }
 
         // Check if this is a MySideline event that can be claimed
-        const canTakeOwnership = carnival.mySidelineEventId && 
+        const canTakeOwnership = carnival.lastMySidelineSync && 
                                 !carnival.createdByUserId && 
                                 req.user && 
                                 req.user.clubId;
@@ -310,7 +310,7 @@ const createCarnival = async (req, res) => {
             }
             
             // Check if this was a merge operation
-            const wasMerged = carnival.mySidelineEventId && carnival.claimedAt;
+            const wasMerged = carnival.lastMySidelineSync && carnival.claimedAt;
             
             if (wasMerged) {
                 req.flash('success_msg', `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`);

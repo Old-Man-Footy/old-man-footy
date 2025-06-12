@@ -61,7 +61,7 @@
                                 <% } else { %>
                                     <span class="badge bg-secondary">Past Event</span>
                                 <% } %>
-                                <% if (!carnival.isManuallyEntered && carnival.mySidelineEventId) { %>
+                                <% if (!carnival.isManuallyEntered && carnival.lastMySidelineSync) { %>
                                     <span class="badge bg-warning text-dark">MySideline Import</span>
                                 <% } %>
                                 <% if (canTakeOwnership) { %>
