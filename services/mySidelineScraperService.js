@@ -520,12 +520,28 @@ class MySidelineScraperService {
                 // Join the address parts, ensuring to trim and filter out empty strings.
                 if (addressParts.length > 0) {
                     locationAddress = addressParts.map(p => p.trim()).filter(Boolean).join(', ');
-                    locationAddressPart1 = addressParts[0]?.trim() || '';
-                    locationAddressPart2 = addressParts[1]?.trim() || '';   
-                    locationAddressPart3 = addressParts[2]?.trim() || '';
-                    locationAddressPart4 = addressParts[3]?.trim() || '';
-                }
+                    for (let i = 0; i < addressParts.length; i++) {
+                        if (!addressParts[i]) continue; // Skip empty parts
 
+                        switch (i) {
+                            case 0:
+                                locationAddressPart1 = addressParts[i].trim();
+                                break;
+                            case 1:
+                                locationAddressPart2 = addressParts[i].trim();
+                                break;
+                            case 2:
+                                locationAddressPart3 = addressParts[i].trim();
+                                break;
+                            case 3:
+                                locationAddressPart4 = addressParts[i].trim();
+                                break;
+                            default:
+                                console.warn(`Unexpected address part index ${i}: ${addressParts[i]}`);
+                                break;
+                        }
+                    }
+                }
             }
             
             // Extract event description.

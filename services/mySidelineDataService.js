@@ -284,67 +284,6 @@ class MySidelineDataService {
             return null;
         }
     }
-
-    /**
-     * Generate mock events for development/testing
-     * @param {string} state - State to generate events for
-     * @returns {Array} Array of mock events
-     */
-    generateMockEvents(state = 'NSW') {
-        const currentYear = new Date().getFullYear();
-        const mockEvents = [];
-        
-        // Generate 2-3 mock events per state
-        const eventTemplates = [
-            {
-                title: `${state} Masters Rugby League Carnival`,
-                locationSuffix: state === 'NSW' ? 'Sydney' : state === 'QLD' ? 'Brisbane' : 'Melbourne',
-                monthOffset: 2
-            },
-            {
-                title: `${state} Over 35s Championship`,
-                locationSuffix: state === 'NSW' ? 'Newcastle' : state === 'QLD' ? 'Gold Coast' : 'Geelong',
-                monthOffset: 4
-            },
-            {
-                title: `${state} Masters Nines Tournament`,
-                locationSuffix: state === 'NSW' ? 'Wollongong' : state === 'QLD' ? 'Cairns' : 'Ballarat',
-                monthOffset: 6
-            }
-        ];
-
-        eventTemplates.forEach((template, index) => {
-            const eventDate = new Date();
-            eventDate.setMonth(eventDate.getMonth() + template.monthOffset);
-            eventDate.setDate(15); // Set to 15th of the month
-
-            mockEvents.push({
-                title: template.title,
-                date: eventDate,
-                locationAddress: `${template.locationSuffix} Sports Complex, ${state}`,
-                state: state,
-                registrationLink: `https://profile.mysideline.com.au/register/mock-${state.toLowerCase()}-${index + 1}`,
-                isManuallyEntered: false,
-                maxTeams: 16,
-                feesDescription: `$${300 + (index * 50)} per team (Early bird discount available)`,
-                registrationDeadline: new Date(eventDate.getTime() - (14 * 24 * 60 * 60 * 1000)), // 2 weeks before
-                scheduleDetails: `Day-long tournament starting at ${8 + index}:00 AM. Multiple age divisions available.`,
-                isRegistrationOpen: true,
-                isActive: true,
-                organiserContactName: `${state} Rugby League Masters`,
-                organiserContactEmail: `masters@${state.toLowerCase()}rl.com.au`,
-                organiserContactPhone: `0${index + 2} ${Math.floor(Math.random() * 9000) + 1000} ${Math.floor(Math.random() * 9000) + 1000}`,
-                sourceData: {
-                    isMockData: true,
-                    generatedAt: new Date(),
-                    state: state,
-                    templateIndex: index
-                }
-            });
-        });
-
-        return mockEvents;
-    }    
 }
 
 module.exports = MySidelineDataService;
