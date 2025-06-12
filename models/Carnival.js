@@ -54,7 +54,7 @@ class Carnival extends Model {
    * @returns {boolean} MySideline event status
    */
   get isMySidelineEvent() {
-    return !!(this.mySidelineEventId && !this.isManuallyEntered);
+    return !!(!this.isManuallyEntered);
   }
 
   /**
@@ -381,6 +381,7 @@ Carnival.init({
     allowNull: false
   },
   // MySideline Integration Fields
+  // TODO: MAY NOT EXIST
   mySidelineEventId: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -390,6 +391,7 @@ Carnival.init({
     type: DataTypes.DATE,
     allowNull: true
   },
+  // TODO: REMOVE THIS FIELD 
   mySidelineSourceUrl: {
     type: DataTypes.STRING,
     allowNull: true
@@ -427,6 +429,7 @@ Carnival.init({
       min: 0
     }
   },
+  // TODO: REMOVE THIS FIELD
   ageCategories: {
     type: DataTypes.JSON,
     allowNull: true,
@@ -452,6 +455,7 @@ Carnival.init({
     allowNull: true
   },
   // Weather and ground conditions
+  // TODO: REMOVE WEATHER CONDITIONS
   weatherConditions: {
     type: DataTypes.TEXT,
     allowNull: true

@@ -24,39 +24,82 @@ class MySidelineDataService {
         
         for (const eventData of scrapedEvents) {
             try {
-                // Filter out Touch events before processing
-                if (this.shouldFilterTouchEvent(eventData, eventData.sourceData)) {
-                    filteredCount++;
-                    continue;
-                }
-
                 // Check if event already exists
                 const existingEvent = await Carnival.findOne({
                     where: {
-                        mySidelineEventId: eventData.mySidelineEventId
+                        title: eventData.title,
+                        date: eventData.date
                     }
                 });
                 
                 if (existingEvent) {
-                    console.log(`Event already exists: ${eventData.title}`);
-                    // Update existing event with any new information
-                    await existingEvent.update({
-                        title: eventData.title,
-                        date: eventData.date,
-                        locationAddress: eventData.locationAddress,
-                        scheduleDetails: eventData.scheduleDetails,
-                        state: eventData.state,
-                        updatedAt: new Date()
-                    });
+                    console.log(`Event already exists: ${eventData.title} on ${eventData.date}`);
+                    // Update existing event with any new information, but only for empty fields
+                    const updateData = {
+                        id: existingEvent.id
+                    };
+                    
+                    // Only update fields that are currently empty
+                    if (!existingEvent.carnivalIcon && eventData.carnivalIcon) {
+                        updateData.carnivalIcon = eventData.carnivalIcon;
+                    }
+                    if (!existingEvent.locationAddress && eventData.locationAddress) {
+                        updateData.locationAddress = eventData.locationAddress;
+                    }
+                    if (!existingEvent.organiserContactEmail && eventData.organiserContactEmail) {
+                        updateData.organiserContactEmail = eventData.organiserContactEmail;
+                    }
+                    if (!existingEvent.organiserContactName && eventData.organiserContactName) {
+                        updateData.organiserContactName = eventData.organiserContactName;
+                    }
+                    if (!existingEvent.organiserContactPhone && eventData.organiserContactPhone) {
+                        updateData.organiserContactPhone = eventData.organiserContactPhone;
+                    }
+                    if (!existingEvent.registrationLink && eventData.registrationLink) {
+                        updateData.registrationLink = eventData.registrationLink;
+                    }
+                    if (!existingEvent.scheduleDetails && eventData.scheduleDetails) {
+                        updateData.scheduleDetails = eventData.scheduleDetails;
+                    }
+                    if (!existingEvent.socialMediaFacebook && eventData.socialMediaFacebook) {
+                        updateData.socialMediaFacebook = eventData.socialMediaFacebook;
+                    }
+                    if (!existingEvent.socialMediaWebsite && eventData.socialMediaWebsite) {
+                        updateData.socialMediaWebsite = eventData.socialMediaWebsite;
+                    }
+                    if (!existingEvent.state && eventData.state) {
+                        updateData.state = eventData.state;
+                    }
+                    
+                    // Always update the sync timestamp
+                    updateData.lastMySidelineSync = scrapedAt;
+                    
+                    // Only perform update if there are fields to update
+                    if (Object.keys(updateData).length > 2) { // > 2 because id and lastMySidelineSync are always included
+                        await existingEvent.update(updateData);
+                        console.log(`Updated ${Object.keys(updateData).length - 2} empty fields for event: ${eventData.title}`);
+                    } else {
+                        await existingEvent.update({ lastMySidelineSync: scrapedAt });
+                    }
+                    
                     processedEvents.push(existingEvent);
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
-                        ...eventData,
+                        carnivalIcon: eventData.carnivalIcon,                        
+                        date: eventData.date,
                         isManuallyEntered: false,
-                        isActive: true,
-                        createdAt: new Date(),
-                        updatedAt: new Date()
+                        lastMySidelineSync: scrapedAt,
+                        locationAddress: eventData.locationAddress,
+                        organiserContactEmail: eventData.organiserContactEmail,
+                        organiserContactName: eventData.organiserContactName,
+                        organiserContactPhone: eventData.organiserContactPhone,
+                        registrationLink: eventData.registrationLink,
+                        scheduleDetails: eventData.scheduleDetails,
+                        socialMediaFacebook: eventData.socialMediaFacebook,
+                        socialMediaWebsite: eventData.socialMediaWebsite,
+                        state: eventData.state,
+                        title: eventData.title,
                     });
                     
                     console.log(`Created new MySideline event: ${newEvent.title}`);
@@ -138,44 +181,6 @@ class MySidelineDataService {
         }
         
         return 'TBA - Check MySideline for details';
-    }
-
-    /**
-     * Extract state from MySideline text
-     * @param {string} fullText - Full text content
-     * @param {string} subtitle - Subtitle text
-     * @returns {string|null} - Extracted state or null
-     */
-    extractStateFromMySidelineText(fullText, subtitle) {
-        const content = (fullText + ' ' + subtitle).toUpperCase();
-        
-        for (const state of this.australianStates) {
-            if (content.includes(state)) {
-                return state;
-            }
-        }
-        
-        return null;
-    }
-
-    /**
-     * Extract event name from text lines
-     * @param {Array} lines - Array of text lines
-     * @returns {string} - Extracted event name
-     */
-    extractEventName(lines) {
-        // Find the best line to use as event name
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.length > 10 && 
-                trimmed.length < 100 && 
-                !trimmed.match(/^\d+/) && 
-                !trimmed.toLowerCase().includes('click') &&
-                !trimmed.toLowerCase().includes('expand')) {
-                return trimmed;
-            }
-        }
-        return lines[0]?.trim() || '';
     }
 
     /**
@@ -283,74 +288,7 @@ class MySidelineDataService {
         });
 
         return mockEvents;
-    }
-
-    /**
-     * Check if an event should be filtered out based on "Touch" content
-     * @param {Object} eventData - Event data to check
-     * @param {Object} sourceElement - Original scraped element data (optional)
-     * @returns {boolean} - True if event should be filtered out (contains Touch)
-     */
-    shouldFilterTouchEvent(eventData, sourceElement = null) {
-        const checkText = (text) => {
-            if (!text || typeof text !== 'string') return false;
-            return text.toLowerCase().includes('touch');
-        };
-
-        // Check title and subtitle
-        if (checkText(eventData.title)) {
-            console.log(`Filtering out Touch event (title): ${eventData.title}`);
-            return true;
-        }
-
-        // Check contact email and website URLs
-        if (checkText(eventData.organiserContactEmail)) {
-            console.log(`Filtering out Touch event (email): ${eventData.organiserContactEmail}`);
-            return true;
-        }
-
-        if (checkText(eventData.organiserContactWebsite)) {
-            console.log(`Filtering out Touch event (website): ${eventData.organiserContactWebsite}`);
-            return true;
-        }
-
-        if (checkText(eventData.registrationLink)) {
-            console.log(`Filtering out Touch event (registration link): ${eventData.registrationLink}`);
-            return true;
-        }
-
-        // Check source element data if available
-        if (sourceElement) {
-            // Check subtitle from source
-            if (checkText(sourceElement.subtitle)) {
-                console.log(`Filtering out Touch event (source subtitle): ${sourceElement.subtitle}`);
-                return true;
-            }
-
-            // Check for div elements with class="right" containing only "Touch"
-            if (sourceElement.innerHTML) {
-                const rightDivMatch = sourceElement.innerHTML.match(/<div[^>]*class="right"[^>]*>\s*touch\s*<\/div>/i);
-                if (rightDivMatch) {
-                    console.log(`Filtering out Touch event (right div): Found touch in right div`);
-                    return true;
-                }
-            }
-
-            // Check expanded content
-            if (checkText(sourceElement.expandedDetails)) {
-                console.log(`Filtering out Touch event (expanded details): Contains touch in expanded content`);
-                return true;
-            }
-
-            // Check full content
-            if (checkText(sourceElement.fullContent || sourceElement.text)) {
-                console.log(`Filtering out Touch event (full content): Contains touch in full content`);
-                return true;
-            }
-        }
-
-        return false;
-    }
+    }    
 }
 
 module.exports = MySidelineDataService;

@@ -52,13 +52,6 @@ class MySidelineScraperService {
             }
         } catch (error) {
             console.error('Failed to scrape MySideline events:', error.message);
-            
-            // In development, fall back to mock data on error
-            if (process.env.NODE_ENV === 'development') {
-                console.log('Browser automation failed in development, using mock data...');
-                return this.generateMockEvents();
-            }
-            
             return [];
         }
     }
@@ -90,6 +83,7 @@ class MySidelineScraperService {
             console.log('Page loaded, waiting for content...');
             
             // Wait for the essential page structure and content
+            //TODO: Work out if we need all of these waits
             await this.waitForPageStructure(page);
             await this.waitForJavaScriptInitialization(page);
             await this.waitForDynamicContentLoading(page);
@@ -452,21 +446,10 @@ class MySidelineScraperService {
                     
                     if (cardData && this.isRelevantMastersEvent(cardData)) {
                         // Step 3: Extract registration URL if needed
-                        if (!cardData.registrationUrl && cardData.isMySidelineCard) {
-                            cardData.registrationUrl = this.extractRegistrationUrl(currentCard, '.el-card.is-always-shadow', cardIndex);
-                        }
+                        if (!cardData.registrationLink && cardData.isMySidelineCard) {
+                            cardData.registrationLink = this.extractregistrationLink(currentCard, '.el-card.is-always-shadow', cardIndex);
+                        }                        
                         
-                        // Step 4: Parse the event data
-                        try {
-                            //TODO: DO WE NEED THIS WE ALREADCY HAVE THE DATA???
-                            // const standardEvent = this.parserService.parseEventFromElement(cardData);
-                            // if (standardEvent) {
-                            //     extractedEvents.push(standardEvent);
-                            //     console.log(`✅ Successfully parsed event: ${standardEvent.title} ${expandedSuccessfully ? '[EXPANDED]' : ''} ${cardData.registrationUrl ? '[REG_URL]' : ''}`);
-                            // }
-                        } catch (parseError) {
-                            console.log(`Failed to parse MySideline event: ${parseError.message}`);
-                        }
                     } else {
                         console.log(`⏭️  Skipping card ${cardIndex + 1} - not relevant or insufficient data`);
                     }
@@ -476,6 +459,7 @@ class MySidelineScraperService {
                         await this.delay(1000);
                     }
 
+                    // Collapse the card after processing
                     await clickExpandElement.click();                    
                 } catch (cardError) {
                     console.log(`Error processing card ${cardIndex + 1}: ${cardError.message}`);
@@ -519,7 +503,7 @@ class MySidelineScraperService {
             const fullTitle = await titleLocator.count() > 0 ? (await titleLocator.textContent()).trim() : null;
 
             const subtitleLocator = currentCard.locator('h4.subtitle, h4#subtitle');
-            const category = await subtitleLocator.count() > 0 ? (await subtitleLocator.textContent()).trim() : null;
+            const subtitle = await subtitleLocator.count() > 0 ? (await subtitleLocator.textContent()).trim() : null;
 
             // Extract venue address from Google Maps link.
             const addressLinkLocator = currentCard.locator('a[href*="maps.google.com"]');
@@ -536,12 +520,12 @@ class MySidelineScraperService {
             // We get all potential description paragraphs and find the first suitable one.
             // const descriptionParagraphs = await currentCard.locator('p[data-v-06457438]').all();
             const descriptionParagraphs = await currentCard.locator('p:not(a > p)').all();
-            let description = '';
+            let scheduleDetails = '';
             for (const pLocator of descriptionParagraphs) {
                 const text = (await pLocator.textContent()).trim();
                 // Skip paragraphs that are empty, short, or contain contact info.
                 if (text && !text.includes('Club Contact') && text.length > 20) {
-                    description = text;
+                    scheduleDetails = text;
                     break; // Stop after finding the first valid description.
                 }
             }
@@ -552,8 +536,8 @@ class MySidelineScraperService {
             let contactName = '';
             let contactPhone = '';
             let contactEmail = '';
-            let facebookUrl = ''
-            let websiteUrl = '';
+            let socialMediaFacebook = ''
+            let socialMediaWebsite = '';
             if (await contactParagraphLocator.count() > 0) {
                 const contactText = await contactParagraphLocator.textContent();
 
@@ -571,11 +555,11 @@ class MySidelineScraperService {
 
                 // Extract Facebook from the contact paragraph if it exists.
                 const facebookLocator = contactParagraphLocator.locator('a[href^="https://facebook.com/"], a[href^="https://www.facebook.com/"]');
-                if (await facebookLocator.count() > 0) facebookUrl = (await facebookLocator.getAttribute('href')).trim();
+                if (await facebookLocator.count() > 0) socialMediaFacebook = (await facebookLocator.getAttribute('href')).trim();
 
                 // Extract other URLs from the contact paragraph.
                 const websiteLocator = contactParagraphLocator.locator('a[href^="http"]:not([href*="facebook.com"])');
-                if (await websiteLocator.count() > 0) websiteUrl = (await websiteLocator.getAttribute('href')).trim();
+                if (await websiteLocator.count() > 0) socialMediaWebsite = (await websiteLocator.getAttribute('href')).trim();
             }
 
             // Extract event type.
@@ -598,9 +582,9 @@ class MySidelineScraperService {
             // --- Post-Processing ---
 
             const cardData = {
-                carnivalIcon, fullTitle, category, locationAddress, googleMapsUrl,
-                description, contactName, contactPhone, contactEmail, eventType, 
-                hasRegistration, facebookUrl, websiteUrl
+                clubLogoUrl: carnivalIcon, fullTitle, subtitle, locationAddress, googleMapsUrl,
+                scheduleDetails: scheduleDetails, contactName, contactPhone, contactEmail, eventType, 
+                hasRegistration, socialMediaFacebook, socialMediaWebsite
             };
             
             if (cardData.eventType === 'Touch') {
@@ -622,30 +606,25 @@ class MySidelineScraperService {
             const state = this.extractStateFromAddress(cardData.locationAddress);
 
             const processedCardData = {
-                title: cardData.fullTitle,
-                carnivalName: carnivalName,
+                title: carnivalName,
                 date: eventDate,
                 state: state,
                 locationAddress: cardData.locationAddress,
                 googleMapsUrl: cardData.googleMapsUrl,
-                description: cardData.description,
-                contactName: cardData.contactName,
-                contactPhone: cardData.contactPhone,
-                contactEmail: cardData.contactEmail,
-                contactFacebook: cardData.facebookUrl,
-                contactWebsite: cardData.websiteUrl,
-                category: cardData.category,
-                eventType: cardData.eventType,
-                carnivalIcon: cardData.carnivalIcon,
-                registrationLink: cardData.googleMapsUrl,
+                scheduleDetails: [cardData.subtitle, cardData.scheduleDetails].filter(Boolean).join('\n'),
+                organiserContactName: cardData.contactName,
+                organiserContactPhone: cardData.contactPhone,
+                organiserContactEmail: cardData.contactEmail,
+                socialMediaFacebook: cardData.socialMediaFacebook,
+                socialMediaWebsite: cardData.socialMediaWebsite,
+                clubLogoUrl: cardData.clubLogoUrl,
                 isActive: cardData.hasRegistration,
                 source: 'MySideline',
                 scrapedAt: new Date(),
-                isMySidelineCard: true,
-                fullContent: cardData.cardText
+                isMySidelineCard: true
             };
 
-            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${cardData.carnivalIcon ? '[ICON]' : '[NO-ICON]'}`);
+            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${cardData.clubLogoUrl ? '[ICON]' : '[NO-ICON]'}`);
             return processedCardData;
 
         } catch (error) {
@@ -660,7 +639,7 @@ class MySidelineScraperService {
      * Extracts an Australian state or territory from a given address string.
      * It checks against a comprehensive list of names and abbreviations.
      * @param {string} addressString - The address string to parse.
-     * @returns {string|null} The full name of the state/territory (e.g., "New South Wales"), or null if no match is found.
+     * @returns {string|null} The acronym of the state/territory (e.g., "NSW"), or null if no match is found.
      */
     extractStateFromAddress(addressString) {
         if (!addressString || typeof addressString !== 'string') {
@@ -669,14 +648,14 @@ class MySidelineScraperService {
 
         // A list of states and territories with their names and abbreviations.
         const states = [
-            { name: 'New South Wales', abbreviations: ['NSW', 'N.S.W.'] },
-            { name: 'Victoria', abbreviations: ['VIC', 'Vic.'] },
-            { name: 'Queensland', abbreviations: ['QLD', 'Qld.'] },
-            { name: 'Western Australia', abbreviations: ['WA', 'W.A.'] },
-            { name: 'South Australia', abbreviations: ['SA', 'S.A.'] },
-            { name: 'Tasmania', abbreviations: ['TAS', 'Tas.'] },
-            { name: 'Australian Capital Territory', abbreviations: ['ACT', 'A.C.T.'] },
-            { name: 'Northern Territory', abbreviations: ['NT', 'N.T.'] }
+            { name: 'NSW', abbreviations: ['NSW', 'N.S.W.','New South Wales'] },
+            { name: 'VIC', abbreviations: ['VIC', 'Vic.','Victoria'] },
+            { name: 'QLD', abbreviations: ['QLD', 'Qld.','Queensland'] },
+            { name: 'WA', abbreviations: ['WA', 'W.A.','Western Australia'] },
+            { name: 'SA', abbreviations: ['SA', 'S.A.','South Australia'] },
+            { name: 'TAS', abbreviations: ['TAS', 'Tas.','Tasmania'] },
+            { name: 'ACT', abbreviations: ['ACT', 'A.C.T.','Australian Capital Territory'] },
+            { name: 'NT', abbreviations: ['NT', 'N.T.','Northern Territory'] }
         ];
 
         const lowerCaseAddress = addressString.toLowerCase();
@@ -702,7 +681,7 @@ class MySidelineScraperService {
      * @param {number} cardIndex - Optional specific card index
      * @returns {Promise<string|null>} Registration URL or null
      */
-    captureEventBasedRegistrationUrl(currentCard, selector, cardIndex = null) {
+    captureEventBasedregistrationLink(currentCard, selector, cardIndex = null) {
         try {
             console.log('Attempting to capture registration URL via navigation/popup events...');
             
@@ -730,13 +709,13 @@ class MySidelineScraperService {
             }
             
             // Try popup monitoring first
-            const popupUrl = this.extractRegistrationUrlViaPopup(page, buttonSelector);
+            const popupUrl = this.extractregistrationLinkViaPopup(page, buttonSelector);
             if (popupUrl) {
                 return popupUrl;
             }
             
             // Try navigation monitoring as fallback
-            const navigationUrl = this.extractRegistrationUrlViaNavigation(page, buttonSelector);
+            const navigationUrl = this.extractregistrationLinkViaNavigation(page, buttonSelector);
             if (navigationUrl) {
                 return navigationUrl;
             }
@@ -756,22 +735,22 @@ class MySidelineScraperService {
      * @param {number} cardIndex - Optional specific card index
      * @returns {Promise<string|null>} Registration URL or null
      */
-    extractRegistrationUrl(currentCard, selector, cardIndex = null) {
+    extractregistrationLink(currentCard, selector, cardIndex = null) {
         try {
             console.log(`Extracting registration URL${cardIndex !== null ? ` from card ${cardIndex + 1}` : ''}...`);
             
             // First try: Intercept dynamic event listeners
             // TODO: CHANGE TO USE CURRENT CARD
-            const dynamicUrl = this.interceptDynamicRegistrationUrl(currentCard, selector, cardIndex);
+            const dynamicUrl = this.interceptDynamicregistrationLink(currentCard, selector, cardIndex);
             if (dynamicUrl) {
                 return dynamicUrl;
             }
             
             // Third try: Monitor navigation/popup events
             // TODO: CHANGE TO USE CURRENT CARD
-            const eventUrl = this.captureEventBasedRegistrationUrl(currentCard, selector, cardIndex);
-            if (eventUrl) {
-                return eventUrl;
+            const registrationLink = this.captureEventBasedregistrationLink(currentCard, selector, cardIndex);
+            if (registrationLink) {
+                return registrationLink;
             }
             
             console.log(`❌ No registration URL found${cardIndex !== null ? ` in card ${cardIndex + 1}` : ''}`);
@@ -784,89 +763,13 @@ class MySidelineScraperService {
     }
 
     /**
-     * Extract registration URL from static attributes and onclick handlers
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @param {number} cardIndex - Optional specific card index
-     * @returns {Promise<string|null>} Registration URL or null
-     */
-    async extractStaticRegistrationUrl(page, selector, cardIndex = null) {
-        try {
-            const registrationUrl = await page.evaluate(({ selector: sel, cardIndex: index }) => {
-                let cards;
-                if (index !== null) {
-                    const allCards = document.querySelectorAll(sel);
-                    cards = allCards[index] ? [allCards[index]] : [];
-                } else {
-                    cards = document.querySelectorAll(sel);
-                }
-                
-                for (let card of cards) {
-                    // Look for registration buttons with various attributes
-                    const registerButtons = card.querySelectorAll('button.el-button--primary, button[id="cardButton"], button:contains("Register"), .register-button, .registration-link');
-                    
-                    for (let button of registerButtons) {
-                        // Check various attributes that might contain the registration URL
-                        const urlSources = [
-                            button.getAttribute('data-url'),
-                            button.getAttribute('data-href'),
-                            button.getAttribute('data-link'),
-                            button.getAttribute('data-registration-url'),
-                            button.getAttribute('href'),
-                            button.getAttribute('onclick')
-                        ];
-                        
-                        for (let urlSource of urlSources) {
-                            if (urlSource) {
-                                // If it's an onclick handler, extract URL from it
-                                if (urlSource.includes('window.open') || urlSource.includes('location.href')) {
-                                    const urlMatch = urlSource.match(/['"](https?:\/\/[^'"]+)['"]/);
-                                    if (urlMatch && urlMatch[1]) {
-                                        return urlMatch[1];
-                                    }
-                                }
-                                // If it's already a URL
-                                if (urlSource.startsWith('http')) {
-                                    return urlSource;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Look for any links that might be registration related
-                    const registrationLinks = card.querySelectorAll('a[href*="register"], a[href*="signup"], a[href*="join"]');
-                    for (let link of registrationLinks) {
-                        const href = link.getAttribute('href');
-                        if (href && href.startsWith('http')) {
-                            return href;
-                        }
-                    }
-                }
-                
-                return null;
-            }, { selector, cardIndex });
-            
-            if (registrationUrl) {
-                console.log(`✅ Found static registration URL: ${registrationUrl}`);
-                return registrationUrl;
-            }
-            
-            return null;
-            
-        } catch (error) {
-            console.log(`Error extracting static registration URL: ${error.message}`);
-            return null;
-        }
-    }
-
-    /**
      * Intercept dynamic JavaScript event listeners to capture registration URLs
      * @param {Page} page - Playwright page object
      * @param {string} selector - CSS selector for the cards
      * @param {number} cardIndex - Optional specific card index
      * @returns {Promise<string|null>} Registration URL or null
      */
-    interceptDynamicRegistrationUrl(currentCard, selector, cardIndex = null) {
+    interceptDynamicregistrationLink(currentCard, selector, cardIndex = null) {
         try {
             console.log('Intercepting dynamic event listeners for registration URL...');
             
@@ -934,7 +837,7 @@ class MySidelineScraperService {
                                     // Look for registration URL in Vue component data
                                     const data = vueInstance.$data;
                                     const possibleUrls = [
-                                        data.registrationUrl,
+                                        data.registrationLink,
                                         data.registerUrl,
                                         data.url,
                                         data.href,
@@ -1055,7 +958,7 @@ class MySidelineScraperService {
      * @param {string} buttonSelector - Selector for the registration button
      * @returns {Promise<string|null>} Registration URL or null
      */
-    extractRegistrationUrlViaNavigation(page, buttonSelector) {
+    extractregistrationLinkViaNavigation(page, buttonSelector) {
         try {
             console.log('Attempting to extract registration URL via navigation monitoring...');
             
@@ -1080,13 +983,13 @@ class MySidelineScraperService {
             const navigationResponse = navigationPromise;
             
             if (navigationResponse) {
-                const registrationUrl = navigationResponse.url();
-                console.log(`✅ Registration URL extracted via navigation: ${registrationUrl}`);
+                const registrationLink = navigationResponse.url();
+                console.log(`✅ Registration URL extracted via navigation: ${registrationLink}`);
                 
                 // Navigate back to the original page
                 page.goBack({ waitUntil: 'domcontentloaded' });
                 
-                return registrationUrl;
+                return registrationLink;
             } else {
                 console.log('No navigation occurred, registration URL not found');
                 return null;
@@ -1104,7 +1007,7 @@ class MySidelineScraperService {
      * @param {string} buttonSelector - Selector for the registration button
      * @returns {Promise<string|null>} Registration URL or null
      */
-    extractRegistrationUrlViaPopup(page, buttonSelector) {
+    extractregistrationLinkViaPopup(page, buttonSelector) {
         try {
             console.log('Attempting to extract registration URL via popup monitoring...');
             
@@ -1127,13 +1030,13 @@ class MySidelineScraperService {
             const popup = popupPromise;
             
             if (popup) {
-                const registrationUrl = popup.url();
-                console.log(`✅ Registration URL extracted via popup: ${registrationUrl}`);
+                const registrationLink = popup.url();
+                console.log(`✅ Registration URL extracted via popup: ${registrationLink}`);
                 
                 // Close the popup
                 popup.close();
                 
-                return registrationUrl;
+                return registrationLink;
             } else {
                 console.log('No popup occurred, registration URL not found');
                 return null;
@@ -1205,225 +1108,6 @@ class MySidelineScraperService {
     }
 
     /**
-     * Validate extracted event data
-     * @param {Array} events - Array of event objects
-     * @returns {Object} Validation results object
-     */
-    validateExtractedData(events) {
-        if (!Array.isArray(events)) {
-            return {
-                totalEvents: 0,
-                validEvents: 0,
-                eventsWithTitle: 0,
-                eventsWithDate: 0,
-                eventsWithLocation: 0,
-                eventsWithRegistration: 0,
-                issues: ['Input is not an array']
-            };
-        }
-
-        const validation = {
-            totalEvents: events.length,
-            validEvents: 0,
-            eventsWithTitle: 0,
-            eventsWithDate: 0,
-            eventsWithLocation: 0,
-            eventsWithRegistration: 0,
-            issues: []
-        };
-        
-        for (let i = 0; i < events.length; i++) {
-            const event = events[i];
-            const eventNum = i + 1;
-            let isValid = true;
-            
-            try {
-                // Basic validation
-                if (!event || typeof event !== 'object') {
-                    validation.issues.push(`Event ${eventNum}: Invalid event object`);
-                    continue;
-                }
-
-                // Title validation
-                if (event.title && typeof event.title === 'string' && event.title.trim()) {
-                    validation.eventsWithTitle++;
-                } else {
-                    validation.issues.push(`Event ${eventNum}: Missing or invalid title`);
-                    isValid = false;
-                }
-
-                // Date validation
-                if (event.date) {
-                    let dateValid = false;
-                    if (event.date instanceof Date && !isNaN(event.date.getTime())) {
-                        dateValid = true;
-                    } else if (typeof event.date === 'string' && event.date.trim()) {
-                        const parsedDate = new Date(event.date.trim());
-                        if (!isNaN(parsedDate.getTime())) {
-                            event.date = parsedDate;
-                            dateValid = true;
-                        }
-                    }
-                    
-                    if (dateValid) {
-                        validation.eventsWithDate++;
-                    } else {
-                        validation.issues.push(`Event ${eventNum}: Invalid date format`);
-                        isValid = false;
-                    }
-                } else {
-                    validation.issues.push(`Event ${eventNum}: Missing date`);
-                    isValid = false;
-                }
-
-                // Location validation
-                if (event.locationAddress || event.location) {
-                    const location = event.locationAddress || event.location;
-                    if (typeof location === 'string' && location.trim()) {
-                        validation.eventsWithLocation++;
-                    }
-                } else {
-                    validation.issues.push(`Event ${eventNum}: Missing location information`);
-                }
-
-                // Registration validation
-                if (event.registrationLink || event.registrationUrl) {
-                    const regLink = event.registrationLink || event.registrationUrl;
-                    if (typeof regLink === 'string' && regLink.trim()) {
-                        validation.eventsWithRegistration++;
-                    }
-                } else {
-                    validation.issues.push(`Event ${eventNum}: Missing registration link`);
-                }
-
-                // Clean up string fields
-                if (event.description && typeof event.description === 'string') {
-                    event.description = event.description.trim();
-                }
-
-                if (isValid) {
-                    validation.validEvents++;
-                }
-                
-            } catch (error) {
-                console.error(`Error validating event ${eventNum}:`, error);
-                validation.issues.push(`Event ${eventNum}: Validation error - ${error.message}`);
-            }
-        }
-        
-        return validation;
-    }
-
-    /**
-     * Log extraction summary
-     * @param {Array} events - Array of extracted events
-     * @param {Object} validation - Validation results
-     */
-    logExtractionSummary(events, validation) {
-        console.log('\n📊 MySideline Extraction Summary:');
-        console.log(`   Total events found: ${validation.totalEvents}`);
-        console.log(`   Valid events: ${validation.validEvents}`);
-        console.log(`   Events with title: ${validation.eventsWithTitle}`);
-        console.log(`   Events with date: ${validation.eventsWithDate}`);
-        console.log(`   Events with location: ${validation.eventsWithLocation}`);
-        console.log(`   Events with registration: ${validation.eventsWithRegistration}`);
-        
-        if (validation.issues.length > 0) {
-            console.log('\n⚠️  Issues found:');
-            validation.issues.forEach(issue => console.log(`   - ${issue}`));
-        }
-        
-        if (events.length > 0) {
-            console.log('\n📋 Sample events:');
-            events.slice(0, 3).forEach((event, index) => {
-                console.log(`   ${index + 1}. ${event.title} - ${event.date} - ${event.state}`);
-            });
-        }
-    }
-
-    /**
-     * Clean up extracted text content
-     * @param {string} text - Raw text content
-     * @returns {string} Cleaned text
-     */
-    cleanTextContent(text) {
-        if (!text) return '';
-        
-        return text
-            .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
-            .replace(/\n+/g, ' ')           // Replace newlines with spaces
-            .replace(/\t+/g, ' ')           // Replace tabs with spaces
-            .replace(/[^\x20-\x7E]/g, '')   // Remove non-printable characters
-            .trim();                        // Remove leading/trailing whitespace
-    }
-
-    /**
-     * Check if the service is properly configured
-     * @returns {boolean} True if configured correctly
-     */
-    isProperlyConfigured() {
-        const issues = [];
-        
-        if (!this.searchUrl) {
-            issues.push('MYSIDELINE_URL environment variable is not set');
-        }
-        
-        if (!this.timeout || this.timeout < 10000) {
-            issues.push('MYSIDELINE_REQUEST_TIMEOUT is too low or not set');
-        }
-        
-        if (!this.parserService) {
-            issues.push('MySidelineEventParserService is not initialized');
-        }
-        
-        if (issues.length > 0) {
-            console.error('❌ MySidelineScraperService configuration issues:');
-            issues.forEach(issue => console.error(`   - ${issue}`));
-            return false;
-        }
-        
-        return true;
-    }
-
-    /**
-     * Get service configuration info
-     * @returns {Object} Configuration details
-     */
-    getConfigurationInfo() {
-        return {
-            searchUrl: this.searchUrl,
-            timeout: this.timeout,
-            retryCount: this.retryCount,
-            requestDelay: this.requestDelay,
-            useHeadlessBrowser: this.useHeadlessBrowser,
-            enableScraping: this.enableScraping,
-            useMockData: this.useMockData,
-            parserServiceInitialized: !!this.parserService
-        };
-    }
-
-    /**
-     * Launch browser with retry logic
-     * @param {number} maxRetries - Maximum number of retry attempts
-     * @returns {Promise<Object>} Browser instance
-     */
-    async launchBrowser(maxRetries = 3) {
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                // Try to launch browser
-                this.browser = await puppeteer.launch({
-                    headless: true,
-                    args: ['--no-sandbox', '--disable-setuid-sandbox']
-                });
-                console.log('Browser launched successfully');
-            } catch (error) {
-                console.error('Failed to launch browser:', error.message);
-                throw error;
-            }
-        }
-    }
-
-    /**
      * Check if card data represents a relevant Masters event
      * @param {Object} cardData - The extracted card data
      * @returns {boolean} True if relevant
@@ -1433,14 +1117,14 @@ class MySidelineScraperService {
             return false;
         }
         
-        const url = cardData.contactWebsite?.toLowerCase() || '';
+        const socialMediaWebsite = cardData.socialMediaWebsite?.toLowerCase() || '';
         const email = cardData.contactEmail?.toLowerCase() || '';
-        const facebook = cardData.contactFacebook?.toLowerCase() || '';
+        const socialMediaFacebook = cardData.socialMediaFacebook?.toLowerCase() || '';
         const title = cardData.title.toLowerCase();
         const subtitle = (cardData.subtitle || '').toLowerCase();
         
         // Filter out Touch events at the scraping stage
-        const containsTouch = url.includes('touch') || email.includes('touch') ||facebook.includes('touch') || title.includes('touch') || subtitle.includes('touch');
+        const containsTouch = socialMediaWebsite.includes('touch') || email.includes('touch') || socialMediaFacebook.includes('touch') || title.includes('touch') || subtitle.includes('touch');
         if (containsTouch) {
             console.log(`❌ Filtering out Touch event: ${cardData.title}`);
             return false;
@@ -1513,322 +1197,6 @@ class MySidelineScraperService {
      */
     async delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    /**
-     * Close the browser instance
-     */
-    async closeBrowser() {
-        if (this.browser) {
-            console.log('🔄 Closing browser...');
-            await this.browser.close();
-            this.browser = null;
-            this.page = null;
-            console.log('✅ Browser closed');
-        }
-    }
-
-    /**
-     * Get browser status
-     * @returns {Object} Browser status information
-     */
-    getBrowserStatus() {
-        return {
-            isInitialized: !!this.browser,
-            hasPage: !!this.page,
-            isHeadless: this.headless
-        };
-    }
-
-    /**
-     * Extract contact information from text
-     * @param {string} text - Text to extract contact info from
-     * @returns {Object} Extracted contact information
-     */
-    extractContactInfo(text) {
-        const contact = {
-            emails: [],
-            phones: [],
-            websites: []
-        };
-        
-        // Email pattern
-        const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-        const emails = text.match(emailPattern);
-        if (emails) {
-            contact.emails = [...new Set(emails)];
-        }
-        
-        // Phone pattern (Australian format)
-        const phonePattern = /(?:\+61\s?)?(?:\(0\d\)\s?|\d{2}\s?)\d{4}\s?\d{4}|\b0\d{1}\s?\d{4}\s?\d{4}\b/g;
-        const phones = text.match(phonePattern);
-        if (phones) {
-            contact.phones = [...new Set(phones)];
-        }
-        
-        // Website pattern
-        const websitePattern = /https?:\/\/[^\s<>"{}|\\^`[\]]+/g;
-        const websites = text.match(websitePattern);
-        if (websites) {
-            contact.websites = [...new Set(websites)];
-        }
-        
-        return contact;
-    }
-
-    /**
-     * Extract venue/location information from text
-     * @param {string} text - Text to extract venue from
-     * @returns {Object} Extracted venue information
-     */
-    extractVenueInfo(text) {
-        const venue = {
-            locations: [],
-            addresses: []
-        };
-        
-        // Look for common venue indicators
-        const venuePatterns = [
-            /(?:at|venue:|location:|held at)\s*([^.,\n]+)/gi,
-            /([A-Z][a-z]+\s+(?:Park|Field|Ground|Stadium|Centre|Center|Club|Oval))/g,
-            /(\d+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Street|St|Road|Rd|Avenue|Ave|Drive|Dr|Lane|Ln))/g
-        ];
-        
-        venuePatterns.forEach(pattern => {
-            let match;
-            while ((match = pattern.exec(text)) !== null) {
-                const location = match[1] ? match[1].trim() : match[0].trim();
-                if (location.length > 3) {
-                    if (pattern.source.includes('Street|St|Road')) {
-                        venue.addresses.push(location);
-                    } else {
-                        venue.locations.push(location);
-                    }
-                }
-            }
-        });
-        
-        // Remove duplicates
-        venue.locations = [...new Set(venue.locations)];
-        venue.addresses = [...new Set(venue.addresses)];
-        
-        return venue;
-    }
-
-    /**
-     * Extract fee/cost information from text
-     * @param {string} text - Text to extract fees from
-     * @returns {Array} Array of extracted fee information
-     */
-    extractFeeInfo(text) {
-        const fees = [];
-        
-        // Fee patterns
-        const feePatterns = [
-            /\$\d+(?:\.\d{2})?/g,
-            /(?:fee|cost|price|entry|registration):\s*\$?\d+(?:\.\d{2})?/gi,
-            /(?:free|no charge|complimentary)/gi
-        ];
-        
-        feePatterns.forEach(pattern => {
-            let match;
-            while ((match = pattern.exec(text)) !== null) {
-                fees.push(match[0]);
-            }
-        });
-        
-        return [...new Set(fees)]; // Remove duplicates
-    }
-
-    /**
-     * Calculate relevance score for an event based on keywords
-     * @param {Object} event - Event object with title and description
-     * @returns {boolean} - True if event is relevant (score > 0.5), false otherwise
-     */
-    calculateRelevanceScore(event) {
-        if (!event || (!event.title && !event.description)) {
-            return false;
-        }
-
-        const keywords = ['rugby', 'league', 'nrl', 'masters', 'over', 'seniors', 'veterans'];
-        const text = `${event.title || ''} ${event.description || ''}`.toLowerCase();
-        
-        let matches = 0;
-        keywords.forEach(keyword => {
-            if (text.includes(keyword)) {
-                matches++;
-            }
-        });
-
-        const score = matches / keywords.length;
-        return score > 0.5;
-    }
-
-    /**
-     * Parse event data from MySideline card elements
-     * @param {Page} page - Playwright page object
-     * @param {string} selector - CSS selector for the cards
-     * @returns {Promise<Array>} Array of parsed event objects
-     */
-    async parseEventData(page, selector) {
-        try {
-            console.log('🔍 Parsing event data from MySideline cards...');
-            
-            const events = await page.evaluate((cardSelector) => {
-                const cards = document.querySelectorAll(cardSelector);
-                const eventData = [];
-                
-                cards.forEach((card, index) => {
-                    try {
-                        const event = {
-                            cardIndex: index,
-                            title: null,
-                            subtitle: null,
-                            description: null,
-                            address: {
-                                line1: null,
-                                line2: null,
-                                cityStatePostal: null,
-                                country: null,
-                                googleMapsUrl: null
-                            },
-                            contact: {
-                                name: null,
-                                phone: null,
-                                email: null
-                            },
-                            eventType: null,
-                            carnivalIcon: null,
-                            registrationUrl: null
-                        };
-                        
-                        // Extract carnival icon from logo image
-                        const logoImg = card.querySelector('.image__wrapper img[data-url]');
-                        if (logoImg) {
-                            event.carnivalIcon = logoImg.getAttribute('data-url');
-                        }
-                        
-                        // Extract title from h3.title
-                        const titleElement = card.querySelector('h3.title');
-                        if (titleElement) {
-                            event.title = titleElement.textContent?.trim();
-                        }
-                        
-                        // Extract subtitle from h4.subtitle
-                        const subtitleElement = card.querySelector('h4.subtitle, h4#subtitle');
-                        if (subtitleElement) {
-                            event.subtitle = subtitleElement.textContent?.trim();
-                        }
-                        
-                        // Extract address information from Google Maps link
-                        const addressLink = card.querySelector('a[href*="maps.google.com"]');
-                        if (addressLink) {
-                            event.address.googleMapsUrl = addressLink.getAttribute('href');
-                            
-                            // Extract address components from nested p elements
-                            const addressParagraphs = addressLink.querySelectorAll('p.m-0');
-                            if (addressParagraphs.length >= 3) {
-                                event.address.line1 = addressParagraphs[0]?.textContent?.trim() || null;
-                                event.address.line2 = addressParagraphs[1]?.textContent?.trim() || null;
-                                event.address.cityStatePostal = addressParagraphs[2]?.textContent?.trim() || null;
-                                if (addressParagraphs[3]) {
-                                    event.address.country = addressParagraphs[3]?.textContent?.trim() || null;
-                                }
-                            }
-                        }
-                        
-                        // Extract event description (first paragraph after address)
-                        const descriptionElements = card.querySelectorAll('p[data-v-06457438]');
-                        for (let p of descriptionElements) {
-                            const text = p.textContent?.trim();
-                            // Skip empty paragraphs and contact info paragraphs
-                            if (text && !text.includes('Club Contact') && !text.includes('Name:') && text.length > 20) {
-                                event.description = text;
-                                break;
-                            }
-                        }
-                        
-                        // Extract contact information
-                        const contactParagraphs = card.querySelectorAll('p[data-v-06457438]');
-                        for (let p of contactParagraphs) {
-                            const text = p.textContent;
-                            if (text && text.includes('Club Contact')) {
-                                // Extract contact name
-                                const nameMatch = text.match(/Name:\s*([^\n\r]+)/);
-                                if (nameMatch) {
-                                    event.contact.name = nameMatch[1].trim();
-                                }
-                                
-                                // Extract phone number from tel: link
-                                const phoneLink = p.querySelector('a[href^="tel:"]');
-                                if (phoneLink) {
-                                    event.contact.phone = phoneLink.textContent?.trim();
-                                }
-                                
-                                // Extract email from mailto: link
-                                const emailLink = p.querySelector('a[href^="mailto:"]');
-                                if (emailLink) {
-                                    event.contact.email = emailLink.textContent?.trim();
-                                }
-                                break;
-                            }
-                        }
-                        
-                        // Extract event type from the details list
-                        const typeItems = card.querySelectorAll('.item.d-flex');
-                        for (let item of typeItems) {
-                            const label = item.querySelector('.list-item');
-                            const value = item.querySelector('.right');
-                            
-                            if (label && value && label.textContent?.trim().toLowerCase() === 'type') {
-                                event.eventType = value.textContent?.trim();
-                                break;
-                            }
-                        }
-                        
-                        // Only include events that are not "Touch" type
-                        if (!event.eventType || event.eventType.toLowerCase() !== 'touch') {
-                            eventData.push(event);
-                        } else {
-                            console.log(`Skipping "Touch" event: ${event.title}`);
-                        }
-                        
-                    } catch (cardError) {
-                        console.error(`Error parsing card ${index}:`, cardError);
-                    }
-                });
-                
-                return eventData;
-            }, selector);
-            
-            console.log(`✅ Parsed ${events.length} events from MySideline cards`);
-            
-            // Extract registration URLs for each event
-            for (let i = 0; i < events.length; i++) {
-                const event = events[i];
-                console.log(`\n🎯 Processing event ${i + 1}/${events.length}: ${event.title}`);
-                
-                // Extract registration URL using the updated method
-                const registrationUrl = this.extractRegistrationUrl(page, selector, event.cardIndex);
-                event.registrationUrl = registrationUrl;
-                
-                // Log extracted data
-                console.log(`📝 Event Details:`);
-                console.log(`   Title: ${event.title}`);
-                console.log(`   Subtitle: ${event.subtitle}`);
-                console.log(`   Carnival Icon: ${event.carnivalIcon}`);
-                console.log(`   Event Type: ${event.eventType}`);
-                console.log(`   Contact: ${event.contact.name} (${event.contact.phone})`);
-                console.log(`   Address: ${event.address.line1}, ${event.address.cityStatePostal}`);
-                console.log(`   Registration URL: ${event.registrationUrl || 'Not found'}`);
-            }
-            
-            return events;
-            
-        } catch (error) {
-            console.error('❌ Error parsing event data:', error);
-            throw error;
-        }
     }
 }
 
