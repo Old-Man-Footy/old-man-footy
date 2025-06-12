@@ -26,11 +26,16 @@ class MySidelineDataService {
                 const existingEvent = await Carnival.findOne({
                     where: {
                         title: eventData.title,
-                        date: eventData.date
+                        date: eventData.date,
                     }
                 });
                 
                 if (existingEvent) {
+                    if (eventData.date < new Date()) {
+                        console.log(`Skipping update of past event: ${eventData.title} on ${eventData.date}`);
+                        continue; // Skip to next event
+                    }
+
                     console.log(`Event already exists: ${eventData.title} on ${eventData.date}`);
                     // Update existing event with any new information, but only for empty fields
                     const updateData = {
@@ -99,6 +104,11 @@ class MySidelineDataService {
                         state: eventData.state,
                         title: eventData.title,
                     });
+
+                    // If the event is more than 7 days in the future, set registration open
+                    if (eventData.date > new Date() + (7 * 24 * 60 * 60 * 1000)) {
+                        newEvent.isRegistrationOpen = true;
+                    }
                     
                     console.log(`Created new MySideline event: ${newEvent.title}`);
                     processedEvents.push(newEvent);
