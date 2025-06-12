@@ -468,11 +468,7 @@ Carnival.init({
       if (carnival.maxTeams && carnival.currentRegistrations > carnival.maxTeams) {
         carnival.currentRegistrations = carnival.maxTeams;
       }
-
-      // If this is a MySideline event being manually managed, update the flag
-      if (carnival.isManuallyEntered === false && carnival.changed('createdByUserId') && carnival.createdByUserId) {
-        carnival.isManuallyEntered = true;
-      }
+      
     }
   }
 });
