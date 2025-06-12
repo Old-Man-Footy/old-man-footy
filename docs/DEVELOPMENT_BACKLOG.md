@@ -71,10 +71,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a club delegate, When I mark my club as inactive, it should be removed from the "Find Clubs" interface (it can show up on historical pages but should clearly show the club is no longer active). | ✅ Completed |
 | As a developer, I want random images uploaded by users (not icons) to be used in the home page carousel. Prioritising recent images. | ✅ Completed |
 | As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | 🔄 In Progress |
-| As a developer, I want to store the MySideline title in a separate hidden field that never changes, for use when matching MySideline carnivals.
-It should:
-- Populate on create from MySideline
-- Be used for matching Carnival records instead of using `title` | ⭕ Not Started |
+| As a developer, I want to store the MySideline title in a separate hidden field that never changes, for use when matching MySideline carnivals.\nIt should:\n- Populate on create from MySideline\n- Be used for matching Carnival records instead of using `title` | ⭕ Not Started |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
