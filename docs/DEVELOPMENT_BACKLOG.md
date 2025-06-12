@@ -84,6 +84,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a developer, I want the Go Back button on error screens to navigate 'back' to the previous page. | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ⭕ Not Started |
+| As a delegate, I want to be able to bulk remove or update contact information from clubs or carnivals from my dashboard. | ⭕ Not Started |
 | **Testing** | |
 | As a tester, I want comprehensive unit tests for, and limited to `models/Carnival.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/Club.js`  | ⭕ Not Started |
