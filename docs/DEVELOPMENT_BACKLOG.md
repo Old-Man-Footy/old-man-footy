@@ -41,7 +41,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on All Carnivals page. | ✅ Completed |
 | As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ✅ Completed |
 | As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa. | ✅ Completed |
-| As a developer, I want to ensure images (icons|images) which are uploaded by delegates or sub delegates remain linked to that club and/or carnival. This requires a complex naming standard be added to uploaded and renamed images | ✅ Completed |
+| As a developer, I want to ensure images (icons/images) which are uploaded by delegates or sub delegates remain linked to that club and/or carnival. This requires a complex naming standard be added to uploaded and renamed images | ✅ Completed |
 | As a club delegate, I want to be able to transfer the role of delegate to another user. | ✅ Completed |
 | As a user, I want to use advanced search and filtering options to find specific carnivals easily. | ✅ Completed |
 | As a club delegate, I want to display social media links and feeds in Contact information on carnival pages. | ✅ Completed |
