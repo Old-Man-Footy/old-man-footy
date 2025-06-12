@@ -381,7 +381,7 @@ Carnival.init({
     allowNull: false
   },
   // MySideline Integration Fields
-  // TODO: MAY NOT EXIST
+  // TODO: REMOVE AS THIS DOES NOT EXIST IN MYSIDELINE
   mySidelineEventId: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -391,7 +391,7 @@ Carnival.init({
     type: DataTypes.DATE,
     allowNull: true
   },
-  // TODO: REMOVE THIS FIELD 
+  // TODO: REMOVE THIS FIELD, NO DIRECT URL DUE TO VUE.JS ROUTING
   mySidelineSourceUrl: {
     type: DataTypes.STRING,
     allowNull: true
@@ -429,7 +429,7 @@ Carnival.init({
       min: 0
     }
   },
-  // TODO: REMOVE THIS FIELD
+  // TODO: REMOVE THIS FIELD, IT'S ALWAYS 35+
   ageCategories: {
     type: DataTypes.JSON,
     allowNull: true,
@@ -455,7 +455,7 @@ Carnival.init({
     allowNull: true
   },
   // Weather and ground conditions
-  // TODO: REMOVE WEATHER CONDITIONS
+  // TODO: REMOVE WEATHER CONDITIONS, NOT NEEDED
   weatherConditions: {
     type: DataTypes.TEXT,
     allowNull: true
