@@ -91,7 +91,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `models/EmailSubscription.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/ClubAlternateName.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/emailService.js`  | ⭕ Not Started |
-| As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineDataService.js` | ✅ Completed |
+| As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineDataService.js` | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineEventParserService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineScraperService.js` | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineIntegrationService.js` | ⭕ Not Started |
@@ -139,7 +139,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `views/contact.ejs`  | ⭕ Not Started |
 | **Enhancements** | |
 | As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
-| As an administrator, I want to manage advanced user roles and permissions. | ⭕ Not Started |
+| As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
 | As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
 | As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
