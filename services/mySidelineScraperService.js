@@ -508,12 +508,24 @@ class MySidelineScraperService {
             // Extract venue address from Google Maps link.
             const addressLinkLocator = currentCard.locator('a[href*="maps.google.com"]');
             let locationAddress = '';
+            let locationAddressPart1 = '';
+            let locationAddressPart2 = '';
+            let locationAddressPart3 = '';
+            let locationAddressPart4 = '';
             let googleMapsUrl = '';
             if (await addressLinkLocator.count() > 0) {
                 googleMapsUrl = await addressLinkLocator.getAttribute('href');
                 // Get all text from child <p> elements and join them.
                 const addressParts = await addressLinkLocator.locator('p.m-0').allTextContents();
-                locationAddress = addressParts.map(p => p.trim()).filter(Boolean).join(', ');
+                // Join the address parts, ensuring to trim and filter out empty strings.
+                if (addressParts.length > 0) {
+                    locationAddress = addressParts.map(p => p.trim()).filter(Boolean).join(', ');
+                    locationAddressPart1 = addressParts[0]?.trim() || '';
+                    locationAddressPart2 = addressParts[1]?.trim() || '';   
+                    locationAddressPart3 = addressParts[2]?.trim() || '';
+                    locationAddressPart4 = addressParts[3]?.trim() || '';
+                }
+
             }
             
             // Extract event description.
@@ -582,9 +594,9 @@ class MySidelineScraperService {
             // --- Post-Processing ---
 
             const cardData = {
-                clubLogoUrl: carnivalIcon, fullTitle, subtitle, locationAddress, googleMapsUrl,
-                scheduleDetails: scheduleDetails, contactName, contactPhone, contactEmail, eventType, 
-                hasRegistration, socialMediaFacebook, socialMediaWebsite
+                clubLogoUrl: carnivalIcon, fullTitle, subtitle, locationAddress, locationAddressPart1, locationAddressPart2, 
+                locationAddressPart3, locationAddressPart4, googleMapsUrl, scheduleDetails: scheduleDetails, contactName, 
+                contactPhone, contactEmail, eventType, hasRegistration, socialMediaFacebook, socialMediaWebsite
             };
             
             if (cardData.eventType === 'Touch') {
@@ -610,6 +622,10 @@ class MySidelineScraperService {
                 date: eventDate,
                 state: state,
                 locationAddress: cardData.locationAddress,
+                locationAddressPart1: cardData.locationAddressPart1,
+                locationAddressPart2: cardData.locationAddressPart2,
+                locationAddressPart3: cardData.locationAddressPart3,
+                locationAddressPart4: cardData.locationAddressPart4,
                 googleMapsUrl: cardData.googleMapsUrl,
                 scheduleDetails: [cardData.subtitle, cardData.scheduleDetails].filter(Boolean).join('\n'),
                 organiserContactName: cardData.contactName,

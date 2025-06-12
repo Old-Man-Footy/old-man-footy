@@ -31,7 +31,7 @@ const getAdminDashboard = async (req, res) => {
         ] = await Promise.all([
             User.count(),
             Club.count(),
-            Carnival.count(),
+            Carnival.count({ where: { isActive: true } }),
             Sponsor.count(),
             EmailSubscription.count(),
             User.count({ where: { isActive: false } }),
@@ -45,6 +45,7 @@ const getAdminDashboard = async (req, res) => {
             }),
             Carnival.count({
                 where: {
+                    isActive: true,
                     createdAt: {
                         [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                     }
@@ -52,6 +53,7 @@ const getAdminDashboard = async (req, res) => {
             }),
             Carnival.count({
                 where: {
+                    isActive: true,
                     date: {
                         [Op.gte]: new Date()
                     }
@@ -67,6 +69,7 @@ const getAdminDashboard = async (req, res) => {
                 include: [{ model: Club, as: 'club' }]
             }),
             carnivals: await Carnival.findAll({
+                where: { isActive: true },
                 limit: 5,
                 order: [['createdAt', 'DESC']],
                 include: [{ model: User, as: 'creator' }]
@@ -645,10 +648,21 @@ const generateReport = async (req, res) => {
                 })
             },
             carnivals: {
-                total: await Carnival.count(),
-                upcoming: await Carnival.count({ where: { date: { [Op.gte]: new Date() } } }),
-                past: await Carnival.count({ where: { date: { [Op.lt]: new Date() } } }),
+                total: await Carnival.count({ where: { isActive: true } }),
+                upcoming: await Carnival.count({ 
+                    where: { 
+                        isActive: true,
+                        date: { [Op.gte]: new Date() } 
+                    } 
+                }),
+                past: await Carnival.count({ 
+                    where: { 
+                        isActive: true,
+                        date: { [Op.lt]: new Date() } 
+                    } 
+                }),
                 byState: await Carnival.findAll({
+                    where: { isActive: true },
                     attributes: ['state', [require('sequelize').fn('COUNT', '*'), 'count']],
                     group: ['state'],
                     raw: true

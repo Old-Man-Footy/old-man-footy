@@ -219,29 +219,57 @@ Carnival.init({
     type: DataTypes.TEXT,
     allowNull: true, // Allow null for MySideline imports
     validate: {
-      len: [5, 500],
-      // Custom validator to ensure location is required for manually entered events
-      checkLocationRequired(value) {
-        if ((!value || value.trim() === '') && this.isManuallyEntered) {
-          throw new Error('Location address is required for manually entered events');
-        }
-      }
+      len: [5, 500],      
     },
     set(value) {
       this.setDataValue('locationAddress', value.trim());
+    }
+  },
+  locationAddressPart1: {
+    type: DataTypes.STRING,
+    allowNull: true, 
+    validate: {
+      len: [2, 100],
+    },
+    set(value) {
+      this.setDataValue('locationAddressPart1', value.trim());
+    }
+  },
+  locationAddressPart2: {
+    type: DataTypes.STRING,
+    allowNull: true, 
+    validate: {
+      len: [2, 100],
+    },
+    set(value) {
+      this.setDataValue('locationAddressPart2', value.trim());
+    }
+  },
+  locationAddressPart3: {
+    type: DataTypes.STRING,
+    allowNull: true, 
+    validate: {
+      len: [2, 100],
+    },
+    set(value) {
+      this.setDataValue('locationAddressPart3', value.trim());
+    }
+  },
+  locationAddressPart4: {
+    type: DataTypes.STRING,
+    allowNull: true, 
+    validate: {
+      len: [2, 100],
+    },
+    set(value) {
+      this.setDataValue('locationAddressPart4', value.trim());
     }
   },
   organiserContactName: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports
     validate: {
-      len: [2, 100],
-      // Custom validator to ensure contact name is required for manually entered events
-      checkContactNameRequired(value) {
-        if ((!value || value.trim() === '') && this.isManuallyEntered) {
-          throw new Error('Organiser contact name is required for manually entered events');
-        }
-      }
+      len: [2, 100],      
     },
     set(value) {
       this.setDataValue('organiserContactName', value.trim());
@@ -253,13 +281,7 @@ Carnival.init({
     validate: {
       isEmail: {
         msg: 'Must be a valid email address'
-      },
-      // Custom validator to ensure email is required for manually entered events
-      checkEmailRequired(value) {
-        if ((!value || value.trim() === '') && this.isManuallyEntered) {
-          throw new Error('Organiser contact email is required for manually entered events');
-        }
-      }
+      },      
     },
     set(value) {
       this.setDataValue('organiserContactEmail', value.toLowerCase().trim());
@@ -269,13 +291,7 @@ Carnival.init({
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports
     validate: {
-      len: [10, 20],
-      // Custom validator to ensure phone is required for manually entered events
-      checkPhoneRequired(value) {
-        if ((!value || value.trim() === '') && this.isManuallyEntered) {
-          throw new Error('Organiser contact phone is required for manually entered events');
-        }
-      }
+      len: [10, 20],      
     },
     set(value) {
       this.setDataValue('organiserContactPhone', value.trim());
@@ -283,15 +299,7 @@ Carnival.init({
   },
   scheduleDetails: {
     type: DataTypes.TEXT,
-    allowNull: true, // Allow null for MySideline imports
-    validate: {
-      // Custom validator to ensure schedule details are required for manually entered events
-      checkScheduleRequired(value) {
-        if ((!value || value.trim() === '') && this.isManuallyEntered) {
-          throw new Error('Schedule details are required for manually entered events');
-        }
-      }
-    }
+    allowNull: true, // Allow null for MySideline imports    
   },
   registrationLink: {
     type: DataTypes.STRING,

@@ -93,6 +93,10 @@ class MySidelineDataService {
                     }
                     if (!existingEvent.locationAddress && eventData.locationAddress) {
                         updateData.locationAddress = eventData.locationAddress;
+                        updateData.locationAddressPart1 = eventData.locationAddressPart1 || null;
+                        updateData.locationAddressPart2 = eventData.locationAddressPart2 || null;
+                        updateData.locationAddressPart3 = eventData.locationAddressPart3 || null;
+                        updateData.locationAddressPart4 = eventData.locationAddressPart4 || null;
                     }
                     if (!existingEvent.organiserContactEmail && eventData.organiserContactEmail) {
                         updateData.organiserContactEmail = eventData.organiserContactEmail;
@@ -139,6 +143,10 @@ class MySidelineDataService {
                         isManuallyEntered: false,
                         lastMySidelineSync: scrapedAt,
                         locationAddress: eventData.locationAddress,
+                        locationAddressPart1: eventData.locationAddressPart1,
+                        locationAddressPart2: eventData.locationAddressPart2,
+                        locationAddressPart3: eventData.locationAddressPart3,
+                        locationAddressPart4: eventData.locationAddressPart4,
                         organiserContactEmail: eventData.organiserContactEmail,
                         organiserContactName: eventData.organiserContactName,
                         organiserContactPhone: eventData.organiserContactPhone,
