@@ -196,7 +196,8 @@ class MySidelineIntegrationService {
                 data: 'MySidelineDataService'
             }
         };
-    }
+    }    
 }
 
 module.exports = new MySidelineIntegrationService();
+

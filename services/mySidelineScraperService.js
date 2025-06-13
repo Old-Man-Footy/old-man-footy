@@ -403,7 +403,7 @@ class MySidelineScraperService {
             const state = this.extractStateFromAddress(locationAddress);
 
             const processedCardData = {
-                clubLogoUrl: clubLogoUrl.split('?')[0], // Remove query parameters if any
+                clubLogoUrl: clubLogoUrl ? clubLogoUrl.split('?')[0] : null, // Remove query parameters if any
                 date: eventDate,
                 googleMapsUrl: googleMapsUrl,
                 isActive: hasRegistration,
