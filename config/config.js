@@ -4,7 +4,7 @@ const path = require('path');
 module.exports = {
   development: {
     dialect: 'sqlite',
-    storage: path.join(__dirname, '..', 'dev-old-man-footy.db'),
+    storage: path.join(__dirname, '..', 'data', 'dev-old-man-footy.db'),
     logging: console.log,
     define: {
       freezeTableName: true,
@@ -22,7 +22,7 @@ module.exports = {
   },
   production: {
     dialect: 'sqlite',
-    storage: path.join(__dirname, '..', 'old-man-footy.db'),
+    storage: path.join(__dirname, '..', 'data', 'old-man-footy.db'),
     logging: false,
     define: {
       freezeTableName: true,

@@ -124,6 +124,14 @@ When writing unit tests, follow these standards:
   3. Controller
   4. Route
 
-**Example Prompt for Copilot:**
+### **5\. Database Management
 
-@workspace /copilot write unit tests for the 'createUser' function in user.controller.js. Make sure to mock the user model and test for both successful creation and error cases.
+Preference for SQLite.
+
+Database updates during development should make use of `npx sequelize-cli db:migrate` packages. An initial package should be created with the first tables required, and subsequent packages on each addition to the database.
+
+When creating future schema changes, create addition migrations using `npx sequelize-cli migration:generate --name describe-your-change`
+
+* **Create a new migration** `npx sequelize-cli migration:generate --name add-new-column-to-clubs`
+* **Run pending migrations** `npx sequelize-cli db:migrate`
+* **Rollback last migration if needed** `npx sequelize-cli db:migrate:undo`

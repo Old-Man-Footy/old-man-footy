@@ -7,6 +7,10 @@
 
 const { Sequelize } = require('sequelize');
 const path = require('path');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+
+const execAsync = promisify(exec);
 
 // Database file location
 const dbPath = process.env.NODE_ENV === 'production' 
@@ -55,7 +59,45 @@ async function testConnection() {
 }
 
 /**
- * Initialize database and create tables
+ * Run database migrations
+ * @returns {Promise<void>}
+ */
+async function runMigrations() {
+  try {
+    console.log('🔄 Running database migrations...');
+    
+    // Set NODE_ENV for migration command if not set
+    const env = process.env.NODE_ENV || 'development';
+    
+    // Run migrations using sequelize-cli
+    const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate', {
+      env: { ...process.env, NODE_ENV: env },
+      cwd: path.join(__dirname, '..')
+    });
+    
+    if (stderr && !stderr.includes('WARNING')) {
+      console.warn('Migration warnings:', stderr);
+    }
+    
+    console.log('✅ Database migrations completed successfully');
+    if (stdout) {
+      console.log('Migration output:', stdout);
+    }
+    
+  } catch (error) {
+    // Check if it's a "No migrations were executed" message (which is not an error)
+    if (error.message.includes('No migrations were executed')) {
+      console.log('✅ Database is up to date - no migrations needed');
+      return;
+    }
+    
+    console.error('❌ Database migration failed:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Initialize database and run migrations
  * @returns {Promise<void>}
  */
 async function initializeDatabase() {
@@ -70,16 +112,10 @@ async function initializeDatabase() {
     // Test connection
     await testConnection();
 
-    // For SQLite, we need to handle foreign key constraints carefully
-    // Use force: false and alter: false to avoid dropping tables with foreign key constraints
-    const syncOptions = {
-      force: false,
-      alter: false  // Back to original setting to avoid conflicts
-    };
-
-    // Sync all models (create tables if they don't exist, but don't alter existing ones)
-    await sequelize.sync(syncOptions);
-    console.log('✅ Database tables synchronized successfully');
+    // Run migrations instead of sync
+    await runMigrations();
+    
+    console.log('✅ Database initialization completed successfully');
     
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
