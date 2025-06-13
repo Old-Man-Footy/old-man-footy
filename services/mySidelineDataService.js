@@ -141,7 +141,7 @@ class MySidelineDataService {
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
-                        carnivalIcon: eventData.carnivalIcon,                        
+                        clubLogoUrl: eventData.carnivalIcon,                        
                         date: eventData.date,
                         isManuallyEntered: false,
                         lastMySidelineSync: lastMySidelineSync,
