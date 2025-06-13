@@ -91,8 +91,8 @@ class MySidelineDataService {
                     };
                     
                     // Only update fields that are currently empty
-                    if (!existingEvent.clubLogoUrl && eventData.clubLogoUrl) {
-                        updateData.clubLogoUrl = eventData.clubLogoUrl;
+                    if (!existingEvent.clubLogoURL && eventData.clubLogoURL) {
+                        updateData.clubLogoURL = eventData.clubLogoURL; // Fix field name mapping
                     }
                     if (!existingEvent.locationAddress && eventData.locationAddress) {
                         updateData.locationAddress = eventData.locationAddress;
@@ -141,8 +141,10 @@ class MySidelineDataService {
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
-                        clubLogoUrl: eventData.clubLogoUrl,                        
+                        clubLogoURL: eventData.clubLogoURL, // Fix field name mapping
                         date: eventData.date,
+                        googleMapsUrl: eventData.googleMapsUrl,
+                        isMySidelineCard: eventData.isMySidelineCard,
                         isManuallyEntered: false,
                         lastMySidelineSync: lastMySidelineSync,
                         locationAddress: eventData.locationAddress,
@@ -158,6 +160,7 @@ class MySidelineDataService {
                         scheduleDetails: eventData.scheduleDetails,
                         socialMediaFacebook: eventData.socialMediaFacebook,
                         socialMediaWebsite: eventData.socialMediaWebsite,
+                        source: eventData.source,
                         state: eventData.state,
                         title: eventData.title,
                     });
