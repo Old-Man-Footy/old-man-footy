@@ -245,10 +245,19 @@ class MySidelineScraperService {
      */
     async extractSingleCardData(clickExpandElement, currentCard, cardIndex) {
         try {
+            
+            // Check if this card has a click-expand element (skip non-event cards)
+            const expandElementCount = await clickExpandElement.count();
+            if (expandElementCount === 0) {
+                console.log(`⏭️  Skipping card ${cardIndex + 1} - no expandable content`);
+                return null;
+            }
+
+            // log the start of extraction for this card
             console.log(`Extracting data from card ${cardIndex + 1}...`);
 
             // Expand the card.            
-            await clickExpandElement.click(options = { timeout: 5000 });
+            await clickExpandElement.click({ timeout: 5000 });
 
             // Extract carnival logo/image.
             // We find the locator first, then check if it exists before getting attributes.
