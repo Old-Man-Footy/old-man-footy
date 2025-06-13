@@ -185,9 +185,6 @@ Carnival.init({
   title: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: {
-      notEmpty: true
-    },
     set(value) {
       this.setDataValue('title', value ? value.trim() : value);
     }
@@ -200,16 +197,6 @@ Carnival.init({
   date: {
     type: DataTypes.DATE,
     allowNull: true, // Allow null for MySideline imports
-    validate: {
-      isDate: true,
-      isAfter: '2020-01-01',
-      // Custom validator to ensure date is required for manually entered events
-      checkDateRequired(value) {
-        if (!value && this.isManuallyEntered) {
-          throw new Error('Date is required for manually entered events');
-        }
-      }
-    }
   },
   locationAddress: {
     type: DataTypes.TEXT,
@@ -256,11 +243,6 @@ Carnival.init({
   organiserContactEmail: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports
-    validate: {
-      isEmail: {
-        msg: 'Must be a valid email address'
-      },      
-    },
     set(value) {
       this.setDataValue('organiserContactEmail', value ? value.toLowerCase().trim() : value);
     }
@@ -268,17 +250,6 @@ Carnival.init({
   organiserContactPhone: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports
-    validate: {
-      isPhoneNumber(value) {
-        if (value && value.trim()) {
-          // Remove common formatting characters for validation
-          const cleanPhone = value.replace(/[\s\-\(\)\.]/g, '');
-          if (cleanPhone.length < 10 || cleanPhone.length > 20) {
-            throw new Error('Phone number must be between 10 and 20 digits');
-          }
-        }
-      }
-    },
     set(value) {
       this.setDataValue('organiserContactPhone', value ? value.trim() : value);
     }
@@ -290,8 +261,9 @@ Carnival.init({
   registrationLink: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isUrl: true
+    set(value) {
+      // Convert empty strings to null for cleaner data storage
+      this.setDataValue('registrationLink', value && value.trim() ? value.trim() : null);
     }
   },
   feesDescription: {
@@ -319,29 +291,33 @@ Carnival.init({
   socialMediaFacebook: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isUrl: true
+    set(value) {
+      // Convert empty strings to null for cleaner data storage
+      this.setDataValue('socialMediaFacebook', value && value.trim() ? value.trim() : null);
     }
   },
   socialMediaInstagram: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isUrl: true
+    set(value) {
+      // Convert empty strings to null for cleaner data storage
+      this.setDataValue('socialMediaInstagram', value && value.trim() ? value.trim() : null);
     }
   },
   socialMediaTwitter: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isUrl: true
+    set(value) {
+      // Convert empty strings to null for cleaner data storage
+      this.setDataValue('socialMediaTwitter', value && value.trim() ? value.trim() : null);
     }
   },
   socialMediaWebsite: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isUrl: true
+    set(value) {
+      // Convert empty strings to null for cleaner data storage
+      this.setDataValue('socialMediaWebsite', value && value.trim() ? value.trim() : null);
     }
   },
   // Enhanced Draw/Document Upload Support
@@ -386,10 +362,7 @@ Carnival.init({
   },
   state: {
     type: DataTypes.STRING(3),
-    allowNull: true, // Allow null for MySideline imports
-    validate: {
-      isIn: [['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']]
-    }
+    allowNull: true // Allow null for MySideline imports
   },
   isActive: {
     type: DataTypes.BOOLEAN,
@@ -403,19 +376,12 @@ Carnival.init({
   // Enhanced fields for better carnival management
   maxTeams: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    validate: {
-      min: 1,
-      max: 1000
-    }
+    allowNull: true
   },
   currentRegistrations: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
-    allowNull: false,
-    validate: {
-      min: 0
-    }
+    allowNull: false
   },
   isRegistrationOpen: {
     type: DataTypes.BOOLEAN,

@@ -82,10 +82,6 @@ EmailSubscription.init({
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      isEmail: true,
-      notEmpty: true
-    },
     set(value) {
       this.setDataValue('email', value.toLowerCase().trim());
     }
@@ -93,19 +89,7 @@ EmailSubscription.init({
   states: {
     type: DataTypes.JSON,
     allowNull: true,
-    defaultValue: [],
-    validate: {
-      isValidStates(value) {
-        if (!Array.isArray(value)) {
-          throw new Error('States must be an array');
-        }
-        const validStates = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
-        const invalid = value.filter(state => !validStates.includes(state));
-        if (invalid.length > 0) {
-          throw new Error(`Invalid states: ${invalid.join(', ')}`);
-        }
-      }
-    }
+    defaultValue: []
   },
   isActive: {
     type: DataTypes.BOOLEAN,

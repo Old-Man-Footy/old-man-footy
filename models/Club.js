@@ -119,91 +119,82 @@ Club.init({
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      notEmpty: true,
-      len: [2, 100]
-    },
     set(value) {
-      this.setDataValue('clubName', value.trim());
+      this.setDataValue('clubName', value ? value.trim() : value);
     }
   },
   state: {
     type: DataTypes.STRING(3),
-    allowNull: true,
-    validate: {
-      isIn: [['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']]
-    }
+    allowNull: true
   },
   location: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 100]
+    set(value) {
+      this.setDataValue('location', value ? value.trim() : value);
     }
   },
   contactEmail: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isEmail: true,
-      len: [0, 100]
+    set(value) {
+      this.setDataValue('contactEmail', value ? value.toLowerCase().trim() : value);
     }
   },
   contactPhone: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 20]
+    set(value) {
+      this.setDataValue('contactPhone', value ? value.trim() : value);
     }
   },
   contactPerson: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 100]
+    set(value) {
+      this.setDataValue('contactPerson', value ? value.trim() : value);
     }
   },
   description: {
     type: DataTypes.TEXT,
     allowNull: true,
-    validate: {
-      len: [0, 1000]
+    set(value) {
+      this.setDataValue('description', value ? value.trim() : value);
     }
   },
   website: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isUrl: true,
-      len: [0, 200]
+    set(value) {
+      this.setDataValue('website', value && value.trim() ? value.trim() : null);
     }
   },
   facebookUrl: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 200]
+    set(value) {
+      this.setDataValue('facebookUrl', value && value.trim() ? value.trim() : null);
     }
   },
   instagramUrl: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 200]
+    set(value) {
+      this.setDataValue('instagramUrl', value && value.trim() ? value.trim() : null);
     }
   },
   twitterUrl: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 200]
+    set(value) {
+      this.setDataValue('twitterUrl', value && value.trim() ? value.trim() : null);
     }
   },
   logoUrl: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 200]
+    set(value) {
+      this.setDataValue('logoUrl', value && value.trim() ? value.trim() : null);
     }
   },
   isPubliclyListed: {
@@ -224,9 +215,8 @@ Club.init({
   inviteEmail: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isEmail: true,
-      len: [0, 100]
+    set(value) {
+      this.setDataValue('inviteEmail', value ? value.toLowerCase().trim() : value);
     }
   },
   createdByUserId: {

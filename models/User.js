@@ -135,10 +135,6 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      isEmail: true,
-      notEmpty: true
-    },
     set(value) {
       this.setDataValue('email', value.toLowerCase().trim());
     }
@@ -146,35 +142,25 @@ User.init({
   passwordHash: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      notEmpty: true,
-      isValidPassword(value) {
-        if (this.isActive && !value) {
-          throw new Error('Password is required for active users');
-        }
+    set(value) {
+      // Only set if value is provided
+      if (value) {
+        this.setDataValue('passwordHash', value);
       }
     }
   },
   firstName: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [1, 50]
-    },
     set(value) {
-      this.setDataValue('firstName', value.trim());
+      this.setDataValue('firstName', value ? value.trim() : value);
     }
   },
   lastName: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [1, 50]
-    },
     set(value) {
-      this.setDataValue('lastName', value.trim());
+      this.setDataValue('lastName', value ? value.trim() : value);
     }
   },
   clubId: {

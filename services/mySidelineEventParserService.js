@@ -75,7 +75,7 @@ class MySidelineEventParserService {
         cleanTitle = cleanTitle
             .replace(/\s*[\-\|]\s*$/, '') // Remove trailing dashes or pipes
             .replace(/^\s*[\-\|]\s*/, '') // Remove leading dashes or pipes
-            .replace(/\(\s*\)/, '') // Remove empty brackets
+            .replace(/\(.*\)/, '') // Remove Brackets
             .replace(/\s+/g, ' ') // Normalize whitespace
             .trim();
 

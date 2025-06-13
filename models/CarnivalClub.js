@@ -148,59 +148,48 @@ CarnivalClub.init({
   },
   playerCount: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    validate: {
-      min: 0,
-      max: 100
-    }
+    allowNull: true
   },
   teamName: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 100]
-    },
     set(value) {
-      this.setDataValue('teamName', value ? value.trim() : null);
+      this.setDataValue('teamName', value ? value.trim() : value);
     }
   },
   contactPerson: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 100]
-    },
     set(value) {
-      this.setDataValue('contactPerson', value ? value.trim() : null);
+      this.setDataValue('contactPerson', value ? value.trim() : value);
     }
   },
   contactEmail: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      isEmail: true,
-      len: [0, 100]
+    set(value) {
+      this.setDataValue('contactEmail', value ? value.toLowerCase().trim() : value);
     }
   },
   contactPhone: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [0, 20]
+    set(value) {
+      this.setDataValue('contactPhone', value ? value.trim() : value);
     }
   },
   specialRequirements: {
     type: DataTypes.TEXT,
     allowNull: true,
-    validate: {
-      len: [0, 500]
+    set(value) {
+      this.setDataValue('specialRequirements', value ? value.trim() : value);
     }
   },
   registrationNotes: {
     type: DataTypes.TEXT,
     allowNull: true,
-    validate: {
-      len: [0, 1000]
+    set(value) {
+      this.setDataValue('registrationNotes', value ? value.trim() : value);
     }
   },
   isActive: {
@@ -215,10 +204,7 @@ CarnivalClub.init({
   },
   paymentAmount: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: true,
-    validate: {
-      min: 0
-    }
+    allowNull: true
   },
   paymentDate: {
     type: DataTypes.DATEONLY,
@@ -227,10 +213,7 @@ CarnivalClub.init({
   displayOrder: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    defaultValue: 999,
-    validate: {
-      min: 0
-    }
+    defaultValue: 999
   },
   createdAt: {
     type: DataTypes.DATE,
