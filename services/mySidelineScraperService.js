@@ -225,8 +225,8 @@ class MySidelineScraperService {
                     extractedEvents.push(cardData);
                                         
                     // Small delay between cards to avoid overwhelming the page
-                    if (cardIndex < cardElements.length - 1) {
-                        await this.delay(1000);
+                    if (cardIndex < cardCount - 1) {
+                        await this.delay(300); 
                     }
 
                     // Collapse the card after processing
