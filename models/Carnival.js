@@ -189,7 +189,7 @@ Carnival.init({
       notEmpty: true
     },
     set(value) {
-      this.setDataValue('title', value.trim());
+      this.setDataValue('title', value ? value.trim() : value);
     }
   },
   mySidelineTitle: {
@@ -215,42 +215,42 @@ Carnival.init({
     type: DataTypes.TEXT,
     allowNull: true, // Allow null for MySideline imports
     set(value) {
-      this.setDataValue('locationAddress', value.trim());
+      this.setDataValue('locationAddress', value ? value.trim() : value);
     }
   },
   locationAddressPart1: {
     type: DataTypes.STRING,
     allowNull: true,
     set(value) {
-      this.setDataValue('locationAddressPart1', value.trim());
+      this.setDataValue('locationAddressPart1', value ? value.trim() : value);
     }
   },
   locationAddressPart2: {
     type: DataTypes.STRING,
     allowNull: true,
     set(value) {
-      this.setDataValue('locationAddressPart2', value.trim());
+      this.setDataValue('locationAddressPart2', value ? value.trim() : value);
     }
   },
   locationAddressPart3: {
     type: DataTypes.STRING,
     allowNull: true,
     set(value) {
-      this.setDataValue('locationAddressPart3', value.trim());
+      this.setDataValue('locationAddressPart3', value ? value.trim() : value);
     }
   },
   locationAddressPart4: {
     type: DataTypes.STRING,
     allowNull: true,
     set(value) {
-      this.setDataValue('locationAddressPart4', value.trim());
+      this.setDataValue('locationAddressPart4', value ? value.trim() : value);
     }
   },
   organiserContactName: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports
     set(value) {
-      this.setDataValue('organiserContactName', value.trim());
+      this.setDataValue('organiserContactName', value ? value.trim() : value);
     }
   },
   organiserContactEmail: {
@@ -262,7 +262,7 @@ Carnival.init({
       },      
     },
     set(value) {
-      this.setDataValue('organiserContactEmail', value.toLowerCase().trim());
+      this.setDataValue('organiserContactEmail', value ? value.toLowerCase().trim() : value);
     }
   },
   organiserContactPhone: {
@@ -280,7 +280,7 @@ Carnival.init({
       }
     },
     set(value) {
-      this.setDataValue('organiserContactPhone', value.trim());
+      this.setDataValue('organiserContactPhone', value ? value.trim() : value);
     }
   },
   scheduleDetails: {
