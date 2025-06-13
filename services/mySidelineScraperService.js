@@ -394,6 +394,11 @@ class MySidelineScraperService {
                 carnivalName = fullTitle || 'Unknown Carnival';                
             }
 
+            if (!eventType.Contains('Contact') && !eventDate) {
+                console.log(`⏭️  Skipping non-contact event without date: ${fullTitle}`);
+                return null;
+            }
+
             const state = this.extractStateFromAddress(locationAddress);
 
             const processedCardData = {
