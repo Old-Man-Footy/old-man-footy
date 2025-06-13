@@ -238,7 +238,7 @@ class MySidelineScraperService {
                 }
             }
 
-            console.log(`\n🎯 Sequential processing completed: ${extractedEvents.length} events extracted from ${cardElements.length} cards`);
+            console.log(`\n🎯 Sequential processing completed: ${extractedEvents.length} events extracted from ${cardCount} cards`);
             return extractedEvents;
             
         } catch (error) {
