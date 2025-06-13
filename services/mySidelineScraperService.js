@@ -369,63 +369,54 @@ class MySidelineScraperService {
             const hasRegistration = await registerButtonLocator.count() > 0;
             
             // --- Post-Processing ---
-
-            const cardData = {
-                clubLogoUrl: carnivalIcon, fullTitle, subtitle, locationAddress, locationAddressPart1, locationAddressPart2, 
-                locationAddressPart3, locationAddressPart4, googleMapsUrl, scheduleDetails: scheduleDetails, contactName, 
-                contactPhone, contactEmail, eventType, hasRegistration, socialMediaFacebook, socialMediaWebsite
-            };
-            
-            if (cardData.eventType === 'Touch') {
-                console.log(`⏭️  Skipping Touch event: ${cardData.fullTitle}`);
+            if (eventType === 'Touch') {
+                console.log(`⏭️  Skipping Touch event: ${fullTitle}`);
                 return null;
             }
 
-            if (!cardData.fullTitle) {
-                console.log('⚠️  No title found, skipping event');
+            if (!fullTitle) {
+                console.log('⚠️  No title found, skipping fullTitle');
                 return null;
             }
 
-            const { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(cardData.fullTitle);
+            const { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(fullTitle);
             if (!carnivalName) {
                 // If no title was extracted, use the full title.
-                carnivalName = cardData.fullTitle || 'Unknown Carnival';                
+                carnivalName = fullTitle || 'Unknown Carnival';                
             }
 
-            const state = this.extractStateFromAddress(cardData.locationAddress);
+            const state = this.extractStateFromAddress(locationAddress);
 
             const processedCardData = {
-                clubLogoUrl: cardData.clubLogoUrl,
+                clubLogoUrl: carnivalIcon,
                 date: eventDate,
-                googleMapsUrl: cardData.googleMapsUrl,
-                isActive: cardData.hasRegistration,
+                googleMapsUrl: googleMapsUrl,
+                isActive: hasRegistration,
                 isMySidelineCard: true,
-                locationAddress: cardData.locationAddress,
-                locationAddressPart1: cardData.locationAddressPart1,
-                locationAddressPart2: cardData.locationAddressPart2,
-                locationAddressPart3: cardData.locationAddressPart3,
-                locationAddressPart4: cardData.locationAddressPart4,
-                mySidelineTitle: cardData.fullTitle,
-                organiserContactEmail: cardData.contactEmail,
-                organiserContactName: cardData.contactName,
-                organiserContactPhone: cardData.contactPhone,
+                locationAddress: locationAddress,
+                locationAddressPart1: locationAddressPart1,
+                locationAddressPart2: locationAddressPart2,
+                locationAddressPart3: locationAddressPart3,
+                locationAddressPart4: locationAddressPart4,
+                mySidelineTitle: fullTitle,
+                organiserContactEmail: contactEmail,
+                organiserContactName: contactName,
+                organiserContactPhone: contactPhone,
                 registrationLink: `${this.eventUrl}${encodeURIComponent(carnivalName)}`,
-                scheduleDetails: [cardData.subtitle, cardData.scheduleDetails].filter(Boolean).join('\n'),
+                scheduleDetails: [subtitle, scheduleDetails].filter(Boolean).join('\n'),
                 scrapedAt: new Date(),
-                socialMediaFacebook: cardData.socialMediaFacebook,
-                socialMediaWebsite: cardData.socialMediaWebsite,
+                socialMediaFacebook: socialMediaFacebook,
+                socialMediaWebsite: socialMediaWebsite,
                 source: 'MySideline',
                 state: state,
                 title: carnivalName,
             };
 
-            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${cardData.clubLogoUrl ? '[ICON]' : '[NO-ICON]'}`);
+            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${carnivalIcon ? '[ICON]' : '[NO-ICON]'}`);
             return processedCardData;
 
         } catch (error) {
             console.error(`❌ Error extracting data from card ${cardIndex + 1}:`, error.message);
-            // Log the state of the card's HTML for debugging if an error occurs.
-            console.error("Card HTML on error:", await currentCard.innerHTML());
             return null;
         }
         finally {
