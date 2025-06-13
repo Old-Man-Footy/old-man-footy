@@ -147,6 +147,7 @@ class MySidelineDataService {
                         locationAddressPart2: eventData.locationAddressPart2,
                         locationAddressPart3: eventData.locationAddressPart3,
                         locationAddressPart4: eventData.locationAddressPart4,
+                        mySidelineTitle: eventData.mySidelineTitle,
                         organiserContactEmail: eventData.organiserContactEmail,
                         organiserContactName: eventData.organiserContactName,
                         organiserContactPhone: eventData.organiserContactPhone,
@@ -156,7 +157,6 @@ class MySidelineDataService {
                         socialMediaWebsite: eventData.socialMediaWebsite,
                         state: eventData.state,
                         title: eventData.title,
-                        mySidelineTitle: eventData.mySidelineTitle
                     });
 
                     // If the event is more than 7 days in the future, set registration open

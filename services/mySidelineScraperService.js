@@ -396,7 +396,8 @@ class MySidelineScraperService {
             }
 
             const { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(cardData.fullTitle);
-            if (!carnivalName || !eventDate) {
+            if (!carnivalName) {
+                // If no title was extracted, use the full title.
                 carnivalName = cardData.fullTitle || 'Unknown Carnival';                
             }
 

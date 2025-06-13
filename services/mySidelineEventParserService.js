@@ -24,61 +24,26 @@ class MySidelineEventParserService {
 
         // Enhanced date patterns to match various formats in titles
         const datePatterns = [
-            // Dates in brackets: (DD/MM/YYYY), (DD-MM-YYYY), (DD Month YYYY), (DDth Month YYYY)
             {
-                // New pattern for dates with ordinal indicators like "27th July 2024"
-                pattern: /\s*\((\d{1,2}(?:st|nd|rd|th)[\s]+\w+[\s]+\d{4})\)\s*/gi,
-                extract: (match) => match[1]
+                // Combined pattern for dates in various formats within brackets.
+                // Handles: (DD/MM/YYYY), (DD-MM-YYYY), (DD Month YYYY), (DDth Month YYYY), (Month DD, YYYY)
+                // Examples: (19/07/2025), (27th July 2024), (Sep 20, 2024)
+                pattern: /\s*\(((?:\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})|(?:\d{1,2}(?:st|nd|rd|th)?\s+[a-zA-Z]{3,}\s+\d{4})|(?:[a-zA-Z]{3,}\s+\d{1,2},?\s+\d{4}))\)\s*/gi,
+                extract: (match) => match[1].trim()
             },
             {
-                pattern: /\s*\((\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})\)\s*/gi,
-                extract: (match) => match[1]
+                // Combined pattern for dates with prefixes like '-' or '|'.
+                // Handles: - DD/MM/YYYY, | DD Month YYYY, - DDth Month YYYY
+                // Examples: - 21/06/2025, | 20th Sep 2024
+                pattern: /\s*[\-\|]\s*((?:\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})|(?:\d{1,2}(?:st|nd|rd|th)?\s+[a-zA-Z]{3,}\s+\d{4})|(?:[a-zA-Z]{3,}\s+\d{1,2},?\s+\d{4}))\s*/gi,
+                extract: (match) => match[1].trim()
             },
             {
-                pattern: /\s*\((\d{1,2}[\s]+\w+[\s]+\d{4})\)\s*/gi,
-                extract: (match) => match[1]
-            },
-            {
-                pattern: /\s*\((\w+[\s]+\d{1,2},?[\s]+\d{4})\)\s*/gi,
-                extract: (match) => match[1]
-            },
-
-            // Dates without brackets but with separators: - DD/MM/YYYY, | DD Month YYYY
-            {
-                pattern: /\s*[\-\|]\s*(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})\s*/gi,
-                extract: (match) => match[1]
-            },
-            {
-                pattern: /\s*[\-\|]\s*(\d{1,2}[\s]+\w+[\s]+\d{4})\s*/gi,
-                extract: (match) => match[1]
-            },
-            {
-                pattern: /\s*[\-\|]\s*(\w+[\s]+\d{1,2},?[\s]+\d{4})\s*/gi,
-                extract: (match) => match[1]
-            },
-
-            // Dates at the end of title: Title DD/MM/YYYY, Title DD Month YYYY
-            {
-                pattern: /\s+(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})\s*$/gi,
-                extract: (match) => match[1]
-            },
-            {
-                pattern: /\s+(\d{1,2}[\s]+\w+[\s]+\d{4})\s*$/gi,
-                extract: (match) => match[1]
-            },
-            {
-                pattern: /\s+(\w+[\s]+\d{1,2},?[\s]+\d{4})\s*$/gi,
-                extract: (match) => match[1]
-            },
-
-            // Year only patterns: (2024), (2025), - 2024, | 2025
-            {
-                pattern: /\s*\((20\d{2})\)\s*/gi,
-                extract: (match) => match[1]
-            },
-            {
-                pattern: /\s*[\-\|]\s*(20\d{2})\s*$/gi,
-                extract: (match) => match[1]
+                // Combined pattern for dates found at the very end of a string.
+                // Handles: Title DD/MM/YYYY, Title DDth Month YYYY
+                // Examples: Carnival 20th Sep 2024
+                pattern: /\s+((?:\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})|(?:\d{1,2}(?:st|nd|rd|th)?\s+[a-zA-Z]{3,}\s+\d{4})|(?:[a-zA-Z]{3,}\s+\d{1,2},?\s+\d{4}))\s*$/gi,
+                extract: (match) => match[1].trim()
             }
         ];
 
