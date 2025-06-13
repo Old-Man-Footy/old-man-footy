@@ -59,7 +59,7 @@ describe('MySidelineScraperService Integration Tests', () => {
 
             console.log(`\n📊 SCRAPING RESULTS SUMMARY:`);
             console.log(`├── Total Events: ${events.length}`);
-            console.log(`├── Events with Icons: ${events.filter(e => e.carnivalIcon).length}`);
+            console.log(`├── Events with Icons: ${events.filter(e => e.clubLogoUrl).length}`);
             console.log(`├── Events with Maps: ${events.filter(e => e.googleMapsUrl?.includes('maps.google.com')).length}`);
             console.log(`├── Events with Contact: ${events.filter(e => e.organiserContactName || e.organiserContactPhone || e.organiserContactEmail).length}`);
             console.log(`├── Active Events: ${events.filter(e => e.isActive).length}`);
@@ -71,7 +71,7 @@ describe('MySidelineScraperService Integration Tests', () => {
                 if (event.title) eventScore += 1;
                 if (event.date) eventScore += 1;
                 if (event.locationAddress) eventScore += 1;
-                if (event.carnivalIcon) eventScore += 0.5;
+                if (event.clubLogoUrl) eventScore += 0.5;
                 if (event.organiserContactName || event.organiserContactPhone || event.organiserContactEmail) eventScore += 0.5;
                 return score + eventScore;
             }, 0);
