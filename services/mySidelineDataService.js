@@ -194,9 +194,7 @@ class MySidelineDataService {
                 (new Date() - lastImportedCarnival.createdAt) <= 24 * 60 * 60 * 1000;
 
             if (!lastImportedCarnival || !hasRecentSync || isDevelopment) {
-                if (isDevelopment && hasRecentSync) {
-                    console.log('Running MySideline sync in development mode (ignoring recent sync)...');
-                } else if (!lastImportedCarnival) {
+                if (!lastImportedCarnival) {
                     console.log('Running initial MySideline sync (no previous sync found)...');
                 } else {
                     console.log('Running initial MySideline sync (last sync > 24 hours ago)...');
