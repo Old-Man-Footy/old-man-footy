@@ -218,6 +218,7 @@ class MySidelineScraperService {
                     // If the card data is null, skip this card
                     if (!cardData) {
                         console.log(`Skipping card ${cardIndex + 1} due to wrong event type or missing data`);
+                        await clickExpandElement.click();  // Collapse the card before moving to the next
                         continue;
                     }
 
