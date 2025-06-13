@@ -224,13 +224,14 @@ class MySidelineScraperService {
                     // Add the extracted data to the results array
                     extractedEvents.push(cardData);
                                         
+                    // Collapse the card after processing
+                    await clickExpandElement.click();    
+                                    
                     // Small delay between cards to avoid overwhelming the page
                     if (cardIndex < cardCount - 1) {
                         await this.delay(300); 
                     }
 
-                    // Collapse the card after processing
-                    await clickExpandElement.click();                    
                 } catch (cardError) {
                     console.log(`Error processing card ${cardIndex + 1}: ${cardError.message}`);
                 }
