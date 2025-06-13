@@ -1,137 +1,109 @@
-# **GitHub Copilot Instructions for this Node.js Project**
+# **GitHub Copilot Instructions for this Project**
 
-This document provides rules and guidelines for GitHub Copilot to follow when assisting with development in this repository. The goal is to ensure consistency, maintain high-quality code, and follow established best practices for Node.js web applications.
+This document provides guiding principles and strict rules for GitHub Copilot. Your primary goal is to act as an expert Node.js developer who is familiar with this codebase. Adhere to these instructions to ensure all contributions are consistent, secure, high-quality, and follow the established patterns of this repository.
 
-## **General Principles**
+## **Core Directives & Priorities**
 
-* **Language:** All code should be written in modern JavaScript (ES2020+) or TypeScript, depending on the file's context.  
-* **Style:** Code should be formatted consistently. Assume [Prettier](https://prettier.io/) is used for code formatting.  
-* **Comments:** Use JSDoc-style comments for all public functions, classes, and complex logic blocks to ensure clarity.
+1. **Security First:** All code you generate MUST be secure. Prioritise security best practices in all layers of the application.  
+2. **Strict MVC Pattern:** Adhere strictly to the Model-View-Controller separation of concerns defined below. Never mix logic between these layers.  
+3. **Test-Driven Development (TDD):** All new business logic in models or controllers MUST be accompanied by corresponding unit tests.  
+4. **Clarity and Readability:** Code MUST be clear, well-commented (using JSDoc), and easy for human developers to understand.
 
-## **1\. Documentation**
+## **1. Project Stack**
 
-Maintaining up-to-date and accurate documentation is crucial. Copilot should assist in keeping both the project's README.md and the build progress logs in the /docs directory current.
+* **Language:** TypeScript / JavaScript (ES2020+)  
+* **Framework:** Node.js with Express.js  
+* **Architecture:** Model-View-Controller (MVC)  
+* **Database:** SQLite3 with Sequelize ORM  
+* **Testing:** Jest  
+* **Code Style:** Prettier (rules are defined in `.prettierrc`)
 
-### **1.1. Updating the README.md**
+## **2. Security (High Priority)**
 
-When changes are made to core configuration or setup, the README.md must be updated. Pay close attention to:
+* **Input Sanitisation:** All incoming data from request bodies (`req.body`), query parameters (`req.query`), or route parameters (`req.params`) MUST be sanitised and validated before use. Use a library like express-validator.  
+* **SQL Injection:** You MUST NOT use raw string interpolation to build database queries. Use only Sequelize's built-in methods, which automatically sanitise inputs.  
+* **Cross-Site Scripting (XSS):** When rendering data in views, ensure it is properly escaped to prevent XSS attacks. Template engines like EJS often have mechanisms for this (e.g., using \<%- for unescaped output is forbidden unless explicitly required and sanitised).  
+* **Secret Management:** Secrets (API keys, database passwords) MUST NOT be hardcoded. They must only be accessed via environment variables (e.g., process.env.API_KEY).  
+* **Dependency Security:** Do not suggest adding dependencies with known vulnerabilities.
 
-* **package.json:** If new dependencies, scripts (e.g., npm run dev), or Node.js version requirements are added, update the "Installation" or "Getting Started" sections of the README.  
-* **Environment Variables:** If a new environment variable is added to .env.example or a configuration file (e.g., /config/config.js), ensure it is documented in the "Configuration" section of the README with a clear description of its purpose.  
-* **API Endpoints:** If new routes are added or existing ones are modified in the /routes directory, update the "API Reference" table in the README to reflect the changes (HTTP method, path, and description).
+## **3. Error Handling**
 
-**Example Prompt for Copilot:**
+* **Consistent Error Responses:** All API error responses MUST follow a consistent JSON format: `{ "error": { "status": <HTTP\_STATUS\_CODE>, "message": "<DESCRIPTIVE_MESSAGE>" } }`.  
+* **Centralised Error Handler:** Use a centralised Express error-handling middleware. Controllers should use next(error) to pass errors to this handler.  
+* **Avoid try-catch in Controllers:** For asynchronous route handlers, use a wrapper function or a library like express-async-errors to automatically catch and forward promise rejections to the central error handler.
 
-@workspace /copilot update the README.md file to include the new dependencies and environment variables I've just added.
+## **4\. MVC (Model-View-Controller) Architecture**
 
-### **1.2. Tracking Build Progress in /docs**
+This project enforces a strict separation of concerns.
 
-The /docs directory contains Markdown files (.md) that serve as a changelog or progress report for development sprints or major feature builds.
+### **4.1. Models (/models)**
 
-* After completing a feature or a set of significant commits, your task is to summarise the changes and append them to the relevant file in /docs.  
-* The summary should be a bulleted list. Each item should clearly describe the change (e.g., "Feature: Added user authentication endpoint," "Fix: Resolved memory leak in data processing service," "Refactor: Simplified database query logic in user model.").  
-* If a relevant progress file for the current version or sprint doesn't exist, create one (e.g., /docs/sprint-3-summary.md).
-
-**Example Prompt for Copilot:**
-
-@workspace /copilot based on my last 5 commits, update the /docs/changelog.md with a summary of the changes.
-
-## **2\. MVC (Model-View-Controller) Architecture**
-
-This project follows the MVC architectural pattern. Adhere strictly to the separation of concerns outlined below. All new features must be implemented following this structure.
-
-### **2.1. Models (/models)**
-
-* **Purpose:** Models are responsible exclusively for data structure, validation, and database interaction. They are the single source of truth for all data-related logic.  
+* **Purpose:** Define data structure, validation, and all database interactions.  
 * **Rules:**  
-  * All database queries (e.g., using Sequelize for SQLite3) must be contained within model files.  
-  * Models must **not** interact directly with the request or response objects from the web server (e.g., Express).  
-  * Business logic related to data manipulation (e.g., formatting user data, calculating values) belongs here.  
-  * Files should be named after the data they represent (e.g., user.model.js, product.model.js).
+  * MUST contain all database query logic (using Sequelize).  
+  * MUST NOT interact directly with the Express req or res objects.  
+  * SHOULD contain business logic related to data manipulation and validation (e.g., password hashing, data formatting).  
+  * File Naming:`[resource-name].model.js` (e.g., user.model.js).
 
-### **2.2. Views (/views)**
+### **4.2. Views (/views)**
 
-* **Purpose:** Views are responsible for the presentation layer. For a traditional web application, these are the template files (e.g., EJS, Pug) that generate the HTML sent to the user.  
+* **Purpose:** The presentation layer (HTML templates) or JSON response structure.  
 * **Rules:**  
-  * For APIs, the "view" is the JSON response. The structure of this JSON response is determined by the controller but should be kept clean and predictable.  
-  * Views must **not** contain any database queries or complex business logic. They should only receive data from controllers and render it.
+  * MUST NOT contain any database queries or complex business logic.  
+  * MUST only render data provided to it by a controller.  
+  * For APIs, the "view" is the JSON response sent by the controller. This response MUST be structured cleanly and predictably.
 
-### **2.3. Controllers (/controllers)**
+### **4.3. Controllers (/controllers)**
 
-* **Purpose:** Controllers act as the intermediary between Models and Views. They handle incoming HTTP requests, process user input, and orchestrate the application's response.  
+* **Purpose:** Handle HTTP requests, orchestrate interactions between models and views.  
 * **Rules:**  
-  * A controller's primary role is to handle req and res objects.  
-  * They should call methods from the Models to fetch or update data.  
-  * They are responsible for input validation and sanitisation before passing data to the models.  
-  * They decide which view to render or what JSON data to send back as a response.  
-  * Keep controllers "thin." Complex business logic should be delegated to service layers or models.  
-  * Files should be named after the resource they manage (e.g., user.controller.js, product.controller.js).
+  * MUST handle the Express req and res objects.  
+  * MUST call methods from the models to fetch or persist data.  
+  * MUST perform input validation before passing data to models or services.  
+  * MUST decide which view to render or what JSON data to send as a response.  
+  * MUST delegate complex business logic to a service layer or the model; controllers should remain "thin".  
+  * File Naming: `[resource-name].controller.js` (e.g., `user.controller.js`).
 
-## **3\. Static Assets & Styling**
+## **5. Unit Testing (\_\_tests\_\_)**
 
-Guidelines for managing static assets and styles to ensure a clean and efficient project structure.
+* **Framework:** Use Jest for all tests.  
+* **Location:** Test files MUST located and /tests director and be named `[file-name].test.js` or `[file-name].spec.js`.  
+* **Best Practices:**  
+  * **AAA Pattern:** Structure tests using Arrange, Act, Assert.  
+  * **Isolation:** Tests MUST be independent. Use beforeEach and afterEach to reset state and mocks.  
+  * **Mocking:** External dependencies (especially database and external APIs) MUST be mocked using jest.mock(). A unit test for a controller MUST NOT make a real database call.  
+  * **Test Order:** When generating a full test suite for a feature, create tests in this order: Model \-\> Service (if any) \-\> Controller.  
+  * **Running Tests:** The command to test a single component is `npm test -- "<file-name>.test.js"`.
 
-### **3.1. Asset Storage Location**
+## **6. Database & Migrations**
 
-* All static, publicly accessible assets **must** be stored in the /public directory at the root of the project.  
-* Use subdirectories within /public to organize assets by type:  
-  * /public/styles for all CSS files.  
-  * /public/images for .jpg, .png, .svg files.  
-  * /public/icons for favicons and feature-specific icons.  
-  * /public/scripts for client-side JavaScript files.
+* **ORM:** Use Sequelize with SQLite.  
+* **Schema Changes:** ALL schema changes MUST be done through Sequelize migrations. Do not alter the database schema manually.  
+  * To create a new migration: `npx sequelize-cli migration:generate --name <change-description>`
+  * To run pending migrations: `npx sequelize-cli db:migrate`
+  * To undo the last migration: `npx sequelize-cli db:migrate:undo`
 
-### **3.2. Styling Implementation**
+## **7. Static Assets & Styling (/public)**
 
-* **Centralized Stylesheets:** All CSS rules **must** be defined within .css files located in the /public/styles directory. This ensures a single source of truth for the application's appearance.  
-* **No Inline Styles or CSS-in-JS:** Avoid using inline style attributes on HTML elements and refrain from using CSS-in-JS libraries. All styling logic must be handled by external stylesheets to maintain a strict separation of concerns.  
-* **Linking:** Link the main stylesheet(s) in the \<head\> of the primary layout or view file (e.g., main.ejs or index.html) to make them globally available.
+* **Location:** All public assets (CSS, client-side JS, images, icons) MUST be in the `/public` directory, organized into subdirectories (`/styles`, `/scripts`, `/images`, `/icons`).  
+* **Styling:** All CSS rules MUST be in external `.css` files within `/public/styles`. You MUST NOT use inline style attributes or CSS-in-JS.  
+* **Asset Referencing:** In view files (HTML, EJS), all asset paths MUST be root-relative.  
+  * **Correct:** `<link rel="stylesheet" href="/styles/main.css">`
+  * **Incorrect:** `<link rel="stylesheet" href="../public/styles/main.css">`
 
-### **3.3. Referencing Assets**
+## **8. Documentation**
 
-* When referencing assets in view files (e.g., HTML, EJS), use root-relative paths. Assume the /public directory is being served as the static root.  
-  * **Correct:** \<img src="/images/logo.png"\> or \<link rel="stylesheet" href="/styles/main.css"\>  
-  * **Incorrect:** \<img src="../public/images/logo.png"\>
+* **JSDoc:** All public functions, classes, and complex logic blocks MUST have JSDoc-style comments.  
+* **README\.md:** When assisting in adding new features, update the README if necessary:  
+  * **Dependencies/Scripts:** If `package.json` changes, update the "Installation" section.  
+  * **Environment Variables:** If new variables are added, document them in the "Configuration" section.  
+  * **API Endpoints:** If routes are added/changed, update the "API Reference" table.  
+* **Changelog (`/docs`):** Based on recent commits, provide a bulleted list of changes for the changelog files in the `/docs` directory.
 
-### **3.4. Asset Optimization**
+### **Example Prompts for Copilot**
 
-* Before committing images, ensure they are optimized for the web to reduce file size.  
-* Prefer modern, efficient formats like SVG for icons and WebP for photographic images where browser support allows.
+`@workspace /copilot Based on my last 3 commits, please generate a summary for the /docs/changelog.md file`.
 
-## **4\. Unit Testing**
+`@workspace /copilot I've added a new API_KEY to the config. Please update the "Configuration" section in the README.md to document it`.
 
-* A robust test suite is essential for maintaining a stable and reliable application. We use the [Jest](https://jestjs.io/) testing framework.
-
-### **4.1. Test File Location and Naming**
-
-* All test files must be located alongside the files they are testing, within a \_\_tests\_\_ subdirectory, or have a .test.js or .spec.js suffix (e.g., user.controller.test.js).
-
-### **4.2. Unit Testing Best Practices**
-
-When writing unit tests, follow these standards:
-
-* **Isolation:** Tests must be independent. The result of one test should never affect another. Use beforeEach or afterEach hooks to reset state and mocks.  
-* **Mocking:** All external dependencies, especially database connections and external API calls, **must** be mocked using Jest's built-in mocking functionality (jest.mock()). A unit test for a controller should not make a real database call.  
-* **Focus:** Test one piece of logic at a time. A single test case should verify a single outcome.  
-* **AAA Pattern:** Structure tests using the Arrange, Act, Assert pattern.  
-  1. **Arrange:** Set up the test, including mock data and mocked dependencies.  
-  2. **Act:** Execute the function or method being tested.  
-  3. **Assert:** Verify that the outcome is as expected using Jest's matchers (e.g., expect(result).toBe(true)).  
-* **Coverage:** Aim to test all business logic within controllers and models. Pay special attention to edge cases, error handling paths, and validation logic.
-* The correct way to test a single test component is `npm test -- "<controller|view|model|service name>.test.js" --verbose`
-* The order which tests should be written in Jest is:
-  1. Model
-  2. Service
-  3. Controller
-  4. Route
-
-### **5\. Database Management
-
-Preference for SQLite.
-
-Database updates during development should make use of `npx sequelize-cli db:migrate` packages. An initial package should be created with the first tables required, and subsequent packages on each addition to the database.
-
-When creating future schema changes, create addition migrations using `npx sequelize-cli migration:generate --name describe-your-change`
-
-* **Create a new migration** `npx sequelize-cli migration:generate --name add-new-column-to-clubs`
-* **Run pending migrations** `npx sequelize-cli db:migrate`
-* **Rollback last migration if needed** `npx sequelize-cli db:migrate:undo`
+`@workspace /copilot Generate a Jest unit test for the createUser method in user.controller.js. Remember to mock the user.model.js dependency.`
