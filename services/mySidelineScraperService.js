@@ -394,7 +394,8 @@ class MySidelineScraperService {
                 carnivalName = fullTitle || 'Unknown Carnival';                
             }
 
-            if (!eventType.Contains('Contact') && !eventDate) {
+            // If no event type, or event type is not contact, and no date is found, skip.
+            if ((!eventType || !eventType.toLowerCase().includes('contact')) && !eventDate) {
                 console.log(`⏭️  Skipping non-contact event without date: ${fullTitle}`);
                 return null;
             }
