@@ -15,7 +15,7 @@ class MySidelineScraperService {
         this.requestDelay = 2000;
         this.searchUrl = process.env.MYSIDELINE_URL;
         this.eventUrl = process.env.MYSIDELINE_EVENT_URL;
-        this.useHeadlessBrowser = process.env.NODE_ENV !== 'development';
+        this.useHeadlessBrowser = true; //process.env.NODE_ENV !== 'development';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
         
@@ -645,6 +645,128 @@ class MySidelineScraperService {
      */
     async delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Validate and clean extracted data to ensure it meets Carnival model requirements
+     * @param {Object} rawData - Raw extracted data from MySideline
+     * @returns {Object} Cleaned and validated data
+     */
+    validateAndCleanData(rawData) {
+        const cleanedData = { ...rawData };
+
+        // Clean string fields - just trim them, no length requirements
+        const stringFields = [
+            'title',
+            'locationAddress',
+            'locationAddressPart1',
+            'locationAddressPart2', 
+            'locationAddressPart3',
+            'locationAddressPart4',
+            'organiserContactName'
+        ];
+
+        stringFields.forEach(field => {
+            const value = cleanedData[field];
+            if (value && typeof value === 'string') {
+                cleanedData[field] = value.trim();
+            }
+            // Convert empty strings to null
+            if (cleanedData[field] === '') {
+                cleanedData[field] = null;
+            }
+        });
+
+        // Validate and clean email
+        if (cleanedData.organiserContactEmail) {
+            const email = cleanedData.organiserContactEmail.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                console.warn(`Invalid email format: ${email}`);
+                cleanedData.organiserContactEmail = null;
+            } else {
+                cleanedData.organiserContactEmail = email.toLowerCase();
+            }
+        }
+
+        // Validate and clean phone number
+        if (cleanedData.organiserContactPhone) {
+            const phone = cleanedData.organiserContactPhone.trim();
+            // Remove common phone formatting characters for length check
+            const cleanPhone = phone.replace(/[\s\-\(\)\.]/g, '');
+            if (cleanPhone.length < 10 || cleanPhone.length > 20) {
+                console.warn(`Invalid phone format: ${phone}`);
+                cleanedData.organiserContactPhone = null;
+            }
+        }
+
+        // Validate and clean URLs
+        const urlFields = ['socialMediaFacebook', 'socialMediaWebsite', 'registrationLink'];
+        urlFields.forEach(field => {
+            const url = cleanedData[field];
+            if (url && typeof url === 'string') {
+                const trimmedUrl = url.trim();
+                const cleanedUrl = this.fixUrlFormat(trimmedUrl);
+                if (!cleanedUrl) {
+                    console.warn(`Invalid URL format for ${field}: ${trimmedUrl}`);
+                    cleanedData[field] = null;
+                } else {
+                    cleanedData[field] = cleanedUrl;
+                }
+            }
+        });
+
+        // Handle state - allow null, but validate if present
+        if (cleanedData.state) {
+            const validStates = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            if (!validStates.includes(cleanedData.state)) {
+                console.warn(`Invalid state: ${cleanedData.state}, setting to null`);
+                cleanedData.state = null;
+            }
+        }
+
+        // Ensure title is present (required field)
+        if (!cleanedData.title || cleanedData.title.trim() === '') {
+            console.warn('No title provided, using default');
+            cleanedData.title = 'Masters Rugby League Carnival';
+        }
+
+        return cleanedData;
+    }
+
+    /**
+     * Validate if a string is a valid URL
+     * @param {string} url - URL to validate
+     * @returns {boolean} True if valid URL
+     */
+    isValidUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * Fix URL format by adding protocol if missing and validate
+     * @param {string} url - URL to fix
+     * @returns {string|null} Fixed URL or null if invalid
+     */
+    fixUrlFormat(url) {
+        if (!url || typeof url !== 'string') return null;
+        
+        const trimmedUrl = url.trim();
+        if (!trimmedUrl) return null;
+
+        // If it already has a protocol, validate and return
+        if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+            return this.isValidUrl(trimmedUrl) ? trimmedUrl : null;
+        }
+
+        // Try adding https://
+        const httpsUrl = `https://${trimmedUrl}`;
+        return this.isValidUrl(httpsUrl) ? httpsUrl : null;
     }
 }
 

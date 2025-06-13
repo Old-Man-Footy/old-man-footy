@@ -186,8 +186,7 @@ Carnival.init({
     type: DataTypes.STRING,
     allowNull: false,
     validate: {
-      notEmpty: true,
-      len: [3, 200]
+      notEmpty: true
     },
     set(value) {
       this.setDataValue('title', value.trim());
@@ -196,9 +195,6 @@ Carnival.init({
   mySidelineTitle: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      len: [3, 200]
-    },
     comment: 'Original MySideline title for matching purposes - never changes once set'
   },
   date: {
@@ -218,49 +214,34 @@ Carnival.init({
   locationAddress: {
     type: DataTypes.TEXT,
     allowNull: true, // Allow null for MySideline imports
-    validate: {
-      len: [5, 500],      
-    },
     set(value) {
       this.setDataValue('locationAddress', value.trim());
     }
   },
   locationAddressPart1: {
     type: DataTypes.STRING,
-    allowNull: true, 
-    validate: {
-      len: [2, 100],
-    },
+    allowNull: true,
     set(value) {
       this.setDataValue('locationAddressPart1', value.trim());
     }
   },
   locationAddressPart2: {
     type: DataTypes.STRING,
-    allowNull: true, 
-    validate: {
-      len: [2, 100],
-    },
+    allowNull: true,
     set(value) {
       this.setDataValue('locationAddressPart2', value.trim());
     }
   },
   locationAddressPart3: {
     type: DataTypes.STRING,
-    allowNull: true, 
-    validate: {
-      len: [2, 100],
-    },
+    allowNull: true,
     set(value) {
       this.setDataValue('locationAddressPart3', value.trim());
     }
   },
   locationAddressPart4: {
     type: DataTypes.STRING,
-    allowNull: true, 
-    validate: {
-      len: [2, 100],
-    },
+    allowNull: true,
     set(value) {
       this.setDataValue('locationAddressPart4', value.trim());
     }
@@ -268,9 +249,6 @@ Carnival.init({
   organiserContactName: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports
-    validate: {
-      len: [2, 100],      
-    },
     set(value) {
       this.setDataValue('organiserContactName', value.trim());
     }
@@ -291,7 +269,15 @@ Carnival.init({
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports
     validate: {
-      len: [10, 20],      
+      isPhoneNumber(value) {
+        if (value && value.trim()) {
+          // Remove common formatting characters for validation
+          const cleanPhone = value.replace(/[\s\-\(\)\.]/g, '');
+          if (cleanPhone.length < 10 || cleanPhone.length > 20) {
+            throw new Error('Phone number must be between 10 and 20 digits');
+          }
+        }
+      }
     },
     set(value) {
       this.setDataValue('organiserContactPhone', value.trim());
@@ -400,7 +386,7 @@ Carnival.init({
   },
   state: {
     type: DataTypes.STRING(3),
-    allowNull: false,
+    allowNull: true, // Allow null for MySideline imports
     validate: {
       isIn: [['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']]
     }

@@ -98,8 +98,39 @@ class MySidelineIntegrationService {
             // Step 1: Scrape events using the scraper service
             const scrapedEvents = await this.scraperService.scrapeEvents();
             
-            // Step 2: Process scraped events using the data service
-            const processedEvents = await this.dataService.processScrapedEvents(scrapedEvents);
+            if (!scrapedEvents || scrapedEvents.length === 0) {
+                console.log('No events found from MySideline scraper');
+                return {
+                    success: true,
+                    eventsProcessed: 0,
+                    message: 'No events found'
+                };
+            }
+
+            // Step 1.5: Validate and clean the scraped data
+            console.log('Validating and cleaning scraped event data...');
+            const cleanedEvents = scrapedEvents.map(event => {
+                try {
+                    return this.scraperService.validateAndCleanData(event);
+                } catch (validationError) {
+                    console.warn(`Failed to validate event "${event.title}": ${validationError.message}`);
+                    return null; // Mark for filtering out
+                }
+            }).filter(event => event !== null); // Remove failed validations
+
+            console.log(`${cleanedEvents.length}/${scrapedEvents.length} events passed validation`);
+
+            if (cleanedEvents.length === 0) {
+                console.log('No events passed validation checks');
+                return {
+                    success: true,
+                    eventsProcessed: 0,
+                    message: 'No events passed validation'
+                };
+            }
+
+            // Step 2: Process validated events using the data service
+            const processedEvents = await this.dataService.processScrapedEvents(cleanedEvents);
             
             console.log(`MySideline sync completed. Processed ${processedEvents.length} events.`);
             this.lastSyncDate = new Date();
