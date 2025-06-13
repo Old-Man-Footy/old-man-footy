@@ -214,8 +214,16 @@ class MySidelineScraperService {
              
                     // Extract data from this specific card
                     const cardData = await this.extractSingleCardData(currentCard, cardIndex);
-                    
-                    
+
+                    // If the card data is null, skip this card
+                    if (!cardData) {
+                        console.log(`Skipping card ${cardIndex + 1} due to missing data`);
+                        continue;
+                    }
+
+                    // Add the extracted data to the results array
+                    extractedEvents.push(cardData);
+                                        
                     // Small delay between cards to avoid overwhelming the page
                     if (cardIndex < cardElements.length - 1) {
                         await this.delay(1000);
@@ -389,8 +397,7 @@ class MySidelineScraperService {
 
             const { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(cardData.fullTitle);
             if (!carnivalName || !eventDate) {
-                console.log(`⚠️  Could not parse carnival name or date from: ${cardData.fullTitle}`);
-                return null;
+                carnivalName = cardData.fullTitle || 'Unknown Carnival';                
             }
 
             const state = this.extractStateFromAddress(cardData.locationAddress);
@@ -406,6 +413,7 @@ class MySidelineScraperService {
                 locationAddressPart2: cardData.locationAddressPart2,
                 locationAddressPart3: cardData.locationAddressPart3,
                 locationAddressPart4: cardData.locationAddressPart4,
+                mySidelineTitle: cardData.fullTitle,
                 organiserContactEmail: cardData.contactEmail,
                 organiserContactName: cardData.contactName,
                 organiserContactPhone: cardData.contactPhone,

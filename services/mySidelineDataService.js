@@ -77,11 +77,11 @@ class MySidelineDataService {
                 if (existingEvent) {
                     if (eventData.date < new Date() || existingEvent.isActive === false) {
                         // If the event date is in the past or already marked as inactive, skip it
-                        console.log(`Skipping update of past event: ${eventData.title} on ${eventData.date} at ${eventData.locationAddress}`);
+                        console.log(`Skipping update of past event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
                         continue; // Skip to next event
                     }
 
-                    console.log(`Event already exists: ${eventData.title} on ${eventData.date}`);
+                    console.log(`Event already exists: ${eventData.mySidelineTitle} on ${eventData.date}`);
                     // Update existing event with any new information, but only for empty fields
                     const updateData = {
                         id: existingEvent.id
@@ -156,7 +156,7 @@ class MySidelineDataService {
                         socialMediaWebsite: eventData.socialMediaWebsite,
                         state: eventData.state,
                         title: eventData.title,
-                        mySidelineTitle: eventData.title, // Populate mySidelineTitle with the title
+                        mySidelineTitle: eventData.mySidelineTitle
                     });
 
                     // If the event is more than 7 days in the future, set registration open
