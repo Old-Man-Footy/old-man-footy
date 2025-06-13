@@ -242,47 +242,71 @@ class MySidelineDataService {
     }
 
     /**
-     * Parse date string into Date object
-     * @param {string} dateString - Date string to parse
-     * @returns {Date|null} - Parsed date or null
+     * A robust function to parse various date string formats into a JavaScript Date object.
+     * This is designed to work with the output from the date extraction regex patterns.
+     *
+     * @param {string} dateString The date string to parse (e.g., "27th July 2024", "19/07/2025").
+     * @returns {Date|null} A valid Date object or null if parsing fails.
      */
     parseDate(dateString) {
-        if (!dateString) return null;
-        
-        try {
-            // Handle various date formats
-            const cleanDateString = dateString.trim();
-            
-            // Try parsing with different formats
-            const formats = [
-                // DD/MM/YYYY
-                /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,
-                // DD-MM-YYYY
-                /^(\d{1,2})-(\d{1,2})-(\d{4})$/,
-                // DD Month YYYY
-                /^(\d{1,2})\s+(\w+)\s+(\d{4})$/,
-                // Month DD, YYYY
-                /^(\w+)\s+(\d{1,2}),?\s+(\d{4})$/
-            ];
-            
-            for (const format of formats) {
-                const match = cleanDateString.match(format);
-                if (match) {
-                    // Handle different date formats appropriately
-                    const parsedDate = new Date(cleanDateString);
-                    if (!isNaN(parsedDate.getTime())) {
-                        return parsedDate;
-                    }
-                }
-            }
-            
-            // Fallback to standard parsing
-            const parsedDate = new Date(cleanDateString);
-            return !isNaN(parsedDate.getTime()) ? parsedDate : null;
-        } catch (error) {
-            console.log(`Failed to parse date "${dateString}":`, error.message);
+        if (!dateString) {
             return null;
         }
+
+        // --- 1. Normalise the string ---
+        // Remove ordinal suffixes (st, nd, rd, th) from days
+        const cleanString = dateString.trim().replace(/(\d+)(st|nd|rd|th)/i, '$1');
+
+        let match;
+
+        // --- 2. Define patterns for parsing ---
+
+        // Pattern 1: Handles DD/MM/YYYY and DD-MM-YYYY
+        // Example: "19/07/2025" or "21-06-2025"
+        const patternNumeric = /^(\d{1,2})[\s\/\-](\d{1,2})[\s\/\-](\d{4})$/;
+        match = cleanString.match(patternNumeric);
+        if (match) {
+            const day = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10); // month is 1-based
+            const year = parseInt(match[3], 10);
+            // Create date, ensuring month is 0-indexed for the Date constructor
+            const date = new Date(year, month - 1, day);
+            // Validate the date to catch invalid inputs like month > 12
+            if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+                return date;
+            }
+        }
+
+        // Pattern 2: Handles "DD Month YYYY" and "Month DD, YYYY"
+        // Example: "27 July 2024" or "Sep 20 2024" or "Sep 20, 2024"
+        const patternMonthName = /^(?:(\d{1,2})\s+([a-zA-Z]{3,})\s+(\d{4}))|(?:([a-zA-Z]{3,})\s+(\d{1,2}),?\s+(\d{4}))$/i;
+        match = cleanString.match(patternMonthName);
+        if (match) {
+            // match[1] is day, match[2] is month, match[3] is year OR
+            // match[4] is month, match[5] is day, match[6] is year
+            const day = parseInt(match[1] || match[5], 10);
+            const monthStr = match[2] || match[4];
+            const year = parseInt(match[3] || match[6], 10);
+
+            const monthIndex = new Date(Date.parse(monthStr +" 1, 2000")).getMonth();
+            
+            if (monthIndex >= 0) {
+                const date = new Date(year, monthIndex, day);
+                // Validate the date
+                if (date.getFullYear() === year && date.getMonth() === monthIndex && date.getDate() === day) {
+                    return date;
+                }
+            }
+        }
+        
+        // --- 3. Fallback for any other valid formats ---
+        const fallbackDate = new Date(cleanString);
+        if (!isNaN(fallbackDate.getTime())) {
+            return fallbackDate;
+        }
+
+        // Return null if no patterns matched or date was invalid
+        return null;
     }
 }
 

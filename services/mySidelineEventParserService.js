@@ -41,7 +41,7 @@ class MySidelineEventParserService {
             {
                 // Combined pattern for dates found at the very end of a string.
                 // Handles: Title DD/MM/YYYY, Title DDth Month YYYY
-                // Examples: Carnival 20th Sep 2024
+                // Examples: Carnival 20th Sep 2024, Another Event 5 Feb 2026
                 pattern: /\s+((?:\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})|(?:\d{1,2}(?:st|nd|rd|th)?\s+[a-zA-Z]{3,}\s+\d{4})|(?:[a-zA-Z]{3,}\s+\d{1,2},?\s+\d{4}))\s*$/gi,
                 extract: (match) => match[1].trim()
             }
@@ -49,6 +49,8 @@ class MySidelineEventParserService {
 
         // Try each pattern to find and extract date
         for (const { pattern, extract } of datePatterns) {
+            // Reset regex state for global patterns
+            pattern.lastIndex = 0; 
             const match = pattern.exec(cleanTitle);
             if (match) {
                 const dateString = extract(match);
@@ -63,12 +65,12 @@ class MySidelineEventParserService {
                     console.log(`Extracted date "${dateString}" from title. Clean title: "${cleanTitle}"`);
                     break;
                 }
-                
-                // Reset the regex lastIndex for next iteration
-                pattern.lastIndex = 0;
-            }
+                else {
+                    console.warn(`Failed to parse date from string: "${dateString}"`);
+                }
+            } 
         }
-        
+
         // Additional cleanup for common title artifacts
         cleanTitle = cleanTitle
             .replace(/\s*[\-\|]\s*$/, '') // Remove trailing dashes or pipes
