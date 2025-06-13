@@ -413,7 +413,7 @@ class MySidelineScraperService {
                 organiserContactPhone: contactPhone,
                 registrationLink: `${this.eventUrl}${encodeURIComponent(carnivalName)}`,
                 scheduleDetails: [subtitle, scheduleDetails].filter(Boolean).join('\n'),
-                scrapedAt: new Date(),
+                lastMySidelineSync: new Date(),
                 socialMediaFacebook: socialMediaFacebook,
                 socialMediaWebsite: socialMediaWebsite,
                 source: 'MySideline',

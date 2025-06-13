@@ -68,6 +68,9 @@ class MySidelineDataService {
     async processScrapedEvents(scrapedEvents) {
         console.log(`Processing ${scrapedEvents.length} scraped MySideline events...`);
         
+        // Set the sync timestamp for all events processed in this batch
+        const lastMySidelineSync = new Date();
+        
         const processedEvents = [];        
         for (const eventData of scrapedEvents) {
             try {
@@ -124,14 +127,14 @@ class MySidelineDataService {
                     }
                     
                     // Always update the sync timestamp
-                    updateData.lastMySidelineSync = scrapedAt;
+                    updateData.lastMySidelineSync = lastMySidelineSync;
                     
                     // Only perform update if there are fields to update
                     if (Object.keys(updateData).length > 2) { // > 2 because id and lastMySidelineSync are always included
                         await existingEvent.update(updateData);
                         console.log(`Updated ${Object.keys(updateData).length - 2} empty fields for event: ${eventData.title}`);
                     } else {
-                        await existingEvent.update({ lastMySidelineSync: scrapedAt });
+                        await existingEvent.update({ lastMySidelineSync: lastMySidelineSync });
                     }
                     
                     processedEvents.push(existingEvent);
@@ -141,7 +144,7 @@ class MySidelineDataService {
                         carnivalIcon: eventData.carnivalIcon,                        
                         date: eventData.date,
                         isManuallyEntered: false,
-                        lastMySidelineSync: scrapedAt,
+                        lastMySidelineSync: lastMySidelineSync,
                         locationAddress: eventData.locationAddress,
                         locationAddressPart1: eventData.locationAddressPart1,
                         locationAddressPart2: eventData.locationAddressPart2,
