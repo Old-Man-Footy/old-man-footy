@@ -38,10 +38,20 @@ describe('MySidelineScraperService Integration Tests', () => {
     });
 
     afterAll(async () => {
-        // Clean up any resources
+        // Clean up any resources and wait for async operations to complete
         if (service) {
-            // Ensure any open browser instances are closed
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Force close any open browser instances by overriding the service method
+            try {
+                // Wait for any pending operations to complete
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Force cleanup of Playwright resources
+                const { chromium } = require('playwright');
+                await chromium.close?.();
+            } catch (error) {
+                // Ignore cleanup errors in tests
+                console.log('Cleanup completed with minor issues (expected in tests)');
+            }
         }
     });
 
@@ -81,6 +91,9 @@ describe('MySidelineScraperService Integration Tests', () => {
 
             // Expect at least 60% data quality
             expect(avgQuality).toBeGreaterThan(0.6);
+
+            // Ensure all async operations complete before test ends
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
         }, INTEGRATION_TIMEOUT);
     });

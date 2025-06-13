@@ -15,7 +15,7 @@ class MySidelineScraperService {
         this.requestDelay = 2000;
         this.searchUrl = process.env.MYSIDELINE_URL;
         this.eventUrl = process.env.MYSIDELINE_EVENT_URL;
-        this.useHeadlessBrowser = true; //process.env.NODE_ENV !== 'development';
+        this.useHeadlessBrowser = process.env.NODE_ENV !== 'development'; //true;
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
         
@@ -334,7 +334,7 @@ class MySidelineScraperService {
             let contactName = '';
             let contactPhone = '';
             let contactEmail = '';
-            let socialMediaFacebook = ''
+            let socialMediaFacebook = '';
             let socialMediaWebsite = '';
             if (await contactParagraphLocator.count() > 0) {
                 const contactText = await contactParagraphLocator.textContent();

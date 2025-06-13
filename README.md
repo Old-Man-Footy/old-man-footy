@@ -94,6 +94,30 @@ Note: SQLite database is included and requires no separate installation.
 | `SESSION_SECRET` | Secret key for session encryption | Required |
 | `NODE_ENV` | Environment mode | development |
 
+## Debugging
+
+To debug in vscode, change the following line in `package.json`
+
+- from: `"test": "jest",`
+- to: `"test": "node --inspect-brk=9229 node_modules/jest/bin/jest.js --runInBand",`
+
+Then use an "attach to Jest" `Launch.json` file:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Jest",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true
+    }
+  ]
+}
+```
+
 ## 🗂️ Project Structure
 
 ```

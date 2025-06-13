@@ -192,11 +192,10 @@ class MySidelineDataService {
             });
 
             // In development mode, always run sync regardless of last sync time
-            const isDevelopment = process.env.NODE_ENV !== 'production';
             const hasRecentSync = lastImportedCarnival && 
                 (new Date() - lastImportedCarnival.createdAt) <= 24 * 60 * 60 * 1000;
 
-            if (!lastImportedCarnival || !hasRecentSync || isDevelopment) {
+            if (!lastImportedCarnival || !hasRecentSync) {
                 if (!lastImportedCarnival) {
                     console.log('Running initial MySideline sync (no previous sync found)...');
                 } else {
