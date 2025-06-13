@@ -2,6 +2,7 @@ const { chromium } = require('playwright');
 const MySidelineDataService = require('./mySidelineDataService');
 const MySidelineEventParserService = require('./mySidelineEventParserService');
 const { Page } = require('puppeteer');
+const { options } = require('../models/User');
 
 /**
  * MySideline Web Scraper Service
@@ -208,31 +209,18 @@ class MySidelineScraperService {
                     // This scopes the search within the card, making it robust.
                     const clickExpandElement = currentCard.locator('.click-expand');
 
-                    // Click the element.
-                    // Playwright's auto-waiting will ensure the element is ready before clicking.
-                    await clickExpandElement.click();
-             
+                   
                     // Extract data from this specific card
-                    const cardData = await this.extractSingleCardData(currentCard, cardIndex);
+                    const cardData = await this.extractSingleCardData(clickExpandElement, currentCard, cardIndex);
 
                     // If the card data is null, skip this card
                     if (!cardData) {
                         console.log(`Skipping card ${cardIndex + 1} due to wrong event type or missing data`);
-                        await clickExpandElement.click();  // Collapse the card before moving to the next
                         continue;
                     }
 
                     // Add the extracted data to the results array
                     extractedEvents.push(cardData);
-                                        
-                    // Collapse the card after processing
-                    await clickExpandElement.click();    
-
-                    // Small delay between cards to avoid overwhelming the page
-                    if (cardIndex < cardCount - 1) {
-                        await this.delay(300); 
-                    }
-
                 } catch (cardError) {
                     console.log(`Error processing card ${cardIndex + 1}: ${cardError.message}`);
                 }
@@ -250,16 +238,17 @@ class MySidelineScraperService {
     /**
      * Extracts structured data from a single card locator using Playwright's API.
      * This is an async function and should be awaited.
+     * @param {import('playwright').Locator} clickExpandElement - The Playwright locator for the expand button within the card.
      * @param {import('playwright').Locator} currentCard - The Playwright locator for the specific card element.
      * @param {number} cardIndex - The index of the card, used for logging purposes.
-     * @param {boolean} wasExpanded - A boolean indicating if the card was expanded to get all data.
      * @returns {Promise<object|null>} A promise that resolves to an object with the extracted card data, or null if extraction fails or the card is skipped.
      */
-    async extractSingleCardData(currentCard, cardIndex) {
+    async extractSingleCardData(clickExpandElement, currentCard, cardIndex) {
         try {
             console.log(`Extracting data from card ${cardIndex + 1}...`);
 
-            // --- Data Extraction using Playwright Locators ---
+            // Expand the card.            
+            await clickExpandElement.click(options = { timeout: 5000 });
 
             // Extract carnival logo/image.
             // We find the locator first, then check if it exists before getting attributes.
@@ -438,6 +427,15 @@ class MySidelineScraperService {
             // Log the state of the card's HTML for debugging if an error occurs.
             console.error("Card HTML on error:", await currentCard.innerHTML());
             return null;
+        }
+        finally {
+            // Ensure the card is collapsed after processing, even if an error occurs.
+            try {
+                await clickExpandElement.click();
+                await this.delay(300); // Short delay to ensure the card collapses properly
+            } catch (collapseError) {
+                console.warn(`⚠️ Could not collapse card ${cardIndex + 1}:`, collapseError.message);
+            }
         }
     }
 
