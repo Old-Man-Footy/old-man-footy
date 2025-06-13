@@ -204,6 +204,14 @@ CarnivalSponsor.init({
     validate: {
       len: [0, 1000]
     }
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false
   }
 }, {
   sequelize,

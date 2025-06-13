@@ -116,6 +116,14 @@ EmailSubscription.init({
     type: DataTypes.STRING,
     allowNull: true,
     unique: true
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false
   }
 }, {
   sequelize,

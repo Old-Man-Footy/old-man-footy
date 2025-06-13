@@ -84,7 +84,7 @@
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="flex-grow-1">
                                                     <h6 class="card-title mb-1 alternate-name-display">
-                                                        <%= alternateName.displayName %>
+                                                        <%= alternateName.alternateName %>
                                                     </h6>
                                                     <small class="text-muted">Added <%= new Date(alternateName.createdAt).toLocaleDateString() %></small>
                                                 </div>
@@ -92,14 +92,14 @@
                                                     <button type="button" 
                                                             class="btn btn-outline-primary btn-sm edit-alternate-name"
                                                             data-id="<%= alternateName.id %>"
-                                                            data-name="<%= alternateName.displayName %>"
+                                                            data-name="<%= alternateName.alternateName %>"
                                                             title="Edit">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
                                                     <button type="button" 
                                                             class="btn btn-outline-danger btn-sm delete-alternate-name"
                                                             data-id="<%= alternateName.id %>"
-                                                            data-name="<%= alternateName.displayName %>"
+                                                            data-name="<%= alternateName.alternateName %>"
                                                             title="Delete">
                                                         <i class="bi bi-trash"></i>
                                                     </button>

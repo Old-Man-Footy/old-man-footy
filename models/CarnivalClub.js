@@ -231,6 +231,14 @@ CarnivalClub.init({
     validate: {
       min: 0
     }
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false
   }
 }, {
   sequelize,

@@ -200,6 +200,10 @@ User.init({
     allowNull: true,
     unique: true
   },
+  invitationExpires: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   tokenExpires: {
     type: DataTypes.DATE,
     allowNull: true
@@ -216,6 +220,14 @@ User.init({
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
+    allowNull: false
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
     allowNull: false
   }
 }, {

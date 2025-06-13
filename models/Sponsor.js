@@ -173,6 +173,14 @@ Sponsor.init({
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     allowNull: false
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false
   }
 }, {
   sequelize,

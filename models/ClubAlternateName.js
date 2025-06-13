@@ -102,25 +102,20 @@ ClubAlternateName.init({
       len: [2, 100]
     },
     set(value) {
-      // Store as lowercase for consistent searching
-      this.setDataValue('alternateName', value.trim().toLowerCase());
-    }
-  },
-  displayName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [2, 100]
-    },
-    set(value) {
-      // Store display version with original case
-      this.setDataValue('displayName', value.trim());
+      this.setDataValue('alternateName', value.trim());
     }
   },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
+    allowNull: false
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
     allowNull: false
   }
 }, {
