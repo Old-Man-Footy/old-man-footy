@@ -91,8 +91,8 @@ class MySidelineDataService {
                     };
                     
                     // Only update fields that are currently empty
-                    if (!existingEvent.carnivalIcon && eventData.carnivalIcon) {
-                        updateData.carnivalIcon = eventData.carnivalIcon;
+                    if (!existingEvent.clubLogoUrl && eventData.clubLogoUrl) {
+                        updateData.clubLogoUrl = eventData.clubLogoUrl;
                     }
                     if (!existingEvent.locationAddress && eventData.locationAddress) {
                         updateData.locationAddress = eventData.locationAddress;
@@ -141,7 +141,7 @@ class MySidelineDataService {
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
-                        clubLogoUrl: eventData.carnivalIcon,                        
+                        clubLogoUrl: eventData.clubLogoUrl,                        
                         date: eventData.date,
                         isManuallyEntered: false,
                         lastMySidelineSync: lastMySidelineSync,

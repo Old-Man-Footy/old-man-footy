@@ -262,10 +262,10 @@ class MySidelineScraperService {
             // Extract carnival logo/image.
             // We find the locator first, then check if it exists before getting attributes.
             const logoLocator = currentCard.locator('.image__wrapper img');
-            let carnivalIcon = '';
+            let clubLogoUrl = '';
             if (await logoLocator.count() > 0) {
                 // Prefer data-url, then src, then an empty string.
-                carnivalIcon = (await logoLocator.getAttribute('data-url')) || (await logoLocator.getAttribute('src')) || '';
+                clubLogoUrl = (await logoLocator.getAttribute('data-url')) || (await logoLocator.getAttribute('src')) || '';
             }
 
             // Extract title and category.
@@ -402,7 +402,7 @@ class MySidelineScraperService {
             const state = this.extractStateFromAddress(locationAddress);
 
             const processedCardData = {
-                clubLogoUrl: carnivalIcon,
+                clubLogoUrl: clubLogoUrl,
                 date: eventDate,
                 googleMapsUrl: googleMapsUrl,
                 isActive: hasRegistration,
@@ -426,7 +426,7 @@ class MySidelineScraperService {
                 title: carnivalName,
             };
 
-            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${carnivalIcon ? '[ICON]' : '[NO-ICON]'}`);
+            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${clubLogoUrl ? '[ICON]' : '[NO-ICON]'}`);
             return processedCardData;
 
         } catch (error) {
