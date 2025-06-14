@@ -507,7 +507,7 @@
                         </div>
                         <div class="mb-3">
                             <strong>Organiser:</strong><br>
-                            <%= carnival.organiserContactName %>
+                            <%= carnival.organiserContactName || 'TBC' %>
                         </div>
                         <div class="mb-3">
                             <strong>Email:</strong><br>
@@ -515,24 +515,24 @@
                         </div>
                         <div class="mb-3">
                             <strong>Phone:</strong><br>
-                            <span class="text-muted"><%= carnival.organiserContactPhone %></span>
+                            <span class="text-muted"><%= carnival.organiserContactPhone  %></span>
                         </div>
                     <% } else { %>
                         <!-- Full contact info for active carnivals or carnival managers -->
                         <div class="mb-3">
                             <strong>Organiser:</strong><br>
-                            <%= carnival.organiserContactName %>
+                            <%= carnival.organiserContactName || 'TBC'  %>
                         </div>
                         <div class="mb-3">
                             <strong>Email:</strong><br>
                             <a href="mailto:<%= carnival.organiserContactEmail %>?subject=Enquiry about <%= carnival.title %>">
-                                <%= carnival.organiserContactEmail %>
+                                <%= carnival.organiserContactEmail  %>
                             </a>
                         </div>
                         <div class="mb-3">
                             <strong>Phone:</strong><br>
                             <a href="tel:<%= carnival.organiserContactPhone %>">
-                                <%= carnival.organiserContactPhone %>
+                                <%= carnival.organiserContactPhone  %>
                             </a>
                         </div>
                         
