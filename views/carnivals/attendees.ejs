@@ -90,7 +90,7 @@
                         <div id="attendeesList" class="row">
                             <% attendingClubs.forEach(registration => { %>
                                 <div class="col-lg-6 mb-3" data-registration-id="<%= registration.id %>">
-                                    <div class="card attendee-card">
+                                    <div class="card carnival-attendee-card">
                                         <div class="card-body">
                                             <div class="d-flex align-items-start">
                                                 <!-- Club Logo -->
@@ -100,7 +100,7 @@
                                                              alt="<%= registration.club.clubName %>" 
                                                              class="attendee-logo">
                                                     <% } else { %>
-                                                        <div class="attendee-logo-placeholder d-flex align-items-center justify-content-center">
+                                                        <div class="carnival-attendee-logo-placeholder d-flex align-items-center justify-content-center">
                                                             <i class="bi bi-shield text-muted"></i>
                                                         </div>
                                                     <% } %>
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
     border: 1px solid #dee2e6;
 }
 
-.attendee-logo-placeholder {
+.carnival-attendee-logo-placeholder {
     width: 60px;
     height: 60px;
     background: #f8f9fa;
@@ -254,12 +254,12 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 1.5rem;
 }
 
-.attendee-card {
+.carnival-attendee-card {
     transition: all 0.3s ease;
     border: 1px solid #dee2e6;
 }
 
-.attendee-card:hover {
+.carnival-attendee-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
 }

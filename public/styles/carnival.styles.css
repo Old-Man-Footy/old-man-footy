@@ -1,0 +1,394 @@
+/* ================================
+   CARNIVAL-SPECIFIC STYLES
+   ================================ */
+   
+   /* Carnival Card Specific Styles */
+   
+   .carnival-card:hover a,
+   .carnival-card a:hover {
+       text-decoration: none;
+   }
+
+.carnival-card {
+    height: 100%;
+    overflow: hidden;
+}
+
+.carnival-card .card-img-top {
+    transition: transform 0.3s ease;
+    height: 200px;
+    object-fit: cover;
+}
+
+.carnival-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.carnival-card .badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.carnival-card .social-links a {
+    color: #6c757d;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.carnival-card .social-links a:hover {
+    color: var(--rugby-green);
+}
+
+/* ================================
+   CARNIVAL DISPLAY & LIST STYLES
+   ================================ */
+
+.carnival-footer {
+    margin-top: 2rem;
+}
+
+.carnival-status-badge {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+}
+
+.carnival-date-display {
+    font-weight: 600;
+    color: var(--rugby-green);
+}
+
+.carnival-location-display {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* ================================
+   CARNIVAL FORM STYLES
+   ================================ */
+
+.carnival-form-section {
+    margin-bottom: 2rem;
+}
+
+.carnival-form-section h5 {
+    color: var(--rugby-green);
+    border-bottom: 2px solid var(--rugby-light-green);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.carnival-description-input {
+    min-height: 120px;
+}
+
+.carnival-schedule-input {
+    min-height: 100px;
+}
+
+/* ================================
+   CARNIVAL MANAGEMENT STYLES
+   ================================ */
+
+.carnival-management-header {
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+    color: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.carnival-stats-card {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid var(--rugby-light-green);
+    transition: all 0.3s ease;
+}
+
+.carnival-stats-card:hover {
+    border-color: var(--rugby-green);
+    transform: translateY(-2px);
+}
+
+/* ================================
+   CARNIVAL ATTENDEES STYLES
+   ================================ */
+
+.carnival-attendee-card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.carnival-attendee-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.carnival-attendee-logo-placeholder {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1.5rem;
+}
+
+.carnival-attendee-club-info {
+    flex-grow: 1;
+}
+
+.carnival-attendee-club-name {
+    font-weight: 600;
+    color: var(--rugby-green);
+    margin-bottom: 0.25rem;
+}
+
+.carnival-attendee-registration-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* ================================
+   CARNIVAL SPONSORS STYLES
+   ================================ */
+
+.carnival-sponsor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.carnival-sponsor-card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.carnival-sponsor-card:hover {
+    border-color: var(--rugby-green);
+    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.15);
+    transform: translateY(-2px);
+}
+
+.carnival-sponsor-logo {
+    height: 120px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carnival-sponsor-logo img {
+    max-height: 100px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.carnival-sponsor-info {
+    padding: 1rem;
+}
+
+.carnival-sponsor-name {
+    font-weight: 600;
+    color: var(--rugby-green);
+    margin-bottom: 0.5rem;
+}
+
+.carnival-sponsor-level {
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.carnival-sponsor-description {
+    font-size: 0.9rem;
+    color: #6c757d;
+    line-height: 1.5;
+}
+
+/* ================================
+   CARNIVAL REGISTRATION STYLES
+   ================================ */
+
+.carnival-registration-section {
+    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+    border: 2px solid var(--rugby-light-green);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.carnival-registration-form {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.carnival-registration-input {
+    border: 2px solid #e9ecef;
+    border-radius: 0.375rem;
+    transition: border-color 0.3s ease;
+}
+
+.carnival-registration-input:focus {
+    border-color: var(--rugby-green);
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+}
+
+/* ================================
+   CARNIVAL DRAW & RESULTS STYLES
+   ================================ */
+
+.carnival-draw-section {
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.carnival-draw-icon {
+    font-size: 3rem;
+    color: var(--rugby-gold);
+    margin-bottom: 1rem;
+}
+
+.carnival-draw-title {
+    color: var(--rugby-green);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.carnival-draw-download {
+    background: linear-gradient(45deg, var(--rugby-green), var(--rugby-dark-green));
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.carnival-draw-download:hover {
+    background: linear-gradient(45deg, var(--rugby-dark-green), var(--rugby-green));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 104, 55, 0.3);
+}
+
+/* ================================
+   CARNIVAL INACTIVE WARNING STYLES
+   ================================ */
+
+.carnival-inactive-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 2px solid #f0ad4e;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.carnival-inactive-warning .alert {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.carnival-inactive-icon {
+    font-size: 1.5rem;
+    color: #f0ad4e;
+}
+
+/* ================================
+   MYSIDELINE INTEGRATION STYLES
+   ================================ */
+
+.carnival-mysideline-badge {
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+    color: #212529;
+    font-weight: 600;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.carnival-mysideline-import-info {
+    background: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.carnival-mysideline-warning-tooltip {
+    --bs-tooltip-bg: #dc3545;
+    --bs-tooltip-color: #fff;
+    max-width: 280px;
+}
+
+.carnival-mysideline-warning-tooltip .carnival-tooltip-inner {
+    font-weight: 500;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.carnival-mysideline-warning-tooltip .carnival-tooltip-arrow::before {
+    border-top-color: #dc3545 !important;
+    border-bottom-color: #dc3545 !important;
+}
+
+.carnival-mysideline-claim-button {
+    background: linear-gradient(45deg, #17a2b8, #138496);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.carnival-mysideline-claim-button:hover {
+    background: linear-gradient(45deg, #138496, #117a8b);
+    transform: translateY(-1px);
+}
+
+/* ================================
+   RESPONSIVE CARNIVAL STYLES
+   ================================ */
+
+@media (max-width: 768px) {
+    .carnival-card .card-img-top {
+        height: 150px;
+    }
+    
+    .carnival-registration-section {
+        padding: 1rem;
+    }
+    
+    .carnival-sponsor-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .carnival-management-header {
+        padding: 1rem;
+    }
+    
+    .carnival-attendee-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .carnival-card .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .carnival-draw-section {
+        padding: 1rem;
+    }
+    
+    .carnival-draw-icon {
+        font-size: 2rem;
+    }
+}

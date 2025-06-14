@@ -1,0 +1,609 @@
+/* ================================
+   CLUB-SPECIFIC STYLES
+   ================================ */
+
+/* Club Card Styles */
+.club-card {
+    height: 100%;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.club-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.15);
+}
+
+.club-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.club-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.club-logo-display {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.club-logo-placeholder {
+    width: 80px;
+    height: 80px;
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.5rem;
+}
+
+/* ================================
+   CLUB LISTING & DIRECTORY STYLES
+   ================================ */
+
+.club-directory-header {
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+    color: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.club-directory-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.club-search-section {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid var(--rugby-light-green);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.club-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.club-filter-chip {
+    background: var(--rugby-light-green);
+    color: var(--rugby-green);
+    border: 1px solid var(--rugby-green);
+    border-radius: 1rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* ================================
+   CLUB PROFILE STYLES
+   ================================ */
+
+.club-profile-header {
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+    color: white;
+    padding: 2rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.club-profile-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="2"/></svg>') repeat;
+    opacity: 0.3;
+}
+
+.club-profile-content {
+    position: relative;
+    z-index: 1;
+}
+
+.club-profile-logo {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    background: white;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.club-profile-name {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.club-profile-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+}
+
+.club-status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.club-status-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 1rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+/* ================================
+   CLUB INFORMATION SECTIONS
+   ================================ */
+
+.club-info-section {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.club-info-section h5 {
+    color: var(--rugby-green);
+    border-bottom: 2px solid var(--rugby-light-green);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.club-contact-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+}
+
+.club-contact-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--rugby-light-green);
+    color: var(--rugby-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+}
+
+.club-contact-details {
+    flex-grow: 1;
+}
+
+.club-contact-label {
+    font-weight: 600;
+    color: var(--rugby-green);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.club-contact-value {
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+/* ================================
+   CLUB MANAGEMENT STYLES
+   ================================ */
+
+.club-management-dashboard {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid var(--rugby-light-green);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.club-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.club-quick-action {
+    background: white;
+    border: 2px solid var(--rugby-light-green);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: var(--rugby-green);
+}
+
+.club-quick-action:hover {
+    border-color: var(--rugby-green);
+    background: var(--rugby-light-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 104, 55, 0.15);
+    color: var(--rugby-dark-green);
+    text-decoration: none;
+}
+
+.club-quick-action i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.club-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.club-stat-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.club-stat-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.club-stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--rugby-green);
+    margin-bottom: 0.25rem;
+}
+
+.club-stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* ================================
+   CLUB FORM STYLES
+   ================================ */
+
+.club-form-section {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.club-form-section h4 {
+    color: var(--rugby-green);
+    border-bottom: 2px solid var(--rugby-light-green);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.club-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.club-form-label {
+    font-weight: 600;
+    color: var(--rugby-green);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.club-form-input {
+    border: 2px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    width: 100%;
+    transition: border-color 0.3s ease;
+}
+
+.club-form-input:focus {
+    border-color: var(--rugby-green);
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+    outline: none;
+}
+
+.club-form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.club-logo-upload {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.club-logo-upload:hover {
+    border-color: var(--rugby-green);
+    background-color: var(--rugby-light-green);
+}
+
+.club-logo-upload.drag-over {
+    border-color: var(--rugby-gold);
+    background-color: #fffbf0;
+}
+
+/* ================================
+   CLUB SPONSORS SECTION
+   ================================ */
+
+.club-sponsors-section {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.club-sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.club-sponsor-card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.club-sponsor-card:hover {
+    border-color: var(--rugby-green);
+    box-shadow: 0 4px 15px rgba(0, 104, 55, 0.15);
+    transform: translateY(-2px);
+}
+
+.club-sponsor-logo {
+    height: 100px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.club-sponsor-logo img {
+    max-height: 80px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.club-sponsor-info {
+    padding: 1rem;
+}
+
+.club-sponsor-name {
+    font-weight: 600;
+    color: var(--rugby-green);
+    margin-bottom: 0.5rem;
+}
+
+.club-sponsor-level {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+/* ================================
+   CLUB CARNIVALS SECTION
+   ================================ */
+
+.club-carnivals-section {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.club-carnival-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.club-carnival-item:hover {
+    border-color: var(--rugby-green);
+    background: var(--rugby-light-green);
+    transform: translateX(5px);
+}
+
+.club-carnival-date {
+    width: 80px;
+    text-align: center;
+    margin-right: 1rem;
+}
+
+.club-carnival-date-month {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.club-carnival-date-day {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--rugby-green);
+}
+
+.club-carnival-info {
+    flex-grow: 1;
+}
+
+.club-carnival-name {
+    font-weight: 600;
+    color: var(--rugby-green);
+    margin-bottom: 0.25rem;
+}
+
+.club-carnival-location {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.club-carnival-status {
+    margin-left: auto;
+}
+
+/* ================================
+   RESPONSIVE CLUB STYLES
+   ================================ */
+
+@media (max-width: 768px) {
+    .club-profile-header {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .club-profile-name {
+        font-size: 1.5rem;
+    }
+    
+    .club-quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .club-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .club-sponsors-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .club-carnival-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .club-carnival-date {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .club-form-section {
+        padding: 1rem;
+    }
+    
+    .club-management-dashboard {
+        padding: 1rem;
+    }
+    
+    .club-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .club-contact-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .club-contact-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ================================
+   CLUB VISIBILITY STYLES
+   ================================ */
+
+.club-visibility-notice {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 2px solid #f0ad4e;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.club-visibility-private {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border: 2px solid #dc3545;
+    color: #721c24;
+}
+
+.club-visibility-public {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 2px solid #28a745;
+    color: #155724;
+}
+
+/* ================================
+   CLUB ALTERNATE NAMES STYLES
+   ================================ */
+
+.club-alternate-names {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.club-alternate-name-tag {
+    display: inline-block;
+    background: var(--rugby-light-green);
+    color: var(--rugby-green);
+    border-radius: 1rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    margin: 0.25rem 0.25rem 0.25rem 0;
+    font-weight: 500;
+}
