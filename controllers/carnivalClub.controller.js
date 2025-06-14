@@ -60,7 +60,8 @@ const showCarnivalAttendees = async (req, res) => {
             attendingClubs,
             totalAttendees,
             paidAttendees,
-            totalPlayerCount
+            totalPlayerCount,
+            additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
         console.error('Error loading carnival attendees:', error);
@@ -115,7 +116,8 @@ const showAddClubToCarnival = async (req, res) => {
         res.render('carnivals/add-club', {
             title: `Add Club to ${carnival.carnivalName}`,
             carnival,
-            availableClubs
+            availableClubs,
+            additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
         console.error('Error loading add club form:', error);
@@ -268,7 +270,8 @@ const showEditRegistration = async (req, res) => {
         res.render('carnivals/edit-registration', {
             title: `Edit Registration - ${registration.club.clubName}`,
             carnival,
-            registration
+            registration,
+            additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
         console.error('Error loading edit registration form:', error);

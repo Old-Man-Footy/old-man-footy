@@ -184,6 +184,7 @@ a[class*="btn"]:focus,
     box-shadow: var(--shadow);
 }
 
+.btn.btn-primary,
 .btn-primary {
     background-color: var(--rugby-green);
     border-color: var(--rugby-green);

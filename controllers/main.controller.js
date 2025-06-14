@@ -55,7 +55,8 @@ const getIndex = async (req, res) => {
             upcomingCarnivals,
             carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
             stats,
-            carouselImages
+            carouselImages,
+            additionalCSS: []
         });
     } catch (error) {
         console.error('Error loading homepage:', error);
@@ -68,7 +69,8 @@ const getIndex = async (req, res) => {
                 upcomingCount: 0,
                 clubsCount: 0
             },
-            carouselImages: []
+            carouselImages: [],
+            additionalCSS: []
         });
     }
 };
@@ -94,7 +96,7 @@ const getDashboard = async (req, res) => {
                 isActive: true
             },
             order: [['date', 'ASC']],
-            limit: 5
+            limit: 4
         });
 
         // Get user's clubs (if they have any associated)
@@ -128,7 +130,8 @@ const getDashboard = async (req, res) => {
             upcomingCarnivals,
             clubs, // Add clubs variable for the dashboard checklist
             carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
-            eligibleDelegates
+            eligibleDelegates,
+            additionalCSS: []
         });
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -139,7 +142,8 @@ const getDashboard = async (req, res) => {
             upcomingCarnivals: [],
             clubs: [], // Ensure clubs is always provided
             carnivals: [], // Ensure carnivals is always provided
-            eligibleDelegates: []
+            eligibleDelegates: [],
+            additionalCSS: []
         });
     }
 };
@@ -148,7 +152,10 @@ const getDashboard = async (req, res) => {
  * Display about page
  */
 const getAbout = (req, res) => {
-    res.render('about', { title: 'About Old Man Footy' });
+    res.render('about', { 
+        title: 'About Old Man Footy',
+        additionalCSS: []
+    });
 };
 
 /**
@@ -234,20 +241,23 @@ const getUnsubscribe = async (req, res) => {
             return res.status(400).render('error', {
                 title: 'Invalid Link',
                 message: 'This unsubscribe link is invalid or has expired.',
-                error: null
+                error: null,
+                additionalCSS: []
             });
         }
 
         res.render('unsubscribe', {
             title: 'Unsubscribe',
-            email: subscription.email
+            email: subscription.email,
+            additionalCSS: []
         });
     } catch (error) {
         console.error('Error unsubscribing:', error);
         res.status(400).render('error', {
             title: 'Invalid Link', 
             message: 'This unsubscribe link is invalid or has expired.',
-            error: null
+            error: null,
+            additionalCSS: []
         });
     }
 };
@@ -272,13 +282,15 @@ const postUnsubscribe = async (req, res) => {
 
         res.render('success', {
             title: 'Unsubscribed',
-            message: 'You have been successfully unsubscribed from our newsletter.'
+            message: 'You have been successfully unsubscribed from our newsletter.',
+            additionalCSS: []
         });
     } catch (error) {
         console.error('Error unsubscribing:', error);
         res.status(500).render('error', {
             title: 'Error',
-            message: 'Unable to process unsubscribe request.'
+            message: 'Unable to process unsubscribe request.',
+            additionalCSS: []
         });
     }
 };
@@ -297,13 +309,15 @@ const getStats = async (req, res) => {
 
         res.render('admin/stats', {
             title: 'Admin Statistics',
-            stats
+            stats,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('Error loading admin statistics:', error);
         res.status(500).render('error', {
             title: 'Error',
-            message: 'Unable to load statistics'
+            message: 'Unable to load statistics',
+            additionalCSS: []
         });
     }
 };
@@ -350,7 +364,8 @@ const getContact = (req, res) => {
         title: 'Contact Us',
         user: req.user,
         errors: req.flash('error'),
-        success: req.flash('success')
+        success: req.flash('success'),
+        additionalCSS: []
     });
 };
 
@@ -367,7 +382,8 @@ const postContact = async (req, res) => {
             return res.render('contact', {
                 title: 'Contact Us',
                 errors: errors.array(),
-                formData: req.body
+                formData: req.body,
+                additionalCSS: []
             });
         }
 
@@ -428,7 +444,8 @@ const postContact = async (req, res) => {
             req.flash('error_msg', 'Sorry, there was an error sending your message. Please try again or email us directly at support@oldmanfooty.com.au');
             res.render('contact', {
                 title: 'Contact Us',
-                formData: req.body
+                formData: req.body,
+                additionalCSS: []
             });
         }
 
@@ -437,7 +454,8 @@ const postContact = async (req, res) => {
         req.flash('error_msg', 'An unexpected error occurred. Please try again.');
         res.render('contact', {
             title: 'Contact Us',
-            formData: req.body
+            formData: req.body,
+            additionalCSS: []
         });
     }
 };

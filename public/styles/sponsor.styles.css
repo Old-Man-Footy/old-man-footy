@@ -389,17 +389,7 @@ margin-bottom: 0.25rem;
     .sponsor-info-icon {
         margin-right: 0;
         margin-bottom: 1rem;
-    }
-    
-    .social-links {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .social-links .btn {
-        margin-bottom: 0.5rem;
-        margin-right: 0;
-    }
+    }    
 }
 
 @media (max-width: 576px) {
@@ -456,11 +446,5 @@ margin-bottom: 0.25rem;
         box-shadow: none !important;
         border: 1px solid #ccc !important;
         break-inside: avoid;
-    }
-    
-    .social-links .btn {
-        background: none !important;
-        color: black !important;
-        border: 1px solid #ccc !important;
     }
 }

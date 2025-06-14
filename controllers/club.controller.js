@@ -73,7 +73,8 @@ const showClubListings = async (req, res) => {
             title: 'Find a Masters Rugby League Club',
             clubs: clubsWithStats,
             filters: { search, state },
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']
+            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
         console.error('Error loading club listings:', error);
@@ -172,7 +173,8 @@ const showClubProfile = async (req, res) => {
             delegates: delegates_full,
             primaryDelegate,
             sponsors: sortedSponsors,
-            user: req.user || null
+            user: req.user || null,
+            additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
         console.error('Error loading club profile:', error);
@@ -204,7 +206,8 @@ const showClubManagement = async (req, res) => {
 
         res.render('clubs/manage', {
             title: 'Manage Club Profile',
-            club
+            club,
+            additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
         console.error('Error loading club management:', error);
@@ -435,7 +438,8 @@ const showClubSponsors = async (req, res) => {
         res.render('clubs/sponsors', {
             title: 'Manage Club Sponsors',
             club,
-            sponsors
+            sponsors,
+            additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
         console.error('Error loading club sponsors:', error);
@@ -493,7 +497,8 @@ const showAddSponsor = async (req, res) => {
             club,
             availableSponsors,
             states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind']
+            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'],
+            additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
         console.error('Error loading add sponsor form:', error);
@@ -693,7 +698,8 @@ const showClubAlternateNames = async (req, res) => {
         res.render('clubs/alternate-names', {
             title: 'Manage Club Alternate Names',
             club,
-            alternateNames: club.alternateNames || []
+            alternateNames: club.alternateNames || [],
+            additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
         console.error('Error loading club alternate names:', error);
@@ -969,7 +975,8 @@ const getCreateOnBehalf = async (req, res) => {
             user: req.user,
             states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
             errors: [],
-            formData: {}
+            formData: {},
+            additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
         console.error('Error showing create on behalf form:', error);
@@ -998,7 +1005,8 @@ const postCreateOnBehalf = async (req, res) => {
                 user: req.user,
                 states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
                 errors: errors.array(),
-                formData: req.body
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
             });
         }
 
@@ -1025,7 +1033,8 @@ const postCreateOnBehalf = async (req, res) => {
                 user: req.user,
                 states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
                 errors: [{ msg: 'A club with this name already exists.' }],
-                formData: req.body
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
             });
         }
 
@@ -1064,7 +1073,8 @@ const postCreateOnBehalf = async (req, res) => {
             user: req.user,
             states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
             errors: [{ msg: 'An error occurred while creating the club.' }],
-            formData: req.body
+            formData: req.body,
+            additionalCSS: ['/styles/club.styles.css']
         });
     }
 };
@@ -1103,7 +1113,8 @@ const getClaimOwnership = async (req, res) => {
             title: `Claim Ownership - ${club.clubName}`,
             user: req.user,
             club,
-            proxyCreator
+            proxyCreator,
+            additionalCSS: ['/styles/club.styles.css']
         });
 
     } catch (error) {
