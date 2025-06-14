@@ -1,0 +1,371 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="page-title">
+                    <i class="bi bi-graph-up text-info"></i>
+                    System Reports
+                </h1>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Report
+                    </button>
+                    <a href="/admin/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                <i class="bi bi-calendar-check"></i> System Report
+                            </h5>
+                            <p class="text-muted mb-0">
+                                Generated on <%= new Date(report.generatedAt).toLocaleDateString('en-AU', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }) %>
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-info fs-6">Administrator Report</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i> User Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-2 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-person fs-3 text-primary"></i>
+                                <h4 class="mt-2"><%= report.users.total %></h4>
+                                <p class="text-muted mb-0">Total Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-person-check fs-3 text-success"></i>
+                                <h4 class="mt-2"><%= report.users.active %></h4>
+                                <p class="text-muted mb-0">Active Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-person-x fs-3 text-warning"></i>
+                                <h4 class="mt-2"><%= report.users.inactive %></h4>
+                                <p class="text-muted mb-0">Inactive Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-shield-check fs-3 text-danger"></i>
+                                <h4 class="mt-2"><%= report.users.admins %></h4>
+                                <p class="text-muted mb-0">Administrators</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-star fs-3 text-primary"></i>
+                                <h4 class="mt-2"><%= report.users.primaryDelegates %></h4>
+                                <p class="text-muted mb-0">Primary Delegates</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Club Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-building"></i> Club Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-building fs-3 text-success"></i>
+                                <h4 class="mt-2"><%= report.clubs.total %></h4>
+                                <p class="text-muted mb-0">Total Clubs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-building-check fs-3 text-success"></i>
+                                <h4 class="mt-2"><%= report.clubs.active %></h4>
+                                <p class="text-muted mb-0">Active Clubs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-building-x fs-3 text-warning"></i>
+                                <h4 class="mt-2"><%= report.clubs.inactive %></h4>
+                                <p class="text-muted mb-0">Inactive Clubs</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="text-muted mb-3">Clubs by State</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>State</th>
+                                    <th class="text-end">Club Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (report.clubs.byState && report.clubs.byState.length > 0) { %>
+                                    <% report.clubs.byState.forEach(state => { %>
+                                        <tr>
+                                            <td><%= state.state %></td>
+                                            <td class="text-end"><strong><%= state.count %></strong></td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">No club data available</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope"></i> Email & Sponsors
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-envelope-at fs-3 text-info"></i>
+                        <h4 class="mt-2"><%= report.subscriptions.total %></h4>
+                        <p class="text-muted mb-0">Email Subscriptions</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <i class="bi bi-award fs-3 text-warning"></i>
+                        <h4 class="mt-2"><%= report.sponsors.total %></h4>
+                        <p class="text-muted mb-0">Total Sponsors</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carnival Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event"></i> Carnival Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-calendar-event fs-3 text-info"></i>
+                                <h4 class="mt-2"><%= report.carnivals.total %></h4>
+                                <p class="text-muted mb-0">Total Carnivals</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-calendar-plus fs-3 text-success"></i>
+                                <h4 class="mt-2"><%= report.carnivals.upcoming %></h4>
+                                <p class="text-muted mb-0">Upcoming</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="bi bi-calendar-check fs-3 text-secondary"></i>
+                                <h4 class="mt-2"><%= report.carnivals.past %></h4>
+                                <p class="text-muted mb-0">Past Events</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="text-muted mb-3">Carnivals by State</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>State</th>
+                                    <th class="text-end">Carnival Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (report.carnivals.byState && report.carnivals.byState.length > 0) { %>
+                                    <% report.carnivals.byState.forEach(state => { %>
+                                        <tr>
+                                            <td><%= state.state %></td>
+                                            <td class="text-end"><strong><%= state.count %></strong></td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">No carnival data available</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/admin/users" class="btn btn-outline-primary">
+                            <i class="bi bi-people"></i> Manage Users
+                        </a>
+                        <a href="/admin/clubs" class="btn btn-outline-success">
+                            <i class="bi bi-building"></i> Manage Clubs
+                        </a>
+                        <a href="/admin/carnivals" class="btn btn-outline-info">
+                            <i class="bi bi-calendar-event"></i> Manage Carnivals
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="generateDetailedReport()">
+                            <i class="bi bi-download"></i> Export Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health Overview -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-heart-pulse"></i> System Health Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Key Metrics</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <strong>User Engagement:</strong> 
+                                    <%= ((report.users.active / report.users.total) * 100).toFixed(1) %>% active users
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <strong>Club Activity:</strong> 
+                                    <%= ((report.clubs.active / report.clubs.total) * 100).toFixed(1) %>% active clubs
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <strong>Future Events:</strong> 
+                                    <%= report.carnivals.upcoming %> upcoming carnivals
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    <strong>Newsletter Reach:</strong> 
+                                    <%= report.subscriptions.total %> subscribers
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">System Status</h6>
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <strong>All systems operational</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Last updated: <%= new Date().toLocaleTimeString('en-AU') %>
+                                </small>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-sm btn-outline-info" onclick="location.reload()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Generate and download detailed system report
+ */
+function generateDetailedReport() {
+    // Create a printable version of the report
+    window.print();
+}
+
+/**
+ * Print-specific styles
+ */
+const printStyles = `
+    @media print {
+        .btn, .card-header {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .card {
+            break-inside: avoid;
+            margin-bottom: 1rem;
+        }
+    }
+`;
+
+// Add print styles to document
+const styleElement = document.createElement('style');
+styleElement.textContent = printStyles;
+document.head.appendChild(styleElement);
+</script>

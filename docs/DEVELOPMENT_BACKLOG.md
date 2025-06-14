@@ -75,6 +75,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | ✅ Completed |
 | As a user, I should not see inactive Carnivals on the front or 'All Carnivals' pages. | ✅ Completed |
 | As a user, I would like addresses on Carnivals to be clickable, opening a link to a Google Maps location. `https://maps.google.com/maps?q=<locationAddress>` and have it rendered neatly using locationAddressPart1-4 fields. | ✅ Completed |
+| As a developer, I want the Go Back button on error screens to navigate 'back' to the previous page. | ⭕ Not Started |
 | As a delegate, I should see a warning about deactivating a Carnival, or Club stating they will "no longer be visible on the site" before I can save it. | ⭕ Not Started |
 | As a delegate, if I deactivate my Club, I expect the Club will remain visible only for historical carnivals, but the link to the club page itself will no longer open, and the link will look disabled. | ⭕ Not Started |
 | As a delegate, when signing up, deactivated clubs are able to be chosen from. If I select a club which is deactivated, an option to reactivate is offered. If reactivated, the new user will be added as a Primary Delegate. The original delegate will be notified via email, with a link to respond if believed fraudulent. | ⭕ Not Started |
@@ -82,7 +83,6 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a delegate, I want to be able to merge (unclaimed) carnivals with one I own if for some reason a duplicate is imported and does not match an already created carnival. The option to select which carnival to merge with, defaulting to the latest.<br>Merging will:<br>- Populate all MySideline related fields.<br>- Set only empty fields from the 'source' carnival<br>- Deactivate the old Carnvial. | ⭕ Not Started |
 | As a delegate, when I claim a carnival and I already have at least one carnival created, i should get the option to merge it with that/or another carnival. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
-| As a developer, I want the Go Back button on error screens to navigate 'back' to the previous page. | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ⭕ Not Started |
 | As a delegate, I want to be able to bulk remove or update contact information from clubs or carnivals from my dashboard. | ⭕ Not Started |
@@ -138,6 +138,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `views/about.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/admin/dashboard.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/admin/edit-user.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `views/admin/reports.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/dashboard.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/error.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/index.ejs`  | ⭕ Not Started |
