@@ -519,7 +519,8 @@ const getCarnivalManagement = async (req, res) => {
         const filters = {
             search: req.query.search || '',
             state: req.query.state || '',
-            status: req.query.status || ''
+            status: req.query.status || '',
+            active: req.query.active || ''
         };
 
         if (filters.search) {
@@ -535,6 +536,14 @@ const getCarnivalManagement = async (req, res) => {
         } else if (filters.status === 'past') {
             whereConditions.date = { [Op.lt]: new Date() };
         }
+
+        // Filter by active status - admin should see all by default
+        if (filters.active === 'active') {
+            whereConditions.isActive = true;
+        } else if (filters.active === 'inactive') {
+            whereConditions.isActive = false;
+        }
+        // If no active filter specified, show both active and inactive carnivals
 
         const { count, rows: carnivals } = await Carnival.findAndCountAll({
             where: whereConditions,
@@ -640,26 +649,37 @@ const updateCarnival = async (req, res) => {
 };
 
 /**
- * Delete Carnival
+ * Toggle Carnival Status (Activate/Deactivate)
  */
-const deleteCarnival = async (req, res) => {
+const toggleCarnivalStatus = async (req, res) => {
     try {
         const carnivalId = req.params.id;
+        const { isActive } = req.body;
         
         const carnival = await Carnival.findByPk(carnivalId);
         if (!carnival) {
-            req.flash('error_msg', 'Carnival not found');
-            return res.redirect('/admin/carnivals');
+            return res.json({ success: false, message: 'Carnival not found' });
         }
 
-        await carnival.destroy();
+        const newStatus = !!isActive;
+        await carnival.update({ isActive: newStatus });
+
+        const statusText = newStatus ? 'reactivated' : 'deactivated';
+        const message = `Carnival "${carnival.title}" has been ${statusText} successfully`;
         
-        req.flash('success_msg', `Carnival "${carnival.title}" has been deleted successfully`);
-        res.redirect('/admin/carnivals');
+        console.log(`✅ Admin ${req.user.email} ${statusText} carnival: ${carnival.title} (ID: ${carnival.id})`);
+
+        res.json({ 
+            success: true, 
+            message: message,
+            newStatus: newStatus
+        });
     } catch (error) {
-        console.error('❌ Error deleting carnival:', error);
-        req.flash('error_msg', 'Error deleting carnival');
-        res.redirect('/admin/carnivals');
+        console.error('❌ Error toggling carnival status:', error);
+        res.json({ 
+            success: false, 
+            message: 'Error updating carnival status' 
+        });
     }
 };
 
@@ -838,6 +858,6 @@ module.exports = {
     getCarnivalManagement,
     showEditCarnival,
     updateCarnival,
-    deleteCarnival,
+    toggleCarnivalStatus,
     generateReport
 };

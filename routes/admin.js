@@ -101,6 +101,6 @@ const carnivalUpdateValidation = [
 ];
 
 router.post('/carnivals/:id/edit', carnivalUpdateValidation, adminController.updateCarnival);
-router.post('/carnivals/:id/delete', adminController.deleteCarnival);
+router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus);
 
 module.exports = router;
