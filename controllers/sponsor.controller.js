@@ -64,7 +64,8 @@ const showSponsorListings = async (req, res) => {
             title: 'Our Sponsors',
             sponsors: sponsorsWithStats,
             filters: { search, state },
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']
+            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            additionalCSS: ['/styles/sponsor.styles.css']
         });
     } catch (error) {
         console.error('Error loading sponsor listings:', error);
@@ -116,7 +117,8 @@ const showSponsorProfile = async (req, res) => {
             title: `${sponsor.sponsorName} - Sponsor Profile`,
             sponsor,
             associatedClubs: sponsor.clubs || [],
-            user: req.user || null
+            user: req.user || null,
+            additionalCSS: ['/styles/sponsor.styles.css']
         });
     } catch (error) {
         console.error('Error loading sponsor profile:', error);
@@ -147,7 +149,8 @@ const showCreateSponsor = async (req, res) => {
             title: 'Add New Sponsor',
             clubs,
             states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind']
+            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'],
+            additionalCSS: ['/styles/sponsor.styles.css']
         });
     } catch (error) {
         console.error('Error loading sponsor creation form:', error);
@@ -283,7 +286,8 @@ const showEditSponsor = async (req, res) => {
             allClubs,
             associatedClubIds: sponsor.clubs.map(club => club.id),
             states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind']
+            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'],
+            additionalCSS: ['/styles/sponsor.styles.css']
         });
     } catch (error) {
         console.error('Error loading sponsor edit form:', error);
