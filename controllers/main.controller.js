@@ -97,6 +97,15 @@ const getDashboard = async (req, res) => {
             limit: 5
         });
 
+        // Get user's clubs (if they have any associated)
+        let clubs = [];
+        if (req.user.clubId) {
+            const userClub = await Club.findByPk(req.user.clubId);
+            if (userClub) {
+                clubs = [userClub];
+            }
+        }
+
         // Get eligible delegates for transfer (if user is primary delegate)
         let eligibleDelegates = [];
         if (req.user.isPrimaryDelegate && req.user.clubId) {
@@ -117,6 +126,8 @@ const getDashboard = async (req, res) => {
             user: req.user,
             userCarnivals,
             upcomingCarnivals,
+            clubs, // Add clubs variable for the dashboard checklist
+            carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
             eligibleDelegates
         });
     } catch (error) {
@@ -126,6 +137,8 @@ const getDashboard = async (req, res) => {
             user: req.user,
             userCarnivals: [],
             upcomingCarnivals: [],
+            clubs: [], // Ensure clubs is always provided
+            carnivals: [], // Ensure carnivals is always provided
             eligibleDelegates: []
         });
     }
