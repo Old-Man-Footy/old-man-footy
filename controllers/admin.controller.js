@@ -92,7 +92,8 @@ const getAdminDashboard = async (req, res) => {
         res.render('admin/dashboard', {
             title: 'Administrator Dashboard - Old Man Footy',
             stats,
-            recentActivity
+            recentActivity,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error loading admin dashboard:', error);
@@ -161,7 +162,8 @@ const getUserManagement = async (req, res) => {
             title: 'User Management - Admin Dashboard',
             users,
             filters,
-            pagination
+            pagination,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error loading user management:', error);
@@ -195,7 +197,8 @@ const showEditUser = async (req, res) => {
         res.render('admin/edit-user', {
             title: `Edit ${editUser.firstName} ${editUser.lastName} - Admin Dashboard`,
             editUser,
-            clubs
+            clubs,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error loading edit user form:', error);
@@ -404,7 +407,8 @@ const getClubManagement = async (req, res) => {
             title: 'Club Management - Admin Dashboard',
             clubs: clubsWithPrimaryDelegate,
             filters,
-            pagination
+            pagination,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error loading club management:', error);
@@ -443,7 +447,8 @@ const showEditClub = async (req, res) => {
 
         res.render('admin/edit-club', {
             title: `Edit ${club.clubName} - Admin Dashboard`,
-            club: clubData
+            club: clubData,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error loading edit club form:', error);
@@ -565,7 +570,8 @@ const getCarnivalManagement = async (req, res) => {
             title: 'Carnival Management - Admin Dashboard',
             carnivals,
             filters,
-            pagination
+            pagination,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error loading carnival management:', error);
@@ -592,7 +598,8 @@ const showEditCarnival = async (req, res) => {
 
         res.render('admin/edit-carnival', {
             title: `Edit ${carnival.title} - Admin Dashboard`,
-            carnival
+            carnival,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error loading edit carnival form:', error);
@@ -809,7 +816,8 @@ const generateReport = async (req, res) => {
 
         res.render('admin/reports', {
             title: 'System Reports - Admin Dashboard',
-            report
+            report,
+            additionalCSS: ['/styles/admin.styles.css']
         });
     } catch (error) {
         console.error('❌ Error generating reports:', error);
