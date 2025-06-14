@@ -369,14 +369,27 @@ const getClubManagement = async (req, res) => {
             include: [
                 { 
                     model: User, 
-                    as: 'primaryDelegate',
-                    where: { isPrimaryDelegate: true },
-                    required: false
+                    as: 'delegates',
+                    where: { 
+                        isPrimaryDelegate: true,
+                        isActive: true 
+                    },
+                    required: false,
+                    attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate']
                 }
             ],
             order: [['clubName', 'ASC']],
             limit,
             offset
+        });
+
+        // Transform the data to add primaryDelegate for template compatibility
+        const clubsWithPrimaryDelegate = clubs.map(club => {
+            const clubData = club.toJSON();
+            clubData.primaryDelegate = clubData.delegates && clubData.delegates.length > 0 
+                ? clubData.delegates[0] 
+                : null;
+            return clubData;
         });
 
         const pagination = {
@@ -389,7 +402,7 @@ const getClubManagement = async (req, res) => {
 
         res.render('admin/clubs', {
             title: 'Club Management - Admin Dashboard',
-            clubs,
+            clubs: clubsWithPrimaryDelegate,
             filters,
             pagination
         });
@@ -409,8 +422,11 @@ const showEditClub = async (req, res) => {
         
         const club = await Club.findByPk(clubId, {
             include: [
-                { model: User, as: 'primaryDelegate' },
-                { model: User, as: 'delegates' }
+                { 
+                    model: User, 
+                    as: 'delegates',
+                    attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate', 'isActive']
+                }
             ]
         });
 
@@ -419,9 +435,15 @@ const showEditClub = async (req, res) => {
             return res.redirect('/admin/clubs');
         }
 
+        // Transform the data to add primaryDelegate for template compatibility
+        const clubData = club.toJSON();
+        clubData.primaryDelegate = clubData.delegates && clubData.delegates.length > 0 
+            ? clubData.delegates.find(delegate => delegate.isPrimaryDelegate) 
+            : null;
+
         res.render('admin/edit-club', {
             title: `Edit ${club.clubName} - Admin Dashboard`,
-            club
+            club: clubData
         });
     } catch (error) {
         console.error('❌ Error loading edit club form:', error);

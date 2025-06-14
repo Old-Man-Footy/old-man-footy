@@ -118,7 +118,6 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `routes/clubs.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `routes/index.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `routes/sponsor.js`  | ⭕ Not Started |
-| As a tester, I want comprehensive unit tests for, and limited to `views/admin/stats.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/auth/accept-invitation.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/auth/login.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/auth/register.ejs`  | ⭕ Not Started |
@@ -130,6 +129,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `views/carnivals/new.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/carnivals/show.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/carnivals/sponsors.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `views/clubs/clubs.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/clubs/list.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/clubs/manage.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/clubs/show.ejs`  | ⭕ Not Started |
@@ -139,6 +139,9 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `views/admin/dashboard.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/admin/edit-user.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/admin/reports.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `views/admin/stats.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `views/admin/carnivals.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `views/admin/edit-carnivals.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/dashboard.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/error.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/index.ejs`  | ⭕ Not Started |

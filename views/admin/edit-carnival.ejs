@@ -1,0 +1,290 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="page-title">
+                    <i class="bi bi-pencil-square text-warning"></i>
+                    Edit Carnival
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-primary">
+                        <i class="bi bi-eye"></i> View Carnival
+                    </a>
+                    <a href="/admin/carnivals" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Carnivals
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carnival Information Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Carnival Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="fw-bold"><%= carnival.title %></h6>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-calendar3"></i> 
+                                <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
+                                <span class="ms-3">
+                                    <i class="bi bi-geo-alt"></i> <%= carnival.state %>
+                                </span>
+                            </p>
+                            <% if (carnival.creator) { %>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-person"></i> 
+                                    Created by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %> 
+                                    (<%= carnival.creator.email %>)
+                                </p>
+                            <% } %>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <% if (carnival.isActive) { %>
+                                <span class="badge bg-success fs-6">Active</span>
+                            <% } else { %>
+                                <span class="badge bg-danger fs-6">Inactive</span>
+                            <% } %>
+                            <% if (carnival.mySidelineTitle) { %>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-link-45deg"></i> MySideline Import
+                                </small>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil"></i> Edit Carnival Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/carnivals/<%= carnival.id %>/edit">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="title" class="form-label">Carnival Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="<%= carnival.title %>" required maxlength="200">
+                                <div class="form-text">The public title of the carnival</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="state" class="form-label">State *</label>
+                                <select class="form-select" id="state" name="state" required>
+                                    <option value="">Select State</option>
+                                    <option value="NSW" <%= carnival.state === 'NSW' ? 'selected' : '' %>>NSW</option>
+                                    <option value="QLD" <%= carnival.state === 'QLD' ? 'selected' : '' %>>QLD</option>
+                                    <option value="VIC" <%= carnival.state === 'VIC' ? 'selected' : '' %>>VIC</option>
+                                    <option value="WA" <%= carnival.state === 'WA' ? 'selected' : '' %>>WA</option>
+                                    <option value="SA" <%= carnival.state === 'SA' ? 'selected' : '' %>>SA</option>
+                                    <option value="TAS" <%= carnival.state === 'TAS' ? 'selected' : '' %>>TAS</option>
+                                    <option value="NT" <%= carnival.state === 'NT' ? 'selected' : '' %>>NT</option>
+                                    <option value="ACT" <%= carnival.state === 'ACT' ? 'selected' : '' %>>ACT</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date" class="form-label">Event Date *</label>
+                                <input type="date" class="form-control" id="date" name="date" 
+                                       value="<%= carnival.date.toISOString().split('T')[0] %>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contactEmail" class="form-label">Contact Email *</label>
+                                <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                       value="<%= carnival.organiserContactEmail || '' %>" required>
+                                <div class="form-text">Primary contact for inquiries</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="locationAddress" class="form-label">Location Address *</label>
+                            <textarea class="form-control" id="locationAddress" name="locationAddress" 
+                                      rows="3" required maxlength="500"><%= carnival.locationAddress %></textarea>
+                            <div class="form-text">Full address or venue details</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="scheduleDetails" class="form-label">Schedule Details *</label>
+                            <textarea class="form-control" id="scheduleDetails" name="scheduleDetails" 
+                                      rows="4" required><%= carnival.scheduleDetails %></textarea>
+                            <div class="form-text">Event schedule, timing, and format details</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="registrationLink" class="form-label">Registration Link</label>
+                            <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
+                                   value="<%= carnival.registrationLink || '' %>" placeholder="https://">
+                            <div class="form-text">Link to external registration or signup form</div>
+                        </div>
+
+                        <!-- Admin-only fields -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-shield-exclamation"></i> Administrator Controls
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="isActive" name="isActive" 
+                                                           <%= carnival.isActive ? 'checked' : '' %>>
+                                                    <label class="form-check-label" for="isActive">
+                                                        <strong>Active Carnival</strong>
+                                                    </label>
+                                                    <div class="form-text">
+                                                        Inactive carnivals are hidden from public view
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <% if (carnival.mySidelineTitle) { %>
+                                                    <div class="alert alert-info mb-0">
+                                                        <i class="bi bi-info-circle"></i>
+                                                        <strong>MySideline Import:</strong> This carnival was imported from MySideline
+                                                        <br>
+                                                        <small class="text-muted">Original title: <%= carnival.mySidelineTitle %></small>
+                                                    </div>
+                                                <% } else { %>
+                                                    <div class="text-muted">
+                                                        <i class="bi bi-person-plus"></i>
+                                                        Manually created carnival
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-check-circle"></i> Update Carnival
+                                </button>
+                                <a href="/admin/carnivals" class="btn btn-secondary ms-2">
+                                    Cancel
+                                </a>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="confirmDelete('<%= carnival.id %>', '<%= carnival.title %>')">
+                                    <i class="bi bi-trash"></i> Delete Carnival
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete this carnival?</p>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All carnival data will be permanently removed.
+                </div>
+                <p class="mb-0"><strong>Carnival:</strong> <span id="carnivalTitle"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete Permanently
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Confirm deletion of the carnival
+ * @param {string} carnivalId - The ID of the carnival to delete
+ * @param {string} carnivalTitle - The title of the carnival for display
+ */
+function confirmDelete(carnivalId, carnivalTitle) {
+    // Set the carnival title in the modal
+    document.getElementById('carnivalTitle').textContent = carnivalTitle;
+    
+    // Set the form action
+    const deleteForm = document.getElementById('deleteForm');
+    deleteForm.action = `/admin/carnivals/${carnivalId}/delete`;
+    
+    // Show the modal
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+
+/**
+ * Initialize form validation and interactions
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form[action*="/edit"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+            }
+        });
+    }
+    
+    // Auto-resize textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
