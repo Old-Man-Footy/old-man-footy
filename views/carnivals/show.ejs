@@ -146,33 +146,46 @@
                             <% if (carnival.registrationLink) { %>
                                 <div class="col-md-6">
                                     <h5><i class="bi bi-person-plus text-success"></i> Registration</h5>
-                                    <% 
-                                    // Check if this is a MySideline link - show warning tooltip
-                                    const isMySidelineEvent = carnival.registrationLink && 
-                                        carnival.registrationLink.toLowerCase().includes('mysideline');
-                                    const tooltipText = isMySidelineEvent ? 
-                                        'MySideline links are not direct - you will need to follow the link and identify the exact carnival by name and date' : 
-                                        'Click to register for this carnival';
-                                    %>
-                                    <a href="<%= carnival.registrationLink %>" 
-                                       class="btn btn-success" 
-                                       target="_blank"
-                                       data-bs-toggle="tooltip" 
-                                       data-bs-placement="top" 
-                                       data-bs-title="<%= tooltipText %>"
-                                       <% if (isMySidelineEvent) { %>data-bs-custom-class="mysideline-warning-tooltip"<% } %>>
-                                        <i class="bi bi-box-arrow-up-right"></i> Register Now
-                                        <% if (isMySidelineEvent) { %>
-                                            <i class="bi bi-info-circle ms-1" style="font-size: 0.875rem;"></i>
-                                        <% } %>
-                                    </a>
-                                    <% if (isMySidelineEvent) { %>
+                                    <% if (!carnival.isActive) { %>
+                                        <!-- Disabled registration for inactive carnivals (regardless of user permissions) -->
+                                        <button class="btn btn-secondary" disabled>
+                                            <i class="bi bi-x-circle"></i> Registration Closed
+                                        </button>
                                         <div class="mt-2">
-                                            <small class="text-warning">
-                                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                                Registration via MySideline - manual navigation required
+                                            <small class="text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Registration is no longer available for this carnival.
                                             </small>
                                         </div>
+                                    <% } else { %>
+                                        <% 
+                                        // Check if this is a MySideline link - show warning tooltip
+                                        const isMySidelineEvent = carnival.registrationLink && 
+                                            carnival.registrationLink.toLowerCase().includes('mysideline');
+                                        const tooltipText = isMySidelineEvent ? 
+                                            'MySideline links are not direct - you will need to follow the link and identify the exact carnival by name and date' : 
+                                            'Click to register for this carnival';
+                                        %>
+                                        <a href="<%= carnival.registrationLink %>" 
+                                           class="btn btn-success" 
+                                           target="_blank"
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           data-bs-title="<%= tooltipText %>"
+                                           <% if (isMySidelineEvent) { %>data-bs-custom-class="mysideline-warning-tooltip"<% } %>>
+                                            <i class="bi bi-box-arrow-up-right"></i> Register Now
+                                            <% if (isMySidelineEvent) { %>
+                                                <i class="bi bi-info-circle ms-1" style="font-size: 0.875rem;"></i>
+                                            <% } %>
+                                        </a>
+                                        <% if (isMySidelineEvent) { %>
+                                            <div class="mt-2">
+                                                <small class="text-warning">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                                    Registration via MySideline - manual navigation required
+                                                </small>
+                                            </div>
+                                        <% } %>
                                     <% } %>
                                 </div>
                             <% } %>
@@ -292,7 +305,7 @@
         <!-- Sidebar -->
         <div class="col-lg-4">
             <!-- Club Registration Section (for delegates) -->
-            <% if (user && canRegisterClub) { %>
+            <% if (user && canRegisterClub && carnival.isActive) { %>
                 <div class="card shadow mb-4 border-success">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Register Your Club</h5>
@@ -317,6 +330,9 @@
                             
                             <div class="mb-3">
                                 <label for="contactPerson" class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                       value="<%= user.firstName %> <%= user.lastName %>" maxlength="100">
+                            </div>
                             
                             <div class="mb-3">
                                 <label for="contactEmail" class="form-label">Contact Email</label>
@@ -349,7 +365,7 @@
                         </div>
                     </div>
                 </div>
-            <% } else if (user && userClubRegistration) { %>
+            <% } else if (user && userClubRegistration && carnival.isActive) { %>
                 <!-- Show registration status for already registered clubs -->
                 <div class="card shadow mb-4 border-info">
                     <div class="card-header bg-info text-white">
@@ -477,50 +493,71 @@
                     <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Contact Information</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Organiser:</strong><br>
-                        <%= carnival.organiserContactName %>
-                    </div>
-                    <div class="mb-3">
-                        <strong>Email:</strong><br>
-                        <a href="mailto:<%= carnival.organiserContactEmail %>?subject=Enquiry about <%= carnival.title %>">
-                            <%= carnival.organiserContactEmail %>
-                        </a>
-                    </div>
-                    <div class="mb-3">
-                        <strong>Phone:</strong><br>
-                        <a href="tel:<%= carnival.organiserContactPhone %>">
-                            <%= carnival.organiserContactPhone %>
-                        </a>
-                    </div>
-                    
-                    <!-- Social Media Links in Contact Information -->
-                    <% if (carnival.socialMediaFacebook || carnival.socialMediaInstagram || carnival.socialMediaTwitter || carnival.socialMediaWebsite) { %>
-                        <div class="mb-3">
-                            <strong>Follow Us:</strong><br>
-                            <div class="social-links mt-2">
-                                <% if (carnival.socialMediaFacebook) { %>
-                                    <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="btn btn-facebook btn-sm me-2 mb-1">
-                                        <i class="bi bi-facebook"></i> Facebook
-                                    </a>
-                                <% } %>
-                                <% if (carnival.socialMediaInstagram) { %>
-                                    <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="btn btn-instagram btn-sm me-2 mb-1">
-                                        <i class="bi bi-instagram"></i> Instagram
-                                    </a>
-                                <% } %>
-                                <% if (carnival.socialMediaTwitter) { %>
-                                    <a href="<%= carnival.socialMediaTwitter %>" target="_blank" class="btn btn-twitter btn-sm me-2 mb-1">
-                                        <i class="bi bi-twitter"></i> X
-                                    </a>
-                                <% } %>
-                                <% if (carnival.socialMediaWebsite) { %>
-                                    <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="btn btn-outline-success btn-sm me-2 mb-1">
-                                        <i class="bi bi-globe"></i> Website
-                                    </a>
-                                <% } %>
-                            </div>
+                    <% if (!carnival.isActive && !canManage) { %>
+                        <!-- Obfuscated contact info for inactive carnivals -->
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <small>Contact details are hidden for inactive carnivals.</small>
                         </div>
+                        <div class="mb-3">
+                            <strong>Organiser:</strong><br>
+                            <%= carnival.organiserContactName %>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Email:</strong><br>
+                            <span class="text-muted"><%= carnival.organiserContactEmail %></span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Phone:</strong><br>
+                            <span class="text-muted"><%= carnival.organiserContactPhone %></span>
+                        </div>
+                    <% } else { %>
+                        <!-- Full contact info for active carnivals or carnival managers -->
+                        <div class="mb-3">
+                            <strong>Organiser:</strong><br>
+                            <%= carnival.organiserContactName %>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Email:</strong><br>
+                            <a href="mailto:<%= carnival.organiserContactEmail %>?subject=Enquiry about <%= carnival.title %>">
+                                <%= carnival.organiserContactEmail %>
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Phone:</strong><br>
+                            <a href="tel:<%= carnival.organiserContactPhone %>">
+                                <%= carnival.organiserContactPhone %>
+                            </a>
+                        </div>
+                        
+                        <!-- Social Media Links in Contact Information -->
+                        <% if (carnival.socialMediaFacebook || carnival.socialMediaInstagram || carnival.socialMediaTwitter || carnival.socialMediaWebsite) { %>
+                            <div class="mb-3">
+                                <strong>Follow Us:</strong><br>
+                                <div class="social-links mt-2">
+                                    <% if (carnival.socialMediaFacebook) { %>
+                                        <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="btn btn-facebook btn-sm me-2 mb-1">
+                                            <i class="bi bi-facebook"></i> Facebook
+                                        </a>
+                                    <% } %>
+                                    <% if (carnival.socialMediaInstagram) { %>
+                                        <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="btn btn-instagram btn-sm me-2 mb-1">
+                                            <i class="bi bi-instagram"></i> Instagram
+                                        </a>
+                                    <% } %>
+                                    <% if (carnival.socialMediaTwitter) { %>
+                                        <a href="<%= carnival.socialMediaTwitter %>" target="_blank" class="btn btn-twitter btn-sm me-2 mb-1">
+                                            <i class="bi bi-twitter"></i> X
+                                        </a>
+                                    <% } %>
+                                    <% if (carnival.socialMediaWebsite) { %>
+                                        <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="btn btn-outline-success btn-sm me-2 mb-1">
+                                            <i class="bi bi-globe"></i> Website
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
                     <% } %>
                     
                     <% if (carnival.creator && carnival.creator.club) { %>
@@ -571,31 +608,51 @@
                 <h5 class="text-primary mb-3">Quick Actions</h5>
                 <div class="d-flex flex-wrap gap-2">
                     <% if (carnival.registrationLink) { %>
-                        <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-success" target="_blank">
-                            <i class="bi bi-person-plus"></i> Register
+                        <% if (!carnival.isActive && !canManage) { %>
+                            <!-- Disabled registration button for inactive carnivals -->
+                            <button class="btn btn-sm btn-secondary" disabled>
+                                <i class="bi bi-x-circle"></i> Registration Closed
+                            </button>
+                        <% } else { %>
+                            <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-success" target="_blank">
+                                <i class="bi bi-person-plus"></i> Register
+                            </a>
+                        <% } %>
+                    <% } %>
+                    
+                    <% if (!carnival.isActive && !canManage) { %>
+                        <!-- Disabled contact button for inactive carnivals -->
+                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                            <i class="bi bi-envelope"></i> Contact Unavailable
+                        </button>
+                    <% } else { %>
+                        <a href="mailto:<%= carnival.organiserContactEmail %>?subject=Enquiry about <%= carnival.title %>" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-envelope"></i> Contact
                         </a>
                     <% } %>
-                    <a href="mailto:<%= carnival.organiserContactEmail %>?subject=Enquiry about <%= carnival.title %>" 
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-envelope"></i> Contact
-                    </a>
+                    
                     <a href="/carnivals" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> Back to All Carnivals
                     </a>
-                    <% if (carnival.socialMediaFacebook) { %>
-                        <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="btn btn-sm btn-facebook">
-                            <i class="bi bi-facebook"></i>
-                        </a>
-                    <% } %>
-                    <% if (carnival.socialMediaInstagram) { %>
-                        <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="btn btn-sm btn-instagram">
-                            <i class="bi bi-instagram"></i>
-                        </a>
-                    <% } %>
-                    <% if (carnival.socialMediaWebsite) { %>
-                        <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-globe"></i>
-                        </a>
+                    
+                    <% if (carnival.isActive || canManage) { %>
+                        <!-- Only show social media links for active carnivals or to managers -->
+                        <% if (carnival.socialMediaFacebook) { %>
+                            <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="btn btn-sm btn-facebook">
+                                <i class="bi bi-facebook"></i>
+                            </a>
+                        <% } %>
+                        <% if (carnival.socialMediaInstagram) { %>
+                            <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="btn btn-sm btn-instagram">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                        <% } %>
+                        <% if (carnival.socialMediaWebsite) { %>
+                            <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-globe"></i>
+                            </a>
+                        <% } %>
                     <% } %>
                 </div>
 
