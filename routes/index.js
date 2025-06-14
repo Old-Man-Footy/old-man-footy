@@ -3,8 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
 const mainController = require('../controllers/main.controller');
-const fs = require('fs');
-const path = require('path');
+const userGuideController = require('../controllers/userGuide.controller');
 
 // Home page - Display upcoming carnivals
 router.get('/', mainController.getIndex);
@@ -63,22 +62,7 @@ router.post('/unsubscribe', mainController.postUnsubscribe);
 // Admin statistics (for primary delegates and admins)
 router.get('/admin/stats', ensureAuthenticated, mainController.getStats);
 
-// User Guide for Club Delegates
-router.get('/user-guide', ensureAuthenticated, (req, res) => {
-    try {
-        const guidePath = path.join(__dirname, '..', 'docs', 'USER_GUIDE_DELEGATES.md');
-        const guideContent = fs.readFileSync(guidePath, 'utf8');
-        
-        res.render('user-guide', {
-            title: 'Club Delegate User Guide',
-            guideContent: guideContent,
-            user: req.user
-        });
-    } catch (error) {
-        console.error('Error loading user guide:', error);
-        req.flash('error_msg', 'User guide is temporarily unavailable.');
-        res.redirect('/dashboard');
-    }
-});
+// User Guide for Club Delegates - now using proper controller
+router.get('/user-guide', ensureAuthenticated, userGuideController.getUserGuide);
 
 module.exports = router;

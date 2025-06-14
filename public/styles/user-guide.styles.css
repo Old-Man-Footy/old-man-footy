@@ -1,0 +1,180 @@
+/**
+ * User Guide Specific Styles
+ * Module: user-guide.styles.css
+ * 
+ * Contains all CSS specific to the user guide page functionality.
+ * This file should be included only on pages that display user guide content.
+ */
+
+/* User Guide Content Container */
+.user-guide-content {
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+/* Typography Hierarchy */
+.user-guide-content h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.user-guide-content h2 {
+    color: #34495e;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 5px;
+}
+
+.user-guide-content h3 {
+    color: #34495e;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* List Styling with Proper Alignment */
+.user-guide-content ul {
+    margin-bottom: 15px;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+    list-style-position: outside;
+}
+
+.user-guide-content li {
+    margin-bottom: 5px;
+    padding-left: 0.25rem;
+    text-align: left;
+}
+
+/* Inline Code Styling */
+.user-guide-content code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #d63384;
+}
+
+/* Link Styling */
+.user-guide-content a {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.user-guide-content a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* Text Formatting */
+.user-guide-content strong {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.user-guide-content p {
+    margin-bottom: 12px;
+    color: #495057;
+}
+
+/* Page Title Styling */
+.page-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* User Guide Card Enhancement */
+.user-guide-content .card {
+    border: 1px solid #e9ecef;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Navigation Back Button */
+.user-guide-back-btn {
+    transition: all 0.3s ease;
+}
+
+.user-guide-back-btn:hover {
+    transform: translateX(-2px);
+}
+
+/* Responsive Design for User Guide */
+@media (max-width: 768px) {
+    .user-guide-content {
+        font-size: 14px;
+    }
+    
+    .user-guide-content ul {
+        padding-left: 1.25rem;
+    }
+    
+    .user-guide-content h1 {
+        font-size: 1.5rem;
+        margin-top: 20px;
+    }
+    
+    .user-guide-content h2 {
+        font-size: 1.25rem;
+        margin-top: 20px;
+    }
+    
+    .user-guide-content h3 {
+        font-size: 1.1rem;
+        margin-top: 15px;
+    }
+    
+    /* Stack navigation elements on mobile */
+    .d-flex {
+        flex-direction: column;
+        align-items: start !important;
+    }
+    
+    .d-flex .btn {
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .user-guide-content {
+        font-size: 13px;
+    }
+    
+    .user-guide-content ul {
+        padding-left: 1rem;
+    }
+    
+    .user-guide-content h1 {
+        font-size: 1.3rem;
+    }
+    
+    .user-guide-content h2 {
+        font-size: 1.15rem;
+    }
+}
+
+/* Print Styles for User Guide */
+@media print {
+    .user-guide-content {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+    
+    .user-guide-content h1,
+    .user-guide-content h2,
+    .user-guide-content h3 {
+        page-break-after: avoid;
+    }
+    
+    .user-guide-content ul {
+        page-break-inside: avoid;
+    }
+    
+    .user-guide-back-btn {
+        display: none;
+    }
+}
