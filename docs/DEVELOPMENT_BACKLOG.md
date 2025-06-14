@@ -149,6 +149,14 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a tester, I want comprehensive unit tests for, and limited to `views/user-guide.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/contact.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/partials/carnival-address.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/admin-carnival.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/admin-user-management.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/admin-reports.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/auth.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/common-utils.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/carnival-managemenht.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/dashboard.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `public/js/sponsor-management.js`  | ⭕ Not Started |
 | **Enhancements** | |
 | As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
 | As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |

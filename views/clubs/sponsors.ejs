@@ -92,9 +92,9 @@
                                                 </a>
                                             <% } %>
                                             <form method="POST" action="/clubs/manage/sponsors/<%= sponsor.id %>/remove" class="d-inline">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm" 
-                                                        onclick="return confirm('Remove <%= sponsor.sponsorName %> from your club?')">
-                                                    <i class="fas fa-times me-1"></i>Remove
+                                                <button data-confirm="Remove <%= sponsor.sponsorName %> from your club?"
+                                                        type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-x-circle"></i> Remove
                                                 </button>
                                             </form>
                                         </div>
@@ -142,7 +142,7 @@
                     </div>
                 </div>
 
-            <% } else { %>
+            <% } else %>
                 <!-- Empty State -->
                 <div class="text-center py-5">
                     <div class="mb-4">
@@ -163,51 +163,7 @@
 
 <!-- Include SortableJS for drag and drop functionality -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
-<script>
-/**
- * Initialize sponsor reordering functionality
- */
-document.addEventListener('DOMContentLoaded', function() {
-    const sponsorList = document.getElementById('sponsor-order-list');
-    const saveButton = document.getElementById('save-sponsor-order');
-    
-    if (sponsorList && sponsorList.children.length > 1) {
-        // Initialize Sortable
-        Sortable.create(sponsorList, {
-            handle: '.fa-grip-vertical',
-            animation: 150,
-            onEnd: function() {
-                saveButton.style.display = 'block';
-            }
-        });
-
-        // Save new order
-        saveButton.addEventListener('click', function() {
-            const sponsorIds = Array.from(sponsorList.children).map(item => 
-                item.getAttribute('data-sponsor-id')
-            );
-
-            fetch('/clubs/manage/sponsors/reorder', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ sponsorOrder: sponsorIds })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error updating sponsor order: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error updating sponsor order');
-            });
-        });
-    }
-});
-</script>
+<!-- Include common utilities for confirmation dialogs -->
+<script src="/js/common-utils.js"></script>
+<!-- Include club sponsors functionality -->
+<script src="/js/club-sponsors.js"></script>

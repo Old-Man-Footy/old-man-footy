@@ -190,7 +190,8 @@
                             </div>
                             <div>
                                 <button type="button" class="btn btn-outline-danger" 
-                                        onclick="confirmDelete('<%= carnival.id %>', '<%= carnival.title %>')">
+                                        data-delete-carnival="<%= carnival.id %>"
+                                        data-carnival-title="<%= carnival.title %>">
                                     <i class="bi bi-trash"></i> Delete Carnival
                                 </button>
                             </div>
@@ -232,59 +233,5 @@
     </div>
 </div>
 
-<script>
-/**
- * Confirm deletion of the carnival
- * @param {string} carnivalId - The ID of the carnival to delete
- * @param {string} carnivalTitle - The title of the carnival for display
- */
-function confirmDelete(carnivalId, carnivalTitle) {
-    // Set the carnival title in the modal
-    document.getElementById('carnivalTitle').textContent = carnivalTitle;
-    
-    // Set the form action
-    const deleteForm = document.getElementById('deleteForm');
-    deleteForm.action = `/admin/carnivals/${carnivalId}/delete`;
-    
-    // Show the modal
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    deleteModal.show();
-}
-
-/**
- * Initialize form validation and interactions
- */
-document.addEventListener('DOMContentLoaded', function() {
-    // Form validation
-    const form = document.querySelector('form[action*="/edit"]');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const requiredFields = form.querySelectorAll('[required]');
-            let isValid = true;
-            
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
-            
-            if (!isValid) {
-                e.preventDefault();
-                alert('Please fill in all required fields.');
-            }
-        });
-    }
-    
-    // Auto-resize textareas
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-    });
-});
-</script>
+<!-- Include external JavaScript file for admin carnival functionality -->
+<script src="/js/admin-carnivals.js"></script>

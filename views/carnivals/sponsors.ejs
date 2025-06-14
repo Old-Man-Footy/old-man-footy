@@ -75,9 +75,9 @@
                                                         <i class="fas fa-eye me-1"></i>View
                                                     </a>
                                                     <form method="POST" action="/carnivals/<%= carnival.id %>/sponsors/<%= sponsor.id %>/remove" class="d-inline">
-                                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
-                                                                onclick="return confirm('Remove <%= sponsor.sponsorName %> from this carnival?')">
-                                                            <i class="fas fa-times me-1"></i>Remove
+                                                        <button data-confirm="Remove <%= sponsor.sponsorName %> from this carnival?"
+                                                                type="submit" class="btn btn-outline-danger btn-sm">
+                                                            <i class="bi bi-x-circle"></i> Remove
                                                         </button>
                                                     </form>
                                                 </div>
@@ -297,49 +297,5 @@
 
 <!-- Include SortableJS for drag and drop functionality -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
-<script>
-/**
- * Initialize carnival sponsor reordering functionality
- */
-document.addEventListener('DOMContentLoaded', function () {
-    const sortableContainer = document.getElementById('sortableSponsors');
-    if (sortableContainer) {
-        Sortable.create(sortableContainer, {
-            animation: 150,
-            handle: '.card-header',
-            onEnd: function (evt) {
-                const itemEl = evt.item;
-                const id = itemEl.getAttribute('data-id');
-                const newIndex = evt.newIndex;
-
-                // Send AJAX request to update the sponsor order
-                fetch('/carnivals/<%= carnival.id %>/sponsors/reorder', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': '<%= csrfToken %>' // Include CSRF token if required
-                    },
-                    body: JSON.stringify({ id, newIndex })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        console.log('Order updated successfully');
-                    } else {
-                        console.error('Error updating order:', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            }
-        });
-    }
-});
-</script>
+<!-- Include common utilities for confirmation dialogs -->
+<script src="/js/common-utils.js"></script>

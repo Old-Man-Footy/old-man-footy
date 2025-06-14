@@ -174,7 +174,8 @@
                                                     </a>
                                                     <button type="button" class="btn btn-outline-danger" 
                                                             title="Delete Carnival"
-                                                            onclick="confirmDelete('<%= carnival.id %>', '<%= carnival.title %>')">
+                                                            data-delete-carnival="<%= carnival.id %>"
+                                                            data-carnival-title="<%= carnival.title %>">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </div>
@@ -278,34 +279,5 @@
     </div>
 </div>
 
-<script>
-/**
- * Confirm deletion of a carnival
- * @param {string} carnivalId - The ID of the carnival to delete
- * @param {string} carnivalTitle - The title of the carnival for display
- */
-function confirmDelete(carnivalId, carnivalTitle) {
-    // Set the carnival title in the modal
-    document.getElementById('carnivalTitle').textContent = carnivalTitle;
-    
-    // Set the form action
-    const deleteForm = document.getElementById('deleteForm');
-    deleteForm.action = `/admin/carnivals/${carnivalId}/delete`;
-    
-    // Show the modal
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    deleteModal.show();
-}
-
-/**
- * Initialize page functionality
- */
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus search input if present
-    const searchInput = document.getElementById('search');
-    if (searchInput && searchInput.value) {
-        searchInput.focus();
-        searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
-    }
-});
-</script>
+<!-- Include external JavaScript file for admin carnivals functionality -->
+<script src="/js/admin-carnivals.js"></script>

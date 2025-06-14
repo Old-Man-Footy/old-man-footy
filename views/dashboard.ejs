@@ -127,9 +127,9 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="h4 mb-0">Your Carnivals</h2>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="showAll()">All</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="showUpcoming()">Upcoming</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="showPast()">Past</button>
+                    <button class="btn btn-outline-secondary btn-sm" data-filter="all">All</button>
+                    <button class="btn btn-outline-secondary btn-sm" data-filter="upcoming">Upcoming</button>
+                    <button class="btn btn-outline-secondary btn-sm" data-filter="past">Past</button>
                 </div>
             </div>
 
@@ -407,7 +407,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="dismissChecklist()">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-action="dismiss-checklist">
                             <i class="bi bi-x"></i> Dismiss Checklist
                         </button>
                     </div>
@@ -484,7 +484,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="/auth/transfer-delegate-role" onsubmit="return confirmTransfer()">
+            <form method="POST" action="/auth/transfer-delegate-role" data-action="transfer-role">
                 <div class="modal-body">
                     <p class="text-muted mb-4">
                         Transfer your primary delegate role for <strong><%= user.clubId.clubName %></strong> to another eligible delegate. 
@@ -529,77 +529,4 @@
 </div>
 <% } %>
 
-<script>
-// Dashboard filtering functionality
-function showAll() {
-    document.querySelectorAll('.carnival-item').forEach(item => {
-        item.style.display = 'block';
-    });
-    updateActiveFilter('all');
-}
-
-function showUpcoming() {
-    const now = new Date().getTime();
-    document.querySelectorAll('.carnival-item').forEach(item => {
-        const itemDate = parseInt(item.dataset.date);
-        item.style.display = itemDate >= now ? 'block' : 'none';
-    });
-    updateActiveFilter('upcoming');
-}
-
-function showPast() {
-    const now = new Date().getTime();
-    document.querySelectorAll('.carnival-item').forEach(item => {
-        const itemDate = parseInt(item.dataset.date);
-        item.style.display = itemDate < now ? 'block' : 'none';
-    });
-    updateActiveFilter('past');
-}
-
-function updateActiveFilter(filter) {
-    document.querySelectorAll('.btn-outline-secondary').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    if (filter === 'all') {
-        document.querySelector('button[onclick="showAll()"]').classList.add('active');
-    } else if (filter === 'upcoming') {
-        document.querySelector('button[onclick="showUpcoming()"]').classList.add('active');
-    } else if (filter === 'past') {
-        document.querySelector('button[onclick="showPast()"]').classList.add('active');
-    }
-}
-
-// Initialize with all carnivals showing
-document.addEventListener('DOMContentLoaded', function() {
-    showAll();
-});
-
-// Confirmation function for delegate role transfer
-function confirmTransfer() {
-    const select = document.getElementById('newPrimaryUserId');
-    const selectedOption = select.options[select.selectedIndex];
-    
-    if (!select.value) {
-        alert('Please select a delegate to transfer the role to.');
-        return false;
-    }
-    
-    const delegateName = selectedOption.text.split(' (')[0]; // Extract name without email
-    const confirmMessage = `Are you sure you want to transfer the primary delegate role to ${delegateName}?\n\nThis action cannot be undone. You will lose your primary delegate privileges and ${delegateName} will become the new primary delegate.`;
-    
-    if (confirm(confirmMessage)) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-// Dismiss checklist for new users
-function dismissChecklist() {
-    const checklistCard = document.querySelector('.card.border-info');
-    if (checklistCard) {
-        checklistCard.style.display = 'none';
-    }
-}
-</script>
+<script src="/js/dashboard.js"></script>

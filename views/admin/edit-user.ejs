@@ -222,7 +222,9 @@
                             <div>
                                 <button type="button" 
                                         class="btn btn-warning me-2"
-                                        onclick="resetPassword('<%= editUser.id %>', '<%= editUser.firstName %> <%= editUser.lastName %>')">
+                                        data-action="reset-password"
+                                        data-user-id="<%= editUser.id %>"
+                                        data-user-name="<%= editUser.firstName %> <%= editUser.lastName %>">
                                     <i class="bi bi-key"></i> Send Password Reset
                                 </button>
                                 <button type="submit" class="btn btn-primary">
@@ -251,7 +253,9 @@
                     </p>
                     <button type="button" 
                             class="btn btn-danger"
-                            onclick="deleteUser('<%= editUser.id %>', '<%= editUser.firstName %> <%= editUser.lastName %>')">
+                            data-action="delete-user"
+                            data-user-id="<%= editUser.id %>"
+                            data-user-name="<%= editUser.firstName %> <%= editUser.lastName %>">
                         <i class="bi bi-trash"></i> Delete User Account
                     </button>
                 </div>
@@ -260,101 +264,5 @@
     </div>
 </div>
 
-<script>
-/**
- * Reset user password via admin action
- * @param {string} userId - The ID of the user to reset password for
- * @param {string} userName - The name of the user for confirmation
- */
-async function resetPassword(userId, userName) {
-    if (!confirm(`Are you sure you want to send a password reset email to ${userName}?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/admin/users/${userId}/password-reset`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert(`Password reset email sent successfully to ${userName}`);
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error resetting password:', error);
-        alert('An error occurred while sending the password reset email');
-    }
-}
-
-/**
- * Delete user via admin action
- * @param {string} userId - The ID of the user to delete
- * @param {string} userName - The name of the user for confirmation
- */
-async function deleteUser(userId, userName) {
-    if (!confirm(`Are you sure you want to permanently delete ${userName}? This action cannot be undone.`)) {
-        return;
-    }
-
-    // Second confirmation for destructive action
-    if (!confirm(`FINAL WARNING: This will permanently delete ${userName} and all associated data. Are you absolutely sure?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/admin/users/${userId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert(result.message);
-            window.location.href = '/admin/users';
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('An error occurred while deleting the user');
-    }
-}
-
-/**
- * Form validation and UI enhancements
- */
-document.addEventListener('DOMContentLoaded', function() {
-    const clubSelect = document.getElementById('clubId');
-    const primaryDelegateCheckbox = document.getElementById('isPrimaryDelegate');
-    
-    // Auto-check primary delegate when club is selected
-    clubSelect.addEventListener('change', function() {
-        if (this.value && !primaryDelegateCheckbox.checked) {
-            // Suggest making them primary delegate if they're assigned to a club
-            const shouldBePrimary = confirm('Would you like to make this user the primary delegate for the selected club?');
-            if (shouldBePrimary) {
-                primaryDelegateCheckbox.checked = true;
-            }
-        }
-    });
-    
-    // Warn if removing primary delegate status
-    primaryDelegateCheckbox.addEventListener('change', function() {
-        if (!this.checked && clubSelect.value) {
-            const confirmRemoval = confirm('Are you sure you want to remove primary delegate status? This may affect club management capabilities.');
-            if (!confirmRemoval) {
-                this.checked = true;
-            }
-        }
-    });
-});
-</script>
+<!-- Include external JavaScript file for admin edit user functionality -->
+<script src="/js/admin-user-management.js"></script>

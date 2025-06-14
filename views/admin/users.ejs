@@ -138,19 +138,26 @@
                                                     <button type="button" 
                                                             class="btn btn-outline-warning" 
                                                             title="Reset Password"
-                                                            onclick="resetPassword(<%= user.id %>, '<%= user.firstName %> <%= user.lastName %>')">
+                                                            data-action="reset-password"
+                                                            data-user-id="<%= user.id %>"
+                                                            data-user-name="<%= user.firstName %> <%= user.lastName %>">
                                                         <i class="bi bi-key"></i>
                                                     </button>
                                                     <button type="button" 
                                                             class="btn btn-outline-<%= user.isActive ? 'danger' : 'success' %>" 
                                                             title="<%= user.isActive ? 'Deactivate' : 'Activate' %> User"
-                                                            onclick="toggleUserStatus(<%= user.id %>, <%= !user.isActive %>, '<%= (user.firstName + ' ' + user.lastName).replace(/'/g, '\\\'') %>')">
+                                                            data-action="toggle-status"
+                                                            data-user-id="<%= user.id %>"
+                                                            data-new-status="<%= !user.isActive %>"
+                                                            data-user-name="<%= user.firstName %> <%= user.lastName %>">
                                                         <i class="bi bi-<%= user.isActive ? 'person-dash' : 'person-check' %>"></i>
                                                     </button>
                                                     <button type="button" 
                                                             class="btn btn-outline-danger" 
                                                             title="Delete User"
-                                                            onclick="deleteUser(<%= user.id %>, '<%= user.firstName %> <%= user.lastName %>')">
+                                                            data-action="delete-user"
+                                                            data-user-id="<%= user.id %>"
+                                                            data-user-name="<%= user.firstName %> <%= user.lastName %>">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </div>
@@ -219,108 +226,5 @@
     <% } %>
 </div>
 
-<script>
-/**
- * Reset user password via admin action
- * @param {number} userId - The ID of the user to reset password for
- * @param {string} userName - The name of the user for confirmation
- */
-async function resetPassword(userId, userName) {
-    if (!confirm(`Are you sure you want to send a password reset email to ${userName}?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/admin/users/${userId}/password-reset`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert(`Password reset email sent successfully to ${userName}`);
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error resetting password:', error);
-        alert('An error occurred while sending the password reset email');
-    }
-}
-
-/**
- * Toggle user active status
- * @param {number} userId - The ID of the user to toggle
- * @param {boolean} newStatus - The new status to set
- * @param {string} userName - The name of the user for confirmation
- */
-async function toggleUserStatus(userId, newStatus, userName) {
-    const action = newStatus ? 'activate' : 'deactivate';
-    
-    if (!confirm(`Are you sure you want to ${action} ${userName}?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/admin/users/${userId}/toggle-status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ isActive: newStatus })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert(result.message);
-            window.location.reload();
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error toggling user status:', error);
-        alert('An error occurred while updating the user status');
-    }
-}
-
-/**
- * Delete user via admin action
- * @param {number} userId - The ID of the user to delete
- * @param {string} userName - The name of the user for confirmation
- */
-async function deleteUser(userId, userName) {
-    if (!confirm(`Are you sure you want to permanently delete ${userName}? This action cannot be undone.`)) {
-        return;
-    }
-
-    // Second confirmation for destructive action
-    if (!confirm(`FINAL WARNING: This will permanently delete ${userName} and all associated data. Are you absolutely sure?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/admin/users/${userId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert(result.message);
-            window.location.reload();
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('An error occurred while deleting the user');
-    }
-}
-</script>
+<!-- Include external JavaScript file for admin users functionality -->
+<script src="/js/admin-user-management.js"></script>

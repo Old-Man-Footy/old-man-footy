@@ -69,7 +69,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="/auth/accept-invitation/<%= user.invitationToken %>">
+                <form method="POST" action="/auth/accept-invitation/<%= user.invitationToken %>" data-form-type="accept-invitation">
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <div class="input-group">
@@ -83,7 +83,7 @@
                                    placeholder="Create a secure password"
                                    required 
                                    minlength="8">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
+                            <button class="btn btn-outline-secondary" type="button" data-toggle-password="password">
                                 <i class="bi bi-eye" id="password-toggle-icon"></i>
                             </button>
                         </div>
@@ -104,7 +104,7 @@
                                    name="confirmPassword" 
                                    placeholder="Confirm your password"
                                    required>
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword')">
+                            <button class="btn btn-outline-secondary" type="button" data-toggle-password="confirmPassword">
                                 <i class="bi bi-eye" id="confirmPassword-toggle-icon"></i>
                             </button>
                         </div>
@@ -137,42 +137,5 @@
     </div>
 </div>
 
-<script>
-function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    const icon = document.getElementById(fieldId + '-toggle-icon');
-    
-    if (field.type === 'password') {
-        field.type = 'text';
-        icon.className = 'bi bi-eye-slash';
-    } else {
-        field.type = 'password';
-        icon.className = 'bi bi-eye';
-    }
-}
-
-// Client-side password validation
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
-    const password = document.getElementById('password');
-    const confirmPassword = document.getElementById('confirmPassword');
-    
-    function validatePasswords() {
-        if (password.value !== confirmPassword.value) {
-            confirmPassword.setCustomValidity('Passwords do not match');
-        } else {
-            confirmPassword.setCustomValidity('');
-        }
-    }
-    
-    password.addEventListener('input', validatePasswords);
-    confirmPassword.addEventListener('input', validatePasswords);
-    
-    form.addEventListener('submit', function(e) {
-        validatePasswords();
-        if (!form.checkValidity()) {
-            e.preventDefault();
-        }
-    });
-});
-</script>
+<!-- Include external JavaScript file for authentication functionality -->
+<script src="/js/auth.js"></script>
