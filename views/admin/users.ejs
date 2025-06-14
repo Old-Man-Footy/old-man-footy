@@ -144,7 +144,7 @@
                                                     <button type="button" 
                                                             class="btn btn-outline-<%= user.isActive ? 'danger' : 'success' %>" 
                                                             title="<%= user.isActive ? 'Deactivate' : 'Activate' %> User"
-                                                            onclick="toggleUserStatus(<%= user.id %>, <%= !user.isActive %>, '<%= JSON.stringify(user.firstName + ' ' + user.lastName) %>')">
+                                                            onclick="toggleUserStatus(<%= user.id %>, <%= !user.isActive %>, '<%= (user.firstName + ' ' + user.lastName).replace(/'/g, '\\\'') %>')">
                                                         <i class="bi bi-<%= user.isActive ? 'person-dash' : 'person-check' %>"></i>
                                                     </button>
                                                     <button type="button" 
