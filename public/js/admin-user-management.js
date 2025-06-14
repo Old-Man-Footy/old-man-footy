@@ -229,6 +229,13 @@ function initializeEditUserPage() {
             deleteUser(userId, userName, true);
         });
     }
+
+    // Add event listeners for toggle status buttons (can exist on edit page too)
+    document.querySelectorAll('[data-action="toggle-status"]').forEach(button => {
+        button.addEventListener('click', function() {
+            toggleUserStatus(this);
+        });
+    });
     
     // Initialize form validation
     initializeEditUserForm();
@@ -239,14 +246,14 @@ function initializeEditUserPage() {
  * Automatically detects page context and initializes appropriate functionality
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Detect page context based on DOM elements
+    // Check for presence of toggle buttons first
+    const hasToggleButtons = document.querySelectorAll('[data-action="toggle-status"]').length > 0;
     const isEditPage = document.getElementById('clubId') !== null; // Edit page has club select
-    const isListPage = document.querySelectorAll('[data-action="toggle-status"]').length > 0; // List page has toggle buttons
     
     if (isEditPage) {
         console.log('Detected admin edit user page');
         initializeEditUserPage();
-    } else if (isListPage) {
+    } else if (hasToggleButtons) {
         console.log('Detected admin users list page');
         initializeUserListPage();
     } else {

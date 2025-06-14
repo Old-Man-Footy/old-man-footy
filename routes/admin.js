@@ -43,7 +43,7 @@ const userUpdateValidation = [
         .withMessage('Please provide a valid email address')
 ];
 
-router.post('/users/:id/edit', userUpdateValidation, adminController.updateUser);
+router.post('/users/:id/update', userUpdateValidation, adminController.updateUser);
 router.post('/users/:id/password-reset', adminController.issuePasswordReset);
 router.post('/users/:id/toggle-status', adminController.toggleUserStatus);
 router.post('/users/:id/delete', adminController.deleteUser);
