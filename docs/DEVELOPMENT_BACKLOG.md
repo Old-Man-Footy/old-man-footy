@@ -1,5 +1,3 @@
-Of course. Here is a simplified backlog of user stories with their current development status, presented in a logical order.
-
 ### **Development Backlog: Old Man Footy Platform**
 
 | User Story | Status |
@@ -86,6 +84,29 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ⭕ Not Started |
 | As a delegate, I want to be able to bulk remove or update contact information from clubs or carnivals from my dashboard. | ⭕ Not Started |
+| **Script Extraction Implementation** | |
+| As a developer, I want to re-enable Express Layouts script extraction in app.js to optimize script loading performance. | ⭕ Not Started |
+| As a developer, I want to update the main layout template (views/layout.ejs) to properly handle extracted scripts using <%- script %> placeholder. | ⭕ Not Started |
+| As a developer, I want to update admin user management view (views/admin/users.ejs) to use script extraction blocks instead of direct script tags. | ⭕ Not Started |
+| As a developer, I want to update admin edit user view (views/admin/edit-user.ejs) to use script extraction blocks instead of direct script tags. | ⭕ Not Started |
+| As a developer, I want to update admin dashboard view (views/admin/dashboard.ejs) to use script extraction blocks for any page-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update admin reports view (views/admin/reports.ejs) to use script extraction blocks for any page-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update admin carnivals view (views/admin/carnivals.ejs) to use script extraction blocks for any page-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update admin edit carnival view (views/admin/edit-carnival.ejs) to use script extraction blocks for any page-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update main dashboard view (views/dashboard.ejs) to use script extraction blocks for dashboard-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update carnival show view (views/carnivals/show.ejs) to use script extraction blocks for carnival-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update carnival management views (views/carnivals/edit.ejs, views/carnivals/new.ejs) to use script extraction blocks. | ⭕ Not Started |
+| As a developer, I want to update club show view (views/clubs/show.ejs) to use script extraction blocks for club-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update club management views (views/clubs/manage.ejs, views/clubs/sponsors.ejs, views/clubs/add-sponsor.ejs) to use script extraction blocks. | ⭕ Not Started |
+| As a developer, I want to update sponsor management views (views/sponsors/*.ejs) to use script extraction blocks for sponsor-specific scripts. | ⭕ Not Started |
+| As a developer, I want to update authentication views (views/auth/*.ejs) to use script extraction blocks for auth-specific scripts. | ⭕ Not Started |
+| As a developer, I want to test all admin functionality after script extraction implementation to ensure user management buttons still work correctly. | ⭕ Not Started |
+| As a developer, I want to test all carnival management functionality after script extraction implementation to ensure all interactive features work correctly. | ⭕ Not Started |
+| As a developer, I want to test all club management functionality after script extraction implementation to ensure all interactive features work correctly. | ⭕ Not Started |
+| As a developer, I want to test all sponsor management functionality after script extraction implementation to ensure all interactive features work correctly. | ⭕ Not Started |
+| As a developer, I want to verify that script loading order is maintained correctly after implementing script extraction across all pages. | ⭕ Not Started |
+| As a developer, I want to ensure Content Security Policy (CSP) compatibility is maintained after implementing script extraction. | ⭕ Not Started |
+| As a developer, I want to create comprehensive documentation for the script extraction pattern for future development reference. | ⭕ Not Started |
 | **Testing** | |
 | As a tester, I want comprehensive unit tests for, and limited to `models/Carnival.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/Club.js`  | ⭕ Not Started |
