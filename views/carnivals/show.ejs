@@ -142,60 +142,61 @@
 
                     <!-- Registration & Fees -->
                     <% if (carnival.registrationLink || carnival.feesDescription) { %>
-                        <div class="row mb-4">
-                            <% if (carnival.registrationLink) { %>
-                                <div class="col-md-6">
-                                    <h5><i class="bi bi-person-plus text-success"></i> Registration</h5>
-                                    <% if (!carnival.isActive) { %>
-                                        <!-- Disabled registration for inactive carnivals (regardless of user permissions) -->
-                                        <button class="btn btn-secondary" disabled>
-                                            <i class="bi bi-x-circle"></i> Registration Closed
-                                        </button>
+                        <!-- Registration Section - Full Width -->
+                        <% if (carnival.registrationLink) { %>
+                            <div class="mb-4">
+                                <h5><i class="bi bi-person-plus text-success"></i> Registration</h5>
+                                <% if (!carnival.isActive) { %>
+                                    <!-- Disabled registration for inactive carnivals (regardless of user permissions) -->
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="bi bi-x-circle"></i> Registration Closed
+                                    </button>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Registration is no longer available for this carnival.
+                                        </small>
+                                    </div>
+                                <% } else { %>
+                                    <% 
+                                    // Check if this is a MySideline link - show warning tooltip
+                                    const isMySidelineEvent = carnival.registrationLink && 
+                                        carnival.registrationLink.toLowerCase().includes('mysideline');
+                                    const tooltipText = isMySidelineEvent ? 
+                                        'MySideline links are not direct - you will need to follow the link and identify the exact carnival by name and date' : 
+                                        'Click to register for this carnival';
+                                    %>
+                                    <a href="<%= carnival.registrationLink %>" 
+                                       class="btn btn-success" 
+                                       target="_blank"
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top" 
+                                       data-bs-title="<%= tooltipText %>"
+                                       <% if (isMySidelineEvent) { %>data-bs-custom-class="mysideline-warning-tooltip"<% } %>>
+                                        <i class="bi bi-box-arrow-up-right"></i> Register Now
+                                        <% if (isMySidelineEvent) { %>
+                                            <i class="bi bi-info-circle ms-1" style="font-size: 0.875rem;"></i>
+                                        <% } %>
+                                    </a>
+                                    <% if (isMySidelineEvent) { %>
                                         <div class="mt-2">
-                                            <small class="text-muted">
-                                                <i class="bi bi-info-circle me-1"></i>
-                                                Registration is no longer available for this carnival.
+                                            <small class="text-warning">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                                Registration via MySideline - manual navigation required
                                             </small>
                                         </div>
-                                    <% } else { %>
-                                        <% 
-                                        // Check if this is a MySideline link - show warning tooltip
-                                        const isMySidelineEvent = carnival.registrationLink && 
-                                            carnival.registrationLink.toLowerCase().includes('mysideline');
-                                        const tooltipText = isMySidelineEvent ? 
-                                            'MySideline links are not direct - you will need to follow the link and identify the exact carnival by name and date' : 
-                                            'Click to register for this carnival';
-                                        %>
-                                        <a href="<%= carnival.registrationLink %>" 
-                                           class="btn btn-success" 
-                                           target="_blank"
-                                           data-bs-toggle="tooltip" 
-                                           data-bs-placement="top" 
-                                           data-bs-title="<%= tooltipText %>"
-                                           <% if (isMySidelineEvent) { %>data-bs-custom-class="mysideline-warning-tooltip"<% } %>>
-                                            <i class="bi bi-box-arrow-up-right"></i> Register Now
-                                            <% if (isMySidelineEvent) { %>
-                                                <i class="bi bi-info-circle ms-1" style="font-size: 0.875rem;"></i>
-                                            <% } %>
-                                        </a>
-                                        <% if (isMySidelineEvent) { %>
-                                            <div class="mt-2">
-                                                <small class="text-warning">
-                                                    <i class="bi bi-exclamation-triangle me-1"></i>
-                                                    Registration via MySideline - manual navigation required
-                                                </small>
-                                            </div>
-                                        <% } %>
                                     <% } %>
-                                </div>
-                            <% } %>
-                            <% if (carnival.feesDescription) { %>
-                                <div class="col-md-6">
-                                    <h5><i class="bi bi-currency-dollar text-info"></i> Fees</h5>
-                                    <p><%= carnival.feesDescription %></p>
-                                </div>
-                            <% } %>
-                        </div>
+                                <% } %>
+                            </div>
+                        <% } %>
+                        
+                        <!-- Fees Section - Full Width -->
+                        <% if (carnival.feesDescription) { %>
+                            <div class="mb-4">
+                                <h5><i class="bi bi-currency-dollar text-info"></i> Fees</h5>
+                                <p><%= carnival.feesDescription %></p>
+                            </div>
+                        <% } %>
                     <% } %>
 
                     <!-- Volunteers -->
