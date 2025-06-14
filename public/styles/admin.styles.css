@@ -158,16 +158,16 @@
     letter-spacing: 0.05em;
 }
 
-.admin-stat-card .stat-change {
+.admin-stat-card .admin-stat-change {
     font-size: 0.875rem;
     margin-top: 0.5rem;
 }
 
-.stat-change.positive {
+.admin-stat-change.positive {
     color: var(--success);
 }
 
-.stat-change.negative {
+.admin-stat-change.negative {
     color: var(--secondary);
 }
 
@@ -309,7 +309,7 @@
 /**
  * User status badges for admin user management
  */
-.user-status-badge {
+.admin-user-status-badge {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
@@ -318,17 +318,17 @@
     letter-spacing: 0.05em;
 }
 
-.user-status-badge.active {
+.admin-user-status-badge.active {
     background-color: var(--success);
     color: white;
 }
 
-.user-status-badge.pending {
+.admin-user-status-badge.pending {
     background-color: var(--warning);
     color: var(--dark);
 }
 
-.user-status-badge.suspended {
+.admin-user-status-badge.suspended {
     background-color: var(--secondary);
     color: white;
 }
@@ -336,7 +336,7 @@
 /**
  * User role badges
  */
-.user-role-badge {
+.admin-user-role-badge {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
@@ -347,7 +347,7 @@
     color: white;
 }
 
-.user-role-badge.admin {
+.admin-user-role-badge.admin {
     background-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
 }
@@ -557,12 +557,12 @@
 /**
  * Consistent page title styling across admin interface
  */
-.page-title {
+.admin-page-title {
     color: var(--rugby-dark-green);
     font-weight: 700;
     margin-bottom: 0;
 }
 
-.page-title i {
+.admin-page-title i {
     margin-right: 0.5rem;
 }
