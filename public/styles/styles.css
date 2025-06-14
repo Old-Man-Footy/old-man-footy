@@ -1802,7 +1802,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 .btn-facebook:hover,
 .btn-facebook:focus,
 .btn-facebook:active {
-    background-color: #166fe5;
+background-color: #166fe5;
     border-color: #166fe5;
     color: white;
 }
@@ -1903,7 +1903,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 .info-card .h3 {
     font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 0.25rem;
+margin-bottom: 0.25rem;
 }
 
 .info-card .text-primary {
@@ -1959,7 +1959,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     
     .info-item {
         flex-direction: column;
-        text-align: center;
+text-align: center;
         align-items: center;
     }
     
@@ -2078,7 +2078,7 @@ social-links a.btn-twitter:focus,
     --bs-tooltip-bg: #dc3545;
     --bs-tooltip-color: #fff;
     max-width: 280px;
-}
+    }
 
 .mysideline-warning-tooltip .tooltip-inner {
     font-weight: 500;
@@ -2091,4 +2091,85 @@ social-links a.btn-twitter:focus,
 .mysideline-warning-tooltip .tooltip-arrow::before {
     border-top-color: #dc3545 !important;
     border-bottom-color: #dc3545 !important;
+}
+
+/* User Guide Specific Styles */
+.user-guide-content {
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.user-guide-content h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.user-guide-content h2 {
+    color: #34495e;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 5px;
+}
+
+.user-guide-content h3 {
+    color: #34495e;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.user-guide-content ul {
+    margin-bottom: 15px;
+}
+
+.user-guide-content li {
+    margin-bottom: 5px;
+}
+
+.user-guide-content code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
+.user-guide-content a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.user-guide-content a:hover {
+    text-decoration: underline;
+}
+
+.user-guide-content strong {
+    font-weight: 600;
+}
+
+.user-guide-content p {
+    margin-bottom: 12px;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* User Guide responsive design */
+@media (max-width: 768px) {
+    .user-guide-content {
+        font-size: 14px;
+    }
+    
+    .d-flex {
+        flex-direction: column;
+        align-items: start !important;
+    }
+    
+    .d-flex .btn {
+        margin-top: 10px;
+    }
 }
