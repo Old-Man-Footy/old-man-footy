@@ -95,6 +95,14 @@ class MySidelineIntegrationService {
         console.log('Starting MySideline event synchronization...');
 
         try {
+            // Step 0: Deactivate past carnivals first (data hygiene)
+            console.log('🗓️  Running data hygiene: deactivating past carnivals...');
+            const deactivationResult = await this.dataService.deactivatePastCarnivals();
+            
+            if (deactivationResult.success && deactivationResult.deactivatedCount > 0) {
+                console.log(`✅ Deactivated ${deactivationResult.deactivatedCount} past carnivals`);
+            }
+
             // Step 1: Scrape events using the scraper service
             const scrapedEvents = await this.scraperService.scrapeEvents();
             

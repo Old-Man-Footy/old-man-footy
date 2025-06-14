@@ -311,6 +311,85 @@ class MySidelineDataService {
         // Return null if no patterns matched or date was invalid
         return null;
     }
+
+    /**
+     * Deactivate carnivals that are in the past
+     * This runs as part of the scheduled MySideline sync to maintain data hygiene
+     * @returns {Promise<Object>} Result object with count of deactivated carnivals
+     */
+    async deactivatePastCarnivals() {
+        console.log('🗓️  Checking for past carnivals to deactivate...');
+        
+        try {
+            const currentDate = new Date();
+            // Set time to start of today to avoid timezone issues
+            currentDate.setHours(0, 0, 0, 0);
+            
+            // Find all active carnivals with dates in the past
+            const pastCarnivals = await Carnival.findAll({
+                where: {
+                    isActive: true,
+                    date: {
+                        [Op.lt]: currentDate // Less than current date
+                    }
+                },
+                attributes: ['id', 'title', 'date', 'state', 'isManuallyEntered']
+            });
+
+            if (pastCarnivals.length === 0) {
+                console.log('✅ No past carnivals found to deactivate');
+                return {
+                    success: true,
+                    deactivatedCount: 0,
+                    message: 'No past carnivals found'
+                };
+            }
+
+            console.log(`📋 Found ${pastCarnivals.length} past carnivals to deactivate:`);
+            pastCarnivals.forEach((carnival, index) => {
+                const daysPast = Math.floor((currentDate - carnival.date) / (1000 * 60 * 60 * 24));
+                console.log(`   ${index + 1}. "${carnival.title}" (${carnival.state}) - ${daysPast} days past`);
+            });
+
+            // Update all past carnivals to inactive
+            const [updatedCount] = await Carnival.update(
+                { 
+                    isActive: false,
+                    updatedAt: new Date()
+                },
+                {
+                    where: {
+                        isActive: true,
+                        date: {
+                            [Op.lt]: currentDate
+                        }
+                    }
+                }
+            );
+
+            console.log(`✅ Successfully deactivated ${updatedCount} past carnivals`);
+
+            return {
+                success: true,
+                deactivatedCount: updatedCount,
+                carnivals: pastCarnivals.map(c => ({
+                    id: c.id,
+                    title: c.title,
+                    date: c.date,
+                    state: c.state,
+                    isManuallyEntered: c.isManuallyEntered
+                }))
+            };
+
+        } catch (error) {
+            console.error('❌ Error deactivating past carnivals:', error.message);
+            return {
+                success: false,
+                error: error.message,
+                deactivatedCount: 0
+            };
+        }
+    }
 }
 
 module.exports = MySidelineDataService;
