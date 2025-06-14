@@ -167,6 +167,18 @@ window.oldmanfooty = {
         });
     },
 
+    // Initialize Bootstrap tooltips
+    initTooltips: function() {
+        /**
+         * Initialize Bootstrap tooltips across all pages
+         * This enables the MySideline registration warning tooltips
+         */
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    },
+
     // Initialize all functionality
     init: function() {
         document.addEventListener('DOMContentLoaded', () => {
@@ -174,6 +186,7 @@ window.oldmanfooty = {
             this.initFileUploads();
             this.initTextareas();
             this.initSearchFilters();
+            this.initTooltips(); // Add tooltip initialization
             
             if (this.utils) {
                 console.log('Old Man Footy app initialized');
