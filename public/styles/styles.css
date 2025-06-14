@@ -2073,6 +2073,287 @@ social-links a.btn-twitter:focus,
     transform: translateY(-1px) !important;
 }
 
+/* Social Media Button Styles for Sponsor Pages */
+.btn-facebook {
+    background-color: #1877f2;
+    border-color: #1877f2;
+    color: white;
+}
+
+.btn-facebook:hover,
+.btn-facebook:focus,
+.btn-facebook:active {
+background-color: #166fe5;
+    border-color: #166fe5;
+    color: white;
+}
+
+.btn-instagram {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    border: none;
+    color: white;
+}
+
+.btn-instagram:hover,
+.btn-instagram:focus,
+.btn-instagram:active {
+    background: linear-gradient(45deg, #e6833c 0%, #d55a35 25%, #c91e3c 50%, #b91e5f 75%, #a91581 100%);
+    color: white;
+}
+
+.btn-twitter {
+    background-color: #000000;
+    border-color: #000000;
+    color: white;
+}
+
+.btn-twitter:hover,
+.btn-twitter:focus,
+.btn-twitter:active {
+    background-color: #1a1a1a;
+    border-color: #1a1a1a;
+    color: white;
+}
+
+.btn-linkedin {
+    background-color: #0077b5;
+    border-color: #0077b5;
+    color: white;
+}
+
+.btn-linkedin:hover,
+.btn-linkedin:focus,
+.btn-linkedin:active {
+    background-color: #005582;
+    border-color: #005582;
+    color: white;
+}
+
+/* Action Buttons in Header */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.action-buttons .btn-outline-light {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.5);
+    color: #ff6b7a;
+}
+
+.action-buttons .btn-outline-light:hover {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.7);
+    color: #ff6b7a;
+}
+
+/* Quick Actions Section */
+.quick-actions .btn {
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.quick-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Statistics Cards in Sidebar */
+.info-card .row.text-center .col-6 {
+    padding: 1rem 0;
+}
+
+.info-card .h3 {
+    font-size: 2rem;
+    font-weight: 700;
+margin-bottom: 0.25rem;
+}
+
+.info-card .text-primary {
+    color: var(--rugby-green) !important;
+}
+
+.info-card .text-success {
+    color: var(--rugby-gold) !important;
+}
+
+.info-card small.text-muted {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* Associated Clubs Grid */
+.info-card .row .col-md-6 {
+    margin-bottom: 1rem;
+}
+
+.info-card .card-body {
+    padding: 1rem;
+}
+
+/* Responsive Design for Sponsor Pages */
+@media (max-width: 768px) {
+    .sponsor-header {
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    .sponsor-header h1 {
+        font-size: 2rem;
+    }
+    
+    .sponsor-logo-large {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 1rem;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .info-card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .info-icon {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .social-links {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .social-links .btn {
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .sponsor-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .sponsor-logo-large {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-card h3, .info-card h4 {
+        font-size: 1.25rem;
+    }
+    
+    .info-content h6 {
+        font-size: 0.8rem;
+    }
+    
+    .club-logo-small {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Print Styles for Sponsor Pages */
+@media print {
+    .sponsor-header {
+        background: none !important;
+        color: black !important;
+        box-shadow: none !important;
+        border-bottom: 2px solid #000;
+    }
+    
+    .action-buttons,
+    .quick-actions {
+        display: none !important;
+    }
+    
+    .info-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+    }
+    
+    .social-links .btn {
+        background: none !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+    }
+}
+
+/* Ensure X/Twitter icon stays white */
+.btn-twitter i,
+.btn-x i,
+.social-links .btn-twitter i,
+.social-links .btn-x i,
+social-links a.btn-twitter i,
+social-links a.btn-x i {
+    color: white !important;
+}
+
+/* Twitter/X button specific styling - override general social-links hover */
+.social-links .btn-twitter,
+.social-links a.btn-twitter,
+.btn-twitter {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: white !important;
+}
+
+.social-links .btn-twitter:hover,
+.social-links a.btn-twitter:hover,
+.btn-twitter:hover,
+.social-links .btn-twitter:focus,
+social-links a.btn-twitter:focus,
+.btn-twitter:focus,
+.social-links .btn-twitter:active,
+.social-links a.btn-twitter:active,
+.btn-twitter:active {
+    background-color: #1a1a1a !important;
+    border-color: #1a1a1a !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+}
+
 /* MySideline Registration Warning Tooltip Styles */
 .mysideline-warning-tooltip {
     --bs-tooltip-bg: #dc3545;
