@@ -1959,7 +1959,7 @@ margin-bottom: 0.25rem;
     
     .info-item {
         flex-direction: column;
-text-align: center;
+        text-align: center;
         align-items: center;
     }
     
@@ -2123,10 +2123,15 @@ social-links a.btn-twitter:focus,
 
 .user-guide-content ul {
     margin-bottom: 15px;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+    list-style-position: outside;
 }
 
 .user-guide-content li {
     margin-bottom: 5px;
+    padding-left: 0.25rem;
+    text-align: left;
 }
 
 .user-guide-content code {
@@ -2162,6 +2167,10 @@ social-links a.btn-twitter:focus,
 @media (max-width: 768px) {
     .user-guide-content {
         font-size: 14px;
+    }
+    
+    .user-guide-content ul {
+        padding-left: 1.25rem;
     }
     
     .d-flex {
