@@ -191,6 +191,11 @@ a[class*="btn"]:focus,
     color: white;
 }
 
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active {

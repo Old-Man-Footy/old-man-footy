@@ -607,3 +607,18 @@
     margin: 0.25rem 0.25rem 0.25rem 0;
     font-weight: 500;
 }
+
+.alternate-name-card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.alternate-name-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.form-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
