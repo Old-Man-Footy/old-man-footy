@@ -66,6 +66,8 @@ const clubUpdateValidation = [
 ];
 
 router.post('/clubs/:id/edit', clubUpdateValidation, adminController.updateClub);
+router.post('/clubs/:id/toggle-status', adminController.toggleClubStatus);
+router.post('/clubs/:id/toggle-visibility', adminController.toggleClubVisibility);
 
 /**
  * Carnival Management Routes

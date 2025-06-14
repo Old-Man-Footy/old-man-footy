@@ -166,6 +166,24 @@
                                                        class="btn btn-outline-warning" title="Edit Club">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
+                                                    <button type="button" 
+                                                            class="btn <%= club.isActive ? 'btn-outline-danger' : 'btn-outline-success' %>" 
+                                                            title="<%= club.isActive ? 'Deactivate Club' : 'Reactivate Club' %>"
+                                                            data-action="toggle-club-status"
+                                                            data-club-id="<%= club.id %>"
+                                                            data-club-name="<%= club.clubName %>"
+                                                            data-current-status="<%= club.isActive %>">
+                                                        <i class="bi bi-<%= club.isActive ? 'toggle-off' : 'toggle-on' %>"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn <%= club.isPubliclyListed ? 'btn-outline-secondary' : 'btn-outline-info' %>" 
+                                                            title="<%= club.isPubliclyListed ? 'Hide from Public Listing' : 'Show in Public Listing' %>"
+                                                            data-action="toggle-club-visibility"
+                                                            data-club-id="<%= club.id %>"
+                                                            data-club-name="<%= club.clubName %>"
+                                                            data-current-visibility="<%= club.isPubliclyListed %>">
+                                                        <i class="bi bi-<%= club.isPubliclyListed ? 'eye-slash' : 'eye' %>"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -237,16 +255,5 @@
     <% } %>
 </div>
 
-<script>
-/**
- * Initialize page functionality
- */
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus search input if present
-    const searchInput = document.getElementById('search');
-    if (searchInput && searchInput.value) {
-        searchInput.focus();
-        searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
-    }
-});
-</script>
+<!-- Include the admin clubs JavaScript -->
+<script src="/js/admin-clubs.js"></script>

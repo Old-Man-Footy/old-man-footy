@@ -684,6 +684,76 @@ const toggleCarnivalStatus = async (req, res) => {
 };
 
 /**
+ * Toggle Club Status (Activate/Deactivate)
+ */
+const toggleClubStatus = async (req, res) => {
+    try {
+        const clubId = req.params.id;
+        const { isActive } = req.body;
+        
+        const club = await Club.findByPk(clubId);
+        if (!club) {
+            return res.json({ success: false, message: 'Club not found' });
+        }
+
+        const newStatus = !!isActive;
+        await club.update({ isActive: newStatus });
+
+        const statusText = newStatus ? 'reactivated' : 'deactivated';
+        const message = `Club "${club.clubName}" has been ${statusText} successfully`;
+        
+        console.log(`✅ Admin ${req.user.email} ${statusText} club: ${club.clubName} (ID: ${club.id})`);
+
+        res.json({ 
+            success: true, 
+            message: message,
+            newStatus: newStatus
+        });
+    } catch (error) {
+        console.error('❌ Error toggling club status:', error);
+        res.json({ 
+            success: false, 
+            message: 'Error updating club status' 
+        });
+    }
+};
+
+/**
+ * Toggle Club Visibility (Publicly Listed status)
+ */
+const toggleClubVisibility = async (req, res) => {
+    try {
+        const clubId = req.params.id;
+        const { isPubliclyListed } = req.body;
+        
+        const club = await Club.findByPk(clubId);
+        if (!club) {
+            return res.json({ success: false, message: 'Club not found' });
+        }
+
+        const newVisibility = !!isPubliclyListed;
+        await club.update({ isPubliclyListed: newVisibility });
+
+        const visibilityText = newVisibility ? 'shown in public listing' : 'hidden from public listing';
+        const message = `Club "${club.clubName}" is now ${visibilityText}`;
+        
+        console.log(`✅ Admin ${req.user.email} updated club visibility: ${club.clubName} (ID: ${club.id}) - ${visibilityText}`);
+
+        res.json({ 
+            success: true, 
+            message: message,
+            newVisibility: newVisibility
+        });
+    } catch (error) {
+        console.error('❌ Error toggling club visibility:', error);
+        res.json({ 
+            success: false, 
+            message: 'Error updating club visibility' 
+        });
+    }
+};
+
+/**
  * Generate System Reports
  */
 const generateReport = async (req, res) => {
@@ -855,6 +925,8 @@ module.exports = {
     getClubManagement,
     showEditClub,
     updateClub,
+    toggleClubStatus,
+    toggleClubVisibility,
     getCarnivalManagement,
     showEditCarnival,
     updateCarnival,
