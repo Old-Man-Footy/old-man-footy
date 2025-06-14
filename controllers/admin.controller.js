@@ -464,7 +464,18 @@ const updateClub = async (req, res) => {
         }
 
         const clubId = req.params.id;
-        const { clubName, state, isActive } = req.body;
+        const {
+            clubName,
+            state,
+            location,
+            description,
+            contactEmail,
+            contactPhone,
+            facebookUrl,
+            websiteUrl,
+            isActive,
+            isPubliclyListed
+        } = req.body;
 
         const club = await Club.findByPk(clubId);
         if (!club) {
@@ -472,10 +483,18 @@ const updateClub = async (req, res) => {
             return res.redirect('/admin/clubs');
         }
 
+        // Update club with all editable fields
         await club.update({
             clubName,
             state,
-            isActive: !!isActive
+            location: location || null,
+            description: description || null,
+            contactEmail: contactEmail || null,
+            contactPhone: contactPhone || null,
+            facebookUrl: facebookUrl || null,
+            website: websiteUrl || null,
+            isActive: !!isActive,
+            isPubliclyListed: !!isPubliclyListed
         });
 
         req.flash('success_msg', `Club ${clubName} has been updated successfully`);
