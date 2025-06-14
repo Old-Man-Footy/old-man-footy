@@ -75,7 +75,7 @@ Of course. Here is a simplified backlog of user stories with their current devel
 | As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | ✅ Completed |
 | As a user, I should not see inactive Carnivals on the front or 'All Carnivals' pages. | ✅ Completed |
 | As a user, I would like addresses on Carnivals to be clickable, opening a link to a Google Maps location. `https://maps.google.com/maps?q=<locationAddress>` and have it rendered neatly using locationAddressPart1-4 fields. | ✅ Completed |
-| As a developer, I want the Go Back button on error screens to navigate 'back' to the previous page. | ⭕ Not Started |
+| As a developer, I want the Go Back button on error screens to navigate 'back' to the previous page. | ✅ Completed |
 | As a delegate, I should see a warning about deactivating a Carnival, or Club stating they will "no longer be visible on the site" before I can save it. | ⭕ Not Started |
 | As a delegate, if I deactivate my Club, I expect the Club will remain visible only for historical carnivals, but the link to the club page itself will no longer open, and the link will look disabled. | ⭕ Not Started |
 | As a delegate, when signing up, deactivated clubs are able to be chosen from. If I select a club which is deactivated, an option to reactivate is offered. If reactivated, the new user will be added as a Primary Delegate. The original delegate will be notified via email, with a link to respond if believed fraudulent. | ⭕ Not Started |
