@@ -96,7 +96,8 @@ const listCarnivals = async (req, res) => {
             title: 'All Carnivals',
             carnivals: processedCarnivals,
             states,
-            currentFilters: { state, search, upcoming: upcomingFilter, mysideline }
+            currentFilters: { state, search, upcoming: upcomingFilter, mysideline },
+            additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
         console.error('Error fetching carnivals:', error);
@@ -104,7 +105,8 @@ const listCarnivals = async (req, res) => {
             title: 'All Carnivals',
             carnivals: [],
             states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            currentFilters: {}
+            currentFilters: {},
+            additionalCSS: ['/styles/carnival.styles.css']
         });
     }
 };
@@ -201,7 +203,8 @@ const showCarnival = async (req, res) => {
             userClubRegistration,
             canRegisterClub,
             canManage,
-            isInactiveCarnival: !carnival.isActive
+            isInactiveCarnival: !carnival.isActive,
+            additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
         console.error('Error fetching carnival:', error);
@@ -219,7 +222,8 @@ const showCreateForm = (req, res) => {
     const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
     res.render('carnivals/new', {
         title: 'Add New Carnival',
-        states
+        states,
+        additionalCSS: ['/styles/carnival.styles.css']
     });
 };
 
@@ -237,7 +241,8 @@ const createCarnival = async (req, res) => {
                 title: 'Add New Carnival',
                 states,
                 errors: errors.array(),
-                formData: req.body
+                formData: req.body,
+                additionalCSS: ['/styles/carnival.styles.css']
             });
         }
 
@@ -352,7 +357,8 @@ const createCarnival = async (req, res) => {
                     states,
                     errors: [{ msg: duplicateError.message }],
                     formData: req.body,
-                    duplicateWarning: true
+                    duplicateWarning: true,
+                    additionalCSS: ['/styles/carnival.styles.css']
                 });
             }
             throw duplicateError; // Re-throw if it's not a duplicate issue
@@ -399,7 +405,8 @@ const showEditForm = async (req, res) => {
         res.render('carnivals/edit', {
             title: 'Edit Carnival',
             carnival,
-            states
+            states,
+            additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
         console.error('Error fetching carnival for edit:', error);
@@ -436,7 +443,8 @@ const updateCarnival = async (req, res) => {
                 title: 'Edit Carnival',
                 carnival,
                 states,
-                errors: errors.array()
+                errors: errors.array(),
+                additionalCSS: ['/styles/carnival.styles.css']
             });
         }
 
@@ -736,7 +744,8 @@ module.exports = {
                 title: `Manage Sponsors - ${carnival.title}`,
                 carnival,
                 carnivalSponsors: carnival.sponsors || [],
-                clubSponsors
+                clubSponsors,
+                additionalCSS: ['/styles/carnival.styles.css']
             });
         } catch (error) {
             console.error('Error loading carnival sponsors:', error);
