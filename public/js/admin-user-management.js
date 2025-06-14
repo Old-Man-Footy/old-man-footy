@@ -40,31 +40,19 @@ async function resetPassword(userId, userName) {
  * @param {HTMLElement} button - The button element that was clicked
  */
 async function toggleUserStatus(button) {
-    console.log('toggleUserStatus called with button:', button);
-    
     const userId = button.getAttribute('data-user-id');
     const newStatus = button.getAttribute('data-new-status') === 'true';
     const userName = button.getAttribute('data-user-name');
     
-    console.log('User data:', { userId, newStatus, userName });
-    
     const action = newStatus ? 'activate' : 'deactivate';
     
-    console.log(`About to ${action} user ${userName}`);
-    
     if (!confirm(`Are you sure you want to ${action} ${userName}?`)) {
-        console.log('User cancelled confirmation');
         return;
     }
-
-    console.log('User confirmed, making API request...');
 
     try {
         const requestUrl = `/admin/users/${userId}/toggle-status`;
         const requestData = { isActive: newStatus };
-        
-        console.log('Making request to:', requestUrl);
-        console.log('Request data:', requestData);
         
         const response = await fetch(requestUrl, {
             method: 'POST',
@@ -73,23 +61,17 @@ async function toggleUserStatus(button) {
             },
             body: JSON.stringify(requestData)
         });
-
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const result = await response.json();
-        console.log('Response data:', result);
 
         if (result.success) {
             alert(result.message);
-            console.log('Success! Reloading page...');
             window.location.reload();
         } else {
-            console.error('Server returned error:', result.message);
             alert(`Error: ${result.message}`);
         }
     } catch (error) {

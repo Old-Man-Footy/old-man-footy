@@ -32,7 +32,8 @@ app.set('views', path.join(__dirname, 'views'));
 // Layout middleware (must come after view engine setup)
 app.use(expressLayouts);
 app.set('layout', 'layout');
-app.set('layout extractScripts', false); // Temporarily disable to debug script loading
+app.set('layout extractScripts', false); // Disabled to allow individual page scripts to load properly
+//TODO: SET UP SCRIPT EXTRACTION PROPERLY
 app.set('layout extractStyles', true);
 
 // Static files
