@@ -1,268 +1,260 @@
-<%- include('../partials/header') %>
-
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Page Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="page-title">
                     <i class="bi bi-person-gear text-primary"></i>
-                    Edit User: <%= user.firstName %> <%= user.lastName %>
+                    Edit User
                 </h1>
-                <div class="d-flex gap-2">
-                    <a href="/admin/users" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Back to Users
-                    </a>
-                </div>
+                <a href="/admin/users" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to User Management
+                </a>
             </div>
-        </div>
-    </div>
 
-    <form method="POST" action="/admin/users/<%= user.id %>/edit">
-        <div class="row">
-            <!-- Basic Information -->
-            <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-person"></i> Basic Information
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="firstName" name="firstName" 
-                                       value="<%= user.firstName %>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="lastName" name="lastName" 
-                                       value="<%= user.lastName %>" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="email" name="email" 
-                                   value="<%= user.email %>" required>
-                            <div class="form-text">Changing the email address will require the user to verify the new email.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" 
-                                   value="<%= user.phone || '' %>">
-                        </div>
-                    </div>
+            <!-- User Edit Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square"></i>
+                        Edit User: <%= editUser.firstName %> <%= editUser.lastName %>
+                    </h5>
                 </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/users/<%= editUser.id %>/update">
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="firstName" class="form-label">
+                                    First Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="firstName" 
+                                       name="firstName" 
+                                       value="<%= editUser.firstName %>" 
+                                       required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lastName" class="form-label">
+                                    Last Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="lastName" 
+                                       name="lastName" 
+                                       value="<%= editUser.lastName %>" 
+                                       required>
+                            </div>
+                        </div>
 
-                <!-- Club Association -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-building"></i> Club Association
-                        </h5>
-                    </div>
-                    <div class="card-body">
                         <div class="mb-3">
-                            <label for="clubId" class="form-label">Associated Club</label>
+                            <label for="email" class="form-label">
+                                Email Address <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   value="<%= editUser.email %>" 
+                                   required>
+                            <div class="form-text">
+                                Changing the email address will require the user to verify the new email.
+                            </div>
+                        </div>
+
+                        <!-- Club Assignment -->
+                        <div class="mb-3">
+                            <label for="clubId" class="form-label">Club Affiliation</label>
                             <select class="form-select" id="clubId" name="clubId">
-                                <option value="">No Club Association</option>
+                                <option value="">No club assigned</option>
                                 <% clubs.forEach(club => { %>
-                                    <option value="<%= club.id %>" <%= user.clubId == club.id ? 'selected' : '' %>>
+                                    <option value="<%= club.id %>" 
+                                            <%= editUser.clubId === club.id ? 'selected' : '' %>>
                                         <%= club.clubName %> (<%= club.state %>)
                                     </option>
-                                <% }) %>
+                                <% }); %>
                             </select>
                             <div class="form-text">
-                                Associates the user with a specific club. Users can only be associated with one club.
+                                Assign this user to a specific club. Leave blank if they're not affiliated with any club.
                             </div>
                         </div>
-                        
-                        <% if (user.club) { %>
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i>
-                                <strong>Current Club:</strong> <%= user.club.clubName %>
-                                <% if (user.isPrimaryDelegate) { %>
-                                    <br><small>This user is the primary delegate for this club.</small>
+
+                        <!-- Role and Permissions -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-shield-check"></i>
+                                    Role and Permissions
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="isPrimaryDelegate" 
+                                                   name="isPrimaryDelegate"
+                                                   <%= editUser.isPrimaryDelegate ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="isPrimaryDelegate">
+                                                <strong>Primary Delegate</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Main contact and manager for their club. Can create carnivals and manage club details.
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="isAdmin" 
+                                                   name="isAdmin"
+                                                   <%= editUser.isAdmin ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="isAdmin">
+                                                <strong>System Administrator</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Full system access. Can manage all users, clubs, and carnivals.
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <% if (editUser.isAdmin) { %>
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Warning:</strong> This user currently has administrator privileges. 
+                                        Removing admin access will revoke their ability to access the admin dashboard.
+                                    </div>
                                 <% } %>
                             </div>
-                        <% } %>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Permissions & Status -->
-            <div class="col-lg-4">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-shield-check"></i> Permissions & Status
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="isActive" name="isActive" 
-                                       <%= user.isActive ? 'checked' : '' %>>
-                                <label class="form-check-label" for="isActive">
-                                    <strong>Active User</strong>
-                                </label>
-                            </div>
-                            <div class="form-text">Inactive users cannot log in to the system.</div>
                         </div>
 
-                        <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="isAdmin" name="isAdmin" 
-                                       <%= user.isAdmin ? 'checked' : '' %>>
-                                <label class="form-check-label" for="isAdmin">
-                                    <strong>Administrator</strong>
-                                </label>
+                        <!-- Account Status -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-toggle2-on"></i>
+                                    Account Status
+                                </h6>
                             </div>
-                            <div class="form-text">Administrators have full system access.</div>
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="isActive" 
+                                           name="isActive"
+                                           <%= editUser.isActive ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="isActive">
+                                        <strong>Account Active</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            When unchecked, the user will not be able to log in or access the system.
+                                        </small>
+                                    </label>
+                                </div>
+                                
+                                <% if (!editUser.isActive) { %>
+                                    <div class="alert alert-info mt-3">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Note:</strong> This account is currently inactive. 
+                                        The user cannot log in until their account is reactivated.
+                                    </div>
+                                <% } %>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="isPrimaryDelegate" name="isPrimaryDelegate" 
-                                       <%= user.isPrimaryDelegate ? 'checked' : '' %>>
-                                <label class="form-check-label" for="isPrimaryDelegate">
-                                    <strong>Primary Delegate</strong>
-                                </label>
+                        <!-- User Information Display -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-info-circle"></i>
+                                    Account Information
+                                </h6>
                             </div>
-                            <div class="form-text">Primary delegates can invite other users and manage club settings.</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Account Created:</strong>
+                                        <br>
+                                        <%= new Date(editUser.createdAt).toLocaleDateString('en-AU', { 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        }) %>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Last Updated:</strong>
+                                        <br>
+                                        <%= new Date(editUser.updatedAt).toLocaleDateString('en-AU', { 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        }) %>
+                                    </div>
+                                </div>
+                                
+                                <% if (editUser.club) { %>
+                                    <div class="mt-3">
+                                        <strong>Current Club:</strong>
+                                        <br>
+                                        <span class="badge bg-info">
+                                            <%= editUser.club.clubName %>
+                                        </span>
+                                    </div>
+                                <% } %>
+                            </div>
                         </div>
 
-                        <% if (user.isAdmin && !currentUser.isAdmin) { %>
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                <small>You cannot modify administrator permissions.</small>
-                            </div>
-                        <% } %>
-                    </div>
-                </div>
-
-                <!-- Account Information -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-info-circle"></i> Account Information
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-2">
-                            <strong>User ID:</strong> <%= user.id %>
-                        </div>
-                        <div class="mb-2">
-                            <strong>Created:</strong> <%= new Date(user.createdAt).toLocaleDateString('en-AU') %>
-                        </div>
-                        <div class="mb-2">
-                            <strong>Last Updated:</strong> <%= new Date(user.updatedAt).toLocaleDateString('en-AU') %>
-                        </div>
-                        <% if (user.lastLoginAt) { %>
-                            <div class="mb-2">
-                                <strong>Last Login:</strong> <%= new Date(user.lastLoginAt).toLocaleDateString('en-AU') %>
-                            </div>
-                        <% } else { %>
-                            <div class="mb-2">
-                                <strong>Last Login:</strong> <span class="text-muted">Never</span>
-                            </div>
-                        <% } %>
-                        
-                        <% if (user.passwordResetToken) { %>
-                            <div class="alert alert-info mt-3">
-                                <i class="bi bi-key"></i>
-                                <small>Password reset pending</small>
-                            </div>
-                        <% } %>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="bi bi-lightning"></i> Quick Actions
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-outline-warning" 
-                                    onclick="sendPasswordReset()">
-                                <i class="bi bi-key"></i> Send Password Reset
-                            </button>
-                            <button type="button" class="btn btn-outline-info" 
-                                    onclick="sendLoginDetails()">
-                                <i class="bi bi-envelope"></i> Send Login Details
-                            </button>
-                            <% if (user.club && !user.isPrimaryDelegate) { %>
-                                <button type="button" class="btn btn-outline-primary" 
-                                        onclick="makePrimaryDelegate()">
-                                    <i class="bi bi-star"></i> Make Primary Delegate
-                                </button>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
+                        <!-- Form Actions -->
                         <div class="d-flex justify-content-between">
+                            <a href="/admin/users" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
                             <div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-lg"></i> Save Changes
+                                <button type="button" 
+                                        class="btn btn-warning me-2"
+                                        onclick="resetPassword('<%= editUser.id %>', '<%= editUser.firstName %> <%= editUser.lastName %>')">
+                                    <i class="bi bi-key"></i> Send Password Reset
                                 </button>
-                                <a href="/admin/users" class="btn btn-outline-secondary ms-2">
-                                    <i class="bi bi-x-lg"></i> Cancel
-                                </a>
-                            </div>
-                            <div>
-                                <% if (!user.isAdmin || currentUser.isAdmin) { %>
-                                    <button type="button" class="btn btn-outline-danger" 
-                                            onclick="confirmDelete()">
-                                        <i class="bi bi-trash"></i> Delete User
-                                    </button>
-                                <% } %>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Update User
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
-        </div>
-    </form>
-</div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm User Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <strong>Warning!</strong> This action cannot be undone.
+            <!-- Danger Zone -->
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Danger Zone
+                    </h6>
                 </div>
-                <p>Are you sure you want to delete <strong><%= user.firstName %> <%= user.lastName %></strong>?</p>
-                <p>This will:</p>
-                <ul>
-                    <li>Permanently remove the user account</li>
-                    <li>Remove them from any associated club</li>
-                    <li>Transfer primary delegate role if applicable</li>
-                    <li>Remove their access to all carnivals</li>
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="deleteUser()">
-                    <i class="bi bi-trash"></i> Delete User
-                </button>
+                <div class="card-body">
+                    <h6>Delete User Account</h6>
+                    <p class="text-muted mb-3">
+                        Permanently delete this user account. This action cannot be undone and will remove 
+                        all associated data. If the user is a primary delegate, their role will be 
+                        transferred to another club member if available.
+                    </p>
+                    <button type="button" 
+                            class="btn btn-danger"
+                            onclick="deleteUser('<%= editUser.id %>', '<%= editUser.firstName %> <%= editUser.lastName %>')">
+                        <i class="bi bi-trash"></i> Delete User Account
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -270,109 +262,63 @@
 
 <script>
 /**
- * Send password reset email
+ * Reset user password via admin action
+ * @param {string} userId - The ID of the user to reset password for
+ * @param {string} userName - The name of the user for confirmation
  */
-async function sendPasswordReset() {
-    if (!confirm('Send a password reset email to <%= user.firstName %> <%= user.lastName %>?')) {
+async function resetPassword(userId, userName) {
+    if (!confirm(`Are you sure you want to send a password reset email to ${userName}?`)) {
         return;
     }
 
     try {
-        const response = await fetch('/admin/users/<%= user.id %>/password-reset', {
+        const response = await fetch(`/admin/users/${userId}/password-reset`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+            }
         });
 
         const result = await response.json();
 
         if (result.success) {
-            alert('Password reset email sent successfully!');
+            alert(`Password reset email sent successfully to ${userName}`);
         } else {
             alert(`Error: ${result.message}`);
         }
     } catch (error) {
-        console.error('Error sending password reset:', error);
+        console.error('Error resetting password:', error);
         alert('An error occurred while sending the password reset email');
     }
 }
 
 /**
- * Send login details email
+ * Delete user via admin action
+ * @param {string} userId - The ID of the user to delete
+ * @param {string} userName - The name of the user for confirmation
  */
-async function sendLoginDetails() {
-    if (!confirm('Send login details email to <%= user.firstName %> <%= user.lastName %>?')) {
+async function deleteUser(userId, userName) {
+    if (!confirm(`Are you sure you want to permanently delete ${userName}? This action cannot be undone.`)) {
+        return;
+    }
+
+    // Second confirmation for destructive action
+    if (!confirm(`FINAL WARNING: This will permanently delete ${userName} and all associated data. Are you absolutely sure?`)) {
         return;
     }
 
     try {
-        const response = await fetch('/admin/users/<%= user.id %>/send-login-details', {
+        const response = await fetch(`/admin/users/${userId}/delete`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+            }
         });
 
         const result = await response.json();
 
         if (result.success) {
-            alert('Login details email sent successfully!');
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error sending login details:', error);
-        alert('An error occurred while sending the login details email');
-    }
-}
-
-/**
- * Make user primary delegate
- */
-async function makePrimaryDelegate() {
-    if (!confirm('Make <%= user.firstName %> <%= user.lastName %> the primary delegate for their club?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch('/admin/users/<%= user.id %>/make-primary', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('User is now the primary delegate!');
-            window.location.reload();
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error making primary delegate:', error);
-        alert('An error occurred while updating the primary delegate');
-    }
-}
-
-/**
- * Show delete confirmation modal
- */
-function confirmDelete() {
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
-}
-
-/**
- * Delete user account
- */
-async function deleteUser() {
-    try {
-        const response = await fetch('/admin/users/<%= user.id %>', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('User deleted successfully');
+            alert(result.message);
             window.location.href = '/admin/users';
         } else {
             alert(`Error: ${result.message}`);
@@ -383,25 +329,32 @@ async function deleteUser() {
     }
 }
 
-// Form validation
+/**
+ * Form validation and UI enhancements
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
     const clubSelect = document.getElementById('clubId');
     const primaryDelegateCheckbox = document.getElementById('isPrimaryDelegate');
-
-    // If user is not associated with a club, disable primary delegate option
-    function togglePrimaryDelegate() {
-        if (!clubSelect.value) {
-            primaryDelegateCheckbox.checked = false;
-            primaryDelegateCheckbox.disabled = true;
-        } else {
-            primaryDelegateCheckbox.disabled = false;
+    
+    // Auto-check primary delegate when club is selected
+    clubSelect.addEventListener('change', function() {
+        if (this.value && !primaryDelegateCheckbox.checked) {
+            // Suggest making them primary delegate if they're assigned to a club
+            const shouldBePrimary = confirm('Would you like to make this user the primary delegate for the selected club?');
+            if (shouldBePrimary) {
+                primaryDelegateCheckbox.checked = true;
+            }
         }
-    }
-
-    clubSelect.addEventListener('change', togglePrimaryDelegate);
-    togglePrimaryDelegate(); // Initial check
+    });
+    
+    // Warn if removing primary delegate status
+    primaryDelegateCheckbox.addEventListener('change', function() {
+        if (!this.checked && clubSelect.value) {
+            const confirmRemoval = confirm('Are you sure you want to remove primary delegate status? This may affect club management capabilities.');
+            if (!confirmRemoval) {
+                this.checked = true;
+            }
+        }
+    });
 });
 </script>
-
-<%- include('../partials/footer') %>
