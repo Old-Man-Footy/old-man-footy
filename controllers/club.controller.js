@@ -92,6 +92,20 @@ const showClubProfile = async (req, res) => {
     try {
         const { id } = req.params;
         
+        // First check if the club exists at all
+        const clubExists = await Club.findByPk(id);
+        
+        if (!clubExists) {
+            req.flash('error_msg', 'Club not found.');
+            return res.redirect('/clubs');
+        }
+        
+        // If club is inactive, redirect with appropriate message
+        if (!clubExists.isActive) {
+            req.flash('error_msg', 'This club is no longer active. Club profiles are only available for active clubs.');
+            return res.redirect('/clubs');
+        }
+        
         const club = await Club.findOne({
             where: {
                 id,

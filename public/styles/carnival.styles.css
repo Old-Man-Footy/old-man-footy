@@ -301,6 +301,52 @@
 }
 
 /* ================================
+   DISABLED CLUB LINKS STYLES
+   ================================ */
+
+.club-link-disabled {
+    color: #6c757d !important;
+    text-decoration: none !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.club-link-disabled:hover {
+    color: #6c757d !important;
+    text-decoration: none !important;
+}
+
+.club-inactive-label {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.club-inactive-badge {
+    background-color: #6c757d;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+}
+
+/* Style for inactive club cards in attendee lists */
+.carnival-attendee-card.inactive-club {
+    border-color: #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.carnival-attendee-card.inactive-club:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.carnival-attendee-card.inactive-club .carnival-attendee-club-name {
+    color: #6c757d;
+}
+
+/* ================================
    MYSIDELINE INTEGRATION STYLES
    ================================ */
 

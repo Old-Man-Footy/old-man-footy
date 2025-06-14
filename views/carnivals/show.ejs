@@ -15,12 +15,17 @@
                             <div class="flex-grow-1">
                                 <h5 class="mb-1 text-primary">Hosted by</h5>
                                 <h4 class="mb-2">
-                                    <% if (carnival.creator.club.isPubliclyListed) { %>
+                                    <% if (carnival.creator.club.isPubliclyListed && carnival.creator.club.isActive) { %>
                                         <a href="/clubs/<%= carnival.creator.club.id %>" class="text-decoration-none text-primary">
                                             <%= carnival.creator.club.clubName %>
                                         </a>
                                     <% } else { %>
-                                        <%= carnival.creator.club.clubName %>
+                                        <span class="<%= carnival.creator.club.isActive ? '' : 'club-inactive-label' %>">
+                                            <%= carnival.creator.club.clubName %>
+                                            <% if (!carnival.creator.club.isActive) { %>
+                                                <span class="club-inactive-badge">Inactive</span>
+                                            <% } %>
+                                        </span>
                                     <% } %>
                                 </h4>
                                 <% if (carnival.creator.club.location) { %>
@@ -32,7 +37,7 @@
                                     </p>
                                 <% } %>
                             </div>
-                            <% if (carnival.creator.club.isPubliclyListed) { %>
+                            <% if (carnival.creator.club.isPubliclyListed && carnival.creator.club.isActive) { %>
                                 <div>
                                     <a href="/clubs/<%= carnival.creator.club.id %>" class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-eye me-1"></i>View Club Profile
