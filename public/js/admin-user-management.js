@@ -246,17 +246,71 @@ function initializeEditUserPage() {
  * Automatically detects page context and initializes appropriate functionality
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for presence of toggle buttons first
-    const hasToggleButtons = document.querySelectorAll('[data-action="toggle-status"]').length > 0;
-    const isEditPage = document.getElementById('clubId') !== null; // Edit page has club select
+    console.log('🚀 Admin user management script loaded');
     
-    if (isEditPage) {
-        console.log('Detected admin edit user page');
-        initializeEditUserPage();
-    } else if (hasToggleButtons) {
-        console.log('Detected admin users list page');
-        initializeUserListPage();
+    // Debug page detection
+    const hasToggleButtons = document.querySelectorAll('[data-action="toggle-status"]').length > 0;
+    const hasDeleteButtons = document.querySelectorAll('[data-action="delete-user"]').length > 0;
+    const hasResetButtons = document.querySelectorAll('[data-action="reset-password"]').length > 0;
+    const isEditPage = document.getElementById('clubId') !== null;
+    
+    console.log('🔍 Page detection results:', {
+        hasToggleButtons,
+        hasDeleteButtons,
+        hasResetButtons,
+        isEditPage,
+        currentURL: window.location.pathname
+    });
+    
+    // Force initialization regardless of page detection
+    if (hasToggleButtons || hasDeleteButtons || hasResetButtons) {
+        console.log('📋 Found action buttons, setting up event listeners...');
+        
+        // Add event listeners for toggle status buttons
+        const toggleButtons = document.querySelectorAll('[data-action="toggle-status"]');
+        console.log(`Found ${toggleButtons.length} toggle buttons`);
+        toggleButtons.forEach((button, index) => {
+            console.log(`Setting up toggle button ${index + 1}:`, button);
+            button.addEventListener('click', function() {
+                console.log('🔄 Toggle button clicked:', this);
+                toggleUserStatus(this);
+            });
+        });
+        
+        // Add event listeners for delete user buttons
+        const deleteButtons = document.querySelectorAll('[data-action="delete-user"]');
+        console.log(`Found ${deleteButtons.length} delete buttons`);
+        deleteButtons.forEach((button, index) => {
+            console.log(`Setting up delete button ${index + 1}:`, button);
+            button.addEventListener('click', function() {
+                console.log('🗑️ Delete button clicked:', this);
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                deleteUser(userId, userName, isEditPage);
+            });
+        });
+        
+        // Add event listeners for password reset buttons
+        const resetButtons = document.querySelectorAll('[data-action="reset-password"]');
+        console.log(`Found ${resetButtons.length} reset buttons`);
+        resetButtons.forEach((button, index) => {
+            console.log(`Setting up reset button ${index + 1}:`, button);
+            button.addEventListener('click', function() {
+                console.log('🔑 Reset button clicked:', this);
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                resetPassword(userId, userName);
+            });
+        });
+        
+        console.log('✅ All event listeners attached successfully');
+        
+        // Initialize form validation if on edit page
+        if (isEditPage) {
+            initializeEditUserForm();
+        }
+        
     } else {
-        console.log('Admin user management loaded but page context not detected');
+        console.log('❌ No action buttons found on this page');
     }
 });
