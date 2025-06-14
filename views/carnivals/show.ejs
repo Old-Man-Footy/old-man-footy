@@ -56,10 +56,14 @@
                             <h1 class="h3 mb-2"><%= carnival.title %></h1>
                             <div class="mb-2">
                                 <span class="badge bg-secondary me-2"><%= carnival.state %></span>
-                                <% if (carnival.date >= new Date()) { %>
-                                    <span class="badge bg-success">Upcoming</span>
+                                <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
+                                    <% if (carnival.date >= new Date()) { %>
+                                        <span class="badge bg-success">Upcoming</span>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary">Past Event</span>
+                                    <% } %>
                                 <% } else { %>
-                                    <span class="badge bg-secondary">Past Event</span>
+                                    <span class="badge bg-warning text-dark">Date TBA</span>
                                 <% } %>
                                 <% if (!carnival.isManuallyEntered && carnival.lastMySidelineSync) { %>
                                     <span class="badge bg-warning text-dark">MySideline Import</span>
@@ -91,12 +95,16 @@
                         <div class="col-md-6">
                             <h5><i class="bi bi-calendar3 text-primary"></i> Date & Time</h5>
                             <p class="mb-3">
-                                <%= carnival.date.toLocaleDateString('en-AU', { 
-                                    weekday: 'long', 
-                                    year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric' 
-                                }) %>
+                                <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
+                                    <%= carnival.date.toLocaleDateString('en-AU', { 
+                                        weekday: 'long', 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    }) %>
+                                <% } else { %>
+                                    <span class="text-warning">Date To Be Announced</span>
+                                <% } %>
                             </p>
                         </div>
                         <div class="col-md-6">
@@ -526,7 +534,13 @@
                 <h5 class="text-primary mb-3">Event Summary</h5>
                 <div class="d-flex align-items-center mb-2">
                     <i class="bi bi-calendar3 text-primary me-2"></i>
-                    <span><%= carnival.date.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                    <span>
+                        <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
+                            <%= carnival.date.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+                        <% } else { %>
+                            Date To Be Announced
+                        <% } %>
+                    </span>
                 </div>
                 <div class="d-flex align-items-center mb-2">
                     <i class="bi bi-geo-alt text-primary me-2"></i>

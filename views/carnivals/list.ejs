@@ -103,10 +103,14 @@
                                     <div class="mb-1">
                                         <small class="text-muted">
                                             <i class="bi bi-calendar3"></i> 
-                                            <%= carnival.date.toLocaleDateString('en-AU', { 
-                                                month: 'short', 
-                                                day: 'numeric' 
-                                            }) %>
+                                            <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
+                                                <%= carnival.date.toLocaleDateString('en-AU', { 
+                                                    month: 'short', 
+                                                    day: 'numeric' 
+                                                }) %>
+                                            <% } else { %>
+                                                <span class="text-warning">Date TBA</span>
+                                            <% } %>
                                         </small>
                                     </div>
                                     <div class="mb-2">
@@ -123,10 +127,14 @@
                                     <!-- Badges -->
                                     <div class="mb-2">
                                         <span class="badge bg-secondary me-1"><%= carnival.state %></span>
-                                        <% if (carnival.date >= new Date()) { %>
-                                            <span class="badge bg-success me-1">Upcoming</span>
+                                        <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
+                                            <% if (carnival.date >= new Date()) { %>
+                                                <span class="badge bg-success me-1">Upcoming</span>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary me-1">Past Event</span>
+                                            <% } %>
                                         <% } else { %>
-                                            <span class="badge bg-secondary me-1">Past Event</span>
+                                            <span class="badge bg-warning text-dark me-1">Date TBA</span>
                                         <% } %>
                                         <% if (!carnival.isManuallyEntered && carnival.lastMySidelineSync) { %>
                                             <span class="badge bg-warning text-dark">MySideline</span>
