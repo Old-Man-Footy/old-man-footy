@@ -128,6 +128,78 @@ class Carnival extends Model {
   }
 
   /**
+   * Obfuscate sensitive contact information for inactive carnivals
+   * @returns {Object} Carnival data with obfuscated contact details if inactive
+   */
+  getPublicDisplayData() {
+    const carnivalData = this.toJSON();
+    
+    // If carnival is active, return full data
+    if (this.isActive) {
+      return carnivalData;
+    }
+    
+    // For inactive carnivals, obfuscate contact details
+    return {
+      ...carnivalData,
+      organiserContactEmail: this.obfuscateEmail(carnivalData.organiserContactEmail),
+      organiserContactPhone: this.obfuscatePhone(carnivalData.organiserContactPhone),
+      registrationLink: null, // Remove registration link entirely
+      socialMediaFacebook: null,
+      socialMediaInstagram: null,
+      socialMediaTwitter: null,
+      socialMediaWebsite: null,
+      // Keep other information visible for historical purposes
+      isRegistrationDisabled: !this.isActive
+    };
+  }
+
+  /**
+   * Obfuscate email address for display
+   * @param {string} email - Email to obfuscate
+   * @returns {string} Obfuscated email or placeholder
+   */
+  obfuscateEmail(email) {
+    if (!email) return 'Contact details not available';
+    
+    const [localPart, domain] = email.split('@');
+    if (!domain) return 'Contact details not available';
+    
+    // Show first 2 characters and last character of local part
+    const obfuscatedLocal = localPart.length > 3 
+      ? `${localPart.substring(0, 2)}***${localPart.slice(-1)}`
+      : '***';
+    
+    // Show first character and last part of domain
+    const domainParts = domain.split('.');
+    const obfuscatedDomain = domainParts.length > 1
+      ? `${domainParts[0].charAt(0)}***.${domainParts[domainParts.length - 1]}`
+      : '***';
+    
+    return `${obfuscatedLocal}@${obfuscatedDomain}`;
+  }
+
+  /**
+   * Obfuscate phone number for display
+   * @param {string} phone - Phone number to obfuscate
+   * @returns {string} Obfuscated phone or placeholder
+   */
+  obfuscatePhone(phone) {
+    if (!phone) return 'Contact details not available';
+    
+    // Remove all non-digit characters for processing
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    if (digitsOnly.length < 6) {
+      return 'Contact details not available';
+    }
+    
+    // Show first 2 and last 2 digits
+    const visible = `${digitsOnly.substring(0, 2)}***${digitsOnly.slice(-2)}`;
+    return visible;
+  }
+
+  /**
    * Find upcoming carnivals
    * @returns {Promise<Array>} Array of upcoming carnivals
    */

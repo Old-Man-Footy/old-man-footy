@@ -46,6 +46,19 @@
 
             <!-- Main Carnival Information -->
             <div class="card shadow mb-4">
+                <!-- Inactive Carnival Warning -->
+                <% if (isInactiveCarnival && !canManage) { %>
+                    <div class="alert alert-warning border-0 rounded-0 mb-0">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.25rem;"></i>
+                            <div>
+                                <strong>This carnival is no longer active.</strong><br>
+                                <small>Contact details have been hidden and registration is no longer available. This information is kept for historical purposes.</small>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+                
                 <% if (carnival.promotionalImageURL) { %>
                     <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" 
                          alt="<%= carnival.title %>" style="height: 300px; object-fit: cover;">
@@ -56,7 +69,9 @@
                             <h1 class="h3 mb-2"><%= carnival.title %></h1>
                             <div class="mb-2">
                                 <span class="badge bg-secondary me-2"><%= carnival.state %></span>
-                                <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
+                                <% if (!carnival.isActive) { %>
+                                    <span class="badge bg-danger">Inactive</span>
+                                <% } else if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
                                     <% if (carnival.date >= new Date()) { %>
                                         <span class="badge bg-success">Upcoming</span>
                                     <% } else { %>

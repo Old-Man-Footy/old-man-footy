@@ -22,7 +22,7 @@ const { sequelize } = require('../models');
 const listCarnivals = async (req, res) => {
     try {
         const { state, search, upcoming, mysideline, _submitted } = req.query;
-        let whereClause = { isActive: true };
+        let whereClause = {}; // Remove isActive filter to show all carnivals
 
         // Set default for upcoming only if no form has been submitted and no explicit filters are applied
         let upcomingFilter = upcoming;
@@ -38,6 +38,8 @@ const listCarnivals = async (req, res) => {
         // Date filter - only apply if upcomingFilter is explicitly 'true'
         if (upcomingFilter === 'true') {
             whereClause.date = { [Op.gte]: new Date() };
+            // When filtering for upcoming only, also filter to active carnivals
+            whereClause.isActive = true;
         }
 
         // MySideline filter
@@ -76,14 +78,23 @@ const listCarnivals = async (req, res) => {
                 as: 'creator',
                 attributes: ['firstName', 'lastName']
             }],
-            order: [['date', 'ASC']]
+            order: [['date', 'DESC']] // Show newest first so inactive/past carnivals appear after active ones
+        });
+
+        // Process carnivals through getPublicDisplayData to handle inactive carnival obfuscation
+        const processedCarnivals = carnivals.map(carnival => {
+            const publicData = carnival.getPublicDisplayData();
+            return {
+                ...publicData,
+                creator: carnival.creator // Preserve creator relationship
+            };
         });
 
         const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
 
         res.render('carnivals/list', {
             title: 'All Carnivals',
-            carnivals,
+            carnivals: processedCarnivals,
             states,
             currentFilters: { state, search, upcoming: upcomingFilter, mysideline }
         });
@@ -134,22 +145,26 @@ const showCarnival = async (req, res) => {
             ]
         });
 
-        if (!carnival || !carnival.isActive) {
+        if (!carnival) {
             req.flash('error_msg', 'Carnival not found.');
             return res.redirect('/carnivals');
         }
 
-        // Check if this is a MySideline event that can be claimed
-        const canTakeOwnership = carnival.lastMySidelineSync && 
+        // Process carnival data through getPublicDisplayData for public views
+        const publicCarnivalData = carnival.getPublicDisplayData();
+
+        // Check if this is a MySideline event that can be claimed (only for active carnivals)
+        const canTakeOwnership = carnival.isActive && 
+                                carnival.lastMySidelineSync && 
                                 !carnival.createdByUserId && 
                                 req.user && 
                                 req.user.clubId;
 
-        // Check if user's club is already registered for this carnival
+        // Check if user's club is already registered for this carnival (only for active carnivals)
         let userClubRegistration = null;
         let canRegisterClub = false;
         
-        if (req.user && req.user.clubId) {
+        if (carnival.isActive && req.user && req.user.clubId) {
             // Check if user's club is already registered
             userClubRegistration = await CarnivalClub.findOne({
                 where: {
@@ -163,20 +178,30 @@ const showCarnival = async (req, res) => {
             // 1. They have a club
             // 2. Their club is not already registered
             // 3. They are not the carnival owner
+            // 4. Carnival is active
             canRegisterClub = !userClubRegistration && 
                              carnival.createdByUserId !== req.user.id;
         }
+
+        // Check if user can manage this carnival (always allow for owners/admins regardless of active status)
+        const canManage = req.user && (
+            req.user.isAdmin || 
+            (carnival.createdByUserId === req.user.id) ||
+            (req.user.clubId && carnival.creator && carnival.creator.club && carnival.creator.club.id === req.user.clubId)
+        );
 
         // Sort sponsors hierarchically using the sorting service
         const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
 
         res.render('carnivals/show', {
             title: carnival.title,
-            carnival,
+            carnival: canManage ? carnival : publicCarnivalData, // Show full data to managers, obfuscated to public
             sponsors: sortedSponsors,
             canTakeOwnership,
             userClubRegistration,
-            canRegisterClub
+            canRegisterClub,
+            canManage,
+            isInactiveCarnival: !carnival.isActive
         });
     } catch (error) {
         console.error('Error fetching carnival:', error);
