@@ -1,0 +1,466 @@
+/**
+ * Sponsor Styles - Old Man Footy Platform
+ * 
+ * Comprehensive styling for sponsor-related components including:
+ * - Sponsor profile pages
+ * - Sponsor listings and grids
+ * - Sponsor cards and headers
+ * - Responsive design
+ */
+
+/* ================================
+   SPONSOR PAGE HEADER STYLES
+   ================================ */
+
+   /* Action button links */
+.sponsor-action-buttons a:hover,
+.sponsor-action-buttons a:focus,
+.sponsor-quick-actions a:hover,
+.sponsor-quick-actions a:focus,
+.sponsor-club-card-hover:hover a,
+.sponsor-club-card-hover a:hover {
+    text-decoration: none;
+}
+
+
+.sponsor-header {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.sponsor-header h1 {
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sponsor-header .lead {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
+/* ================================
+   SPONSOR LOGO STYLES
+   ================================ */
+
+.sponsor-logo-large {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    background-color: white;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease;
+}
+
+.sponsor-logo-large:hover {
+    transform: scale(1.05);
+}
+
+.sponsor-logo-large.d-flex {
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    color: #6c757d;
+    font-size: 3rem;
+}
+
+.sponsor-club-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 0.375rem;
+    background-color: white;
+    padding: 0.25rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ================================
+   SPONSOR LISTING GRID STYLES
+   ================================ */
+
+.sponsor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.sponsor-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.sponsor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.sponsor-logo {
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    background: #f8f9fa;
+    padding: 1rem;
+}
+
+.sponsor-info {
+    padding: 1rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+}
+
+.sponsor-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.sponsor-tier {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.sponsor-tier-platinum { background: #e5e4e2; color: #333; }
+.sponsor-tier-gold { background: #ffd700; color: #333; }
+.sponsor-tier-silver { background: #c0c0c0; color: #333; }
+.sponsor-tier-bronze { background: #cd7f32; color: white; }
+.sponsor-tier-community { background: #28a745; color: white; }
+
+.sponsor-description {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.sponsor-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+
+/* ================================
+   SPONSOR INFORMATION CARDS
+   ================================ */
+
+.sponsor-info-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.sponsor-info-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.sponsor-info-card h3, .sponsor-info-card h4 {
+    color: var(--rugby-green);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.sponsor-info-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.sponsor-info-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.sponsor-info-icon {
+    flex-shrink: 0;
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.sponsor-info-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.sponsor-info-content h6 {
+    color: var(--rugby-dark-green);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sponsor-info-content p {
+    margin: 0;
+    color: #495057;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.sponsor-info-content a {
+    color: var(--rugby-link-green);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.sponsor-info-content a:hover {
+    color: var(--rugby-link-green-hover);
+    text-decoration: underline;
+}
+
+/* ================================
+   SPONSOR CLUB ASSOCIATIONS
+   ================================ */
+
+.sponsor-club-card-hover {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.sponsor-club-card-hover:hover {
+    border-color: var(--rugby-green);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.sponsor-club-card-hover .card-title {
+    transition: color 0.3s ease;
+}
+
+.sponsor-club-card-hover:hover .card-title {
+    color: var(--rugby-green) !important;
+}
+
+/* Associated Clubs Grid */
+.sponsor-info-card .row .col-md-6 {
+    margin-bottom: 1rem;
+}
+
+.sponsor-info-card .card-body {
+    padding: 1rem;
+}
+
+/* ================================
+   SPONSOR ACTION BUTTONS
+   ================================ */
+
+.sponsor-action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.sponsor-action-buttons .btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.sponsor-action-buttons .btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.sponsor-action-buttons .btn-outline-light {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.5);
+    color: #ff6b7a;
+}
+
+.sponsor-action-buttons .btn-outline-light:hover {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.7);
+    color: #ff6b7a;
+}
+
+/* Quick Actions Section */
+.sponsor-quick-actions .btn {
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.sponsor-quick-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ================================
+   SPONSOR STATISTICS
+   ================================ */
+
+.sponsor-info-card .row.text-center .col-6 {
+    padding: 1rem 0;
+}
+
+.sponsor-info-card .h3 {
+    font-size: 2rem;
+    font-weight: 700;
+margin-bottom: 0.25rem;
+}
+
+.sponsor-info-card .text-primary {
+    color: var(--rugby-green) !important;
+}
+
+.sponsor-info-card .text-success {
+    color: var(--rugby-gold) !important;
+}
+
+.sponsor-info-card small.text-muted {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media (max-width: 768px) {
+    .sponsor-header {
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    .sponsor-header h1 {
+        font-size: 2rem;
+    }
+    
+    .sponsor-logo-large {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 1rem;
+    }
+    
+    .sponsor-action-buttons {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .sponsor-info-card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .sponsor-info-item {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .sponsor-info-icon {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .social-links {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .social-links .btn {
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .sponsor-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .sponsor-logo-large {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .sponsor-action-buttons {
+        flex-direction: column;
+    }
+    
+    .sponsor-action-buttons .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .sponsor-info-card h3, .sponsor-info-card h4 {
+        font-size: 1.25rem;
+    }
+    
+    .sponsor-info-content h6 {
+        font-size: 0.8rem;
+    }
+    
+    .sponsor-club-logo {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* ================================
+   PRINT STYLES
+   ================================ */
+
+@media print {
+    .sponsor-header {
+        background: none !important;
+        color: black !important;
+        box-shadow: none !important;
+        border-bottom: 2px solid #000;
+    }
+    
+    .sponsor-action-buttons,
+    .sponsor-quick-actions {
+        display: none !important;
+    }
+    
+    .sponsor-info-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+    }
+    
+    .social-links .btn {
+        background: none !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+    }
+}
