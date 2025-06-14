@@ -98,7 +98,7 @@
                                                     <% if (registration.club.logoUrl) { %>
                                                         <img src="<%= registration.club.logoUrl %>" 
                                                              alt="<%= registration.club.clubName %>" 
-                                                             class="attendee-logo">
+                                                             class="carnival-attendee-logo">
                                                     <% } else { %>
                                                         <div class="carnival-attendee-logo-placeholder d-flex align-items-center justify-content-center">
                                                             <i class="bi bi-shield text-muted"></i>
@@ -111,7 +111,18 @@
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <div>
                                                             <h6 class="card-title mb-1">
-                                                                <%= registration.club.clubName %>
+                                                                <% if (registration.club.isActive && registration.club.isPubliclyListed) { %>
+                                                                    <a href="/clubs/<%= registration.club.id %>" class="text-decoration-none">
+                                                                        <%= registration.club.clubName %>
+                                                                    </a>
+                                                                <% } else { %>
+                                                                    <span class="club-inactive-label">
+                                                                        <%= registration.club.clubName %>
+                                                                        <% if (!registration.club.isActive) { %>
+                                                                            <span class="club-inactive-badge">Inactive</span>
+                                                                        <% } %>
+                                                                    </span>
+                                                                <% } %>
                                                                 <% if (registration.teamName) { %>
                                                                     <small class="text-muted">(<%= registration.teamName %>)</small>
                                                                 <% } %>
@@ -124,7 +135,7 @@
                                                                 <% } %>
                                                             </small>
                                                         </div>
-                                                        <div class="btn-group btn-group-sm">
+                                                        <div class="btn-group carnival-btn-group-sm">
                                                             <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/edit" 
                                                                class="btn btn-outline-primary btn-sm" title="Edit Registration">
                                                                 <i class="bi bi-pencil"></i>
@@ -235,37 +246,3 @@ document.addEventListener('DOMContentLoaded', function() {
     // This would require additional JavaScript library like SortableJS
 });
 </script>
-
-<style>
-.attendee-logo {
-    width: 60px;
-    height: 60px;
-    object-fit: contain;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-.carnival-attendee-logo-placeholder {
-    width: 60px;
-    height: 60px;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    font-size: 1.5rem;
-}
-
-.carnival-attendee-card {
-    transition: all 0.3s ease;
-    border: 1px solid #dee2e6;
-}
-
-.carnival-attendee-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
-}
-
-.btn-group-sm .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-</style>

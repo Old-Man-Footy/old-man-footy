@@ -146,6 +146,20 @@
     color: #6c757d;
 }
 
+.carnival-attendee-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Button group styles for attendee cards */
+.carnival-btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
 /* ================================
    CARNIVAL SPONSORS STYLES
    ================================ */
