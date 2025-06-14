@@ -193,7 +193,7 @@ For managing event information on this platform:
 - All Carnivals: Main navigation menu
 
 ### Contact Information
-For technical support or questions about using this platform, contact your event organizers or fellow club delegates.
+For technical support or questions about using this platform, Contact support at [support@oldmanfooty.com](mailto:support@oldmanfooty.com)
 
 ---
 
