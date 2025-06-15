@@ -44,9 +44,10 @@ const loginUser = (req, res, next) => {
  */
 const showRegisterForm = async (req, res) => {
     try {
-        // Fetch all clubs for autocomplete
+        // Fetch all clubs for autocomplete with their state and location data
         const clubs = await Club.findAll({
             where: { isActive: true },
+            attributes: ['clubName', 'state', 'location'],
             order: [['clubName', 'ASC']]
         });
 
@@ -72,10 +73,12 @@ const showRegisterForm = async (req, res) => {
 const registerUser = async (req, res) => {
     try {
         const errors = validationResult(req);
+        
         if (!errors.isEmpty()) {
             // Fetch clubs for autocomplete when re-rendering form with errors
             const clubs = await Club.findAll({
                 where: { isActive: true },
+                attributes: ['clubName', 'state', 'location'],
                 order: [['clubName', 'ASC']]
             });
 
@@ -95,6 +98,7 @@ const registerUser = async (req, res) => {
             // Fetch clubs for autocomplete when re-rendering form with errors
             const clubs = await Club.findAll({
                 where: { isActive: true },
+                attributes: ['clubName', 'state', 'location'],
                 order: [['clubName', 'ASC']]
             });
 

@@ -48,7 +48,7 @@
                             <datalist id="clubList">
                                 <% if (clubs && clubs.length > 0) { %>
                                     <% clubs.forEach(club => { %>
-                                        <option value="<%= club.clubName %>">
+                                        <option value="<%= club.clubName %>" data-state="<%= club.state || '' %>" data-location="<%= club.location || '' %>">
                                     <% }) %>
                                 <% } %>
                             </datalist>
@@ -56,10 +56,10 @@
                             <div class="invalid-feedback">Please provide your club name.</div>
                         </div>
 
-                        <div class="row">
+                        <div class="row" id="clubDetailsSection">
                             <div class="col-md-6 mb-3">
-                                <label for="clubState" class="form-label">Club State</label>
-                                <select class="form-select" id="clubState" name="clubState" required>
+                                <label for="clubState" class="form-label">Club State <span class="text-danger" id="stateRequired">*</span></label>
+                                <select class="form-select" id="clubState" name="clubState">
                                     <option value="">Select State</option>
                                     <option value="NSW" <%= typeof formData !== 'undefined' && formData.clubState === 'NSW' ? 'selected' : '' %>>NSW</option>
                                     <option value="QLD" <%= typeof formData !== 'undefined' && formData.clubState === 'QLD' ? 'selected' : '' %>>QLD</option>
@@ -70,15 +70,16 @@
                                     <option value="NT" <%= typeof formData !== 'undefined' && formData.clubState === 'NT' ? 'selected' : '' %>>NT</option>
                                     <option value="ACT" <%= typeof formData !== 'undefined' && formData.clubState === 'ACT' ? 'selected' : '' %>>ACT</option>
                                 </select>
+                                <div class="form-text" id="stateHelpText">Required for new clubs</div>
                                 <div class="invalid-feedback">Please select your club's state.</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="clubAddress" class="form-label">Club Address</label>
-                                <input type="text" class="form-control" id="clubAddress" name="clubAddress" 
-                                       value="<%= typeof formData !== 'undefined' ? formData.clubAddress : '' %>" 
-                                       placeholder="City, Suburb, or General Location" required>
-                                <div class="form-text">General location or address for your club.</div>
-                                <div class="invalid-feedback">Please provide your club's address or location.</div>
+                                <label for="location" class="form-label">Club Location <span class="text-danger" id="locationRequired">*</span></label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.location : '' %>" 
+                                       placeholder="City, Suburb, or General Location">
+                                <div class="form-text" id="locationHelpText">General location for your club. Required for new clubs.</div>
+                                <div class="invalid-feedback">Please provide your club's location.</div>
                             </div>
                         </div>
 
@@ -123,6 +124,7 @@
     </div>
 </div>
 
+<script src="/js/registration-form.js"></script>
 <script>
 // Password confirmation validation
 document.getElementById('confirmPassword').addEventListener('input', function() {
