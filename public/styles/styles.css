@@ -882,47 +882,52 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: white;
 }
 
-/* Override any conflicting social-links styles for YouTube */
-.social-links .btn-youtube,
-.social-links .btn-youtube:not(:disabled):not(.disabled) {
-    background-color: #ff0000;
-    border-color: #ff0000;
+/* Instagram button styling */
+.btn-instagram,
+.btn-instagram:not(:disabled):not(.disabled) {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    border-color: #e6683c;
     color: white;
 }
 
-.social-links .btn-youtube:hover,
-.social-links .btn-youtube:focus,
-.social-links .btn-youtube:active {
-    background-color: #cc0000;
-    border-color: #cc0000;
+.btn-instagram:hover,
+.btn-instagram:focus,
+.btn-instagram:active,
+.btn-instagram:not(:disabled):not(.disabled):hover,
+.btn-instagram:not(:disabled):not(.disabled):focus,
+.btn-instagram:not(:disabled):not(.disabled):active {
+    background: linear-gradient(45deg, #d6821f 0%, #cc5a28 25%, #c22336 50%, #b81f52 75%, #a8146e 100%);
+    border-color: #cc5a28;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(230, 104, 60, 0.25);
+}
+
+.btn-instagram i {
     color: white;
 }
 
-/* Ensure YouTube icon stays white */
-.btn-youtube i,
-.social-links .btn-youtube i,
-social-links a.btn-youtube i {
-    color: white !important;
+/* Twitter/X button styling */
+.btn-twitter,
+.btn-twitter:not(:disabled):not(.disabled) {
+    background-color: #000000;
+    border-color: #000000;
+    color: white;
 }
 
-/* YouTube button specific styling - override general social-links hover */
-.social-links .btn-youtube,
-social-links a.btn-youtube {
-    background-color: #ff0000 !important;
-    border-color: #ff0000 !important;
-    color: white !important;
+.btn-twitter:hover,
+.btn-twitter:focus,
+.btn-twitter:active,
+.btn-twitter:not(:disabled):not(.disabled):hover,
+.btn-twitter:not(:disabled):not(.disabled):focus,
+.btn-twitter:not(:disabled):not(.disabled):active {
+    background-color: #333333;
+    border-color: #333333;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
 }
 
-.social-links .btn-youtube:hover,
-social-links a.btn-youtube:hover,
-social-links .btn-youtube:focus,
-social-links a.btn-youtube:focus,
-social-links .btn-youtube:active,
-social-links a.btn-youtube:active {
-    background-color: #cc0000 !important;
-    border-color: #cc0000 !important;
-    color: white !important;
-    transform: translateY(-1px) !important;
+.btn-twitter i {
+    color: white;
 }
 
 /* Footer Enhancements */
