@@ -214,13 +214,19 @@
 
                         <!-- Contact Information -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label for="contactPerson" class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                       value="<%= club.contactPerson || '' %>" maxlength="100">
+                                <div class="form-text">Primary contact person for the club</div>
+                            </div>
+                            <div class="col-md-4">
                                 <label for="contactEmail" class="form-label">Contact Email</label>
                                 <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
                                        value="<%= club.contactEmail || '' %>">
                                 <div class="form-text">Public contact email for the club</div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="contactPhone" class="form-label">Contact Phone</label>
                                 <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
                                        value="<%= club.contactPhone || '' %>">
