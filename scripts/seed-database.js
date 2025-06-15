@@ -6,14 +6,62 @@
  * - Sample carnival data (both manual and MySideline imported)
  * - Email subscriptions
  * - Realistic data for testing all platform features
+ * 
+ * SECURITY: This script can ONLY run on development or test environments
  */
 
 const bcrypt = require('bcrypt');
-const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub } = require('../models');
+const path = require('path');
+const fs = require('fs');
+const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubAlternateName, SyncLog } = require('../models');
 const MySidelineService = require('../services/mySidelineIntegrationService');
 
 // Load environment variables
 require('dotenv').config();
+
+/**
+ * Environment Protection: Prevent running on production databases
+ */
+function validateEnvironment() {
+    const environment = process.env.NODE_ENV || 'development';
+    const dbPath = sequelize.options.storage;
+    
+    console.log(`🔍 Environment check: ${environment}`);
+    console.log(`🗂️  Database path: ${dbPath}`);
+    
+    // Block production environment completely
+    if (environment === 'production') {
+        throw new Error('❌ FATAL: Database seeding is FORBIDDEN in production environment');
+    }
+    
+    // Block if database path suggests production
+    if (dbPath && dbPath.includes('old-man-footy.db') && !dbPath.includes('dev-') && !dbPath.includes('test-')) {
+        throw new Error('❌ FATAL: Database path appears to be production database. Seeding blocked for safety.');
+    }
+    
+    // Only allow specific development/test database names
+    const allowedDbNames = [
+        'dev-old-man-footy.db',
+        'test-old-man-footy.db',
+        ':memory:'  // In-memory database for tests
+    ];
+    
+    const isAllowedDb = allowedDbNames.some(name => 
+        dbPath === name || dbPath.endsWith(name) || dbPath === ':memory:'
+    );
+    
+    if (!isAllowedDb) {
+        throw new Error(`❌ FATAL: Database name not in allowed list. Allowed: ${allowedDbNames.join(', ')}`);
+    }
+    
+    // Require explicit confirmation for seeding
+    const confirmFlag = process.argv.includes('--confirm-seed');
+    if (!confirmFlag) {
+        throw new Error('❌ FATAL: Database seeding requires --confirm-seed flag for safety');
+    }
+    
+    console.log('✅ Environment validation passed - seeding authorized');
+}
 
 /**
  * Australian Rugby League club names and locations for realistic test data
@@ -832,10 +880,13 @@ class DatabaseSeeder {
     }
 
     /**
-     * Initialize database connection and sync tables
+     * Initialize database connection and validate environment
      */
     async connect() {
         try {
+            // CRITICAL: Validate environment before any database operations
+            validateEnvironment();
+            
             const { initializeDatabase } = require('../config/database');
             await initializeDatabase();
             console.log('✅ SQLite database initialized successfully');
@@ -846,41 +897,145 @@ class DatabaseSeeder {
     }
 
     /**
-     * Clear existing data using Sequelize with proper foreign key handling
+     * Comprehensive database clearing with proper dependency order
+     * Clears ALL tables to ensure clean slate for seeding
      */
     async clearDatabase() {
-        console.log('🧹 Clearing existing data...');
-        
-        // Use transaction for atomicity
-        const transaction = await sequelize.transaction();
+        console.log('🧹 Clearing existing data from ALL tables...');
         
         try {
-            // Disable foreign key constraints temporarily for SQLite
-            await sequelize.query('PRAGMA foreign_keys = OFF', { transaction });
+            // Double-check environment before destructive operations
+            validateEnvironment();
             
-            // Clear junction tables first (foreign key dependencies)
-            await CarnivalClub.destroy({ where: {}, transaction, force: true });
-            await CarnivalSponsor.destroy({ where: {}, transaction, force: true });
-            await ClubSponsor.destroy({ where: {}, transaction, force: true });
+            // Disable foreign key constraints for SQLite
+            await sequelize.query('PRAGMA foreign_keys = OFF');
+            console.log('🔓 Foreign key constraints disabled');
+            
+            // Get all table names from database schema
+            const [tables] = await sequelize.query(`
+                SELECT name FROM sqlite_master 
+                WHERE type='table' 
+                AND name NOT LIKE 'sqlite_%' 
+                AND name != 'SequelizeMeta'
+                ORDER BY name
+            `);
+            
+            console.log(`📋 Found ${tables.length} tables to clear:`, tables.map(t => t.name).join(', '));
+            
+            // Clear junction/relationship tables first (to avoid FK violations)
+            const junctionTables = [
+                'CarnivalClub',
+                'CarnivalSponsor', 
+                'ClubSponsor',
+                'ClubAlternateName'
+            ];
+            
+            for (const tableName of junctionTables) {
+                try {
+                    const model = sequelize.models[tableName];
+                    if (model) {
+                        await model.destroy({ where: {}, force: true, truncate: true });
+                        console.log(`  ✅ Cleared ${tableName}`);
+                    }
+                } catch (error) {
+                    console.log(`  ⚠️  ${tableName} already empty or doesn't exist`);
+                }
+            }
             
             // Clear main tables in dependency order
-            await EmailSubscription.destroy({ where: {}, transaction, force: true });
-            await Carnival.destroy({ where: {}, transaction, force: true });
-            await User.destroy({ where: {}, transaction, force: true });
-            await Sponsor.destroy({ where: {}, transaction, force: true });
-            await Club.destroy({ where: {}, transaction, force: true });
+            const mainTables = [
+                'SyncLog',           // No dependencies
+                'EmailSubscription', // No dependencies  
+                'Carnival',          // References User
+                'User',              // References Club
+                'Sponsor',           // No dependencies
+                'Club'               // Referenced by others
+            ];
+            
+            for (const tableName of mainTables) {
+                try {
+                    const model = sequelize.models[tableName];
+                    if (model) {
+                        await model.destroy({ where: {}, force: true, truncate: true });
+                        console.log(`  ✅ Cleared ${tableName}`);
+                    }
+                } catch (error) {
+                    console.log(`  ⚠️  ${tableName} already empty or doesn't exist`);
+                }
+            }
+            
+            // Clear any remaining tables using direct SQL
+            for (const table of tables) {
+                try {
+                    await sequelize.query(`DELETE FROM "${table.name}"`);
+                    console.log(`  ✅ SQL-cleared ${table.name}`);
+                } catch (error) {
+                    // Ignore errors for tables that don't exist or are already empty
+                    console.log(`  ⚠️  Could not clear ${table.name}: ${error.message}`);
+                }
+            }
+            
+            // Reset SQLite sequences
+            await sequelize.query(`DELETE FROM sqlite_sequence`);
+            console.log('🔄 Reset auto-increment sequences');
             
             // Re-enable foreign key constraints
-            await sequelize.query('PRAGMA foreign_keys = ON', { transaction });
+            await sequelize.query('PRAGMA foreign_keys = ON');
+            console.log('🔒 Foreign key constraints re-enabled');
             
-            console.log('🔄 Resetting table sequences...');
+            // Verify database is actually empty
+            const verification = await this.verifyDatabaseEmpty();
+            if (!verification.isEmpty) {
+                console.warn('⚠️  Warning: Some tables still contain data:', verification.nonEmptyTables);
+            } else {
+                console.log('✅ Database completely cleared and verified empty');
+            }
             
-            await transaction.commit();
-            console.log('✅ Database cleared completely');
         } catch (error) {
-            await transaction.rollback();
             console.error('❌ Database clearing failed:', error.message);
             throw error;
+        }
+    }
+
+    /**
+     * Verify that database is completely empty after clearing
+     * @returns {Object} Verification results
+     */
+    async verifyDatabaseEmpty() {
+        try {
+            const [tables] = await sequelize.query(`
+                SELECT name FROM sqlite_master 
+                WHERE type='table' 
+                AND name NOT LIKE 'sqlite_%' 
+                AND name != 'SequelizeMeta'
+            `);
+            
+            const nonEmptyTables = [];
+            let totalRecords = 0;
+            
+            for (const table of tables) {
+                try {
+                    const [result] = await sequelize.query(`SELECT COUNT(*) as count FROM "${table.name}"`);
+                    const count = result[0].count;
+                    totalRecords += count;
+                    
+                    if (count > 0) {
+                        nonEmptyTables.push({ table: table.name, count });
+                    }
+                } catch (error) {
+                    // Ignore errors for tables that don't exist
+                }
+            }
+            
+            return {
+                isEmpty: totalRecords === 0,
+                totalRecords,
+                nonEmptyTables,
+                tablesChecked: tables.length
+            };
+        } catch (error) {
+            console.error('Error verifying database state:', error.message);
+            return { isEmpty: false, error: error.message };
         }
     }
 
@@ -1666,25 +1821,39 @@ class DatabaseSeeder {
     }
 
     /**
-     * Run the complete seeding process
+     * Run the complete seeding process with enhanced safety checks
      */
     async seed() {
-        console.log('🌱 Starting SQLite database seeding process...\n');
+        console.log('🌱 Starting PROTECTED database seeding process...\n');
         
         try {
+            // Multiple environment validation checkpoints
+            console.log('🛡️  SECURITY CHECKPOINT 1: Initial validation');
+            validateEnvironment();
+            
             await this.connect();
+            
+            console.log('🛡️  SECURITY CHECKPOINT 2: Pre-clear validation');
+            validateEnvironment();
+            
             await this.clearDatabase();
+            
+            console.log('🛡️  SECURITY CHECKPOINT 3: Pre-seed validation');
+            validateEnvironment();
+            
+            // Proceed with seeding
             await this.createClubs();
             await this.createUsers();
             await this.createSponsors();
             await this.linkSponsorsToClubs();
-                       await this.createManualCarnivals();
+            await this.createManualCarnivals();
             await this.linkSponsorsToCarnivals();
             await this.linkClubsToCarnivals();
             await this.importMySidelineData();
             await this.createEmailSubscriptions();
             await this.generateSummary();
             
+
             console.log('\n✅ Database seeding completed successfully!');
             console.log('\n🔐 Login credentials:');
             console.log('   Admin: admin@oldmanfooty.au / admin123');
@@ -1701,17 +1870,26 @@ class DatabaseSeeder {
 }
 
 /**
- * Run seeder if called directly
+ * Run seeder if called directly with proper safety checks
  */
 if (require.main === module) {
+    // Display safety warning
+    console.log('\n' + '⚠️ '.repeat(20));
+    console.log('🚨 DATABASE SEEDING SCRIPT - DESTRUCTIVE OPERATION');
+    console.log('⚠️ '.repeat(20));
+    console.log('This script will COMPLETELY WIPE and re-populate the database');
+    console.log('Only run this on DEVELOPMENT or TEST databases');
+    console.log('Required flag: --confirm-seed');
+    console.log('⚠️ '.repeat(20) + '\n');
+    
     const seeder = new DatabaseSeeder();
     seeder.seed()
         .then(() => {
-            console.log('\n🎉 Seeding process completed!');
+            console.log('\n🎉 Seeding process completed safely!');
             process.exit(0);
         })
         .catch((error) => {
-            console.error('\n💥 Seeding process failed:', error);
+            console.error('\n💥 Seeding process failed:', error.message);
             process.exit(1);
         });
 }
