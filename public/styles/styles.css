@@ -229,6 +229,17 @@ a[class*="btn"]:focus,
     color: var(--rugby-dark-green) !important;
 }
 
+/* Ensure text color is applied with higher specificity */
+.card .card-header.bg-info,
+.card-header.bg-info h1,
+.card-header.bg-info h2,
+.card-header.bg-info h3,
+.card-header.bg-info h4,
+.card-header.bg-info h5,
+.card-header.bg-info h6 {
+    color: var(--rugby-dark-green) !important;
+}
+
 
 /* Button Enhancements */
 .btn {
