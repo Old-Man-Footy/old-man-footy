@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const MySidelineScraperService = require('./mySidelineScraperService');
 const MySidelineEventParserService = require('./mySidelineEventParserService');
 const MySidelineDataService = require('./mySidelineDataService');
+const { SyncLog } = require('../models');
 
 /**
  * MySideline Integration Service (Main Orchestrator)
@@ -74,7 +75,7 @@ class MySidelineIntegrationService {
     }
 
     /**
-     * Main sync function - orchestrates the entire process
+     * Main sync function - orchestrates the entire process with proper sync logging
      */
     async syncMySidelineEvents() {
         if (!this.syncEnabled) {
@@ -94,6 +95,12 @@ class MySidelineIntegrationService {
         this.isRunning = true;
         console.log('Starting MySideline event synchronization...');
 
+        // Create sync log entry at the start - this ensures we always track sync attempts
+        const syncLog = await SyncLog.startSync('mysideline', {
+            triggerSource: 'scheduled',
+            environment: process.env.NODE_ENV || 'development'
+        });
+
         try {
             // Step 0: Deactivate past carnivals first (data hygiene)
             console.log('🗓️  Running data hygiene: deactivating past carnivals...');
@@ -108,6 +115,14 @@ class MySidelineIntegrationService {
             
             if (!scrapedEvents || scrapedEvents.length === 0) {
                 console.log('No events found from MySideline scraper');
+                
+                // Mark sync as completed even when no events found - this prevents endless retries
+                await syncLog.markCompleted({
+                    eventsProcessed: 0,
+                    eventsCreated: 0,
+                    eventsUpdated: 0
+                });
+                
                 return {
                     success: true,
                     eventsProcessed: 0,
@@ -130,6 +145,14 @@ class MySidelineIntegrationService {
 
             if (cleanedEvents.length === 0) {
                 console.log('No events passed validation checks');
+                
+                // Mark sync as completed even when no events pass validation
+                await syncLog.markCompleted({
+                    eventsProcessed: 0,
+                    eventsCreated: 0,
+                    eventsUpdated: 0
+                });
+                
                 return {
                     success: true,
                     eventsProcessed: 0,
@@ -140,16 +163,35 @@ class MySidelineIntegrationService {
             // Step 2: Process validated events using the data service
             const processedEvents = await this.dataService.processScrapedEvents(cleanedEvents);
             
-            console.log(`MySideline sync completed. Processed ${processedEvents.length} events.`);
+            // Count new vs updated events for logging
+            const eventsCreated = processedEvents.filter(event => 
+                event.createdAt && new Date(event.createdAt) > new Date(Date.now() - 60000) // Created in last minute
+            ).length;
+            const eventsUpdated = processedEvents.length - eventsCreated;
+            
+            console.log(`MySideline sync completed. Processed ${processedEvents.length} events (${eventsCreated} new, ${eventsUpdated} updated).`);
             this.lastSyncDate = new Date();
+            
+            // Mark sync as completed with detailed results
+            await syncLog.markCompleted({
+                eventsProcessed: processedEvents.length,
+                eventsCreated: eventsCreated,
+                eventsUpdated: eventsUpdated
+            });
             
             return {
                 success: true,
                 eventsProcessed: processedEvents.length,
+                eventsCreated: eventsCreated,
+                eventsUpdated: eventsUpdated,
                 lastSync: this.lastSyncDate
             };
         } catch (error) {
             console.error('MySideline sync failed:', error);
+            
+            // Mark sync as failed in the log
+            await syncLog.markFailed(error.message);
+            
             return {
                 success: false,
                 error: error.message

@@ -17,6 +17,7 @@ const ClubSponsor = require('./ClubSponsor');
 const CarnivalSponsor = require('./CarnivalSponsor');
 const ClubAlternateName = require('./ClubAlternateName');
 const CarnivalClub = require('./CarnivalClub');
+const SyncLog = require('./SyncLog');
 
 /**
  * Define model associations/relationships
@@ -177,5 +178,6 @@ module.exports = {
   ClubSponsor,
   CarnivalSponsor,
   ClubAlternateName,
-  CarnivalClub
+  CarnivalClub,
+  SyncLog
 };

@@ -421,7 +421,6 @@ class MySidelineScraperService {
                 organiserContactPhone: contactPhone,
                 registrationLink: `${this.eventUrl}${encodeURIComponent(carnivalName)}`,
                 scheduleDetails: [subtitle, scheduleDetails].filter(Boolean).join('\n'),
-                lastMySidelineSync: new Date(),
                 socialMediaFacebook: socialMediaFacebook,
                 socialMediaWebsite: socialMediaWebsite,
                 source: 'MySideline',
@@ -458,6 +457,7 @@ class MySidelineScraperService {
             return null;
         }
 
+        // A list of states and territories with their names and abbreviations.
         // A list of states and territories with their names and abbreviations.
         const states = [
             { name: 'NSW', abbreviations: ['NSW', 'N.S.W.','New South Wales'] },

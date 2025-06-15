@@ -1,4 +1,4 @@
-const { Carnival } = require('../models');
+const { Carnival, SyncLog } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('./emailService');
 
@@ -171,30 +171,27 @@ class MySidelineDataService {
     }
 
     /**
-     * Check if we need to run initial sync
+     * Check if we need to run initial sync using SyncLog table
      * @returns {Promise<boolean>} True if sync should run
      */
     async shouldRunInitialSync() {
         try {
-            const lastImportedCarnival = await Carnival.findOne({ 
-                where: {
-                    lastMySidelineSync: { [Op.ne]: null }
-                }
-            });
-
-            // In development mode, always run sync regardless of last sync time
-            const hasRecentSync = lastImportedCarnival && 
-                (new Date() - lastImportedCarnival.createdAt) <= 24 * 60 * 60 * 1000;
-
-            if (!lastImportedCarnival || !hasRecentSync) {
-                if (!lastImportedCarnival) {
+            // Use the new SyncLog-based approach instead of checking individual events
+            const shouldSync = await SyncLog.shouldRunSync('mysideline', 24);
+            
+            if (shouldSync) {
+                const lastSync = await SyncLog.getLastSuccessfulSync('mysideline');
+                if (!lastSync) {
                     console.log('Running initial MySideline sync (no previous sync found)...');
                 } else {
-                    console.log('Running initial MySideline sync (last sync > 24 hours ago)...');
+                    const hoursSinceLastSync = (new Date() - new Date(lastSync.completedAt)) / (1000 * 60 * 60);
+                    console.log(`Running MySideline sync (last sync was ${hoursSinceLastSync.toFixed(1)} hours ago)...`);
                 }
                 return true;
             } else {
-                console.log('MySideline sync skipped - recent sync found (production mode)');
+                const lastSync = await SyncLog.getLastSuccessfulSync('mysideline');
+                const hoursSinceLastSync = (new Date() - new Date(lastSync.completedAt)) / (1000 * 60 * 60);
+                console.log(`MySideline sync skipped - recent sync found (${hoursSinceLastSync.toFixed(1)} hours ago)`);
                 return false;
             }
         } catch (error) {

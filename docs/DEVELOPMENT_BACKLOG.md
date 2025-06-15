@@ -118,6 +118,7 @@
 | As a tester, I want comprehensive unit tests for, and limited to `models/Index.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/EmailSubscription.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/ClubAlternateName.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `models/SyncLog.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/emailService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineDataService.js` | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineEventParserService.js`  | ⭕ Not Started |
