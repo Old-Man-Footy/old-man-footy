@@ -192,9 +192,6 @@ For managing event information on this platform:
 - Your Club Profile: Main navigation menu
 - All Carnivals: Main navigation menu
 
-### Contact Information
-For technical support or questions about using this platform, Contact support at [support@oldmanfooty.com](mailto:support@oldmanfooty.com)
-
 ---
 
 *This guide is designed to help you make the most of the Old Man Footy platform. The system is designed to be intuitive, but don't hesitate to explore and experiment with the various features available to you.*

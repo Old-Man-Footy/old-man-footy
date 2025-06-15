@@ -61,20 +61,20 @@
 
 /* Link Styling */
 .user-guide-content a {
-    color: #3498db;
+    color: var(--rugby-link-green);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 .user-guide-content a:hover {
-    color: #2980b9;
+    color: var(--rugby-link-green-hover);
     text-decoration: underline;
 }
 
 /* Text Formatting */
 .user-guide-content strong {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--theme-text-primary);
 }
 
 .user-guide-content p {
@@ -177,4 +177,62 @@
     .user-guide-back-btn {
         display: none;
     }
+}
+
+/* ================================
+   DARK MODE SUPPORT
+   ================================ */
+
+/* Dark mode styling for user guide content */
+[data-theme="dark"] .user-guide-content {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .user-guide-content h1 {
+    color: var(--theme-text-primary) !important;
+    border-bottom-color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .user-guide-content h2 {
+    color: var(--theme-text-primary) !important;
+    border-bottom-color: var(--theme-border-color) !important;
+}
+
+[data-theme="dark"] .user-guide-content h3 {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .user-guide-content p {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .user-guide-content strong {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .user-guide-content a {
+    color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .user-guide-content a:hover {
+    color: var(--rugby-light-green) !important;
+}
+
+[data-theme="dark"] .user-guide-content code {
+    background-color: var(--theme-bg-tertiary) !important;
+    color: var(--rugby-gold) !important;
+}
+
+[data-theme="dark"] .user-guide-content li {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .user-guide-content .card {
+    background-color: var(--theme-card-bg) !important;
+    border-color: var(--theme-border-color) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .page-title {
+    color: var(--theme-text-primary) !important;
 }
