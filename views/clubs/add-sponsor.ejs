@@ -31,12 +31,12 @@
                             <div class="mb-4">
                                 <label class="form-label">Choose Option:</label>
                                 <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="sponsorType" id="newSponsor" value="new" checked>
+                                    <input type="radio" class="btn-primary" name="sponsorType" id="newSponsor" value="new" checked>
                                     <label class="btn btn-outline-primary" for="newSponsor">
                                         <i class="fas fa-plus me-2"></i>Create New Sponsor
                                     </label>
                                     
-                                    <input type="radio" class="btn-check" name="sponsorType" id="existingSponsor" value="existing" 
+                                    <input type="radio" class="btn-primary" name="sponsorType" id="existingSponsor" value="existing" 
                                            <% if (!availableSponsors || availableSponsors.length === 0) { %>disabled<% } %>>
                                     <label class="btn btn-outline-success" for="existingSponsor">
                                         <i class="fas fa-link me-2"></i>Link Existing Sponsor
