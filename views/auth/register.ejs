@@ -56,8 +56,8 @@
                             <div class="invalid-feedback">Please provide your club name.</div>
                         </div>
 
-                        <div class="row" id="clubDetailsSection">
-                            <div class="col-md-6 mb-3">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
                                 <label for="clubState" class="form-label">Club State <span class="text-danger" id="stateRequired">*</span></label>
                                 <select class="form-select" id="clubState" name="clubState">
                                     <option value="">Select State</option>
@@ -73,7 +73,10 @@
                                 <div class="form-text" id="stateHelpText">Required for new clubs</div>
                                 <div class="invalid-feedback">Please select your club's state.</div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
                                 <label for="location" class="form-label">Club Location <span class="text-danger" id="locationRequired">*</span></label>
                                 <input type="text" class="form-control" id="location" name="location" 
                                        value="<%= typeof formData !== 'undefined' ? formData.location : '' %>" 
