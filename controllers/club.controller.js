@@ -1469,6 +1469,141 @@ const joinClub = async (req, res) => {
     }
 };
 
+/**
+ * Leave current club (disassociate user from club)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const leaveClub = async (req, res) => {
+    try {
+        const user = req.user;
+        const { confirmed, leaveAction, newPrimaryDelegateId } = req.body;
+        
+        // Ensure user has a club to leave
+        if (!user.clubId) {
+            req.flash('error_msg', 'You are not currently associated with any club.');
+            return res.redirect('/dashboard');
+        }
+
+        // Validate confirmation
+        if (!confirmed || confirmed !== 'true') {
+            req.flash('error_msg', 'You must confirm that you want to leave the club.');
+            return res.redirect('/dashboard');
+        }
+
+        // Get the club information for messaging
+        const club = await Club.findByPk(user.clubId, {
+            attributes: ['id', 'clubName', 'isActive']
+        });
+
+        if (!club) {
+            req.flash('error_msg', 'Club not found.');
+            return res.redirect('/dashboard');
+        }
+
+        // Use database transaction for safe user disassociation
+        const { sequelize } = require('../models');
+        const transaction = await sequelize.transaction();
+
+        try {
+            const clubName = club.clubName;
+            let successMessage = '';
+            
+            if (user.isPrimaryDelegate) {
+                // Handle primary delegate leaving based on selected action
+                if (leaveAction === 'transfer' && newPrimaryDelegateId) {
+                    // Transfer primary role to specific delegate
+                    const newPrimaryDelegate = await User.findOne({
+                        where: {
+                            id: newPrimaryDelegateId,
+                            clubId: user.clubId,
+                            isActive: true,
+                            isPrimaryDelegate: false
+                        },
+                        transaction
+                    });
+
+                    if (!newPrimaryDelegate) {
+                        await transaction.rollback();
+                        req.flash('error_msg', 'Selected delegate not found or is not eligible for primary role.');
+                        return res.redirect('/dashboard');
+                    }
+
+                    // Transfer the primary delegate role
+                    await newPrimaryDelegate.update({
+                        isPrimaryDelegate: true
+                    }, { transaction });
+
+                    successMessage = `You have successfully left "${clubName}". Primary delegate role has been transferred to ${newPrimaryDelegate.firstName} ${newPrimaryDelegate.lastName}.`;
+                    console.log(`✅ Primary delegate role transferred from ${user.email} to ${newPrimaryDelegate.email} when leaving club`);
+
+                } else if (leaveAction === 'deactivate') {
+                    // Primary delegate chose to deactivate the club
+                    await club.update({
+                        isActive: false,
+                        isPubliclyListed: false
+                    }, { transaction });
+                    
+                    successMessage = `You have successfully left "${clubName}" and the club has been deactivated. The club will no longer appear in public listings.`;
+                    console.log(`✅ Primary delegate ${user.email} left and deactivated club: ${clubName} (ID: ${club.id})`);
+
+                } else {
+                    // Primary delegate chose to leave club available for others (leaveAction === 'available')
+                    const otherDelegates = await User.findAll({
+                        where: {
+                            clubId: user.clubId,
+                            isActive: true,
+                            isPrimaryDelegate: false,
+                            id: { [Op.ne]: user.id }
+                        },
+                        transaction
+                    });
+
+                    if (otherDelegates.length > 0) {
+                        // Auto-promote the first available delegate to primary
+                        await otherDelegates[0].update({
+                            isPrimaryDelegate: true
+                        }, { transaction });
+                        
+                        successMessage = `You have successfully left "${clubName}". Primary delegate role has been automatically transferred to ${otherDelegates[0].firstName} ${otherDelegates[0].lastName}.`;
+                        console.log(`✅ Primary delegate role auto-transferred from ${user.email} to ${otherDelegates[0].email} when leaving club`);
+                    } else {
+                        // No other delegates - club becomes available for claiming
+                        successMessage = `You have successfully left "${clubName}". The club is now available for other users to claim or join.`;
+                        console.log(`✅ Primary delegate ${user.email} left club: ${clubName} (ID: ${club.id}) - club available for claiming`);
+                    }
+                }
+            } else {
+                // Regular delegate leaving
+                successMessage = `You have successfully left "${clubName}". You can now join a different club if needed.`;
+                console.log(`✅ User ${user.email} left club: ${clubName} (ID: ${club.id})`);
+            }
+
+            // Disassociate user from the club
+            await user.update({
+                clubId: null,
+                isPrimaryDelegate: false
+            }, { transaction });
+
+            // Commit the transaction
+            await transaction.commit();
+
+            req.flash('success_msg', successMessage);
+            res.redirect('/dashboard');
+
+        } catch (transactionError) {
+            // Rollback the transaction
+            await transaction.rollback();
+            throw transactionError;
+        }
+
+    } catch (error) {
+        console.error('Error leaving club:', error);
+        req.flash('error_msg', 'An error occurred while leaving the club. Please try again.');
+        res.redirect('/dashboard');
+    }
+};
+
 module.exports = {
     showClubListings,
     showClubProfile,
@@ -1491,5 +1626,6 @@ module.exports = {
     getCreateOnBehalf,
     postCreateOnBehalf,
     getClaimOwnership,
-    postClaimOwnership
+    postClaimOwnership,
+    leaveClub
 };

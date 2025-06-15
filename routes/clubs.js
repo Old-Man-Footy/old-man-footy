@@ -22,6 +22,9 @@ router.get('/api/search', clubController.searchClubs);
 // Join existing club route
 router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 
+// Leave club route
+router.post('/leave', ensureAuthenticated, clubController.leaveClub);
+
 // Update club profile with structured upload support
 router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
     body('contactEmail').optional().isEmail().withMessage('Valid email address required'),

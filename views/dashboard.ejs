@@ -408,14 +408,45 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteModal">
-                            <i class="bi bi-envelope"></i> Invite New Delegate
-                        </button>
-                        <% if (eligibleDelegates && eligibleDelegates.length > 0) { %>
-                            <button class="btn btn-outline-warning ms-2" data-bs-toggle="modal" data-bs-target="#transferRoleModal">
-                                <i class="bi bi-arrow-right-circle"></i> Transfer Primary Role
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteModal">
+                                <i class="bi bi-envelope"></i> Invite New Delegate
                             </button>
-                        <% } %>
+                            <% if (eligibleDelegates && eligibleDelegates.length > 0) { %>
+                                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#transferRoleModal">
+                                    <i class="bi bi-arrow-right-circle"></i> Transfer Primary Role
+                                </button>
+                            <% } %>
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
+                                <i class="bi bi-box-arrow-right"></i> Leave Club
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <!-- Regular Delegate Section -->
+    <% if (!user.isPrimaryDelegate && user.clubId && user.clubId.clubName) { %>
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-check"></i> Club Delegate Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">As a delegate for <%= user.clubId.clubName %>, you can create and manage carnivals for your club.</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/clubs/manage" class="btn btn-outline-primary">
+                                <i class="bi bi-building"></i> Manage Club Profile
+                            </a>
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
+                                <i class="bi bi-box-arrow-right"></i> Leave Club
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -744,5 +775,115 @@
         </div>
     </div>
 </div>
+
+<!-- Leave Club Modal -->
+<% if (user.clubId && user.clubId.clubName) { %>
+<div class="modal fade" id="leaveClubModal" tabindex="-1" aria-labelledby="leaveClubModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leaveClubModalLabel">
+                    <i class="bi bi-box-arrow-right"></i> Leave Club
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="/clubs/leave">
+                <div class="modal-body">
+                    <p class="text-muted mb-4">
+                        You are about to leave <strong><%= user.clubId.clubName %></strong>.
+                    </p>
+                    
+                    <% if (user.isPrimaryDelegate) { %>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>You are the primary delegate for this club.</strong> 
+                            Please choose what should happen to the club when you leave:
+                        </div>
+                        
+                        <div class="mb-4">
+                            <% if (eligibleDelegates && eligibleDelegates.length > 0) { %>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="leaveAction" id="transferToDelegate" value="transfer" checked>
+                                    <label class="form-check-label" for="transferToDelegate">
+                                        <strong>Transfer primary role to another delegate</strong>
+                                        <div class="text-muted small mt-1">
+                                            Choose a specific delegate to become the new primary delegate. The club will remain active and under their control.
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                                <div class="ms-4 mb-3" id="delegateSelection">
+                                    <label for="newPrimaryDelegateId" class="form-label">Select new primary delegate:</label>
+                                    <select class="form-select" id="newPrimaryDelegateId" name="newPrimaryDelegateId">
+                                        <option value="">Choose a delegate...</option>
+                                        <% eligibleDelegates.forEach(delegate => { %>
+                                            <option value="<%= delegate.id %>">
+                                                <%= delegate.firstName %> <%= delegate.lastName %> (<%= delegate.email %>)
+                                            </option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            <% } %>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="leaveAction" id="leaveAvailable" value="available" <%= (!eligibleDelegates || eligibleDelegates.length === 0) ? 'checked' : '' %>>
+                                <label class="form-check-label" for="leaveAvailable">
+                                    <strong>Leave club available for others</strong>
+                                    <div class="text-muted small mt-1">
+                                        <% if (eligibleDelegates && eligibleDelegates.length > 0) { %>
+                                            The club will become available for any user to claim or join. Current delegates will remain as regular members.
+                                        <% } else { %>
+                                            The club will remain active and available for other users to claim or join.
+                                        <% } %>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="leaveAction" id="deactivateClub" value="deactivate">
+                                <label class="form-check-label" for="deactivateClub">
+                                    <strong>Deactivate the club</strong>
+                                    <div class="text-muted small mt-1">
+                                        The club will be deactivated and removed from public listings. This cannot be undone.
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            As a regular delegate, leaving the club will simply remove your association. 
+                            The club and its primary delegate will remain unchanged.
+                        </div>
+                    <% } %>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmLeave" name="confirmed" value="true" required>
+                        <label class="form-check-label" for="confirmLeave">
+                            <strong>I confirm that I want to leave <%= user.clubId.clubName %></strong>
+                        </label>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>This action cannot be undone.</strong> 
+                        <% if (user.isPrimaryDelegate) { %>
+                            If you leave, you will lose all primary delegate privileges for this club.
+                        <% } else { %>
+                            You will need to be re-invited or rejoin the club to regain access.
+                        <% } %>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-box-arrow-right"></i> Leave Club
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<% } %>
 
 <script src="/js/dashboard.js"></script>
