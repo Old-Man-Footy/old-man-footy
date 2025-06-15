@@ -1,5 +1,15 @@
 /* Old Man Footy Custom Styles */
 
+/* Prevent flash of unstyled content during theme loading */
+.theme-loading {
+    visibility: hidden !important;
+    transition: none !important;
+}
+
+.theme-loading * {
+    transition: none !important;
+}
+
 /* Root Variables for Consistent Theming - Green/Gold Theme */
 :root {
     --rugby-green: #006837;
@@ -76,6 +86,15 @@ body {
     color: #333;
     background-color: var(--theme-bg-primary);
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Re-enable visibility and transitions after theme is applied */
+body.theme-applied {
+    visibility: visible !important;
+}
+
+body.theme-applied * {
+    transition: all 0.3s ease;
 }
 
 /* Link Styling - Rugby Theme */

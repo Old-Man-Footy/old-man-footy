@@ -20,14 +20,24 @@ window.themeManager = {
      * Initialize theme system
      */
     init: function() {
-        this.loadSavedTheme();
+        // Use the theme that was already applied by the inline script
+        if (window.__INITIAL_THEME__) {
+            this.currentTheme = window.__INITIAL_THEME__;
+            console.log(`🎨 Using initial theme: ${this.currentTheme}`);
+        } else {
+            // Fallback to the old method if inline script didn't run
+            this.loadSavedTheme();
+        }
+        
         this.setupToggleButton();
         this.updateThemeIcon();
+        this.setupSystemThemeListener();
         console.log('✅ Theme manager initialized');
     },
     
     /**
      * Load theme from localStorage or detect system preference
+     * (Fallback method - normally handled by inline script)
      */
     loadSavedTheme: function() {
         // Check localStorage first
