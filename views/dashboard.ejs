@@ -148,7 +148,7 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4 dashboard-stats">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-6 mb-3">
             <div class="card text-white">
                 <div class="card-body text-center">
                     <i class="bi bi-calendar-event display-4 mb-2"></i>
@@ -157,21 +157,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <a href="/carnivals?upcoming=true" class="text-decoration-none">
-                <div class="card text-white dashboard-stat-card clickable-card">
-                    <div class="card-body text-center">
-                        <i class="bi bi-calendar-check display-4 mb-2"></i>
-                        <h3><%= upcomingCarnivals ? upcomingCarnivals.length : 0 %></h3>
-                        <p class="mb-0">Upcoming Events</p>
-                        <small class="text-white-50 mt-1 d-block">
-                            <i class="bi bi-arrow-right"></i> Click to view all
-                        </small>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-6 mb-3">
             <% if (user.clubId && user.clubId.clubName) { %>
                 <a href="/clubs/manage" class="text-decoration-none">
                     <div class="card text-white dashboard-stat-card clickable-card">
@@ -414,21 +400,7 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-3">As the primary delegate for <%= user.clubId.clubName %>, you have additional privileges:</p>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-person-plus-fill text-primary me-2"></i>
-                                    <span>Invite additional club delegates</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-gear-fill text-primary me-2"></i>
-                                    <span>Manage club settings</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
+                       <div class="d-flex flex-wrap gap-2">
                             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteModal">
                                 <i class="bi bi-envelope"></i> Invite New Delegate
                             </button>
@@ -437,6 +409,9 @@
                                     <i class="bi bi-arrow-right-circle"></i> Transfer Primary Role
                                 </button>
                             <% } %>
+                            <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="/club/manage">
+                                <i class="bi bi-gear"></i> Manage Club Settings
+                            </button>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
                                 <i class="bi bi-box-arrow-right"></i> Leave Club
                             </button>
