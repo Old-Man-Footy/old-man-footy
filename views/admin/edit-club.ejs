@@ -229,16 +229,45 @@
                         </div>
 
                         <!-- Social Media -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="facebookUrl" class="form-label">Facebook URL</label>
-                                <input type="url" class="form-control" id="facebookUrl" name="facebookUrl" 
-                                       value="<%= club.facebookUrl || '' %>" placeholder="https://facebook.com/...">
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-share"></i> Social Media & Online Presence
+                            </h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="websiteUrl" class="form-label">
+                                        <i class="bi bi-globe text-success"></i> Website URL
+                                    </label>
+                                    <input type="url" class="form-control" id="websiteUrl" name="websiteUrl" 
+                                           value="<%= club.website || '' %>" placeholder="https://yourclub.com">
+                                    <div class="form-text">Official club website</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="facebookUrl" class="form-label">
+                                        <i class="bi bi-facebook text-primary"></i> Facebook URL
+                                    </label>
+                                    <input type="url" class="form-control" id="facebookUrl" name="facebookUrl" 
+                                           value="<%= club.facebookUrl || '' %>" placeholder="https://facebook.com/yourclub">
+                                    <div class="form-text">Facebook page or profile</div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="websiteUrl" class="form-label">Website URL</label>
-                                <input type="url" class="form-control" id="websiteUrl" name="websiteUrl" 
-                                       value="<%= club.websiteUrl || '' %>" placeholder="https://...">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="instagramUrl" class="form-label">
+                                        <i class="bi bi-instagram text-danger"></i> Instagram URL
+                                    </label>
+                                    <input type="url" class="form-control" id="instagramUrl" name="instagramUrl" 
+                                           value="<%= club.instagramUrl || '' %>" placeholder="https://instagram.com/yourclub">
+                                    <div class="form-text">Instagram profile</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="twitterUrl" class="form-label">
+                                        <i class="bi bi-twitter-x"></i> X (Twitter) URL
+                                    </label>
+                                    <input type="url" class="form-control" id="twitterUrl" name="twitterUrl" 
+                                           value="<%= club.twitterUrl || '' %>" placeholder="https://x.com/yourclub">
+                                    <div class="form-text">X (formerly Twitter) profile</div>
+                                </div>
                             </div>
                         </div>
 

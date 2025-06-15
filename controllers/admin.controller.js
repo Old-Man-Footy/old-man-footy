@@ -477,6 +477,8 @@ const updateClub = async (req, res) => {
             contactEmail,
             contactPhone,
             facebookUrl,
+            instagramUrl,
+            twitterUrl,
             websiteUrl,
             isActive,
             isPubliclyListed
@@ -497,6 +499,8 @@ const updateClub = async (req, res) => {
             contactEmail: contactEmail || null,
             contactPhone: contactPhone || null,
             facebookUrl: facebookUrl || null,
+            instagramUrl: instagramUrl || null,
+            twitterUrl: twitterUrl || null,
             website: websiteUrl || null,
             isActive: !!isActive,
             isPubliclyListed: !!isPubliclyListed
