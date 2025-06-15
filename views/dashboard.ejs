@@ -172,21 +172,41 @@
             </a>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card text-white">
-                <div class="card-body text-center">
-                    <i class="bi bi-people display-4 mb-2"></i>
-                    <% if (user.clubId && user.clubId.clubName) { %>
-                        <h3><%= user.clubId.clubName %></h3>
-                        <p class="mb-0">Your Club</p>
-                    <% } else if (user.isAdmin) { %>
+            <% if (user.clubId && user.clubId.clubName) { %>
+                <a href="/clubs/manage" class="text-decoration-none">
+                    <div class="card text-white dashboard-stat-card clickable-card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people display-4 mb-2"></i>
+                            <h3><%= user.clubId.clubName %></h3>
+                            <p class="mb-0">Your Club</p>
+                            <small class="text-white-50 mt-1 d-block">
+                                <i class="bi bi-arrow-right"></i> Click to manage
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            <% } else if (user.isAdmin) { %>
+                <div class="card text-white">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people display-4 mb-2"></i>
                         <h3>Admin</h3>
                         <p class="mb-0">System Role</p>
-                    <% } else { %>
-                        <h3>No Club</h3>
-                        <p class="mb-0">No Association</p>
-                    <% } %>
+                    </div>
                 </div>
-            </div>
+            <% } else { %>
+                <a href="/clubs/manage" class="text-decoration-none">
+                    <div class="card text-white dashboard-stat-card clickable-card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people display-4 mb-2"></i>
+                            <h3>No Club</h3>
+                            <p class="mb-0">No Association</p>
+                            <small class="text-white-50 mt-1 d-block">
+                                <i class="bi bi-arrow-right"></i> Click to join/create
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            <% } %>
         </div>
     </div>
 
