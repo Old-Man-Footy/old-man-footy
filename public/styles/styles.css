@@ -209,20 +209,37 @@ a[class*="btn"]:focus,
     color: var(--rugby-dark-green) !important;
 }
 
-/* Override any blue link colors in navigation */
-.navbar a,
-.navbar a:visited,
-.navbar a:focus {
-    color: rgba(255, 255, 255, 0.9) !important;
+/* Dark mode dropdown menu styling */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--theme-dropdown-bg) !important;
+    border-color: var(--theme-border-color) !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5) !important;
 }
 
-.navbar a:hover,
-.navbar a:active {
+[data-theme="dark"] .dropdown-menu .dropdown-item {
+    color: var(--theme-text-primary) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .dropdown-menu .dropdown-item:hover,
+[data-theme="dark"] .dropdown-menu .dropdown-item:focus {
+    background-color: var(--theme-bg-secondary) !important;
     color: var(--rugby-gold) !important;
 }
 
-.bg-primary {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%) !important;
+[data-theme="dark"] .dropdown-menu .dropdown-item:active {
+    background-color: var(--rugby-green) !important;
+    color: white !important;
+}
+
+/* Dropdown dividers in dark mode */
+[data-theme="dark"] .dropdown-divider {
+    border-top-color: var(--theme-border-color) !important;
+}
+
+/* Dropdown toggle icon color in dark mode */
+[data-theme="dark"] .dropdown-toggle::after {
+    border-top-color: var(--theme-text-primary) !important;
 }
 
 /* Button Enhancements */
@@ -2045,8 +2062,7 @@ padding: 4rem 0;
     width: 50px;
     height: 50px;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: center    justify-content: center;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
 }

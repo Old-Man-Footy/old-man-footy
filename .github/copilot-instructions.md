@@ -86,14 +86,14 @@ This project enforces a strict separation of concerns.
 ## **7. Static Assets & Styling (/public)**
 
 * **Location:** All public assets (CSS, client-side JS, images, icons) MUST be in the `/public` directory, organized into subdirectories (`/styles`, `/scripts`, `/images`, `/icons`).
-* **Styling:** All CSS rules MUST be in external `.css` files within `/public/styles`. You MUST NOT use inline `style` attributes or CSS-in-JS.
+* **Styling:** All CSS rules MUST be in external `.css` files within `/public/styles`. You MUST NOT use inline `style` attributes or CSS-in-JS. Styles MUST be authored to support both **light and dark modes**, preferably using CSS custom properties (variables) for colours that can be toggled with a `prefers-color-scheme` media query.
 * **Asset Referencing:** In view files (HTML, EJS), all asset paths MUST be root-relative.
   * **Correct:** `<link rel="stylesheet" href="/styles/main.css">`
   * **Incorrect:** `<link rel="stylesheet" href="../public/styles/main.css">`
 
 ## **8. Client-Side Scripting**
 
-* **Principle:** You MUST NOT embed client-side application logic directly within `<script>` tags in `.ejs` or other view files. All client-side JavaScript MUST be placed in external `.js` files within the `/public/scripts/` directory. This enforces a clean separation between server-rendered templates and client-side behaviour, improving maintainability and security.
+* **Principle:** You MUST NOT embed client-side application logic directly within `<script>` tags in `.ejs` or other view files. All client-side JavaScript MUST be placed in external `.js` files within the `/public/js/` directory. This enforces a clean separation between server-rendered templates and client-side behaviour, improving maintainability and security.
 * **Passing Data to Scripts:** To pass dynamic data from a controller to a client-side script, attach it to the DOM using `data-*` attributes. The external script can then read these attributes.
 
 * **Incorrect Example (Logic embedded in EJS):**
