@@ -4,7 +4,7 @@
  */
 document.addEventListener('DOMContentLoaded', function() {
     // Form validation
-    const form = document.querySelector('form[action*="/clubs/manage/profile"]');
+    const form = document.querySelector('form[action*="/clubs/manage"]');
     if (form) {
         form.addEventListener('submit', function(e) {
             const requiredFields = form.querySelectorAll('[required]');

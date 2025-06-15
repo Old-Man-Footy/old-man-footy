@@ -577,11 +577,11 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: var(--theme-text-primary) !important;
 }
 
-[data-theme="dark"] .card-header {
+/* [data-theme="dark"] .card-header {
     background-color: var(--theme-bg-secondary) !important;
     border-bottom-color: var(--theme-border-color) !important;
     color: var(--theme-text-primary) !important;
-}
+} */
 
 /* Rugby Masters Cards - Club cards specific styling */
 [data-theme="dark"] .rugby-masters-card {
@@ -1545,11 +1545,11 @@ padding: 4rem 0;
     color: var(--theme-text-primary) !important;
 }
 
-[data-theme="dark"] .card-header {
+/* [data-theme="dark"] .card-header {
     background-color: var(--theme-bg-secondary) !important;
     border-bottom-color: var(--theme-border-color) !important;
     color: var(--theme-text-primary) !important;
-}
+} */
 
 /* Rugby Masters Cards - Club cards specific styling */
 [data-theme="dark"] .rugby-masters-card {
@@ -2216,11 +2216,11 @@ padding: 4rem 0;
     color: var(--theme-text-primary) !important;
 }
 
-[data-theme="dark"] .card-header {
+/* [data-theme="dark"] .card-header {
     background-color: var(--theme-bg-secondary) !important;
     border-bottom-color: var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
-}
+    color: var(--theme-text-primary) !important;S
+} */
 
 /* Rugby Masters Cards - Club cards specific styling */
 [data-theme="dark"] .rugby-masters-card {

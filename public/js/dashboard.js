@@ -108,6 +108,17 @@ document.addEventListener('DOMContentLoaded', function() {
         dismissBtn.addEventListener('click', dismissChecklist);
     }
     
+    // Setup navigation buttons
+    const navigationButtons = document.querySelectorAll('[data-action="navigate"]');
+    navigationButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const target = this.getAttribute('data-target');
+            if (target) {
+                window.location.href = target;
+            }
+        });
+    });
+    
     // Setup transfer role form
     const transferForm = document.querySelector('[data-action="transfer-role"]');
     if (transferForm) {

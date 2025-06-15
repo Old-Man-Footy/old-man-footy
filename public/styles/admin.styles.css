@@ -356,10 +356,11 @@
     color: #721c24;
 }
 
+.bg-info,
 .admin-alert.alert-info {
-    background-color: var(--info);;
-    border-left-color: var(--rugby-light-green);
-    color: var(--rugby-dark-green);
+    background-color: var(--info) !important;
+    border-left-color: var(--rugby-light-green) !important;
+    color: var(--rugby-dark-green) !important;
 }
 
 /* ==========================================================================
@@ -567,11 +568,11 @@
     color: #ea868f !important;
 }
 
-[data-theme="dark"] .admin-alert.alert-info {
+/* [data-theme="dark"] .admin-alert.alert-info {
     background-color: var(--info) !important;
     border-left-color: var(--rugby-light-green) !important;
     color: var(--rugby-dark-green) !important;
-}
+} */
 
 /* Admin Breadcrumbs Dark Mode */
 [data-theme="dark"] .admin-breadcrumb .breadcrumb-item {
