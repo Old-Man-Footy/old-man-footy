@@ -369,6 +369,122 @@ const transferDelegateRole = async (req, res) => {
     }
 };
 
+/**
+ * Update user's phone number
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updatePhoneNumber = async (req, res) => {
+    try {
+        const { phoneNumber } = req.body;
+        
+        // Sanitize phone number input
+        const sanitizedPhoneNumber = phoneNumber ? phoneNumber.trim() : null;
+        
+        // Update user's phone number
+        await req.user.update({
+            phoneNumber: sanitizedPhoneNumber
+        });
+
+        console.log(`✅ Phone number updated for user: ${req.user.email} (ID: ${req.user.id})`);
+        
+        req.flash('success_msg', 'Phone number updated successfully!');
+        res.redirect('/dashboard');
+
+    } catch (error) {
+        console.error('Error updating phone number:', error);
+        req.flash('error_msg', 'An error occurred while updating your phone number. Please try again.');
+        res.redirect('/dashboard');
+    }
+};
+
+/**
+ * Update user's name (first name and last name)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updateName = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please provide valid first and last names.');
+            return res.redirect('/dashboard');
+        }
+
+        const { firstName, lastName } = req.body;
+        
+        // Update user's name
+        await req.user.update({
+            firstName: firstName.trim(),
+            lastName: lastName.trim()
+        });
+
+        console.log(`✅ Name updated for user: ${req.user.email} (ID: ${req.user.id})`);
+        
+        req.flash('success_msg', 'Name updated successfully!');
+        res.redirect('/dashboard');
+
+    } catch (error) {
+        console.error('Error updating name:', error);
+        req.flash('error_msg', 'An error occurred while updating your name. Please try again.');
+        res.redirect('/dashboard');
+    }
+};
+
+/**
+ * Update user's email address with password verification
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updateEmail = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please provide a valid email address and current password.');
+            return res.redirect('/dashboard');
+        }
+
+        const { email, currentPassword } = req.body;
+        
+        // Verify current password for security
+        const isPasswordValid = await req.user.checkPassword(currentPassword);
+        if (!isPasswordValid) {
+            req.flash('error_msg', 'Current password is incorrect. Please try again.');
+            return res.redirect('/dashboard');
+        }
+
+        // Check if new email is already in use by another user
+        const existingUser = await User.findOne({ 
+            where: { 
+                email: email.toLowerCase(),
+                id: { [require('sequelize').Op.ne]: req.user.id }
+            } 
+        });
+        
+        if (existingUser) {
+            req.flash('error_msg', 'This email address is already in use by another account.');
+            return res.redirect('/dashboard');
+        }
+
+        // Update user's email
+        await req.user.update({
+            email: email.toLowerCase().trim()
+        });
+
+        console.log(`✅ Email updated for user: ${req.user.id} from ${req.user.email} to ${email.toLowerCase()}`);
+        
+        req.flash('success_msg', 'Email address updated successfully! Please use your new email to log in next time.');
+        res.redirect('/dashboard');
+
+    } catch (error) {
+        console.error('Error updating email:', error);
+        req.flash('error_msg', 'An error occurred while updating your email address. Please try again.');
+        res.redirect('/dashboard');
+    }
+};
+
 module.exports = {
     showLoginForm,
     loginUser,
@@ -378,5 +494,8 @@ module.exports = {
     acceptInvitation,
     logoutUser,
     sendInvitation,
-    transferDelegateRole
+    transferDelegateRole,
+    updatePhoneNumber,
+    updateName,
+    updateEmail
 };
