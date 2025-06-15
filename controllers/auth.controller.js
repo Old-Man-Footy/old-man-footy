@@ -44,30 +44,19 @@ const loginUser = (req, res, next) => {
  */
 const showRegisterForm = async (req, res) => {
     try {
-        // Fetch ALL clubs (both active and deactivated) for autocomplete with their data
-        const clubs = await Club.findAll({
-            attributes: ['clubName', 'state', 'location', 'isActive'],
-            order: [['clubName', 'ASC']]
-        });
-
         return res.render('auth/register', {
-            title: 'Register as Club Delegate',
-            clubs
+            title: 'Create Account'
         });
     } catch (error) {
-        console.error('Error fetching clubs for registration:', error);
-        // Only render fallback if no response has been sent yet
-        if (!res.headersSent) {
-            return res.render('auth/register', {
-                title: 'Register as Club Delegate',
-                clubs: []
-            });
-        }
+        console.error('Error loading registration form:', error);
+        return res.render('auth/register', {
+            title: 'Create Account'
+        });
     }
 };
 
 /**
- * Handle user registration
+ * Handle user registration - simplified to create user only
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -76,184 +65,39 @@ const registerUser = async (req, res) => {
         const errors = validationResult(req);
         
         if (!errors.isEmpty()) {
-            // Fetch clubs for autocomplete when re-rendering form with errors
-            const clubs = await Club.findAll({
-                attributes: ['clubName', 'state', 'location', 'isActive'],
-                order: [['clubName', 'ASC']]
-            });
-
             return res.render('auth/register', {
-                title: 'Register as Club Delegate',
+                title: 'Create Account',
                 errors: errors.array(),
-                formData: req.body,
-                clubs
+                formData: req.body
             });
         }
 
-        const { firstName, lastName, email, password, clubName, clubState, location, reactivateClub } = req.body;
+        const { firstName, lastName, email, password } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
         if (existingUser) {
-            // Fetch clubs for autocomplete when re-rendering form with errors
-            const clubs = await Club.findAll({
-                attributes: ['clubName', 'state', 'location', 'isActive'],
-                order: [['clubName', 'ASC']]
-            });
-
             return res.render('auth/register', {
-                title: 'Register as Club Delegate',
+                title: 'Create Account',
                 errors: [{ msg: 'User with this email already exists' }],
-                formData: req.body,
-                clubs
+                formData: req.body
             });
         }
 
-        // Check if club already exists (including deactivated clubs)
-        let club = await Club.findOne({ where: { clubName: clubName.trim() } });
-        let clubClaimed = false;
-        let clubReactivated = false;
-        let originalDelegate = null;
-        
-        if (club) {
-            console.log(`🏆 Found existing club: ${club.clubName} (ID: ${club.id}, Active: ${club.isActive})`);
-            
-            // Handle deactivated club reactivation
-            if (!club.isActive && reactivateClub === 'true') {
-                console.log(`🔄 Reactivating deactivated club: ${club.clubName}`);
-                
-                // Find the original primary delegate for notification
-                originalDelegate = await User.findOne({
-                    where: {
-                        clubId: club.id,
-                        isPrimaryDelegate: true
-                    },
-                    order: [['createdAt', 'ASC']] // Get the first primary delegate
-                });
-
-                // Use database transaction for safe reactivation
-                const { sequelize } = require('../config/database');
-                const transaction = await sequelize.transaction();
-
-                try {
-                    // Reactivate the club
-                    await club.update({
-                        isActive: true,
-                        state: clubState, // Update with new data
-                        location: location
-                    }, { transaction });
-
-                    clubReactivated = true;
-                    clubClaimed = true;
-
-                    await transaction.commit();
-                    console.log(`✅ Club ${club.clubName} successfully reactivated`);
-                } catch (reactivationError) {
-                    await transaction.rollback();
-                    throw reactivationError;
-                }
-            } else if (!club.isActive) {
-                // Deactivated club but user didn't confirm reactivation
-                const clubs = await Club.findAll({
-                    attributes: ['clubName', 'state', 'location', 'isActive'],
-                    order: [['clubName', 'ASC']]
-                });
-
-                return res.render('auth/register', {
-                    title: 'Register as Club Delegate',
-                    errors: [{ msg: 'This club is currently deactivated. Please confirm if you want to reactivate it.' }],
-                    formData: req.body,
-                    clubs,
-                    showReactivationConfirm: true,
-                    deactivatedClub: club
-                });
-            } else {
-                // Active club - check for existing delegates
-                const existingDelegates = await User.findAll({
-                    where: {
-                        clubId: club.id,
-                        isActive: true
-                    }
-                });
-
-                if (existingDelegates.length > 0) {
-                    const existingPrimaryDelegate = existingDelegates.find(user => user.isPrimaryDelegate);
-                    
-                    if (existingPrimaryDelegate) {
-                        console.log(`❌ Club ${club.clubName} already has primary delegate: ${existingPrimaryDelegate.email}`);
-                        
-                        const clubs = await Club.findAll({
-                            attributes: ['clubName', 'state', 'location', 'isActive'],
-                            order: [['clubName', 'ASC']]
-                        });
-
-                        return res.render('auth/register', {
-                            title: 'Register as Club Delegate',
-                            errors: [{ msg: 'This club already has a primary delegate. Please contact them for an invitation.' }],
-                            formData: req.body,
-                            clubs
-                        });
-                    }
-                    console.log(`⚠️ Club ${club.clubName} has delegates but no primary delegate - user will become primary`);
-                } else {
-                    console.log(`✅ Club ${club.clubName} exists but has no delegates - user will claim as primary delegate`);
-                    clubClaimed = true;
-                }
-            }
-        } else {
-            console.log(`🆕 Club ${clubName.trim()} does not exist - creating new club`);
-            
-            // Create new club
-            club = await Club.create({
-                clubName: clubName.trim(),
-                state: clubState,
-                location: location,
-                isActive: true
-            });
-            
-            console.log(`✅ New club created: ${club.clubName} (ID: ${club.id})`);
-        }
-
-        // Create user as primary delegate
+        // Create user without club association
         const newUser = await User.create({
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             email: email.toLowerCase(),
             passwordHash: password,
-            clubId: club.id,
-            isPrimaryDelegate: true,
+            clubId: null, // No club association initially
+            isPrimaryDelegate: false, // Will be set when they create/join a club
             isActive: true
         });
 
-        // Send fraud alert email to original delegate if club was reactivated
-        if (clubReactivated && originalDelegate) {
-            try {
-                await emailService.sendClubReactivationAlert(
-                    originalDelegate.email,
-                    originalDelegate.getFullName(),
-                    club.clubName,
-                    newUser.getFullName(),
-                    newUser.email
-                );
-                console.log(`📧 Fraud alert email sent to original delegate: ${originalDelegate.email}`);
-            } catch (emailError) {
-                console.error('Error sending fraud alert email:', emailError);
-                // Don't fail registration if email fails
-            }
-        }
-
-        // Set success message based on action taken
-        if (clubReactivated) {
-            console.log(`🎉 Club ${club.clubName} reactivated by ${newUser.email} as primary delegate`);
-            req.flash('success_msg', `Registration successful! You have reactivated ${club.clubName} and are now the primary delegate. The original delegate has been notified.`);
-        } else if (clubClaimed) {
-            console.log(`🎉 Club ${club.clubName} successfully claimed by ${newUser.email} as primary delegate`);
-            req.flash('success_msg', `Registration successful! You have claimed ${club.clubName} and are now the primary delegate.`);
-        } else {
-            console.log(`🎉 User ${newUser.email} registered as primary delegate for ${club.clubName}`);
-            req.flash('success_msg', 'Registration successful! You can now log in as the primary delegate for your club.');
-        }
+        console.log(`✅ New user registered: ${newUser.email} (ID: ${newUser.id})`);
         
+        req.flash('success_msg', 'Registration successful! You can now log in and create or join a club from your dashboard.');
         res.redirect('/auth/login');
 
     } catch (error) {

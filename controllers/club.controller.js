@@ -198,7 +198,7 @@ const showClubProfile = async (req, res) => {
 };
 
 /**
- * Show club profile management form (for delegates)
+ * Show club profile management form (for delegates) or club creation/joining options (for users without clubs)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -206,11 +206,44 @@ const showClubManagement = async (req, res) => {
     try {
         const user = req.user;
         
+        // If user doesn't have a club, show creation/joining options
         if (!user.clubId) {
-            req.flash('error_msg', 'You must be associated with a club to manage its profile.');
-            return res.redirect('/dashboard');
+            // Get available clubs that user could potentially join
+            const availableClubs = await Club.findAll({
+                where: {
+                    isActive: true,
+                    isPubliclyListed: true
+                },
+                include: [{
+                    model: User,
+                    as: 'delegates',
+                    where: { isActive: true },
+                    required: false,
+                    attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
+                }],
+                order: [['clubName', 'ASC']]
+            });
+
+            // Get clubs that were created on behalf of others and might match this user's email
+            const claimableClubs = await Club.findAll({
+                where: {
+                    createdByProxy: true,
+                    inviteEmail: user.email,
+                    isActive: true
+                }
+            });
+
+            return res.render('clubs/club-options', {
+                title: 'Join or Create a Club',
+                user,
+                availableClubs,
+                claimableClubs,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                additionalCSS: ['/styles/club.styles.css']
+            });
         }
 
+        // User has a club - show normal management interface
         const club = await Club.findByPk(user.clubId);
         
         if (!club) {
@@ -1182,10 +1215,87 @@ const postClaimOwnership = async (req, res) => {
     }
 };
 
+/**
+ * Create a new club (for users without clubs)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const createClub = async (req, res) => {
+    try {
+        const user = req.user;
+        
+        // Ensure user doesn't already have a club
+        if (user.clubId) {
+            req.flash('error_msg', 'You are already associated with a club. You can only be a member of one club at a time.');
+            return res.redirect('/clubs/manage');
+        }
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please correct the validation errors and try again.');
+            return res.redirect('/clubs/manage');
+        }
+
+        const { clubName, state, location, description } = req.body;
+
+        // Check if club name already exists
+        const existingClub = await Club.findOne({
+            where: { clubName: clubName.trim() }
+        });
+
+        if (existingClub) {
+            req.flash('error_msg', 'A club with this name already exists. Please choose a different name.');
+            return res.redirect('/clubs/manage');
+        }
+
+        // Use database transaction for safe club creation and user association
+        const { sequelize } = require('../models');
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Create the new club
+            const newClub = await Club.create({
+                clubName: clubName.trim(),
+                state,
+                location: location.trim(),
+                description: description?.trim(),
+                isActive: true,
+                isPubliclyListed: true,
+                createdByUserId: user.id
+            }, { transaction });
+
+            // Associate user with the new club as primary delegate
+            await user.update({
+                clubId: newClub.id,
+                isPrimaryDelegate: true
+            }, { transaction });
+
+            // Commit the transaction
+            await transaction.commit();
+
+            console.log(`✅ New club created: ${newClub.clubName} (ID: ${newClub.id}) by user ${user.email}`);
+            
+            req.flash('success_msg', `Congratulations! You have successfully created "${newClub.clubName}" and are now the primary delegate. You can start creating carnivals and managing your club.`);
+            res.redirect('/dashboard');
+
+        } catch (transactionError) {
+            // Rollback the transaction
+            await transaction.rollback();
+            throw transactionError;
+        }
+
+    } catch (error) {
+        console.error('Error creating club:', error);
+        req.flash('error_msg', 'An error occurred while creating the club. Please try again.');
+        res.redirect('/clubs/manage');
+    }
+};
+
 module.exports = {
     showClubListings,
     showClubProfile,
     showClubManagement,
+    createClub,
     updateClubProfile,
     getClubImages,
     deleteClubImage,

@@ -1,0 +1,342 @@
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="h3 mb-3">Join or Create a Club</h1>
+                <p class="text-muted">To create carnivals and participate in the platform, you need to be associated with a rugby league club.</p>
+            </div>
+
+            <!-- Claimable Clubs (if any) -->
+            <% if (claimableClubs && claimableClubs.length > 0) { %>
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-star-fill"></i> Club Waiting for You!
+                            </h5>
+                            <p class="mb-3">A club has been created specifically for you. Click below to claim ownership and become the primary delegate.</p>
+                            
+                            <% claimableClubs.forEach(club => { %>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <h6 class="card-title mb-1"><%= club.clubName %></h6>
+                                                <p class="text-muted mb-2">
+                                                    <i class="bi bi-geo-alt"></i> <%= club.location || 'Location not specified' %>, <%= club.state %>
+                                                </p>
+                                                <% if (club.description) { %>
+                                                    <p class="card-text small"><%= club.description %></p>
+                                                <% } %>
+                                            </div>
+                                            <div class="col-md-4 text-md-end">
+                                                <a href="/clubs/<%= club.id %>/claim" class="btn btn-success">
+                                                    <i class="bi bi-check-circle"></i> Claim This Club
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Main Options -->
+            <div class="row">
+                <!-- Create New Club -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-header bg-primary text-white text-center">
+                            <h4 class="mb-0">
+                                <i class="bi bi-plus-circle"></i> Create New Club
+                            </h4>
+                        </div>
+                        <div class="card-body text-center">
+                            <p class="card-text mb-4">
+                                Start a new masters rugby league club for your area. You'll become the primary delegate with full management privileges.
+                            </p>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-3">What you'll be able to do:</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Create and manage carnivals</li>
+                                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Invite other delegates</li>
+                                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Manage club profile and sponsors</li>
+                                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Control club visibility settings</li>
+                                </ul>
+                            </div>
+
+                            <!-- Quick Club Creation Form -->
+                            <form method="POST" action="/clubs/create" class="text-start">
+                                <div class="mb-3">
+                                    <label for="clubName" class="form-label">Club Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="clubName" name="clubName" required 
+                                           placeholder="e.g., Parramatta Masters Rugby League">
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="state" name="state" required>
+                                            <option value="">Select State</option>
+                                            <% states.forEach(state => { %>
+                                                <option value="<%= state %>"><%= state %></option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="location" name="location" required
+                                               placeholder="City or suburb">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Brief Description (Optional)</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" 
+                                              placeholder="Tell people about your club..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="bi bi-plus-circle"></i> Create My Club
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Join Existing Club -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-header bg-success text-white text-center">
+                            <h4 class="mb-0">
+                                <i class="bi bi-people"></i> Join Existing Club
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text mb-4 text-center">
+                                Browse and request to join an existing masters rugby league club in your area.
+                            </p>
+
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-3">How it works:</h6>
+                                <ol class="small">
+                                    <li class="mb-2">Browse available clubs below</li>
+                                    <li class="mb-2">Contact the primary delegate directly</li>
+                                    <li class="mb-2">They can send you an invitation to join</li>
+                                    <li class="mb-2">Accept the invitation to become a club delegate</li>
+                                </ol>
+                            </div>
+
+                            <!-- Club Search -->
+                            <div class="mb-3">
+                                <label for="clubSearch" class="form-label">Search Clubs</label>
+                                <input type="text" class="form-control" id="clubSearch" 
+                                       placeholder="Search by club name or location...">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="stateFilter" class="form-label">Filter by State</label>
+                                <select class="form-select" id="stateFilter">
+                                    <option value="">All States</option>
+                                    <% states.forEach(state => { %>
+                                        <option value="<%= state %>"><%= state %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+
+                            <!-- Available Clubs List -->
+                            <div class="border rounded p-3 mb-3" style="max-height: 300px; overflow-y: auto;" id="clubsList">
+                                <% if (availableClubs && availableClubs.length > 0) { %>
+                                    <% availableClubs.forEach(club => { %>
+                                        <div class="club-item mb-3 pb-3 border-bottom" data-club-name="<%= club.clubName.toLowerCase() %>" 
+                                             data-location="<%= (club.location || '').toLowerCase() %>" data-state="<%= club.state %>">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">
+                                                        <a href="/clubs/<%= club.id %>" class="text-decoration-none" target="_blank">
+                                                            <%= club.clubName %>
+                                                            <i class="bi bi-box-arrow-up-right small text-muted"></i>
+                                                        </a>
+                                                    </h6>
+                                                    <p class="text-muted small mb-2">
+                                                        <i class="bi bi-geo-alt"></i> <%= club.location || 'Location not specified' %>, <%= club.state %>
+                                                        <% if (club.delegates && club.delegates.length > 0) { %>
+                                                            <br><i class="bi bi-people"></i> <%= club.delegates.length %> delegate<%= club.delegates.length === 1 ? '' : 's' %>
+                                                        <% } %>
+                                                    </p>
+                                                    <% if (club.description && club.description.length > 0) { %>
+                                                        <p class="small mb-2">
+                                                            <%= club.description.length > 100 ? club.description.substring(0, 100) + '...' : club.description %>
+                                                        </p>
+                                                    <% } %>
+                                                </div>
+                                                <div class="text-end">
+                                                    <% 
+                                                    const primaryDelegate = club.delegates ? club.delegates.find(d => d.isPrimaryDelegate) : null;
+                                                    %>
+                                                    <% if (primaryDelegate) { %>
+                                                        <button class="btn btn-outline-success btn-sm contact-delegate-btn" 
+                                                                data-club-name="<%= club.clubName %>"
+                                                                data-delegate-name="<%= primaryDelegate.firstName %> <%= primaryDelegate.lastName %>">
+                                                            <i class="bi bi-envelope"></i> Contact
+                                                        </button>
+                                                    <% } else { %>
+                                                        <small class="text-muted">No primary delegate</small>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                <% } else { %>
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-info-circle"></i>
+                                        <p>No clubs are currently available for joining.</p>
+                                        <p class="small">Consider creating a new club instead!</p>
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <div class="text-center">
+                                <a href="/clubs" class="btn btn-outline-success">
+                                    <i class="bi bi-list"></i> View All Clubs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-question-circle"></i> Need Help?
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Creating a Club</h6>
+                                    <ul class="small">
+                                        <li>Choose a descriptive name for your club</li>
+                                        <li>You'll become the primary delegate automatically</li>
+                                        <li>You can invite other delegates later</li>
+                                        <li>Club information can be updated anytime</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Joining a Club</h6>
+                                    <ul class="small">
+                                        <li>Contact the primary delegate of the club you want to join</li>
+                                        <li>They will send you an invitation via email</li>
+                                        <li>Click the link in the invitation to complete joining</li>
+                                        <li>You'll then be able to help manage the club</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-center">
+                                <a href="/user-guide" class="btn btn-outline-info">
+                                    <i class="bi bi-book"></i> Read User Guide
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Delegate Modal -->
+<div class="modal fade" id="contactDelegateModal" tabindex="-1" aria-labelledby="contactDelegateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactDelegateModalLabel">
+                    <i class="bi bi-envelope"></i> Contact Club Delegate
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="contactDelegateContent">
+                    <p>To join <strong id="modalClubName"></strong>, you'll need to contact their primary delegate:</p>
+                    <p><strong id="modalDelegateName"></strong></p>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>How to proceed:</strong>
+                        <ol class="mb-0 mt-2">
+                            <li>Visit the club's profile page to find contact information</li>
+                            <li>Send them a message expressing your interest in joining</li>
+                            <li>They can send you an invitation to become a club delegate</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="modalClubProfileLink" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> View Club Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('clubSearch');
+    const stateFilter = document.getElementById('stateFilter');
+    const clubItems = document.querySelectorAll('.club-item');
+    
+    function filterClubs() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedState = stateFilter.value;
+        
+        clubItems.forEach(item => {
+            const clubName = item.dataset.clubName;
+            const location = item.dataset.location;
+            const state = item.dataset.state;
+            
+            const matchesSearch = !searchTerm || 
+                clubName.includes(searchTerm) || 
+                location.includes(searchTerm);
+            const matchesState = !selectedState || state === selectedState;
+            
+            if (matchesSearch && matchesState) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    searchInput.addEventListener('input', filterClubs);
+    stateFilter.addEventListener('change', filterClubs);
+    
+    // Contact delegate modal
+    const contactButtons = document.querySelectorAll('.contact-delegate-btn');
+    const contactModal = new bootstrap.Modal(document.getElementById('contactDelegateModal'));
+    
+    contactButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const clubName = this.dataset.clubName;
+            const delegateName = this.dataset.delegateName;
+            const clubId = this.closest('.club-item').querySelector('a').getAttribute('href').split('/').pop();
+            
+            document.getElementById('modalClubName').textContent = clubName;
+            document.getElementById('modalDelegateName').textContent = delegateName;
+            document.getElementById('modalClubProfileLink').setAttribute('href', `/clubs/${clubId}`);
+            
+            contactModal.show();
+        });
+    });
+});
+</script>

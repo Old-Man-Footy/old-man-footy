@@ -5,8 +5,8 @@
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <i class="bi bi-person-plus display-4 text-primary"></i>
-                        <h2 class="h4 mt-2">Register as Club Delegate</h2>
-                        <p class="text-muted">Create an account to manage your club's carnivals</p>
+                        <h2 class="h4 mt-2">Create Account</h2>
+                        <p class="text-muted">Register as a club delegate - you can create or join a club after logging in</p>
                     </div>
 
                     <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
@@ -41,96 +41,6 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="clubName" class="form-label">Club Name</label>
-                            <input type="text" class="form-control" id="clubName" name="clubName" 
-                                   value="<%= typeof formData !== 'undefined' ? formData.clubName : '' %>" 
-                                   list="clubList" required>
-                            <datalist id="clubList">
-                                <% if (clubs && clubs.length > 0) { %>
-                                    <% clubs.forEach(club => { %>
-                                        <option value="<%= club.clubName %>" data-state="<%= club.state || '' %>" data-location="<%= club.location || '' %>" data-active="<%= club.isActive %>">
-                                    <% }) %>
-                                <% } %>
-                            </datalist>
-                            <div class="form-text">Start typing to see existing clubs or enter a new club name.</div>
-                            <div class="invalid-feedback">Please provide your club name.</div>
-                        </div>
-
-                        <% if (typeof showReactivationConfirm !== 'undefined' && showReactivationConfirm && typeof deactivatedClub !== 'undefined') { %>
-                            <div class="alert alert-warning" id="reactivationAlert">
-                                <h5 class="alert-heading">
-                                    <i class="bi bi-exclamation-triangle"></i> Club Reactivation Required
-                                </h5>
-                                <p><strong><%= deactivatedClub.clubName %></strong> is currently deactivated. Would you like to reactivate it and become the primary delegate?</p>
-                                <hr>
-                                <div class="mb-3">
-                                    <p><strong>Current club details:</strong></p>
-                                    <ul class="mb-3">
-                                        <% if (deactivatedClub.state) { %><li><strong>State:</strong> <%= deactivatedClub.state %></li><% } %>
-                                        <% if (deactivatedClub.location) { %><li><strong>Location:</strong> <%= deactivatedClub.location %></li><% } %>
-                                        <% if (deactivatedClub.contactEmail) { %><li><strong>Contact Email:</strong> <%= deactivatedClub.contactEmail %></li><% } %>
-                                    </ul>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="reactivateClub" name="reactivateClub" value="true">
-                                    <label class="form-check-label" for="reactivateClub">
-                                        <strong>Yes, I want to reactivate this club and become the primary delegate</strong>
-                                    </label>
-                                </div>
-                                <div class="alert alert-info mb-0">
-                                    <small>
-                                        <i class="bi bi-info-circle"></i>
-                                        <strong>Note:</strong> The original delegate will be notified via email with a link to report if this reactivation is fraudulent.
-                                        You will gain full administrative control including the ability to create carnivals and invite other delegates.
-                                    </small>
-                                </div>
-                            </div>
-                        <% } %>
-
-                        <div id="deactivatedClubWarning" class="alert alert-warning" style="display: none;">
-                            <h6 class="alert-heading">
-                                <i class="bi bi-exclamation-triangle"></i> Deactivated Club Detected
-                            </h6>
-                            <p class="mb-2">This club is currently deactivated. You can reactivate it and become the primary delegate.</p>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="confirmReactivation" name="reactivateClub" value="true">
-                                <label class="form-check-label" for="confirmReactivation">
-                                    <strong>I want to reactivate this club</strong>
-                                </label>
-                            </div>
-                            <small class="text-muted d-block mt-2">
-                                <i class="bi bi-shield-check"></i>
-                                The original delegate will be notified for security purposes.
-                            </small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="clubState" class="form-label">Club State <span class="text-danger" id="stateRequired">*</span></label>
-                            <select class="form-select" id="clubState" name="clubState">
-                                <option value="">Select State</option>
-                                <option value="NSW" <%= typeof formData !== 'undefined' && formData.clubState === 'NSW' ? 'selected' : '' %>>NSW</option>
-                                <option value="QLD" <%= typeof formData !== 'undefined' && formData.clubState === 'QLD' ? 'selected' : '' %>>QLD</option>
-                                <option value="VIC" <%= typeof formData !== 'undefined' && formData.clubState === 'VIC' ? 'selected' : '' %>>VIC</option>
-                                <option value="WA" <%= typeof formData !== 'undefined' && formData.clubState === 'WA' ? 'selected' : '' %>>WA</option>
-                                <option value="SA" <%= typeof formData !== 'undefined' && formData.clubState === 'SA' ? 'selected' : '' %>>SA</option>
-                                <option value="TAS" <%= typeof formData !== 'undefined' && formData.clubState === 'TAS' ? 'selected' : '' %>>TAS</option>
-                                <option value="NT" <%= typeof formData !== 'undefined' && formData.clubState === 'NT' ? 'selected' : '' %>>NT</option>
-                                <option value="ACT" <%= typeof formData !== 'undefined' && formData.clubState === 'ACT' ? 'selected' : '' %>>ACT</option>
-                            </select>
-                            <div class="form-text" id="stateHelpText">Required for new clubs</div>
-                            <div class="invalid-feedback">Please select your club's state.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="location" class="form-label">Club Location <span class="text-danger" id="locationRequired">*</span></label>
-                            <input type="text" class="form-control" id="location" name="location" 
-                                    value="<%= typeof formData !== 'undefined' ? formData.location : '' %>" 
-                                    placeholder="City, Suburb, or General Location">
-                            <div class="form-text" id="locationHelpText">General location for your club. Required for new clubs.</div>
-                            <div class="invalid-feedback">Please provide your club's location.</div>
-                        </div>
-
-                        <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" 
                                    minlength="8" required>
@@ -146,13 +56,12 @@
 
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i>
-                            <strong>Note:</strong> The first person to register for a club becomes the primary delegate 
-                            with additional privileges to invite other delegates.
+                            <strong>Next Steps:</strong> After registration, you'll be able to create a new club or request to join an existing club from your dashboard.
                         </div>
 
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-person-check"></i> Register
+                                <i class="bi bi-person-check"></i> Create Account
                             </button>
                         </div>
                     </form>
@@ -171,7 +80,6 @@
     </div>
 </div>
 
-<script src="/js/registration-form.js"></script>
 <script>
 // Password confirmation validation
 document.getElementById('confirmPassword').addEventListener('input', function() {

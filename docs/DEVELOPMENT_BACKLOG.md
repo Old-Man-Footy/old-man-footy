@@ -157,6 +157,7 @@
 | As a tester, I want comprehensive unit tests for, and limited to `views/clubs/show.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/clubs/sponsors.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/clubs/add-sponsor.ejs`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `views/clubs/club-options.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/about.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/admin/dashboard.ejs`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `views/admin/edit-user.ejs`  | ⭕ Not Started |

@@ -14,6 +14,14 @@ router.get('/:id', clubController.showClubProfile);
 // Club management (authenticated delegates only)
 router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
 
+// Create new club (for users without clubs)
+router.post('/create', ensureAuthenticated, [
+    body('clubName').isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
+    body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state required'),
+    body('location').isLength({ min: 2, max: 100 }).withMessage('Location must be between 2 and 100 characters'),
+    body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
+], clubController.createClub);
+
 // Update club profile with structured upload support
 router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
     body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
