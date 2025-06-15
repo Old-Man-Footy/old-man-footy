@@ -50,7 +50,7 @@ const getIndex = async (req, res) => {
         // Get carousel images for the homepage
         const carouselImages = await carouselImageService.getCarouselImages(8);
 
-        res.render('index', { 
+        return res.render('index', { 
             title: 'Old Man Footy',
             upcomingCarnivals,
             carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
@@ -60,18 +60,20 @@ const getIndex = async (req, res) => {
         });
     } catch (error) {
         console.error('Error loading homepage:', error);
-        res.render('index', { 
-            title: 'Old Man Footy',
-            upcomingCarnivals: [],
-            carnivals: [], // Also provide as 'carnivals' for template compatibility
-            stats: {
-                totalCarnivals: 0,
-                upcomingCount: 0,
-                clubsCount: 0
-            },
-            carouselImages: [],
-            additionalCSS: []
-        });
+        if (!res.headersSent) {
+            return res.render('index', { 
+                title: 'Old Man Footy',
+                upcomingCarnivals: [],
+                carnivals: [], // Also provide as 'carnivals' for template compatibility
+                stats: {
+                    totalCarnivals: 0,
+                    upcomingCount: 0,
+                    clubsCount: 0
+                },
+                carouselImages: [],
+                additionalCSS: []
+            });
+        }
     }
 };
 
@@ -123,7 +125,7 @@ const getDashboard = async (req, res) => {
             });
         }
 
-        res.render('dashboard', {
+        return res.render('dashboard', {
             title: 'Dashboard',
             user: req.user,
             userCarnivals,
@@ -135,16 +137,18 @@ const getDashboard = async (req, res) => {
         });
     } catch (error) {
         console.error('Error loading dashboard:', error);
-        res.render('dashboard', {
-            title: 'Dashboard',
-            user: req.user,
-            userCarnivals: [],
-            upcomingCarnivals: [],
-            clubs: [], // Ensure clubs is always provided
-            carnivals: [], // Ensure carnivals is always provided
-            eligibleDelegates: [],
-            additionalCSS: []
-        });
+        if (!res.headersSent) {
+            return res.render('dashboard', {
+                title: 'Dashboard',
+                user: req.user,
+                userCarnivals: [],
+                upcomingCarnivals: [],
+                clubs: [], // Ensure clubs is always provided
+                carnivals: [], // Ensure carnivals is always provided
+                eligibleDelegates: [],
+                additionalCSS: []
+            });
+        }
     }
 };
 

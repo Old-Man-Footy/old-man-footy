@@ -51,17 +51,19 @@ const showRegisterForm = async (req, res) => {
             order: [['clubName', 'ASC']]
         });
 
-        res.render('auth/register', {
+        return res.render('auth/register', {
             title: 'Register as Club Delegate',
             clubs
         });
     } catch (error) {
         console.error('Error fetching clubs for registration:', error);
-        // Fallback without clubs data
-        res.render('auth/register', {
-            title: 'Register as Club Delegate',
-            clubs: []
-        });
+        // Only render fallback if no response has been sent yet
+        if (!res.headersSent) {
+            return res.render('auth/register', {
+                title: 'Register as Club Delegate',
+                clubs: []
+            });
+        }
     }
 };
 
