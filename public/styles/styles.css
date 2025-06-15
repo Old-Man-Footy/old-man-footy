@@ -918,16 +918,31 @@ button[type="submit"]:contains("Complete Registration"):focus {
 }
 
 /* Social Media Platform Colors */
-.btn-facebook, .btn-facebook:not(:disabled):not(.disabled) { background-color: #1877f2; border-color: #1877f2; color: white; }
+.label-facebook {
+    color: #1877f2;
+}
+.label-youtube {
+    color: #ff0000;
+}
+.label-instagram {
+    color: #cc0000;
+}
+.label-twitter-x {
+    color: #000000;
+}
+
+.btn-facebook:not(:disabled):not(.disabled) { background-color: #1877f2; border-color: #1877f2; color: white; }
 .btn-facebook:hover, .btn-facebook:focus, .btn-facebook:active { background-color: #166fe5; border-color: #166fe5; color: white; box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25); }
 .btn-youtube, .btn-youtube:not(:disabled):not(.disabled) { background-color: #ff0000; border-color: #ff0000; color: white; }
 .btn-youtube:hover, .btn-youtube:focus, .btn-youtube:active { background-color: #cc0000; border-color: #cc0000; color: white; box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25); }
-.btn-instagram, .btn-instagram:not(:disabled):not(.disabled) { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-color: #e6683c; color: white; }
+.btn-instagram:not(:disabled):not(.disabled) { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-color: #e6683c; color: white; }
 .btn-instagram:hover, .btn-instagram:focus, .btn-instagram:active { background: linear-gradient(45deg, #d6821f 0%, #cc5a28 25%, #c22336 50%, #b81f52 75%, #a8146e 100%); border-color: #cc5a28; color: white; box-shadow: 0 0 0 0.2rem rgba(230, 104, 60, 0.25); }
-.btn-twitter, .btn-twitter:not(:disabled):not(.disabled) { background-color: #000000; border-color: #000000; color: white; }
-.btn-twitter:hover, .btn-twitter:focus, .btn-twitter:active { background-color: #333333; border-color: #333333; color: white; box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25); }
+.btn-twitter-x, .btn-twitter-x:not(:disabled):not(.disabled) { background-color: #000000; border-color: #000000; color: white; }
+.btn-twitter-x:hover, .btn-twitter-x:focus, .btn-twitter-x:active { background-color: #333333; border-color: #333333; color: white; box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25); }
+.btn-twitter-x, .btn-twitter-x:not(:disabled):not(.disabled) { background-color: #000000; border-color: #000000; color: white; }
 
-.btn-facebook i, .btn-youtube i, .btn-instagram i, .btn-twitter i {
+
+.btn-facebook i, .btn-youtube i, .btn-instagram i, .btn-twitter-x i {
     color: white;
 }
 
@@ -1287,4 +1302,3 @@ button[type="submit"]:contains("Complete Registration"):focus {
     justify-content: center !important;
     margin-right: 0.75rem !important;
 }
-ile-upload-area

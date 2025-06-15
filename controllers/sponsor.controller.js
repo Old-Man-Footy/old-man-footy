@@ -480,6 +480,123 @@ const toggleSponsorStatus = async (req, res) => {
     }
 };
 
+/**
+ * Check for duplicate sponsors by name (API endpoint)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const checkDuplicateSponsor = async (req, res) => {
+    try {
+        const { sponsorName } = req.body;
+        
+        if (!sponsorName || sponsorName.trim().length < 3) {
+            return res.json({
+                isDuplicate: false,
+                existingSponsor: null
+            });
+        }
+
+        const trimmedName = sponsorName.trim();
+        
+        // Look for exact matches or very similar names
+        const existingSponsor = await Sponsor.findOne({
+            where: {
+                isActive: true,
+                [Op.or]: [
+                    { sponsorName: { [Op.like]: trimmedName } }, // Exact match (case insensitive)
+                    { sponsorName: { [Op.like]: `%${trimmedName}%` } } // Contains match
+                ]
+            },
+            order: [
+                // Prioritize exact matches
+                [Sponsor.sequelize.fn('LENGTH', Sponsor.sequelize.col('sponsorName')), 'ASC']
+            ]
+        });
+
+        if (existingSponsor) {
+            // Check if it's a close enough match to suggest linking
+            const similarity = calculateNameSimilarity(trimmedName.toLowerCase(), existingSponsor.sponsorName.toLowerCase());
+            
+            if (similarity > 0.7) { // 70% similarity threshold
+                return res.json({
+                    isDuplicate: true,
+                    existingSponsor: {
+                        id: existingSponsor.id,
+                        sponsorName: existingSponsor.sponsorName,
+                        businessType: existingSponsor.businessType,
+                        location: existingSponsor.location,
+                        state: existingSponsor.state,
+                        description: existingSponsor.description,
+                        logoUrl: existingSponsor.logoUrl
+                    }
+                });
+            }
+        }
+
+        res.json({
+            isDuplicate: false,
+            existingSponsor: null
+        });
+    } catch (error) {
+        console.error('Error checking for duplicate sponsors:', error);
+        res.status(500).json({
+            isDuplicate: false,
+            existingSponsor: null,
+            error: 'Server error'
+        });
+    }
+};
+
+/**
+ * Calculate similarity between two strings using Levenshtein distance
+ * @param {string} str1 - First string
+ * @param {string} str2 - Second string
+ * @returns {number} Similarity ratio between 0 and 1
+ */
+function calculateNameSimilarity(str1, str2) {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+}
+
+/**
+ * Calculate Levenshtein distance between two strings
+ * @param {string} str1 - First string
+ * @param {string} str2 - Second string
+ * @returns {number} Edit distance
+ */
+function levenshteinDistance(str1, str2) {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+        matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+        for (let j = 1; j <= str1.length; j++) {
+            if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    matrix[i][j - 1] + 1,     // insertion
+                    matrix[i - 1][j] + 1      // deletion
+                );
+            }
+        }
+    }
+    
+    return matrix[str2.length][str1.length];
+}
+
 module.exports = {
     showSponsorListings,
     showSponsorProfile,
@@ -488,5 +605,6 @@ module.exports = {
     showEditSponsor,
     updateSponsor,
     deleteSponsor,
-    toggleSponsorStatus
+    toggleSponsorStatus,
+    checkDuplicateSponsor
 };
