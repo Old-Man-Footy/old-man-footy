@@ -163,16 +163,12 @@ const registerUser = async (req, res) => {
             console.log(`✅ New club created: ${club.clubName} (ID: ${club.id})`);
         }
 
-        // Hash password
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Create user as primary delegate
+        // Create user as primary delegate (password will be hashed by User model hook)
         const newUser = await User.create({
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             email: email.toLowerCase(),
-            passwordHash: hashedPassword,
+            passwordHash: password, // Pass plain password - User model will hash it
             clubId: club.id,
             isPrimaryDelegate: true,
             isActive: true
@@ -283,10 +279,11 @@ const acceptInvitation = async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
+        // Update user with plain password (User model will hash it)
         await invitedUser.update({
             firstName: req.body.firstName.trim(),
             lastName: req.body.lastName.trim(),
-            passwordHash: hashedPassword,
+            passwordHash: req.body.password, // Pass plain password - User model will hash it
             isActive: true,
             invitationToken: null,
             tokenExpires: null
