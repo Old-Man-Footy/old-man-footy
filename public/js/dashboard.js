@@ -127,5 +127,153 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Initialize Leave Club modal
+    initializeLeaveClubModal();
+    
     console.log('Dashboard functionality initialized successfully');
 });
+
+/**
+ * Initialize Leave Club modal functionality
+ */
+function initializeLeaveClubModal() {
+    const leaveClubModal = document.getElementById('leaveClubModal');
+    
+    if (!leaveClubModal) {
+        return; // Modal doesn't exist on this page
+    }
+    
+    const radioButtons = leaveClubModal.querySelectorAll('input[name="leaveAction"]');
+    const delegateSelection = document.getElementById('delegateSelection');
+    const delegateSelect = document.getElementById('newPrimaryDelegateId');
+    const submitButton = leaveClubModal.querySelector('button[type="submit"]');
+    
+    // Handle radio button changes
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (delegateSelection) {
+                if (this.value === 'transfer') {
+                    // Show delegate selection dropdown
+                    delegateSelection.style.display = 'block';
+                    delegateSelect.required = true;
+                } else {
+                    // Hide delegate selection dropdown
+                    delegateSelection.style.display = 'none';
+                    delegateSelect.required = false;
+                    delegateSelect.value = ''; // Clear selection
+                }
+            }
+            
+            // Update submit button text based on selection
+            updateSubmitButtonText(this.value);
+        });
+    });
+    
+    // Handle form submission validation
+    const leaveClubForm = leaveClubModal.querySelector('form');
+    if (leaveClubForm) {
+        leaveClubForm.addEventListener('submit', function(e) {
+            const selectedAction = leaveClubModal.querySelector('input[name="leaveAction"]:checked');
+            
+            if (selectedAction && selectedAction.value === 'transfer') {
+                if (!delegateSelect.value) {
+                    e.preventDefault();
+                    alert('Please select a delegate to transfer the primary role to.');
+                    delegateSelect.focus();
+                    return false;
+                }
+            }
+            
+            // Final confirmation for destructive actions
+            const confirmCheckbox = leaveClubModal.querySelector('#confirmLeave');
+            if (!confirmCheckbox.checked) {
+                e.preventDefault();
+                alert('Please confirm that you want to leave the club.');
+                confirmCheckbox.focus();
+                return false;
+            }
+            
+            return true;
+        });
+    }
+    
+    // Initialize on modal show
+    leaveClubModal.addEventListener('show.bs.modal', function() {
+        // Reset form state
+        const transferRadio = leaveClubModal.querySelector('#transferToDelegate');
+        if (transferRadio && transferRadio.checked && delegateSelection) {
+            delegateSelection.style.display = 'block';
+            delegateSelect.required = true;
+        }
+        
+        // Update submit button text
+        const checkedRadio = leaveClubModal.querySelector('input[name="leaveAction"]:checked');
+        if (checkedRadio) {
+            updateSubmitButtonText(checkedRadio.value);
+        }
+    });
+    
+    /**
+     * Update submit button text based on selected action
+     * @param {string} actionValue - The selected action value
+     */
+    function updateSubmitButtonText(actionValue) {
+        if (!submitButton) return;
+        
+        const icon = '<i class="bi bi-box-arrow-right"></i>';
+        
+        switch(actionValue) {
+            case 'transfer':
+                submitButton.innerHTML = `${icon} Leave & Transfer Role`;
+                submitButton.className = 'btn btn-warning';
+                break;
+            case 'deactivate':
+                submitButton.innerHTML = `${icon} Leave & Deactivate Club`;
+                submitButton.className = 'btn btn-danger';
+                break;
+            case 'available':
+            default:
+                submitButton.innerHTML = `${icon} Leave Club`;
+                submitButton.className = 'btn btn-danger';
+                break;
+        }
+    }
+}
+
+/**
+ * Global utility functions for the dashboard
+ */
+window.dashboard = {
+    /**
+     * Confirm delete action with custom message
+     * @param {string} message - Confirmation message
+     * @returns {boolean} User's confirmation choice
+     */
+    confirmDelete: function(message) {
+        return confirm(message || 'Are you sure you want to delete this item? This action cannot be undone.');
+    },
+    
+    /**
+     * Show temporary success message
+     * @param {string} message - Success message to display
+     */
+    showSuccessMessage: function(message) {
+        // Create a temporary alert element
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alert);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+};

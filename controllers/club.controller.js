@@ -1232,11 +1232,27 @@ const createClub = async (req, res) => {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            req.flash('error_msg', 'Please correct the validation errors and try again.');
+            // Log the specific validation errors for debugging
+            console.error('Club creation validation errors:', errors.array());
+            
+            // Create detailed error message showing specific field errors
+            const errorMessages = errors.array().map(error => 
+                `${error.param}: ${error.msg}`
+            ).join('; ');
+            
+            req.flash('error_msg', `Validation errors: ${errorMessages}`);
             return res.redirect('/clubs/manage');
         }
 
         const { clubName, state, location, description } = req.body;
+
+        // Debug log the received data
+        console.log('Club creation data received:', {
+            clubName: clubName?.trim(),
+            state,
+            location: location?.trim(),
+            description: description?.trim()
+        });
 
         // Check if club name already exists
         const existingClub = await Club.findOne({
