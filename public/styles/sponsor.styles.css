@@ -448,3 +448,123 @@ margin-bottom: 0.25rem;
         break-inside: avoid;
     }
 }
+
+/* ================================
+   DARK MODE STYLES
+   ================================ */
+
+/* Sponsor information cards */
+[data-theme="dark"] .sponsor-info-card {
+    background-color: var(--theme-card-bg) !important;
+    border-color: var(--theme-border-color) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-info-card h3,
+[data-theme="dark"] .sponsor-info-card h4 {
+    color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .sponsor-info-card h6 {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-info-card p {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-info-card .text-muted {
+    color: var(--theme-text-muted) !important;
+}
+
+[data-theme="dark"] .sponsor-info-card .text-primary {
+    color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .sponsor-info-card .text-success {
+    color: var(--rugby-gold) !important;
+}
+
+/* Sponsor club cards */
+[data-theme="dark"] .sponsor-club-card-hover {
+    background-color: var(--theme-card-bg) !important;
+    border-color: var(--theme-border-color) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-club-card-hover .card-body {
+    background-color: var(--theme-card-bg) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-club-card-hover .card-title {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-club-card-hover .text-primary {
+    color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .sponsor-club-card-hover .text-muted {
+    color: var(--theme-text-muted) !important;
+}
+
+[data-theme="dark"] .sponsor-club-card-hover:hover {
+    border-color: var(--rugby-green) !important;
+    background-color: var(--theme-card-bg) !important;
+}
+
+/* Sponsor grid cards */
+[data-theme="dark"] .sponsor-card {
+    background-color: var(--theme-card-bg) !important;
+    border-color: var(--theme-border-color) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-info {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-name {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .sponsor-description {
+    color: var(--theme-text-secondary) !important;
+}
+
+/* Sponsor info content links */
+[data-theme="dark"] .sponsor-info-content a {
+    color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .sponsor-info-content a:hover {
+    color: var(--rugby-light-green) !important;
+}
+
+/* Sponsor tier badges dark mode support */
+[data-theme="dark"] .sponsor-tier-platinum { 
+    background: #b8b8b8 !important; 
+    color: #1a1a1a !important; 
+}
+
+[data-theme="dark"] .sponsor-tier-gold { 
+    background: #d4af37 !important; 
+    color: #1a1a1a !important; 
+}
+
+[data-theme="dark"] .sponsor-tier-silver { 
+    background: #a0a0a0 !important; 
+    color: #1a1a1a !important; 
+}
+
+[data-theme="dark"] .sponsor-tier-bronze { 
+    background: #cd7f32 !important; 
+    color: white !important; 
+}
+
+[data-theme="dark"] .sponsor-tier-community { 
+    background: var(--rugby-green) !important; 
+    color: white !important; 
+}
