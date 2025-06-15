@@ -4,7 +4,7 @@
             <!-- Header -->
             <div class="text-center mb-5">
                 <h1 class="h3 mb-3">Join or Create a Club</h1>
-                <p class="text-muted">To create carnivals and participate in the platform, you need to be associated with a rugby league club.</p>
+                <p class="text-muted">To create carnivals and participate in the platform, you need to be associated with a masters rugby league club.</p>
             </div>
 
             <!-- Claimable Clubs (if any) -->
@@ -70,11 +70,12 @@
                             </div>
 
                             <!-- Quick Club Creation Form with Autocomplete -->
-                            <form method="POST" action="/clubs/create" class="text-start" id="clubCreationForm">
+                            <form method="POST" action="/clubs/create" class="text-start" id="clubCreationForm" novalidate>
                                 <div class="mb-3">
                                     <label for="clubName" class="form-label">Club Name <span class="text-danger">*</span></label>
                                     <div class="position-relative">
-                                        <input type="text" class="form-control" id="clubName" name="clubName" required 
+                                        <input type="text" class="form-control" id="clubName" name="clubName" 
+                                               data-required="true"
                                                placeholder="Start typing club name..." 
                                                autocomplete="off">
                                         <div id="clubSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
@@ -98,7 +99,7 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="state" class="form-label">State <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="state" name="state" required>
+                                        <select class="form-select" id="state" name="state" data-required="true">
                                             <option value="">Select State</option>
                                             <% states.forEach(state => { %>
                                                 <option value="<%= state %>"><%= state %></option>
@@ -107,7 +108,8 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="location" name="location" required
+                                        <input type="text" class="form-control" id="location" name="location" 
+                                               data-required="true"
                                                placeholder="City or suburb">
                                     </div>
                                 </div>

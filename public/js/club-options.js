@@ -10,7 +10,192 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeClubSearch();
     initializeContactDelegateModal();
     initializeBasicAutocomplete();
+    initializeFormValidation();
 });
+
+/**
+ * Initialize form validation to only trigger on actual form submission
+ */
+function initializeFormValidation() {
+    const clubCreationForm = document.getElementById('clubCreationForm');
+    if (!clubCreationForm) return;
+
+    // Ensure novalidate stays on form to prevent browser validation
+    clubCreationForm.setAttribute('novalidate', 'novalidate');
+    
+    // Prevent any premature form submission
+    const formInputs = clubCreationForm.querySelectorAll('input, select, textarea');
+    formInputs.forEach(input => {
+        // Remove required attributes temporarily to prevent browser validation on change
+        if (input.hasAttribute('required')) {
+            input.setAttribute('data-required', 'true');
+            input.removeAttribute('required');
+        }
+        
+        // Clear validation errors when user interacts with form
+        input.addEventListener('input', clearValidationErrors);
+        input.addEventListener('focus', clearValidationErrors);
+        input.addEventListener('change', clearValidationErrors);
+    });
+    
+    // Only validate when form is actually submitted (button clicked)
+    clubCreationForm.addEventListener('submit', function(event) {
+        // Prevent default form submission first
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Clear any existing errors first
+        clearValidationErrors();
+        
+        const clubNameInput = document.getElementById('clubName');
+        const stateSelect = document.getElementById('state');
+        const locationInput = document.getElementById('location');
+        
+        let isValid = true;
+        const errors = [];
+
+        // Validate club name
+        if (!clubNameInput || !clubNameInput.value.trim() || clubNameInput.value.trim().length < 2) {
+            errors.push('Club name must be at least 2 characters long');
+            if (clubNameInput) {
+                clubNameInput.classList.add('is-invalid');
+                showFieldError(clubNameInput, 'Club name must be at least 2 characters long');
+            }
+            isValid = false;
+        }
+
+        // Validate state
+        if (!stateSelect || !stateSelect.value) {
+            errors.push('Please select a state');
+            if (stateSelect) {
+                stateSelect.classList.add('is-invalid');
+                showFieldError(stateSelect, 'Please select a state');
+            }
+            isValid = false;
+        }
+
+        // Validate location
+        if (!locationInput || !locationInput.value.trim() || locationInput.value.trim().length < 2) {
+            errors.push('Location must be at least 2 characters long');
+            if (locationInput) {
+                locationInput.classList.add('is-invalid');
+                showFieldError(locationInput, 'Location must be at least 2 characters long');
+            }
+            isValid = false;
+        }
+
+        // If validation fails, show errors and don't submit
+        if (!isValid) {
+            // Show consolidated error message at top of form
+            showFormErrors(errors);
+            
+            // Focus on first invalid field
+            const firstInvalid = clubCreationForm.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            return false;
+        }
+
+        // If validation passes, show loading state and submit the form
+        const submitButton = clubCreationForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Creating Club...';
+            submitButton.disabled = true;
+        }
+        
+        // Re-add required attributes for server-side validation
+        formInputs.forEach(input => {
+            if (input.getAttribute('data-required') === 'true') {
+                input.setAttribute('required', 'required');
+            }
+        });
+        
+        // Manually submit the form
+        clubCreationForm.submit();
+    });
+    
+    /**
+     * Clear all validation errors from the form
+     */
+    function clearValidationErrors() {
+        // Remove server-side error messages that contain "undefined"
+        const errorAlerts = document.querySelectorAll('.alert-danger');
+        errorAlerts.forEach(alert => {
+            if (alert.textContent.includes('undefined') || 
+                alert.textContent.includes('validation') ||
+                alert.textContent.includes('Validation errors') ||
+                alert.textContent.includes('Please check your form input')) {
+                alert.remove();
+            }
+        });
+        
+        // Remove client-side validation styling and messages
+        const invalidInputs = clubCreationForm.querySelectorAll('.is-invalid');
+        invalidInputs.forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        
+        // Remove individual field error messages
+        const fieldErrors = clubCreationForm.querySelectorAll('.invalid-feedback');
+        fieldErrors.forEach(error => error.remove());
+        
+        // Remove consolidated error message
+        const errorContainer = document.getElementById('formErrors');
+        if (errorContainer) {
+            errorContainer.remove();
+        }
+    }
+    
+    /**
+     * Show error message for a specific field
+     */
+    function showFieldError(field, message) {
+        // Remove any existing error message for this field
+        const existingError = field.parentNode.querySelector('.invalid-feedback');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Create and show new error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.textContent = message;
+        field.parentNode.appendChild(errorDiv);
+    }
+    
+    /**
+     * Show consolidated error messages at top of form
+     */
+    function showFormErrors(errors) {
+        // Remove any existing error container
+        const existingContainer = document.getElementById('formErrors');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
+        
+        // Create new error container
+        const errorContainer = document.createElement('div');
+        errorContainer.id = 'formErrors';
+        errorContainer.className = 'alert alert-danger mt-3';
+        errorContainer.innerHTML = `
+            <div class="d-flex align-items-start">
+                <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                <div>
+                    <strong>Please correct the following errors:</strong>
+                    <ul class="mb-0 mt-2">
+                        ${errors.map(error => `<li>${error}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        // Insert at the top of the form
+        clubCreationForm.insertBefore(errorContainer, clubCreationForm.firstChild);
+    }
+}
 
 /**
  * Initialize club search and filtering functionality
@@ -120,8 +305,22 @@ function initializeBasicAutocomplete() {
     const availableClubsData = getAvailableClubsFromDOM();
     let selectedClubId = null;
 
+    // Only trigger autocomplete search after user has typed at least 3 characters
+    // and add debouncing to prevent excessive API calls
+    let searchTimeout;
+    
     clubNameInput.addEventListener('input', function() {
+        // Clear any existing validation errors when user starts typing
+        clubNameInput.classList.remove('is-invalid');
+        const errorContainer = document.getElementById('formErrors');
+        if (errorContainer) {
+            errorContainer.remove();
+        }
+        
         const query = this.value.toLowerCase().trim();
+        
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
         
         if (query.length < 3) {
             hideSuggestions();
@@ -129,13 +328,16 @@ function initializeBasicAutocomplete() {
             return;
         }
         
-        // Filter clubs that match the query
-        const filteredClubs = availableClubsData.filter(club => 
-            club.clubName.toLowerCase().includes(query) ||
-            (club.location && club.location.toLowerCase().includes(query))
-        );
-        
-        displayBasicSuggestions(filteredClubs, query);
+        // Debounce the search to avoid excessive filtering
+        searchTimeout = setTimeout(() => {
+            // Filter clubs that match the query
+            const filteredClubs = availableClubsData.filter(club => 
+                club.clubName.toLowerCase().includes(query) ||
+                (club.location && club.location.toLowerCase().includes(query))
+            );
+            
+            displayBasicSuggestions(filteredClubs, query);
+        }, 300); // 300ms debounce
     });
 
     /**

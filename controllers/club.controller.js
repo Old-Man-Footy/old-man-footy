@@ -1230,21 +1230,59 @@ const createClub = async (req, res) => {
             return res.redirect('/clubs/manage');
         }
 
+        // Check if this is actually a form submission (not just a page load)
+        if (req.method !== 'POST') {
+            req.flash('error_msg', 'Invalid request method.');
+            return res.redirect('/clubs/manage');
+        }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             // Log the specific validation errors for debugging
             console.error('Club creation validation errors:', errors.array());
             
-            // Create detailed error message showing specific field errors
-            const errorMessages = errors.array().map(error => 
-                `${error.param}: ${error.msg}`
-            ).join('; ');
+            // Create user-friendly error messages with proper field names
+            const fieldNameMap = {
+                'clubName': 'Club name',
+                'state': 'State',
+                'location': 'Location',
+                'description': 'Description'
+            };
             
-            req.flash('error_msg', `Validation errors: ${errorMessages}`);
+            // Filter out any errors with undefined params and create meaningful messages
+            const validErrors = errors.array().filter(error => error.param && error.msg);
+            
+            if (validErrors.length === 0) {
+                req.flash('error_msg', 'Please check your form input and try again.');
+                return res.redirect('/clubs/manage');
+            }
+            
+            const errorMessages = validErrors.map(error => {
+                const fieldName = fieldNameMap[error.param] || error.param || 'Form field';
+                return `${fieldName}: ${error.msg}`;
+            }).join('; ');
+            
+            req.flash('error_msg', `Please correct the following errors: ${errorMessages}`);
             return res.redirect('/clubs/manage');
         }
 
+        // Validate required fields are present and not empty
         const { clubName, state, location, description } = req.body;
+
+        if (!clubName || !clubName.trim()) {
+            req.flash('error_msg', 'Club name is required.');
+            return res.redirect('/clubs/manage');
+        }
+
+        if (!state) {
+            req.flash('error_msg', 'State is required.');
+            return res.redirect('/clubs/manage');
+        }
+
+        if (!location || !location.trim()) {
+            req.flash('error_msg', 'Location is required.');
+            return res.redirect('/clubs/manage');
+        }
 
         // Debug log the received data
         console.log('Club creation data received:', {

@@ -12,11 +12,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const foundClubDetails = document.getElementById('foundClubDetails');
     const joinFoundClub = document.getElementById('joinFoundClub');
     const autocompleteHelp = document.getElementById('autocompleteHelp');
+    const createClubForm = document.getElementById('clubCreationForm');
     
     let searchTimeout;
     let selectedClub = null;
 
     if (!clubNameInput) return; // Exit if elements don't exist
+
+    /**
+     * Clear any existing validation errors when user starts typing
+     */
+    function clearValidationErrors() {
+        const errorAlerts = document.querySelectorAll('.alert-danger');
+        errorAlerts.forEach(alert => {
+            if (alert.textContent.includes('undefined') || alert.textContent.includes('validation')) {
+                alert.style.display = 'none';
+            }
+        });
+    }
 
     /**
      * Debounced search function to avoid excessive API calls
@@ -29,22 +42,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Show loading state
-        autocompleteHelp.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Searching clubs...';
+        if (autocompleteHelp) {
+            autocompleteHelp.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Searching clubs...';
+        }
 
-        // Perform API search
-        fetch(`/clubs/api/search?q=${encodeURIComponent(query)}`)
-            .then(response => response.json())
+        // Perform API search with proper error handling
+        fetch(`/clubs/api/search?q=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.success) {
+                if (data.success && data.clubs) {
                     displaySuggestions(data.clubs, query);
                 } else {
-                    console.error('Search failed:', data.message);
-                    autocompleteHelp.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> Search temporarily unavailable';
+                    console.error('Search failed:', data.message || 'Unknown error');
+                    if (autocompleteHelp) {
+                        autocompleteHelp.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> Search temporarily unavailable';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Search error:', error);
-                autocompleteHelp.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> Search temporarily unavailable';
+                if (autocompleteHelp) {
+                    autocompleteHelp.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> Search temporarily unavailable';
+                }
+                // Don't show validation errors from search failures
+                hideSuggestions();
             });
     }
 
@@ -158,26 +190,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Input event handler with debouncing
     clubNameInput.addEventListener('input', function() {
+        clearValidationErrors();
         const query = this.value.trim();
         
-        // Clear previous timeout
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-
-        hideJoinOption();
-
-        if (query.length < 2) {
-            autocompleteHelp.innerHTML = '<i class="bi bi-lightbulb"></i> Start typing to see if a club already exists with that name';
-            hideSuggestions();
-            return;
-        }
-
-        // Debounce search to avoid excessive API calls
-        searchTimeout = setTimeout(() => {
-            performSearch(query);
-        }, 300);
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => performSearch(query), 300);
     });
+
+    // Prevent form submission validation errors from autocomplete
+    clubNameInput.addEventListener('focus', clearValidationErrors);
 
     // Hide suggestions when clicking outside
     document.addEventListener('click', function(event) {
