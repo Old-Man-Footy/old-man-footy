@@ -882,24 +882,24 @@ button[type="submit"]:contains("Complete Registration"):focus {
 /* Ensure YouTube icon stays white */
 .btn-youtube i,
 .social-links .btn-youtube i,
-.social-links a.btn-youtube i {
+social-links a.btn-youtube i {
     color: white !important;
 }
 
 /* YouTube button specific styling - override general social-links hover */
 .social-links .btn-youtube,
-.social-links a.btn-youtube {
+social-links a.btn-youtube {
     background-color: #ff0000 !important;
     border-color: #ff0000 !important;
     color: white !important;
 }
 
 .social-links .btn-youtube:hover,
-.social-links a.btn-youtube:hover,
-.social-links .btn-youtube:focus,
-.social-links a.btn-youtube:focus,
-.social-links .btn-youtube:active,
-.social-links a.btn-youtube:active {
+social-links a.btn-youtube:hover,
+social-links .btn-youtube:focus,
+social-links a.btn-youtube:focus,
+social-links .btn-youtube:active,
+social-links a.btn-youtube:active {
     background-color: #cc0000 !important;
     border-color: #cc0000 !important;
     color: white !important;
@@ -941,9 +941,9 @@ button[type="submit"]:contains("Complete Registration"):focus {
 }
 
 .alert-info {
-    background-color: #e3f2fd;
-    color: #0c5460;
-    border-left: 4px solid #17a2b8;
+    background-color: #e8f5e8;
+    color: #2e7d32;
+    border-left: 4px solid var(--rugby-green);
 }
 
 .alert-warning {
@@ -956,6 +956,31 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background-color: #f8d7da;
     color: #721c24;
     border-left: 4px solid #dc3545;
+}
+
+/* Dark mode alert styling */
+[data-theme="dark"] .alert-success {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #81c784;
+    border-left-color: #4caf50;
+}
+
+[data-theme="dark"] .alert-info {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #a5d6a7;
+    border-left-color: var(--rugby-green);
+}
+
+[data-theme="dark"] .alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-left-color: var(--rugby-gold);
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #ef5350;
+    border-left-color: #f44336;
 }
 
 /* Search and Filter Section */
