@@ -7,6 +7,18 @@
                 <p class="text-muted">To create carnivals and participate in the platform, you need to be associated with a masters rugby league club.</p>
             </div>
 
+            <!-- Display Validation Errors -->
+            <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+                <div class="alert alert-danger" role="alert">
+                    <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Please correct the following errors:</h6>
+                    <ul class="mb-0">
+                        <% errors.forEach(error => { %>
+                            <li><%= error.msg %></li>
+                        <% }) %>
+                    </ul>
+                </div>
+            <% } %>
+
             <!-- Claimable Clubs (if any) -->
             <% if (claimableClubs && claimableClubs.length > 0) { %>
                 <div class="row mb-5">
@@ -74,8 +86,10 @@
                                 <div class="mb-3">
                                     <label for="clubName" class="form-label">Club Name <span class="text-danger">*</span></label>
                                     <div class="position-relative">
-                                        <input type="text" class="form-control" id="clubName" name="clubName" 
+                                        <input type="text" class="form-control <%= (typeof errors !== 'undefined' && errors && errors.some(e => e.msg.toLowerCase().includes('club name'))) ? 'is-invalid' : '' %>" 
+                                               id="clubName" name="clubName" 
                                                data-required="true"
+                                               value="<%= (typeof formData !== 'undefined' && formData && formData.clubName) ? formData.clubName : '' %>"
                                                placeholder="Start typing club name..." 
                                                autocomplete="off">
                                         <div id="clubSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
@@ -99,17 +113,20 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="state" class="form-label">State <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="state" name="state" data-required="true">
+                                        <select class="form-select <%= (typeof errors !== 'undefined' && errors && errors.some(e => e.msg.toLowerCase().includes('state'))) ? 'is-invalid' : '' %>" 
+                                                id="state" name="state" data-required="true">
                                             <option value="">Select State</option>
                                             <% states.forEach(state => { %>
-                                                <option value="<%= state %>"><%= state %></option>
+                                                <option value="<%= state %>" <%= (typeof formData !== 'undefined' && formData && formData.state === state) ? 'selected' : '' %>><%= state %></option>
                                             <% }) %>
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="location" name="location" 
+                                        <input type="text" class="form-control <%= (typeof errors !== 'undefined' && errors && errors.some(e => e.msg.toLowerCase().includes('location'))) ? 'is-invalid' : '' %>" 
+                                               id="location" name="location" 
                                                data-required="true"
+                                               value="<%= (typeof formData !== 'undefined' && formData && formData.location) ? formData.location : '' %>"
                                                placeholder="City or suburb">
                                     </div>
                                 </div>
@@ -117,7 +134,7 @@
                                 <div class="mb-3">
                                     <label for="description" class="form-label">Brief Description (Optional)</label>
                                     <textarea class="form-control" id="description" name="description" rows="3" 
-                                              placeholder="Tell people about your club..."></textarea>
+                                              placeholder="Tell people about your club..."><%= (typeof formData !== 'undefined' && formData && formData.description) ? formData.description : '' %></textarea>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary btn-lg w-100">

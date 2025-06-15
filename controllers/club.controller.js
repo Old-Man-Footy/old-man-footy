@@ -1241,47 +1241,114 @@ const createClub = async (req, res) => {
             // Log the specific validation errors for debugging
             console.error('Club creation validation errors:', errors.array());
             
-            // Create user-friendly error messages with proper field names
-            const fieldNameMap = {
-                'clubName': 'Club name',
-                'state': 'State',
-                'location': 'Location',
-                'description': 'Description'
-            };
-            
-            // Filter out any errors with undefined params and create meaningful messages
-            const validErrors = errors.array().filter(error => error.param && error.msg);
-            
-            if (validErrors.length === 0) {
-                req.flash('error_msg', 'Please check your form input and try again.');
-                return res.redirect('/clubs/manage');
-            }
-            
-            const errorMessages = validErrors.map(error => {
-                const fieldName = fieldNameMap[error.param] || error.param || 'Form field';
-                return `${fieldName}: ${error.msg}`;
-            }).join('; ');
-            
-            req.flash('error_msg', `Please correct the following errors: ${errorMessages}`);
-            return res.redirect('/clubs/manage');
+            // Get available clubs that user could potentially join
+            const availableClubs = await Club.findAll({
+                where: {
+                    isActive: true,
+                    isPubliclyListed: true
+                },
+                include: [{
+                    model: User,
+                    as: 'delegates',
+                    where: { isActive: true },
+                    required: false,
+                    attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
+                }],
+                order: [['clubName', 'ASC']]
+            });
+
+            // Get clubs that were created on behalf of others and might match this user's email
+            const claimableClubs = await Club.findAll({
+                where: {
+                    createdByProxy: true,
+                    inviteEmail: user.email,
+                    isActive: true
+                }
+            });
+
+            // Render the form with errors and preserved data instead of redirecting
+            return res.render('clubs/club-options', {
+                title: 'Join or Create a Club',
+                user,
+                availableClubs,
+                claimableClubs,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: errors.array(),
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
+            });
         }
 
         // Validate required fields are present and not empty
         const { clubName, state, location, description } = req.body;
 
         if (!clubName || !clubName.trim()) {
-            req.flash('error_msg', 'Club name is required.');
-            return res.redirect('/clubs/manage');
+            // Get clubs data for re-rendering
+            const availableClubs = await Club.findAll({
+                where: { isActive: true, isPubliclyListed: true },
+                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
+                order: [['clubName', 'ASC']]
+            });
+            const claimableClubs = await Club.findAll({
+                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
+            });
+
+            return res.render('clubs/club-options', {
+                title: 'Join or Create a Club',
+                user,
+                availableClubs,
+                claimableClubs,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: [{ msg: 'Club name is required.' }],
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
+            });
         }
 
         if (!state) {
-            req.flash('error_msg', 'State is required.');
-            return res.redirect('/clubs/manage');
+            // Get clubs data for re-rendering
+            const availableClubs = await Club.findAll({
+                where: { isActive: true, isPubliclyListed: true },
+                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
+                order: [['clubName', 'ASC']]
+            });
+            const claimableClubs = await Club.findAll({
+                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
+            });
+
+            return res.render('clubs/club-options', {
+                title: 'Join or Create a Club',
+                user,
+                availableClubs,
+                claimableClubs,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: [{ msg: 'State is required.' }],
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
+            });
         }
 
         if (!location || !location.trim()) {
-            req.flash('error_msg', 'Location is required.');
-            return res.redirect('/clubs/manage');
+            // Get clubs data for re-rendering
+            const availableClubs = await Club.findAll({
+                where: { isActive: true, isPubliclyListed: true },
+                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
+                order: [['clubName', 'ASC']]
+            });
+            const claimableClubs = await Club.findAll({
+                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
+            });
+
+            return res.render('clubs/club-options', {
+                title: 'Join or Create a Club',
+                user,
+                availableClubs,
+                claimableClubs,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: [{ msg: 'Location is required.' }],
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
+            });
         }
 
         // Debug log the received data
@@ -1298,8 +1365,26 @@ const createClub = async (req, res) => {
         });
 
         if (existingClub) {
-            req.flash('error_msg', 'A club with this name already exists. Please choose a different name.');
-            return res.redirect('/clubs/manage');
+            // Get clubs data for re-rendering
+            const availableClubs = await Club.findAll({
+                where: { isActive: true, isPubliclyListed: true },
+                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
+                order: [['clubName', 'ASC']]
+            });
+            const claimableClubs = await Club.findAll({
+                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
+            });
+
+            return res.render('clubs/club-options', {
+                title: 'Join or Create a Club',
+                user,
+                availableClubs,
+                claimableClubs,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: [{ msg: 'A club with this name already exists. Please choose a different name.' }],
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
+            });
         }
 
         // Use database transaction for safe club creation and user association
@@ -1343,8 +1428,33 @@ const createClub = async (req, res) => {
 
     } catch (error) {
         console.error('Error creating club:', error);
-        req.flash('error_msg', 'An error occurred while creating the club. Please try again.');
-        res.redirect('/clubs/manage');
+        
+        // Even in case of unexpected errors, try to preserve form data
+        try {
+            const availableClubs = await Club.findAll({
+                where: { isActive: true, isPubliclyListed: true },
+                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
+                order: [['clubName', 'ASC']]
+            });
+            const claimableClubs = await Club.findAll({
+                where: { createdByProxy: true, inviteEmail: req.user.email, isActive: true }
+            });
+
+            return res.render('clubs/club-options', {
+                title: 'Join or Create a Club',
+                user: req.user,
+                availableClubs,
+                claimableClubs,
+                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                errors: [{ msg: 'An error occurred while creating the club. Please try again.' }],
+                formData: req.body,
+                additionalCSS: ['/styles/club.styles.css']
+            });
+        } catch (renderError) {
+            // Fallback to redirect if rendering fails
+            req.flash('error_msg', 'An error occurred while creating the club. Please try again.');
+            res.redirect('/clubs/manage');
+        }
     }
 };
 
