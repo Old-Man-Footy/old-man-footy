@@ -16,7 +16,7 @@ router.post('/register', [
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('clubName').trim().notEmpty().withMessage('Club name is required'),
     body('clubState').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
-    body('clubAddress').trim().notEmpty().withMessage('Club address is required')
+    body('location').trim().notEmpty().withMessage('Club location is required')
 ], authController.registerUser);
 
 // Invitation routes

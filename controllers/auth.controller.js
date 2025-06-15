@@ -87,7 +87,7 @@ const registerUser = async (req, res) => {
             });
         }
 
-        const { firstName, lastName, email, password, clubName, clubState, clubAddress } = req.body;
+        const { firstName, lastName, email, password, clubName, clubState, location } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
@@ -156,7 +156,7 @@ const registerUser = async (req, res) => {
             club = await Club.create({
                 clubName: clubName.trim(),
                 state: clubState,
-                address: clubAddress,
+                location: location,
                 isActive: true
             });
             
