@@ -357,9 +357,9 @@
 }
 
 .admin-alert.alert-info {
-    background-color: #d1ecf1;
-    border-left-color: #17a2b8;
-    color: #0c5460;
+    background-color: var(--info);;
+    border-left-color: var(--rugby-light-green);
+    color: var(--rugby-dark-green);
 }
 
 /* ==========================================================================
@@ -568,9 +568,9 @@
 }
 
 [data-theme="dark"] .admin-alert.alert-info {
-    background-color: rgba(13, 202, 240, 0.15) !important;
-    border-left-color: var(--info) !important;
-    color: #6edff6 !important;
+    background-color: var(--info) !important;
+    border-left-color: var(--rugby-light-green) !important;
+    color: var(--rugby-dark-green) !important;
 }
 
 /* Admin Breadcrumbs Dark Mode */
