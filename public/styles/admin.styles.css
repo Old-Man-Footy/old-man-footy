@@ -523,23 +523,162 @@
  * Print-optimized styles for admin reports and data exports
  */
 @media print {
+    /* Hide navigation and interactive elements */
     .admin-sidebar,
     .admin-header,
     .admin-actions,
-    .admin-search-bar {
+    .btn,
+    .d-flex.gap-2,
+    .admin-search-bar,
+    [data-action],
+    .no-print {
         display: none !important;
     }
     
+    /* Hide specific navigation buttons on reports page */
+    .d-flex.justify-content-between.align-items-center .d-flex.gap-2 {
+        display: none !important;
+    }
+    
+    /* Format page for printing */
+    body {
+        background: white !important;
+        font-size: 12pt;
+        line-height: 1.4;
+        color: black !important;
+    }
+    
+    .container-fluid {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Format page title for print */
+    .admin-page-title {
+        color: black !important;
+        font-size: 18pt;
+        margin-bottom: 20pt;
+        text-align: center;
+        border-bottom: 2px solid black;
+        padding-bottom: 10pt;
+    }
+    
+    .admin-page-title i {
+        display: none !important;
+    }
+    
+    /* Format cards for print */
+    .card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+        margin-bottom: 15pt;
+        background: white !important;
+    }
+    
+    .card-header {
+        background: #f8f9fa !important;
+        color: black !important;
+        border-bottom: 1px solid #ccc !important;
+        font-weight: bold;
+        padding: 8pt 12pt !important;
+    }
+    
+    .card-body {
+        padding: 12pt !important;
+    }
+    
+    /* Format statistics for print */
+    .admin-stat-card {
+        break-inside: avoid;
+        margin-bottom: 10pt;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        background: white !important;
+    }
+    
+    .stat-number {
+        color: black !important;
+        font-size: 16pt !important;
+    }
+    
+    .stat-label {
+        color: #666 !important;
+        font-size: 10pt !important;
+    }
+    
+    /* Format tables for print */
+    .table {
+        font-size: 10pt;
+    }
+    
+    .table thead th {
+        background: #f8f9fa !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+        font-weight: bold;
+    }
+    
+    .table td {
+        border: 1px solid #ddd !important;
+        padding: 6pt !important;
+    }
+    
+    /* Format badges and icons for print */
+    .badge {
+        border: 1px solid #ccc !important;
+        background: #f8f9fa !important;
+        color: black !important;
+    }
+    
+    .bi {
+        display: none !important;
+    }
+    
+    /* Format alerts for print */
+    .alert {
+        border: 1px solid #ccc !important;
+        background: #f8f9fa !important;
+        color: black !important;
+    }
+    
+    /* Page breaks */
+    .row {
+        break-inside: avoid;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        break-after: avoid;
+        color: black !important;
+    }
+    
+    /* Print header with generation info */
+    .card:first-of-type {
+        border-top: 3px solid black;
+    }
+    
+    /* Format system health overview */
+    .list-unstyled li {
+        margin-bottom: 4pt !important;
+    }
+    
+    /* Remove hover effects and transitions */
+    * {
+        transition: none !important;
+        transform: none !important;
+    }
+    
     .admin-content {
-        padding: 0;
+        padding: 0 !important;
     }
     
     .admin-table {
-        box-shadow: none;
+        box-shadow: none !important;
     }
     
     .admin-card {
-        box-shadow: none;
+        box-shadow: none !important;
         break-inside: avoid;
         margin-bottom: 1rem;
     }

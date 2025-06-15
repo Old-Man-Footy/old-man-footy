@@ -765,15 +765,39 @@ const toggleClubVisibility = async (req, res) => {
  */
 const generateReport = async (req, res) => {
     try {
-        // Generate comprehensive system report
+        // Define time periods for activity analysis
+        const now = new Date();
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+        // Generate comprehensive system report with login activity tracking
         const report = {
-            generatedAt: new Date(),
+            generatedAt: now,
             users: {
                 total: await User.count(),
                 active: await User.count({ where: { isActive: true } }),
                 inactive: await User.count({ where: { isActive: false } }),
                 admins: await User.count({ where: { isAdmin: true } }),
-                primaryDelegates: await User.count({ where: { isPrimaryDelegate: true } })
+                primaryDelegates: await User.count({ where: { isPrimaryDelegate: true } }),
+                // Login activity statistics
+                loggedInLast30Days: await User.count({
+                    where: {
+                        isActive: true,
+                        lastLoginAt: { [Op.gte]: thirtyDaysAgo }
+                    }
+                }),
+                loggedInLast7Days: await User.count({
+                    where: {
+                        isActive: true,
+                        lastLoginAt: { [Op.gte]: sevenDaysAgo }
+                    }
+                }),
+                neverLoggedIn: await User.count({
+                    where: {
+                        isActive: true,
+                        lastLoginAt: null
+                    }
+                })
             },
             clubs: {
                 total: await Club.count(),

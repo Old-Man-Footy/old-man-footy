@@ -208,6 +208,10 @@ User.init({
     defaultValue: true,
     allowNull: false
   },
+  lastLoginAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false

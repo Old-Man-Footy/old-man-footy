@@ -31,6 +31,11 @@ passport.use(new LocalStrategy(
                 return done(null, false, { message: 'Incorrect password.' });
             }
 
+            // Update lastLoginAt timestamp for successful login
+            await user.update({ 
+                lastLoginAt: new Date() 
+            });
+
             return done(null, user);
         } catch (error) {
             return done(error);
