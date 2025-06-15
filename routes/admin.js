@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
+const { clubUpload, handleUploadError } = require('../middleware/upload');
 const adminController = require('../controllers/admin.controller');
 
 // Apply admin authentication to all routes
@@ -65,7 +66,7 @@ const clubUpdateValidation = [
         .withMessage('Please select a valid state')
 ];
 
-router.post('/clubs/:id/edit', clubUpdateValidation, adminController.updateClub);
+router.post('/clubs/:id/edit', clubUpload, handleUploadError, clubUpdateValidation, adminController.updateClub);
 router.post('/clubs/:id/toggle-status', adminController.toggleClubStatus);
 router.post('/clubs/:id/toggle-visibility', adminController.toggleClubVisibility);
 

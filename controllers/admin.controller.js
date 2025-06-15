@@ -488,8 +488,8 @@ const updateClub = async (req, res) => {
             return res.redirect('/admin/clubs');
         }
 
-        // Update club with all editable fields
-        await club.update({
+        // Prepare update data
+        const updateData = {
             clubName,
             state,
             location: location || null,
@@ -500,9 +500,25 @@ const updateClub = async (req, res) => {
             website: websiteUrl || null,
             isActive: !!isActive,
             isPubliclyListed: !!isPubliclyListed
-        });
+        };
 
-        req.flash('success_msg', `Club ${clubName} has been updated successfully`);
+        // Handle logo upload if provided
+        if (req.structuredUploads && req.structuredUploads.length > 0) {
+            const logoUpload = req.structuredUploads.find(upload => upload.fieldname === 'logo');
+            if (logoUpload) {
+                updateData.logoUrl = logoUpload.path;
+                console.log(`📸 Admin updated club ${club.id} logo: ${logoUpload.path}`);
+            }
+        }
+
+        // Update club with all editable fields
+        await club.update(updateData);
+
+        const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
+            ? `Club ${clubName} has been updated successfully, including new logo upload` 
+            : `Club ${clubName} has been updated successfully`;
+
+        req.flash('success_msg', successMessage);
         res.redirect('/admin/clubs');
     } catch (error) {
         console.error('❌ Error updating club:', error);
