@@ -272,7 +272,9 @@ const updateClubProfile = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            req.flash('error_msg', 'Please correct the validation errors.');
+            // Create detailed error messages for better user feedback
+            const errorMessages = errors.array().map(error => error.msg);
+            req.flash('error_msg', `Validation errors: ${errorMessages.join(', ')}`);
             return res.redirect('/clubs/manage');
         }
 

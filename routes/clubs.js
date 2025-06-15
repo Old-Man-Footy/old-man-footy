@@ -27,8 +27,13 @@ router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 
 // Update club profile with structured upload support
 router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
-    body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
-    body('website').optional().isURL().withMessage('Valid website URL required'),
+    body('clubName').optional().isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
+    body('state').optional().isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state required'),
+    body('contactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid email address required'),
+    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
+    body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
+    body('twitterUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid X (Twitter) URL required'),
     body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
     body('contactPerson').optional().isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
     body('location').optional().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),

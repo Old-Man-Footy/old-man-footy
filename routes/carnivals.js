@@ -23,16 +23,16 @@ router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
     body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
     // Contact details are optional for MySideline imports but will be validated at model level
     body('organiserContactName').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Organiser contact name must be between 2 and 100 characters when provided'),
-    body('organiserContactEmail').optional().isEmail().withMessage('Valid organiser email is required when provided'),
+    body('organiserContactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid organiser email is required when provided'),
     body('organiserContactPhone').optional().trim().isLength({ min: 10, max: 20 }).withMessage('Organiser phone must be between 10 and 20 characters when provided'),
     // Schedule details are optional for MySideline imports but will be validated at model level
     body('scheduleDetails').optional().trim().isLength({ min: 10 }).withMessage('Schedule details must be at least 10 characters when provided'),
     body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
-    body('socialMediaFacebook').optional().isURL().withMessage('Facebook URL must be valid'),
-    body('socialMediaInstagram').optional().isURL().withMessage('Instagram URL must be valid'),
-    body('socialMediaTwitter').optional().isURL().withMessage('Twitter URL must be valid'),
-    body('socialMediaWebsite').optional().isURL().withMessage('Website URL must be valid'),
-    body('registrationLink').optional().isURL().withMessage('Registration link must be valid')
+    body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Facebook URL must be valid'),
+    body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Instagram URL must be valid'),
+    body('socialMediaTwitter').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Twitter URL must be valid'),
+    body('socialMediaWebsite').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Website URL must be valid'),
+    body('registrationLink').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Registration link must be valid')
 ], carnivalController.postNew);
 
 // Edit carnival form
@@ -47,16 +47,16 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
     body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
     // Contact details are optional for MySideline imports but will be validated at model level
     body('organiserContactName').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Organiser contact name must be between 2 and 100 characters when provided'),
-    body('organiserContactEmail').optional().isEmail().withMessage('Valid organiser email is required when provided'),
+    body('organiserContactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid organiser email is required when provided'),
     body('organiserContactPhone').optional().trim().isLength({ min: 10, max: 20 }).withMessage('Organiser phone must be between 10 and 20 characters when provided'),
     // Schedule details are optional for MySideline imports but will be validated at model level
     body('scheduleDetails').optional().trim().isLength({ min: 10 }).withMessage('Schedule details must be at least 10 characters when provided'),
     body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
-    body('socialMediaFacebook').optional().isURL().withMessage('Facebook URL must be valid'),
-    body('socialMediaInstagram').optional().isURL().withMessage('Instagram URL must be valid'),
-    body('socialMediaTwitter').optional().isURL().withMessage('Twitter URL must be valid'),
-    body('socialMediaWebsite').optional().isURL().withMessage('Website URL must be valid'),
-    body('registrationLink').optional().isURL().withMessage('Registration link must be valid')
+    body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Facebook URL must be valid'),
+    body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Instagram URL must be valid'),
+    body('socialMediaTwitter').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Twitter URL must be valid'),
+    body('socialMediaWebsite').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Website URL must be valid'),
+    body('registrationLink').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Registration link must be valid')
 ], carnivalController.postEdit);
 
 // Delete carnival

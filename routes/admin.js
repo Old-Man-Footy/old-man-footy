@@ -83,24 +83,28 @@ const carnivalUpdateValidation = [
         .isLength({ min: 5, max: 200 })
         .withMessage('Title must be between 5 and 200 characters'),
     body('date')
+        .optional()
         .isISO8601()
         .toDate()
-        .withMessage('Please provide a valid date'),
+        .withMessage('Please provide a valid date when specified'),
     body('locationAddress')
+        .optional()
         .trim()
         .isLength({ min: 10, max: 500 })
-        .withMessage('Location address must be between 10 and 500 characters'),
+        .withMessage('Location address must be between 10 and 500 characters when provided'),
     body('state')
         .isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'])
         .withMessage('Please select a valid state'),
     body('scheduleDetails')
+        .optional()
         .trim()
         .isLength({ min: 10 })
-        .withMessage('Schedule details must be at least 10 characters'),
-    body('contactEmail')
+        .withMessage('Schedule details must be at least 10 characters when provided'),
+    body('organiserContactEmail')
+        .optional({ nullable: true, checkFalsy: true })
         .isEmail()
         .normalizeEmail()
-        .withMessage('Please provide a valid contact email')
+        .withMessage('Please provide a valid contact email when specified')
 ];
 
 router.post('/carnivals/:id/edit', carnivalUpdateValidation, adminController.updateCarnival);
