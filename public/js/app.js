@@ -109,10 +109,12 @@ window.themeManager = {
         themeIcon.className = '';
         
         if (this.currentTheme === this.THEMES.DARK) {
-            themeIcon.className = 'bi bi-sun-fill';
+            // Show moon icon for dark mode (current active state)
+            themeIcon.className = 'bi bi-moon-fill';
             themeIcon.parentElement.title = 'Switch to light mode';
         } else {
-            themeIcon.className = 'bi bi-moon-fill';
+            // Show sun icon for light mode (current active state)
+            themeIcon.className = 'bi bi-sun-fill';
             themeIcon.parentElement.title = 'Switch to dark mode';
         }
     },
