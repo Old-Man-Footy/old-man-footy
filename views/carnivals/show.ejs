@@ -238,7 +238,7 @@
             <!-- Attending Clubs Section -->
             <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header bg-info">
                         <h5 class="mb-0"><i class="bi bi-people-fill"></i> Attending Clubs</h5>
                     </div>
                     <div class="card-body">
@@ -291,7 +291,7 @@
             <% } else if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                 <!-- Show empty state for carnival owners -->
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header bg-info">
                         <h5 class="mb-0"><i class="bi bi-people-fill"></i> Attending Clubs</h5>
                     </div>
                     <div class="card-body text-center">
@@ -313,7 +313,7 @@
             <!-- Club Registration Section (for delegates) -->
             <% if (user && canRegisterClub && carnival.isActive) { %>
                 <div class="card shadow mb-4 border-success">
-                    <div class="card-header bg-success text-white">
+                    <div class="card-header bg-success">
                         <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Register Your Club</h5>
                     </div>
                     <div class="card-body">
@@ -374,7 +374,7 @@
             <% } else if (user && userClubRegistration && carnival.isActive) { %>
                 <!-- Show registration status for already registered clubs -->
                 <div class="card shadow mb-4 border-info">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header bg-info">
                         <h5 class="mb-0"><i class="bi bi-check-circle"></i> Your Club is Registered</h5>
                     </div>
                     <div class="card-body">
@@ -495,7 +495,7 @@
 
             <!-- Contact Information -->
             <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary">
                     <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Contact Information</h5>
                 </div>
                 <div class="card-body">

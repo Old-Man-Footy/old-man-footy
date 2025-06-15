@@ -62,7 +62,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-info">
-                <div class="card-header bg-info text-white py-2">
+                <div class="card-header bg-info py-2">
                     <h6 class="mb-0">
                         <i class="bi bi-person-gear"></i> Profile Settings
                     </h6>
@@ -149,7 +149,7 @@
     <!-- Stats Cards -->
     <div class="row mb-4 dashboard-stats">
         <div class="col-md-6 mb-3">
-            <div class="card text-white">
+            <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-calendar-event display-4 mb-2"></i>
                     <h3><%= userCarnivals ? userCarnivals.length : 0 %></h3>
@@ -160,7 +160,7 @@
         <div class="col-md-6 mb-3">
             <% if (user.clubId && user.clubId.clubName) { %>
                 <a href="/clubs/manage" class="text-decoration-none">
-                    <div class="card text-white dashboard-stat-card clickable-card">
+                    <div class="card dashboard-stat-card clickable-card">
                         <div class="card-body text-center">
                             <i class="bi bi-people display-4 mb-2"></i>
                             <h3><%= user.clubId.clubName %></h3>
@@ -172,7 +172,7 @@
                     </div>
                 </a>
             <% } else if (user.isAdmin) { %>
-                <div class="card text-white">
+                <div class="card">
                     <div class="card-body text-center">
                         <i class="bi bi-people display-4 mb-2"></i>
                         <h3>Admin</h3>
@@ -181,7 +181,7 @@
                 </div>
             <% } else { %>
                 <a href="/clubs/manage" class="text-decoration-none">
-                    <div class="card text-white dashboard-stat-card clickable-card">
+                    <div class="card dashboard-stat-card clickable-card">
                         <div class="card-body text-center">
                             <i class="bi bi-people display-4 mb-2"></i>
                             <h3>No Club</h3>
@@ -325,7 +325,7 @@
         <div class="row mt-5">
             <div class="col-12">
                 <div class="card border-danger">
-                    <div class="card-header bg-danger text-white">
+                    <div class="card-header bg-danger">
                         <h5 class="mb-0">
                             <i class="bi bi-shield-check"></i> Administrator Dashboard
                         </h5>
@@ -393,7 +393,7 @@
         <div class="row mt-5">
             <div class="col-12">
                 <div class="card border-primary">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-primary">
                         <h5 class="mb-0">
                             <i class="bi bi-shield-check"></i> Primary Delegate Actions
                         </h5>
@@ -427,7 +427,7 @@
         <div class="row mt-5">
             <div class="col-12">
                 <div class="card border-secondary">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card-header bg-secondary">
                         <h5 class="mb-0">
                             <i class="bi bi-person-check"></i> Club Delegate Actions
                         </h5>
@@ -453,7 +453,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-info">
-                <div class="card-header bg-info text-white">
+                <div class="card-header bg-info">
                     <h5 class="mb-0">
                         <i class="bi bi-list-check"></i> Quick Start Checklist
                         <small class="opacity-75">(New User)</small>

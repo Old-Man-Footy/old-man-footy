@@ -338,7 +338,7 @@ window.oldmanfooty = {
     showToast: function(message, type = 'info') {
         // Create toast element
         const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.className = `toast align-items-center bg-${type} border-0`;
         toast.setAttribute('role', 'alert');
         toast.innerHTML = `
             <div class="d-flex">
