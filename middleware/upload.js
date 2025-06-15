@@ -139,33 +139,67 @@ function extractUploadContext(req, file) {
 
 // Enhanced file filter function
 const fileFilter = (req, file, cb) => {
-    // Allowed file types by category
+    // Allowed file types by category with MIME type support
     const allowedTypes = {
-        [ImageNamingService.IMAGE_TYPES.LOGO]: /jpeg|jpg|png|gif|svg|webp/,
-        [ImageNamingService.IMAGE_TYPES.PROMOTIONAL]: /jpeg|jpg|png|gif|webp/,
-        [ImageNamingService.IMAGE_TYPES.GALLERY]: /jpeg|jpg|png|gif|webp/,
-        [ImageNamingService.IMAGE_TYPES.BANNER]: /jpeg|jpg|png|gif|webp/,
-        [ImageNamingService.IMAGE_TYPES.AVATAR]: /jpeg|jpg|png|gif|webp/,
-        [ImageNamingService.IMAGE_TYPES.THUMBNAIL]: /jpeg|jpg|png|gif|webp/,
-        [ImageNamingService.IMAGE_TYPES.SOCIAL_MEDIA]: /jpeg|jpg|png|gif|webp/,
-        [ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT]: /pdf|doc|docx|xls|xlsx|txt/
+        [ImageNamingService.IMAGE_TYPES.LOGO]: {
+            extensions: /jpeg|jpg|png|gif|svg|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
+        },
+        [ImageNamingService.IMAGE_TYPES.PROMOTIONAL]: {
+            extensions: /jpeg|jpg|png|gif|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+        },
+        [ImageNamingService.IMAGE_TYPES.GALLERY]: {
+            extensions: /jpeg|jpg|png|gif|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+        },
+        [ImageNamingService.IMAGE_TYPES.BANNER]: {
+            extensions: /jpeg|jpg|png|gif|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+        },
+        [ImageNamingService.IMAGE_TYPES.AVATAR]: {
+            extensions: /jpeg|jpg|png|gif|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+        },
+        [ImageNamingService.IMAGE_TYPES.THUMBNAIL]: {
+            extensions: /jpeg|jpg|png|gif|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+        },
+        [ImageNamingService.IMAGE_TYPES.SOCIAL_MEDIA]: {
+            extensions: /jpeg|jpg|png|gif|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+        },
+        [ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT]: {
+            extensions: /pdf|doc|docx|xls|xlsx|txt/,
+            mimeTypes: /^(application\/(pdf|msword|vnd\.(openxmlformats-officedocument\.wordprocessingml\.document|ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet))|text\/plain)$/
+        }
     };
     
     // Determine image type from field name
     const context = extractUploadContext(req, file);
-    const allowedPattern = allowedTypes[context.imageType];
+    const allowedType = allowedTypes[context.imageType];
     
-    if (!allowedPattern) {
+    if (!allowedType) {
         return cb(new Error(`Unsupported image type: ${context.imageType}`));
     }
     
-    const extname = allowedPattern.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedPattern.test(file.mimetype);
+    const extname = allowedType.extensions.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedType.mimeTypes.test(file.mimetype);
     
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb(new Error(`Invalid file type for ${file.fieldname}. Allowed formats: ${allowedPattern.source}`));
+        // Create user-friendly error messages
+        let allowedFormats = '';
+        if (context.imageType === ImageNamingService.IMAGE_TYPES.LOGO) {
+            allowedFormats = 'JPG, PNG, GIF, SVG, or WebP';
+        } else if (context.imageType === ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT) {
+            allowedFormats = 'PDF, DOC, DOCX, XLS, XLSX, or TXT';
+        } else {
+            allowedFormats = 'JPG, PNG, GIF, or WebP';
+        }
+        
+        cb(new Error(`Invalid file type for ${file.fieldname}. Allowed formats: ${allowedFormats}`));
     }
 };
 
