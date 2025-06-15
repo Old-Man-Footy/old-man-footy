@@ -23,11 +23,11 @@
     --warning: #ffc107;
     --light: #f8f9fa;
     --dark: #343a40;
-    --info: #bdf9c0; 
+    --info: #bdf9c0;
     --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-    
+
     /* Light theme colors (default) */
     --theme-bg-primary: #ffffff;
     --theme-bg-secondary: #f8f9fa;
@@ -39,7 +39,7 @@
     --theme-card-bg: #ffffff;
     --theme-input-bg: #ffffff;
     --theme-dropdown-bg: #ffffff;
-    
+
     /* Override ALL Bootstrap's nav-link CSS custom properties */
     --bs-nav-link-color: rgba(255, 255, 255, 0.9) !important;
     --bs-nav-link-hover-color: #FFD700 !important;
@@ -72,7 +72,7 @@
     --theme-card-bg: #2d2d2d;
     --theme-input-bg: #404040;
     --theme-dropdown-bg: #2d2d2d;
-    
+
     /* Override Bootstrap dark theme properties */
     --bs-body-bg: #1a1a1a;
     --bs-body-color: #ffffff;
@@ -84,7 +84,7 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
-    color: #333;
+    color: var(--theme-text-primary);
     background-color: var(--theme-bg-primary);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -116,64 +116,38 @@ a:visited {
 }
 
 /* Remove underlines from links that already have visual feedback */
-/* Navigation links */
 .navbar a:hover,
 .navbar a:focus,
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link:focus,
 .dropdown-menu .dropdown-item:hover,
-.dropdown-menu .dropdown-item:focus {
-    text-decoration: none;
-}
-
-/* Button-style links */
+.dropdown-menu .dropdown-item:focus,
 .btn:hover,
 .btn:focus,
 a.btn:hover,
-a.btn:focus {
-    text-decoration: none;
-}
-
-/* Card links with hover effects */
+a.btn:focus,
 .card:hover a,
 .card a:hover,
 .rugby-masters-card:hover a,
-.rugby-masters-card a:hover {
-    text-decoration: none;
-}
-
-/* Social media links */
+.rugby-masters-card a:hover,
 .social-links a:hover,
-.social-links a:focus {
-    text-decoration: none;
-}
-
-/* Links with transform effects */
+.social-links a:focus,
 a[class*="btn"]:hover,
 a[class*="btn"]:focus,
 .hero-btn:hover,
 .hero-btn:focus,
-.hero-logo:hover {
-    text-decoration: none;
-}
-
-/* Footer links */
+.hero-logo:hover,
 .footer a:hover,
-.footer a:focus {
-    text-decoration: none;
-}
-
-/* Breadcrumb links */
+.footer a:focus,
 .breadcrumb-item a:hover,
 .breadcrumb-item a:focus {
     text-decoration: none;
 }
 
-
 /* Header and Navigation */
 .navbar-brand {
     font-weight: 700;
-    color: white !important;    
+    color: white !important;
     transition: color 0.3s ease;
 }
 
@@ -199,8 +173,8 @@ a[class*="btn"]:focus,
     color: rgba(255, 255, 255, 0.9) !important;
 }
 
-.navbar-nav .nav-link:hover,
-.navbar-nav .nav-link:active {
+.navbar-nav .nav-link:active,
+.navbar-nav .nav-link:hover {
     color: var(--rugby-gold) !important;
 }
 
@@ -239,15 +213,22 @@ a[class*="btn"]:focus,
     color: white !important;
 }
 
-/* Dropdown dividers in dark mode */
 [data-theme="dark"] .dropdown-divider {
     border-top-color: var(--theme-border-color) !important;
 }
 
-/* Dropdown toggle icon color in dark mode */
 [data-theme="dark"] .dropdown-toggle::after {
     border-top-color: var(--theme-text-primary) !important;
 }
+
+/* Info Section Enhancements */
+.bg-info,
+.card-header.bg-info {
+    background-color: var(--info) !important;
+    border-left-color: var(--rugby-light-green) !important;
+    color: var(--rugby-dark-green) !important;
+}
+
 
 /* Button Enhancements */
 .btn {
@@ -268,11 +249,6 @@ a[class*="btn"]:focus,
     color: white;
 }
 
-.btn-group-sm .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active {
@@ -289,11 +265,18 @@ a[class*="btn"]:focus,
 
 .btn-outline-primary:hover,
 .btn-outline-primary:focus,
-.btn-outline-primary:active {
-    background-color: var(--rugby-green);
-    border-color: var(--rugby-green);
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+.btn-outline-primary:active,
+.btn-outline-primary:not(:disabled):not(.disabled):active,
+.btn-outline-primary:not(:disabled):not(.disabled).active,
+.show > .btn-outline-primary.dropdown-toggle {
+    background-color: var(--rugby-green) !important;
+    border-color: var(--rugby-green) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
+}
+
+.btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
 }
 
 .btn-success {
@@ -326,84 +309,18 @@ a[class*="btn"]:focus,
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
-/* Specific styling for register buttons to ensure theme consistency */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Registration Buttons */
+.btn-register,
+.registration-btn,
 a[href*="/auth/register"],
 button[type="submit"]:contains("Register"),
+button[type="submit"]:contains("Complete Registration"),
 .btn:contains("Register") {
-    background-color: var(--rugby-gold);
-    border-color: var(--rugby-gold);
-    color: var(--rugby-dark-green);
-    font-weight: 600;
-}
-
-a[href*="/auth/register"]:hover,
-a[href*="/auth/register"]:focus,
-button[type="submit"]:contains("Register"):hover,
-button[type="submit"]:contains("Register"):focus,
-.btn:contains("Register"):hover,
-.btn:contains("Register"):focus {
-    background-color: #e6c200;
-    border-color: #e6c200;
-    color: var(--rugby-dark-green);
-    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
-    transform: translateY(-2px);
-}
-
-/* Registration form specific styling */
-.registration-btn,
-button[type="submit"]:contains("Complete Registration") {
-    background: linear-gradient(45deg, var(--rugby-gold), #e6c200);
-    border: none;
-    color: var(--rugby-dark-green);
-    font-weight: 600;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.registration-btn:hover,
-.registration-btn:focus,
-button[type="submit"]:contains("Complete Registration"):hover,
-button[type="submit"]:contains("Complete Registration"):focus {
-    background: linear-gradient(45deg, #e6c200, var(--rugby-gold));
-    color: var(--rugby-dark-green);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-}
-
-/* Better register button targeting - more reliable CSS selectors */
-.btn-outline-primary {
-    color: var(--rugby-green);
-    border-color: var(--rugby-green);
-}
-
-.btn-outline-primary:hover,
-.btn-outline-primary:focus,
-.btn-outline-primary:active {
-    background-color: var(--rugby-green);
-    border-color: var(--rugby-green);
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
-}
-
-/* Override Bootstrap's red focus states specifically for register buttons */
-.btn-outline-primary:not(:disabled):not(.disabled):active,
-.btn-outline-primary:not(:disabled):not(.disabled).active,
-.show > .btn-outline-primary.dropdown-toggle {
-    background-color: var(--rugby-green) !important;
-    border-color: var(--rugby-green) !important;
-    color: white !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
-}
-
-/* Ensure no red Bootstrap colors bleed through */
-.btn-outline-primary:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
-}
-
-/* Register-specific button class for targeted styling */
-.btn-register {
     background: linear-gradient(45deg, var(--rugby-gold), #e6c200) !important;
     border: 2px solid var(--rugby-gold) !important;
     color: var(--rugby-dark-green) !important;
@@ -411,99 +328,60 @@ button[type="submit"]:contains("Complete Registration"):focus {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
 }
 
 .btn-register:hover,
 .btn-register:focus,
-.btn-register:active {
+.btn-register:active,
+.registration-btn:hover,
+.registration-btn:focus,
+a[href*="/auth/register"]:hover,
+a[href*="/auth/register"]:focus,
+button[type="submit"]:contains("Register"):hover,
+button[type="submit"]:contains("Register"):focus,
+.btn:contains("Register"):hover,
+.btn:contains("Register"):focus,
+button[type="submit"]:contains("Complete Registration"):hover,
+button[type="submit"]:contains("Complete Registration"):focus {
     background: linear-gradient(45deg, #e6c200, var(--rugby-gold)) !important;
     border-color: #e6c200 !important;
     color: var(--rugby-dark-green) !important;
-    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25) !important;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3) !important;
     transform: translateY(-2px);
 }
 
-/* Dashboard Stats Cards */
-.dashboard-stats .card {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+/* Card Enhancements */
+.card {
     border: none;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-sm);
     transition: all 0.3s ease;
-    height: 100%; /* Ensure cards fill the column height */
-    display: flex; /* Make card itself a flex container */
-    flex-direction: column; /* Stack card content vertically */
+    background-color: var(--theme-card-bg);
+    border-color: var(--theme-border-color);
+    color: var(--theme-text-primary);
 }
 
-/* Make dashboard stats row use flexbox for equal height cards - remove gaps */
-.dashboard-stats.row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: -15px;
-    margin-right: -15px;
-    gap: 0; /* Remove any gaps */
+.card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
 }
 
-.dashboard-stats .col-md-4 {
-    display: flex;
-    flex-direction: column; /* Stack content vertically */
-    padding-left: 15px;
-    padding-right: 15px;
-    margin-bottom: 0; /* Remove bottom margin that creates gaps */
+.card-header {
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    border-bottom: 2px solid var(--theme-border-color);
+    font-weight: 600;
 }
 
-/* Remove the mb-3 class effect for dashboard stats specifically */
-.dashboard-stats .col-md-4.mb-3 {
-    margin-bottom: 0 !important;
-}
-
-/* Handle anchor tags that wrap cards - make them expand to full height */
-.dashboard-stats .col-md-4 > a {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    text-decoration: none;
-    flex: 1;
-}
-
-/* Ensure card body content is properly distributed and fills the card */
-.dashboard-stats .card .card-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 1.25rem 1rem;
-    min-height: 150px;
-    flex: 1; /* Take up all available space in the card */
-}
-
-/* Make the main numbers smaller */
-.dashboard-stats .card .card-body h1,
-.dashboard-stats .card .card-body h3 {
-    font-size: 2.25rem; /* Reduced from default size */
-    margin-bottom: 0.5rem;
-}
-
-/* Make the card titles smaller */
-.dashboard-stats .card .card-body h5,
-.dashboard-stats .card .card-body p {
-    font-size: 1rem; /* Slightly smaller title */
-    margin-bottom: 0.5rem;
-}
-
-/* Ensure small text at bottom doesn't affect main content alignment */
-.dashboard-stats .card .card-body .text-white-50 {
-    margin-top: auto;
-    padding-top: 0.5rem;
-    font-size: 0.8rem; /* Slightly smaller text */
-}
-
-/* Clickable dashboard stat card styling */
+/* Clickable Dashboard Stat Card Styling */
 .clickable-card {
     cursor: pointer;
     transform: translateY(0);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    border-radius: 0.75rem !important;
 }
 
 .clickable-card::before {
@@ -531,105 +409,141 @@ button[type="submit"]:contains("Complete Registration"):focus {
     box-shadow: 0 4px 15px rgba(0, 104, 55, 0.2);
 }
 
-/* Ensure text color inheritance for clickable cards */
-.clickable-card .card-body * {
+.clickable-card .card-body *,
+.clickable-card * {
+    color: white !important;
+}
+
+.clickable-card:not(:where(a)) .card-body * {
     color: inherit !important;
 }
 
-/* Dashboard stats card hover effects for non-clickable cards */
-.dashboard-stats .card:not(.clickable-card):hover {
+/* Dashboard Stats Cards */
+.dashboard-stats.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -15px;
+    margin-right: -15px;
+    gap: 0;
+}
+
+.dashboard-stats .col-md-4 {
+    display: flex;
+    flex-direction: column;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-bottom: 0 !important;
+}
+
+.dashboard-stats .col-md-4 > a {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    text-decoration: none;
+    flex: 1;
+}
+
+.dashboard-stats .card {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    border: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-stats .card:not(.clickable-card):hover,
+.dashboard-stat-card:not(.clickable-card):hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(0, 104, 55, 0.2);
 }
 
-/* Card Enhancements */
-.card {
-    border: none;
-    border-radius: 0.75rem;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s ease;
-    background-color: var(--theme-card-bg);
-    border-color: var(--theme-border-color);
-    color: var(--theme-text-primary);
+.dashboard-stats .card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1.25rem 1rem;
+    min-height: 150px;
+    flex: 1;
 }
 
-.card:hover {
-    box-shadow: var(--shadow);
-    transform: translateY(-2px);
+.dashboard-stats .card .card-body h1,
+.dashboard-stats .card .card-body h3 {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
 }
 
-.card-header {
-    border-radius: 0.75rem 0.75rem 0 0 !important;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
-    border-bottom-color: var(--theme-border-color);
+.dashboard-stats .card .card-body h5,
+.dashboard-stats .card .card-body p {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-/* Dark mode styling for all cards */
-[data-theme="dark"] .card {
+.dashboard-stats .card .card-body .text-white-50 {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+
+/* Dark Mode Card Styling */
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body {
     background-color: var(--theme-card-bg) !important;
     border-color: var(--theme-border-color) !important;
     color: var(--theme-text-primary) !important;
 }
 
-[data-theme="dark"] .card-body {
-    background-color: var(--theme-card-bg) !important;
+/* Old Man Footy Specific Enhancements */
+.rugby-masters-hero {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    color: white;
+    padding: 4rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.rugby-masters-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="2"/></svg>') repeat;
+    opacity: 0.3;
+}
+
+.rugby-masters-card {
+    background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+    border: 2px solid var(--rugby-light-green);
+    transition: all 0.3s ease;
+}
+
+.rugby-masters-card:hover {
+    border-color: var(--rugby-green);
+    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.15);
+}
+
+[data-theme="dark"] .rugby-masters-card,
+[data-theme="dark"] .rugby-masters-card .card-body,
+[data-theme="dark"] .rugby-masters-card .card-title,
+[data-theme="dark"] .rugby-masters-card .card-text,
+[data-theme="dark"] .rugby-masters-card span:not(.badge) {
+    background: var(--theme-card-bg) !important;
     color: var(--theme-text-primary) !important;
 }
 
-/* [data-theme="dark"] .card-header {
-    background-color: var(--theme-bg-secondary) !important;
-    border-bottom-color: var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
-} */
-
-/* Rugby Masters Cards - Club cards specific styling */
 [data-theme="dark"] .rugby-masters-card {
-    background: var(--theme-card-bg) !important;
     border: 2px solid var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
 }
 
 [data-theme="dark"] .rugby-masters-card:hover {
     border-color: var(--rugby-green) !important;
-    background-color: var(--theme-card-bg) !important;
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15) !important;
 }
 
-[data-theme="dark"] .rugby-masters-card .card-body {
-    background-color: var(--theme-card-bg) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-title {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-text {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Search and filter cards */
-[data-theme="dark"] .filter-section {
-    background: var(--theme-bg-secondary) !important;
-    border: 2px solid var(--theme-border-color) !important;
-}
-
-/* Club stat items in dark mode */
-[data-theme="dark"] .stat-item-small .stat-label-small {
-    color: var(--theme-text-muted) !important;
-}
-
-/* Fix text-muted elements in dark mode for better readability */
-[data-theme="dark"] .text-muted {
-    color: var(--theme-text-muted) !important;
-}
-
-[data-theme="dark"] .text-muted.small {
-    color: var(--theme-text-muted) !important;
-}
-
-/* Fix contact info links in club cards */
 [data-theme="dark"] .rugby-masters-card .text-muted a {
     color: var(--theme-text-secondary) !important;
 }
@@ -638,46 +552,34 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: var(--theme-text-primary) !important;
 }
 
-/* Fix location and other text elements in club summary */
-[data-theme="dark"] .rugby-masters-card .d-flex span {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .bi-geo-alt {
-    color: var(--rugby-green) !important;
-}
-
+[data-theme="dark"] .rugby-masters-card .bi-geo-alt,
 [data-theme="dark"] .rugby-masters-card .bi-envelope,
 [data-theme="dark"] .rugby-masters-card .bi-telephone,
-[data-theme="dark"] .rugby-masters-card .bi-globe {
-    color: var(--rugby-green) !important;
-}
-
-/* Fix all span elements in club cards for better visibility */
-[data-theme="dark"] .rugby-masters-card span:not(.badge) {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Club Summary section specific dark mode fixes */
-[data-theme="dark"] .col-md-6 h5 {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .col-md-6 .d-flex span {
-    color: var(--theme-text-primary) !important;
-}
-
+[data-theme="dark"] .rugby-masters-card .bi-globe,
 [data-theme="dark"] .col-md-6 .d-flex .bi-geo-alt,
 [data-theme="dark"] .col-md-6 .d-flex .bi-trophy {
     color: var(--rugby-green) !important;
 }
 
-/* Ensure all text in club summary sections is visible in dark mode */
+/* Dark Mode Text & Element Fixes */
+[data-theme="dark"] .filter-section {
+    background: var(--theme-bg-secondary) !important;
+    border: 2px solid var(--theme-border-color) !important;
+}
+
+[data-theme="dark"] .stat-item-small .stat-label-small,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-muted.small,
+[data-theme="dark"] .form-text {
+    color: var(--theme-text-muted) !important;
+}
+
+[data-theme="dark"] .col-md-6 h5,
+[data-theme="dark"] .col-md-6 .d-flex span,
 [data-theme="dark"] .col-md-6 span:not(.badge):not(.text-primary) {
     color: var(--theme-text-primary) !important;
 }
 
-/* Social media button styling in dark mode */
 [data-theme="dark"] .social-links .btn {
     border-color: var(--theme-border-color) !important;
 }
@@ -687,7 +589,6 @@ button[type="submit"]:contains("Complete Registration"):focus {
     border-color: var(--rugby-green) !important;
 }
 
-/* Community Gallery section styling */
 .community-gallery {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
@@ -696,7 +597,6 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-tertiary) 100%);
 }
 
-/* Image carousel section dark mode adjustments */
 [data-theme="dark"] .py-4.bg-light {
     background-color: var(--theme-bg-secondary) !important;
 }
@@ -740,16 +640,17 @@ button[type="submit"]:contains("Complete Registration"):focus {
 }
 
 /* Form Enhancements */
-.form-control, .form-select {
+.form-control,
+.form-select {
     border-radius: 0.375rem;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--theme-border-color);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     background-color: var(--theme-input-bg);
-    border-color: var(--theme-border-color);
     color: var(--theme-text-primary);
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: var(--rugby-green);
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
 }
@@ -764,21 +665,21 @@ button[type="submit"]:contains("Complete Registration"):focus {
 }
 
 /* State Badge Colors - Australian States */
-.badge.bg-secondary {
+.badge.bg-secondary,
+.badge.state-tas {
     background-color: var(--rugby-green) !important;
 }
-
 .badge.state-nsw { background-color: #003d7a; }
 .badge.state-qld { background-color: #8b0000; }
 .badge.state-vic { background-color: #003366; }
 .badge.state-wa { background-color: #ffcd00; color: #000; }
 .badge.state-sa { background-color: #d50000; }
-.badge.state-tas { background-color: var(--rugby-green); }
 .badge.state-nt { background-color: #e87722; }
 .badge.state-act { background-color: #0066cc; }
 
 /* Hero Section Enhancements */
-.hero-section, .bg-primary {
+.hero-section,
+.bg-primary {
     background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%) !important;
     color: white;
 }
@@ -798,7 +699,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     opacity: 0.9;
 }
 
-/* Enhanced Hero Banner with Gradient - Compact Version */
+/* Enhanced Hero Banner */
 .hero-banner {
     background: linear-gradient(180deg, var(--rugby-gold) 0%, var(--rugby-green) 100%) !important;
     position: relative;
@@ -814,16 +715,11 @@ button[type="submit"]:contains("Complete Registration"):focus {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: 
+    background-image:
         radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
         radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
     animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
 }
 
 .hero-title {
@@ -835,18 +731,8 @@ button[type="submit"]:contains("Complete Registration"):focus {
     animation: slideInFromTop 1s ease-out;
 }
 
-@keyframes slideInFromTop {
-    0% { opacity: 0; transform: translateY(-30px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
 .hero-content {
     animation: slideInFromRight 1s ease-out 0.3s both;
-}
-
-@keyframes slideInFromRight {
-    0% { opacity: 0; transform: translateX(30px); }
-    100% { opacity: 1; transform: translateX(0); }
 }
 
 .hero-description .lead {
@@ -870,41 +756,6 @@ button[type="submit"]:contains("Complete Registration"):focus {
 
 .hero-logo:hover {
     transform: scale(1.05) rotate(2deg);
-}
-
-/* Statistics Runner */
-.stats-runner {
-    background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
-    border-top: 3px solid var(--rugby-gold);
-    animation: slideInFromBottom 1s ease-out 0.6s both;
-}
-
-@keyframes slideInFromBottom {
-    0% { opacity: 0; transform: translateY(30px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-.stat-item-small {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.5rem;
-}
-
-.stat-number-small {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--rugby-gold);
-    line-height: 1;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.stat-label-small {
-    font-size: 0.75rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 0.25rem;
 }
 
 /* Hero Action Buttons */
@@ -952,29 +803,70 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: var(--rugby-dark-green);
 }
 
-/* Social Media Icons with Rugby League Colors */
-.social-links a {
-    display: inline-block;
-    margin-right: 0.75rem;
+/* Animation Keyframes */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes slideInFromTop {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInFromRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInFromLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInFromBottom {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Statistics Runner */
+.stats-runner {
+    background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
+    border-top: 3px solid var(--rugby-gold);
+    animation: slideInFromBottom 1s ease-out 0.6s both;
+}
+
+.stat-item-small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 0.5rem;
-    border-radius: 50%;
-    background-color: #f8f9fa;
-    transition: all 0.3s ease;
 }
 
-.social-links a:hover {
-    background-color: var(--rugby-green);
-    color: white !important;
-    transform: translateY(-2px);
+.stat-number-small {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--rugby-gold);
+    line-height: 1;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Social Media Links Enhancement */
+.stat-label-small {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+}
+
+/* Social Media Links */
 .social-links {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
+.social-links a,
 .social-links .btn {
     display: inline-flex;
     align-items: center;
@@ -986,16 +878,25 @@ button[type="submit"]:contains("Complete Registration"):focus {
     transition: all 0.2s ease;
 }
 
+.social-links a {
+    margin-right: 12px;
+    margin-bottom: 8px;
+    background-color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.social-links a:hover,
 .social-links .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    text-decoration: none;
 }
 
+.social-links a i,
 .social-links .btn i {
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
-/* Contact Information Social Media */
 .card-body .social-links {
     margin-top: 8px;
 }
@@ -1005,129 +906,23 @@ button[type="submit"]:contains("Complete Registration"):focus {
     padding: 4px 8px;
 }
 
-/* Main content social media styling */
-.social-links a {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    margin-right: 12px;
-    margin-bottom: 8px;
-    background-color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.social-links a:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    text-decoration: none;
-}
-
-.social-links a i {
-    font-size: 1.1rem;
-}
-
 /* Social Media Platform Colors */
-.btn-facebook,
-.btn-facebook:not(:disabled):not(.disabled) {
-    background-color: #1877f2;
-    border-color: #1877f2;
-    color: white;
-}
+.btn-facebook, .btn-facebook:not(:disabled):not(.disabled) { background-color: #1877f2; border-color: #1877f2; color: white; }
+.btn-facebook:hover, .btn-facebook:focus, .btn-facebook:active { background-color: #166fe5; border-color: #166fe5; color: white; box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25); }
+.btn-youtube, .btn-youtube:not(:disabled):not(.disabled) { background-color: #ff0000; border-color: #ff0000; color: white; }
+.btn-youtube:hover, .btn-youtube:focus, .btn-youtube:active { background-color: #cc0000; border-color: #cc0000; color: white; box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25); }
+.btn-instagram, .btn-instagram:not(:disabled):not(.disabled) { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-color: #e6683c; color: white; }
+.btn-instagram:hover, .btn-instagram:focus, .btn-instagram:active { background: linear-gradient(45deg, #d6821f 0%, #cc5a28 25%, #c22336 50%, #b81f52 75%, #a8146e 100%); border-color: #cc5a28; color: white; box-shadow: 0 0 0 0.2rem rgba(230, 104, 60, 0.25); }
+.btn-twitter, .btn-twitter:not(:disabled):not(.disabled) { background-color: #000000; border-color: #000000; color: white; }
+.btn-twitter:hover, .btn-twitter:focus, .btn-twitter:active { background-color: #333333; border-color: #333333; color: white; box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25); }
 
-.btn-facebook:hover,
-.btn-facebook:focus,
-.btn-facebook:active,
-.btn-facebook:not(:disabled):not(.disabled):hover,
-.btn-facebook:not(:disabled):not(.disabled):focus,
-.btn-facebook:not(:disabled):not(.disabled):active {
-    background-color: #166fe5;
-    border-color: #166fe5;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25);
-}
-
-.btn-facebook i {
-    color: white;
-}
-
-/* YouTube button styling */
-.btn-youtube,
-.btn-youtube:not(:disabled):not(.disabled) {
-    background-color: #ff0000;
-    border-color: #ff0000;
-    color: white;
-}
-
-.btn-youtube:hover,
-.btn-youtube:focus,
-.btn-youtube:active,
-.btn-youtube:not(:disabled):not(.disabled):hover,
-.btn-youtube:not(:disabled):not(.disabled):focus,
-.btn-youtube:not(:disabled):not(.disabled):active {
-    background-color: #cc0000;
-    border-color: #cc0000;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
-}
-
-.btn-youtube i {
-    color: white;
-}
-
-/* Instagram button styling */
-.btn-instagram,
-.btn-instagram:not(:disabled):not(.disabled) {
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    border-color: #e6683c;
-    color: white;
-}
-
-.btn-instagram:hover,
-.btn-instagram:focus,
-.btn-instagram:active,
-.btn-instagram:not(:disabled):not(.disabled):hover,
-.btn-instagram:not(:disabled):not(.disabled):focus,
-.btn-instagram:not(:disabled):not(.disabled):active {
-    background: linear-gradient(45deg, #d6821f 0%, #cc5a28 25%, #c22336 50%, #b81f52 75%, #a8146e 100%);
-    border-color: #cc5a28;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(230, 104, 60, 0.25);
-}
-
-.btn-instagram i {
-    color: white;
-}
-
-/* Twitter/X button styling */
-.btn-twitter,
-.btn-twitter:not(:disabled):not(.disabled) {
-    background-color: #000000;
-    border-color: #000000;
-    color: white;
-}
-
-.btn-twitter:hover,
-.btn-twitter:focus,
-.btn-twitter:active,
-.btn-twitter:not(:disabled):not(.disabled):hover,
-.btn-twitter:not(:disabled):not(.disabled):focus,
-.btn-twitter:not(:disabled):not(.disabled):active {
-    background-color: #333333;
-    border-color: #333333;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
-}
-
-.btn-twitter i {
+.btn-facebook i, .btn-youtube i, .btn-instagram i, .btn-twitter i {
     color: white;
 }
 
 /* Footer Enhancements */
-.footer, .bg-dark {
+.footer,
+.bg-dark {
     background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
     color: white;
 }
@@ -1147,61 +942,23 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: var(--rugby-gold);
 }
 
-/* Alert Enhancements with Rugby Theme */
+/* Alert Enhancements */
 .alert {
     border: none;
     border-radius: 0.5rem;
     font-weight: 500;
 }
 
-.alert-success {
-    background-color: var(--rugby-light-green);
-    color: var(--rugby-dark-green);
-    border-left: 4px solid var(--rugby-green);
-}
-
-.alert-info {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-    border-left: 4px solid var(--rugby-green);
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border-left: 4px solid var(--rugby-gold);
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
-}
+.alert-success { background-color: var(--rugby-light-green); color: var(--rugby-dark-green); border-left: 4px solid var(--rugby-green); }
+.alert-info { background-color: #e8f5e8; color: #2e7d32; border-left: 4px solid var(--rugby-green); }
+.alert-warning { background-color: #fff3cd; color: #856404; border-left: 4px solid var(--rugby-gold); }
+.alert-danger { background-color: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
 
 /* Dark mode alert styling */
-[data-theme="dark"] .alert-success {
-    background-color: rgba(76, 175, 80, 0.2);
-    color: #81c784;
-    border-left-color: #4caf50;
-}
-
-[data-theme="dark"] .alert-info {
-    background-color: rgba(76, 175, 80, 0.15);
-    color: #a5d6a7;
-    border-left-color: var(--rugby-green);
-}
-
-[data-theme="dark"] .alert-warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
-    border-left-color: var(--rugby-gold);
-}
-
-[data-theme="dark"] .alert-danger {
-    background-color: rgba(244, 67, 54, 0.2);
-    color: #ef5350;
-    border-left-color: #f44336;
-}
+[data-theme="dark"] .alert-success { background-color: rgba(76, 175, 80, 0.2); color: #81c784; border-left-color: #4caf50; }
+[data-theme="dark"] .alert-info { background-color: rgba(76, 175, 80, 0.15); color: #a5d6a7; border-left-color: var(--rugby-green); }
+[data-theme="dark"] .alert-warning { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; border-left-color: var(--rugby-gold); }
+[data-theme="dark"] .alert-danger { background-color: rgba(244, 67, 54, 0.2); color: #ef5350; border-left-color: #f44336; }
 
 /* Search and Filter Section */
 .filter-section {
@@ -1212,1135 +969,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     border: 2px solid var(--rugby-light-green);
 }
 
-/* Old Man Footy Specific Enhancements */
-.rugby-masters-hero {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
-    color: white;
-padding: 4rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.rugby-masters-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="2"/></svg>') repeat;
-    opacity: 0.3;
-}
-
-.rugby-masters-card {
-    background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
-    border: 2px solid var(--rugby-light-green);
-    transition: all 0.3s ease;
-}
-
-.rugby-masters-card:hover {
-    border-color: var(--rugby-green);
-    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.15);
-}
-/* Social Media Icons with Rugby League Colors */
-.social-links a {
-    display: inline-block;
-    margin-right: 0.75rem;
-    padding: 0.5rem;
-    border-radius: 50%;
-    background-color: #f8f9fa;
-    transition: all 0.3s ease;
-}
-
-.social-links a:hover {
-    background-color: var(--rugby-green);
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-/* Social Media Links Enhancement */
-.social-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.social-links .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 0.875rem;
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.social-links .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.social-links .btn i {
-    font-size: 1rem;
-}
-
-/* Contact Information Social Media */
-.card-body .social-links {
-    margin-top: 8px;
-}
-
-.card-body .social-links .btn {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-}
-
-/* Main content social media styling */
-.social-links a {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    margin-right: 12px;
-    margin-bottom: 8px;
-    background-color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.social-links a:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    text-decoration: none;
-}
-
-.social-links a i {
-    font-size: 1.1rem;
-}
-
-/* Social Media Platform Colors */
-.btn-facebook,
-.btn-facebook:not(:disabled):not(.disabled) {
-    background-color: #1877f2;
-    border-color: #1877f2;
-    color: white;
-}
-
-.btn-facebook:hover,
-.btn-facebook:focus,
-.btn-facebook:active,
-.btn-facebook:not(:disabled):not(.disabled):hover,
-.btn-facebook:not(:disabled):not(.disabled):focus,
-.btn-facebook:not(:disabled):not(.disabled):active {
-    background-color: #166fe5;
-    border-color: #166fe5;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25);
-}
-
-.btn-facebook i {
-    color: white;
-}
-
-/* YouTube button styling */
-.btn-youtube,
-.btn-youtube:not(:disabled):not(.disabled) {
-    background-color: #ff0000;
-    border-color: #ff0000;
-    color: white;
-}
-
-.btn-youtube:hover,
-.btn-youtube:focus,
-.btn-youtube:active,
-.btn-youtube:not(:disabled):not(.disabled):hover,
-.btn-youtube:not(:disabled):not(.disabled):focus,
-.btn-youtube:not(:disabled):not(.disabled):active {
-    background-color: #cc0000;
-    border-color: #cc0000;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
-}
-
-.btn-youtube i {
-    color: white;
-}
-
-/* Instagram button styling */
-.btn-instagram,
-.btn-instagram:not(:disabled):not(.disabled) {
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    border-color: #e6683c;
-    color: white;
-}
-
-.btn-instagram:hover,
-.btn-instagram:focus,
-.btn-instagram:active,
-.btn-instagram:not(:disabled):not(.disabled):hover,
-.btn-instagram:not(:disabled):not(.disabled):focus,
-.btn-instagram:not(:disabled):not(.disabled):active {
-    background: linear-gradient(45deg, #d6821f 0%, #cc5a28 25%, #c22336 50%, #b81f52 75%, #a8146e 100%);
-    border-color: #cc5a28;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(230, 104, 60, 0.25);
-}
-
-.btn-instagram i {
-    color: white;
-}
-
-/* Twitter/X button styling */
-.btn-twitter,
-.btn-twitter:not(:disabled):not(.disabled) {
-    background-color: #000000;
-    border-color: #000000;
-    color: white;
-}
-
-.btn-twitter:hover,
-.btn-twitter:focus,
-.btn-twitter:active,
-.btn-twitter:not(:disabled):not(.disabled):hover,
-.btn-twitter:not(:disabled):not(.disabled):focus,
-.btn-twitter:not(:disabled):not(.disabled):active {
-    background-color: #333333;
-    border-color: #333333;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
-}
-
-.btn-twitter i {
-    color: white;
-}
-
-/* Footer Enhancements */
-.footer, .bg-dark {
-    background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
-    color: white;
-}
-
-.footer {
-    padding: 2rem 0;
-    margin-top: 4rem;
-}
-
-.footer a {
-    color: #adb5bd;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer a:hover {
-    color: var(--rugby-gold);
-}
-
-/* Card Enhancements */
-.card {
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-}
-
-.alert-success {
-    background-color: var(--rugby-light-green);
-    color: var(--rugby-dark-green);
-    border-left: 4px solid var(--rugby-green);
-}
-
-.alert-info {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-    border-left: 4px solid var(--rugby-green);
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border-left: 4px solid var(--rugby-gold);
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
-}
-
-/* Dark mode alert styling */
-[data-theme="dark"] .alert-success {
-    background-color: rgba(76, 175, 80, 0.2);
-    color: #81c784;
-    border-left-color: #4caf50;
-}
-
-[data-theme="dark"] .alert-info {
-    background-color: rgba(76, 175, 80, 0.15);
-    color: #a5d6a7;
-    border-left-color: var(--rugby-green);
-}
-
-[data-theme="dark"] .alert-warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
-    border-left-color: var(--rugby-gold);
-}
-
-[data-theme="dark"] .alert-danger {
-    background-color: rgba(244, 67, 54, 0.2);
-    color: #ef5350;
-    border-left-color: #f44336;
-}
-
-/* Search and Filter Section */
-.filter-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border: 2px solid var(--rugby-light-green);
-}
-
-/* Old Man Footy Specific Enhancements */
-.rugby-masters-hero {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
-    color: white;
-padding: 4rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.rugby-masters-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="2"/></svg>') repeat;
-    opacity: 0.3;
-}
-
-.rugby-masters-card {
-    background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
-    border: 2px solid var(--rugby-light-green);
-    transition: all 0.3s ease;
-}
-
-.rugby-masters-card:hover {
-    border-color: var(--rugby-green);
-    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.15);
-}
-
-/* Dark mode styling for all cards */
-[data-theme="dark"] .card {
-    background-color: var(--theme-card-bg) !important;
-    border-color: var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .card-body {
-    background-color: var(--theme-card-bg) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-/* [data-theme="dark"] .card-header {
-    background-color: var(--theme-bg-secondary) !important;
-    border-bottom-color: var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
-} */
-
-/* Rugby Masters Cards - Club cards specific styling */
-[data-theme="dark"] .rugby-masters-card {
-    background: var(--theme-card-bg) !important;
-    border: 2px solid var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card:hover {
-    border-color: var(--rugby-green) !important;
-    background-color: var(--theme-card-bg) !important;
-    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-body {
-    background-color: var(--theme-card-bg) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-title {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-text {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Search and filter cards */
-[data-theme="dark"] .filter-section {
-    background: var(--theme-bg-secondary) !important;
-    border: 2px solid var(--theme-border-color) !important;
-}
-
-/* Club stat items in dark mode */
-[data-theme="dark"] .stat-item-small .stat-label-small {
-    color: var(--theme-text-muted) !important;
-}
-
-/* Fix text-muted elements in dark mode for better readability */
-[data-theme="dark"] .text-muted {
-    color: var(--theme-text-muted) !important;
-}
-
-[data-theme="dark"] .text-muted.small {
-    color: var(--theme-text-muted) !important;
-}
-
-/* Fix contact info links in club cards */
-[data-theme="dark"] .rugby-masters-card .text-muted a {
-    color: var(--theme-text-secondary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .text-muted a:hover {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Fix location and other text elements in club summary */
-[data-theme="dark"] .rugby-masters-card .d-flex span {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .bi-geo-alt {
-    color: var(--rugby-green) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .bi-envelope,
-[data-theme="dark"] .rugby-masters-card .bi-telephone,
-[data-theme="dark"] .rugby-masters-card .bi-globe {
-    color: var(--rugby-green) !important;
-}
-
-/* Fix all span elements in club cards for better visibility */
-[data-theme="dark"] .rugby-masters-card span:not(.badge) {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Club Summary section specific dark mode fixes */
-[data-theme="dark"] .col-md-6 h5 {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .col-md-6 .d-flex span {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .col-md-6 .d-flex .bi-geo-alt,
-[data-theme="dark"] .col-md-6 .d-flex .bi-trophy {
-    color: var(--rugby-green) !important;
-}
-
-/* Ensure all text in club summary sections is visible in dark mode */
-[data-theme="dark"] .col-md-6 span:not(.badge):not(.text-primary) {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Social media button styling in dark mode */
-[data-theme="dark"] .social-links .btn {
-    border-color: var(--theme-border-color) !important;
-}
-
-[data-theme="dark"] .social-links .btn:hover {
-    background-color: var(--theme-bg-secondary) !important;
-    border-color: var(--rugby-green) !important;
-}
-
-/* Community Gallery section styling */
-.community-gallery {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-[data-theme="dark"] .community-gallery {
-    background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-tertiary) 100%);
-}
-
-/* Image carousel section dark mode adjustments */
-[data-theme="dark"] .py-4.bg-light {
-    background-color: var(--theme-bg-secondary) !important;
-}
-
-/* File Upload Areas */
-.file-upload-area {
-    border: 2px dashed #dee2e6;
-    border-radius: 0.5rem;
-    padding: 2rem 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background-color: #f8f9fa;
-}
-
-.file-upload-area:hover {
-    border-color: var(--rugby-green);
-    background-color: var(--rugby-light-green);
-}
-
-.file-upload-area.drag-over {
-    border-color: var(--rugby-gold);
-    background-color: #fffbf0;
-    transform: scale(1.02);
-}
-
-.file-upload-area i {
-    opacity: 0.6;
-    transition: opacity 0.3s ease;
-    color: var(--rugby-green);
-}
-
-.file-upload-area:hover i {
-    opacity: 1;
-}
-
-.upload-text {
-    margin: 0;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-/* Form Enhancements */
-.form-control, .form-select {
-    border-radius: 0.375rem;
-    border: 2px solid #e9ecef;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    background-color: var(--theme-input-bg);
-    border-color: var(--theme-border-color);
-    color: var(--theme-text-primary);
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: var(--rugby-green);
-    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
-}
-
-/* Text Colors */
-.text-primary {
-    color: var(--rugby-green) !important;
-}
-
-.text-success {
-    color: var(--rugby-gold) !important;
-}
-
-/* State Badge Colors - Australian States */
-.badge.bg-secondary {
-    background-color: var(--rugby-green) !important;
-}
-
-.badge.state-nsw { background-color: #003d7a; }
-.badge.state-qld { background-color: #8b0000; }
-.badge.state-vic { background-color: #003366; }
-.badge.state-wa { background-color: #ffcd00; color: #000; }
-.badge.state-sa { background-color: #d50000; }
-.badge.state-tas { background-color: var(--rugby-green); }
-.badge.state-nt { background-color: #e87722; }
-.badge.state-act { background-color: #0066cc; }
-
-/* Hero Section Enhancements */
-.hero-section, .bg-primary {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%) !important;
-    color: white;
-}
-
-.hero-section {
-    padding: 4rem 0;
-    margin-bottom: 2rem;
-}
-
-.hero-section h1 {
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.hero-section .lead {
-    font-size: 1.25rem;
-    opacity: 0.9;
-}
-
-/* Enhanced Hero Banner with Gradient - Compact Version */
-.hero-banner {
-    background: linear-gradient(180deg, var(--rugby-gold) 0%, var(--rugby-green) 100%) !important;
-    position: relative;
-    overflow: hidden;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-}
-
-.hero-background-pattern {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
-    animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
-
-.hero-title {
-    font-size: 2.4rem;
-    font-weight: 800;
-    color: var(--rugby-dark-green);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    margin-bottom: 1rem;
-    animation: slideInFromTop 1s ease-out;
-}
-
-@keyframes slideInFromTop {
-    0% { opacity: 0; transform: translateY(-30px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-.hero-content {
-    animation: slideInFromRight 1s ease-out 0.3s both;
-}
-
-@keyframes slideInFromRight {
-    0% { opacity: 0; transform: translateX(30px); }
-    100% { opacity: 1; transform: translateX(0); }
-}
-
-.hero-description .lead {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: var(--rugby-dark-green);
-    font-weight: 500;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.logo-container {
-    animation: slideInFromLeft 1s ease-out 0.1s both;
-    padding-left: 1rem;
-}
-
-.hero-logo {
-    max-height: 280px;
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
-    transition: transform 0.3s ease;
-}
-
-.hero-logo:hover {
-    transform: scale(1.05) rotate(2deg);
-}
-
-/* Statistics Runner */
-.stats-runner {
-    background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
-    border-top: 3px solid var(--rugby-gold);
-    animation: slideInFromBottom 1s ease-out 0.6s both;
-}
-
-@keyframes slideInFromBottom {
-    0% { opacity: 0; transform: translateY(30px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-.stat-item-small {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.5rem;
-}
-
-.stat-number-small {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--rugby-gold);
-    line-height: 1;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.stat-label-small {
-    font-size: 0.75rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 0.25rem;
-}
-
-/* Hero Action Buttons */
-.hero-actions {
-    animation: slideInFromBottom 1s ease-out 0.9s both;
-}
-
-.hero-btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 50px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.hero-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.hero-btn.btn-success {
-    background: linear-gradient(45deg, var(--rugby-gold), #f0c800);
-    border: none;
-    color: var(--rugby-dark-green);
-}
-
-.hero-btn.btn-success:hover {
-    background: linear-gradient(45deg, #f0c800, var(--rugby-gold));
-    color: var(--rugby-dark-green);
-}
-
-.hero-btn.btn-outline-success {
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid var(--rugby-gold);
-    color: var(--rugby-gold);
-    backdrop-filter: blur(10px);
-}
-
-.hero-btn.btn-outline-success:hover {
-    background: var(--rugby-gold);
-    border-color: var(--rugby-gold);
-    color: var(--rugby-dark-green);
-}
-
-/* Dashboard Stats Cards */
-.dashboard-stats .card {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
-    border: none;
-    transition: all 0.3s ease;
-    height: 100%; /* Ensure cards fill the column height */
-    display: flex; /* Make card itself a flex container */
-    flex-direction: column; /* Stack card content vertically */
-}
-
-/* Make dashboard stats row use flexbox for equal height cards - remove gaps */
-.dashboard-stats.row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: -15px;
-    margin-right: -15px;
-    gap: 0; /* Remove any gaps */
-}
-
-.dashboard-stats .col-md-4 {
-    display: flex;
-    flex-direction: column; /* Stack content vertically */
-    padding-left: 15px;
-    padding-right: 15px;
-    margin-bottom: 0; /* Remove bottom margin that creates gaps */
-}
-
-/* Remove the mb-3 class effect for dashboard stats specifically */
-.dashboard-stats .col-md-4.mb-3 {
-    margin-bottom: 0 !important;
-}
-
-/* Handle anchor tags that wrap cards - make them expand to full height */
-.dashboard-stats .col-md-4 > a {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    text-decoration: none;
-    flex: 1;
-}
-
-/* Ensure card body content is properly distributed and fills the card */
-.dashboard-stats .card .card-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 1.25rem 1rem;
-    min-height: 150px;
-    flex: 1; /* Take up all available space in the card */
-}
-
-/* Make the main numbers smaller */
-.dashboard-stats .card .card-body h1,
-.dashboard-stats .card .card-body h3 {
-    font-size: 2.25rem; /* Reduced from default size */
-    margin-bottom: 0.5rem;
-}
-
-/* Make the card titles smaller */
-.dashboard-stats .card .card-body h5,
-.dashboard-stats .card .card-body p {
-    font-size: 1rem; /* Slightly smaller title */
-    margin-bottom: 0.5rem;
-}
-
-/* Ensure small text at bottom doesn't affect main content alignment */
-.dashboard-stats .card .card-body .text-white-50 {
-    margin-top: auto;
-    padding-top: 0.5rem;
-    font-size: 0.8rem; /* Slightly smaller text */
-}
-
-/* Clickable dashboard stat card styling */
-.clickable-card {
-    cursor: pointer;
-    transform: translateY(0);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.clickable-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s ease;
-}
-
-.clickable-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.3);
-}
-
-.clickable-card:hover::before {
-    left: 100%;
-}
-
-.clickable-card:active {
-    transform: translateY(0);
-    box-shadow: 0 4px 15px rgba(0, 104, 55, 0.2);
-}
-
-/* Ensure text color inheritance for clickable cards */
-.clickable-card .card-body * {
-    color: inherit !important;
-}
-
-/* Dashboard stats card hover effects for non-clickable cards */
-.dashboard-stats .card:not(.clickable-card):hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 104, 55, 0.2);
-}
-
-/* Card Enhancements */
-.card {
-    border: none;
-    border-radius: 0.75rem;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s ease;
-    background-color: var(--theme-card-bg);
-    border-color: var(--theme-border-color);
-    color: var(--theme-text-primary);
-}
-
-.card:hover {
-    box-shadow: var(--shadow);
-    transform: translateY(-2px);
-}
-
-.card-header {
-    border-radius: 0.75rem 0.75rem 0 0 !important;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
-    border-bottom-color: var(--theme-border-color);
-}
-
-/* Dashboard Stats Cards */
-.dashboard-stats .card {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
-    border: none;
-    transition: all 0.3s ease;
-    height: 100%; /* Ensure cards fill the column height */
-    display: flex; /* Make card itself a flex container */
-    flex-direction: column; /* Stack card content vertically */
-}
-
-/* Make dashboard stats row use flexbox for equal height cards - remove gaps */
-.dashboard-stats.row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: -15px;
-    margin-right: -15px;
-    gap: 0; /* Remove any gaps */
-}
-
-.dashboard-stats .col-md-4 {
-    display: flex;
-    flex-direction: column; /* Stack content vertically */
-    padding-left: 15px;
-    padding-right: 15px;
-    margin-bottom: 0; /* Remove bottom margin that creates gaps */
-}
-
-/* Remove the mb-3 class effect for dashboard stats specifically */
-.dashboard-stats .col-md-4.mb-3 {
-    margin-bottom: 0 !important;
-}
-
-/* Handle anchor tags that wrap cards - make them expand to full height */
-.dashboard-stats .col-md-4 > a {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    text-decoration: none;
-    flex: 1;
-}
-
-/* Ensure card body content is properly distributed and fills the card */
-.dashboard-stats .card .card-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 1.25rem 1rem;
-    min-height: 150px;
-    flex: 1; /* Take up all available space in the card */
-}
-
-/* Make the main numbers smaller */
-.dashboard-stats .card .card-body h1,
-.dashboard-stats .card .card-body h3 {
-    font-size: 2.25rem; /* Reduced from default size */
-    margin-bottom: 0.5rem;
-}
-
-/* Make the card titles smaller */
-.dashboard-stats .card .card-body h5,
-.dashboard-stats .card .card-body p {
-    font-size: 1rem; /* Slightly smaller title */
-    margin-bottom: 0.5rem;
-}
-
-/* Ensure small text at bottom doesn't affect main content alignment */
-.dashboard-stats .card .card-body .text-white-50 {
-    margin-top: auto;
-    padding-top: 0.5rem;
-    font-size: 0.8rem; /* Slightly smaller text */
-}
-
-/* Clickable dashboard stat card styling */
-.clickable-card {
-    cursor: pointer;
-    transform: translateY(0);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.clickable-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s ease;
-}
-
-.clickable-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.3);
-}
-
-.clickable-card:hover::before {
-    left: 100%;
-}
-
-.clickable-card:active {
-    transform: translateY(0);
-    box-shadow: 0 4px 15px rgba(0, 104, 55, 0.2);
-}
-
-/* Ensure text color inheritance for clickable cards */
-.clickable-card .card-body * {
-    color: inherit !important;
-}
-
-/* Dashboard stats card hover effects for non-clickable cards */
-.dashboard-stats .card:not(.clickable-card):hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 104, 55, 0.2);
-}
-
-/* Card Enhancements */
-.card {
-    border: none;
-    border-radius: 0.75rem;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s ease;
-    background-color: var(--theme-card-bg);
-    border-color: var(--theme-border-color);
-    color: var(--theme-text-primary);
-}
-
-.card:hover {
-    box-shadow: var(--shadow);
-    transform: translateY(-2px);
-}
-
-.card-header {
-    border-radius: 0.75rem 0.75rem 0 0 !important;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
-    border-bottom-color: var(--theme-border-color);
-}
-
-/* Dark mode styling for all cards */
-[data-theme="dark"] .card {
-    background-color: var(--theme-card-bg) !important;
-    border-color: var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .card-body {
-    background-color: var(--theme-card-bg) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-/* [data-theme="dark"] .card-header {
-    background-color: var(--theme-bg-secondary) !important;
-    border-bottom-color: var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;S
-} */
-
-/* Rugby Masters Cards - Club cards specific styling */
-[data-theme="dark"] .rugby-masters-card {
-    background: var(--theme-card-bg) !important;
-    border: 2px solid var(--theme-border-color) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card:hover {
-    border-color: var(--rugby-green) !important;
-    background-color: var(--theme-card-bg) !important;
-    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-body {
-    background-color: var(--theme-card-bg) !important;
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-title {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .card-text {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Search and filter cards */
-[data-theme="dark"] .filter-section {
-    background: var(--theme-bg-secondary) !important;
-    border: 2px solid var(--theme-border-color) !important;
-}
-
-/* Club stat items in dark mode */
-[data-theme="dark"] .stat-item-small .stat-label-small {
-    color: var(--theme-text-muted) !important;
-}
-
-/* Fix text-muted elements in dark mode for better readability */
-[data-theme="dark"] .text-muted {
-    color: var(--theme-text-muted) !important;
-}
-
-[data-theme="dark"] .text-muted.small {
-    color: var(--theme-text-muted) !important;
-}
-
-/* Fix contact info links in club cards */
-[data-theme="dark"] .rugby-masters-card .text-muted a {
-    color: var(--theme-text-secondary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .text-muted a:hover {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Fix location and other text elements in club summary */
-[data-theme="dark"] .rugby-masters-card .d-flex span {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .bi-geo-alt {
-    color: var(--rugby-green) !important;
-}
-
-[data-theme="dark"] .rugby-masters-card .bi-envelope,
-[data-theme="dark"] .rugby-masters-card .bi-telephone,
-[data-theme="dark"] .rugby-masters-card .bi-globe {
-    color: var(--rugby-green) !important;
-}
-
-/* Fix all span elements in club cards for better visibility */
-[data-theme="dark"] .rugby-masters-card span:not(.badge) {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Club Summary section specific dark mode fixes */
-[data-theme="dark"] .col-md-6 h5 {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .col-md-6 .d-flex span {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] .col-md-6 .d-flex .bi-geo-alt,
-[data-theme="dark"] .col-md-6 .d-flex .bi-trophy {
-    color: var(--rugby-green) !important;
-}
-
-/* Ensure all text in club summary sections is visible in dark mode */
-[data-theme="dark"] .col-md-6 span:not(.badge):not(.text-primary) {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Social media button styling in dark mode */
-[data-theme="dark"] .social-links .btn {
-    border-color: var(--theme-border-color) !important;
-}
-
-[data-theme="dark"] .social-links .btn:hover {
-    background-color: var(--theme-bg-secondary) !important;
-    border-color: var(--rugby-green) !important;
-}
-
-/* Community Gallery section styling */
-.community-gallery {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-[data-theme="dark"] .community-gallery {
-    background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-tertiary) 100%);
-}
-
-/* Image carousel section dark mode adjustments */
-[data-theme="dark"] .py-4.bg-light {
-    background-color: var(--theme-bg-secondary) !important;
-}
-
-/* Loading Spinner with Rugby Colors */
+/* Loading Spinner */
 .btn.loading::after {
     border-top: 2px solid var(--rugby-gold);
 }
@@ -2468,13 +1097,8 @@ padding: 4rem 0;
     transform: translateY(-50%) scale(1.1);
 }
 
-.carousel-button--left {
-    left: 1rem;
-}
-
-.carousel-button--right {
-    right: 1rem;
-}
+.carousel-button--left { left: 1rem; }
+.carousel-button--right { right: 1rem; }
 
 .carousel-button i {
     font-size: 1.2rem;
@@ -2506,57 +1130,6 @@ padding: 4rem 0;
     transform: scale(1.2);
 }
 
-/* Auto-play animation */
-.carousel-track.auto-playing {
-    animation: none;
-}
-
-/* Responsive carousel */
-@media (max-width: 768px) {
-    .image-carousel {
-        height: 300px;
-    }
-    
-    .carousel-button {
-        width: 40px;
-        height: 40px;
-        padding: 0.75rem;
-    }
-    
-    .carousel-button--left {
-        left: 0.5rem;
-    }
-    
-    .carousel-button--right {
-        right: 0.5rem;
-    }
-    
-    .carousel-image-overlay {
-        padding: 0.75rem;
-    }
-    
-    .carousel-image-info .badge {
-        font-size: 0.7rem;
-        padding: 0.3rem 0.6rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .image-carousel {
-        height: 250px;
-}
-
-.carousel-button {
-        width: 35px;
-        height: 35px;
-    }
-    
-    .carousel-button i {
-        font-size: 1rem;
-    }
-}
-
-/* Loading state for carousel */
 .image-carousel.loading {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
@@ -2564,95 +1137,60 @@ padding: 4rem 0;
 }
 
 @keyframes loading {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
 }
 
-/* Email Subscription Section - Stay Updated */
+/* Responsive Carousel */
+@media (max-width: 768px) {
+    .image-carousel { height: 300px; }
+    .carousel-button { width: 40px; height: 40px; padding: 0.75rem; }
+    .carousel-button--left { left: 0.5rem; }
+    .carousel-button--right { right: 0.5rem; }
+    .carousel-image-overlay { padding: 0.75rem; }
+    .carousel-image-info .badge { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+}
+
+@media (max-width: 480px) {
+    .image-carousel { height: 250px; }
+    .carousel-button { width: 35px; height: 35px; }
+    .carousel-button i { font-size: 1rem; }
+}
+
+/* Email Subscription Section */
+#subscribe,
 .bg-light {
     background-color: var(--theme-bg-secondary) !important;
 }
 
+[data-theme="dark"] #subscribe,
 [data-theme="dark"] .bg-light {
     background-color: var(--theme-bg-secondary) !important;
 }
 
-/* Stay Updated section specific styling */
-#subscribe {
-    background-color: var(--theme-bg-secondary);
-    transition: background-color 0.3s ease;
-}
-
-[data-theme="dark"] #subscribe {
-    background-color: var(--theme-bg-secondary);
-}
-
-/* Dark mode text improvements */
-[data-theme="dark"] h1,
-[data-theme="dark"] h2,
-[data-theme="dark"] h3,
-[data-theme="dark"] h4,
-[data-theme="dark"] h5,
-[data-theme="dark"] h6 {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Exception: Hero title should maintain its original color since hero background doesn't change */
-[data-theme="dark"] .hero-title {
-    color: var(--rugby-dark-green) !important;
-}
-
-[data-theme="dark"] p,
-[data-theme="dark"] .lead {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Exception: Hero description should maintain its original color */
-[data-theme="dark"] .hero-description .lead {
-    color: var(--rugby-dark-green) !important;
-}
-
-/* Stay Updated section text improvements */
-[data-theme="dark"] #subscribe h2,
-[data-theme="dark"] #subscribe .h3 {
-    color: var(--theme-text-primary) !important;
-}
-
-[data-theme="dark"] #subscribe p {
-    color: var(--theme-text-primary) !important;
-}
-
-/* Official Registration section text improvements */
-[data-theme="dark"] section h2,
-[data-theme="dark"] section .h3 {
-    color: var(--theme-text-primary) !important;
-}
-
+/* Dark Mode Text Improvements */
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+[data-theme="dark"] p, [data-theme="dark"] .lead,
+[data-theme="dark"] #subscribe h2, [data-theme="dark"] #subscribe .h3,
+[data-theme="dark"] #subscribe p,
+[data-theme="dark"] section h2, [data-theme="dark"] section .h3,
 [data-theme="dark"] section p {
     color: var(--theme-text-primary) !important;
 }
 
-/* Form text styling for dark mode */
-[data-theme="dark"] .form-text {
-    color: var(--theme-text-muted) !important;
+/* Exceptions for elements that should not change color in dark mode */
+[data-theme="dark"] .hero-title,
+[data-theme="dark"] .hero-description .lead {
+    color: var(--rugby-dark-green) !important;
 }
 
-/* Text muted improvements for dark mode */
-[data-theme="dark"] .text-muted {
-    color: var(--theme-text-muted) !important;
-}
-
-/* Ensure small text elements are readable */
 [data-theme="dark"] small,
 [data-theme="dark"] .small {
     color: var(--theme-text-secondary) !important;
 }
 
-/* Bootstrap Nav Tabs Dark Mode Styling */
+/* Bootstrap Nav Tabs Dark Mode */
 [data-theme="dark"] .nav-tabs {
     border-bottom-color: var(--theme-border-color) !important;
 }
@@ -2661,6 +1199,11 @@ padding: 4rem 0;
     color: var(--theme-text-secondary) !important;
     background-color: transparent !important;
     border-color: transparent !important;
+}
+
+[data-theme="dark"]  .file-upload-area {
+    border: 2px dashed var(--theme-border-color);
+    background-color: var(--theme-card-bg) !important;
 }
 
 [data-theme="dark"] .nav-tabs .nav-link:hover,
@@ -2678,18 +1221,13 @@ padding: 4rem 0;
     border-color: var(--theme-border-color) var(--theme-border-color) var(--theme-card-bg) !important;
 }
 
-/* Tab content styling for dark mode */
-[data-theme="dark"] .tab-content {
-    background-color: var(--theme-card-bg) !important;
-    color: var(--theme-text-primary) !important;
-}
-
+[data-theme="dark"] .tab-content,
 [data-theme="dark"] .tab-pane {
     background-color: var(--theme-card-bg) !important;
     color: var(--theme-text-primary) !important;
 }
 
-/* Theme toggle button styling */
+/* Theme Toggle Button */
 #themeToggle {
     transition: all 0.3s ease;
     border-radius: 50% !important;
@@ -2701,8 +1239,7 @@ padding: 4rem 0;
     justify-content: center !important;
     border: 2px solid rgba(255, 255, 255, 0.3) !important;
     background-color: transparent !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
+    margin: 0 !important;
     align-self: center !important;
 }
 
@@ -2725,7 +1262,7 @@ padding: 4rem 0;
     color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Ensure navbar items are properly aligned */
+/* Navbar Alignment */
 .navbar-nav {
     align-items: center;
 }
@@ -2735,10 +1272,8 @@ padding: 4rem 0;
     align-items: center;
 }
 
-/* Theme toggle nav item specific alignment */
 .navbar-nav .nav-item:has(#themeToggle) {
-    display: flex !important;
-    align-items: center !important;
     justify-content: center !important;
     margin-right: 0.75rem !important;
 }
+ile-upload-area

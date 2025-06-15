@@ -356,7 +356,6 @@
     color: #721c24;
 }
 
-.bg-info,
 .admin-alert.alert-info {
     background-color: var(--info) !important;
     border-left-color: var(--rugby-light-green) !important;
