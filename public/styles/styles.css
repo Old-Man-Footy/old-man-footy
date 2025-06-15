@@ -417,17 +417,55 @@ button[type="submit"]:contains("Complete Registration"):focus {
 }
 
 /* Dashboard Stats Cards */
-.dashboard-stats .card:nth-child(1) .card-body {
-    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+.dashboard-stats .card {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    border: none;
+    transition: all 0.3s ease;
 }
 
-.dashboard-stats .card:nth-child(2) .card-body {
-    background: linear-gradient(135deg, var(--rugby-gold), #e6c200);
-    color: var(--rugby-dark-green) !important;
+/* Clickable dashboard stat card styling */
+.clickable-card {
+    cursor: pointer;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.dashboard-stats .card:nth-child(3) .card-body {
-    background: linear-gradient(135deg, #28a745, #1e7e34);
+.clickable-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.clickable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.3);
+}
+
+.clickable-card:hover::before {
+    left: 100%;
+}
+
+.clickable-card:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 104, 55, 0.2);
+}
+
+/* Ensure text color inheritance for clickable cards */
+.clickable-card .card-body * {
+    color: inherit !important;
+}
+
+/* Dashboard stats card hover effects for non-clickable cards */
+.dashboard-stats .card:not(.clickable-card):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 104, 55, 0.2);
 }
 
 /* Card Enhancements */
@@ -1518,295 +1556,72 @@ padding: 4rem 0;
     color: var(--rugby-dark-green);
 }
 
-/* Social Media Icons with Rugby League Colors */
-.social-links a {
-    display: inline-block;
-    margin-right: 0.75rem;
-    padding: 0.5rem;
-    border-radius: 50%;
-    background-color: #f8f9fa;
+/* Clickable dashboard stat card styling */
+.clickable-card {
+    cursor: pointer;
+    transform: translateY(0);
     transition: all 0.3s ease;
-}
-
-.social-links a:hover {
-    background-color: var(--rugby-green);
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-/* Social Media Links Enhancement */
-.social-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.social-links .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 0.875rem;
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.social-links .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.social-links .btn i {
-    font-size: 1rem;
-}
-
-/* Contact Information Social Media */
-.card-body .social-links {
-    margin-top: 8px;
-}
-
-.card-body .social-links .btn {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-}
-
-/* Main content social media styling */
-.social-links a {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    margin-right: 12px;
-    margin-bottom: 8px;
-    background-color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.social-links a:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    text-decoration: none;
-}
-
-.social-links a i {
-    font-size: 1.1rem;
-}
-
-/* Social Media Platform Colors */
-.btn-facebook,
-.btn-facebook:not(:disabled):not(.disabled) {
-    background-color: #1877f2;
-    border-color: #1877f2;
-    color: white;
-}
-
-.btn-facebook:hover,
-.btn-facebook:focus,
-.btn-facebook:active,
-.btn-facebook:not(:disabled):not(.disabled):hover,
-.btn-facebook:not(:disabled):not(.disabled):focus,
-.btn-facebook:not(:disabled):not(.disabled):active {
-    background-color: #166fe5;
-    border-color: #166fe5;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25);
-}
-
-.btn-facebook i {
-    color: white;
-}
-
-/* YouTube button styling */
-.btn-youtube,
-.btn-youtube:not(:disabled):not(.disabled) {
-    background-color: #ff0000;
-    border-color: #ff0000;
-    color: white;
-}
-
-.btn-youtube:hover,
-.btn-youtube:focus,
-.btn-youtube:active,
-.btn-youtube:not(:disabled):not(.disabled):hover,
-.btn-youtube:not(:disabled):not(.disabled):focus,
-.btn-youtube:not(:disabled):not(.disabled):active {
-    background-color: #cc0000;
-    border-color: #cc0000;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
-}
-
-.btn-youtube i {
-    color: white;
-}
-
-/* Instagram button styling */
-.btn-instagram,
-.btn-instagram:not(:disabled):not(.disabled) {
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    border-color: #e6683c;
-    color: white;
-}
-
-.btn-instagram:hover,
-.btn-instagram:focus,
-.btn-instagram:active,
-.btn-instagram:not(:disabled):not(.disabled):hover,
-.btn-instagram:not(:disabled):not(.disabled):focus,
-.btn-instagram:not(:disabled):not(.disabled):active {
-    background: linear-gradient(45deg, #d6821f 0%, #cc5a28 25%, #c22336 50%, #b81f52 75%, #a8146e 100%);
-    border-color: #cc5a28;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(230, 104, 60, 0.25);
-}
-
-.btn-instagram i {
-    color: white;
-}
-
-/* Twitter/X button styling */
-.btn-twitter,
-.btn-twitter:not(:disabled):not(.disabled) {
-    background-color: #000000;
-    border-color: #000000;
-    color: white;
-}
-
-.btn-twitter:hover,
-.btn-twitter:focus,
-.btn-twitter:active,
-.btn-twitter:not(:disabled):not(.disabled):hover,
-.btn-twitter:not(:disabled):not(.disabled):focus,
-.btn-twitter:not(:disabled):not(.disabled):active {
-    background-color: #333333;
-    border-color: #333333;
-    color: white;
-    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
-}
-
-.btn-twitter i {
-    color: white;
-}
-
-/* Footer Enhancements */
-.footer, .bg-dark {
-    background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
-    color: white;
-}
-
-.footer {
-    padding: 2rem 0;
-    margin-top: 4rem;
-}
-
-.footer a {
-    color: #adb5bd;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer a:hover {
-    color: var(--rugby-gold);
-}
-
-/* Alert Enhancements with Rugby Theme */
-.alert {
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-}
-
-.alert-success {
-    background-color: var(--rugby-light-green);
-    color: var(--rugby-dark-green);
-    border-left: 4px solid var(--rugby-green);
-}
-
-.alert-info {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-    border-left: 4px solid var(--rugby-green);
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #856404;
-    border-left: 4px solid var(--rugby-gold);
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
-}
-
-/* Dark mode alert styling */
-[data-theme="dark"] .alert-success {
-    background-color: rgba(76, 175, 80, 0.2);
-    color: #81c784;
-    border-left-color: #4caf50;
-}
-
-[data-theme="dark"] .alert-info {
-    background-color: rgba(76, 175, 80, 0.15);
-    color: #a5d6a7;
-    border-left-color: var(--rugby-green);
-}
-
-[data-theme="dark"] .alert-warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
-    border-left-color: var(--rugby-gold);
-}
-
-[data-theme="dark"] .alert-danger {
-    background-color: rgba(244, 67, 54, 0.2);
-    color: #ef5350;
-    border-left-color: #f44336;
-}
-
-/* Search and Filter Section */
-.filter-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border: 2px solid var(--rugby-light-green);
-}
-
-/* Old Man Footy Specific Enhancements */
-.rugby-masters-hero {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
-    color: white;
-padding: 4rem 0;
     position: relative;
     overflow: hidden;
 }
 
-.rugby-masters-hero::before {
+.clickable-card::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="2"/></svg>') repeat;
-    opacity: 0.3;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
 }
 
-.rugby-masters-card {
-    background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
-    border: 2px solid var(--rugby-light-green);
+.clickable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.3);
+}
+
+.clickable-card:hover::before {
+    left: 100%;
+}
+
+.clickable-card:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 104, 55, 0.2);
+}
+
+/* Ensure text color inheritance for clickable cards */
+.clickable-card .card-body * {
+    color: inherit !important;
+}
+
+/* Dashboard stats card hover effects for non-clickable cards */
+.dashboard-stats .card:not(.clickable-card):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 104, 55, 0.2);
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-sm);
     transition: all 0.3s ease;
+    background-color: var(--theme-card-bg);
+    border-color: var(--theme-border-color);
+    color: var(--theme-text-primary);
 }
 
-.rugby-masters-card:hover {
-    border-color: var(--rugby-green);
-    box-shadow: 0 8px 25px rgba(0, 104, 55, 0.15);
+.card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    border-bottom-color: var(--theme-border-color);
 }
 
 /* Dark mode styling for all cards */

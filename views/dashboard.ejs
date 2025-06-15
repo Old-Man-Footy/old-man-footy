@@ -70,13 +70,18 @@
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card text-white">
-                <div class="card-body text-center">
-                    <i class="bi bi-calendar-check display-4 mb-2"></i>
-                    <h3><%= upcomingCarnivals ? upcomingCarnivals.length : 0 %></h3>
-                    <p class="mb-0">Upcoming Events</p>
+            <a href="/carnivals?upcoming=true" class="text-decoration-none">
+                <div class="card text-white dashboard-stat-card clickable-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check display-4 mb-2"></i>
+                        <h3><%= upcomingCarnivals ? upcomingCarnivals.length : 0 %></h3>
+                        <p class="mb-0">Upcoming Events</p>
+                        <small class="text-white-50 mt-1 d-block">
+                            <i class="bi bi-arrow-right"></i> Click to view all
+                        </small>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-md-4 mb-3">
             <div class="card text-white">
