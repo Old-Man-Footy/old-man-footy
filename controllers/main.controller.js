@@ -27,7 +27,7 @@ const getIndex = async (req, res) => {
                 attributes: ['firstName', 'lastName']
             }],
             order: [['date', 'ASC']],
-            limit: 5
+            limit: 4
         });
 
         // Get statistics for the stats runner
