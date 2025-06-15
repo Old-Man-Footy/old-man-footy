@@ -564,9 +564,15 @@ const deleteCarnival = async (req, res) => {
  */
 const takeOwnership = async (req, res) => {
     try {
-        const result = await mySidelineService.takeOwnership(req.params.id, req.user.id);
+        // Use the Carnival model's takeOwnership method instead of mySidelineService
+        const result = await Carnival.takeOwnership(req.params.id, req.user.id);
         
-        req.flash('success_msg', result.message);
+        if (result.success) {
+            req.flash('success_msg', result.message);
+        } else {
+            req.flash('error_msg', result.message);
+        }
+        
         res.redirect(`/carnivals/${req.params.id}`);
 
     } catch (error) {

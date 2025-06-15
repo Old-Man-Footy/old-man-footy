@@ -846,7 +846,7 @@ class DatabaseSeeder {
     }
 
     /**
-     * Clear existing data using Sequelize
+     * Clear existing data using Sequelize with proper foreign key handling
      */
     async clearDatabase() {
         console.log('🧹 Clearing existing data...');
@@ -855,19 +855,24 @@ class DatabaseSeeder {
         const transaction = await sequelize.transaction();
         
         try {
+            // Disable foreign key constraints temporarily for SQLite
+            await sequelize.query('PRAGMA foreign_keys = OFF', { transaction });
+            
             // Clear junction tables first (foreign key dependencies)
-            await CarnivalClub.destroy({ where: {}, transaction });
-            await CarnivalSponsor.destroy({ where: {}, transaction });
-            await ClubSponsor.destroy({ where: {}, transaction });
+            await CarnivalClub.destroy({ where: {}, transaction, force: true });
+            await CarnivalSponsor.destroy({ where: {}, transaction, force: true });
+            await ClubSponsor.destroy({ where: {}, transaction, force: true });
             
             // Clear main tables in dependency order
-            await Carnival.destroy({ where: {}, transaction });
-            await User.destroy({ where: {}, transaction });
-            await Club.destroy({ where: {}, transaction });
-            await EmailSubscription.destroy({ where: {}, transaction });
-            await Sponsor.destroy({ where: {}, transaction });
+            await EmailSubscription.destroy({ where: {}, transaction, force: true });
+            await Carnival.destroy({ where: {}, transaction, force: true });
+            await User.destroy({ where: {}, transaction, force: true });
+            await Sponsor.destroy({ where: {}, transaction, force: true });
+            await Club.destroy({ where: {}, transaction, force: true });
             
-            // Reset auto-increment counters by recreating tables if needed
+            // Re-enable foreign key constraints
+            await sequelize.query('PRAGMA foreign_keys = ON', { transaction });
+            
             console.log('🔄 Resetting table sequences...');
             
             await transaction.commit();
@@ -1673,7 +1678,7 @@ class DatabaseSeeder {
             await this.createUsers();
             await this.createSponsors();
             await this.linkSponsorsToClubs();
-            await this.createManualCarnivals();
+                       await this.createManualCarnivals();
             await this.linkSponsorsToCarnivals();
             await this.linkClubsToCarnivals();
             await this.importMySidelineData();

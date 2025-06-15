@@ -243,6 +243,94 @@ class Carnival extends Model {
       order: [['date', 'ASC']]
     });
   }
+
+  /**
+   * Take ownership of a MySideline carnival
+   * This method handles the business logic for claiming unclaimed MySideline events
+   * @param {number} carnivalId - ID of the carnival to claim
+   * @param {number} userId - ID of the user claiming ownership
+   * @returns {Promise<Object>} Result object with success status and message
+   */
+  static async takeOwnership(carnivalId, userId) {
+    const User = require('./User');
+    
+    try {
+      // Input validation
+      if (!carnivalId || !userId) {
+        throw new Error('Carnival ID and User ID are required');
+      }
+
+      // Find the carnival
+      const carnival = await this.findByPk(carnivalId);
+      if (!carnival) {
+        throw new Error('Carnival not found');
+      }
+
+      // Find the user and include their club information
+      const user = await User.findByPk(userId, {
+        include: [{
+          model: require('./Club'),
+          as: 'club',
+          attributes: ['id', 'clubName', 'isActive']
+        }]
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Authorization checks
+      if (!user.clubId) {
+        throw new Error('You must be associated with a club to claim carnival ownership');
+      }
+
+      if (!user.club || !user.club.isActive) {
+        throw new Error('Your club must be active to claim carnival ownership');
+      }
+
+      // Business rule checks
+      if (carnival.isManuallyEntered) {
+        throw new Error('Can only claim ownership of MySideline imported events');
+      }
+
+      if (!carnival.lastMySidelineSync) {
+        throw new Error('This carnival was not imported from MySideline');
+      }
+
+      if (carnival.createdByUserId) {
+        throw new Error('This carnival already has an owner');
+      }
+
+      // All checks passed - update the carnival
+      await carnival.update({
+        createdByUserId: userId,
+        claimedAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      // Log the ownership claim for audit purposes
+      console.log(`🏆 Carnival ownership claimed: "${carnival.title}" (ID: ${carnivalId}) claimed by user ${userId} (${user.club.clubName})`);
+
+      return {
+        success: true,
+        message: `You have successfully claimed ownership of "${carnival.title}". You can now manage this carnival and its attendees.`,
+        carnival: carnival,
+        claimedBy: {
+          userId: user.id,
+          userName: `${user.firstName} ${user.lastName}`,
+          clubName: user.club.clubName
+        }
+      };
+
+    } catch (error) {
+      console.error(`❌ Failed to claim carnival ownership (ID: ${carnivalId}, User: ${userId}):`, error.message);
+      
+      return {
+        success: false,
+        message: error.message || 'An error occurred while claiming carnival ownership'
+      };
+    }
+  }
 }
 
 /**
