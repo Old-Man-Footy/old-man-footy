@@ -39,21 +39,98 @@
                         <h5 class="mb-0"><i class="bi bi-gear"></i> Club Profile Settings</h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="/clubs/manage/profile">
+                        <form method="POST" action="/clubs/manage/profile" enctype="multipart/form-data">
+                            <!-- Logo Upload Section for Primary Delegates -->
+                            <% if (user.isPrimaryDelegate) { %>
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-image"></i> Club Logo
+                                        </h6>
+                                        <div class="row align-items-center">
+                                            <div class="col-md-3">
+                                                <% if (club.logoUrl) { %>
+                                                    <div class="card">
+                                                        <img src="<%= club.logoUrl %>" class="card-img-top" alt="Current Club Logo" 
+                                                             style="height: 150px; object-fit: contain; background: #f8f9fa;">
+                                                        <div class="card-body text-center p-2">
+                                                            <small class="text-muted">Current Logo</small>
+                                                        </div>
+                                                    </div>
+                                                <% } else { %>
+                                                    <div class="card bg-light">
+                                                        <div class="card-body text-center" style="height: 150px; display: flex; align-items: center; justify-content: center;">
+                                                            <div>
+                                                                <i class="bi bi-image display-6 text-muted"></i>
+                                                                <div class="mt-2">
+                                                                    <small class="text-muted">No logo uploaded</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <label for="logo" class="form-label">Upload New Logo</label>
+                                                <div class="file-upload-area mb-3">
+                                                    <input type="file" class="form-control" id="logo" name="logo" 
+                                                           accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp" 
+                                                           style="display: none;">
+                                                    <i class="bi bi-cloud-upload display-6 text-muted"></i>
+                                                    <p class="upload-text mt-2">Click or drag to upload club logo</p>
+                                                    <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
+                                                </div>
+                                                <div class="form-text">
+                                                    Upload a logo for your club. Recommended size: 200x200 pixels or larger, square format.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
+
                             <!-- Basic Information -->
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <h6 class="text-primary mb-3"><i class="bi bi-info-circle"></i> Basic Information</h6>
+                                    <% if (!user.isPrimaryDelegate) { %>
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle"></i>
+                                            <strong>Note:</strong> Only primary delegates can edit core club information like name and state. 
+                                            Contact your primary delegate or support for changes to these fields.
+                                        </div>
+                                    <% } %>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="clubName" class="form-label">Club Name</label>
-                                    <input type="text" class="form-control" id="clubName" value="<%= club.clubName %>" disabled>
-                                    <div class="form-text">Contact support to change your club name</div>
+                                    <label for="clubName" class="form-label">Club Name *</label>
+                                    <% if (user.isPrimaryDelegate) { %>
+                                        <input type="text" class="form-control" id="clubName" name="clubName" 
+                                               value="<%= club.clubName %>" required maxlength="100">
+                                        <div class="form-text">Official name of the rugby league club</div>
+                                    <% } else { %>
+                                        <input type="text" class="form-control" id="clubName" value="<%= club.clubName %>" disabled>
+                                        <div class="form-text">Contact your primary delegate to change the club name</div>
+                                    <% } %>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="state" class="form-label">State</label>
-                                    <input type="text" class="form-control" id="state" value="<%= club.state || 'Not specified' %>" disabled>
-                                    <div class="form-text">Contact support to change your state</div>
+                                    <label for="state" class="form-label">State *</label>
+                                    <% if (user.isPrimaryDelegate) { %>
+                                        <select class="form-select" id="state" name="state" required>
+                                            <option value="">Select State</option>
+                                            <option value="NSW" <%= club.state === 'NSW' ? 'selected' : '' %>>NSW</option>
+                                            <option value="QLD" <%= club.state === 'QLD' ? 'selected' : '' %>>QLD</option>
+                                            <option value="VIC" <%= club.state === 'VIC' ? 'selected' : '' %>>VIC</option>
+                                            <option value="WA" <%= club.state === 'WA' ? 'selected' : '' %>>WA</option>
+                                            <option value="SA" <%= club.state === 'SA' ? 'selected' : '' %>>SA</option>
+                                            <option value="TAS" <%= club.state === 'TAS' ? 'selected' : '' %>>TAS</option>
+                                            <option value="NT" <%= club.state === 'NT' ? 'selected' : '' %>>NT</option>
+                                            <option value="ACT" <%= club.state === 'ACT' ? 'selected' : '' %>>ACT</option>
+                                        </select>
+                                        <div class="form-text">State where the club is based</div>
+                                    <% } else { %>
+                                        <input type="text" class="form-control" id="state" value="<%= club.state || 'Not specified' %>" disabled>
+                                        <div class="form-text">Contact your primary delegate to change the state</div>
+                                    <% } %>
                                 </div>
                             </div>
 
@@ -271,3 +348,5 @@
         </div>
     </div>
 </section>
+
+<script src="/js/club-manage.js"></script>
