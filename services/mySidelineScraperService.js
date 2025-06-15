@@ -414,6 +414,8 @@ class MySidelineScraperService {
                 locationAddressPart3: locationAddressPart3,
                 locationAddressPart4: locationAddressPart4,
                 mySidelineTitle: fullTitle,
+                mySidelineAddress: locationAddress, // Immutable for matching
+                mySidelineDate: eventDate, // Immutable for matching
                 organiserContactEmail: contactEmail,
                 organiserContactName: contactName,
                 organiserContactPhone: contactPhone,

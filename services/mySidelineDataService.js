@@ -12,49 +12,35 @@ class MySidelineDataService {
     }
 
     /**
-     * Find existing MySideline event using flexible matching
+     * Find existing MySideline event using robust matching with immutable fields
      * @param {Object} eventData - Event data to match against
      * @returns {Promise<Carnival|null>} Existing carnival or null
      */
     async findExistingMySidelineEvent(eventData) {
-        // Primary match: Use mySidelineTitle (this is the most reliable for MySideline events)
-        if (eventData.title) {
-            const primaryMatch = await Carnival.findOne({
-                where: {
-                    mySidelineTitle: eventData.title,
-                    isManuallyEntered: false // Only match MySideline events
-                }
-            });
-            
-            if (primaryMatch) {
-                return primaryMatch;
+        // Strategy 1: Use MySideline-specific matching fields (most reliable)
+        // This uses the immutable fields that never change after import
+        if (eventData.mySidelineTitle) {
+            const whereConditions = {
+                mySidelineTitle: eventData.mySidelineTitle,
+                isManuallyEntered: false
+            };
+
+            // Add mySidelineDate if available (null matches null, value matches value)
+            if (eventData.mySidelineDate !== undefined) {
+                whereConditions.mySidelineDate = eventData.mySidelineDate;
             }
-        }
-        
-        // Secondary match: Use combination of available fields
-        const whereConditions = {
-            isManuallyEntered: false
-        };
-        
-        // Add title condition
-        if (eventData.title) {
-            whereConditions.mySidelineTitle = eventData.title;
-        }
-        
-        // Add date condition if available
-        if (eventData.date) {
-            whereConditions.date = eventData.date;
-        }
-        
-        // Add location condition if available
-        if (eventData.locationAddress) {
-            whereConditions.locationAddress = eventData.locationAddress;
-        }
-        
-        // Only search if we have meaningful criteria
-        if (Object.keys(whereConditions).length > 1) { 
-            // More than just isManuallyEntered
-            return await Carnival.findOne({ where: whereConditions });
+
+            // Add mySidelineAddress if available (null matches null, value matches value)
+            if (eventData.mySidelineAddress !== undefined) {
+                whereConditions.mySidelineAddress = eventData.mySidelineAddress;
+            }
+
+            const match = await Carnival.findOne({ where: whereConditions });
+            
+            if (match) {
+                console.log(`Found existing MySideline event by immutable fields: "${eventData.mySidelineTitle}"`);
+                return match;
+            }
         }
         
         return null;
@@ -141,7 +127,7 @@ class MySidelineDataService {
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
-                        clubLogoURL: eventData.clubLogoURL, // Fix field name mapping
+                        clubLogoURL: eventData.clubLogoURL,
                         date: eventData.date,
                         googleMapsUrl: eventData.googleMapsUrl,
                         isMySidelineCard: eventData.isMySidelineCard,
@@ -153,6 +139,8 @@ class MySidelineDataService {
                         locationAddressPart3: eventData.locationAddressPart3,
                         locationAddressPart4: eventData.locationAddressPart4,
                         mySidelineTitle: eventData.mySidelineTitle,
+                        mySidelineAddress: eventData.mySidelineAddress,
+                        mySidelineDate: eventData.mySidelineDate,
                         organiserContactEmail: eventData.organiserContactEmail,
                         organiserContactName: eventData.organiserContactName,
                         organiserContactPhone: eventData.organiserContactPhone,

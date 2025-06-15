@@ -266,6 +266,16 @@ Carnival.init({
     allowNull: true,
     comment: 'Original MySideline title for matching purposes - never changes once set'
   },
+  mySidelineAddress: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Original MySideline address - immutable, used for duplicate detection'
+  },
+  mySidelineDate: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Original MySideline date - immutable, used for duplicate detection'
+  },
   date: {
     type: DataTypes.DATE,
     allowNull: true, // Allow null for MySideline imports
