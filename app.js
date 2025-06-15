@@ -89,16 +89,27 @@ async function initializeDatabase() {
         
         console.log('✅ SQLite database initialized successfully');
         
-        // Initialize MySideline service after database connection
-        mySidelineService.initializeScheduledSync();
+        return true;
     } catch (error) {
         console.error('❌ Database initialization failed:', error);
         process.exit(1);
     }
 }
 
-// Initialize database
-initializeDatabase();
+/**
+ * Initialize MySideline sync service
+ * This runs after the server is up and running
+ */
+async function initializeMySidelineSync() {
+    try {
+        console.log('🔄 Initializing MySideline sync service...');
+        mySidelineService.initializeScheduledSync();
+        console.log('✅ MySideline sync service initialized successfully');
+    } catch (error) {
+        console.error('❌ MySideline sync initialization failed:', error);
+        // Don't exit process - let the site run without sync if needed
+    }
+}
 
 // Routes
 const indexRoutes = require('./routes/index');
@@ -137,9 +148,38 @@ app.use((error, req, res, next) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Old Man Footy server running on port ${PORT}`);
-});
+/**
+ * Main startup sequence
+ * 1. Initialize database
+ * 2. Start server
+ * 3. Initialize MySideline sync
+ */
+async function startServer() {
+    try {
+        // Step 1: Initialize database
+        await initializeDatabase();
+        
+        // Step 2: Start the server
+        const PORT = process.env.PORT || 3000;
+        const server = app.listen(PORT, () => {
+            console.log(`🚀 Old Man Footy server running on port ${PORT}`);
+            console.log('📊 Site is now accessible and ready to serve requests');
+        });
+        
+        // Step 3: Initialize MySideline sync after server is running
+        // Add a small delay to ensure server is fully up
+        setTimeout(async () => {
+            await initializeMySidelineSync();
+        }, 1000);
+        
+        return server;
+    } catch (error) {
+        console.error('❌ Server startup failed:', error);
+        process.exit(1);
+    }
+}
+
+// Start the server with the new sequence
+startServer();
 
 module.exports = app;
