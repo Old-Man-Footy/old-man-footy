@@ -163,6 +163,13 @@ User.init({
       this.setDataValue('lastName', value ? value.trim() : value);
     }
   },
+  phoneNumber: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    set(value) {
+      this.setDataValue('phoneNumber', value ? value.trim() : value);
+    }
+  },
   clubId: {
     type: DataTypes.INTEGER,
     allowNull: true,

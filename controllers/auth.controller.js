@@ -72,7 +72,7 @@ const registerUser = async (req, res) => {
             });
         }
 
-        const { firstName, lastName, email, password } = req.body;
+        const { firstName, lastName, email, password, phoneNumber } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
@@ -90,6 +90,7 @@ const registerUser = async (req, res) => {
             lastName: lastName.trim(),
             email: email.toLowerCase(),
             passwordHash: password,
+            phoneNumber: phoneNumber?.trim() || null,
             clubId: null, // No club association initially
             isPrimaryDelegate: false, // Will be set when they create/join a club
             isActive: true

@@ -41,6 +41,16 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="phoneNumber" class="form-label">Phone Number (Optional)</label>
+                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
+                                   value="<%= typeof formData !== 'undefined' ? formData.phoneNumber : '' %>" 
+                                   placeholder="e.g., 0412 345 678 or +61 2 9876 5432"
+                                   pattern="[\+]?[\d\s\-\(\)]{7,20}">
+                            <div class="form-text">Used for club contact details when you create a club</div>
+                            <div class="invalid-feedback">Please enter a valid phone number format (7-20 characters, numbers, spaces, dashes, brackets allowed)</div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" 
                                    minlength="8" required>

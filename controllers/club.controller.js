@@ -1090,9 +1090,9 @@ const postCreateOnBehalf = async (req, res) => {
             clubName: clubName.trim(),
             state,
             location: location?.trim(),
-            contactEmail: contactEmail?.trim(),
-            contactPhone: contactPhone?.trim(),
-            contactPerson: contactPerson?.trim(),
+            contactEmail: user.email, // Auto-populate from user
+            contactPhone: user.phoneNumber, // Auto-populate from user's phone number
+            contactPerson: user.getFullName(), // Auto-populate from user's name
             description: description?.trim(),
             createdByProxy: true,
             inviteEmail: inviteEmail.trim(),
@@ -1259,6 +1259,9 @@ const createClub = async (req, res) => {
                 state,
                 location: location.trim(),
                 description: description?.trim(),
+                contactEmail: user.email, // Auto-populate from user
+                contactPhone: user.phoneNumber, // Auto-populate from user's phone number
+                contactPerson: user.getFullName(), // Auto-populate from user's name
                 isActive: true,
                 isPubliclyListed: true,
                 createdByUserId: user.id

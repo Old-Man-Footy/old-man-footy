@@ -13,6 +13,17 @@ router.post('/register', [
     body('firstName').trim().notEmpty().withMessage('First name is required'),
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
     body('email').isEmail().withMessage('Valid email is required'),
+    body('phoneNumber').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
+        .custom((value) => {
+            if (value && value.trim()) {
+                // Allow common Australian phone number formats: +61, 04, (02), etc.
+                const phoneRegex = /^[\+]?[\d\s\-\(\)]{7,20}$/;
+                if (!phoneRegex.test(value.trim())) {
+                    throw new Error('Please enter a valid phone number format');
+                }
+            }
+            return true;
+        }),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
 ], authController.registerUser);
 
