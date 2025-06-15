@@ -1,5 +1,194 @@
 // Old Man Footy Application JavaScript
 
+/**
+ * Theme Management System
+ * Handles dark/light mode toggle with localStorage persistence
+ */
+window.themeManager = {
+    // Theme constants
+    THEMES: {
+        LIGHT: 'light',
+        DARK: 'dark'
+    },
+    
+    STORAGE_KEY: 'oldmanfooty-theme',
+    
+    // Current theme state
+    currentTheme: 'light',
+    
+    /**
+     * Initialize theme system
+     */
+    init: function() {
+        this.loadSavedTheme();
+        this.setupToggleButton();
+        this.updateThemeIcon();
+        console.log('✅ Theme manager initialized');
+    },
+    
+    /**
+     * Load theme from localStorage or detect system preference
+     */
+    loadSavedTheme: function() {
+        // Check localStorage first
+        const savedTheme = localStorage.getItem(this.STORAGE_KEY);
+        
+        if (savedTheme && Object.values(this.THEMES).includes(savedTheme)) {
+            this.currentTheme = savedTheme;
+        } else {
+            // Fallback to system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                this.currentTheme = this.THEMES.DARK;
+            } else {
+                this.currentTheme = this.THEMES.LIGHT;
+            }
+        }
+        
+        this.applyTheme(this.currentTheme);
+        console.log(`🎨 Loaded theme: ${this.currentTheme}`);
+    },
+    
+    /**
+     * Apply theme to document
+     */
+    applyTheme: function(theme) {
+        const html = document.documentElement;
+        
+        if (theme === this.THEMES.DARK) {
+            html.setAttribute('data-theme', 'dark');
+        } else {
+            html.removeAttribute('data-theme');
+        }
+        
+        this.currentTheme = theme;
+        this.updateThemeIcon();
+        
+        // Save to localStorage
+        localStorage.setItem(this.STORAGE_KEY, theme);
+        
+        // Dispatch custom event for other components
+        window.dispatchEvent(new CustomEvent('themeChanged', { 
+            detail: { theme: theme } 
+        }));
+    },
+    
+    /**
+     * Toggle between light and dark themes
+     */
+    toggleTheme: function() {
+        const newTheme = this.currentTheme === this.THEMES.LIGHT 
+            ? this.THEMES.DARK 
+            : this.THEMES.LIGHT;
+            
+        this.applyTheme(newTheme);
+        
+        // Add visual feedback
+        this.showToggleFeedback();
+        
+        console.log(`🔄 Theme toggled to: ${newTheme}`);
+    },
+    
+    /**
+     * Update the theme toggle button icon
+     */
+    updateThemeIcon: function() {
+        const themeIcon = document.getElementById('themeIcon');
+        if (!themeIcon) return;
+        
+        // Remove existing classes
+        themeIcon.className = '';
+        
+        if (this.currentTheme === this.THEMES.DARK) {
+            themeIcon.className = 'bi bi-sun-fill';
+            themeIcon.parentElement.title = 'Switch to light mode';
+        } else {
+            themeIcon.className = 'bi bi-moon-fill';
+            themeIcon.parentElement.title = 'Switch to dark mode';
+        }
+    },
+    
+    /**
+     * Setup theme toggle button event listener
+     */
+    setupToggleButton: function() {
+        const toggleButton = document.getElementById('themeToggle');
+        if (!toggleButton) {
+            console.warn('⚠️ Theme toggle button not found');
+            return;
+        }
+        
+        toggleButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleTheme();
+        });
+        
+        // Add keyboard support
+        toggleButton.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleTheme();
+            }
+        });
+        
+        console.log('🎯 Theme toggle button setup complete');
+    },
+    
+    /**
+     * Show visual feedback when theme is toggled
+     */
+    showToggleFeedback: function() {
+        const toggleButton = document.getElementById('themeToggle');
+        if (!toggleButton) return;
+        
+        // Add animation class
+        toggleButton.style.transform = 'scale(1.2)';
+        
+        setTimeout(() => {
+            toggleButton.style.transform = '';
+        }, 150);
+        
+        // Optional: Show toast notification
+        if (window.oldmanfooty && window.oldmanfooty.showToast) {
+            const themeName = this.currentTheme === this.THEMES.DARK ? 'Dark' : 'Light';
+            window.oldmanfooty.showToast(`${themeName} mode activated`, 'success');
+        }
+    },
+    
+    /**
+     * Listen for system theme changes
+     */
+    setupSystemThemeListener: function() {
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            mediaQuery.addEventListener('change', (e) => {
+                // Only auto-switch if user hasn't manually set a preference
+                const hasManualPreference = localStorage.getItem(this.STORAGE_KEY);
+                
+                if (!hasManualPreference) {
+                    const systemTheme = e.matches ? this.THEMES.DARK : this.THEMES.LIGHT;
+                    this.applyTheme(systemTheme);
+                    console.log(`🔄 System theme changed to: ${systemTheme}`);
+                }
+            });
+        }
+    },
+    
+    /**
+     * Get current theme
+     */
+    getCurrentTheme: function() {
+        return this.currentTheme;
+    },
+    
+    /**
+     * Check if dark mode is active
+     */
+    isDarkMode: function() {
+        return this.currentTheme === this.THEMES.DARK;
+    }
+};
+
 window.oldmanfooty = {
     // Confirmation dialogs
     confirmDelete: function(message) {
@@ -187,6 +376,12 @@ window.oldmanfooty = {
             this.initTextareas();
             this.initSearchFilters();
             this.initTooltips(); // Add tooltip initialization
+            
+            // Initialize theme manager
+            if (window.themeManager) {
+                window.themeManager.init();
+                window.themeManager.setupSystemThemeListener();
+            }
             
             if (this.utils) {
                 console.log('Old Man Footy app initialized');
