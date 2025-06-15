@@ -5,13 +5,7 @@ const { ensureAuthenticated } = require('../middleware/auth');
 const { clubUpload, handleUploadError } = require('../middleware/upload');
 const clubController = require('../controllers/club.controller');
 
-// Public club listings
-router.get('/', clubController.showClubListings);
-
-// Individual club profile (public)
-router.get('/:id', clubController.showClubProfile);
-
-// Club management (authenticated delegates only)
+// Club management (authenticated delegates only) - MUST come before /:id route
 router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
 
 // Create new club (for users without clubs)
@@ -21,6 +15,12 @@ router.post('/create', ensureAuthenticated, [
     body('location').isLength({ min: 2, max: 100 }).withMessage('Location must be between 2 and 100 characters'),
     body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
 ], clubController.createClub);
+
+// API endpoint for club autocomplete search
+router.get('/api/search', clubController.searchClubs);
+
+// Join existing club route
+router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 
 // Update club profile with structured upload support
 router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
@@ -74,8 +74,14 @@ router.post('/create-on-behalf', ensureAuthenticated, [
     body('customMessage').optional().isLength({ max: 2000 }).withMessage('Custom message must be 2000 characters or less')
 ], clubController.postCreateOnBehalf);
 
-// Club ownership claiming routes
+// Club ownership claiming routes - MUST come before /:id route
 router.get('/:id/claim', ensureAuthenticated, clubController.getClaimOwnership);
 router.post('/:id/claim', ensureAuthenticated, clubController.postClaimOwnership);
+
+// Public club listings - MUST come before /:id route
+router.get('/', clubController.showClubListings);
+
+// Individual club profile (public) - MUST come LAST as it catches all /:id patterns
+router.get('/:id', clubController.showClubProfile);
 
 module.exports = router;

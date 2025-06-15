@@ -82,6 +82,15 @@ const getIndex = async (req, res) => {
  */
 const getDashboard = async (req, res) => {
     try {
+        // Load user with full club information
+        const userWithClub = await User.findByPk(req.user.id, {
+            include: [{
+                model: Club,
+                as: 'club',
+                attributes: ['id', 'clubName', 'state', 'location', 'isActive', 'isPubliclyListed']
+            }]
+        });
+
         // Get user's carnivals
         const userCarnivals = await Carnival.findAll({
             where: { 
@@ -103,31 +112,34 @@ const getDashboard = async (req, res) => {
 
         // Get user's clubs (if they have any associated)
         let clubs = [];
-        if (req.user.clubId) {
-            const userClub = await Club.findByPk(req.user.clubId);
-            if (userClub) {
-                clubs = [userClub];
-            }
+        if (userWithClub.clubId && userWithClub.club) {
+            clubs = [userWithClub.club];
         }
 
         // Get eligible delegates for transfer (if user is primary delegate)
         let eligibleDelegates = [];
-        if (req.user.isPrimaryDelegate && req.user.clubId) {
+        if (userWithClub.isPrimaryDelegate && userWithClub.clubId) {
             eligibleDelegates = await User.findAll({
                 where: {
-                    clubId: req.user.clubId,
+                    clubId: userWithClub.clubId,
                     isActive: true,
                     isPrimaryDelegate: false,
-                    id: { [Op.ne]: req.user.id } // Exclude current user
+                    id: { [Op.ne]: userWithClub.id } // Exclude current user
                 },
                 attributes: ['id', 'firstName', 'lastName', 'email'],
                 order: [['firstName', 'ASC'], ['lastName', 'ASC']]
             });
         }
 
+        // Update the user object to include club information for template
+        const enrichedUser = {
+            ...userWithClub.toJSON(),
+            clubId: userWithClub.club // This provides clubId.clubName for the template
+        };
+
         return res.render('dashboard', {
             title: 'Dashboard',
-            user: req.user,
+            user: enrichedUser,
             userCarnivals,
             upcomingCarnivals,
             clubs, // Add clubs variable for the dashboard checklist

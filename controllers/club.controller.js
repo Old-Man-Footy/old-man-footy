@@ -1294,11 +1294,188 @@ const createClub = async (req, res) => {
     }
 };
 
+/**
+ * API endpoint for club autocomplete search
+ * Searches both club names and alternate names
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const searchClubs = async (req, res) => {
+    try {
+        const { q } = req.query;
+        
+        if (!q || q.trim().length < 2) {
+            return res.json({
+                success: true,
+                clubs: []
+            });
+        }
+
+        const searchTerm = q.trim();
+
+        // Search clubs by name
+        const clubsByName = await Club.findAll({
+            where: {
+                clubName: { [Op.like]: `%${searchTerm}%` },
+                isActive: true
+            },
+            attributes: ['id', 'clubName', 'location', 'state'],
+            order: [['clubName', 'ASC']],
+            limit: 10
+        });
+
+        // Search clubs by alternate names
+        const clubIdsByAlternate = await ClubAlternateName.searchClubsByAlternateName(searchTerm);
+        
+        let clubsByAlternate = [];
+        if (clubIdsByAlternate.length > 0) {
+            clubsByAlternate = await Club.findAll({
+                where: {
+                    id: { [Op.in]: clubIdsByAlternate },
+                    isActive: true
+                },
+                attributes: ['id', 'clubName', 'location', 'state'],
+                include: [{
+                    model: ClubAlternateName,
+                    as: 'alternateNames',
+                    where: {
+                        alternateName: { [Op.like]: `%${searchTerm}%` },
+                        isActive: true
+                    },
+                    attributes: ['alternateName'],
+                    required: true
+                }],
+                order: [['clubName', 'ASC']],
+                limit: 10
+            });
+        }
+
+        // Combine and deduplicate results
+        const allClubs = [...clubsByName];
+        
+        clubsByAlternate.forEach(altClub => {
+            if (!allClubs.find(club => club.id === altClub.id)) {
+                allClubs.push(altClub);
+            }
+        });
+
+        // Format results for autocomplete
+        const formattedClubs = allClubs.slice(0, 10).map(club => {
+            const matchedAlternate = club.alternateNames && club.alternateNames.length > 0 
+                ? club.alternateNames[0].alternateName 
+                : null;
+
+            return {
+                id: club.id,
+                clubName: club.clubName,
+                location: club.location,
+                state: club.state,
+                matchedAlternate,
+                displayText: matchedAlternate 
+                    ? `${club.clubName} (also known as: ${matchedAlternate})`
+                    : club.clubName,
+                subtitle: `${club.location}, ${club.state}`
+            };
+        });
+
+        res.json({
+            success: true,
+            clubs: formattedClubs
+        });
+
+    } catch (error) {
+        console.error('Error searching clubs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error searching clubs'
+        });
+    }
+};
+
+/**
+ * Join an existing club
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const joinClub = async (req, res) => {
+    try {
+        const user = req.user;
+        const { id } = req.params;
+        
+        // Ensure user doesn't already have a club
+        if (user.clubId) {
+            req.flash('error_msg', 'You are already associated with a club. You can only be a member of one club at a time.');
+            return res.redirect('/clubs/manage');
+        }
+
+        const club = await Club.findOne({
+            where: {
+                id,
+                isActive: true
+            },
+            include: [{
+                model: User,
+                as: 'delegates',
+                where: { isActive: true, isPrimaryDelegate: true },
+                required: false,
+                attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate']
+            }]
+        });
+
+        if (!club) {
+            req.flash('error_msg', 'Club not found or is not active.');
+            return res.redirect('/clubs/manage');
+        }
+
+        // Check if club has a primary delegate
+        const primaryDelegate = club.delegates && club.delegates.find(delegate => delegate.isPrimaryDelegate);
+        
+        if (primaryDelegate) {
+            // Club has a primary delegate - user should contact them for an invitation
+            req.flash('error_msg', `This club already has a primary delegate (${primaryDelegate.firstName} ${primaryDelegate.lastName}). Please contact them to request an invitation to join the club. You can find their contact information on the club's profile page.`);
+            return res.redirect(`/clubs/${club.id}`);
+        }
+
+        // Club doesn't have a primary delegate - allow direct joining
+        // Use database transaction for safe user association
+        const { sequelize } = require('../models');
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Associate user with the club as a regular delegate (not primary)
+            await user.update({
+                clubId: club.id,
+                isPrimaryDelegate: false
+            }, { transaction });
+
+            // Commit the transaction
+            await transaction.commit();
+
+            console.log(`✅ User ${user.email} joined club: ${club.clubName} (ID: ${club.id})`);
+            
+            req.flash('success_msg', `You have successfully joined "${club.clubName}" as a club delegate. You can now create carnivals for this club.`);
+            res.redirect('/dashboard');
+
+        } catch (transactionError) {
+            // Rollback the transaction
+            await transaction.rollback();
+            throw transactionError;
+        }
+
+    } catch (error) {
+        console.error('Error joining club:', error);
+        req.flash('error_msg', 'An error occurred while joining the club. Please try again.');
+        res.redirect('/clubs/manage');
+    }
+};
+
 module.exports = {
     showClubListings,
     showClubProfile,
     showClubManagement,
     createClub,
+    searchClubs,
+    joinClub,
     updateClubProfile,
     getClubImages,
     deleteClubImage,

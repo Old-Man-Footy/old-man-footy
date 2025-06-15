@@ -69,12 +69,30 @@
                                 </ul>
                             </div>
 
-                            <!-- Quick Club Creation Form -->
-                            <form method="POST" action="/clubs/create" class="text-start">
+                            <!-- Quick Club Creation Form with Autocomplete -->
+                            <form method="POST" action="/clubs/create" class="text-start" id="clubCreationForm">
                                 <div class="mb-3">
                                     <label for="clubName" class="form-label">Club Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="clubName" name="clubName" required 
-                                           placeholder="e.g., Parramatta Masters Rugby League">
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="clubName" name="clubName" required 
+                                               placeholder="Start typing club name..." 
+                                               autocomplete="off">
+                                        <div id="clubSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
+                                    </div>
+                                    <div class="form-text">
+                                        <span id="autocompleteHelp">Start typing to see if a club already exists with that name</span>
+                                    </div>
+                                    <div id="joinClubOption" class="alert alert-success mt-2" style="display: none;">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong><i class="bi bi-check-circle"></i> Club Found!</strong>
+                                                <br><span id="foundClubDetails"></span>
+                                            </div>
+                                            <button type="button" class="btn btn-success btn-sm" id="joinFoundClub">
+                                                <i class="bi bi-people"></i> Join This Club
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="row">
@@ -289,54 +307,6 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Search functionality
-    const searchInput = document.getElementById('clubSearch');
-    const stateFilter = document.getElementById('stateFilter');
-    const clubItems = document.querySelectorAll('.club-item');
-    
-    function filterClubs() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const selectedState = stateFilter.value;
-        
-        clubItems.forEach(item => {
-            const clubName = item.dataset.clubName;
-            const location = item.dataset.location;
-            const state = item.dataset.state;
-            
-            const matchesSearch = !searchTerm || 
-                clubName.includes(searchTerm) || 
-                location.includes(searchTerm);
-            const matchesState = !selectedState || state === selectedState;
-            
-            if (matchesSearch && matchesState) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }
-    
-    searchInput.addEventListener('input', filterClubs);
-    stateFilter.addEventListener('change', filterClubs);
-    
-    // Contact delegate modal
-    const contactButtons = document.querySelectorAll('.contact-delegate-btn');
-    const contactModal = new bootstrap.Modal(document.getElementById('contactDelegateModal'));
-    
-    contactButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const clubName = this.dataset.clubName;
-            const delegateName = this.dataset.delegateName;
-            const clubId = this.closest('.club-item').querySelector('a').getAttribute('href').split('/').pop();
-            
-            document.getElementById('modalClubName').textContent = clubName;
-            document.getElementById('modalDelegateName').textContent = delegateName;
-            document.getElementById('modalClubProfileLink').setAttribute('href', `/clubs/${clubId}`);
-            
-            contactModal.show();
-        });
-    });
-});
-</script>
+<!-- Include external JavaScript files -->
+<script src="/js/club-autocomplete.js"></script>
+<script src="/js/club-options.js"></script>
