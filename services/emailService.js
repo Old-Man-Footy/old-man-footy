@@ -706,8 +706,8 @@ Reply to: ${email}
         `;
 
         const mailOptions = {
-            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.com.au',
-            to: process.env.SUPPORT_EMAIL || 'support@oldmanfooty.com.au',
+            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.au',
+            to: process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au',
             replyTo: email,
             subject: emailSubject,
             text: textContent,
@@ -761,7 +761,7 @@ Reply to: ${email}
                             <li>We've received your message and it's been forwarded to the appropriate team member</li>
                             <li>We typically respond to inquiries within 1-2 business days</li>
                             <li>You'll receive a response at this email address: <strong>${email}</strong></li>
-                            <li>If your inquiry is urgent, you can also email us directly at support@oldmanfooty.com.au</li>
+                            <li>If your inquiry is urgent, you can also email us directly at support@oldmanfooty.au</li>
                         </ul>
                     </div>
                     
@@ -803,7 +803,7 @@ What happens next?
 - We've received your message and it's been forwarded to the appropriate team member
 - We typically respond to inquiries within 1-2 business days
 - You'll receive a response at this email address: ${email}
-- If your inquiry is urgent, you can also email us directly at support@oldmanfooty.com.au
+- If your inquiry is urgent, you can also email us directly at support@oldmanfooty.au
 
 While you wait, feel free to explore more of what Old Man Footy has to offer:
 - Browse Carnivals: ${process.env.BASE_URL || 'http://localhost:3000'}/carnivals
@@ -816,7 +816,7 @@ We'll respond to your inquiry from our support team shortly.
         `;
 
         const mailOptions = {
-            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.com.au',
+            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.au',
             to: email,
             subject: `Thank you for contacting Old Man Footy - ${subjectMapping[subject] || 'Your Inquiry'}`,
             text: textContent,

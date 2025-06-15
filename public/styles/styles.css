@@ -873,7 +873,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 .rugby-masters-hero {
     background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
     color: white;
-    padding: 4rem 0;
+padding: 4rem 0;
     position: relative;
     overflow: hidden;
 }
@@ -1114,9 +1114,9 @@ button[type="submit"]:contains("Complete Registration"):focus {
 @media (max-width: 480px) {
     .image-carousel {
         height: 250px;
-    }
-    
-    .carousel-button {
+}
+
+.carousel-button {
         width: 35px;
         height: 35px;
     }
@@ -1153,7 +1153,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 }
 
 .community-gallery .text-muted {
-    color: #6c757d !important;
+color: #6c757d !important;
 }
 
 
@@ -1162,12 +1162,12 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background-color: #1877f2;
     border-color: #1877f2;
     color: white;
-}
+    }
 
 .btn-facebook:hover,
 .btn-facebook:focus,
 .btn-facebook:active {
-background-color: #166fe5;
+    background-color: #166fe5;
     border-color: #166fe5;
     color: white;
 }
@@ -1197,7 +1197,7 @@ background-color: #166fe5;
     background-color: #1a1a1a;
     border-color: #1a1a1a;
     color: white;
-}
+    }
 
 .btn-linkedin {
     background-color: #0077b5;
@@ -1337,4 +1337,83 @@ social-links a.btn-twitter:focus,
     border-color: #1a1a1a !important;
     color: white !important;
     transform: translateY(-1px) !important;
+}
+
+/* Bootstrap Info Class Overrides - Match Rugby Theme */
+.bg-info {
+    background-color: var(--rugby-gold); 
+    border-color: var(--rugby-gold);
+    color: var(--rugby-dark-green);
+}
+
+.btn-info {
+    background-color: var(--rugby-gold);
+    border-color: var(--rugby-gold);
+    color: var(--rugby-dark-green);
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+    background-color: var(--rugby-gold);
+    border-color: var(--rugby-gold);
+    color: var(--rugby-dark-green);
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+}
+
+.btn-outline-info {
+    color: var(--rugby-green);
+    border-color: var(--rugby-green);
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus,
+.btn-outline-info:active {
+    background-color: var(--rugby-green);
+    border-color: var(--rugby-green);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+}
+
+.badge.bg-info {
+    background-color: var(--rugby-green) !important;
+    color: white;
+}
+
+.text-info {
+    color: var(--rugby-green) !important;
+}
+
+.border-info {
+    border-color: var(--rugby-green) !important;
+}
+
+.card.bg-info {
+    background-color: var(--rugby-green) !important;
+    color: white;
+}
+
+.card-header.bg-info {
+    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green)) !important;
+    color: white;
+    border-bottom: 2px solid var(--rugby-dark-green);
+}
+
+/* Alert info styling update */
+.alert-info {
+    background-color: var(--rugby-light-green);
+    color: var(--rugby-dark-green);
+    border-left: 4px solid var(--rugby-green);
+    border: 1px solid rgba(0, 104, 55, 0.2);
+}
+
+/* Progress bar info styling */
+.progress-bar.bg-info {
+    background-color: var(--rugby-green) !important;
+}
+
+/* Override any remaining Bootstrap cyan info colors */
+:root {
+    --bs-info: var(--rugby-green) !important;
+    --bs-info-rgb: 0, 104, 55 !important;
 }

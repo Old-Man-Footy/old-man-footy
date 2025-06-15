@@ -56,6 +56,32 @@
                             <div class="invalid-feedback">Please provide your club name.</div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="clubState" class="form-label">Club State</label>
+                                <select class="form-select" id="clubState" name="clubState" required>
+                                    <option value="">Select State</option>
+                                    <option value="NSW" <%= typeof formData !== 'undefined' && formData.clubState === 'NSW' ? 'selected' : '' %>>NSW</option>
+                                    <option value="QLD" <%= typeof formData !== 'undefined' && formData.clubState === 'QLD' ? 'selected' : '' %>>QLD</option>
+                                    <option value="VIC" <%= typeof formData !== 'undefined' && formData.clubState === 'VIC' ? 'selected' : '' %>>VIC</option>
+                                    <option value="WA" <%= typeof formData !== 'undefined' && formData.clubState === 'WA' ? 'selected' : '' %>>WA</option>
+                                    <option value="SA" <%= typeof formData !== 'undefined' && formData.clubState === 'SA' ? 'selected' : '' %>>SA</option>
+                                    <option value="TAS" <%= typeof formData !== 'undefined' && formData.clubState === 'TAS' ? 'selected' : '' %>>TAS</option>
+                                    <option value="NT" <%= typeof formData !== 'undefined' && formData.clubState === 'NT' ? 'selected' : '' %>>NT</option>
+                                    <option value="ACT" <%= typeof formData !== 'undefined' && formData.clubState === 'ACT' ? 'selected' : '' %>>ACT</option>
+                                </select>
+                                <div class="invalid-feedback">Please select your club's state.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="clubAddress" class="form-label">Club Address</label>
+                                <input type="text" class="form-control" id="clubAddress" name="clubAddress" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.clubAddress : '' %>" 
+                                       placeholder="City, Suburb, or General Location" required>
+                                <div class="form-text">General location or address for your club.</div>
+                                <div class="invalid-feedback">Please provide your club's address or location.</div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" 

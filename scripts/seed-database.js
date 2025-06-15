@@ -917,7 +917,7 @@ class DatabaseSeeder {
         
         // Create admin user
         const adminUser = await User.create({
-            email: 'admin@oldmanfooty.com.au',
+            email: 'admin@oldmanfooty.au',
             firstName: 'Admin',
             lastName: 'User',
             passwordHash: 'admin123', // Will be hashed by model hook
@@ -1682,7 +1682,7 @@ class DatabaseSeeder {
             
             console.log('\n✅ Database seeding completed successfully!');
             console.log('\n🔐 Login credentials:');
-            console.log('   Admin: admin@oldmanfooty.com.au / admin123');
+            console.log('   Admin: admin@oldmanfooty.au / admin123');
             console.log('   Delegates: primary@[clubname].com.au / delegate123');
             
         } catch (error) {

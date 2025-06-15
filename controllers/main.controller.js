@@ -441,7 +441,7 @@ const postContact = async (req, res) => {
 
         } catch (emailError) {
             console.error('Error sending contact form email:', emailError);
-            req.flash('error_msg', 'Sorry, there was an error sending your message. Please try again or email us directly at support@oldmanfooty.com.au');
+            req.flash('error_msg', 'Sorry, there was an error sending your message. Please try again or email us directly at support@oldmanfooty.au');
             res.render('contact', {
                 title: 'Contact Us',
                 formData: req.body,

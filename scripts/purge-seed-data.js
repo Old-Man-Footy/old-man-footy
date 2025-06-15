@@ -2,7 +2,7 @@
  * Production Data Purge Script - Remove Seed Data Only
  * 
  * This script removes all development seed data while preserving:
- * - The main administrator account (admin@oldmanfooty.com.au)
+ * - The main administrator account (admin@oldmanfooty.au)
  * - Any User Acceptance Testing (UAT) data
  * - Real production data created by actual users
  * 
@@ -82,7 +82,7 @@ const SEED_DATA_PATTERNS = {
  * Protected accounts that should never be deleted
  */
 const PROTECTED_ACCOUNTS = [
-    'admin@oldmanfooty.com.au'  // Main administrator account
+    'admin@oldmanfooty.au'  // Main administrator account
 ];
 
 class SeedDataPurger {
