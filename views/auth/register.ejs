@@ -48,12 +48,60 @@
                             <datalist id="clubList">
                                 <% if (clubs && clubs.length > 0) { %>
                                     <% clubs.forEach(club => { %>
-                                        <option value="<%= club.clubName %>" data-state="<%= club.state || '' %>" data-location="<%= club.location || '' %>">
+                                        <option value="<%= club.clubName %>" data-state="<%= club.state || '' %>" data-location="<%= club.location || '' %>" data-active="<%= club.isActive %>">
                                     <% }) %>
                                 <% } %>
                             </datalist>
                             <div class="form-text">Start typing to see existing clubs or enter a new club name.</div>
                             <div class="invalid-feedback">Please provide your club name.</div>
+                        </div>
+
+                        <% if (typeof showReactivationConfirm !== 'undefined' && showReactivationConfirm && typeof deactivatedClub !== 'undefined') { %>
+                            <div class="alert alert-warning" id="reactivationAlert">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-exclamation-triangle"></i> Club Reactivation Required
+                                </h5>
+                                <p><strong><%= deactivatedClub.clubName %></strong> is currently deactivated. Would you like to reactivate it and become the primary delegate?</p>
+                                <hr>
+                                <div class="mb-3">
+                                    <p><strong>Current club details:</strong></p>
+                                    <ul class="mb-3">
+                                        <% if (deactivatedClub.state) { %><li><strong>State:</strong> <%= deactivatedClub.state %></li><% } %>
+                                        <% if (deactivatedClub.location) { %><li><strong>Location:</strong> <%= deactivatedClub.location %></li><% } %>
+                                        <% if (deactivatedClub.contactEmail) { %><li><strong>Contact Email:</strong> <%= deactivatedClub.contactEmail %></li><% } %>
+                                    </ul>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="reactivateClub" name="reactivateClub" value="true">
+                                    <label class="form-check-label" for="reactivateClub">
+                                        <strong>Yes, I want to reactivate this club and become the primary delegate</strong>
+                                    </label>
+                                </div>
+                                <div class="alert alert-info mb-0">
+                                    <small>
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Note:</strong> The original delegate will be notified via email with a link to report if this reactivation is fraudulent.
+                                        You will gain full administrative control including the ability to create carnivals and invite other delegates.
+                                    </small>
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <div id="deactivatedClubWarning" class="alert alert-warning" style="display: none;">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle"></i> Deactivated Club Detected
+                            </h6>
+                            <p class="mb-2">This club is currently deactivated. You can reactivate it and become the primary delegate.</p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmReactivation" name="reactivateClub" value="true">
+                                <label class="form-check-label" for="confirmReactivation">
+                                    <strong>I want to reactivate this club</strong>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-shield-check"></i>
+                                The original delegate will be notified for security purposes.
+                            </small>
                         </div>
 
                         <div class="row mb-3">

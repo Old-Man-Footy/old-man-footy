@@ -909,6 +909,131 @@ We'll respond to your inquiry from our support team shortly.
             return { success: false, error: error.message };
         }
     }
+
+    /**
+     * Send club reactivation alert to original delegate
+     * @param {string} originalDelegateEmail - Email of the original delegate
+     * @param {string} originalDelegateName - Name of the original delegate
+     * @param {string} clubName - Name of the reactivated club
+     * @param {string} newDelegateName - Name of the new delegate who reactivated
+     * @param {string} newDelegateEmail - Email of the new delegate
+     */
+    async sendClubReactivationAlert(originalDelegateEmail, originalDelegateName, clubName, newDelegateName, newDelegateEmail) {
+        const fraudReportUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/report-fraud?club=${encodeURIComponent(clubName)}&newDelegate=${encodeURIComponent(newDelegateEmail)}`;
+        const clubUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/clubs/${encodeURIComponent(clubName)}`;
+
+        const mailOptions = {
+            from: `"Old Man Footy Security" <${process.env.EMAIL_USER}>`,
+            to: originalDelegateEmail,
+            subject: `🚨 SECURITY ALERT: ${clubName} has been reactivated`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #dc3545, #ff6b6b); padding: 20px; text-align: center;">
+                        <h1 style="color: white; margin: 0;">🚨 SECURITY ALERT</h1>
+                        <p style="color: white; margin: 5px 0 0 0; font-weight: bold;">Old Man Footy - Club Reactivation Notice</p>
+                    </div>
+                    
+                    <div style="padding: 30px; background: #f9f9f9;">
+                        <h2 style="color: #dc3545; margin-top: 0;">Club Reactivation Alert</h2>
+                        
+                        <p>Hello <strong>${originalDelegateName}</strong>,</p>
+                        
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                            <p style="margin: 0; color: #856404; font-weight: bold;">
+                                ⚠️ Your deactivated club <strong>${clubName}</strong> has been reactivated by someone else.
+                            </p>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #dc3545;">
+                            <h3 style="color: #dc3545; margin-top: 0;">Reactivation Details</h3>
+                            <p><strong>Club:</strong> ${clubName}</p>
+                            <p><strong>Reactivated by:</strong> ${newDelegateName}</p>
+                            <p><strong>New Delegate Email:</strong> ${newDelegateEmail}</p>
+                            <p><strong>Date:</strong> ${new Date().toLocaleDateString('en-AU', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                timeZone: 'Australia/Sydney'
+                            })} AEDT</p>
+                        </div>
+                        
+                        <h3 style="color: #dc3545;">What does this mean?</h3>
+                        <ul style="line-height: 1.6;">
+                            <li><strong>${newDelegateName}</strong> has registered and claimed your deactivated club</li>
+                            <li>They are now the primary delegate with full administrative control</li>
+                            <li>They can create carnivals, manage club information, and invite other delegates</li>
+                            <li>Your previous delegate access has been superseded</li>
+                        </ul>
+                        
+                        <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                            <h4 style="color: #155724; margin-top: 0;">✅ If this was legitimate:</h4>
+                            <p style="margin: 0; color: #155724;">
+                                If you know ${newDelegateName} and expected them to take over the club, 
+                                no action is required. You can contact them directly to discuss access or collaboration.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                            <h4 style="color: #721c24; margin-top: 0;">🚨 If this was unauthorized:</h4>
+                            <p style="margin: 0; color: #721c24;">
+                                If you don't recognize ${newDelegateName} or believe this reactivation was fraudulent, 
+                                please report it immediately using the button below.
+                            </p>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${fraudReportUrl}" 
+                               style="background: #dc3545; color: white; padding: 15px 30px; 
+                                      text-decoration: none; border-radius: 5px; font-weight: bold; margin: 0 10px; display: inline-block;">
+                                🚨 Report as Fraudulent
+                            </a>
+                            <a href="${clubUrl}" 
+                               style="background: #6c757d; color: white; padding: 15px 30px; 
+                                      text-decoration: none; border-radius: 5px; font-weight: bold; margin: 0 10px; display: inline-block;">
+                                👀 View Club Page
+                            </a>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h4 style="color: #006837; margin-top: 0;">Security Best Practices</h4>
+                            <ul style="line-height: 1.6; margin: 0;">
+                                <li>Always verify the identity of anyone claiming to represent your club</li>
+                                <li>If you plan to deactivate your club temporarily, inform trusted club members</li>
+                                <li>Consider reactivating your club yourself if you plan to use it again</li>
+                                <li>Report any suspicious activity to our security team immediately</li>
+                            </ul>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666;">
+                            This alert was sent because you were previously the primary delegate for ${clubName}. 
+                            If you have questions or concerns, please contact our security team immediately.
+                        </p>
+                        
+                        <p style="font-size: 14px; color: #666; text-align: center; margin-top: 30px;">
+                            <strong>Time is important:</strong> Report any fraud within 48 hours for fastest resolution.
+                        </p>
+                    </div>
+                    
+                    <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+                        <p>© 2025 Old Man Footy Security Team. Protecting Rugby League Communities Across Australia.</p>
+                        <p>This is an automated security alert. For support, email security@oldmanfooty.au</p>
+                    </div>
+                </div>
+            `
+        };
+
+        try {
+            const result = await this.transporter.sendMail(mailOptions);
+            console.log(`🚨 Club reactivation alert sent to original delegate: ${originalDelegateEmail}`);
+            return { success: true, messageId: result.messageId };
+        } catch (error) {
+            console.error('❌ Failed to send club reactivation alert:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new EmailService();
