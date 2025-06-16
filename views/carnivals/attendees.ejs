@@ -1,5 +1,3 @@
-<%- include('../layout', { title: title }) %>
-
 <div class="container mt-4">
     <div class="row">
         <div class="col-12">
@@ -136,6 +134,10 @@
                                                             </small>
                                                         </div>
                                                         <div class="btn-group carnival-btn-group-sm">
+                                                            <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players" 
+                                                               class="btn btn-outline-info btn-sm" title="Manage Players">
+                                                                <i class="bi bi-people"></i>
+                                                            </a>
                                                             <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/edit" 
                                                                class="btn btn-outline-primary btn-sm" title="Edit Registration">
                                                                 <i class="bi bi-pencil"></i>
@@ -209,6 +211,7 @@
     </div>
 </div>
 
+<!-- Remove attendee functionality -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Remove attendee functionality
