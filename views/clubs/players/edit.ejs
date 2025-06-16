@@ -1,0 +1,306 @@
+<div class="container-fluid py-4">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="/clubs/players">Players</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Edit <%= player.getFullName() %></li>
+        </ol>
+      </nav>
+      <h1 class="h2 mb-1">Edit Player</h1>
+      <p class="text-muted">Update information for <%= player.getFullName() %></p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- Player Form -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil me-2"></i>
+            Player Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Display validation errors -->
+          <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+            <div class="alert alert-danger" role="alert">
+              <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Please correct the following errors:
+              </h6>
+              <ul class="mb-0">
+                <% errors.forEach(error => { %>
+                  <li><%= error.msg %></li>
+                <% }); %>
+              </ul>
+            </div>
+          <% } %>
+
+          <form method="POST" action="/clubs/players/<%= player.id %>" novalidate>
+            <input type="hidden" name="_method" value="PUT">
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="firstName" class="form-label">
+                    First Name <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'firstName') ? 'is-invalid' : '' %>" 
+                    id="firstName" 
+                    name="firstName" 
+                    value="<%= formData.firstName || '' %>"
+                    required
+                    maxlength="50"
+                    placeholder="Enter first name"
+                  >
+                  <div class="invalid-feedback">
+                    Please provide a valid first name (letters only, 1-50 characters).
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="lastName" class="form-label">
+                    Last Name <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'lastName') ? 'is-invalid' : '' %>" 
+                    id="lastName" 
+                    name="lastName" 
+                    value="<%= formData.lastName || '' %>"
+                    required
+                    maxlength="50"
+                    placeholder="Enter last name"
+                  >
+                  <div class="invalid-feedback">
+                    Please provide a valid last name (letters only, 1-50 characters).
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="dateOfBirth" class="form-label">
+                    Date of Birth <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="date" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'dateOfBirth') ? 'is-invalid' : '' %>" 
+                    id="dateOfBirth" 
+                    name="dateOfBirth" 
+                    value="<%= formData.dateOfBirth || '' %>"
+                    required
+                    max="<%= new Date().toISOString().split('T')[0] %>"
+                  >
+                  <div class="form-text">
+                    System accepts players between 16 and 100 years old
+                  </div>
+                  <div class="invalid-feedback">
+                    Please provide a valid date of birth.
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="email" class="form-label">
+                    Email Address <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="email" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'email') ? 'is-invalid' : '' %>" 
+                    id="email" 
+                    name="email" 
+                    value="<%= formData.email || '' %>"
+                    required
+                    maxlength="254"
+                    placeholder="player@example.com"
+                  >
+                  <div class="form-text">
+                    Each player must have a unique email address
+                  </div>
+                  <div class="invalid-feedback">
+                    Please provide a valid email address.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="notes" class="form-label">Notes (Optional)</label>
+              <textarea 
+                class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'notes') ? 'is-invalid' : '' %>" 
+                id="notes" 
+                name="notes" 
+                rows="3"
+                maxlength="1000"
+                placeholder="Additional notes about the player (e.g., position, medical notes, etc.)"
+              ><%= formData.notes || '' %></textarea>
+              <div class="form-text">
+                <span id="notesCounter">0</span>/1000 characters
+              </div>
+              <div class="invalid-feedback">
+                Notes cannot exceed 1000 characters.
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="/clubs/players" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Cancel
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-2"></i>Update Player
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Player Summary -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">
+            <i class="bi bi-person-badge me-2"></i>
+            Player Summary
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" 
+                 style="width: 60px; height: 60px; font-weight: 600; font-size: 1.2rem;">
+              <%= player.getInitials() %>
+            </div>
+            <div>
+              <h6 class="mb-1"><%= player.getFullName() %></h6>
+              <small class="text-muted">
+                <% const age = player.getAge(); %>
+                <%= age !== null ? age + ' years old' : 'Age unknown' %>
+              </small>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="text-primary mb-2">Masters Eligibility</h6>
+            <% if (player.isMastersEligible()) { %>
+              <span class="badge bg-success">
+                <i class="bi bi-check-circle me-1"></i>Eligible for Masters
+              </span>
+            <% } else { %>
+              <span class="badge bg-warning text-dark">
+                <i class="bi bi-exclamation-triangle me-1"></i>Under 35 - Not Masters Eligible
+              </span>
+            <% } %>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="text-primary mb-2">Registration Details</h6>
+            <p class="small text-muted mb-1">
+              <strong>Registered:</strong> <%= new Date(player.registeredAt).toLocaleDateString() %>
+            </p>
+            <p class="small text-muted mb-1">
+              <strong>Last Updated:</strong> <%= new Date(player.updatedAt).toLocaleDateString() %>
+            </p>
+            <p class="small text-muted mb-0">
+              <strong>Status:</strong> 
+              <span class="badge bg-success">Active</span>
+            </p>
+          </div>
+
+          <% if (player.notes) { %>
+            <div class="mb-3">
+              <h6 class="text-primary mb-2">Current Notes</h6>
+              <p class="small text-muted mb-0">
+                <%= player.notes %>
+              </p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Club Information -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h6 class="mb-0">
+            <i class="bi bi-shield-check me-2"></i>
+            Club Membership
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" 
+                 style="width: 50px; height: 50px; font-weight: 600;">
+              <%= club.clubName.substring(0, 2).toUpperCase() %>
+            </div>
+            <div>
+              <h6 class="mb-1"><%= club.clubName %></h6>
+              <small class="text-muted">Player's Club</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h6 class="mb-0">
+            <i class="bi bi-gear me-2"></i>
+            Actions
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-grid">
+            <button type="button" 
+                    class="btn btn-outline-danger"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#removePlayerModal">
+              <i class="bi bi-person-dash me-2"></i>Remove Player
+            </button>
+          </div>
+          <div class="form-text mt-2">
+            <small>Removing a player will deactivate them but keep their record for historical purposes.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Remove Player Modal -->
+<div class="modal fade" id="removePlayerModal" tabindex="-1" aria-labelledby="removePlayerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="removePlayerModalLabel">
+          <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+          Remove Player
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove <strong><%= player.getFullName() %></strong> from your club?</p>
+        <p class="text-muted small">This action will deactivate the player but keep their record for historical purposes.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="POST" action="/clubs/players/<%= player.id %>" class="d-inline">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-person-dash me-1"></i>Remove Player
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/club-players-form.js"></script>

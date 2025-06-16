@@ -8,6 +8,7 @@ const flash = require('connect-flash');
 const path = require('path');
 const helmet = require('helmet');
 const expressLayouts = require('express-ejs-layouts');
+const methodOverride = require('method-override');
 const mySidelineService = require('./services/mySidelineIntegrationService');
 const { sequelize } = require('./models');
 
@@ -43,6 +44,17 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Method override middleware
+app.use(methodOverride((req, res) => {
+    if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+        // Look in urlencoded POST bodies and delete the method key
+        const method = req.body._method;
+        delete req.body._method;
+        return method;
+    }
+    return null;
+}));
 
 // Session store using SQLite
 const sessionStore = new SequelizeStore({
@@ -118,6 +130,7 @@ const carnivalRoutes = require('./routes/carnivals');
 const carnivalClubRoutes = require('./routes/carnivalClubs');
 const carnivalSponsorRoutes = require('./routes/carnivalSponsors');
 const clubRoutes = require('./routes/clubs');
+const clubPlayerRoutes = require('./routes/clubPlayers');
 const sponsorRoutes = require('./routes/sponsors');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
@@ -127,6 +140,8 @@ app.use('/auth', authRoutes);
 app.use('/carnivals', carnivalRoutes);
 app.use('/carnivals', carnivalClubRoutes);
 app.use('/carnival-sponsors', carnivalSponsorRoutes);
+// Mount specific routes before general ones
+app.use('/clubs/players', clubPlayerRoutes);
 app.use('/clubs', clubRoutes);
 app.use('/sponsors', sponsorRoutes);
 app.use('/admin', adminRoutes);

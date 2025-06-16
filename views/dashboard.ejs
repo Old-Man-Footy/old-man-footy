@@ -412,6 +412,9 @@
                             <button type="button" class="btn btn-outline-success" data-action="navigate" data-target="/clubs/manage">
                                 <i class="bi bi-gear"></i> Manage Club Settings
                             </button>
+                            <a href="/clubs/players" class="btn btn-outline-info">
+                                <i class="bi bi-people"></i> Manage Players
+                            </a>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
                                 <i class="bi bi-box-arrow-right"></i> Leave Club
                             </button>
@@ -438,6 +441,9 @@
                             <a href="/clubs/manage" class="btn btn-outline-primary">
                                 <i class="bi bi-building"></i> Manage Club Profile
                             </a>
+                            <a href="/clubs/players" class="btn btn-outline-info">
+                                <i class="bi bi-people"></i> Manage Players
+                            </a>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
                                 <i class="bi bi-box-arrow-right"></i> Leave Club
                             </button>
@@ -461,9 +467,6 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted mb-3">Complete these steps to get the most out of your account:</p>
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex align-items-center">
-                            <input type="checkbox" class="form-check-input me-3" id="step1" <%= clubs && clubs.length > 0 ? 'checked' : '' %>>
                             <label for="step1" class="flex-grow-1">
                                 <strong>Register your first club</strong>
                                 <small class="d-block text-muted">Add your rugby league club to start managing carnivals</small>

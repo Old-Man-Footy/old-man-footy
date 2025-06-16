@@ -1,0 +1,301 @@
+<div class="container-fluid py-4">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Players</li>
+        </ol>
+      </nav>
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h2 mb-1">Club Players</h1>
+          <p class="text-muted"><%= club.clubName %> - Player Management</p>
+        </div>
+        <a href="/clubs/players/add" class="btn btn-success">
+          <i class="bi bi-person-plus me-2"></i>Add New Player
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <form method="GET" class="row g-3">
+            <div class="col-md-4">
+              <label for="search" class="form-label">Search Players</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="search" 
+                name="search" 
+                value="<%= search %>"
+                placeholder="Search by name or email..."
+              >
+            </div>
+            <div class="col-md-3">
+              <label for="sortBy" class="form-label">Sort by</label>
+              <select class="form-select" id="sortBy" name="sortBy">
+                <option value="lastName" <%= sortBy === 'lastName' ? 'selected' : '' %>>Last Name</option>
+                <option value="firstName" <%= sortBy === 'firstName' ? 'selected' : '' %>>First Name</option>
+                <option value="email" <%= sortBy === 'email' ? 'selected' : '' %>>Email</option>
+                <option value="registeredAt" <%= sortBy === 'registeredAt' ? 'selected' : '' %>>Registration Date</option>
+                <option value="dateOfBirth" <%= sortBy === 'dateOfBirth' ? 'selected' : '' %>>Age</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label for="sortOrder" class="form-label">Order</label>
+              <select class="form-select" id="sortOrder" name="sortOrder">
+                <option value="ASC" <%= sortOrder === 'ASC' ? 'selected' : '' %>>A-Z / Oldest</option>
+                <option value="DESC" <%= sortOrder === 'DESC' ? 'selected' : '' %>>Z-A / Newest</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">&nbsp;</label>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-search me-1"></i>Search
+                </button>
+                <a href="/clubs/players" class="btn btn-outline-secondary">
+                  <i class="bi bi-arrow-clockwise me-1"></i>Reset
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Players Summary -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card text-center">
+        <div class="card-body">
+          <i class="bi bi-people display-4 text-primary mb-2"></i>
+          <h3 class="mb-1"><%= pagination.totalPlayers %></h3>
+          <p class="text-muted mb-0">Total Players</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card text-center">
+        <div class="card-body">
+          <i class="bi bi-award display-4 text-success mb-2"></i>
+          <h3 class="mb-1">
+            <%= players.filter(player => player.isMastersEligible()).length %>
+          </h3>
+          <p class="text-muted mb-0">Masters Eligible (35+)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Players List -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-people me-2"></i>
+            Player Roster
+            <% if (search) { %>
+              <small class="text-muted">- Search results for "<%= search %>"</small>
+            <% } %>
+          </h5>
+        </div>
+        <div class="card-body">
+          <% if (players.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Age</th>
+                    <th>Email</th>
+                    <th>Masters Eligible</th>
+                    <th>Registered</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% players.forEach(player => { %>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" 
+                               style="width: 40px; height: 40px; font-weight: 600;">
+                            <%= player.getInitials() %>
+                          </div>
+                          <div>
+                            <h6 class="mb-0"><%= player.getFullName() %></h6>
+                            <% if (player.notes) { %>
+                              <small class="text-muted">
+                                <i class="bi bi-chat-text me-1"></i>
+                                <%= player.notes.length > 50 ? player.notes.substring(0, 50) + '...' : player.notes %>
+                              </small>
+                            <% } %>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <% const age = player.getAge(); %>
+                        <% if (age !== null) { %>
+                          <%= age %> years
+                        <% } else { %>
+                          <span class="text-muted">Unknown</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <a href="mailto:<%= player.email %>" class="text-decoration-none">
+                          <%= player.email %>
+                        </a>
+                      </td>
+                      <td>
+                        <% if (player.isMastersEligible()) { %>
+                          <span class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i>Yes
+                          </span>
+                        <% } else { %>
+                          <span class="badge bg-warning text-dark">
+                            <i class="bi bi-x-circle me-1"></i>Under 35
+                          </span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          <%= new Date(player.registeredAt).toLocaleDateString() %>
+                        </small>
+                      </td>
+                      <td class="text-end">
+                        <div class="btn-group" role="group">
+                          <a 
+                            href="/clubs/players/<%= player.id %>/edit" 
+                            class="btn btn-outline-primary btn-sm"
+                            data-bs-toggle="tooltip"
+                            title="Edit Player"
+                          >
+                            <i class="bi bi-pencil"></i>
+                          </a>
+                          <button 
+                            type="button" 
+                            class="btn btn-outline-danger btn-sm"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#removePlayerModal"
+                            data-player-id="<%= player.id %>"
+                            data-player-name="<%= player.getFullName() %>"
+                            title="Remove Player"
+                          >
+                            <i class="bi bi-person-dash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <% if (pagination.totalPages > 1) { %>
+              <nav aria-label="Players pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                  <li class="page-item <%= !pagination.hasPrevPage ? 'disabled' : '' %>">
+                    <% if (pagination.hasPrevPage) { %>
+                      <a class="page-link" href="?page=<%= pagination.prevPage %>&search=<%= encodeURIComponent(search) %>&sortBy=<%= sortBy %>&sortOrder=<%= sortOrder %>">
+                        <i class="bi bi-chevron-left"></i> Previous
+                      </a>
+                    <% } else { %>
+                      <span class="page-link">
+                        <i class="bi bi-chevron-left"></i> Previous
+                      </span>
+                    <% } %>
+                  </li>
+
+                  <% for (let i = Math.max(1, pagination.currentPage - 2); i <= Math.min(pagination.totalPages, pagination.currentPage + 2); i++) { %>
+                    <li class="page-item <%= i === pagination.currentPage ? 'active' : '' %>">
+                      <a class="page-link" href="?page=<%= i %>&search=<%= encodeURIComponent(search) %>&sortBy=<%= sortBy %>&sortOrder=<%= sortOrder %>">
+                        <%= i %>
+                      </a>
+                    </li>
+                  <% } %>
+
+                  <li class="page-item <%= !pagination.hasNextPage ? 'disabled' : '' %>">
+                    <% if (pagination.hasNextPage) { %>
+                      <a class="page-link" href="?page=<%= pagination.nextPage %>&search=<%= encodeURIComponent(search) %>&sortBy=<%= sortBy %>&sortOrder=<%= sortOrder %>">
+                        Next <i class="bi bi-chevron-right"></i>
+                      </a>
+                    <% } else { %>
+                      <span class="page-link">
+                        Next <i class="bi bi-chevron-right"></i>
+                      </span>
+                    <% } %>
+                  </li>
+                </ul>
+              </nav>
+            <% } %>
+
+          <% } else { %>
+            <!-- Empty State -->
+            <div class="text-center py-5">
+              <i class="bi bi-people display-4 text-muted mb-3"></i>
+              <% if (search) { %>
+                <h4 class="text-muted">No players found</h4>
+                <p class="text-muted mb-4">
+                  No players match your search criteria "<%= search %>".
+                  <br>Try adjusting your search terms or clearing the filter.
+                </p>
+                <a href="/clubs/players" class="btn btn-outline-secondary me-2">
+                  <i class="bi bi-arrow-clockwise me-1"></i>Clear Search
+                </a>
+              <% } else { %>
+                <h4 class="text-muted">No players registered yet</h4>
+                <p class="text-muted mb-4">
+                  Start building your team by adding your first player.
+                  <br>Players must be at least 16 years old to register.
+                </p>
+              <% } %>
+              <a href="/clubs/players/add" class="btn btn-success">
+                <i class="bi bi-person-plus me-2"></i>Add Your First Player
+              </a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Remove Player Modal -->
+<div class="modal fade" id="removePlayerModal" tabindex="-1" aria-labelledby="removePlayerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="removePlayerModalLabel">
+          <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+          Remove Player
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove <strong id="playerNameToRemove"></strong> from your club?</p>
+        <p class="text-muted small">This action will deactivate the player but keep their record for historical purposes.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="POST" id="removePlayerForm" class="d-inline">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-person-dash me-1"></i>Remove Player
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/club-players.js"></script>

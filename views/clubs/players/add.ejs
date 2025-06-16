@@ -1,0 +1,231 @@
+<div class="container-fluid py-4">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="/clubs/players">Players</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Add Player</li>
+        </ol>
+      </nav>
+      <h1 class="h2 mb-1">Add New Player</h1>
+      <p class="text-muted">Add a new player to <%= club.clubName %></p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- Player Form -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-person-plus me-2"></i>
+            Player Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Display validation errors -->
+          <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+            <div class="alert alert-danger" role="alert">
+              <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Please correct the following errors:
+              </h6>
+              <ul class="mb-0">
+                <% errors.forEach(error => { %>
+                  <li><%= error.msg %></li>
+                <% }); %>
+              </ul>
+            </div>
+          <% } %>
+
+          <form method="POST" action="/clubs/players" novalidate>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="firstName" class="form-label">
+                    First Name <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'firstName') ? 'is-invalid' : '' %>" 
+                    id="firstName" 
+                    name="firstName" 
+                    value="<%= formData.firstName || '' %>"
+                    required
+                    maxlength="50"
+                    placeholder="Enter first name"
+                  >
+                  <div class="invalid-feedback">
+                    Please provide a valid first name (letters only, 1-50 characters).
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="lastName" class="form-label">
+                    Last Name <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'lastName') ? 'is-invalid' : '' %>" 
+                    id="lastName" 
+                    name="lastName" 
+                    value="<%= formData.lastName || '' %>"
+                    required
+                    maxlength="50"
+                    placeholder="Enter last name"
+                  >
+                  <div class="invalid-feedback">
+                    Please provide a valid last name (letters only, 1-50 characters).
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="dateOfBirth" class="form-label">
+                    Date of Birth <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="date" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'dateOfBirth') ? 'is-invalid' : '' %>" 
+                    id="dateOfBirth" 
+                    name="dateOfBirth" 
+                    value="<%= formData.dateOfBirth || '' %>"
+                    required
+                    max="<%= new Date().toISOString().split('T')[0] %>"
+                  >
+                  <div class="form-text">
+                    System accepts players between 16 and 100 years old
+                  </div>
+                  <div class="invalid-feedback">
+                    Please provide a valid date of birth.
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="email" class="form-label">
+                    Email Address <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="email" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'email') ? 'is-invalid' : '' %>" 
+                    id="email" 
+                    name="email" 
+                    value="<%= formData.email || '' %>"
+                    required
+                    maxlength="254"
+                    placeholder="player@example.com"
+                  >
+                  <div class="form-text">
+                    Each player must have a unique email address
+                  </div>
+                  <div class="invalid-feedback">
+                    Please provide a valid email address.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="notes" class="form-label">Notes (Optional)</label>
+              <textarea 
+                class="form-control <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'notes') ? 'is-invalid' : '' %>" 
+                id="notes" 
+                name="notes" 
+                rows="3"
+                maxlength="1000"
+                placeholder="Additional notes about the player (e.g., position, medical notes, etc.)"
+              ><%= formData.notes || '' %></textarea>
+              <div class="form-text">
+                <span id="notesCounter">0</span>/1000 characters
+              </div>
+              <div class="invalid-feedback">
+                Notes cannot exceed 1000 characters.
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="/clubs/players" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Cancel
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-person-plus me-2"></i>Add Player
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Help and Guidelines -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            Player Guidelines
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="text-primary">Masters Eligibility</h6>
+            <p class="small text-muted mb-0">
+              Players must be 35 years or older to be eligible for Masters Rugby League competitions.
+            </p>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-primary">Email Requirements</h6>
+            <p class="small text-muted mb-0">
+              Each player must have a unique email address. This will be used for communication and potential future player login functionality.
+            </p>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-primary">Data Privacy</h6>
+            <p class="small text-muted mb-0">
+              Player information is kept confidential and only visible to delegates from the same club.
+            </p>
+          </div>
+
+          <div class="alert alert-info" role="alert">
+            <small>
+              <i class="bi bi-lightbulb me-1"></i>
+              <strong>Tip:</strong> Use the notes field to record important information like preferred position, medical conditions, or emergency contacts.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Club Information -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <h6 class="mb-0">
+            <i class="bi bi-shield-check me-2"></i>
+            Adding to Club
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" 
+                 style="width: 50px; height: 50px; font-weight: 600;">
+              <%= club.clubName.substring(0, 2).toUpperCase() %>
+            </div>
+            <div>
+              <h6 class="mb-1"><%= club.clubName %></h6>
+              <small class="text-muted">Your Club</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/club-players-form.js"></script>
