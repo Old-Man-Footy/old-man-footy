@@ -160,8 +160,36 @@ const showClubProfile = async (req, res) => {
             order: [['date', 'ASC']]
         });
 
+        // Get carnivals this club is registered to attend
+        const { CarnivalClub } = require('../models');
+        const attendingCarnivals = await CarnivalClub.findAll({
+            where: {
+                clubId: club.id,
+                isActive: true
+            },
+            include: [{
+                model: Carnival,
+                as: 'carnival',
+                where: { isActive: true },
+                include: [{
+                    model: User,
+                    as: 'creator',
+                    attributes: ['firstName', 'lastName', 'email']
+                }]
+            }],
+            order: [['carnival', 'date', 'ASC']]
+        });
+
+        // Extract carnival data from the CarnivalClub relationship
+        const attendingCarnivalsList = attendingCarnivals.map(carnivalClub => carnivalClub.carnival);
+
         // Calculate upcoming carnivals count
         const upcomingCarnivals = carnivals.filter(carnival => 
+            new Date(carnival.date) >= new Date()
+        ).length;
+
+        // Calculate upcoming attending carnivals count
+        const upcomingAttendingCarnivals = attendingCarnivalsList.filter(carnival => 
             new Date(carnival.date) >= new Date()
         ).length;
 
@@ -183,7 +211,9 @@ const showClubProfile = async (req, res) => {
             title: `${club.clubName} - Masters Rugby League Club`,
             club,
             clubCarnivals: carnivals,
+            attendingCarnivals: attendingCarnivalsList,
             upcomingCarnivals,
+            upcomingAttendingCarnivals,
             delegates: delegates_full,
             primaryDelegate,
             sponsors: sortedSponsors,

@@ -300,6 +300,251 @@
                     <% } %>
                 </div>
             </div>
+
+            <!-- Attending Carnivals Section -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Carnivals Attended by <%= club.clubName %>
+                    </h5>
+                    <span class="badge bg-light text-info"><%= attendingCarnivals.length %> Total</span>
+                </div>
+                <div class="card-body">
+                    <% if (attendingCarnivals.length > 0) { %>
+                        <!-- Filter Tabs -->
+                        <ul class="nav nav-tabs mb-3" id="attendingCarnivalTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="upcoming-attending-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#upcoming-attending" type="button" role="tab">
+                                    Upcoming Events (<%= upcomingAttendingCarnivals %>)
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="past-attending-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#past-attending" type="button" role="tab">
+                                    Past Events (<%= attendingCarnivals.length - upcomingAttendingCarnivals %>)
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="all-attending-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#all-attending" type="button" role="tab">
+                                    All Events (<%= attendingCarnivals.length %>)
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="attendingCarnivalTabContent">
+                            <!-- Upcoming Attending Events -->
+                            <div class="tab-pane fade show active" id="upcoming-attending" role="tabpanel">
+                                <% 
+                                const upcomingAttending = attendingCarnivals.filter(carnival => 
+                                    new Date(carnival.date) >= new Date()
+                                ).sort((a, b) => new Date(a.date) - new Date(b.date));
+                                %>
+                                <% if (upcomingAttending.length > 0) { %>
+                                    <div class="row">
+                                        <% upcomingAttending.forEach(carnival => { %>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="card h-100 border-info">
+                                                    <% if (carnival.promotionalImageURL) { %>
+                                                        <img src="<%= carnival.promotionalImageURL %>" 
+                                                             class="card-img-top" style="height: 150px; object-fit: cover;">
+                                                    <% } %>
+                                                    <div class="card-body d-flex flex-column">
+                                                        <h6 class="card-title">
+                                                            <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none">
+                                                                <%= carnival.title %>
+                                                            </a>
+                                                        </h6>
+                                                        <p class="card-text text-muted small mb-2">
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
+                                                                weekday: 'short', 
+                                                                month: 'short', 
+                                                                day: 'numeric',
+                                                                year: 'numeric'
+                                                            }) %>
+                                                        </p>
+                                                        <p class="card-text text-muted small mb-2">
+                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            <%= carnival.locationAddress %>
+                                                        </p>
+                                                        <% if (carnival.creator) { %>
+                                                            <p class="card-text text-muted small mb-2">
+                                                                <i class="fas fa-user me-1"></i>
+                                                                Hosted by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
+                                                            </p>
+                                                        <% } %>
+                                                        <div class="mt-auto">
+                                                            <span class="badge bg-info me-1">Attending</span>
+                                                            <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-footer bg-transparent">
+                                                        <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
+                                                            <i class="fas fa-eye me-1"></i>View Details
+                                                        </a>
+                                                        <% if (carnival.registrationLink) { %>
+                                                            <a href="<%= carnival.registrationLink %>" target="_blank" 
+                                                               class="btn btn-success btn-sm">
+                                                                <i class="fas fa-user-plus me-1"></i>Register
+                                                            </a>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No upcoming events to attend</h5>
+                                        <p class="text-muted">This club isn't registered for any upcoming carnivals.</p>
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <!-- Past Attending Events -->
+                            <div class="tab-pane fade" id="past-attending" role="tabpanel">
+                                <% 
+                                const pastAttending = attendingCarnivals.filter(carnival => 
+                                    new Date(carnival.date) < new Date()
+                                ).sort((a, b) => new Date(b.date) - new Date(a.date));
+                                %>
+                                <% if (pastAttending.length > 0) { %>
+                                    <div class="row">
+                                        <% pastAttending.forEach(carnival => { %>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="card h-100">
+                                                    <% if (carnival.promotionalImageURL) { %>
+                                                        <img src="<%= carnival.promotionalImageURL %>" 
+                                                             class="card-img-top" style="height: 150px; object-fit: cover;">
+                                                    <% } %>
+                                                    <div class="card-body d-flex flex-column">
+                                                        <h6 class="card-title">
+                                                            <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none">
+                                                                <%= carnival.title %>
+                                                            </a>
+                                                        </h6>
+                                                        <p class="card-text text-muted small mb-2">
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
+                                                                weekday: 'short', 
+                                                                month: 'short', 
+                                                                day: 'numeric',
+                                                                year: 'numeric'
+                                                            }) %>
+                                                        </p>
+                                                        <p class="card-text text-muted small mb-2">
+                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            <%= carnival.locationAddress %>
+                                                        </p>
+                                                        <% if (carnival.creator) { %>
+                                                            <p class="card-text text-muted small mb-2">
+                                                                <i class="fas fa-user me-1"></i>
+                                                                Hosted by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
+                                                            </p>
+                                                        <% } %>
+                                                        <div class="mt-auto">
+                                                            <span class="badge bg-secondary me-1">Attended</span>
+                                                            <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-footer bg-transparent">
+                                                        <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-eye me-1"></i>View Details
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No past events attended</h5>
+                                        <p class="text-muted">This club hasn't attended any past carnivals yet.</p>
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <!-- All Attending Events -->
+                            <div class="tab-pane fade" id="all-attending" role="tabpanel">
+                                <div class="row">
+                                    <% attendingCarnivals.forEach(carnival => { %>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100 <%= new Date(carnival.date) >= new Date() ? 'border-info' : '' %>">
+                                                <% if (carnival.promotionalImageURL) { %>
+                                                    <img src="<%= carnival.promotionalImageURL %>" 
+                                                         class="card-img-top" style="height: 150px; object-fit: cover;">
+                                                <% } %>
+                                                <div class="card-body d-flex flex-column">
+                                                    <h6 class="card-title">
+                                                        <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none">
+                                                            <%= carnival.title %>
+                                                        </a>
+                                                    </h6>
+                                                    <p class="card-text text-muted small mb-2">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
+                                                            weekday: 'short', 
+                                                            month: 'short', 
+                                                            day: 'numeric',
+                                                            year: 'numeric'
+                                                        }) %>
+                                                    </p>
+                                                    <p class="card-text text-muted small mb-2">
+                                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                                        <%= carnival.locationAddress %>
+                                                    </p>
+                                                    <% if (carnival.creator) { %>
+                                                        <p class="card-text text-muted small mb-2">
+                                                            <i class="fas fa-user me-1"></i>
+                                                            Hosted by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
+                                                        </p>
+                                                    <% } %>
+                                                    <div class="mt-auto">
+                                                        <% if (new Date(carnival.date) >= new Date()) { %>
+                                                            <span class="badge bg-info me-1">Attending</span>
+                                                        <% } else { %>
+                                                            <span class="badge bg-secondary me-1">Attended</span>
+                                                        <% } %>
+                                                        <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                    </div>
+                                                </div>
+                                                <div class="card-footer bg-transparent">
+                                                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-eye me-1"></i>View Details
+                                                    </a>
+                                                    <% if (new Date(carnival.date) >= new Date() && carnival.registrationLink) { %>
+                                                        <a href="<%= carnival.registrationLink %>" target="_blank" 
+                                                           class="btn btn-success btn-sm">
+                                                            <i class="fas fa-user-plus me-1"></i>Register
+                                                        </a>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">Not Attending Any Carnivals</h4>
+                            <p class="text-muted mb-4">This club isn't currently registered to attend any carnivals.</p>
+                            <% if (user && user.clubId && user.clubId.toString() === club.id.toString()) { %>
+                                <p class="text-muted">Visit carnival pages and register your club as an attendee to see them listed here.</p>
+                                <a href="/carnivals" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Browse Carnivals
+                                </a>
+                            <% } %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
         </div>
 
         <!-- Sidebar -->
