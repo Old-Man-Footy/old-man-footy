@@ -368,6 +368,71 @@ window.oldmanfooty = {
         });
     },
 
+    /**
+     * Auto-dismiss flash messages after a specified timeout
+     * @param {number} timeout - Timeout in milliseconds (default: 5000ms = 5 seconds)
+     */
+    initFlashMessageAutoDismiss: function(timeout = 5000) {
+        // Find all alert elements that should auto-dismiss
+        const alerts = document.querySelectorAll('.alert-dismissible');
+        
+        alerts.forEach(alert => {
+            // Only auto-dismiss if it's a flash message (has success/error content)
+            const isFlashMessage = alert.classList.contains('alert-success') || 
+                                   alert.classList.contains('alert-danger') ||
+                                   alert.classList.contains('alert-warning') ||
+                                   alert.classList.contains('alert-info');
+            
+            if (isFlashMessage) {
+                // Set up auto-dismiss timer
+                const timer = setTimeout(() => {
+                    // Use Bootstrap's dismissal method
+                    const closeButton = alert.querySelector('.btn-close');
+                    if (closeButton) {
+                        closeButton.click();
+                    } else {
+                        // Fallback: fade out manually
+                        alert.style.transition = 'opacity 0.3s ease';
+                        alert.style.opacity = '0';
+                        setTimeout(() => {
+                            if (alert.parentNode) {
+                                alert.remove();
+                            }
+                        }, 300);
+                    }
+                }, timeout);
+                
+                // Store timer reference on the element
+                alert._autoDismissTimer = timer;
+                
+                // Clear timer if user manually dismisses
+                const closeButton = alert.querySelector('.btn-close');
+                if (closeButton) {
+                    closeButton.addEventListener('click', () => {
+                        clearTimeout(timer);
+                    });
+                }
+                
+                // Pause timer on hover (user might be reading)
+                alert.addEventListener('mouseenter', () => {
+                    clearTimeout(alert._autoDismissTimer);
+                });
+                
+                // Resume timer when mouse leaves (with remaining time)
+                alert.addEventListener('mouseleave', () => {
+                    alert._autoDismissTimer = setTimeout(() => {
+                        const closeButton = alert.querySelector('.btn-close');
+                        if (closeButton) {
+                            closeButton.click();
+                        }
+                    }, 2000); // Give 2 more seconds after mouse leaves
+                });
+            }
+        });
+        
+        console.log(`✅ Auto-dismiss initialized for ${alerts.length} flash messages`);
+    },
+
     // Initialize Bootstrap tooltips
     initTooltips: function() {
         /**
@@ -388,6 +453,7 @@ window.oldmanfooty = {
             this.initTextareas();
             this.initSearchFilters();
             this.initTooltips(); // Add tooltip initialization
+            this.initFlashMessageAutoDismiss(); // Add auto-dismiss for flash messages
             
             // Initialize theme manager
             if (window.themeManager) {
