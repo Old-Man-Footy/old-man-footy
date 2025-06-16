@@ -1,6 +1,8 @@
 const { Carnival, SyncLog } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('./emailService');
+const MySidelineLogoDownloadService = require('./mySidelineLogoDownloadService');
+const ImageNamingService = require('./imageNamingService');
 
 /**
  * MySideline Data Processing Service
@@ -9,6 +11,7 @@ const emailService = require('./emailService');
 class MySidelineDataService {
     constructor() {
         this.australianStates = ['NSW', 'QLD', 'VIC', 'SA', 'WA', 'NT', 'ACT', 'TAS'];
+        this.logoDownloadService = new MySidelineLogoDownloadService();
     }
 
     /**
@@ -60,6 +63,14 @@ class MySidelineDataService {
         const processedEvents = [];        
         for (const eventData of scrapedEvents) {
             try {
+                // Process club logo if available - download and store locally
+                let localLogoUrl = null;
+                if (eventData.clubLogoURL) {
+                    // Add temporary ID for logo processing
+                    eventData.temporaryId = Date.now() + Math.random();
+                    localLogoUrl = await this.processClubLogo(eventData.clubLogoURL, eventData);
+                }
+
                 // Check if event already exists
                 const existingEvent = await this.findExistingMySidelineEvent(eventData);
                 
@@ -77,8 +88,8 @@ class MySidelineDataService {
                     };
                     
                     // Only update fields that are currently empty
-                    if (!existingEvent.clubLogoURL && eventData.clubLogoURL) {
-                        updateData.clubLogoURL = eventData.clubLogoURL; // Fix field name mapping
+                    if (!existingEvent.clubLogoURL && localLogoUrl) {
+                        updateData.clubLogoURL = localLogoUrl; // Use downloaded logo URL
                     }
                     if (!existingEvent.locationAddress && eventData.locationAddress) {
                         updateData.locationAddress = eventData.locationAddress;
@@ -127,7 +138,7 @@ class MySidelineDataService {
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
-                        clubLogoURL: eventData.clubLogoURL,
+                        clubLogoURL: localLogoUrl, // Use downloaded logo URL instead of original URL
                         date: eventData.date,
                         googleMapsUrl: eventData.googleMapsUrl,
                         isMySidelineCard: eventData.isMySidelineCard,
@@ -152,6 +163,14 @@ class MySidelineDataService {
                         state: eventData.state,
                         title: eventData.title,
                     });
+
+                    // Update logo with actual carnival ID if we downloaded one
+                    if (localLogoUrl && newEvent.id) {
+                        const updatedLogoUrl = await this.updateLogoWithCarnivalId(localLogoUrl, newEvent.id);
+                        if (updatedLogoUrl !== localLogoUrl) {
+                            await newEvent.update({ clubLogoURL: updatedLogoUrl });
+                        }
+                    }
 
                     // If the event is more than 7 days in the future, set registration open
                     if (eventData.date > new Date() + (7 * 24 * 60 * 60 * 1000)) {
@@ -373,6 +392,103 @@ class MySidelineDataService {
                 error: error.message,
                 deactivatedCount: 0
             };
+        }
+    }
+
+    /**
+     * Process club logo URL - download and store locally instead of saving URL
+     * 
+     * @param {string} logoUrl - MySideline logo URL
+     * @param {Object} eventData - Event data containing carnival info
+     * @returns {Promise<string|null>} Local logo URL or null if download failed
+     */
+    async processClubLogo(logoUrl, eventData) {
+        if (!logoUrl || typeof logoUrl !== 'string') {
+            return null;
+        }
+
+        try {
+            console.log(`🖼️  Processing club logo for "${eventData.title}": ${logoUrl}`);
+
+            // For MySideline events, we'll use the carnival as the entity
+            // since clubs may not exist in our system yet
+            const downloadResult = await this.logoDownloadService.downloadLogo(
+                logoUrl,
+                ImageNamingService.ENTITY_TYPES.CARNIVAL,
+                eventData.temporaryId || Date.now(), // Use temporary ID until carnival is created
+                ImageNamingService.IMAGE_TYPES.LOGO
+            );
+
+            if (downloadResult.success) {
+                console.log(`✅ Club logo downloaded successfully: ${downloadResult.publicUrl}`);
+                return downloadResult.publicUrl;
+            } else {
+                console.warn(`⚠️  Failed to download club logo: ${downloadResult.error}`);
+                // Don't crash - just proceed without the logo
+                return null;
+            }
+
+        } catch (error) {
+            console.error(`❌ Error processing club logo for "${eventData.title}":`, error.message);
+            // Don't crash - just proceed without the logo
+            return null;
+        }
+    }
+
+    /**
+     * Update downloaded logo to use actual carnival ID after creation
+     * 
+     * @param {string} tempLogoUrl - Temporary logo URL
+     * @param {number} carnivalId - Actual carnival ID
+     * @returns {Promise<string|null>} Updated logo URL or original if update failed
+     */
+    async updateLogoWithCarnivalId(tempLogoUrl, carnivalId) {
+        if (!tempLogoUrl || !carnivalId) {
+            return tempLogoUrl;
+        }
+
+        try {
+            // Parse the temporary logo URL to get the filename
+            const urlParts = tempLogoUrl.split('/');
+            const filename = urlParts[urlParts.length - 1];
+            
+            // Parse the filename to get components
+            const parsed = ImageNamingService.parseImageName(filename);
+            if (!parsed) {
+                return tempLogoUrl; // Keep original if parsing fails
+            }
+
+            // Generate new filename with actual carnival ID
+            const newNamingResult = await ImageNamingService.generateImageName({
+                entityType: ImageNamingService.ENTITY_TYPES.CARNIVAL,
+                entityId: carnivalId,
+                imageType: ImageNamingService.IMAGE_TYPES.LOGO,
+                uploaderId: 1, // System user
+                originalName: `mysideline-logo${parsed.extension}`,
+                customSuffix: 'mysideline'
+            });
+
+            // Move the file to the new location
+            const fs = require('fs').promises;
+            const path = require('path');
+            
+            const oldPath = path.join('uploads', tempLogoUrl.replace('/uploads/', ''));
+            const newPath = path.join('uploads', newNamingResult.fullPath);
+            
+            // Ensure new directory exists
+            await fs.mkdir(path.dirname(newPath), { recursive: true });
+            
+            // Move the file
+            await fs.rename(oldPath, newPath);
+            
+            const newPublicUrl = `/uploads/${newNamingResult.fullPath.replace(/\\/g, '/')}`;
+            console.log(`📁 Updated logo location: ${tempLogoUrl} → ${newPublicUrl}`);
+            
+            return newPublicUrl;
+
+        } catch (error) {
+            console.error('Error updating logo with carnival ID:', error.message);
+            return tempLogoUrl; // Return original URL if update fails
         }
     }
 }

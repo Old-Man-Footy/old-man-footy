@@ -80,7 +80,7 @@
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. This setting should also be remembered by the browser. | ✅ Completed |
 | As a user, under the "Carnivals Hosted by" section on /clubs/:id page, I want to see a "Carnivals Attended by" card. Showing which carnivals that club are registered to attend. | ✅ Completed |
 | As a delegate, when I "Register My Club" to attend another club's carnival (/carnivals/:id). When I open the page, Team Name, Contact Person, Contact Email and Contact Phone should automatically be populated from my profile details. But they can be changed if I want to. Currently Contact Person, and Contact Email are populated. | ⭕ Not Started |
-| As a developer, When performing a MySidelineSync, Instead of saving the URL from MySideline to the Club Logo field, I want to attempt to download the logo, and upload it to the site. Storing a copy locally instead. If the logo fails to download due to permissions issues or other, do not crash. Simply do not add the logo to the site. | ⭕ Not Started |
+| As a developer, When performing a MySidelineSync, Instead of saving the URL from MySideline to the Club Logo field, I want to attempt to download the logo, and upload it to the site. Storing a copy locally instead. If the logo fails to download due to permissions issues or other, do not crash. Simply do not add the logo to the site. | ✅ Completed |
 | As a delegate, I want to be able to link players to my club. via ClubPlayers route from my dashboard. Club player records will have:<br>First Name<br>Last Name<br>DOB<br>Email. | ⭕ Not Started |
 | As a delegate, after registering to attend a carnival. I want to select Players from ClubPlayers and link them to the Carnival. Likely via a CarnivalClubPlayers route or similar. | ⭕ Not Started |
 | As a delegate, when hosting a carnival, and logged in, I want to be able to see the player lists of all the clubs attending my carnival, so I can keep track of attendance. | ⭕ Not Started |
@@ -127,6 +127,7 @@
 | As a tester, I want comprehensive unit tests for, and limited to `models/ClubAlternateName.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `models/SyncLog.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/emailService.js`  | ⭕ Not Started |
+| As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineLogoDownloadService.js` | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineDataService.js` | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineEventParserService.js`  | ⭕ Not Started |
 | As a tester, I want comprehensive unit tests for, and limited to `services/mySidelineScraperService.js` | ⭕ Not Started |
