@@ -162,6 +162,15 @@
                             
                             <div class="mb-3">
                                 <label for="registrationLink" class="form-label">Registration Link</label>
+                                
+                                <!-- Generate MySideline Link Button (hidden by default) -->
+                                <div class="mb-2" id="mysidelineButtonContainer" style="display: none;">
+                                    <button type="button" class="btn btn-outline-info btn-sm" id="generateMysidelineBtn">
+                                        <i class="bi bi-link-45deg"></i> Generate MySideline Link
+                                    </button>
+                                    <small class="text-muted ms-2">Creates a registration link based on the carnival title</small>
+                                </div>
+                                
                                 <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
                                        value="<%= typeof formData !== 'undefined' ? formData.registrationLink : '' %>"
                                        placeholder="https://...">
@@ -187,7 +196,7 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="socialMediaFacebook" class="form-label">
-                                        <i class="bi bi-facebook text-primary"></i> Facebook
+                                        <i class="bi bi-facebook label-facebook"></i> Facebook
                                     </label>
                                     <input type="url" class="form-control" id="socialMediaFacebook" name="socialMediaFacebook" 
                                            value="<%= typeof formData !== 'undefined' ? formData.socialMediaFacebook : '' %>"
@@ -195,7 +204,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="socialMediaInstagram" class="form-label">
-                                        <i class="bi bi-instagram text-danger"></i> Instagram
+                                        <i class="bi bi-instagram label-instagram"></i> Instagram
                                     </label>
                                     <input type="url" class="form-control" id="socialMediaInstagram" name="socialMediaInstagram" 
                                            value="<%= typeof formData !== 'undefined' ? formData.socialMediaInstagram : '' %>"
@@ -205,7 +214,7 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="socialMediaTwitter" class="form-label">
-                                        <i class="bi bi-twitter-x text-info"></i> X
+                                        <i class="bi bi-twitter-x label-twitter-x"></i> X
                                     </label>
                                     <input type="url" class="form-control" id="socialMediaTwitter" name="socialMediaTwitter" 
                                            value="<%= typeof formData !== 'undefined' ? formData.socialMediaTwitter : '' %>"
@@ -313,4 +322,45 @@ function clearForm() {
     // Clear the form fields
     document.getElementById('carnivalForm').reset();
 }
+
+// Show/hide MySideline link button based on title input
+document.getElementById('title').addEventListener('input', function() {
+    const title = this.value.trim();
+    const buttonContainer = document.getElementById('mysidelineButtonContainer');
+    if (title.length > 0) {
+        buttonContainer.style.display = 'block';
+    } else {
+        buttonContainer.style.display = 'none';
+    }
+});
+
+// Generate MySideline link
+document.getElementById('generateMysidelineBtn').addEventListener('click', function() {
+    const title = document.getElementById('title').value.trim();
+    const registrationLink = document.getElementById('registrationLink');
+    
+    if (title.length > 0) {
+        // Generate MySideline registration link with URL encoded title
+        const encodedTitle = encodeURIComponent(title);
+        const mysidelineUrl = `https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&criteria=${encodedTitle}`;
+        registrationLink.value = mysidelineUrl;
+        
+        // Add visual feedback
+        registrationLink.focus();
+        registrationLink.select();
+        
+        // Show a brief success indicator
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-circle"></i> Generated!';
+        btn.classList.remove('btn-outline-info');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-info');
+        }, 2000);
+    }
+});
 </script>

@@ -5,17 +5,13 @@ const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
 const { sponsorUpload, handleUploadError } = require('../middleware/upload');
 const sponsorController = require('../controllers/sponsor.controller');
 
-// Public sponsor listings
+// Public sponsor listings - MUST come first
 router.get('/', sponsorController.showSponsorListings);
 
-// Admin-only routes for sponsor management
-// Show create sponsor form (must be before /:id route)
+// Admin-only routes for sponsor management - MUST come before /:id route
 router.get('/new', ensureAuthenticated, ensureAdmin, sponsorController.showCreateSponsor);
 
-// Individual sponsor profile (public)
-router.get('/:id', sponsorController.showSponsorProfile);
-
-// Create new sponsor
+// Create new sponsor - POST route can come before parameterized routes
 router.post('/', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploadError, [
     body('sponsorName').notEmpty().trim().isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
     body('contactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid email address required'),
@@ -33,7 +29,10 @@ router.post('/', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploadEr
     body('sponsorshipLevel').optional().isIn(['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind']).withMessage('Invalid sponsorship level')
 ], sponsorController.createSponsor);
 
-// Show edit sponsor form
+// Individual sponsor profile (public) - MUST come after all specific routes
+router.get('/:id', sponsorController.showSponsorProfile);
+
+// Show edit sponsor form - MUST come after /:id route
 router.get('/:id/edit', ensureAuthenticated, ensureAdmin, sponsorController.showEditSponsor);
 
 // Update sponsor
