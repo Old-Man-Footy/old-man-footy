@@ -134,6 +134,15 @@
                                         </button>
                                     <% } %>
 
+                                    <!-- Release ownership button for MySideline events owned by the user -->
+                                    <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId && carnival.lastMySidelineSync) { %>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#releaseOwnershipModal">
+                                            <i class="bi bi-unlock"></i> Release Ownership
+                                        </button>
+                                    <% } %>
+
                                     <!-- Edit button for owners -->
                                     <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId) { %>
                                         <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-primary btn-sm">
@@ -792,6 +801,42 @@
                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
                     <button type="submit" class="btn btn-warning">
                         <i class="bi bi-hand-thumbs-up"></i> Yes, Claim This Event
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Release Ownership Modal -->
+<div class="modal fade" id="releaseOwnershipModal" tabindex="-1" aria-labelledby="releaseOwnershipModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="releaseOwnershipModalLabel">
+                    <i class="bi bi-unlock text-danger me-2"></i>
+                    Release Event Ownership
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> Releasing ownership will remove your access to manage this event.
+                </div>
+                
+                <p class="mb-0">
+                    <strong>Event:</strong> <%= carnival.title %><br>
+                    <strong>Your Club:</strong> <%= user && user.club ? user.club.clubName : 'Your Club' %>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <form method="POST" action="/carnivals/<%= carnival.id %>/release-ownership" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-unlock"></i> Yes, Release Ownership
                     </button>
                 </form>
             </div>

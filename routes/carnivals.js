@@ -65,6 +65,9 @@ router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);
 // Take ownership of MySideline event
 router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeOwnership);
 
+// Release ownership of MySideline event
+router.post('/:id/release-ownership', ensureAuthenticated, carnivalController.releaseOwnership);
+
 // Sync MySideline events (admin only)
 router.post('/sync-mysideline', ensureAuthenticated, carnivalController.syncMySideline);
 

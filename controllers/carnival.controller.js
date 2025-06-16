@@ -81,12 +81,34 @@ const listCarnivals = async (req, res) => {
             order: [['date', 'DESC']] // Show newest first so inactive/past carnivals appear after active ones
         });
 
-        // Process carnivals through getPublicDisplayData to handle inactive carnival obfuscation
+        // Fetch full user data with club information for ownership checking
+        let userWithClub = null;
+        if (req.user) {
+            userWithClub = await User.findByPk(req.user.id, {
+                include: [{
+                    model: Club,
+                    as: 'club',
+                    attributes: ['id', 'clubName', 'state', 'location']
+                }],
+                attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId', 'isAdmin', 'isPrimaryDelegate']
+            });
+        }
+
+        // Process carnivals through getPublicDisplayData and add ownership information
         const processedCarnivals = carnivals.map(carnival => {
             const publicData = carnival.getPublicDisplayData();
+            
+            // Check if this carnival can be claimed by the current user
+            const canTakeOwnership = carnival.isActive && 
+                                    carnival.lastMySidelineSync && 
+                                    !carnival.createdByUserId && 
+                                    userWithClub && 
+                                    userWithClub.clubId;
+            
             return {
                 ...publicData,
-                creator: carnival.creator // Preserve creator relationship
+                creator: carnival.creator, // Preserve creator relationship
+                canTakeOwnership: canTakeOwnership
             };
         });
 
@@ -97,6 +119,7 @@ const listCarnivals = async (req, res) => {
             carnivals: processedCarnivals,
             states,
             currentFilters: { state, search, upcoming: upcomingFilter, mysideline },
+            user: userWithClub, // Pass user data to view for ownership checking
             additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
@@ -597,6 +620,31 @@ const takeOwnership = async (req, res) => {
 };
 
 /**
+ * Release ownership of MySideline event
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const releaseOwnership = async (req, res) => {
+    try {
+        // Use the Carnival model's releaseOwnership method
+        const result = await Carnival.releaseOwnership(req.params.id, req.user.id);
+        
+        if (result.success) {
+            req.flash('success_msg', result.message);
+        } else {
+            req.flash('error_msg', result.message);
+        }
+        
+        res.redirect(`/carnivals/${req.params.id}`);
+
+    } catch (error) {
+        console.error('Error releasing ownership of carnival:', error);
+        req.flash('error_msg', error.message || 'An error occurred while releasing ownership of the event.');
+        res.redirect('/carnivals');
+    }
+};
+
+/**
  * Trigger MySideline sync (admin only)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -631,6 +679,7 @@ module.exports = {
     postEdit: updateCarnival,
     delete: deleteCarnival,
     takeOwnership,
+    releaseOwnership,
     syncMySideline,
     getUpcoming: async (req, res) => {
         try {

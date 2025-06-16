@@ -331,6 +331,101 @@ class Carnival extends Model {
       };
     }
   }
+
+  /**
+   * Release ownership of a carnival
+   * This method handles the business logic for unclaiming carnival ownership
+   * @param {number} carnivalId - ID of the carnival to release
+   * @param {number} userId - ID of the user releasing ownership
+   * @returns {Promise<Object>} Result object with success status and message
+   */
+  static async releaseOwnership(carnivalId, userId) {
+    const User = require('./User');
+    
+    try {
+      // Input validation
+      if (!carnivalId || !userId) {
+        throw new Error('Carnival ID and User ID are required');
+      }
+
+      // Find the carnival
+      const carnival = await this.findByPk(carnivalId);
+      if (!carnival) {
+        throw new Error('Carnival not found');
+      }
+
+      // Find the user and include their club information
+      const user = await User.findByPk(userId, {
+        include: [{
+          model: require('./Club'),
+          as: 'club',
+          attributes: ['id', 'clubName', 'isActive']
+        }]
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Authorization checks
+      if (!carnival.createdByUserId) {
+        throw new Error('This carnival is not currently owned by anyone');
+      }
+
+      if (carnival.createdByUserId !== userId) {
+        throw new Error('You can only release ownership of carnivals you own');
+      }
+
+      // Business rule checks
+      if (!carnival.lastMySidelineSync) {
+        throw new Error('Can only release ownership of MySideline imported events');
+      }
+
+      // Check if there are registered clubs - warn but allow
+      const { CarnivalClub } = require('./index');
+      const registeredClubs = await CarnivalClub.count({
+        where: {
+          carnivalId: carnivalId,
+          isActive: true
+        }
+      });
+
+      // Release ownership - revert to MySideline import state
+      await carnival.update({
+        createdByUserId: null,
+        claimedAt: null,
+        updatedAt: new Date()
+      });
+
+      // Log the ownership release for audit purposes
+      console.log(`🔓 Carnival ownership released: "${carnival.title}" (ID: ${carnivalId}) released by user ${userId} (${user.club ? user.club.clubName : 'No Club'})`);
+
+      let warningMessage = '';
+      if (registeredClubs > 0) {
+        warningMessage = ` Note: This carnival has ${registeredClubs} registered club${registeredClubs > 1 ? 's' : ''} - you may want to contact them about the ownership change.`;
+      }
+
+      return {
+        success: true,
+        message: `You have successfully released ownership of "${carnival.title}". The event is now available for the correct organizer to claim.${warningMessage}`,
+        carnival: carnival,
+        releasedBy: {
+          userId: user.id,
+          userName: `${user.firstName} ${user.lastName}`,
+          clubName: user.club ? user.club.clubName : 'No Club'
+        },
+        registeredClubsCount: registeredClubs
+      };
+
+    } catch (error) {
+      console.error(`❌ Failed to release carnival ownership (ID: ${carnivalId}, User: ${userId}):`, error.message);
+      
+      return {
+        success: false,
+        message: error.message || 'An error occurred while releasing carnival ownership'
+      };
+    }
+  }
 }
 
 /**
