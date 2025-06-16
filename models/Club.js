@@ -43,19 +43,43 @@ class Club extends Model {
   }
 
   /**
-   * Get club's carnival count
-   * @returns {Promise<number>} Number of active carnivals
+   * Get club's carnival count (unique combination of hosted and attended carnivals)
+   * @returns {Promise<number>} Number of unique active carnivals
    */
   async getCarnivalCount() {
     const Carnival = require('./Carnival');
-    return await Carnival.count({
+    const CarnivalClub = require('./CarnivalClub');
+    const { Op } = require('sequelize');
+
+    // Get carnivals hosted by this club's delegates
+    const delegateIds = await this.getDelegateIds();
+    const hostedCarnivalIds = await Carnival.findAll({
       where: {
-        createdByUserId: {
-          [require('sequelize').Op.in]: await this.getDelegateIds()
-        },
+        createdByUserId: { [Op.in]: delegateIds },
         isActive: true
-      }
-    });
+      },
+      attributes: ['id']
+    }).then(carnivals => carnivals.map(c => c.id));
+
+    // Get carnivals this club is attending
+    const attendingCarnivalIds = await CarnivalClub.findAll({
+      where: {
+        clubId: this.id,
+        isActive: true
+      },
+      include: [{
+        model: Carnival,
+        as: 'carnival',
+        where: { isActive: true },
+        attributes: ['id']
+      }],
+      attributes: []
+    }).then(carnivalClubs => carnivalClubs.map(cc => cc.carnival.id));
+
+    // Combine and get unique carnival IDs
+    const uniqueCarnivalIds = [...new Set([...hostedCarnivalIds, ...attendingCarnivalIds])];
+    
+    return uniqueCarnivalIds.length;
   }
 
   /**
