@@ -186,7 +186,17 @@ const fileFilter = (req, file, cb) => {
     const extname = allowedType.extensions.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedType.mimeTypes.test(file.mimetype);
     
-    if (mimetype && extname) {
+    // Special handling for SVG files - browsers can send different MIME types
+    const isSvg = path.extname(file.originalname).toLowerCase() === '.svg' &&
+                  (file.mimetype === 'image/svg+xml' || 
+                   file.mimetype === 'image/svg' ||
+                   file.mimetype === 'text/xml' ||
+                   file.mimetype === 'application/xml');
+    
+    // Allow SVG files for logo uploads specifically
+    const isSvgAllowed = context.imageType === ImageNamingService.IMAGE_TYPES.LOGO && isSvg;
+    
+    if ((mimetype && extname) || isSvgAllowed) {
         return cb(null, true);
     } else {
         // Create user-friendly error messages
@@ -199,7 +209,7 @@ const fileFilter = (req, file, cb) => {
             allowedFormats = 'JPG, PNG, GIF, or WebP';
         }
         
-        cb(new Error(`Invalid file type for ${file.fieldname}. Allowed formats: ${allowedFormats}`));
+        cb(new Error(`Invalid file type for ${file.fieldname}. Allowed formats: ${allowedFormats}. Received: ${file.mimetype} for file: ${file.originalname}`));
     }
 };
 

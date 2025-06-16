@@ -34,6 +34,15 @@
     padding: 0.5rem;
 }
 
+.club-logo-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    background: white;
+    border: 1px solid #e9ecef;
+    padding: 0.25rem;
+}
+
 .club-logo-placeholder {
     width: 80px;
     height: 80px;
