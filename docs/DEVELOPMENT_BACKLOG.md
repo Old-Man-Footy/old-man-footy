@@ -79,15 +79,16 @@
 | As a delegate, when signing up and I start typing the name of my club, deactivated clubs are able to be chosen from. If I select a club which is deactivated, an option to reactivate is offered. If reactivated, the new user will be added as a Primary Delegate. The original delegate will be notified via email, with a link to respond if believed fraudulent. | ✅ Completed |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. This setting should also be remembered by the browser. | ✅ Completed |
 | As a user, under the "Carnivals Hosted by" section on /clubs/:id page, I want to see a "Carnivals Attended by" card. Showing which carnivals that club are registered to attend. | ✅ Completed |
-| As a delegate, I should not be able to register as attending a carnival that has not been claimed by a club. A warning message should show up instead. | ⭕ Not Started |
-| As a delegate, I want to be able to merge (unclaimed) carnivals with one I own if for some reason a duplicate is imported and does not match an already created carnival. The option to select which carnival to merge with, defaulting to the latest.<br>Merging will:<br>- Populate all MySideline related fields.<br>- Set only empty fields from the 'source' carnival<br>- Deactivate the old Carnival. | ⭕ Not Started |
-| As a delegate, when I claim a carnival and I already have at least one carnival created, i should get the option to merge it with that/or another carnival. | ⭕ Not Started |
+| As a delegate, I want to be able to link players to my club. via ClubPlayers route from my dashboard. Club player records will have:<br>First Name<br>Last Name<br>DOB<br>Email. | ⭕ Not Started |
+| As a delegate, after registering to attend a carnival. I want to select Players from ClubPlayers and link them to the Carnival. Likely via a CarnivalClubPlayers route or similar. | ⭕ Not Started |
+| As a delegate, when hosting a carnival, and logged in, I want to be able to see the player lists of all the clubs attending my carnival, so I can keep track of attendance. | ⭕ Not Started |
+| As a delegate, I want to be able to merge (claimed) carnivals with another one I own if for some reason a duplicate is imported and does not match an already created carnival. The option to select which carnival to merge with, defaulting to the latest.<br>Merging will:<br>- Populate all MySideline related fields.<br>- Set only empty fields from the 'source' carnival<br>- Deactivate the old Carnival. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
-| As a developer, I want to add a "Buy me a coffee" link in the footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`  | ⭕ Not Started |
+| As a developer, I want to add a "Buy me a coffee" link in the main site footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`. It should stand out and attract attention without being big.  | ⭕ Not Started |
 | As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ⭕ Not Started |
 | As a delegate, I want to be able to bulk remove or update contact information from clubs or carnivals from my dashboard. | ⭕ Not Started |
 | **Script Extraction Implementation** | |
-| As a developer, I want to re-enable Express Layouts script extraction in app.js to optimize script loading performance. | ⭕ Not Started |
+| As a developer, I want to ensure we are using Express Layouts script extraction in app.js to optimize script loading performance. | ⭕ Not Started |
 | As a developer, I want to update the main layout template (views/layout.ejs) to properly handle extracted scripts using <%- script %> placeholder. | ⭕ Not Started |
 | As a developer, I want to update admin user management view (views/admin/users.ejs) to use script extraction blocks instead of direct script tags. | ⭕ Not Started |
 | As a developer, I want to update admin edit user view (views/admin/edit-user.ejs) to use script extraction blocks instead of direct script tags. | ⭕ Not Started |
