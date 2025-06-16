@@ -4,47 +4,51 @@
  */
 
 /**
- * Dashboard filtering functionality
+ * Dashboard filtering functionality with tab-specific support
  */
-function showAll() {
-    document.querySelectorAll('.carnival-item').forEach(item => {
+function showAll(target = null) {
+    const selector = target ? `.${target}-carnival` : '.carnival-item';
+    document.querySelectorAll(selector).forEach(item => {
         item.style.display = 'block';
     });
-    updateActiveFilter('all');
+    updateActiveFilter('all', target);
 }
 
-function showUpcoming() {
+function showUpcoming(target = null) {
     const now = new Date().getTime();
-    document.querySelectorAll('.carnival-item').forEach(item => {
+    const selector = target ? `.${target}-carnival` : '.carnival-item';
+    document.querySelectorAll(selector).forEach(item => {
         const itemDate = parseInt(item.dataset.date);
         item.style.display = itemDate >= now ? 'block' : 'none';
     });
-    updateActiveFilter('upcoming');
+    updateActiveFilter('upcoming', target);
 }
 
-function showPast() {
+function showPast(target = null) {
     const now = new Date().getTime();
-    document.querySelectorAll('.carnival-item').forEach(item => {
+    const selector = target ? `.${target}-carnival` : '.carnival-item';
+    document.querySelectorAll(selector).forEach(item => {
         const itemDate = parseInt(item.dataset.date);
         item.style.display = itemDate < now ? 'block' : 'none';
     });
-    updateActiveFilter('past');
+    updateActiveFilter('past', target);
 }
 
-function updateActiveFilter(filter) {
-    document.querySelectorAll('.btn-outline-secondary').forEach(btn => {
+function updateActiveFilter(filter, target = null) {
+    // Update only buttons for the specific target, or all if no target specified
+    const buttonSelector = target ? `[data-target="${target}"]` : '[data-filter]';
+    document.querySelectorAll(buttonSelector).forEach(btn => {
         btn.classList.remove('active');
     });
     
-    if (filter === 'all') {
-        const allBtn = document.querySelector('[data-filter="all"]');
-        if (allBtn) allBtn.classList.add('active');
-    } else if (filter === 'upcoming') {
-        const upcomingBtn = document.querySelector('[data-filter="upcoming"]');
-        if (upcomingBtn) upcomingBtn.classList.add('active');
-    } else if (filter === 'past') {
-        const pastBtn = document.querySelector('[data-filter="past"]');
-        if (pastBtn) pastBtn.classList.add('active');
+    // Find and activate the correct button
+    const activeButtonSelector = target 
+        ? `[data-filter="${filter}"][data-target="${target}"]`
+        : `[data-filter="${filter}"]`;
+    
+    const activeBtn = document.querySelector(activeButtonSelector);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
     }
 }
 
@@ -84,23 +88,32 @@ function dismissChecklist() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard page loaded, setting up functionality...');
     
-    // Initialize with all carnivals showing
-    showAll();
+    // Initialize with all carnivals showing for both tabs
+    showAll('hosted');
+    showAll('attending');
     
-    // Setup filter button event listeners
-    const allBtn = document.querySelector('[data-filter="all"]');
-    const upcomingBtn = document.querySelector('[data-filter="upcoming"]');
-    const pastBtn = document.querySelector('[data-filter="past"]');
-    
-    if (allBtn) {
-        allBtn.addEventListener('click', showAll);
-    }
-    if (upcomingBtn) {
-        upcomingBtn.addEventListener('click', showUpcoming);
-    }
-    if (pastBtn) {
-        pastBtn.addEventListener('click', showPast);
-    }
+    // Setup filter button event listeners with delegation for tab-specific filtering
+    document.addEventListener('click', function(event) {
+        const filterButton = event.target.closest('[data-filter]');
+        if (filterButton) {
+            event.preventDefault();
+            
+            const filter = filterButton.dataset.filter;
+            const target = filterButton.dataset.target;
+            
+            switch(filter) {
+                case 'all':
+                    showAll(target);
+                    break;
+                case 'upcoming':
+                    showUpcoming(target);
+                    break;
+                case 'past':
+                    showPast(target);
+                    break;
+            }
+        }
+    });
     
     // Setup dismiss checklist button
     const dismissBtn = document.querySelector('[data-action="dismiss-checklist"]');
@@ -140,6 +153,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize Leave Club modal
     initializeLeaveClubModal();
+    
+    // Handle tab switching to reset filters
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+    tabButtons.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            const targetPane = event.target.getAttribute('data-bs-target');
+            if (targetPane === '#hosted-carnivals') {
+                showAll('hosted');
+            } else if (targetPane === '#attending-carnivals') {
+                showAll('attending');
+            }
+        });
+    });
     
     console.log('Dashboard functionality initialized successfully');
 });

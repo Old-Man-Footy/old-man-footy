@@ -349,13 +349,11 @@
                 <div class="tab-pane fade" id="attending-carnivals" role="tabpanel" aria-labelledby="attending-tab">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="h5 mb-0">Carnivals <%= user.clubId.clubName %> is Attending</h2>
-                        <% if (attendingCarnivals && attendingCarnivals.length > 0) { %>
                         <div class="d-flex gap-2">
                             <button class="btn btn-outline-secondary btn-sm" data-filter="all" data-target="attending">All</button>
                             <button class="btn btn-outline-secondary btn-sm" data-filter="upcoming" data-target="attending">Upcoming</button>
                             <button class="btn btn-outline-secondary btn-sm" data-filter="past" data-target="attending">Past</button>
                         </div>
-                        <% } %>
                     </div>
 
                     <% if (attendingCarnivals && attendingCarnivals.length > 0) { %>
