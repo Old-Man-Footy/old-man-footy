@@ -36,7 +36,7 @@
 | As a developer, I want all buttons and links on the website to have a purpose and a destination. Ensure they all have a function. | ✅ Completed |
 | As a club delegate, I want to ensure any carnivals I create on this website are merged with data synched from MySideline. We should not end up with duplicates. | ✅ Completed |
 | As a club delegate, I want to be able to list our club on the site, so local players without affiliation can find a Masters team. This should include name, location and contact details, as well as ability to link to social media pages.  | ✅ Completed |
-| As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on All Carnivals page. | ✅ Completed |
+| As a user, when I want to be able to uncheck the 'Upcoming events only' checkbox on Find Carnivals page. | ✅ Completed |
 | As a developer, I want puppeteer calls to be headless when in production mode only so I can see what is happening during development. | ✅ Completed |
 | As a club delegate, I want Our Carnivals to be linked to our Club pages, and vice versa. | ✅ Completed |
 | As a developer, I want to ensure images (icons/images) which are uploaded by delegates or sub delegates remain linked to that club and/or carnival. This requires a complex naming standard be added to uploaded and renamed images | ✅ Completed |
@@ -71,7 +71,7 @@
 | As a developer, I want to store the MySideline title in a separate hidden field that never changes, for use when matching MySideline carnivals.<br>It should:<br>- Populate on create from MySideline<br>- Be used for matching Carnival records instead of using `title` | ✅ Completed |
 | As a developer, MySideline Sync should only update 'Active' carnivals | ✅ Completed |
 | As an administrator, I want to be able to edit all clubs, Carnivals or users, and issue password resets or close accounts from my dashboard. The Administrator Dashboard will look different to Delegates. | ✅ Completed |
-| As a user, I should not see inactive Carnivals on the front or 'All Carnivals' pages. | ✅ Completed |
+| As a user, I should not see inactive Carnivals on the front or 'Find Carnivals' pages. | ✅ Completed |
 | As a user, I would like addresses on Carnivals to be clickable, opening a link to a Google Maps location. `https://maps.google.com/maps?q=<locationAddress>` and have it rendered neatly using locationAddressPart1-4 fields. | ✅ Completed |
 | As a developer, I want the Go Back button on error screens to navigate 'back' to the previous page. | ✅ Completed |
 | As a delegate, I should see a warning about deactivating a Carnival, or Club stating they will "no longer be visible on the site" before I can save it. | ✅ Completed |
@@ -79,10 +79,10 @@
 | As a delegate, when signing up and I start typing the name of my club, deactivated clubs are able to be chosen from. If I select a club which is deactivated, an option to reactivate is offered. If reactivated, the new user will be added as a Primary Delegate. The original delegate will be notified via email, with a link to respond if believed fraudulent. | ✅ Completed |
 | As a user, I want to be able to select dark/light mode from a toggle in the top right corner next to Register button. This should replace white backgrounds with black/dark grey, black writing with white and, and dark grey writing with light grey. This setting should also be remembered by the browser. | ✅ Completed |
 | As a user, under the "Carnivals Hosted by" section on /clubs/:id page, I want to see a "Carnivals Attended by" card. Showing which carnivals that club are registered to attend. | ✅ Completed |
-| As a delegate, before I click "Register My Club" to attend another club's carnival (/carnivals/:id). When I open the page, Team Name, Contact Person, Contact Email and Contact Phone should automatically be populated from my profile details. But they can be changed if I want to. Currently only Contact Person, and Contact Email are populated. | ⭕ Not Started |
+| As a delegate, before I click "Register My Club" to attend another club's carnival (/carnivals/:id). When I open the page, Team Name, Contact Person, Contact Email and Contact Phone should automatically be populated from my profile details. But they can be changed if I want to. Currently only Contact Person, and Contact Email are populated. | ✅ Completed |
 | As a developer, When performing a MySidelineSync, Instead of saving the URL from MySideline to the Club Logo field, I want to attempt to download the logo, and upload it to the site. Storing a copy locally instead. If the logo fails to download due to permissions issues or other, do not crash. Simply do not add the logo to the site. | ✅ Completed |
 | As a delegate, I want to be able to view and link players to my club. via ClubPlayers route from my dashboard. Club player records will have:<br>First Name<br>Last Name<br>DOB<br>Email. | ✅ Completed |
-| As a delegate, after registering to attend a carnival. I want to select Players from ClubPlayers and link them to the Carnival. Likely via a CarnivalClubPlayers route or similar. | ⭕ Not Started |
+| As a delegate, after registering to attend a carnival. I want to be able to select Players from ClubPlayers and link them to that Carnival's Attendance, so the organiser knows who is coming. This will likely via a carnivalClubsPlayers route or similar. | ⭕ Not Started |
 | As a delegate, when hosting a carnival, and logged in, I want to be able to see the player lists of all the clubs attending my carnival, so I can keep track of attendance. | ⭕ Not Started |
 | As a delegate, I want to be able to merge (claimed) carnivals with another one I own if for some reason a duplicate is imported and does not match an already created carnival. The option to select which carnival to merge with, defaulting to the latest.<br>Merging will:<br>- Populate all MySideline related fields.<br>- Set only empty fields from the 'source' carnival<br>- Deactivate the old Carnival. | ⭕ Not Started |
 | As an admin, I want to be able to merge carnivals on behalf of other clubs. | ⭕ Not Started |

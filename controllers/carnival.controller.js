@@ -115,7 +115,7 @@ const listCarnivals = async (req, res) => {
         const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
 
         res.render('carnivals/list', {
-            title: 'All Carnivals',
+            title: 'Find Carnivals',
             carnivals: processedCarnivals,
             states,
             currentFilters: { state, search, upcoming: upcomingFilter, mysideline },
@@ -125,7 +125,7 @@ const listCarnivals = async (req, res) => {
     } catch (error) {
         console.error('Error fetching carnivals:', error);
         res.render('carnivals/list', {
-            title: 'All Carnivals',
+            title: 'Find Carnivals',
             carnivals: [],
             states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
             currentFilters: {},

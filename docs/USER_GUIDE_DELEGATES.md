@@ -190,7 +190,7 @@ For managing event information on this platform:
 ### Important Links
 - Official NRL Masters Registration: Available from dashboard
 - Your Club Profile: Main navigation menu
-- All Carnivals: Main navigation menu
+- Find Carnivals: Main navigation menu
 
 ---
 
