@@ -91,7 +91,7 @@ const getDashboard = async (req, res) => {
             }]
         });
 
-        // Get user's carnivals
+        // Get user's carnivals (carnivals they've created)
         const userCarnivals = await Carnival.findAll({
             where: { 
                 createdByUserId: req.user.id,
@@ -99,6 +99,41 @@ const getDashboard = async (req, res) => {
             },
             order: [['date', 'DESC']]
         });
+
+        // Get carnivals the user's club is registered to attend
+        let attendingCarnivals = [];
+        if (userWithClub.clubId) {
+            const { CarnivalClub } = require('../models');
+            const carnivalRegistrations = await CarnivalClub.findAll({
+                where: {
+                    clubId: userWithClub.clubId,
+                    isActive: true
+                },
+                include: [{
+                    model: Carnival,
+                    as: 'carnival',
+                    where: { isActive: true },
+                    include: [{
+                        model: User,
+                        as: 'creator',
+                        attributes: ['firstName', 'lastName', 'email']
+                    }]
+                }],
+                order: [['carnival', 'date', 'ASC']]
+            });
+            
+            // Extract carnival data from the CarnivalClub relationship
+            attendingCarnivals = carnivalRegistrations.map(registration => ({
+                ...registration.carnival.toJSON(),
+                registration: {
+                    id: registration.id,
+                    playerCount: registration.playerCount,
+                    teamName: registration.teamName,
+                    isPaid: registration.isPaid,
+                    registrationDate: registration.registrationDate
+                }
+            }));
+        }
 
         // Get upcoming carnivals
         const upcomingCarnivals = await Carnival.findAll({
@@ -141,6 +176,7 @@ const getDashboard = async (req, res) => {
             title: 'Dashboard',
             user: enrichedUser,
             userCarnivals,
+            attendingCarnivals, // New: carnivals the user's club is attending
             upcomingCarnivals,
             clubs, // Add clubs variable for the dashboard checklist
             carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
@@ -154,6 +190,7 @@ const getDashboard = async (req, res) => {
                 title: 'Dashboard',
                 user: req.user,
                 userCarnivals: [],
+                attendingCarnivals: [], // Ensure attending carnivals is always provided
                 upcomingCarnivals: [],
                 clubs: [], // Ensure clubs is always provided
                 carnivals: [], // Ensure carnivals is always provided
