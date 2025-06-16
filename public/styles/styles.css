@@ -1288,6 +1288,43 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: rgba(255, 255, 255, 0.9) !important;
 }
 
+/* Tooltip Dark Mode Fixes */
+[data-theme="dark"] .tooltip {
+    --bs-tooltip-bg: var(--theme-bg-tertiary) !important;
+    --bs-tooltip-color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .tooltip .tooltip-inner {
+    background-color: var(--theme-bg-tertiary) !important;
+    color: var(--theme-text-primary) !important;
+    border: 1px solid var(--theme-border-color) !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .tooltip .tooltip-arrow::before {
+    border-color: var(--theme-bg-tertiary) transparent !important;
+}
+
+[data-theme="dark"] .tooltip.bs-tooltip-top .tooltip-arrow::before,
+[data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="top"] .tooltip-arrow::before {
+    border-top-color: var(--theme-bg-tertiary) !important;
+}
+
+[data-theme="dark"] .tooltip.bs-tooltip-end .tooltip-arrow::before,
+[data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="right"] .tooltip-arrow::before {
+    border-right-color: var(--theme-bg-tertiary) !important;
+}
+
+[data-theme="dark"] .tooltip.bs-tooltip-bottom .tooltip-arrow::before,
+[data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="bottom"] .tooltip-arrow::before {
+    border-bottom-color: var(--theme-bg-tertiary) !important;
+}
+
+[data-theme="dark"] .tooltip.bs-tooltip-start .tooltip-arrow::before,
+[data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="left"] .tooltip-arrow::before {
+    border-left-color: var(--theme-bg-tertiary) !important;
+}
+
 /* Navbar Alignment */
 .navbar-nav {
     align-items: center;
