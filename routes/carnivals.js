@@ -8,11 +8,11 @@ const carnivalController = require('../controllers/carnival.controller');
 // List all carnivals with filtering
 router.get('/', carnivalController.list);
 
-// Show individual carnival
-router.get('/:id', carnivalController.show);
-
 // Create carnival form
 router.get('/new', ensureAuthenticated, carnivalController.getNew);
+
+// Show individual carnival
+router.get('/:id', carnivalController.show);
 
 // Create carnival POST with validation
 router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
