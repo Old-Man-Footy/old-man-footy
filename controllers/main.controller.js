@@ -100,7 +100,7 @@ const getDashboard = async (req, res) => {
             order: [['date', 'DESC']]
         });
 
-        // Get carnivals the user's club is registered to attend
+        // Get carnivals the user's club is registered to attend (both upcoming and past)
         let attendingCarnivals = [];
         if (userWithClub.clubId) {
             const { CarnivalClub } = require('../models');
@@ -112,14 +112,14 @@ const getDashboard = async (req, res) => {
                 include: [{
                     model: Carnival,
                     as: 'carnival',
-                    where: { isActive: true },
+                    where: { isActive: true }, // Only show active carnivals (not deleted ones)
                     include: [{
                         model: User,
                         as: 'creator',
                         attributes: ['firstName', 'lastName', 'email']
                     }]
                 }],
-                order: [['carnival', 'date', 'ASC']]
+                order: [['carnival', 'date', 'DESC']] // Show most recent first
             });
             
             // Extract carnival data from the CarnivalClub relationship
