@@ -155,23 +155,36 @@ const showCarnival = async (req, res) => {
         // Process carnival data through getPublicDisplayData for public views
         const publicCarnivalData = carnival.getPublicDisplayData();
 
+        // Fetch full user data with club information for auto-populating registration form
+        let userWithClub = null;
+        if (req.user) {
+            userWithClub = await User.findByPk(req.user.id, {
+                include: [{
+                    model: Club,
+                    as: 'club',
+                    attributes: ['id', 'clubName', 'state', 'location']
+                }],
+                attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId', 'isAdmin', 'isPrimaryDelegate']
+            });
+        }
+
         // Check if this is a MySideline event that can be claimed (only for active carnivals)
         const canTakeOwnership = carnival.isActive && 
                                 carnival.lastMySidelineSync && 
                                 !carnival.createdByUserId && 
-                                req.user && 
-                                req.user.clubId;
+                                userWithClub && 
+                                userWithClub.clubId;
 
         // Check if user's club is already registered for this carnival (only for active carnivals)
         let userClubRegistration = null;
         let canRegisterClub = false;
         
-        if (carnival.isActive && req.user && req.user.clubId) {
+        if (carnival.isActive && userWithClub && userWithClub.clubId) {
             // Check if user's club is already registered
             userClubRegistration = await CarnivalClub.findOne({
                 where: {
                     carnivalId: carnival.id,
-                    clubId: req.user.clubId,
+                    clubId: userWithClub.clubId,
                     isActive: true
                 }
             });
@@ -182,14 +195,14 @@ const showCarnival = async (req, res) => {
             // 3. They are not the carnival owner
             // 4. Carnival is active
             canRegisterClub = !userClubRegistration && 
-                             carnival.createdByUserId !== req.user.id;
+                             carnival.createdByUserId !== userWithClub.id;
         }
 
         // Check if user can manage this carnival (always allow for owners/admins regardless of active status)
-        const canManage = req.user && (
-            req.user.isAdmin || 
-            (carnival.createdByUserId === req.user.id) ||
-            (req.user.clubId && carnival.creator && carnival.creator.club && carnival.creator.club.id === req.user.clubId)
+        const canManage = userWithClub && (
+            userWithClub.isAdmin || 
+            (carnival.createdByUserId === userWithClub.id) ||
+            (userWithClub.clubId && carnival.creator && carnival.creator.club && carnival.creator.club.id === userWithClub.clubId)
         );
 
         // Sort sponsors hierarchically using the sorting service
@@ -198,6 +211,7 @@ const showCarnival = async (req, res) => {
         res.render('carnivals/show', {
             title: carnival.title,
             carnival: canManage ? carnival : publicCarnivalData, // Show full data to managers, obfuscated to public
+            user: userWithClub, // Pass enriched user data with club information
             sponsors: sortedSponsors,
             canTakeOwnership,
             userClubRegistration,

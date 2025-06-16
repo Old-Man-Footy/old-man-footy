@@ -446,6 +446,7 @@
                             <div class="mb-3">
                                 <label for="teamName" class="form-label">Team Name</label>
                                 <input type="text" class="form-control" id="teamName" name="teamName" 
+                                       value="<%= user && user.club ? user.club.clubName : '' %>" 
                                        maxlength="100" placeholder="Optional team name">
                             </div>
                             
@@ -464,6 +465,7 @@
                             <div class="mb-3">
                                 <label for="contactPhone" class="form-label">Contact Phone</label>
                                 <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                       value="<%= user.phoneNumber || '' %>" 
                                        maxlength="20" placeholder="Optional phone number">
                             </div>
                             
