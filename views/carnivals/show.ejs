@@ -310,6 +310,121 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
+            <!-- Sponsors Section -->
+            <% if (sponsors && sponsors.length > 0) { %>
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-star-fill"></i> Event Sponsors</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <% sponsors.forEach((sponsor, index) => { %>
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center p-2 border rounded">
+                                        <% if (sponsor.logoUrl) { %>
+                                            <img src="<%= sponsor.logoUrl %>" alt="<%= sponsor.sponsorName %> Logo" 
+                                                 class="me-3" style="height: 40px; width: auto; max-width: 60px; object-fit: contain;">
+                                        <% } else { %>
+                                            <div class="me-3 d-flex align-items-center justify-content-center bg-light border rounded" 
+                                                 style="height: 40px; width: 60px; min-width: 60px;">
+                                                <i class="bi bi-building text-muted"></i>
+                                            </div>
+                                        <% } %>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="/sponsors/<%= sponsor.id %>" class="text-decoration-none">
+                                                    <%= sponsor.sponsorName %>
+                                                </a>
+                                            </h6>
+                                            <% if (sponsor.sponsorshipLevel) { %>
+                                                <span class="badge bg-secondary small"><%= sponsor.sponsorshipLevel %></span>
+                                            <% } %>
+                                            <% if (sponsor.businessType) { %>
+                                                <div class="text-muted small"><%= sponsor.businessType %></div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Contact Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary">
+                    <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <% if (!carnival.isActive && !canManage) { %>
+                        <!-- Obfuscated contact info for inactive carnivals -->
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <small>Contact details are hidden for inactive carnivals.</small>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Organiser:</strong><br>
+                            <%= carnival.organiserContactName || 'TBC' %>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Email:</strong><br>
+                            <span class="text-muted"><%= carnival.organiserContactEmail %></span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Phone:</strong><br>
+                            <span class="text-muted"><%= carnival.organiserContactPhone  %></span>
+                        </div>
+                    <% } else { %>
+                        <!-- Full contact info for active carnivals or carnival managers -->
+                        <div class="mb-3">
+                            <strong>Organiser:</strong><br>
+                            <%= carnival.organiserContactName || 'TBC'  %>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Email:</strong><br>
+                            <a href="mailto:<%= carnival.organiserContactEmail %>?subject=Enquiry about <%= carnival.title %>">
+                                <%= carnival.organiserContactEmail  %>
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Phone:</strong><br>
+                            <a href="tel:<%= carnival.organiserContactPhone %>">
+                                <%= carnival.organiserContactPhone  %>
+                            </a>
+                        </div>
+                        
+                        <!-- Social Media Links in Contact Information -->
+                        <% if (carnival.socialMediaFacebook || carnival.socialMediaInstagram || carnival.socialMediaTwitter || carnival.socialMediaWebsite) { %>
+                            <div class="mb-3">
+                                <strong>Follow Us:</strong><br>
+                                <div class="social-links mt-2">
+                                    <% if (carnival.socialMediaFacebook) { %>
+                                        <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="btn btn-facebook btn-sm me-2 mb-1">
+                                            <i class="bi bi-facebook"></i> Facebook
+                                        </a>
+                                    <% } %>
+                                    <% if (carnival.socialMediaInstagram) { %>
+                                        <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="btn btn-instagram btn-sm me-2 mb-1">
+                                            <i class="bi bi-instagram"></i> Instagram
+                                        </a>
+                                    <% } %>
+                                    <% if (carnival.socialMediaTwitter) { %>
+                                        <a href="<%= carnival.socialMediaTwitter %>" target="_blank" class="btn btn-twitter-x btn-sm me-2 mb-1">
+                                            <i class="bi bi-twitter-x"></i> X (Twitter)
+                                        </a>
+                                    <% } %>
+                                    <% if (carnival.socialMediaWebsite) { %>
+                                        <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="btn-primary btn-sm me-2 mb-1">
+                                            <i class="bi bi-globe"></i> Website
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
+                    <% } %>
+                </div>
+            </div>
             <!-- Club Registration Section (for delegates) -->
             <% if (user && canRegisterClub && carnival.isActive) { %>
                 <div class="card shadow mb-4 border-success">
@@ -451,136 +566,6 @@
                     </div>
                 </div>
             <% } %>
-
-            <!-- Sponsors Section -->
-            <% if (sponsors && sponsors.length > 0) { %>
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="bi bi-star-fill"></i> Event Sponsors</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <% sponsors.forEach((sponsor, index) => { %>
-                                <div class="col-12">
-                                    <div class="d-flex align-items-center p-2 border rounded">
-                                        <% if (sponsor.logoUrl) { %>
-                                            <img src="<%= sponsor.logoUrl %>" alt="<%= sponsor.sponsorName %> Logo" 
-                                                 class="me-3" style="height: 40px; width: auto; max-width: 60px; object-fit: contain;">
-                                        <% } else { %>
-                                            <div class="me-3 d-flex align-items-center justify-content-center bg-light border rounded" 
-                                                 style="height: 40px; width: 60px; min-width: 60px;">
-                                                <i class="bi bi-building text-muted"></i>
-                                            </div>
-                                        <% } %>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">
-                                                <a href="/sponsors/<%= sponsor.id %>" class="text-decoration-none">
-                                                    <%= sponsor.sponsorName %>
-                                                </a>
-                                            </h6>
-                                            <% if (sponsor.sponsorshipLevel) { %>
-                                                <span class="badge bg-secondary small"><%= sponsor.sponsorshipLevel %></span>
-                                            <% } %>
-                                            <% if (sponsor.businessType) { %>
-                                                <div class="text-muted small"><%= sponsor.businessType %></div>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                </div>
-                            <% }); %>
-                        </div>
-                    </div>
-                </div>
-            <% } %>
-
-            <!-- Contact Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary">
-                    <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Contact Information</h5>
-                </div>
-                <div class="card-body">
-                    <% if (!carnival.isActive && !canManage) { %>
-                        <!-- Obfuscated contact info for inactive carnivals -->
-                        <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle me-1"></i>
-                            <small>Contact details are hidden for inactive carnivals.</small>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Organiser:</strong><br>
-                            <%= carnival.organiserContactName || 'TBC' %>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Email:</strong><br>
-                            <span class="text-muted"><%= carnival.organiserContactEmail %></span>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Phone:</strong><br>
-                            <span class="text-muted"><%= carnival.organiserContactPhone  %></span>
-                        </div>
-                    <% } else { %>
-                        <!-- Full contact info for active carnivals or carnival managers -->
-                        <div class="mb-3">
-                            <strong>Organiser:</strong><br>
-                            <%= carnival.organiserContactName || 'TBC'  %>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Email:</strong><br>
-                            <a href="mailto:<%= carnival.organiserContactEmail %>?subject=Enquiry about <%= carnival.title %>">
-                                <%= carnival.organiserContactEmail  %>
-                            </a>
-                        </div>
-                        <div class="mb-3">
-                            <strong>Phone:</strong><br>
-                            <a href="tel:<%= carnival.organiserContactPhone %>">
-                                <%= carnival.organiserContactPhone  %>
-                            </a>
-                        </div>
-                        
-                        <!-- Social Media Links in Contact Information -->
-                        <% if (carnival.socialMediaFacebook || carnival.socialMediaInstagram || carnival.socialMediaTwitter || carnival.socialMediaWebsite) { %>
-                            <div class="mb-3">
-                                <strong>Follow Us:</strong><br>
-                                <div class="social-links mt-2">
-                                    <% if (carnival.socialMediaFacebook) { %>
-                                        <a href="<%= carnival.socialMediaFacebook %>" target="_blank" class="btn btn-facebook btn-sm me-2 mb-1">
-                                            <i class="bi bi-facebook"></i> Facebook
-                                        </a>
-                                    <% } %>
-                                    <% if (carnival.socialMediaInstagram) { %>
-                                        <a href="<%= carnival.socialMediaInstagram %>" target="_blank" class="btn btn-instagram btn-sm me-2 mb-1">
-                                            <i class="bi bi-instagram"></i> Instagram
-                                        </a>
-                                    <% } %>
-                                    <% if (carnival.socialMediaTwitter) { %>
-                                        <a href="<%= carnival.socialMediaTwitter %>" target="_blank" class="btn btn-twitter-x btn-sm me-2 mb-1">
-                                            <i class="bi bi-twitter-x"></i> X (Twitter)
-                                        </a>
-                                    <% } %>
-                                    <% if (carnival.socialMediaWebsite) { %>
-                                        <a href="<%= carnival.socialMediaWebsite %>" target="_blank" class="btn-primary btn-sm me-2 mb-1">
-                                            <i class="bi bi-globe"></i> Website
-                                        </a>
-                                    <% } %>
-                                </div>
-                            </div>
-                        <% } %>
-                    <% } %>
-                    
-                    <% if (carnival.creator && carnival.creator.club) { %>
-                        <div class="mb-0">
-                            <strong>Hosting Club:</strong><br>
-                            <% if (carnival.creator.club.isPubliclyListed) { %>
-                                <a href="/clubs/<%= carnival.creator.club.id %>" class="text-decoration-none">
-                                    <%= carnival.creator.club.clubName %>
-                                    <i class="bi bi-arrow-up-right-square ms-1 small"></i>
-                                </a>
-                            <% } else { %>
-                                <%= carnival.creator.club.clubName %>
-                            <% } %>
-                        </div>
-                    <% } %>
-                </div>
-            </div>
         </div>
     </div>
 </div>
