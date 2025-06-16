@@ -87,7 +87,7 @@ const getDashboard = async (req, res) => {
             include: [{
                 model: Club,
                 as: 'club',
-                attributes: ['id', 'clubName', 'state', 'location', 'isActive', 'isPubliclyListed']
+                attributes: ['id', 'clubName', 'state', 'location', 'isActive', 'isPubliclyListed', 'logoUrl']
             }]
         });
 

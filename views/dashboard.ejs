@@ -162,7 +162,12 @@
                 <a href="/clubs/manage" class="text-decoration-none">
                     <div class="card dashboard-stat-card clickable-card">
                         <div class="card-body text-center">
-                            <i class="bi bi-people display-4 mb-2"></i>
+                            <% if (user.clubId.logoUrl) { %>
+                                <img src="<%= user.clubId.logoUrl %>" alt="<%= user.clubId.clubName %> Logo" 
+                                     class="mb-2" style="height: 4rem; width: auto; max-width: 100%; object-fit: contain;">
+                            <% } else { %>
+                                <i class="bi bi-people display-4 mb-2"></i>
+                            <% } %>
                             <h3><%= user.clubId.clubName %></h3>
                             <p class="mb-0">Your Club</p>
                             <small class="text-white-50 mt-1 d-block">
@@ -245,7 +250,7 @@
                                     <div class="mb-2">
                                         <small class="text-muted">
                                             <i class="bi bi-calendar3"></i> 
-                                            <span data-date="<%= carnival.date.toISOString() %>">
+                                            <span data-date="<%= carnival.date.toISOString() %>"></span>
                                                 <%= carnival.date.toLocaleDateString('en-AU') %>
                                             </span>
                                         </small>
