@@ -741,6 +741,11 @@ button[type="submit"]:contains("Complete Registration"):focus {
 .badge.state-nt { background-color: #e87722; }
 .badge.state-act { background-color: #0066cc; }
 
+/* Badge Styling - Square corners to differentiate from buttons */
+.badge {
+    border-radius: 0 !important;
+}
+
 /* Hero Section Enhancements */
 .hero-section,
 .bg-primary {
