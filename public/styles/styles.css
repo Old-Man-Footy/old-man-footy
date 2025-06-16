@@ -1277,6 +1277,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 /* Bootstrap Nav Tabs Dark Mode */
 [data-theme="dark"] .nav-tabs {
     border-bottom-color: var(--theme-border-color) !important;
+    background-color: transparent !important;
 }
 
 [data-theme="dark"] .nav-tabs .nav-link {
@@ -1293,7 +1294,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 [data-theme="dark"] .nav-tabs .nav-link:hover,
 [data-theme="dark"] .nav-tabs .nav-link:focus {
     color: var(--theme-text-primary) !important;
-    background-color: var(--theme-bg-tertiary) !important;
+    background-color: transparent !important;
     border-color: var(--theme-border-color) !important;
     isolation: isolate;
 }
@@ -1301,13 +1302,13 @@ button[type="submit"]:contains("Complete Registration"):focus {
 [data-theme="dark"] .nav-tabs .nav-link.active,
 [data-theme="dark"] .nav-tabs .nav-item.show .nav-link {
     color: var(--theme-text-primary) !important;
-    background-color: var(--theme-card-bg) !important;
+    background-color: transparent !important;
     border-color: var(--theme-border-color) var(--theme-border-color) var(--theme-card-bg) !important;
 }
 
 [data-theme="dark"] .tab-content,
 [data-theme="dark"] .tab-pane {
-    background-color: var(--theme-card-bg) !important;
+    background-color: transparent !important;
     color: var(--theme-text-primary) !important;
 }
 
