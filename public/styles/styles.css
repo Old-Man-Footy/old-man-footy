@@ -1397,3 +1397,29 @@ button[type="submit"]:contains("Complete Registration"):focus {
     justify-content: center !important;
     margin-right: 0.75rem !important;
 }
+
+/* Force white text for all dashboard stat card content */
+.dashboard-stats .card .card-body,
+.dashboard-stats .card .card-body *,
+.dashboard-stats .card .card-body h1,
+.dashboard-stats .card .card-body h2,
+.dashboard-stats .card .card-body h3,
+.dashboard-stats .card .card-body h4,
+.dashboard-stats .card .card-body h5,
+.dashboard-stats .card .card-body h6,
+.dashboard-stats .card .card-body p,
+.dashboard-stats .card .card-body span,
+.dashboard-stats .card .card-body i,
+.dashboard-stat-card .card-body,
+.dashboard-stat-card .card-body *,
+.dashboard-stat-card .card-body h1,
+.dashboard-stat-card .card-body h2,
+.dashboard-stat-card .card-body h3,
+.dashboard-stat-card .card-body h4,
+.dashboard-stat-card .card-body h5,
+.dashboard-stat-card .card-body h6,
+.dashboard-stat-card .card-body p,
+.dashboard-stat-card .card-body span,
+.dashboard-stat-card .card-body i {
+    color: white !important;
+}
