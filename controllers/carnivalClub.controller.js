@@ -6,7 +6,7 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { CarnivalClub, Carnival, Club, User } = require('../models');
+const { CarnivalClub, Carnival, Club, User, ClubPlayer, CarnivalClubPlayer } = require('../models');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 
@@ -668,6 +668,537 @@ const unregisterMyClubFromCarnival = async (req, res) => {
     }
 };
 
+/**
+ * Show players assigned to a specific carnival club registration
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showCarnivalClubPlayers = async (req, res) => {
+    try {
+        const { carnivalId, registrationId } = req.params;
+        const user = req.user;
+
+        // Verify carnival ownership
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                createdByUserId: user.id,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
+            return res.redirect('/carnivals');
+        }
+
+        // Get registration details
+        const registration = await CarnivalClub.findOne({
+            where: {
+                id: registrationId,
+                carnivalId: carnivalId,
+                isActive: true
+            },
+            include: [{
+                model: Club,
+                as: 'club',
+                attributes: ['id', 'clubName', 'state', 'location']
+            }]
+        });
+
+        if (!registration) {
+            req.flash('error_msg', 'Registration not found.');
+            return res.redirect(`/carnivals/${carnivalId}/attendees`);
+        }
+
+        // Get assigned players
+        const assignedPlayers = await CarnivalClubPlayer.findAll({
+            where: {
+                carnivalClubId: registrationId,
+                isActive: true
+            },
+            include: [{
+                model: ClubPlayer,
+                as: 'clubPlayer',
+                where: { isActive: true },
+                required: true
+            }],
+            order: [['clubPlayer', 'firstName', 'ASC'], ['clubPlayer', 'lastName', 'ASC']]
+        });
+
+        // Get attendance statistics
+        const attendanceStats = await CarnivalClubPlayer.getAttendanceStats(registrationId);
+
+        res.render('carnivals/club-players', {
+            title: `Players - ${registration.club.clubName}`,
+            carnival,
+            registration,
+            assignedPlayers,
+            attendanceStats,
+            additionalCSS: ['/styles/carnival.styles.css']
+        });
+    } catch (error) {
+        console.error('Error loading carnival club players:', error);
+        req.flash('error_msg', 'Error loading player assignments.');
+        res.redirect(`/carnivals/${req.params.carnivalId}/attendees`);
+    }
+};
+
+/**
+ * Show form to add players to carnival registration
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showAddPlayersToRegistration = async (req, res) => {
+    try {
+        const { carnivalId, registrationId } = req.params;
+        const user = req.user;
+
+        // Verify carnival ownership
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                createdByUserId: user.id,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
+            return res.redirect('/carnivals');
+        }
+
+        // Get registration details
+        const registration = await CarnivalClub.findOne({
+            where: {
+                id: registrationId,
+                carnivalId: carnivalId,
+                isActive: true
+            },
+            include: [{
+                model: Club,
+                as: 'club',
+                attributes: ['id', 'clubName', 'state', 'location']
+            }]
+        });
+
+        if (!registration) {
+            req.flash('error_msg', 'Registration not found.');
+            return res.redirect(`/carnivals/${carnivalId}/attendees`);
+        }
+
+        // Get already assigned player IDs
+        const assignedPlayerIds = await CarnivalClubPlayer.findAll({
+            where: {
+                carnivalClubId: registrationId,
+                isActive: true
+            },
+            attributes: ['clubPlayerId']
+        }).then(results => results.map(r => r.clubPlayerId));
+
+        // Get available players from the club
+        const availablePlayers = await ClubPlayer.findAll({
+            where: {
+                clubId: registration.club.id,
+                isActive: true,
+                id: { [Op.notIn]: assignedPlayerIds }
+            },
+            order: [['firstName', 'ASC'], ['lastName', 'ASC']]
+        });
+
+        res.render('carnivals/add-players', {
+            title: `Add Players - ${registration.club.clubName}`,
+            carnival,
+            registration,
+            availablePlayers,
+            additionalCSS: ['/styles/carnival.styles.css']
+        });
+    } catch (error) {
+        console.error('Error loading add players form:', error);
+        req.flash('error_msg', 'Error loading player selection form.');
+        res.redirect(`/carnivals/${req.params.carnivalId}/attendees/${req.params.registrationId}/players`);
+    }
+};
+
+/**
+ * Add selected players to carnival registration
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const addPlayersToRegistration = async (req, res) => {
+    try {
+        const { carnivalId, registrationId } = req.params;
+        const user = req.user;
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please select at least one player.');
+            return res.redirect(`/carnivals/${carnivalId}/attendees/${registrationId}/players/add`);
+        }
+
+        // Verify carnival ownership
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                createdByUserId: user.id,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
+            return res.redirect('/carnivals');
+        }
+
+        // Get registration details
+        const registration = await CarnivalClub.findOne({
+            where: {
+                id: registrationId,
+                carnivalId: carnivalId,
+                isActive: true
+            }
+        });
+
+        if (!registration) {
+            req.flash('error_msg', 'Registration not found.');
+            return res.redirect(`/carnivals/${carnivalId}/attendees`);
+        }
+
+        const { playerIds } = req.body;
+        const selectedPlayerIds = Array.isArray(playerIds) ? playerIds : [playerIds];
+
+        // Verify all selected players belong to the registered club
+        const validPlayers = await ClubPlayer.findAll({
+            where: {
+                id: { [Op.in]: selectedPlayerIds },
+                clubId: registration.clubId,
+                isActive: true
+            }
+        });
+
+        if (validPlayers.length !== selectedPlayerIds.length) {
+            req.flash('error_msg', 'Some selected players are invalid.');
+            return res.redirect(`/carnivals/${carnivalId}/attendees/${registrationId}/players/add`);
+        }
+
+        // Create player assignments
+        const assignments = selectedPlayerIds.map(playerId => ({
+            carnivalClubId: parseInt(registrationId),
+            clubPlayerId: parseInt(playerId),
+            attendanceStatus: 'confirmed',
+            addedAt: new Date()
+        }));
+
+        await CarnivalClubPlayer.bulkCreate(assignments, {
+            ignoreDuplicates: true // Ignore if player is already assigned
+        });
+
+        req.flash('success_msg', `${selectedPlayerIds.length} player(s) have been added to the carnival registration.`);
+        res.redirect(`/carnivals/${carnivalId}/attendees/${registrationId}/players`);
+    } catch (error) {
+        console.error('Error adding players to registration:', error);
+        req.flash('error_msg', 'Error adding players to registration.');
+        res.redirect(`/carnivals/${req.params.carnivalId}/attendees/${req.params.registrationId}/players/add`);
+    }
+};
+
+/**
+ * Remove player from carnival registration
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const removePlayerFromRegistration = async (req, res) => {
+    try {
+        const { carnivalId, registrationId, assignmentId } = req.params;
+        const user = req.user;
+
+        // Verify carnival ownership
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                createdByUserId: user.id,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            return res.status(403).json({
+                success: false,
+                message: 'Carnival not found or you do not have permission to manage it.'
+            });
+        }
+
+        // Get player assignment
+        const assignment = await CarnivalClubPlayer.findOne({
+            where: {
+                id: assignmentId,
+                carnivalClubId: registrationId,
+                isActive: true
+            },
+            include: [{
+                model: ClubPlayer,
+                as: 'clubPlayer',
+                attributes: ['firstName', 'lastName']
+            }]
+        });
+
+        if (!assignment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Player assignment not found.'
+            });
+        }
+
+        // Soft delete the assignment
+        await assignment.update({ isActive: false });
+
+        res.json({
+            success: true,
+            message: `${assignment.clubPlayer.firstName} ${assignment.clubPlayer.lastName} has been removed from the carnival registration.`
+        });
+    } catch (error) {
+        console.error('Error removing player from registration:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error removing player from registration.'
+        });
+    }
+};
+
+/**
+ * Update player attendance status
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updatePlayerAttendanceStatus = async (req, res) => {
+    try {
+        const { carnivalId, registrationId, assignmentId } = req.params;
+        const user = req.user;
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid attendance status.'
+            });
+        }
+
+        // Verify carnival ownership
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                createdByUserId: user.id,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            return res.status(403).json({
+                success: false,
+                message: 'Carnival not found or you do not have permission to manage it.'
+            });
+        }
+
+        // Get player assignment
+        const assignment = await CarnivalClubPlayer.findOne({
+            where: {
+                id: assignmentId,
+                carnivalClubId: registrationId,
+                isActive: true
+            }
+        });
+
+        if (!assignment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Player assignment not found.'
+            });
+        }
+
+        const { attendanceStatus, notes } = req.body;
+
+        // Update assignment
+        await assignment.update({
+            attendanceStatus: attendanceStatus,
+            notes: notes?.trim() || null
+        });
+
+        res.json({
+            success: true,
+            message: 'Player attendance status updated successfully.'
+        });
+    } catch (error) {
+        console.error('Error updating player attendance status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating attendance status.'
+        });
+    }
+};
+
+/**
+ * Show players for delegate's own club carnival registration
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showMyClubPlayersForCarnival = async (req, res) => {
+    try {
+        const { carnivalId } = req.params;
+        const user = req.user;
+
+        // Ensure user has a club
+        if (!user.clubId) {
+            req.flash('error_msg', 'You must be associated with a club to manage players.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
+        // Get carnival
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            req.flash('error_msg', 'Carnival not found.');
+            return res.redirect('/carnivals');
+        }
+
+        // Get user's club registration
+        const registration = await CarnivalClub.findOne({
+            where: {
+                carnivalId: carnivalId,
+                clubId: user.clubId,
+                isActive: true
+            },
+            include: [{
+                model: Club,
+                as: 'club',
+                attributes: ['id', 'clubName', 'state', 'location']
+            }]
+        });
+
+        if (!registration) {
+            req.flash('error_msg', 'Your club is not registered for this carnival.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
+        // Get assigned players
+        const assignedPlayers = await CarnivalClubPlayer.findAll({
+            where: {
+                carnivalClubId: registration.id,
+                isActive: true
+            },
+            include: [{
+                model: ClubPlayer,
+                as: 'clubPlayer',
+                where: { isActive: true },
+                required: true
+            }],
+            order: [['clubPlayer', 'firstName', 'ASC'], ['clubPlayer', 'lastName', 'ASC']]
+        });
+
+        // Get all club players for selection
+        const assignedPlayerIds = assignedPlayers.map(ap => ap.clubPlayerId);
+        const availablePlayers = await ClubPlayer.findAll({
+            where: {
+                clubId: user.clubId,
+                isActive: true,
+                id: { [Op.notIn]: assignedPlayerIds }
+            },
+            order: [['firstName', 'ASC'], ['lastName', 'ASC']]
+        });
+
+        res.render('carnivals/my-club-players', {
+            title: `Manage Players - ${carnival.title}`,
+            carnival,
+            registration,
+            assignedPlayers,
+            availablePlayers,
+            additionalCSS: ['/styles/carnival.styles.css']
+        });
+    } catch (error) {
+        console.error('Error loading my club players for carnival:', error);
+        req.flash('error_msg', 'Error loading player management.');
+        res.redirect(`/carnivals/${req.params.carnivalId}`);
+    }
+};
+
+/**
+ * Add players to delegate's own club registration
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const addPlayersToMyClubRegistration = async (req, res) => {
+    try {
+        const { carnivalId } = req.params;
+        const user = req.user;
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            req.flash('error_msg', 'Please select at least one player.');
+            return res.redirect(`/carnivals/${carnivalId}/register/players`);
+        }
+
+        // Ensure user has a club
+        if (!user.clubId) {
+            req.flash('error_msg', 'You must be associated with a club to manage players.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
+        // Get user's club registration
+        const registration = await CarnivalClub.findOne({
+            where: {
+                carnivalId: carnivalId,
+                clubId: user.clubId,
+                isActive: true
+            }
+        });
+
+        if (!registration) {
+            req.flash('error_msg', 'Your club is not registered for this carnival.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
+        const { playerIds } = req.body;
+        const selectedPlayerIds = Array.isArray(playerIds) ? playerIds : [playerIds];
+
+        // Verify all selected players belong to user's club
+        const validPlayers = await ClubPlayer.findAll({
+            where: {
+                id: { [Op.in]: selectedPlayerIds },
+                clubId: user.clubId,
+                isActive: true
+            }
+        });
+
+        if (validPlayers.length !== selectedPlayerIds.length) {
+            req.flash('error_msg', 'Some selected players are invalid.');
+            return res.redirect(`/carnivals/${carnivalId}/register/players`);
+        }
+
+        // Create player assignments
+        const assignments = selectedPlayerIds.map(playerId => ({
+            carnivalClubId: registration.id,
+            clubPlayerId: parseInt(playerId),
+            attendanceStatus: 'confirmed',
+            addedAt: new Date()
+        }));
+
+        await CarnivalClubPlayer.bulkCreate(assignments, {
+            ignoreDuplicates: true
+        });
+
+        req.flash('success_msg', `${selectedPlayerIds.length} player(s) have been added to your carnival registration.`);
+        res.redirect(`/carnivals/${carnivalId}/register/players`);
+    } catch (error) {
+        console.error('Error adding players to my club registration:', error);
+        req.flash('error_msg', 'Error adding players to registration.');
+        res.redirect(`/carnivals/${req.params.carnivalId}/register/players`);
+    }
+};
+
 module.exports = {
     showCarnivalAttendees,
     showAddClubToCarnival,
@@ -677,5 +1208,13 @@ module.exports = {
     removeClubFromCarnival,
     reorderAttendingClubs,
     registerMyClubForCarnival,
-    unregisterMyClubFromCarnival
+    unregisterMyClubFromCarnival,
+    // New player management functions
+    showCarnivalClubPlayers,
+    showAddPlayersToRegistration,
+    addPlayersToRegistration,
+    removePlayerFromRegistration,
+    updatePlayerAttendanceStatus,
+    showMyClubPlayersForCarnival,
+    addPlayersToMyClubRegistration
 };

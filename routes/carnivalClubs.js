@@ -45,6 +45,28 @@ router.delete('/:carnivalId/attendees/:registrationId', ensureAuthenticated, car
 // Reorder attending clubs (API endpoint)
 router.post('/:carnivalId/attendees/reorder', ensureAuthenticated, carnivalClubController.reorderAttendingClubs);
 
+// Player management routes for carnival attendance
+// Manage players for a specific club's carnival registration
+router.get('/:carnivalId/attendees/:registrationId/players', ensureAuthenticated, carnivalClubController.showCarnivalClubPlayers);
+
+// Add players to carnival registration form
+router.get('/:carnivalId/attendees/:registrationId/players/add', ensureAuthenticated, carnivalClubController.showAddPlayersToRegistration);
+
+// Add selected players to carnival registration
+router.post('/:carnivalId/attendees/:registrationId/players/add', ensureAuthenticated, [
+    body('playerIds').isArray({ min: 1 }).withMessage('At least one player must be selected'),
+    body('playerIds.*').isInt({ min: 1 }).withMessage('Valid player selection required')
+], carnivalClubController.addPlayersToRegistration);
+
+// Remove player from carnival registration
+router.delete('/:carnivalId/attendees/:registrationId/players/:assignmentId', ensureAuthenticated, carnivalClubController.removePlayerFromRegistration);
+
+// Update player attendance status
+router.post('/:carnivalId/attendees/:registrationId/players/:assignmentId/status', ensureAuthenticated, [
+    body('attendanceStatus').isIn(['confirmed', 'tentative', 'unavailable']).withMessage('Valid attendance status required'),
+    body('notes').optional().isLength({ max: 500 }).withMessage('Notes cannot exceed 500 characters')
+], carnivalClubController.updatePlayerAttendanceStatus);
+
 // Delegate self-registration routes
 // Register delegate's own club for a carnival
 router.post('/:carnivalId/register', ensureAuthenticated, [
@@ -55,6 +77,15 @@ router.post('/:carnivalId/register', ensureAuthenticated, [
     body('contactPhone').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
     body('specialRequirements').optional().isLength({ max: 500 }).withMessage('Special requirements must be 500 characters or less')
 ], carnivalClubController.registerMyClubForCarnival);
+
+// Manage players for delegate's own club registration
+router.get('/:carnivalId/register/players', ensureAuthenticated, carnivalClubController.showMyClubPlayersForCarnival);
+
+// Add players to delegate's own club registration
+router.post('/:carnivalId/register/players', ensureAuthenticated, [
+    body('playerIds').isArray({ min: 1 }).withMessage('At least one player must be selected'),
+    body('playerIds.*').isInt({ min: 1 }).withMessage('Valid player selection required')
+], carnivalClubController.addPlayersToMyClubRegistration);
 
 // Unregister delegate's own club from a carnival (API endpoint)
 router.delete('/:carnivalId/register', ensureAuthenticated, carnivalClubController.unregisterMyClubFromCarnival);

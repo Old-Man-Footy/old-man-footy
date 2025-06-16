@@ -1,0 +1,224 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>"><%= carnival.title %></a></li>
+            <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>/attendees">Attendees</a></li>
+            <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players">Players</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add Players</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-person-plus"></i> Add Players - <%= registration.club.clubName %></h2>
+                    <p class="text-muted mb-0">Select players to add to the carnival registration</p>
+                </div>
+                <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Players
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Players Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Select Players</h5>
+                </div>
+                <div class="card-body">
+                    <% if (availablePlayers.length === 0) { %>
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="bi bi-info-circle text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-muted">No Available Players</h5>
+                            <p class="text-muted">All players from this club have already been assigned to this carnival registration.</p>
+                            <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players" class="btn btn-primary">
+                                <i class="bi bi-arrow-left"></i> Back to Players
+                            </a>
+                        </div>
+                    <% } else { %>
+                        <form method="POST" action="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players/add" id="addPlayersForm">
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Available Players (<%= availablePlayers.length %>)</h6>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" onclick="selectAll()">
+                                            <i class="bi bi-check-square"></i> Select All
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="selectNone()">
+                                            <i class="bi bi-square"></i> Select None
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <% availablePlayers.forEach(player => { %>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input player-checkbox" type="checkbox" 
+                                                               name="playerIds" value="<%= player.id %>" id="player<%= player.id %>">
+                                                        <label class="form-check-label w-100" for="player<%= player.id %>">
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div>
+                                                                    <h6 class="mb-1"><%= player.firstName %> <%= player.lastName %></h6>
+                                                                    <small class="text-muted d-block"><%= player.email %></small>
+                                                                    <% if (player.getAge()) { %>
+                                                                        <small class="text-muted">Age: <%= player.getAge() %> years</small>
+                                                                    <% } %>
+                                                                    <% if (player.isMastersEligible()) { %>
+                                                                        <span class="badge bg-success ms-2">Masters Eligible</span>
+                                                                    <% } else { %>
+                                                                        <span class="badge bg-warning text-dark ms-2">Under 35</span>
+                                                                    <% } %>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                                    <i class="bi bi-plus-circle"></i> Add Selected Players
+                                </button>
+                            </div>
+                        </form>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Registration Info</h5>
+                </div>
+                <div class="card-body">
+                    <h6><%= carnival.title %></h6>
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-calendar"></i> <%= new Date(carnival.date).toLocaleDateString() %>
+                    </p>
+                    <p class="small text-muted mb-3">
+                        <i class="bi bi-geo-alt"></i> <%= carnival.locationAddress %>
+                    </p>
+                    
+                    <hr>
+                    
+                    <h6>Club: <%= registration.club.clubName %></h6>
+                    <p class="small text-muted">
+                        <%= registration.club.state %><% if (registration.club.location) { %>, <%= registration.club.location %><% } %>
+                    </p>
+                    
+                    <% if (registration.teamName) { %>
+                        <p class="small"><strong>Team Name:</strong> <%= registration.teamName %></p>
+                    <% } %>
+                    
+                    <% if (registration.playerCount) { %>
+                        <p class="small"><strong>Expected Players:</strong> <%= registration.playerCount %></p>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Masters Eligible:</strong> Players must be 35+ years old for masters rugby
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Multiple Selection:</strong> You can select multiple players at once
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Status Management:</strong> Player attendance status can be updated later
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Contact Info:</strong> Player email addresses are available for communication
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.player-checkbox');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('addPlayersForm');
+
+    // Update submit button state based on selections
+    function updateSubmitButton() {
+        const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
+        submitBtn.disabled = selectedCount === 0;
+        submitBtn.innerHTML = selectedCount > 0 
+            ? `<i class="bi bi-plus-circle"></i> Add ${selectedCount} Selected Player${selectedCount > 1 ? 's' : ''}`
+            : '<i class="bi bi-plus-circle"></i> Add Selected Players';
+    }
+
+    // Add event listeners to checkboxes
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSubmitButton);
+    });
+
+    // Select all functionality
+    window.selectAll = function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        updateSubmitButton();
+    };
+
+    // Select none functionality
+    window.selectNone = function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateSubmitButton();
+    };
+
+    // Form submission validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
+            if (selectedCount === 0) {
+                e.preventDefault();
+                alert('Please select at least one player to add.');
+                return false;
+            }
+        });
+    }
+
+    // Initial state
+    updateSubmitButton();
+});
+</script>
+
+<%- include('../partials/footer') %>

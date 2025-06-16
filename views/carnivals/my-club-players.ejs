@@ -1,0 +1,313 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>"><%= carnival.title %></a></li>
+            <li class="breadcrumb-item active" aria-current="page">Manage Players</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-people-fill"></i> Manage Players - <%= carnival.title %></h2>
+                    <p class="text-muted mb-0">Select which players from your club will attend this carnival</p>
+                </div>
+                <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Carnival
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Your Registration</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Club:</strong> <%= registration.club.clubName %></p>
+                            <% if (registration.teamName) { %>
+                                <p><strong>Team Name:</strong> <%= registration.teamName %></p>
+                            <% } %>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Contact:</strong> <%= registration.contactPerson %></p>
+                            <% if (registration.contactEmail) { %>
+                                <p><strong>Email:</strong> <%= registration.contactEmail %></p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Players -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> Players Going to Carnival (<%= assignedPlayers.length %>)</h5>
+                    <% if (availablePlayers.length > 0) { %>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPlayersModal">
+                            <i class="bi bi-plus-circle"></i> Add More Players
+                        </button>
+                    <% } %>
+                </div>
+                <div class="card-body">
+                    <% if (assignedPlayers.length === 0) { %>
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="bi bi-person-plus text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-muted">No Players Selected Yet</h5>
+                            <p class="text-muted mb-4">Add players from your club who will be attending this carnival.</p>
+                            <% if (availablePlayers.length > 0) { %>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPlayersModal">
+                                    <i class="bi bi-plus-circle"></i> Add First Player
+                                </button>
+                            <% } else { %>
+                                <p class="text-muted">No players available to add. Make sure your club has registered players.</p>
+                                <a href="/clubs/<%= registration.club.id %>/players" class="btn btn-outline-primary">
+                                    <i class="bi bi-plus-circle"></i> Manage Club Players
+                                </a>
+                            <% } %>
+                        </div>
+                    <% } else { %>
+                        <div class="row">
+                            <% assignedPlayers.forEach(assignment => { %>
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="mb-1"><%= assignment.clubPlayer.firstName %> <%= assignment.clubPlayer.lastName %></h6>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-player-btn"
+                                                        data-assignment-id="<%= assignment.id %>"
+                                                        data-player-name="<%= assignment.clubPlayer.firstName %> <%= assignment.clubPlayer.lastName %>"
+                                                        title="Remove player">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted d-block mb-2"><%= assignment.clubPlayer.email %></small>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <% if (assignment.clubPlayer.getAge()) { %>
+                                                        <small class="text-muted">Age: <%= assignment.clubPlayer.getAge() %></small>
+                                                    <% } %>
+                                                </div>
+                                                <div>
+                                                    <% if (assignment.clubPlayer.isMastersEligible()) { %>
+                                                        <span class="badge bg-success">Masters</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-warning text-dark">Under 35</span>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                            <% if (assignment.notes) { %>
+                                                <div class="mt-2">
+                                                    <small class="text-muted"><i class="bi bi-chat-text"></i> <%= assignment.notes %></small>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <% if (assignedPlayers.length > 0) { %>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card border-0 bg-primary text-white">
+                    <div class="card-body text-center">
+                        <div class="display-6 fw-bold"><%= assignedPlayers.length %></div>
+                        <small>Total Players</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-success text-white">
+                    <div class="card-body text-center">
+                        <div class="display-6 fw-bold"><%= assignedPlayers.filter(p => p.clubPlayer.isMastersEligible()).length %></div>
+                        <small>Masters Eligible</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-info text-white">
+                    <div class="card-body text-center">
+                        <div class="display-6 fw-bold"><%= availablePlayers.length %></div>
+                        <small>Available to Add</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+</div>
+
+<!-- Add Players Modal -->
+<% if (availablePlayers.length > 0) { %>
+    <div class="modal fade" id="addPlayersModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Players to Carnival</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="/carnivals/<%= carnival.id %>/register/players" id="addPlayersForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Available Players (<%= availablePlayers.length %>)</h6>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-primary" onclick="selectAllModal()">
+                                        <i class="bi bi-check-square"></i> All
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="selectNoneModal()">
+                                        <i class="bi bi-square"></i> None
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <% availablePlayers.forEach(player => { %>
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check p-3 border rounded">
+                                            <input class="form-check-input modal-player-checkbox" type="checkbox" 
+                                                   name="playerIds" value="<%= player.id %>" id="modalPlayer<%= player.id %>">
+                                            <label class="form-check-label w-100" for="modalPlayer<%= player.id %>">
+                                                <div>
+                                                    <strong><%= player.firstName %> <%= player.lastName %></strong>
+                                                    <br>
+                                                    <small class="text-muted"><%= player.email %></small>
+                                                    <br>
+                                                    <% if (player.getAge()) { %>
+                                                        <small class="text-muted">Age: <%= player.getAge() %></small>
+                                                    <% } %>
+                                                    <% if (player.isMastersEligible()) { %>
+                                                        <span class="badge bg-success ms-2">Masters</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-warning text-dark ms-2">Under 35</span>
+                                                    <% } %>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="modalSubmitBtn" disabled>
+                            <i class="bi bi-plus-circle"></i> Add Selected Players
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<% } %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove player functionality
+    document.querySelectorAll('.remove-player-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const assignmentId = this.dataset.assignmentId;
+            const playerName = this.dataset.playerName;
+            
+            if (confirm(`Are you sure you want to remove "${playerName}" from this carnival?`)) {
+                removePlayer(assignmentId);
+            }
+        });
+    });
+
+    async function removePlayer(assignmentId) {
+        try {
+            const response = await fetch(`/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players/${assignmentId}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload(); // Refresh to show updated list
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while removing the player.');
+        }
+    }
+
+    // Modal functionality
+    const modalCheckboxes = document.querySelectorAll('.modal-player-checkbox');
+    const modalSubmitBtn = document.getElementById('modalSubmitBtn');
+    const modalForm = document.getElementById('addPlayersForm');
+
+    if (modalCheckboxes.length > 0) {
+        // Update modal submit button state
+        function updateModalSubmitButton() {
+            const selectedCount = document.querySelectorAll('.modal-player-checkbox:checked').length;
+            modalSubmitBtn.disabled = selectedCount === 0;
+            modalSubmitBtn.innerHTML = selectedCount > 0 
+                ? `<i class="bi bi-plus-circle"></i> Add ${selectedCount} Player${selectedCount > 1 ? 's' : ''}`
+                : '<i class="bi bi-plus-circle"></i> Add Selected Players';
+        }
+
+        // Add event listeners to modal checkboxes
+        modalCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateModalSubmitButton);
+        });
+
+        // Modal select all/none functions
+        window.selectAllModal = function() {
+            modalCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateModalSubmitButton();
+        };
+
+        window.selectNoneModal = function() {
+            modalCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateModalSubmitButton();
+        };
+
+        // Form validation
+        if (modalForm) {
+            modalForm.addEventListener('submit', function(e) {
+                const selectedCount = document.querySelectorAll('.modal-player-checkbox:checked').length;
+                if (selectedCount === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one player to add.');
+                    return false;
+                }
+            });
+        }
+
+        // Initial state
+        updateModalSubmitButton();
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>

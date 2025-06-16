@@ -18,6 +18,7 @@ const CarnivalSponsor = require('./CarnivalSponsor');
 const ClubAlternateName = require('./ClubAlternateName');
 const CarnivalClub = require('./CarnivalClub');
 const ClubPlayer = require('./ClubPlayer');
+const CarnivalClubPlayer = require('./CarnivalClubPlayer');
 const SyncLog = require('./SyncLog');
 
 /**
@@ -178,6 +179,27 @@ ClubPlayer.belongsTo(Club, {
   as: 'club'
 });
 
+// CarnivalClubPlayer associations
+CarnivalClubPlayer.belongsTo(CarnivalClub, {
+  foreignKey: 'carnivalClubId',
+  as: 'carnivalClub'
+});
+
+CarnivalClubPlayer.belongsTo(ClubPlayer, {
+  foreignKey: 'clubPlayerId',
+  as: 'clubPlayer'
+});
+
+CarnivalClub.hasMany(CarnivalClubPlayer, {
+  foreignKey: 'carnivalClubId',
+  as: 'playerAssignments'
+});
+
+ClubPlayer.hasMany(CarnivalClubPlayer, {
+  foreignKey: 'clubPlayerId',
+  as: 'carnivalAssignments'
+});
+
 /**
  * Export all models and database instance
  */
@@ -193,5 +215,6 @@ module.exports = {
   ClubAlternateName,
   CarnivalClub,
   ClubPlayer,
+  CarnivalClubPlayer,
   SyncLog
 };

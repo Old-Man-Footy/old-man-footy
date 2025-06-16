@@ -131,6 +131,7 @@
 | As a developer, I want comprehensive unit tests for, and limited to `models/EmailSubscription.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/ClubAlternateName.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/ClubPlayer.js`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `models/CarnivalClubPlayer.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/SyncLog.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/emailService.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/mySidelineLogoDownloadService.js` | ⭕ Not Started |
@@ -161,6 +162,9 @@
 | As a developer, I want comprehensive unit tests for, and limited to `views/auth/register.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/add-club.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/attendees.ejs`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/add-players.ejs`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/club-players.ejs`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/my-club-players.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/edit.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/edit-registration.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/list.ejs`  | ⭕ Not Started | 

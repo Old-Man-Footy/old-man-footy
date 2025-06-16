@@ -583,6 +583,19 @@
                             </div>
                         <% } %>
                         
+                        <!-- Player Management Button -->
+                        <div class="mb-3">
+                            <a href="/carnivals/<%= carnival.id %>/register/players" class="btn btn-primary btn-sm w-100">
+                                <i class="bi bi-people"></i> Manage Players
+                            </a>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Select which players from your club will attend this carnival.
+                                </small>
+                            </div>
+                        </div>
+                        
                         <!-- Allow unregistration only if not paid -->
                         <% if (!userClubRegistration.isPaid) { %>
                             <button type="button" class="btn btn-outline-danger btn-sm w-100" 
