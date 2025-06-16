@@ -74,12 +74,123 @@ function confirmTransfer() {
  * Dismiss checklist for new users
  */
 function dismissChecklist() {
-    const checklistCard = document.querySelector('.card.border-info');
+    const checklistCard = document.getElementById('quickStartChecklist');
     if (checklistCard) {
         checklistCard.style.display = 'none';
         // Save preference to localStorage
         localStorage.setItem('checklistDismissed', 'true');
     }
+}
+
+/**
+ * Handle checklist item interactions
+ */
+function initializeChecklist() {
+    const checklistItems = document.querySelectorAll('.checklist-item');
+    
+    checklistItems.forEach(checkbox => {
+        // Load saved state from localStorage
+        const step = checkbox.dataset.step;
+        const savedState = localStorage.getItem(`checklist-${step}`);
+        
+        if (savedState === 'completed') {
+            checkbox.checked = true;
+            checkbox.disabled = true;
+            
+            // Add visual styling for completed items
+            const listItem = checkbox.closest('.list-group-item');
+            if (listItem) {
+                listItem.classList.add('checklist-completed');
+                
+                // Update label styling
+                const label = listItem.querySelector('label');
+                if (label) {
+                    label.style.opacity = '0.7';
+                    label.style.textDecoration = 'line-through';
+                }
+                
+                // Hide action button if present
+                const actionButton = listItem.querySelector('.btn');
+                if (actionButton) {
+                    actionButton.style.display = 'none';
+                }
+            }
+        }
+        
+        // Handle checkbox state changes
+        checkbox.addEventListener('change', function() {
+            const step = this.dataset.step;
+            const listItem = this.closest('.list-group-item');
+            const label = listItem.querySelector('label');
+            const actionButton = listItem.querySelector('.btn');
+            
+            if (this.checked) {
+                // Mark as completed
+                this.disabled = true;
+                localStorage.setItem(`checklist-${step}`, 'completed');
+                
+                // Add visual styling
+                listItem.classList.add('checklist-completed');
+                if (label) {
+                    label.style.opacity = '0.7';
+                    label.style.textDecoration = 'line-through';
+                }
+                if (actionButton) {
+                    actionButton.style.display = 'none';
+                }
+                
+                // Show success feedback
+                showChecklistSuccess(this);
+                
+            } else {
+                // This shouldn't happen since we disable completed items,
+                // but handle it just in case
+                this.disabled = false;
+                localStorage.removeItem(`checklist-${step}`);
+                
+                // Remove visual styling
+                listItem.classList.remove('checklist-completed');
+                if (label) {
+                    label.style.opacity = '1';
+                    label.style.textDecoration = 'none';
+                }
+                if (actionButton) {
+                    actionButton.style.display = 'inline-block';
+                }
+            }
+        });
+    });
+}
+
+/**
+ * Show success animation for completed checklist items
+ * @param {HTMLElement} checkbox - The completed checkbox element
+ */
+function showChecklistSuccess(checkbox) {
+    // Create a temporary success icon
+    const successIcon = document.createElement('i');
+    successIcon.className = 'bi bi-check-circle-fill text-success position-absolute';
+    successIcon.style.cssText = `
+        font-size: 1.5rem;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        animation: checklistSuccess 0.6s ease-out;
+    `;
+    
+    // Position relative to the checkbox
+    const container = checkbox.closest('.list-group-item');
+    container.style.position = 'relative';
+    container.appendChild(successIcon);
+    
+    // Remove after animation
+    setTimeout(() => {
+        if (successIcon.parentNode) {
+            successIcon.remove();
+        }
+        container.style.position = '';
+    }, 600);
 }
 
 /**
@@ -166,6 +277,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Initialize checklist functionality
+    initializeChecklist();
     
     console.log('Dashboard functionality initialized successfully');
 });
