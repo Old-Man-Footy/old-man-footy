@@ -385,6 +385,59 @@ button[type="submit"]:contains("Complete Registration"):focus {
     font-weight: 600;
 }
 
+/* Dark Mode Card Glow Effects */
+[data-theme="dark"] .card {
+    box-shadow: 0 0 8px rgba(0, 104, 55, 0.3) !important;
+    border: 1px solid rgba(0, 104, 55, 0.2) !important;
+}
+
+[data-theme="dark"] .card:hover {
+    box-shadow: 0 0 16px rgba(0, 104, 55, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+[data-theme="dark"] .card.shadow,
+[data-theme="dark"] .card.shadow-sm,
+[data-theme="dark"] .card.shadow-lg {
+    box-shadow: 0 0 12px rgba(0, 104, 55, 0.4) !important;
+}
+
+[data-theme="dark"] .card.shadow:hover,
+[data-theme="dark"] .card.shadow-sm:hover,
+[data-theme="dark"] .card.shadow-lg:hover {
+    box-shadow: 0 0 20px rgba(0, 104, 55, 0.6) !important;
+}
+
+/* Special glow effects for different card types in dark mode */
+[data-theme="dark"] .card.border-primary {
+    box-shadow: 0 0 12px rgba(0, 104, 55, 0.4) !important;
+    border-color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .card.border-success {
+    box-shadow: 0 0 12px rgba(0, 104, 55, 0.4) !important;
+    border-color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .card.border-info {
+    box-shadow: 0 0 12px rgba(0, 104, 55, 0.4) !important;
+    border-color: var(--rugby-green) !important;
+}
+
+[data-theme="dark"] .card.border-warning {
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.3) !important;
+    border-color: var(--rugby-gold) !important;
+}
+
+/* Rugby Masters Cards with enhanced glow */
+[data-theme="dark"] .rugby-masters-card {
+    box-shadow: 0 0 12px rgba(0, 104, 55, 0.4) !important;
+}
+
+[data-theme="dark"] .rugby-masters-card:hover {
+    box-shadow: 0 0 20px rgba(0, 104, 55, 0.6) !important;
+}
+
 /* Clickable Dashboard Stat Card Styling */
 .clickable-card {
     cursor: pointer;
