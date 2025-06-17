@@ -69,7 +69,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/admin/carnivals/<%= carnival.id %>/claim">
+                    <form method="POST" action="/admin/carnivals/<%= carnival.id %>/claim" id="claim-carnival-form" data-carnival-state="<%= carnival.state %>">
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle"></i>
                             <strong>Important:</strong> Claiming this carnival will:
@@ -135,41 +135,4 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const clubSelect = document.getElementById('targetClubId');
-    const selectedClubInfo = document.getElementById('selectedClubInfo');
-    const delegateName = document.getElementById('delegateName');
-    const delegateEmail = document.getElementById('delegateEmail');
-    const clubState = document.getElementById('clubState');
-    const stateWarning = document.getElementById('stateWarning');
-    const claimButton = document.getElementById('claimButton');
-    const carnivalState = '<%= carnival.state %>';
-
-    clubSelect.addEventListener('change', function() {
-        const selectedOption = clubSelect.options[clubSelect.selectedIndex];
-        
-        if (selectedOption.value) {
-            // Populate club information
-            delegateName.textContent = selectedOption.dataset.delegateName;
-            delegateEmail.textContent = selectedOption.dataset.delegateEmail;
-            clubState.textContent = selectedOption.dataset.clubState;
-            
-            // Show state warning if states don't match
-            if (carnivalState && selectedOption.dataset.clubState !== carnivalState) {
-                stateWarning.classList.remove('d-none');
-            } else {
-                stateWarning.classList.add('d-none');
-            }
-            
-            // Show selected club info and enable claim button
-            selectedClubInfo.classList.remove('d-none');
-            claimButton.disabled = false;
-        } else {
-            // Hide info and disable button
-            selectedClubInfo.classList.add('d-none');
-            claimButton.disabled = true;
-        }
-    });
-});
-</script>
+<script src="/js/admin-claim-carnival.js"></script>
