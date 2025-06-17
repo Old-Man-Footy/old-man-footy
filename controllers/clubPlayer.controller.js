@@ -631,38 +631,38 @@ async function importPlayersFromCsv(req, res, next) {
           continue;
         }
 
-        // Check if player already exists
+        // Check if player already exists - based on name and DOB within user's club
         const existingPlayer = await ClubPlayer.findOne({
           where: {
-            email: playerData.email.toLowerCase(),
+            firstName: playerData.firstname,
+            lastName: playerData.lastname,
+            dateOfBirth: playerData.dateofbirth,
+            clubId: req.user.clubId, // SECURITY: Only check within user's club
             isActive: true
           }
         });
 
         if (existingPlayer) {
-          if (existingPlayer.clubId === req.user.clubId) {
-            if (updateExisting) {
-              // Update existing player
-              await existingPlayer.update({
-                firstName: playerData.firstname,
-                lastName: playerData.lastname,
-                dateOfBirth: playerData.dateofbirth,
-                notes: playerData.notes || notes || null,
-                shorts: playerData.shorts || shortsColor
-              });
-              results.updated++;
-            } else {
-              results.duplicates++;
-            }
+          // Player exists in current user's club
+          if (updateExisting) {
+            // Update existing player (already belongs to user's club)
+            await existingPlayer.update({
+              firstName: playerData.firstname,
+              lastName: playerData.lastname,
+              dateOfBirth: playerData.dateofbirth,
+              notes: playerData.notes || notes || null,
+              shorts: playerData.shorts || shortsColor
+            });
+            results.updated++;
           } else {
-            results.errors.push(`Row ${i + 1}: Email already exists in another club`);
+            results.duplicates++;
           }
           continue;
         }
 
-        // Create new player
+        // Create new player - ALWAYS use the authenticated user's club ID
         await ClubPlayer.create({
-          clubId: req.user.clubId,
+          clubId: req.user.clubId, // SECURITY: Force user's club ID
           firstName: playerData.firstname,
           lastName: playerData.lastname,
           email: playerData.email.toLowerCase(),

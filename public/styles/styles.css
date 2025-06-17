@@ -796,9 +796,27 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: var(--nt-text) !important;
 }
 
+.badge.state-act,
+.badge.state-nsw,
+.badge.state-nt,
+.badge.state-qld,
+.badge.state-sa,
+.badge.state-tas,
+.badge.state-vic,
+.badge.state-wa,
+.badge[data-state="act"],
+.badge[data-state="nsw"],
+.badge[data-state="nt"],
+.badge[data-state="qld"], 
+.badge[data-state="sa"],
+.badge[data-state="tas"],
+.badge[data-state="vic"],
+.badge[data-state="wa"] {
+    width: 3rem !important;
+}
+
 .badge {
     border-radius: 0 !important;
-    width: 3rem !important;
 }
 
 /* Hero Section Enhancements */
