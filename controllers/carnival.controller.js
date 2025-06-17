@@ -236,6 +236,27 @@ const showCarnival = async (req, res) => {
             (userWithClub.clubId && carnival.creator && carnival.creator.club && carnival.creator.club.id === userWithClub.clubId)
         );
 
+        // Check if merge carnival option should be available
+        let canMergeCarnival = false;
+        let availableMergeTargets = [];
+        
+        if (userWithClub && carnival.createdByUserId === userWithClub.id && 
+            carnival.lastMySidelineSync && carnival.isActive) {
+            // User owns this MySideline carnival, check if they have other active non-MySideline carnivals
+            availableMergeTargets = await Carnival.findAll({
+                where: {
+                    createdByUserId: userWithClub.id,
+                    isActive: true,
+                    isManuallyEntered: true, // Non-MySideline carnivals only
+                    id: { [Op.ne]: carnival.id } // Exclude current carnival
+                },
+                attributes: ['id', 'title', 'date', 'state'],
+                order: [['date', 'DESC']]
+            });
+            
+            canMergeCarnival = availableMergeTargets.length > 0;
+        }
+
         // Sort sponsors hierarchically using the sorting service
         const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
 
@@ -248,6 +269,8 @@ const showCarnival = async (req, res) => {
             userClubRegistration,
             canRegisterClub,
             canManage,
+            canMergeCarnival, // Pass merge option availability
+            availableMergeTargets, // Pass available merge targets
             isInactiveCarnival: !carnival.isActive,
             additionalCSS: ['/styles/carnival.styles.css']
         });
@@ -1195,6 +1218,128 @@ module.exports = {
         } catch (error) {
             console.error('Error loading carnival player list:', error);
             req.flash('error_msg', 'Error loading player list.');
+            res.redirect(`/carnivals/${req.params.id}`);
+        }
+    },
+
+    /**
+     * Merge MySideline carnival with existing carnival
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    mergeCarnival: async (req, res) => {
+        try {
+            const { targetCarnivalId } = req.body;
+            const sourceCarnivalId = req.params.id;
+
+            // Validate input
+            if (!targetCarnivalId) {
+                req.flash('error_msg', 'Please select a carnival to merge into.');
+                return res.redirect(`/carnivals/${sourceCarnivalId}`);
+            }
+
+            // Find both carnivals with transaction
+            const transaction = await sequelize.transaction();
+
+            try {
+                const sourceCarnival = await Carnival.findByPk(sourceCarnivalId, { transaction });
+                const targetCarnival = await Carnival.findByPk(targetCarnivalId, { transaction });
+
+                if (!sourceCarnival || !targetCarnival) {
+                    await transaction.rollback();
+                    req.flash('error_msg', 'One or both carnivals not found.');
+                    return res.redirect('/carnivals');
+                }
+
+                // Validation checks
+                if (sourceCarnival.createdByUserId !== req.user.id) {
+                    await transaction.rollback();
+                    req.flash('error_msg', 'You can only merge carnivals you own.');
+                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                }
+
+                if (targetCarnival.createdByUserId !== req.user.id) {
+                    await transaction.rollback();
+                    req.flash('error_msg', 'You can only merge into carnivals you own.');
+                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                }
+
+                if (!sourceCarnival.lastMySidelineSync) {
+                    await transaction.rollback();
+                    req.flash('error_msg', 'Only MySideline carnivals can be merged.');
+                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                }
+
+                if (targetCarnival.lastMySidelineSync) {
+                    await transaction.rollback();
+                    req.flash('error_msg', 'Cannot merge into a MySideline carnival.');
+                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                }
+
+                if (!sourceCarnival.isActive || !targetCarnival.isActive) {
+                    await transaction.rollback();
+                    req.flash('error_msg', 'Both carnivals must be active to merge.');
+                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                }
+
+                // Perform the merge
+                const mergeData = {};
+
+                // Copy MySideline backend fields (overwrite existing values)
+                const mySidelineFields = [
+                    'mySidelineTitle', 'mySidelineAddress', 'mySidelineDate', 
+                    'lastMySidelineSync', 'registrationLink'
+                ];
+
+                mySidelineFields.forEach(field => {
+                    if (sourceCarnival[field] !== null && sourceCarnival[field] !== undefined) {
+                        mergeData[field] = sourceCarnival[field];
+                    }
+                });
+
+                // Copy other fields only if target field is empty
+                const mergableFields = [
+                    'locationAddress', 'locationAddressPart1', 'locationAddressPart2',
+                    'locationAddressPart3', 'locationAddressPart4', 'organiserContactName',
+                    'organiserContactEmail', 'organiserContactPhone', 'scheduleDetails',
+                    'feesDescription', 'callForVolunteers', 'clubLogoURL',
+                    'promotionalImageURL', 'socialMediaFacebook', 'socialMediaInstagram',
+                    'socialMediaTwitter', 'socialMediaWebsite', 'drawFileURL',
+                    'drawFileName', 'drawTitle', 'drawDescription'
+                ];
+
+                mergableFields.forEach(field => {
+                    if ((!targetCarnival[field] || targetCarnival[field] === '') && 
+                        sourceCarnival[field] && sourceCarnival[field] !== '') {
+                        mergeData[field] = sourceCarnival[field];
+                    }
+                });
+
+                // Update target carnival
+                await targetCarnival.update(mergeData, { transaction });
+
+                // Deactivate source carnival
+                await sourceCarnival.update({ 
+                    isActive: false,
+                    updatedAt: new Date()
+                }, { transaction });
+
+                await transaction.commit();
+
+                // Log the merge for audit purposes
+                console.log(`🔄 Carnival merge completed: "${sourceCarnival.title}" (ID: ${sourceCarnivalId}) merged into "${targetCarnival.title}" (ID: ${targetCarnivalId}) by user ${req.user.id}`);
+
+                req.flash('success_msg', `Merge successful. "${sourceCarnival.title}" has been merged into "${targetCarnival.title}" and has been deactivated.`);
+                res.redirect(`/carnivals/${targetCarnivalId}`);
+
+            } catch (mergeError) {
+                await transaction.rollback();
+                throw mergeError;
+            }
+
+        } catch (error) {
+            console.error('Error merging carnivals:', error);
+            req.flash('error_msg', error.message || 'An error occurred while merging carnivals.');
             res.redirect(`/carnivals/${req.params.id}`);
         }
     }

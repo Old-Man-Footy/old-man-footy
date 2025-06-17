@@ -168,6 +168,15 @@
                                             <i class="bi bi-unlock"></i> Release Ownership
                                         </button>
                                     <% } %>
+
+                                    <!-- Merge carnival button for MySideline events owned by the user -->
+                                    <% if (canMergeCarnival) { %>
+                                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#mergeCarnivalModal">
+                                            <i class="bi bi-arrow-down-up"></i> Merge Carnival
+                                        </button>
+                                    <% } %>
                                 </div>
                             </div>
                         </div>
@@ -936,6 +945,148 @@
         </div>
     </div>
 </div>
+
+<!-- Merge Carnival Modal -->
+<% if (canMergeCarnival) { %>
+<div class="modal fade" id="mergeCarnivalModal" tabindex="-1" aria-labelledby="mergeCarnivalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mergeCarnivalModalLabel">
+                    <i class="bi bi-arrow-down-up text-info me-2"></i>
+                    Merge Carnival
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>What does merging mean?</strong>
+                </div>
+                
+                <p>Merging this MySideline carnival will:</p>
+                
+                <ul class="mb-3">
+                    <li><strong>Copy MySideline data</strong> - Registration link and MySideline fields will be copied to your selected carnival</li>
+                    <li><strong>Fill empty fields</strong> - Any empty fields in your target carnival will be populated from this MySideline event</li>
+                    <li><strong>Deactivate this carnival</strong> - This MySideline carnival will be marked as inactive</li>
+                    <li><strong>Preserve your data</strong> - Existing data in your target carnival will not be overwritten</li>
+                </ul>
+                
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. Choose your target carnival carefully.
+                </div>
+
+                <form id="mergeCarnivalForm" method="POST" action="/carnivals/<%= carnival.id %>/merge">
+                    <div class="mb-3">
+                        <label for="targetCarnivalId" class="form-label">Select Target Carnival to Merge Into</label>
+                        <select class="form-select" id="targetCarnivalId" name="targetCarnivalId" required>
+                            <option value="">-- Select Carnival to Merge Into --</option>
+                            <% availableMergeTargets.forEach(targetCarnival => { %>
+                                <option value="<%= targetCarnival.id %>">
+                                    <%= targetCarnival.title %> 
+                                    <% if (targetCarnival.date) { %>
+                                        - <%= new Date(targetCarnival.date).toLocaleDateString('en-AU') %>
+                                    <% } %>
+                                    <% if (targetCarnival.state) { %>
+                                        (<%= targetCarnival.state %>)
+                                    <% } %>
+                                </option>
+                            <% }); %>
+                        </select>
+                        <div class="form-text">
+                            Select which of your existing carnivals you want to merge this MySideline event into.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p><strong>Source (MySideline):</strong> <%= carnival.title %></p>
+                        <p><strong>Action:</strong> Data from this event will be merged into your selected carnival above, then this event will be deactivated.</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-info" onclick="confirmMerge()">
+                    <i class="bi bi-arrow-down-up"></i> Proceed to Merge
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Merge Confirmation Modal -->
+<div class="modal fade" id="mergeCarnivalConfirmModal" tabindex="-1" aria-labelledby="mergeCarnivalConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mergeCarnivalConfirmModalLabel">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirm Carnival Merge
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Final Warning:</strong> This action cannot be undone!
+                </div>
+                
+                <p>You are about to merge:</p>
+                <ul>
+                    <li><strong>Source:</strong> "<%= carnival.title %>" (MySideline Import)</li>
+                    <li><strong>Target:</strong> <span id="targetCarnivalName">[Selected Carnival]</span></li>
+                </ul>
+                
+                <p><strong>What will happen:</strong></p>
+                <ul>
+                    <li>MySideline data will be copied to your target carnival</li>
+                    <li>Empty fields in target will be populated from source</li>
+                    <li>This MySideline carnival will be deactivated</li>
+                </ul>
+                
+                <p class="mb-0"><strong>Do you want to continue?</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-danger" form="mergeCarnivalForm">
+                    <i class="bi bi-arrow-down-up"></i> Yes, Merge Carnivals
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<script>
+function confirmMerge() {
+    const targetSelect = document.getElementById('targetCarnivalId');
+    const targetCarnivalName = document.getElementById('targetCarnivalName');
+    
+    if (!targetSelect.value) {
+        alert('Please select a carnival to merge into.');
+        return;
+    }
+    
+    // Update confirmation modal with selected carnival name
+    const selectedOption = targetSelect.options[targetSelect.selectedIndex];
+    targetCarnivalName.textContent = selectedOption.text;
+    
+    // Hide first modal and show confirmation modal
+    const firstModal = bootstrap.Modal.getInstance(document.getElementById('mergeCarnivalModal'));
+    firstModal.hide();
+    
+    setTimeout(() => {
+        const confirmModal = new bootstrap.Modal(document.getElementById('mergeCarnivalConfirmModal'));
+        confirmModal.show();
+    }, 300);
+}
+</script>
 
 <!-- Include external JavaScript files -->
 <script src="/js/common-utils.js"></script>

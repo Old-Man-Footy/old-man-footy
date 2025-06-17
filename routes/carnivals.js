@@ -68,6 +68,11 @@ router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeO
 // Release ownership of MySideline event
 router.post('/:id/release-ownership', ensureAuthenticated, carnivalController.releaseOwnership);
 
+// Merge MySideline carnival with existing carnival
+router.post('/:id/merge', ensureAuthenticated, [
+    body('targetCarnivalId').notEmpty().withMessage('Target carnival is required').isInt().withMessage('Target carnival must be a valid ID')
+], carnivalController.mergeCarnival);
+
 // Sync MySideline events (admin only)
 router.post('/sync-mysideline', ensureAuthenticated, carnivalController.syncMySideline);
 
