@@ -201,31 +201,6 @@ async function createPlayer(req, res, next) {
     // Extract validated data
     const { firstName, lastName, dateOfBirth, email, notes, shorts } = req.body;
 
-    // Check for duplicate player based on business rules (club + name + DOB)
-    const isDuplicate = await ClubPlayer.isDuplicate(
-      req.user.clubId,
-      firstName,
-      lastName,
-      dateOfBirth
-    );
-
-    if (isDuplicate) {
-      // Get club information for re-rendering form
-      const club = await Club.findByPk(req.user.clubId, {
-        attributes: ['id', 'clubName']  
-      });
-
-      return res.render('clubs/players/add', {
-        title: `Add Player - ${club.clubName}`,
-        club,
-        formData: req.body,
-        errors: [{
-          msg: `A player named ${firstName} ${lastName} with this date of birth already exists in your club.`,
-          param: 'dateOfBirth'
-        }]
-      });
-    }
-
     // Create the player
     const player = await ClubPlayer.create({
       clubId: req.user.clubId,
@@ -244,12 +219,7 @@ async function createPlayer(req, res, next) {
     
     // Handle specific database errors
     if (error.name === 'SequelizeUniqueConstraintError') {
-      // Check if it's the new unique constraint
-      if (error.parent && error.parent.constraint === 'unique_club_player_identity') {
-        req.flash('error', 'A player with this name and date of birth already exists in your club.');
-      } else {
-        req.flash('error', 'This player information conflicts with an existing player.');
-      }
+      req.flash('error', 'A player with this email address already exists.');
     } else if (error.name === 'SequelizeValidationError') {
       req.flash('error', error.errors.map(err => err.message).join(', '));
     } else {
@@ -371,41 +341,6 @@ async function updatePlayer(req, res, next) {
     // Extract validated data
     const { firstName, lastName, dateOfBirth, email, notes, shorts } = req.body;
 
-    // Check for duplicate player based on business rules (excluding current player)
-    const isDuplicate = await ClubPlayer.isDuplicate(
-      req.user.clubId,
-      firstName,
-      lastName,
-      dateOfBirth,
-      playerId // Exclude current player from duplicate check
-    );
-
-    if (isDuplicate) {
-      // Find player for re-rendering form
-      const playerWithClub = await ClubPlayer.findOne({
-        where: {
-          id: playerId,
-          clubId: req.user.clubId
-        },
-        include: [{
-          model: Club,
-          as: 'club',
-          attributes: ['id', 'clubName']
-        }]
-      });
-
-      return res.render('clubs/players/edit', {
-        title: `Edit Player - ${playerWithClub.getFullName()}`,
-        player: playerWithClub,
-        club: playerWithClub.club,
-        formData: req.body,
-        errors: [{
-          msg: `A player named ${firstName} ${lastName} with this date of birth already exists in your club.`,
-          param: 'dateOfBirth'
-        }]
-      });
-    }
-
     // Update the player
     await player.update({
       firstName,
@@ -423,12 +358,7 @@ async function updatePlayer(req, res, next) {
     
     // Handle specific database errors
     if (error.name === 'SequelizeUniqueConstraintError') {
-      // Check if it's the new unique constraint
-      if (error.parent && error.parent.constraint === 'unique_club_player_identity') {
-        req.flash('error', 'A player with this name and date of birth already exists in your club.');
-      } else {
-        req.flash('error', 'This player information conflicts with an existing player.');
-      }
+      req.flash('error', 'A player with this email address already exists.');
     } else if (error.name === 'SequelizeValidationError') {
       req.flash('error', error.errors.map(err => err.message).join(', '));
     } else {

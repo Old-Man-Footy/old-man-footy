@@ -57,52 +57,6 @@ class ClubPlayer extends Model {
     const lastInitial = this.lastName ? this.lastName.charAt(0).toUpperCase() : '';
     return `${firstInitial}.${lastInitial}.`;
   }
-
-  /**
-   * Check if a player with the same identity already exists in the club
-   * @param {number} clubId - The club ID
-   * @param {string} firstName - Player's first name
-   * @param {string} lastName - Player's last name
-   * @param {string} dateOfBirth - Player's date of birth (YYYY-MM-DD)
-   * @param {number} excludeId - Optional player ID to exclude from check (for updates)
-   * @returns {Promise<boolean>} True if duplicate exists, false otherwise
-   */
-  static async isDuplicate(clubId, firstName, lastName, dateOfBirth, excludeId = null) {
-    const where = {
-      clubId,
-      firstName: firstName.trim().charAt(0).toUpperCase() + firstName.trim().slice(1).toLowerCase(),
-      lastName: lastName.trim().charAt(0).toUpperCase() + lastName.trim().slice(1).toLowerCase(),
-      dateOfBirth,
-      isActive: true
-    };
-
-    if (excludeId) {
-      where.id = { [require('sequelize').Op.ne]: excludeId };
-    }
-
-    const existing = await this.findOne({ where });
-    return !!existing;
-  }
-
-  /**
-   * Find existing player by identity (club + name + DOB)
-   * @param {number} clubId - The club ID
-   * @param {string} firstName - Player's first name
-   * @param {string} lastName - Player's last name
-   * @param {string} dateOfBirth - Player's date of birth (YYYY-MM-DD)
-   * @returns {Promise<ClubPlayer|null>} Existing player or null
-   */
-  static async findByIdentity(clubId, firstName, lastName, dateOfBirth) {
-    return await this.findOne({
-      where: {
-        clubId,
-        firstName: firstName.trim().charAt(0).toUpperCase() + firstName.trim().slice(1).toLowerCase(),
-        lastName: lastName.trim().charAt(0).toUpperCase() + lastName.trim().slice(1).toLowerCase(),
-        dateOfBirth,
-        isActive: true
-      }
-    });
-  }
 }
 
 /**
@@ -203,6 +157,7 @@ ClubPlayer.init({
   email: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
     validate: {
       notEmpty: {
         msg: 'Email is required'
@@ -280,17 +235,13 @@ ClubPlayer.init({
   indexes: [
     {
       unique: true,
-      fields: ['clubId', 'firstName', 'lastName', 'dateOfBirth'],
-      name: 'unique_club_player_identity'
+      fields: ['email']
     },
     {
       fields: ['clubId']
     },
     {
       fields: ['firstName', 'lastName']
-    },
-    {
-      fields: ['email'] // Keep email indexed for performance, but not unique
     },
     {
       fields: ['isActive']
