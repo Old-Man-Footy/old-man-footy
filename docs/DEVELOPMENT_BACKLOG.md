@@ -224,3 +224,4 @@ Fields on the target carnival that already contain data (and are not designated 
 <!-- | As a developer, I want to set up a CI/CD pipeline for automated testing and deployment. | 🔄 In Progress | -->
 | As an administrator, I want automated SQLite database backups and a disaster recovery plan to protect platform data. | ⭕ Not Started |
 | As an administrator, I want the production environment to use load balancing and a CDN to ensure performance and availability. | ⭕ Not Started |
+| As a developer, I want to produce an OpenAPI spec/definition for the site (Swagger) to provide details for developers. | ⭕ Not Started |
