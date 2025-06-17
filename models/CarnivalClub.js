@@ -324,7 +324,49 @@ CarnivalClub.init({
     {
       fields: ['approvalStatus']
     }
-  ]
+  ],
+  hooks: {
+    /**
+     * Update carnival currentRegistrations after creating a new registration
+     */
+    afterCreate: async (carnivalClub, options) => {
+      await updateCarnivalRegistrationCount(carnivalClub.carnivalId);
+    },
+
+    /**
+     * Update carnival currentRegistrations after updating a registration
+     */
+    afterUpdate: async (carnivalClub, options) => {
+      // Only update if approval status or isActive changed
+      if (carnivalClub.changed('approvalStatus') || carnivalClub.changed('isActive')) {
+        await updateCarnivalRegistrationCount(carnivalClub.carnivalId);
+      }
+    },
+
+    /**
+     * Update carnival currentRegistrations after destroying a registration
+     */
+    afterDestroy: async (carnivalClub, options) => {
+      await updateCarnivalRegistrationCount(carnivalClub.carnivalId);
+    }
+  }
 });
+
+/**
+ * Helper function to update carnival's currentRegistrations count
+ * @param {number} carnivalId - The carnival ID to update
+ */
+async function updateCarnivalRegistrationCount(carnivalId) {
+  try {
+    const Carnival = require('./Carnival');
+    const carnival = await Carnival.findByPk(carnivalId);
+    
+    if (carnival) {
+      await carnival.updateCurrentRegistrations();
+    }
+  } catch (error) {
+    console.error(`Error updating carnival ${carnivalId} registration count:`, error);
+  }
+}
 
 module.exports = CarnivalClub;

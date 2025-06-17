@@ -529,6 +529,20 @@ const registerMyClubForCarnival = async (req, res) => {
             return res.redirect('/carnivals');
         }
 
+        // Check if registration is still open (using async version for real-time count)
+        const canRegister = await carnival.isRegistrationActiveAsync();
+        if (!canRegister) {
+            if (carnival.maxTeams) {
+                const approvedCount = await carnival.getApprovedRegistrationsCount();
+                if (approvedCount >= carnival.maxTeams) {
+                    req.flash('error_msg', `This carnival has reached its maximum capacity of ${carnival.maxTeams} teams.`);
+                    return res.redirect(`/carnivals/${carnivalId}`);
+                }
+            }
+            req.flash('error_msg', 'Registration for this carnival is currently closed.');
+            return res.redirect(`/carnivals/${carnivalId}`);
+        }
+
         // Check if user's club is already registered
         const existingRegistration = await CarnivalClub.findOne({
             where: {

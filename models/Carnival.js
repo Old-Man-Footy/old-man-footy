@@ -24,6 +24,59 @@ class Carnival extends Model {
   }
 
   /**
+   * Update currentRegistrations to reflect only approved teams
+   * @returns {Promise<number>} Number of approved registrations
+   */
+  async updateCurrentRegistrations() {
+    const CarnivalClub = require('./CarnivalClub');
+    const approvedCount = await CarnivalClub.count({
+      where: {
+        carnivalId: this.id,
+        isActive: true,
+        approvalStatus: 'approved'
+      }
+    });
+    
+    // Update the currentRegistrations field
+    await this.update({ currentRegistrations: approvedCount }, { 
+      silent: true // Prevent triggering hooks to avoid recursion
+    });
+    
+    return approvedCount;
+  }
+
+  /**
+   * Get current approved registrations count (real-time)
+   * @returns {Promise<number>} Number of approved registrations
+   */
+  async getApprovedRegistrationsCount() {
+    const CarnivalClub = require('./CarnivalClub');
+    return await CarnivalClub.count({
+      where: {
+        carnivalId: this.id,
+        isActive: true,
+        approvalStatus: 'approved'
+      }
+    });
+  }
+
+  /**
+   * Check if registration is currently active (async version with real-time count)
+   * @returns {Promise<boolean>} Registration status
+   */
+  async isRegistrationActiveAsync() {
+    if (!this.isRegistrationOpen) return false;
+    if (this.registrationDeadline && new Date() > this.registrationDeadline) return false;
+    
+    if (this.maxTeams) {
+      const approvedCount = await this.getApprovedRegistrationsCount();
+      if (approvedCount >= this.maxTeams) return false;
+    }
+    
+    return true;
+  }
+
+  /**
    * Calculate days until carnival
    * @returns {number} Days until carnival (negative if past)
    */
