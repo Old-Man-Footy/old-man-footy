@@ -320,15 +320,15 @@
                 </thead>
                 <tbody>
                   <% inactivePlayers.forEach(player => { %>
-                    <tr class="table-secondary">
+                    <tr>
                       <td>
                         <div class="d-flex align-items-center">
-                          <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" 
+                          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" 
                                style="width: 40px; height: 40px; font-weight: 600;">
                             <%= player.getInitials() %>
                           </div>
                           <div>
-                            <h6 class="mb-0 text-muted"><%= player.getFullName() %></h6>
+                            <h6 class="mb-0"><%= player.getFullName() %></h6>
                             <% if (player.notes) { %>
                               <small class="text-muted">
                                 <i class="bi bi-chat-text me-1"></i>
@@ -338,7 +338,7 @@
                           </div>
                         </div>
                       </td>
-                      <td class="text-muted">
+                      <td>
                         <% const age = player.getAge(); %>
                         <% if (age !== null) { %>
                           <%= age %> years
@@ -346,8 +346,10 @@
                           <span class="text-muted">Unknown</span>
                         <% } %>
                       </td>
-                      <td class="text-muted">
-                        <%= player.email %>
+                      <td>
+                        <a href="mailto:<%= player.email %>" class="text-decoration-none">
+                          <%= player.email %>
+                        </a>
                       </td>
                       <td>
                         <% if (player.shorts) { %>
