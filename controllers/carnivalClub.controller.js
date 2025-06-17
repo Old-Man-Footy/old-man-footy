@@ -49,7 +49,8 @@ const showCarnivalAttendees = async (req, res) => {
             order: [['displayOrder', 'ASC'], ['registrationDate', 'ASC']]
         });
 
-        // Get attendance statistics
+        // Get attendance statistics with approval status
+        const attendanceStats = await CarnivalClub.getAttendanceCountWithStatus(carnivalId);
         const totalAttendees = attendingClubs.length;
         const paidAttendees = attendingClubs.filter(cc => cc.isPaid).length;
         const totalPlayerCount = attendingClubs.reduce((sum, cc) => sum + (cc.playerCount || 0), 0);
@@ -61,6 +62,7 @@ const showCarnivalAttendees = async (req, res) => {
             totalAttendees,
             paidAttendees,
             totalPlayerCount,
+            attendanceStats,
             additionalCSS: ['/styles/carnival.styles.css']
         });
     } catch (error) {
@@ -205,7 +207,8 @@ const registerClubForCarnival = async (req, res) => {
             paymentAmount: paymentAmount ? parseFloat(paymentAmount) : null,
             isPaid: isPaid === 'on',
             paymentDate: isPaid === 'on' ? new Date() : null,
-            displayOrder: currentCount + 1
+            displayOrder: currentCount + 1,
+            approvalStatus: 'approved' // Host club adding clubs directly = auto-approved
         };
 
         const registration = await CarnivalClub.create(registrationData);
@@ -576,12 +579,13 @@ const registerMyClubForCarnival = async (req, res) => {
             isPaid: false, // Delegates register unpaid by default
             paymentDate: null,
             displayOrder: currentCount + 1,
-            registrationDate: new Date()
+            registrationDate: new Date(),
+            approvalStatus: 'pending' // Self-registrations need approval
         };
 
         await CarnivalClub.create(registrationData);
 
-        req.flash('success_msg', `${club.clubName} has been successfully registered for ${carnival.title}! The carnival organiser will contact you with payment details.`);
+        req.flash('success_msg', `${club.clubName} has registered interest to attend ${carnival.title}! Your registration is pending approval from the hosting club. You'll be notified once approved.`);
         res.redirect(`/carnivals/${carnivalId}`);
     } catch (error) {
         console.error('Error registering club for carnival:', error);
@@ -1199,6 +1203,182 @@ const addPlayersToMyClubRegistration = async (req, res) => {
     }
 };
 
+/**
+ * Approve a club registration for a carnival
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const approveClubRegistration = async (req, res) => {
+    try {
+        const { carnivalId, registrationId } = req.params;
+        const user = req.user;
+
+        // Verify carnival ownership
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                createdByUserId: user.id,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            return res.status(403).json({
+                success: false,
+                message: 'Carnival not found or you do not have permission to manage it.'
+            });
+        }
+
+        // Get registration
+        const registration = await CarnivalClub.findOne({
+            where: {
+                id: registrationId,
+                carnivalId: carnivalId,
+                isActive: true
+            },
+            include: [{
+                model: Club,
+                as: 'club',
+                attributes: ['clubName', 'contactEmail']
+            }]
+        });
+
+        if (!registration) {
+            return res.status(404).json({
+                success: false,
+                message: 'Registration not found.'
+            });
+        }
+
+        if (registration.approvalStatus === 'approved') {
+            return res.status(400).json({
+                success: false,
+                message: 'Registration is already approved.'
+            });
+        }
+
+        // Approve the registration
+        await registration.update({
+            approvalStatus: 'approved',
+            approvedAt: new Date(),
+            approvedByUserId: user.id,
+            rejectionReason: null
+        });
+
+        // Send approval notification email
+        try {
+            const emailService = require('../services/emailService');
+            await emailService.sendRegistrationApprovalEmail(
+                carnival,
+                registration.club,
+                `${user.firstName} ${user.lastName}`
+            );
+        } catch (emailError) {
+            console.error('Error sending approval email:', emailError);
+        }
+
+        res.json({
+            success: true,
+            message: `${registration.club.clubName} has been approved to attend ${carnival.title}.`
+        });
+    } catch (error) {
+        console.error('Error approving club registration:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error approving registration.'
+        });
+    }
+};
+
+/**
+ * Reject a club registration for a carnival
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const rejectClubRegistration = async (req, res) => {
+    try {
+        const { carnivalId, registrationId } = req.params;
+        const { rejectionReason } = req.body;
+        const user = req.user;
+
+        // Verify carnival ownership
+        const carnival = await Carnival.findOne({
+            where: {
+                id: carnivalId,
+                createdByUserId: user.id,
+                isActive: true
+            }
+        });
+
+        if (!carnival) {
+            return res.status(403).json({
+                success: false,
+                message: 'Carnival not found or you do not have permission to manage it.'
+            });
+        }
+
+        // Get registration
+        const registration = await CarnivalClub.findOne({
+            where: {
+                id: registrationId,
+                carnivalId: carnivalId,
+                isActive: true
+            },
+            include: [{
+                model: Club,
+                as: 'club',
+                attributes: ['clubName', 'contactEmail']
+            }]
+        });
+
+        if (!registration) {
+            return res.status(404).json({
+                success: false,
+                message: 'Registration not found.'
+            });
+        }
+
+        if (registration.approvalStatus === 'rejected') {
+            return res.status(400).json({
+                success: false,
+                message: 'Registration is already rejected.'
+            });
+        }
+
+        // Reject the registration
+        await registration.update({
+            approvalStatus: 'rejected',
+            approvedAt: null,
+            approvedByUserId: user.id,
+            rejectionReason: rejectionReason?.trim() || 'No reason provided'
+        });
+
+        // Send rejection notification email
+        try {
+            const emailService = require('../services/emailService');
+            await emailService.sendRegistrationRejectionEmail(
+                carnival,
+                registration.club,
+                `${user.firstName} ${user.lastName}`,
+                rejectionReason
+            );
+        } catch (emailError) {
+            console.error('Error sending rejection email:', emailError);
+        }
+
+        res.json({
+            success: true,
+            message: `${registration.club.clubName}'s registration has been rejected.`
+        });
+    } catch (error) {
+        console.error('Error rejecting club registration:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error rejecting registration.'
+        });
+    }
+};
+
 module.exports = {
     showCarnivalAttendees,
     showAddClubToCarnival,
@@ -1216,5 +1396,7 @@ module.exports = {
     removePlayerFromRegistration,
     updatePlayerAttendanceStatus,
     showMyClubPlayersForCarnival,
-    addPlayersToMyClubRegistration
+    addPlayersToMyClubRegistration,
+    approveClubRegistration,
+    rejectClubRegistration
 };

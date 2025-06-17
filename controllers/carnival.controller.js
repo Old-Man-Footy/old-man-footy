@@ -207,13 +207,17 @@ const showCarnival = async (req, res) => {
         let canRegisterClub = false;
         
         if (carnival.isActive && userWithClub && userWithClub.clubId) {
-            // Check if user's club is already registered
+            // Check if user's club is already registered - include approval status
             userClubRegistration = await CarnivalClub.findOne({
                 where: {
                     carnivalId: carnival.id,
                     clubId: userWithClub.clubId,
                     isActive: true
-                }
+                },
+                attributes: [
+                    'id', 'approvalStatus', 'isPaid', 'playerCount', 'teamName',
+                    'contactPerson', 'registrationDate', 'rejectionReason'
+                ]
             });
 
             // User can register if:

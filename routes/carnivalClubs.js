@@ -45,6 +45,14 @@ router.delete('/:carnivalId/attendees/:registrationId', ensureAuthenticated, car
 // Reorder attending clubs (API endpoint)
 router.post('/:carnivalId/attendees/reorder', ensureAuthenticated, carnivalClubController.reorderAttendingClubs);
 
+// Approve club registration
+router.post('/:carnivalId/attendees/:registrationId/approve', ensureAuthenticated, carnivalClubController.approveClubRegistration);
+
+// Reject club registration
+router.post('/:carnivalId/attendees/:registrationId/reject', ensureAuthenticated, [
+    body('rejectionReason').optional().isLength({ max: 500 }).withMessage('Rejection reason must be 500 characters or less')
+], carnivalClubController.rejectClubRegistration);
+
 // Player management routes for carnival attendance
 // Manage players for a specific club's carnival registration
 router.get('/:carnivalId/attendees/:registrationId/players', ensureAuthenticated, carnivalClubController.showCarnivalClubPlayers);

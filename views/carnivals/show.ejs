@@ -553,12 +553,54 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <strong>Registration Status:</strong>
-                            <% if (userClubRegistration.isPaid) { %>
-                                <span class="badge bg-success ms-2">Paid</span>
-                            <% } else { %>
-                                <span class="badge bg-warning text-dark ms-2">Pending Payment</span>
+                            <% if (userClubRegistration.approvalStatus === 'approved') { %>
+                                <span class="badge bg-success ms-2">
+                                    <i class="bi bi-check-circle"></i> Approved
+                                </span>
+                                <% if (userClubRegistration.isPaid) { %>
+                                    <span class="badge bg-info ms-1">Paid</span>
+                                <% } else { %>
+                                    <span class="badge bg-warning text-dark ms-1">Payment Pending</span>
+                                <% } %>
+                            <% } else if (userClubRegistration.approvalStatus === 'pending') { %>
+                                <span class="badge bg-warning text-dark ms-2">
+                                    <i class="bi bi-clock"></i> Pending Approval
+                                </span>
+                            <% } else if (userClubRegistration.approvalStatus === 'rejected') { %>
+                                <span class="badge bg-danger ms-2">
+                                    <i class="bi bi-x-circle"></i> Rejected
+                                </span>
                             <% } %>
                         </div>
+
+                        <!-- Show different content based on approval status -->
+                        <% if (userClubRegistration.approvalStatus === 'pending') { %>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-clock me-2"></i>
+                                <strong>Awaiting Approval</strong><br>
+                                Your registration is pending approval from the hosting club. 
+                                You'll receive an email notification once your registration is reviewed.
+                            </div>
+                        <% } else if (userClubRegistration.approvalStatus === 'rejected') { %>
+                            <div class="alert alert-danger">
+                                <i class="bi bi-x-circle me-2"></i>
+                                <strong>Registration Rejected</strong><br>
+                                Unfortunately, your registration was not approved by the hosting club.
+                                <% if (userClubRegistration.rejectionReason) { %>
+                                    <br><strong>Reason:</strong> <%= userClubRegistration.rejectionReason %>
+                                <% } %>
+                                <br>Contact the organiser if you have questions.
+                            </div>
+                        <% } else if (userClubRegistration.approvalStatus === 'approved') { %>
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <strong>Registration Approved!</strong><br>
+                                Your club's registration has been approved. 
+                                <% if (!userClubRegistration.isPaid) { %>
+                                    The organiser will contact you with payment details.
+                                <% } %>
+                            </div>
+                        <% } %>
                         
                         <% if (userClubRegistration.playerCount) { %>
                             <div class="mb-2">
@@ -584,31 +626,44 @@
                             </div>
                         <% } %>
                         
-                        <!-- Player Management Button -->
-                        <div class="mb-3">
-                            <a href="/carnivals/<%= carnival.id %>/register/players" class="btn btn-primary btn-sm w-100">
-                                <i class="bi bi-people"></i> Manage Players
-                            </a>
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    <i class="bi bi-info-circle"></i> 
-                                    Select which players from your club will attend this carnival.
-                                </small>
+                        <!-- Player Management Button (only for approved registrations) -->
+                        <% if (userClubRegistration.approvalStatus === 'approved') { %>
+                            <div class="mb-3">
+                                <a href="/carnivals/<%= carnival.id %>/register/players" class="btn btn-primary btn-sm w-100">
+                                    <i class="bi bi-people"></i> Manage Players
+                                </a>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i> 
+                                        Select which players from your club will attend this carnival.
+                                    </small>
+                                </div>
                             </div>
-                        </div>
+                        <% } %>
                         
-                        <!-- Allow unregistration only if not paid -->
-                        <% if (!userClubRegistration.isPaid) { %>
+                        <!-- Allow unregistration based on status -->
+                        <% if (userClubRegistration.approvalStatus === 'pending' || (userClubRegistration.approvalStatus === 'approved' && !userClubRegistration.isPaid) || userClubRegistration.approvalStatus === 'rejected') { %>
                             <button type="button" class="btn btn-outline-danger btn-sm w-100" 
                                     data-action="unregister-carnival">
-                                <i class="bi bi-x-circle"></i> Unregister My Club
+                                <i class="bi bi-x-circle"></i> 
+                                <% if (userClubRegistration.approvalStatus === 'rejected') { %>
+                                    Remove Registration
+                                <% } else { %>
+                                    Unregister My Club
+                                <% } %>
                             </button>
                             <div class="mt-2">
                                 <small class="text-muted">
-                                    You can unregister before payment is made.
+                                    <% if (userClubRegistration.approvalStatus === 'pending') { %>
+                                        You can withdraw your registration while it's pending approval.
+                                    <% } else if (userClubRegistration.approvalStatus === 'rejected') { %>
+                                        Remove this rejected registration from your records.
+                                    <% } else { %>
+                                        You can unregister before payment is made.
+                                    <% } %>
                                 </small>
                             </div>
-                        <% } else { %>
+                        <% } else if (userClubRegistration.approvalStatus === 'approved' && userClubRegistration.isPaid) { %>
                             <div class="alert alert-info mb-0">
                                 <small>
                                     <i class="bi bi-info-circle"></i> 

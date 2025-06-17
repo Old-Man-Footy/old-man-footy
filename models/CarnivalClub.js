@@ -106,9 +106,59 @@ class CarnivalClub extends Model {
     return await this.count({
       where: {
         carnivalId,
-        isActive: true
+        isActive: true,
+        approvalStatus: 'approved'
       }
     });
+  }
+
+  /**
+   * Get attendance count for a carnival (including pending)
+   * @param {number} carnivalId - The carnival ID
+   * @returns {Promise<Object>} Object with approved and pending counts
+   */
+  static async getAttendanceCountWithStatus(carnivalId) {
+    const approved = await this.count({
+      where: {
+        carnivalId,
+        isActive: true,
+        approvalStatus: 'approved'
+      }
+    });
+
+    const pending = await this.count({
+      where: {
+        carnivalId,
+        isActive: true,
+        approvalStatus: 'pending'
+      }
+    });
+
+    return { approved, pending, total: approved + pending };
+  }
+
+  /**
+   * Check if registration is approved
+   * @returns {boolean} True if approved, false otherwise
+   */
+  isApproved() {
+    return this.approvalStatus === 'approved';
+  }
+
+  /**
+   * Check if registration is pending approval
+   * @returns {boolean} True if pending, false otherwise
+   */
+  isPending() {
+    return this.approvalStatus === 'pending';
+  }
+
+  /**
+   * Check if registration is rejected
+   * @returns {boolean} True if rejected, false otherwise
+   */
+  isRejected() {
+    return this.approvalStatus === 'rejected';
   }
 }
 
@@ -215,6 +265,29 @@ CarnivalClub.init({
     allowNull: true,
     defaultValue: 999
   },
+  approvalStatus: {
+    type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+    allowNull: false,
+    defaultValue: 'pending'
+  },
+  approvedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  approvedByUserId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL'
+  },
+  rejectionReason: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false
@@ -247,6 +320,9 @@ CarnivalClub.init({
     },
     {
       fields: ['isPaid']
+    },
+    {
+      fields: ['approvalStatus']
     }
   ]
 });

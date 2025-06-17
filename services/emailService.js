@@ -1034,6 +1034,193 @@ We'll respond to your inquiry from our support team shortly.
             throw error;
         }
     }
+
+    /**
+     * Send registration approval notification email
+     * @param {Object} carnival - Carnival instance
+     * @param {Object} club - Club instance
+     * @param {string} approverName - Name of the person who approved
+     */
+    async sendRegistrationApprovalEmail(carnival, club, approverName) {
+        try {
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
+            const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
+
+            if (!recipientEmail) {
+                console.warn(`No email found for club: ${club.clubName}`);
+                return { success: false, message: 'No email address available' };
+            }
+
+            const mailOptions = {
+                from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                to: recipientEmail,
+                subject: `🎉 Registration Approved: ${carnival.title}`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
+                            <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                            <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
+                        </div>
+                        
+                        <div style="padding: 30px; background: #f9f9f9;">
+                            <h2 style="color: #006837;">🎉 Great News! Your Registration is Approved</h2>
+                            
+                            <p>Hello <strong>${club.clubName}</strong>,</p>
+                            
+                            <p>Excellent news! <strong>${approverName}</strong> from the hosting club has approved your registration for:</p>
+                            
+                            <div style="background: #e8f5e8; border-left: 4px solid #006837; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
+                                <h3 style="color: #006837; margin-top: 0;">${carnival.title}</h3>
+                                <p><strong>📅 Date:</strong> ${carnival.date.toLocaleDateString('en-AU', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                })}</p>
+                                <p><strong>📍 Location:</strong> ${carnival.locationAddress}</p>
+                            </div>
+                            
+                            <p><strong>What's next?</strong></p>
+                            <ul>
+                                <li>✅ Your club is now officially attending this carnival</li>
+                                <li>📧 The organiser will contact you with payment details if required</li>
+                                <li>👥 You can now manage your player selections</li>
+                                <li>📋 Keep an eye out for draw information and updates</li>
+                            </ul>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="${carnivalUrl}" 
+                                   style="background: #006837; color: white; padding: 15px 30px; 
+                                          text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                    View Carnival Details
+                                </a>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #666;">
+                                <strong>Contact:</strong> ${carnival.organiserContactName}<br>
+                                <strong>Email:</strong> <a href="mailto:${carnival.organiserContactEmail}">${carnival.organiserContactEmail}</a><br>
+                                <strong>Phone:</strong> <a href="tel:${carnival.organiserContactPhone}">${carnival.organiserContactPhone}</a>
+                            </p>
+                            
+                            <p style="font-size: 14px; color: #666; text-align: center;">
+                                See you on the field! 🏉
+                            </p>
+                        </div>
+                        
+                        <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+                            <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
+                        </div>
+                    </div>
+                `
+            };
+
+            await this.transporter.sendMail(mailOptions);
+            console.log(`Registration approval email sent to: ${recipientEmail}`);
+            
+            return { success: true, message: 'Approval email sent successfully' };
+
+        } catch (error) {
+            console.error('Failed to send registration approval email:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Send registration rejection notification email
+     * @param {Object} carnival - Carnival instance
+     * @param {Object} club - Club instance
+     * @param {string} rejectorName - Name of the person who rejected
+     * @param {string} rejectionReason - Reason for rejection
+     */
+    async sendRegistrationRejectionEmail(carnival, club, rejectorName, rejectionReason) {
+        try {
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
+            const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
+
+            if (!recipientEmail) {
+                console.warn(`No email found for club: ${club.clubName}`);
+                return { success: false, message: 'No email address available' };
+            }
+
+            const mailOptions = {
+                from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                to: recipientEmail,
+                subject: `Registration Update: ${carnival.title}`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <div style="background: linear-gradient(135deg, #006837, #FFD700); padding: 20px; text-align: center;">
+                            <h1 style="color: white; margin: 0;">Old Man Footy</h1>
+                            <p style="color: white; margin: 5px 0 0 0;">Masters Rugby League Carnivals Australia</p>
+                        </div>
+                        
+                        <div style="padding: 30px; background: #f9f9f9;">
+                            <h2 style="color: #006837;">Registration Update</h2>
+                            
+                            <p>Hello <strong>${club.clubName}</strong>,</p>
+                            
+                            <p>Thank you for your interest in attending <strong>${carnival.title}</strong>. Unfortunately, <strong>${rejectorName}</strong> from the hosting club was unable to approve your registration at this time.</p>
+                            
+                            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                                <h3 style="color: #006837; margin-top: 0;">${carnival.title}</h3>
+                                <p><strong>📅 Date:</strong> ${carnival.date.toLocaleDateString('en-AU', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                })}</p>
+                                <p><strong>📍 Location:</strong> ${carnival.locationAddress}</p>
+                                
+                                ${rejectionReason && rejectionReason !== 'No reason provided' ? `
+                                    <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin: 15px 0;">
+                                        <strong>Reason:</strong> ${rejectionReason}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <p><strong>What can you do next?</strong></p>
+                            <ul>
+                                <li>📞 Contact the organiser directly to discuss your registration</li>
+                                <li>📧 Reply to this email with any questions</li>
+                                <li>👀 Keep an eye out for future carnivals in your area</li>
+                            </ul>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="${carnivalUrl}" 
+                                   style="background: #006837; color: white; padding: 15px 30px; 
+                                          text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                    View Carnival Details
+                                </a>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #666;">
+                                <strong>Contact the Organiser:</strong><br>
+                                <strong>Name:</strong> ${carnival.organiserContactName}<br>
+                                <strong>Email:</strong> <a href="mailto:${carnival.organiserContactEmail}">${carnival.organiserContactEmail}</a><br>
+                                <strong>Phone:</strong> <a href="tel:${carnival.organiserContactPhone}">${carnival.organiserContactPhone}</a>
+                            </p>
+                            
+                            <p style="font-size: 14px; color: #666; text-align: center;">
+                                We appreciate your interest and hope to see you at future events! 🏉
+                            </p>
+                        </div>
+                        
+                        <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
+                            <p>© 2025 Old Man Footy. Connecting Masters Rugby League Communities Across Australia.</p>
+                        </div>
+                    </div>
+                `
+            };
+
+            await this.transporter.sendMail(mailOptions);
+            console.log(`Registration rejection email sent to: ${recipientEmail}`);
+            
+            return { success: true, message: 'Rejection email sent successfully' };
+
+        } catch (error) {
+            console.error('Failed to send registration rejection email:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new EmailService();
