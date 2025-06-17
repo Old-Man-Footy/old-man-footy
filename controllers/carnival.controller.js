@@ -240,21 +240,46 @@ const showCarnival = async (req, res) => {
         let canMergeCarnival = false;
         let availableMergeTargets = [];
         
-        if (userWithClub && carnival.createdByUserId === userWithClub.id && 
-            carnival.lastMySidelineSync && carnival.isActive) {
-            // User owns this MySideline carnival, check if they have other active non-MySideline carnivals
-            availableMergeTargets = await Carnival.findAll({
-                where: {
-                    createdByUserId: userWithClub.id,
-                    isActive: true,
-                    isManuallyEntered: true, // Non-MySideline carnivals only
-                    id: { [Op.ne]: carnival.id } // Exclude current carnival
-                },
-                attributes: ['id', 'title', 'date', 'state'],
-                order: [['date', 'DESC']]
-            });
-            
-            canMergeCarnival = availableMergeTargets.length > 0;
+        if (userWithClub && carnival.lastMySidelineSync && carnival.isActive) {
+            // Admin users can merge any MySideline carnival into any active non-MySideline carnival
+            if (userWithClub.isAdmin) {
+                availableMergeTargets = await Carnival.findAll({
+                    where: {
+                        isActive: true,
+                        isManuallyEntered: true, // Non-MySideline carnivals only
+                        id: { [Op.ne]: carnival.id } // Exclude current carnival
+                    },
+                    include: [{
+                        model: User,
+                        as: 'creator',
+                        attributes: ['firstName', 'lastName'],
+                        include: [{
+                            model: Club,
+                            as: 'club',
+                            attributes: ['clubName']
+                        }]
+                    }],
+                    attributes: ['id', 'title', 'date', 'state', 'createdByUserId'],
+                    order: [['date', 'DESC']]
+                });
+                
+                canMergeCarnival = availableMergeTargets.length > 0;
+            } 
+            // Regular users can only merge carnivals they own
+            else if (carnival.createdByUserId === userWithClub.id) {
+                availableMergeTargets = await Carnival.findAll({
+                    where: {
+                        createdByUserId: userWithClub.id,
+                        isActive: true,
+                        isManuallyEntered: true, // Non-MySideline carnivals only
+                        id: { [Op.ne]: carnival.id } // Exclude current carnival
+                    },
+                    attributes: ['id', 'title', 'date', 'state'],
+                    order: [['date', 'DESC']]
+                });
+                
+                canMergeCarnival = availableMergeTargets.length > 0;
+            }
         }
 
         // Sort sponsors hierarchically using the sorting service
@@ -1253,19 +1278,25 @@ module.exports = {
                     return res.redirect('/carnivals');
                 }
 
-                // Validation checks
-                if (sourceCarnival.createdByUserId !== req.user.id) {
-                    await transaction.rollback();
-                    req.flash('error_msg', 'You can only merge carnivals you own.');
-                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                // Admin validation checks - admins can merge any carnivals
+                const isAdmin = req.user.isAdmin;
+                
+                // For non-admin users, enforce ownership checks
+                if (!isAdmin) {
+                    if (sourceCarnival.createdByUserId !== req.user.id) {
+                        await transaction.rollback();
+                        req.flash('error_msg', 'You can only merge carnivals you own.');
+                        return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                    }
+
+                    if (targetCarnival.createdByUserId !== req.user.id) {
+                        await transaction.rollback();
+                        req.flash('error_msg', 'You can only merge into carnivals you own.');
+                        return res.redirect(`/carnivals/${sourceCarnivalId}`);
+                    }
                 }
 
-                if (targetCarnival.createdByUserId !== req.user.id) {
-                    await transaction.rollback();
-                    req.flash('error_msg', 'You can only merge into carnivals you own.');
-                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
-                }
-
+                // Business logic validation (applies to all users including admins)
                 if (!sourceCarnival.lastMySidelineSync) {
                     await transaction.rollback();
                     req.flash('error_msg', 'Only MySideline carnivals can be merged.');
@@ -1428,10 +1459,15 @@ module.exports = {
 
                 await transaction.commit();
 
-                // Log the merge for audit purposes
-                console.log(`🔄 Carnival merge completed: "${sourceCarnival.title}" (ID: ${sourceCarnivalId}) merged into "${targetCarnival.title}" (ID: ${targetCarnivalId}) by user ${req.user.id}`);
+                // Log the merge for audit purposes - include admin info if applicable
+                const userInfo = isAdmin ? `admin ${req.user.email}` : `user ${req.user.id}`;
+                console.log(`🔄 Carnival merge completed: "${sourceCarnival.title}" (ID: ${sourceCarnivalId}) merged into "${targetCarnival.title}" (ID: ${targetCarnivalId}) by ${userInfo}`);
 
-                req.flash('success_msg', `Merge successful. "${sourceCarnival.title}" has been merged into "${targetCarnival.title}" and has been deactivated.`);
+                const successMessage = isAdmin 
+                    ? `Admin merge successful. "${sourceCarnival.title}" has been merged into "${targetCarnival.title}" and has been deactivated.`
+                    : `Merge successful. "${sourceCarnival.title}" has been merged into "${targetCarnival.title}" and has been deactivated.`;
+                
+                req.flash('success_msg', successMessage);
                 res.redirect(`/carnivals/${targetCarnivalId}`);
 
             } catch (mergeError) {

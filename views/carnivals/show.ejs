@@ -988,13 +988,28 @@
                                     <% if (targetCarnival.state) { %>
                                         (<%= targetCarnival.state %>)
                                     <% } %>
+                                    <% if (user && user.isAdmin && targetCarnival.creator && targetCarnival.creator.club) { %>
+                                        - Hosted by <%= targetCarnival.creator.club.clubName %>
+                                    <% } %>
                                 </option>
                             <% }); %>
                         </select>
                         <div class="form-text">
-                            Select which of your existing carnivals you want to merge this MySideline event into.
+                            <% if (user && user.isAdmin) { %>
+                                As an administrator, you can merge this MySideline event into any active carnival on the platform.
+                            <% } else { %>
+                                Select which of your existing carnivals you want to merge this MySideline event into.
+                            <% } %>
                         </div>
                     </div>
+                    
+                    <% if (user && user.isAdmin) { %>
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-shield-exclamation me-2"></i>
+                            <strong>Administrator Action:</strong> You are performing an administrative merge on behalf of other clubs. 
+                            This will merge data between carnivals owned by different organizations.
+                        </div>
+                    <% } %>
                     
                     <div class="mb-3">
                         <p><strong>Source (MySideline):</strong> <%= carnival.title %></p>
