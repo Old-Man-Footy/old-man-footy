@@ -30,10 +30,27 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="date" class="form-label">Date *</label>
+                                    <label for="date" class="form-label">
+                                        <span id="dateLabel">Date *</span>
+                                    </label>
                                     <input type="date" class="form-control" id="date" name="date" 
                                            value="<%= carnival.date.toISOString().split('T')[0] %>" required>
                                     <div class="invalid-feedback">Please select a date.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="isMultiDay" name="isMultiDay" 
+                                               <%= carnival.endDate ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="isMultiDay">
+                                            Multi-day event
+                                        </label>
+                                    </div>
+                                    <div id="endDateContainer" style="<%= carnival.endDate ? '' : 'display: none;' %>">
+                                        <label for="endDate" class="form-label">End Date</label>
+                                        <input type="date" class="form-control" id="endDate" name="endDate" 
+                                               value="<%= carnival.endDate ? carnival.endDate.toISOString().split('T')[0] : '' %>">
+                                        <div class="invalid-feedback">End date must be after start date.</div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="state" class="form-label">State *</label>

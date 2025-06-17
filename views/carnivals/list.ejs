@@ -97,15 +97,12 @@
                                     <!-- Date and Location -->
                                     <div class="mb-1">
                                         <small class="text-muted">
-                                            <i class="bi bi-calendar3"></i> 
-                                            <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
-                                                <%= carnival.date.toLocaleDateString('en-AU', { 
-                                                    month: 'short', 
-                                                    day: 'numeric' 
-                                                }) %>
-                                            <% } else { %>
-                                                <span class="text-warning">Date TBA</span>
-                                            <% } %>
+                                            <%- include('../partials/carnival-date', { 
+                                                carnival: carnival, 
+                                                format: 'compact',
+                                                showIcon: true,
+                                                addClass: 'text-muted'
+                                            }) %>
                                         </small>
                                     </div>
                                     <div class="mb-2">

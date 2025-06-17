@@ -431,6 +431,85 @@ class Carnival extends Model {
       };
     }
   }
+
+  /**
+   * Check if this is a multi-day carnival
+   * @returns {boolean} Multi-day carnival status
+   */
+  get isMultiDay() {
+    return this.endDate && this.endDate !== this.date;
+  }
+
+  /**
+   * Get formatted date range string for display
+   * @returns {string} Formatted date range
+   */
+  getDateRangeString() {
+    if (!this.date) return 'Date To Be Announced';
+    
+    const startDate = new Date(this.date);
+    const endDate = this.endDate ? new Date(this.endDate) : null;
+    
+    if (!endDate || startDate.toDateString() === endDate.toDateString()) {
+      // Single day event
+      return startDate.toLocaleDateString('en-AU', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+    
+    // Multi-day event
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    const startMonth = startDate.getMonth();
+    const endMonth = endDate.getMonth();
+    
+    if (startYear === endYear && startMonth === endMonth) {
+      // Same month and year: "18-20 July 2025"
+      return `${startDate.getDate()}-${endDate.getDate()} ${startDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}`;
+    } else if (startYear === endYear) {
+      // Same year: "28 June - 2 July 2025"
+      return `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    } else {
+      // Different years: "28 December 2024 - 2 January 2025"
+      return `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    }
+  }
+
+  /**
+   * Get short formatted date range string for compact display
+   * @returns {string} Short formatted date range
+   */
+  getShortDateRangeString() {
+    if (!this.date) return 'Date TBA';
+    
+    const startDate = new Date(this.date);
+    const endDate = this.endDate ? new Date(this.endDate) : null;
+    
+    if (!endDate || startDate.toDateString() === endDate.toDateString()) {
+      // Single day event
+      return startDate.toLocaleDateString('en-AU', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+    
+    // Multi-day event
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    const startMonth = startDate.getMonth();
+    const endMonth = endDate.getMonth();
+    
+    if (startYear === endYear && startMonth === endMonth) {
+      // Same month and year: "18-20 Jul"
+      return `${startDate.getDate()}-${endDate.getDate()} ${startDate.toLocaleDateString('en-AU', { month: 'short' })}`;
+    } else {
+      // Different months: "28 Jun - 2 Jul"
+      return `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
+    }
+  }
 }
 
 /**
@@ -467,6 +546,11 @@ Carnival.init({
   date: {
     type: DataTypes.DATE,
     allowNull: true, // Allow null for MySideline imports
+  },
+  endDate: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'End date for multi-day carnivals. If null, carnival is a single day event.'
   },
   locationAddress: {
     type: DataTypes.TEXT,
@@ -707,6 +791,15 @@ Carnival.init({
         carnival.currentRegistrations = carnival.maxTeams;
       }
       
+      // Validate end date is after start date for multi-day carnivals
+      if (carnival.endDate && carnival.date) {
+        const startDate = new Date(carnival.date);
+        const endDate = new Date(carnival.endDate);
+        
+        if (endDate <= startDate) {
+          throw new Error('End date must be after the start date for multi-day carnivals');
+        }
+      }
     }
   }
 });

@@ -354,6 +354,7 @@ const createCarnival = async (req, res) => {
         const carnivalData = {
             title: req.body.title,
             date: new Date(req.body.date),
+            endDate: req.body.endDate ? new Date(req.body.endDate) : null,
             locationAddress: req.body.locationAddress,
             organiserContactName: req.body.organiserContactName,
             organiserContactEmail: req.body.organiserContactEmail,
@@ -586,6 +587,7 @@ const updateCarnival = async (req, res) => {
         const updateData = {
             title: req.body.title,
             date: new Date(req.body.date),
+            endDate: req.body.endDate ? new Date(req.body.endDate) : null,
             locationAddress: req.body.locationAddress,
             organiserContactName: req.body.organiserContactName,
             organiserContactEmail: req.body.organiserContactEmail,

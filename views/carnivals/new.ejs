@@ -80,13 +80,29 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="date" class="form-label">
-                                        Date *
+                                        <span id="dateLabel">Date *</span>
                                         <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
                                            title="Select the main carnival date. For multi-day events, use the first day."></i>
                                     </label>
                                     <input type="date" class="form-control" id="date" name="date" 
                                            value="<%= typeof formData !== 'undefined' ? formData.date : '' %>" required>
                                     <div class="invalid-feedback">Please select a date.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="isMultiDay" name="isMultiDay" 
+                                               <%= typeof formData !== 'undefined' && formData.endDate ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="isMultiDay">
+                                            Multi-day event
+                                        </label>
+                                    </div>
+                                    <div id="endDateContainer" style="<%= typeof formData !== 'undefined' && formData.endDate ? '' : 'display: none;' %>">
+                                        <label for="endDate" class="form-label">End Date</label>
+                                        <input type="date" class="form-control" id="endDate" name="endDate" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.endDate : '' %>">
+                                        <div class="invalid-feedback">End date must be after start date.</div>
+                                        <div class="form-text">Leave blank for single-day events</div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="state" class="form-label">State *</label>

@@ -19,14 +19,24 @@ router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
     body('title').trim().notEmpty().withMessage('Title is required'),
     // Date is optional for MySideline imports but will be validated at model level
     body('date').optional().isISO8601().withMessage('Valid date is required when provided'),
+    body('endDate').optional().isISO8601().withMessage('Valid end date is required when provided')
+        .custom((endDate, { req }) => {
+            if (endDate && req.body.date) {
+                const startDate = new Date(req.body.date);
+                const endDateObj = new Date(endDate);
+                if (endDateObj <= startDate) {
+                    throw new Error('End date must be after the start date');
+                }
+            }
+            return true;
+        }),
     // Location is optional for MySideline imports but will be validated at model level
     body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
     // Contact details are optional for MySideline imports but will be validated at model level
     body('organiserContactName').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Organiser contact name must be between 2 and 100 characters when provided'),
     body('organiserContactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid organiser email is required when provided'),
-    body('organiserContactPhone').optional().trim().isLength({ min: 10, max: 20 }).withMessage('Organiser phone must be between 10 and 20 characters when provided'),
-    // Schedule details are optional for MySideline imports but will be validated at model level
-    body('scheduleDetails').optional().trim().isLength({ min: 10 }).withMessage('Schedule details must be at least 10 characters when provided'),
+    body('organiserContactPhone').optional().trim().isLength({ min: 7, max: 20 }).withMessage('Organiser contact phone must be between 7 and 20 characters when provided'),
+    body('scheduleDetails').optional().trim().isLength({ min: 10, max: 2000 }).withMessage('Schedule details must be between 10 and 2000 characters when provided'),
     body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
     body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Facebook URL must be valid'),
     body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Instagram URL must be valid'),
@@ -43,6 +53,17 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
     body('title').trim().notEmpty().withMessage('Title is required'),
     // Date is optional for MySideline imports but will be validated at model level
     body('date').optional().isISO8601().withMessage('Valid date is required when provided'),
+    body('endDate').optional().isISO8601().withMessage('Valid end date is required when provided')
+        .custom((endDate, { req }) => {
+            if (endDate && req.body.date) {
+                const startDate = new Date(req.body.date);
+                const endDateObj = new Date(endDate);
+                if (endDateObj <= startDate) {
+                    throw new Error('End date must be after the start date');
+                }
+            }
+            return true;
+        }),
     // Location is optional for MySideline imports but will be validated at model level
     body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
     // Contact details are optional for MySideline imports but will be validated at model level

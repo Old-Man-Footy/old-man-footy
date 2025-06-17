@@ -1,0 +1,111 @@
+<%
+/**
+ * Carnival Date Display Partial
+ * Displays carnival dates with proper formatting for single-day and multi-day events
+ * 
+ * Parameters:
+ * - carnival: Carnival object with date and endDate properties
+ * - format: 'full' (default), 'short', or 'compact'
+ * - showIcon: boolean (default: true) - whether to show calendar icon
+ * - addClass: string - additional CSS classes to apply
+ */
+
+const format = typeof locals.format !== 'undefined' ? locals.format : 'full';
+const showIcon = typeof locals.showIcon !== 'undefined' ? locals.showIcon : true;
+const addClass = typeof locals.addClass !== 'undefined' ? locals.addClass : '';
+
+let dateString = '';
+let isMultiDay = false;
+
+if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
+    const startDate = new Date(carnival.date);
+    const endDate = carnival.endDate ? new Date(carnival.endDate) : null;
+    
+    // Check if it's a multi-day event
+    isMultiDay = endDate && startDate.toDateString() !== endDate.toDateString();
+    
+    if (format === 'full') {
+        if (isMultiDay) {
+            // Multi-day event - full format
+            const startYear = startDate.getFullYear();
+            const endYear = endDate.getFullYear();
+            const startMonth = startDate.getMonth();
+            const endMonth = endDate.getMonth();
+            
+            if (startYear === endYear && startMonth === endMonth) {
+                // Same month and year: "18-20 July 2025"
+                dateString = `${startDate.getDate()}-${endDate.getDate()} ${startDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}`;
+            } else if (startYear === endYear) {
+                // Same year: "28 June - 2 July 2025"
+                dateString = `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+            } else {
+                // Different years: "28 December 2024 - 2 January 2025"
+                dateString = `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+            }
+        } else {
+            // Single day event - full format
+            dateString = startDate.toLocaleDateString('en-AU', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+    } else if (format === 'short') {
+        if (isMultiDay) {
+            // Multi-day event - short format
+            const startYear = startDate.getFullYear();
+            const endYear = endDate.getFullYear();
+            const startMonth = startDate.getMonth();
+            const endMonth = endDate.getMonth();
+            
+            if (startYear === endYear && startMonth === endMonth) {
+                // Same month and year: "18-20 Jul"
+                dateString = `${startDate.getDate()}-${endDate.getDate()} ${startDate.toLocaleDateString('en-AU', { month: 'short' })}`;
+            } else {
+                // Different months: "28 Jun - 2 Jul"
+                dateString = `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
+            }
+        } else {
+            // Single day event - short format
+            dateString = startDate.toLocaleDateString('en-AU', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+    } else if (format === 'compact') {
+        if (isMultiDay) {
+            // Multi-day event - compact format
+            const startMonth = startDate.getMonth();
+            const endMonth = endDate.getMonth();
+            
+            if (startMonth === endMonth) {
+                // Same month: "18-20 Jul"
+                dateString = `${startDate.getDate()}-${endDate.getDate()} ${startDate.toLocaleDateString('en-AU', { month: 'short' })}`;
+            } else {
+                // Different months: "28 Jun - 2 Jul"
+                dateString = `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
+            }
+        } else {
+            // Single day event - compact format
+            dateString = startDate.toLocaleDateString('en-AU', { 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+    }
+} else {
+    dateString = format === 'compact' ? 'Date TBA' : 'Date To Be Announced';
+}
+%>
+
+<span class="carnival-date-display <%= addClass %>">
+    <% if (showIcon) { %>
+        <i class="bi bi-calendar3 me-1"></i>
+    <% } %>
+    <%= dateString %>
+    <% if (isMultiDay) { %>
+        <small class="text-muted ms-1">(Multi-day)</small>
+    <% } %>
+</span>

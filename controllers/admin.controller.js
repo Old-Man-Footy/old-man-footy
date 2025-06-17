@@ -659,11 +659,13 @@ const updateCarnival = async (req, res) => {
         await carnival.update({
             title,
             date: new Date(date),
+            endDate: req.body.endDate ? new Date(req.body.endDate) : null,
             locationAddress,
             state,
             scheduleDetails,
-            registrationLink,
-            contactEmail
+            registrationLink: registrationLink || null,
+            organiserContactEmail: contactEmail,
+            isActive: req.body.isActive === 'on'
         });
 
         req.flash('success_msg', `Carnival ${title} has been updated successfully`);

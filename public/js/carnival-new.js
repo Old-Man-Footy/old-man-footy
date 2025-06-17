@@ -1,6 +1,6 @@
 /**
  * Carnival New JavaScript
- * Handles file upload interactions, duplicate warnings, and MySideline link generation for new carnival creation
+ * Handles file upload area interactions, MySideline link generation, and multi-day event functionality
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,52 +14,125 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Show/hide MySideline link button based on title input
+    // MySideline link generation functionality
+    const generateBtn = document.getElementById('generateMysidelineBtn');
     const titleInput = document.getElementById('title');
-    const buttonContainer = document.getElementById('mysidelineButtonContainer');
-    
-    if (titleInput && buttonContainer) {
+    const registrationLinkInput = document.getElementById('registrationLink');
+    const mysidelineContainer = document.getElementById('mysidelineButtonContainer');
+
+    // Show MySideline button when title is entered
+    if (titleInput && mysidelineContainer) {
         titleInput.addEventListener('input', function() {
-            const title = this.value.trim();
-            if (title.length > 0) {
-                buttonContainer.style.display = 'block';
+            if (this.value.trim().length > 3) {
+                mysidelineContainer.style.display = 'block';
             } else {
-                buttonContainer.style.display = 'none';
+                mysidelineContainer.style.display = 'none';
+            }
+        });
+
+        // Check on page load if title already has content
+        if (titleInput.value.trim().length > 3) {
+            mysidelineContainer.style.display = 'block';
+        }
+    }
+
+    if (generateBtn && titleInput && registrationLinkInput) {
+        generateBtn.addEventListener('click', function() {
+            const title = titleInput.value.trim();
+            if (title) {
+                // Generate MySideline-style URL based on title
+                const slug = title.toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+                    .replace(/\s+/g, '-') // Replace spaces with hyphens
+                    .replace(/-+/g, '-') // Replace multiple hyphens with single
+                    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+                
+                const mysidelineUrl = `https://www.mysideline.com.au/event/${slug}`;
+                registrationLinkInput.value = mysidelineUrl;
+                
+                // Show feedback
+                generateBtn.innerHTML = '<i class="bi bi-check-circle"></i> Generated!';
+                generateBtn.classList.remove('btn-outline-success');
+                generateBtn.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    generateBtn.innerHTML = '<i class="bi bi-link-45deg"></i> Generate MySideline Link';
+                    generateBtn.classList.remove('btn-success');
+                    generateBtn.classList.add('btn-outline-success');
+                }, 2000);
             }
         });
     }
 
-    // Generate MySideline link
-    const generateBtn = document.getElementById('generateMysidelineBtn');
-    if (generateBtn) {
-        generateBtn.addEventListener('click', function() {
-            const title = document.getElementById('title').value.trim();
-            const registrationLink = document.getElementById('registrationLink');
-            
-            if (title.length > 0) {
-                // Generate MySideline registration link with URL encoded title
-                const encodedTitle = encodeURIComponent(title);
-                const mysidelineUrl = `https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&criteria=${encodedTitle}`;
-                registrationLink.value = mysidelineUrl;
+    // Multi-day event functionality
+    const isMultiDayCheckbox = document.getElementById('isMultiDay');
+    const endDateContainer = document.getElementById('endDateContainer');
+    const endDateInput = document.getElementById('endDate');
+    const dateLabel = document.getElementById('dateLabel');
+    const startDateInput = document.getElementById('date');
+
+    if (isMultiDayCheckbox && endDateContainer && endDateInput && dateLabel) {
+        // Toggle end date field visibility
+        isMultiDayCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                endDateContainer.style.display = 'block';
+                dateLabel.textContent = 'Event Start Date *';
+                endDateInput.required = true;
                 
-                // Add visual feedback
-                registrationLink.focus();
-                registrationLink.select();
-                
-                // Show a brief success indicator
-                const btn = this;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="bi bi-check-circle"></i> Generated!';
-                btn.classList.remove('btn-outline-success');
-                btn.classList.add('btn-success');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-outline-success');
-                }, 2000);
+                // Set minimum end date to start date + 1 day
+                updateEndDateMin();
+            } else {
+                endDateContainer.style.display = 'none';
+                dateLabel.textContent = 'Date *';
+                endDateInput.required = false;
+                endDateInput.value = '';
             }
         });
+
+        // Update end date minimum when start date changes
+        startDateInput.addEventListener('change', function() {
+            if (isMultiDayCheckbox.checked) {
+                updateEndDateMin();
+            }
+        });
+
+        // Validate end date is after start date
+        endDateInput.addEventListener('change', function() {
+            validateEndDate();
+        });
+
+        function updateEndDateMin() {
+            if (startDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                startDate.setDate(startDate.getDate() + 1);
+                const minEndDate = startDate.toISOString().split('T')[0];
+                endDateInput.min = minEndDate;
+                
+                // If current end date is before new minimum, clear it
+                if (endDateInput.value && endDateInput.value <= startDateInput.value) {
+                    endDateInput.value = minEndDate;
+                }
+            }
+        }
+
+        function validateEndDate() {
+            if (endDateInput.value && startDateInput.value) {
+                if (endDateInput.value <= startDateInput.value) {
+                    endDateInput.setCustomValidity('End date must be after the start date');
+                    endDateInput.classList.add('is-invalid');
+                } else {
+                    endDateInput.setCustomValidity('');
+                    endDateInput.classList.remove('is-invalid');
+                }
+            }
+        }
+
+        // Initialize on page load
+        if (isMultiDayCheckbox.checked) {
+            dateLabel.textContent = 'Event Start Date *';
+            endDateInput.required = true;
+            updateEndDateMin();
+        }
     }
 });
 
