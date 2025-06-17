@@ -1043,6 +1043,98 @@ const deleteUser = async (req, res) => {
     }
 };
 
+/**
+ * Show claim carnival on behalf of club form
+ */
+const showClaimCarnivalForm = async (req, res) => {
+    try {
+        const carnivalId = req.params.id;
+        
+        const carnival = await Carnival.findByPk(carnivalId, {
+            include: [{ model: User, as: 'creator' }]
+        });
+
+        if (!carnival) {
+            req.flash('error_msg', 'Carnival not found');
+            return res.redirect('/admin/carnivals');
+        }
+
+        // Check if carnival can be claimed (MySideline import with no owner)
+        if (carnival.isManuallyEntered) {
+            req.flash('error_msg', 'Can only claim ownership of MySideline imported events');
+            return res.redirect('/admin/carnivals');
+        }
+
+        if (!carnival.lastMySidelineSync) {
+            req.flash('error_msg', 'This carnival was not imported from MySideline');
+            return res.redirect('/admin/carnivals');
+        }
+
+        if (carnival.createdByUserId) {
+            req.flash('error_msg', 'This carnival already has an owner');
+            return res.redirect('/admin/carnivals');
+        }
+
+        // Get all active clubs with primary delegates
+        const clubs = await Club.findAll({
+            where: { isActive: true },
+            include: [{
+                model: User,
+                as: 'delegates',
+                where: { 
+                    isPrimaryDelegate: true,
+                    isActive: true 
+                },
+                required: true,
+                attributes: ['id', 'firstName', 'lastName', 'email']
+            }],
+            order: [['clubName', 'ASC']]
+        });
+
+        res.render('admin/claim-carnival', {
+            title: `Claim Carnival - ${carnival.title}`,
+            carnival,
+            clubs,
+            additionalCSS: ['/styles/admin.styles.css']
+        });
+    } catch (error) {
+        console.error('❌ Error loading claim carnival form:', error);
+        req.flash('error_msg', 'Error loading claim carnival form');
+        res.redirect('/admin/carnivals');
+    }
+};
+
+/**
+ * Process admin claim carnival on behalf of club
+ */
+const adminClaimCarnival = async (req, res) => {
+    try {
+        const carnivalId = req.params.id;
+        const { targetClubId } = req.body;
+
+        if (!targetClubId) {
+            req.flash('error_msg', 'Please select a club to claim the carnival for');
+            return res.redirect(`/admin/carnivals/${carnivalId}/claim`);
+        }
+
+        // Use the Carnival model's adminClaimOnBehalf method
+        const result = await Carnival.adminClaimOnBehalf(carnivalId, req.user.id, parseInt(targetClubId));
+        
+        if (result.success) {
+            req.flash('success_msg', result.message);
+        } else {
+            req.flash('error_msg', result.message);
+        }
+        
+        res.redirect('/admin/carnivals');
+
+    } catch (error) {
+        console.error('❌ Error claiming carnival on behalf of club:', error);
+        req.flash('error_msg', 'An error occurred while claiming the carnival');
+        res.redirect('/admin/carnivals');
+    }
+};
+
 module.exports = {
     getAdminDashboard,
     getUserManagement,
@@ -1060,5 +1152,7 @@ module.exports = {
     showEditCarnival,
     updateCarnival,
     toggleCarnivalStatus,
-    generateReport
+    generateReport,
+    showClaimCarnivalForm,
+    adminClaimCarnival
 };

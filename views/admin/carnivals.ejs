@@ -180,6 +180,15 @@
                                                        class="btn btn-outline-warning" title="Edit Carnival">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
+                                                    
+                                                    <!-- Admin Claim Button for unclaimed MySideline carnivals -->
+                                                    <% if (!carnival.isManuallyEntered && carnival.lastMySidelineSync && !carnival.creator) { %>
+                                                        <a href="/admin/carnivals/<%= carnival.id %>/claim" 
+                                                           class="btn btn-outline-info" title="Claim for Club">
+                                                            <i class="bi bi-hand-thumbs-up"></i>
+                                                        </a>
+                                                    <% } %>
+                                                    
                                                     <% if (carnival.isActive) { %>
                                                         <button type="button" class="btn btn-outline-danger" 
                                                                 title="Deactivate Carnival"

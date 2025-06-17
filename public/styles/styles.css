@@ -798,6 +798,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 
 .badge {
     border-radius: 0 !important;
+    width: 3rem !important;
 }
 
 /* Hero Section Enhancements */
@@ -944,7 +945,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 
 @keyframes slideInFromLeft {
     from { opacity: 0; transform: translateX(-30px); }
-    to { opacity: 1, transform: translateX(0); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slideInFromBottom {

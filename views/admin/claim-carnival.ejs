@@ -1,0 +1,175 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="admin-page-title">
+                    <i class="bi bi-hand-thumbs-up text-warning"></i>
+                    Claim Carnival on Behalf of Club
+                </h1>
+                <a href="/admin/carnivals" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Carnivals
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carnival Information -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event"></i> Carnival Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Carnival Title</h6>
+                            <p class="text-primary"><%= carnival.title %></p>
+                            
+                            <h6 class="fw-bold">Date</h6>
+                            <p><%= new Date(carnival.date).toLocaleDateString('en-AU', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            }) %></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Location</h6>
+                            <p><%= carnival.locationAddress || 'No location specified' %></p>
+                            
+                            <h6 class="fw-bold">State</h6>
+                            <p><span class="badge state-<%= carnival.state ? carnival.state.toLowerCase() : 'unknown' %>">
+                                <%= carnival.state || 'Unknown' %>
+                            </span></p>
+                        </div>
+                    </div>
+                    
+                    <% if (carnival.mySidelineTitle) { %>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>MySideline Import:</strong> This carnival was imported from MySideline with the original title: 
+                            "<%= carnival.mySidelineTitle %>"
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claim Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">
+                        <i class="bi bi-building"></i> Select Club to Claim For
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/carnivals/<%= carnival.id %>/claim">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Important:</strong> Claiming this carnival will:
+                            <ul class="mb-0 mt-2">
+                                <li>Assign ownership to the selected club's primary delegate</li>
+                                <li>Auto-populate contact details with the primary delegate's information</li>
+                                <li>Allow the primary delegate to manage this carnival</li>
+                                <li>This action cannot be undone without administrator assistance</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="targetClubId" class="form-label">
+                                <strong>Select Club *</strong>
+                            </label>
+                            <select class="form-select" id="targetClubId" name="targetClubId" required>
+                                <option value="">-- Choose a club to claim carnival for --</option>
+                                <% clubs.forEach(club => { %>
+                                    <option value="<%= club.id %>" 
+                                            data-delegate-name="<%= club.delegates[0].firstName %> <%= club.delegates[0].lastName %>"
+                                            data-delegate-email="<%= club.delegates[0].email %>"
+                                            data-club-state="<%= club.state %>">
+                                        <%= club.clubName %> (<%= club.state %>)
+                                        - Primary Delegate: <%= club.delegates[0].firstName %> <%= club.delegates[0].lastName %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                            <div class="form-text">
+                                Only clubs with active primary delegates are shown. The primary delegate will become the carnival owner.
+                            </div>
+                        </div>
+
+                        <!-- Selected Club Information (populated via JavaScript) -->
+                        <div id="selectedClubInfo" class="alert alert-light d-none">
+                            <h6 class="fw-bold">Selected Club Information:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Primary Delegate:</strong> <span id="delegateName"></span><br>
+                                    <strong>Email:</strong> <span id="delegateEmail"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Club State:</strong> <span id="clubState"></span><br>
+                                    <span id="stateWarning" class="text-warning d-none">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <small>Note: Club state differs from carnival state</small>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/admin/carnivals" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning" id="claimButton" disabled>
+                                <i class="bi bi-hand-thumbs-up"></i> Claim Carnival for Selected Club
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clubSelect = document.getElementById('targetClubId');
+    const selectedClubInfo = document.getElementById('selectedClubInfo');
+    const delegateName = document.getElementById('delegateName');
+    const delegateEmail = document.getElementById('delegateEmail');
+    const clubState = document.getElementById('clubState');
+    const stateWarning = document.getElementById('stateWarning');
+    const claimButton = document.getElementById('claimButton');
+    const carnivalState = '<%= carnival.state %>';
+
+    clubSelect.addEventListener('change', function() {
+        const selectedOption = clubSelect.options[clubSelect.selectedIndex];
+        
+        if (selectedOption.value) {
+            // Populate club information
+            delegateName.textContent = selectedOption.dataset.delegateName;
+            delegateEmail.textContent = selectedOption.dataset.delegateEmail;
+            clubState.textContent = selectedOption.dataset.clubState;
+            
+            // Show state warning if states don't match
+            if (carnivalState && selectedOption.dataset.clubState !== carnivalState) {
+                stateWarning.classList.remove('d-none');
+            } else {
+                stateWarning.classList.add('d-none');
+            }
+            
+            // Show selected club info and enable claim button
+            selectedClubInfo.classList.remove('d-none');
+            claimButton.disabled = false;
+        } else {
+            // Hide info and disable button
+            selectedClubInfo.classList.add('d-none');
+            claimButton.disabled = true;
+        }
+    });
+});
+</script>

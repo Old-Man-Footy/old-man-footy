@@ -109,5 +109,7 @@ const carnivalUpdateValidation = [
 
 router.post('/carnivals/:id/edit', carnivalUpload, handleUploadError, carnivalUpdateValidation, adminController.updateCarnival);
 router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus);
+router.get('/carnivals/:id/claim', adminController.showClaimCarnivalForm);
+router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
 
 module.exports = router;

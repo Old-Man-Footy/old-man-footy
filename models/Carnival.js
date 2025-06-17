@@ -47,7 +47,7 @@ class Carnival extends Model {
 
   /**
    * Get current approved registrations count (real-time)
-   * @returns {Promise<number>} Number of approved registrations
+   * @returns {Promise<number>}
    */
   async getApprovedRegistrationsCount() {
     const CarnivalClub = require('./CarnivalClub');
@@ -359,12 +359,18 @@ class Carnival extends Model {
         throw new Error('This carnival already has an owner');
       }
 
-      // All checks passed - update the carnival
-      await carnival.update({
+      // All checks passed - update the carnival with user's contact details
+      const updateData = {
         createdByUserId: userId,
         claimedAt: new Date(),
-        updatedAt: new Date()
-      });
+        updatedAt: new Date(),
+        // Auto-populate contact details with the claiming user's information
+        organiserContactName: `${user.firstName} ${user.lastName}`,
+        organiserContactEmail: user.email,
+        organiserContactPhone: user.phoneNumber || null
+      };
+
+      await carnival.update(updateData);
 
       // Log the ownership claim for audit purposes
       console.log(`🏆 Carnival ownership claimed: "${carnival.title}" (ID: ${carnivalId}) claimed by user ${userId} (${user.club.clubName})`);
@@ -452,7 +458,11 @@ class Carnival extends Model {
       await carnival.update({
         createdByUserId: null,
         claimedAt: null,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        // Clear contact details when releasing ownership
+        organiserContactName: null,
+        organiserContactEmail: null,
+        organiserContactPhone: null
       });
 
       // Log the ownership release for audit purposes
@@ -481,6 +491,135 @@ class Carnival extends Model {
       return {
         success: false,
         message: error.message || 'An error occurred while releasing carnival ownership'
+      };
+    }
+  }
+
+  /**
+   * Admin claim ownership of a carnival on behalf of a club
+   * This method handles the business logic for admins claiming carnivals for other clubs
+   * @param {number} carnivalId - ID of the carnival to claim
+   * @param {number} adminUserId - ID of the admin user performing the claim
+   * @param {number} targetClubId - ID of the club to claim the carnival for
+   * @returns {Promise<Object>} Result object with success status and message
+   */
+  static async adminClaimOnBehalf(carnivalId, adminUserId, targetClubId) {
+    const User = require('./User');
+    const Club = require('./Club');
+    
+    try {
+      // Input validation
+      if (!carnivalId || !adminUserId || !targetClubId) {
+        throw new Error('Carnival ID, Admin User ID, and Target Club ID are required');
+      }
+
+      // Find the carnival
+      const carnival = await this.findByPk(carnivalId);
+      if (!carnival) {
+        throw new Error('Carnival not found');
+      }
+
+      // Find and validate the admin user
+      const adminUser = await User.findByPk(adminUserId, {
+        attributes: ['id', 'firstName', 'lastName', 'email', 'isAdmin']
+      });
+
+      if (!adminUser) {
+        throw new Error('Admin user not found');
+      }
+
+      if (!adminUser.isAdmin) {
+        throw new Error('Only administrators can claim carnivals on behalf of other clubs');
+      }
+
+      // Find and validate the target club
+      const targetClub = await Club.findByPk(targetClubId, {
+        include: [{
+          model: User,
+          as: 'delegates',
+          where: { 
+            isPrimaryDelegate: true,
+            isActive: true 
+          },
+          required: false,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber']
+        }],
+        attributes: ['id', 'clubName', 'state', 'isActive']
+      });
+
+      if (!targetClub) {
+        throw new Error('Target club not found');
+      }
+
+      if (!targetClub.isActive) {
+        throw new Error('Cannot claim carnival for an inactive club');
+      }
+
+      // Get the primary delegate for contact details
+      const primaryDelegate = targetClub.delegates && targetClub.delegates.length > 0 
+        ? targetClub.delegates[0] 
+        : null;
+
+      if (!primaryDelegate) {
+        throw new Error('Target club must have an active primary delegate to claim carnival');
+      }
+
+      // Business rule checks
+      if (carnival.isManuallyEntered) {
+        throw new Error('Can only claim ownership of MySideline imported events');
+      }
+
+      if (!carnival.lastMySidelineSync) {
+        throw new Error('This carnival was not imported from MySideline');
+      }
+
+      if (carnival.createdByUserId) {
+        throw new Error('This carnival already has an owner');
+      }
+
+      // State-based validation (optional warning, but allow admin override)
+      let stateWarning = '';
+      if (carnival.state && targetClub.state && carnival.state !== targetClub.state) {
+        stateWarning = ` Note: This carnival is in ${carnival.state} but the club is based in ${targetClub.state}.`;
+      }
+
+      // All checks passed - update the carnival with primary delegate's contact details
+      const updateData = {
+        createdByUserId: primaryDelegate.id,
+        claimedAt: new Date(),
+        updatedAt: new Date(),
+        // Auto-populate contact details with the primary delegate's information
+        organiserContactName: `${primaryDelegate.firstName} ${primaryDelegate.lastName}`,
+        organiserContactEmail: primaryDelegate.email,
+        organiserContactPhone: primaryDelegate.phoneNumber || null
+      };
+
+      await carnival.update(updateData);
+
+      // Log the admin claim for audit purposes
+      console.log(`🏆 Admin claim: "${carnival.title}" (ID: ${carnivalId}) claimed by admin ${adminUser.email} for club ${targetClub.clubName} (Primary delegate: ${primaryDelegate.email})`);
+
+      return {
+        success: true,
+        message: `You have successfully claimed ownership of "${carnival.title}" for ${targetClub.clubName}. The primary delegate ${primaryDelegate.firstName} ${primaryDelegate.lastName} will now manage this carnival.${stateWarning}`,
+        carnival: carnival,
+        claimedBy: {
+          adminUserId: adminUser.id,
+          adminName: `${adminUser.firstName} ${adminUser.lastName}`,
+          targetClubId: targetClub.id,
+          targetClubName: targetClub.clubName,
+          primaryDelegateId: primaryDelegate.id,
+          primaryDelegateName: `${primaryDelegate.firstName} ${primaryDelegate.lastName}`,
+          primaryDelegateEmail: primaryDelegate.email
+        }
+      };
+
+    } catch (error) {
+      console.error(`❌ Failed admin claim (Carnival: ${carnivalId}, Admin: ${adminUserId}, Club: ${targetClubId}):`, error.message);
+      
+      return {
+        success: false,
+        message: error.message || 'An error occurred while claiming carnival ownership'
       };
     }
   }
