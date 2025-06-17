@@ -196,8 +196,9 @@ class DataCleanupService {
             const removedSyncLogs = await SyncLog.destroy({
                 where: {
                     [require('sequelize').Op.or]: [
-                        { operation: 'seed_data_import' },
-                        { details: { [require('sequelize').Op.like]: '%seed%' } },
+                        { syncType: 'seed_data_import' },
+                        { syncType: { [require('sequelize').Op.like]: '%seed%' } },
+                        { errorMessage: { [require('sequelize').Op.like]: '%seed%' } },
                         { createdAt: { [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } } // Last 24 hours
                     ]
                 }

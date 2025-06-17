@@ -58,9 +58,9 @@ class DatabaseBackupService {
             console.log(`  📁 Source: ${dbPath}`);
             console.log(`  💾 Backup: ${this.backupPath}`);
             
-            // Ensure database connection is closed before backup
-            await sequelize.close();
-            console.log('  🔌 Database connection closed for backup');
+            // For SQLite, we can copy the file while the database is open
+            // This avoids connection management issues
+            console.log('  📋 Creating backup copy...');
             
             // Create the backup by copying the file
             fs.copyFileSync(dbPath, this.backupPath);
@@ -72,11 +72,6 @@ class DatabaseBackupService {
             }
             
             console.log(`  ✅ Backup created successfully (${Math.round(backupStats.size / 1024)} KB)`);
-            
-            // Reconnect to database
-            const { initializeDatabase } = require('../../config/database');
-            await initializeDatabase();
-            console.log('  🔌 Database connection restored');
             
             return this.backupPath;
             

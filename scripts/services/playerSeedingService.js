@@ -17,6 +17,9 @@ class PlayerSeedingService {
     async createClubPlayers(clubs) {
         console.log('🏃 Creating test players for each club...');
         
+        let totalPlayersCreated = 0;
+        let duplicatesSkipped = 0;
+        
         for (const club of clubs) {
             // Create 11-20 players per club
             const playerCount = Math.floor(Math.random() * 10) + 11;
@@ -42,38 +45,59 @@ class PlayerSeedingService {
                 dateOfBirth.setMonth(Math.floor(Math.random() * 12));
                 dateOfBirth.setDate(Math.floor(Math.random() * 28) + 1);
                 
-                // Generate shorts preference with weighted distribution
-                const shortsOptions = ['unrestricted', 'red', 'blue', 'green', 'yellow', 'black', 'white'];
-                const shortsWeights = [40, 15, 15, 15, 15, 15, 15]; // Percentages
-                let shortsPreference = this.weightedRandomChoice(shortsOptions, shortsWeights);
+                // Format date as YYYY-MM-DD for database
+                const formattedDateOfBirth = dateOfBirth.toISOString().split('T')[0];
+                
+                // Check for duplicate based on business rules (club + name + DOB)
+                const isDuplicate = await ClubPlayer.isDuplicate(
+                    club.id,
+                    firstName,
+                    lastName,
+                    formattedDateOfBirth
+                );
+                
+                if (isDuplicate) {
+                    // Skip this duplicate and try with a different name
+                    duplicatesSkipped++;
+                    continue;
+                }
+                
+                // Generate shorts preference with correct enum values
+                const shortsOptions = ['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'];
+                const shortsWeights = [40, 15, 15, 15, 15]; // Percentages
+                const shorts = this.weightedRandomChoice(shortsOptions, shortsWeights);
                 
                 // 30% chance of having notes
                 const notes = Math.random() < 0.3 
                     ? PLAYER_NOTES[Math.floor(Math.random() * PLAYER_NOTES.length)]
                     : null;
                 
-                const player = await ClubPlayer.create({
-                    clubId: club.id,
-                    firstName: firstName,
-                    lastName: lastName,
-                    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${domain}`,
-                    phone: this.generatePhoneNumber(),
-                    dateOfBirth: dateOfBirth,
-                    shortsPreference: shortsPreference,
-                    notes: notes,
-                    isActive: true
-                });
-                
-                // 30% chance to add emergency contact
-                if (Math.random() < 0.3) {
-                    player.emergencyContactName = this.generateEmergencyContactName();
-                    player.emergencyContactPhone = this.generatePhoneNumber();
-                    await player.save();
+                try {
+                    const player = await ClubPlayer.create({
+                        clubId: club.id,
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${domain}`,
+                        dateOfBirth: formattedDateOfBirth,
+                        shorts: shorts, // Fixed: use 'shorts' instead of 'shortsPreference'
+                        notes: notes,
+                        isActive: true
+                    });
+                    
+                    totalPlayersCreated++;
+                } catch (error) {
+                    // Handle any remaining database constraint errors
+                    if (error.name === 'SequelizeUniqueConstraintError') {
+                        console.warn(`⚠️  Skipping duplicate player: ${firstName} ${lastName} (${formattedDateOfBirth})`);
+                        duplicatesSkipped++;
+                    } else {
+                        console.error(`❌ Error creating player ${firstName} ${lastName}:`, error.message);
+                    }
                 }
             }
         }
         
-        console.log('✅ Created players for all clubs');
+        console.log(`✅ Created ${totalPlayersCreated} players for all clubs (${duplicatesSkipped} duplicates skipped)`);
     }
 
     /**

@@ -118,7 +118,7 @@ class BasicSeedingService {
 
     /**
      * Create manual test carnivals using Sequelize
-     * @returns {Promise<Array>} Created carnivals
+     * @returns {Promise<Array>}
      */
     async createManualCarnivals() {
         console.log('🎪 Creating manual test carnivals...');
@@ -212,15 +212,39 @@ class BasicSeedingService {
     async createEmailSubscriptions() {
         console.log('📧 Creating email subscriptions...');
         
+        let created = 0;
+        let skipped = 0;
+        
         for (const subData of SAMPLE_SUBSCRIPTIONS) {
-            await EmailSubscription.create({
-                email: subData.email,
-                states: subData.states,
-                isActive: true
-            });
+            try {
+                // Check if email already exists
+                const existing = await EmailSubscription.findOne({
+                    where: { email: subData.email }
+                });
+                
+                if (existing) {
+                    console.log(`  ⏭️  Skipping duplicate email: ${subData.email}`);
+                    skipped++;
+                    continue;
+                }
+                
+                await EmailSubscription.create({
+                    email: subData.email,
+                    states: subData.states,
+                    isActive: true
+                });
+                created++;
+            } catch (error) {
+                if (error.name === 'SequelizeUniqueConstraintError') {
+                    console.log(`  ⏭️  Skipping duplicate email: ${subData.email}`);
+                    skipped++;
+                } else {
+                    console.error(`  ❌ Failed to create subscription for ${subData.email}:`, error.message);
+                }
+            }
         }
         
-        console.log(`✅ Created ${SAMPLE_SUBSCRIPTIONS.length} email subscriptions`);
+        console.log(`✅ Created ${created} email subscriptions (${skipped} duplicates skipped)`);
     }
 
     /**

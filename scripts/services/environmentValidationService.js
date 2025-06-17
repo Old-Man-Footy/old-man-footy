@@ -43,8 +43,19 @@ function validateEnvironment() {
     }
     
     // Require explicit confirmation for seeding
-    const confirmFlag = process.argv.includes('--confirm-seed');
+    // Check for --confirm-seed in both process.argv and npm environment variables
+    const confirmFlag = process.argv.includes('--confirm-seed') || 
+                       process.env.npm_config_confirm_seed === 'true' ||
+                       process.env.CONFIRM_SEED === 'true';
+    
     if (!confirmFlag) {
+        // Provide helpful guidance on the correct syntax
+        console.log('');
+        console.log('💡 TIP: Use one of these methods to confirm seeding:');
+        console.log('   Method 1: npm run seed -- --confirm-seed');
+        console.log('   Method 2: CONFIRM_SEED=true npm run seed');
+        console.log('   Method 3: node scripts/seed-database.js --confirm-seed');
+        console.log('');
         throw new Error('❌ FATAL: Database seeding requires --confirm-seed flag for safety');
     }
     
