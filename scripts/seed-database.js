@@ -1,5 +1,5 @@
 /**
- * Database Seeding Script for Development Environment - SQLite/Sequelize Implementation
+ * Database Seeding Script for Development Environment - Modular Implementation
  * 
  * This script populates the local SQLite development database with:
  * - Test clubs and users
@@ -8,889 +8,51 @@
  * - Realistic data for testing all platform features
  * 
  * SECURITY: This script can ONLY run on development or test environments
+ * 
+ * The script has been refactored into smaller, manageable modules:
+ * - fixtures/ - Contains all sample data
+ * - services/ - Contains business logic for seeding operations
  */
 
-const bcrypt = require('bcrypt');
-const path = require('path');
-const fs = require('fs');
-const { sequelize, User, Club, Carnival, EmailSubscription, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubAlternateName, SyncLog } = require('../models');
-const MySidelineService = require('../services/mySidelineIntegrationService');
+const { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } = require('../models');
+
+// Import modular services
+const { validateEnvironment } = require('./services/environmentValidationService');
+const DatabaseBackupService = require('./services/databaseBackupService');
+const DataCleanupService = require('./services/dataCleanupService');
+const BasicSeedingService = require('./services/basicSeedingService');
+const PlayerSeedingService = require('./services/playerSeedingService');
 
 // Load environment variables
 require('dotenv').config();
 
 /**
- * Environment Protection: Prevent running on production databases
+ * Database Seeder - Main Orchestrator Class
+ * 
+ * Coordinates all seeding operations using specialized service classes
  */
-function validateEnvironment() {
-    const environment = process.env.NODE_ENV || 'development';
-    const dbPath = sequelize.options.storage;
-    
-    console.log(`🔍 Environment check: ${environment}`);
-    console.log(`🗂️  Database path: ${dbPath}`);
-    
-    // Block production environment completely
-    if (environment === 'production') {
-        throw new Error('❌ FATAL: Database seeding is FORBIDDEN in production environment');
-    }
-    
-    // Block if database path suggests production
-    if (dbPath && dbPath.includes('old-man-footy.db') && !dbPath.includes('dev-') && !dbPath.includes('test-')) {
-        throw new Error('❌ FATAL: Database path appears to be production database. Seeding blocked for safety.');
-    }
-    
-    // Only allow specific development/test database names
-    const allowedDbNames = [
-        'dev-old-man-footy.db',
-        'test-old-man-footy.db',
-        ':memory:'  // In-memory database for tests
-    ];
-    
-    const isAllowedDb = allowedDbNames.some(name => 
-        dbPath === name || dbPath.endsWith(name) || dbPath === ':memory:'
-    );
-    
-    if (!isAllowedDb) {
-        throw new Error(`❌ FATAL: Database name not in allowed list. Allowed: ${allowedDbNames.join(', ')}`);
-    }
-    
-    // Require explicit confirmation for seeding
-    const confirmFlag = process.argv.includes('--confirm-seed');
-    if (!confirmFlag) {
-        throw new Error('❌ FATAL: Database seeding requires --confirm-seed flag for safety');
-    }
-    
-    console.log('✅ Environment validation passed - seeding authorized');
-}
-
-/**
- * Australian Rugby League club names and locations for realistic test data
- */
-const SAMPLE_CLUBS = [
-    { 
-        name: 'Canterbury Bankstown Masters', 
-        state: 'NSW', 
-        location: 'Belmore', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Michael Thompson',
-        contactEmail: 'contact@canterburymasters.com.au',
-        contactPhone: '(02) 9759 3456',
-        description: 'Founded in 1985, Canterbury Bankstown Masters is one of NSW\'s premier rugby league clubs for players over 35. We pride ourselves on mateship, fair play, and keeping the game alive for experienced players.',
-        website: 'https://www.canterburymasters.com.au',
-        facebookUrl: 'https://facebook.com/canterburymasters',
-        instagramUrl: 'https://instagram.com/canterburymasters',
-        twitterUrl: 'https://x.com/canterburymasters'
-    },
-    { 
-        name: 'Parramatta Eels Masters', 
-        state: 'NSW', 
-        location: 'Parramatta', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'David Wilson',
-        contactEmail: 'info@parramattamasters.com.au',
-        contactPhone: '(02) 9630 7890',
-        description: 'The Blue and Gold tradition continues with Parramatta Eels Masters. Established in 1990, we welcome players aged 35+ who want to continue their rugby league journey in a competitive yet friendly environment.',
-        website: 'https://www.parramattamasters.com.au',
-        facebookUrl: 'https://facebook.com/parramattamasters',
-        instagramUrl: 'https://instagram.com/parramattamasters'
-    },
-    { 
-        name: 'Cronulla Sharks Masters', 
-        state: 'NSW', 
-        location: 'Cronulla', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'James Mitchell',
-        contactEmail: 'secretary@cronullamasters.com.au',
-        contactPhone: '(02) 9523 4567',
-        description: 'Located in the heart of the Shire, Cronulla Sharks Masters offers beach-side rugby league for mature players. Join us for competitive games and post-match gatherings at our licensed club.',
-        website: 'https://www.cronullamasters.com.au',
-        facebookUrl: 'https://facebook.com/cronullamasters',
-        twitterUrl: 'https://x.com/cronullamasters'
-    },
-    { 
-        name: 'Brisbane Broncos Masters', 
-        state: 'QLD', 
-        location: 'Brisbane', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Sarah Johnson',
-        contactEmail: 'admin@brisbanemasters.com.au',
-        contactPhone: '(07) 3856 1234',
-        description: 'Brisbane Broncos Masters carries on the proud tradition of Queensland rugby league. We field teams in multiple age divisions and host one of the state\'s largest masters carnivals.',
-        website: 'https://www.brisbanemasters.com.au',
-        facebookUrl: 'https://facebook.com/brisbanemasters',
-        instagramUrl: 'https://instagram.com/brisbanemasters',
-        twitterUrl: 'https://x.com/brisbanemasters'
-    },
-    { 
-        name: 'Gold Coast Titans Masters', 
-        state: 'QLD', 
-        location: 'Gold Coast', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Mark Stevens',
-        contactEmail: 'contact@gctitansmasters.com.au',
-        contactPhone: '(07) 5592 8765',
-        description: 'The newest addition to Queensland masters rugby league, Gold Coast Titans Masters welcomes players from across South East Queensland for fun, fitness, and friendship.',
-        facebookUrl: 'https://facebook.com/gctitansmasters',
-        instagramUrl: 'https://instagram.com/gctitansmasters'
-    },
-    { 
-        name: 'North Queensland Cowboys Masters', 
-        state: 'QLD', 
-        location: 'Townsville', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Tony Richards',
-        contactEmail: 'secretary@nqcowboysmasters.com.au',
-        contactPhone: '(07) 4721 5432',
-        description: 'Representing the far north, NQ Cowboys Masters brings together players from across tropical Queensland. We\'re known for our hospitality and competitive spirit.',
-        website: 'https://www.nqcowboysmasters.com.au',
-        facebookUrl: 'https://facebook.com/nqcowboysmasters'
-    },
-    { 
-        name: 'Melbourne Storm Masters', 
-        state: 'VIC', 
-        location: 'Melbourne', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Peter Anderson',
-        contactEmail: 'info@melbournemasters.com.au',
-        contactPhone: '(03) 9652 3456',
-        description: 'Melbourne Storm Masters is the premier rugby league masters club in Victoria. We welcome players from all backgrounds and skill levels aged 35 and over.',
-        website: 'https://www.melbournemasters.com.au',
-        facebookUrl: 'https://facebook.com/melbournemasters',
-        instagramUrl: 'https://instagram.com/melbournemasters',
-        twitterUrl: 'https://x.com/melbournemasters'
-    },
-    { 
-        name: 'Geelong Masters Rugby League', 
-        state: 'VIC', 
-        location: 'Geelong', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Robert Clark',
-        contactEmail: 'contact@geelongmasters.com.au',
-        contactPhone: '(03) 5248 7890',
-        description: 'Serving the Geelong region and surrounding areas, our club focuses on maintaining fitness, friendship, and the rugby league tradition for players over 35.',
-        facebookUrl: 'https://facebook.com/geelongmasters',
-        instagramUrl: 'https://instagram.com/geelongmasters'
-    },
-    { 
-        name: 'Perth Pirates Masters', 
-        state: 'WA', 
-        location: 'Perth', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Chris Walker',
-        contactEmail: 'admin@perthpirates.com.au',
-        contactPhone: '(08) 9321 4567',
-        description: 'Perth Pirates Masters is Western Australia\'s foundation masters rugby league club. We\'ve been keeping the game alive in WA since 1988.',
-        website: 'https://www.perthpirates.com.au',
-        facebookUrl: 'https://facebook.com/perthpirates',
-        twitterUrl: 'https://x.com/perthpirates'
-    },
-    { 
-        name: 'Fremantle Dockers Masters', 
-        state: 'WA', 
-        location: 'Fremantle', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Andrew Taylor',
-        contactEmail: 'secretary@fremantlemasters.com.au',
-        contactPhone: '(08) 9433 2109',
-        description: 'Based in the historic port city of Fremantle, our club welcomes masters players from across the Perth metropolitan area for competitive rugby league.',
-        facebookUrl: 'https://facebook.com/fremantlemasters',
-        instagramUrl: 'https://instagram.com/fremantlemasters'
-    },
-    { 
-        name: 'Adelaide Rams Masters', 
-        state: 'SA', 
-        location: 'Adelaide', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Steven Brown',
-        contactEmail: 'contact@adelaiderams.com.au',
-        contactPhone: '(08) 8234 5678',
-        description: 'Adelaide Rams Masters represents South Australia in the national masters rugby league community. We pride ourselves on sportsmanship and community involvement.',
-        website: 'https://www.adelaiderams.com.au',
-        facebookUrl: 'https://facebook.com/adelaiderams',
-        instagramUrl: 'https://instagram.com/adelaiderams'
-    },
-    { 
-        name: 'Port Adelaide Masters', 
-        state: 'SA', 
-        location: 'Port Adelaide', 
-        isPubliclyListed: false, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Daniel Power',
-        contactEmail: 'admin@portmasters.com.au',
-        contactPhone: '(08) 8447 3210',
-        description: 'A close-knit club serving the Port Adelaide community. Currently building our membership before becoming publicly listed.',
-        facebookUrl: 'https://facebook.com/portmasters'
-    },
-    { 
-        name: 'Hobart Devils Masters', 
-        state: 'TAS', 
-        location: 'Hobart', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Michelle Green',
-        contactEmail: 'secretary@hobartdevils.com.au',
-        contactPhone: '(03) 6234 8901',
-        description: 'Tasmania\'s premier masters rugby league club, welcoming players from across the state. We host the annual Island Championship.',
-        website: 'https://www.hobartdevils.com.au',
-        facebookUrl: 'https://facebook.com/hobartdevils'
-    },
-    { 
-        name: 'Launceston Lions Masters', 
-        state: 'TAS', 
-        location: 'Launceston', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'John Campbell',
-        contactEmail: 'info@launcestonlions.com.au',
-        contactPhone: '(03) 6331 7654',
-        description: 'Representing northern Tasmania, the Lions are known for their fierce competition and warm hospitality. All skill levels welcome.',
-        facebookUrl: 'https://facebook.com/launcestonlions',
-        twitterUrl: 'https://x.com/launcestonlions'
-    },
-    { 
-        name: 'Darwin Crocodiles Masters', 
-        state: 'NT', 
-        location: 'Darwin', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Terry Robinson',
-        contactEmail: 'contact@darwincrocs.com.au',
-        contactPhone: '(08) 8922 1357',
-        description: 'The Top End\'s only masters rugby league club. We adapt our game schedule to the tropical climate and welcome visiting teams year-round.',
-        website: 'https://www.darwincrocs.com.au',
-        facebookUrl: 'https://facebook.com/darwincrocs',
-        instagramUrl: 'https://instagram.com/darwincrocs'
-    },
-    { 
-        name: 'Canberra Raiders Masters', 
-        state: 'ACT', 
-        location: 'Canberra', 
-        isPubliclyListed: true, 
-        logoUrl: '/icons/seed.svg',
-        contactPerson: 'Lisa Wilson',
-        contactEmail: 'admin@canberramasters.com.au',
-        contactPhone: '(02) 6247 8642',
-        description: 'The nation\'s capital club, drawing players from Canberra and surrounding NSW regions. We host the annual Capital Cup tournament.',
-        website: 'https://www.canberramasters.com.au',
-        facebookUrl: 'https://facebook.com/canberramasters',
-        instagramUrl: 'https://instagram.com/canberramasters',
-        twitterUrl: 'https://x.com/canberramasters'
-    }
-];
-
-/**
- * Sample carnival data for testing - diverse across all states
- */
-const SAMPLE_CARNIVALS = [
-    {
-        title: 'NSW Masters Grand Final',
-        date: new Date('2025-09-15'),
-        state: 'NSW',
-        locationAddress: 'ANZ Stadium, Olympic Park, Sydney NSW 2127',
-        scheduleDetails: 'Championship finals across all age groups. Games start at 9:00 AM with the grand final at 3:00 PM.',
-        organiserContactName: 'John Smith',
-        organiserContactEmail: 'john.smith@nswmasters.com.au',
-        organiserContactPhone: '0412 345 678',
-        registrationLink: 'https://www.nswmasters.com.au/register/grand-final',
-        feesDescription: 'Entry fee: $150 per team. Includes lunch and presentation.',
-        callForVolunteers: 'Seeking referees and ground officials. Contact organiser for details.',
-        socialMediaFacebook: 'https://facebook.com/nswmasters',
-        socialMediaInstagram: 'https://instagram.com/nswmasters',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Cronulla Beach Masters Tournament',
-        date: new Date('2025-08-10'),
-        state: 'NSW',
-        locationAddress: 'Sharks Park, Cronulla NSW 2230',
-        scheduleDetails: 'Beach-side tournament with modified touch rules. 10:00 AM start, BBQ lunch included.',
-        organiserContactName: 'Steve Rogers',
-        organiserContactEmail: 'steve.rogers@cronullamasters.com.au',
-        organiserContactPhone: '0423 111 222',
-        registrationLink: 'https://www.cronullamasters.com.au/beach-tournament',
-        feesDescription: 'Team entry: $120. Individual players: $30.',
-        socialMediaFacebook: 'https://facebook.com/cronullamasters',
-        socialMediaWebsite: 'https://www.cronullamasters.com.au',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Queensland Masters Carnival',
-        date: new Date('2025-08-20'),
-        state: 'QLD',
-        locationAddress: 'Suncorp Stadium, Milton QLD 4064',
-        scheduleDetails: 'Two-day carnival featuring 35+ and 45+ divisions. Pool games Saturday, finals Sunday.',
-        organiserContactName: 'Sarah Wilson',
-        organiserContactEmail: 'sarah.wilson@qldmasters.com.au',
-        organiserContactPhone: '0423 456 789',
-        registrationLink: 'https://www.qldmasters.com.au/carnival2025',
-        feesDescription: 'Team entry: $200. Individual registration: $50.',
-        callForVolunteers: 'Volunteers needed for ground setup, timekeeping, and canteen duties.',
-        socialMediaFacebook: 'https://facebook.com/qldmasters',
-        socialMediaWebsite: 'https://www.qldmasters.com.au',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Gold Coast Summer Festival',
-        date: new Date('2025-12-28'),
-        state: 'QLD',
-        locationAddress: 'Cbus Super Stadium, Robina QLD 4226',
-        scheduleDetails: 'Holiday season festival with family activities. Games run from 9:00 AM to 5:00 PM.',
-        organiserContactName: 'Mark Thompson',
-        organiserContactEmail: 'mark.thompson@gcmasters.com.au',
-        organiserContactPhone: '0434 222 333',
-        registrationLink: 'https://www.gcmasters.com.au/summer-festival',
-        feesDescription: 'Entry: $80 per team. Kids activities included.',
-        socialMediaInstagram: 'https://instagram.com/gcmasters',
-        socialMediaTwitter: 'https://twitter.com/gcmasters',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'North Queensland Cowboys Heritage Cup',
-        date: new Date('2025-07-15'),
-        state: 'QLD',
-        locationAddress: 'Queensland Country Bank Stadium, Townsville QLD 4810',
-        scheduleDetails: 'Heritage round celebrating rugby league history. Traditional jerseys encouraged.',
-        organiserContactName: 'Jim Richards',
-        organiserContactEmail: 'jim.richards@nqmasters.com.au',
-        organiserContactPhone: '0445 333 444',
-        registrationLink: 'https://www.nqmasters.com.au/heritage-cup',
-        feesDescription: 'Team registration: $140. Museum tour included.',
-        callForVolunteers: 'Looking for heritage display volunteers and photographers.',
-        socialMediaWebsite: 'https://www.nqmasters.com.au',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Victorian Masters Championship',
-        date: new Date('2025-07-30'),
-        state: 'VIC',
-        locationAddress: 'AAMI Park, Melbourne VIC 3000',
-        scheduleDetails: 'Annual championship with modified rules for masters players. Games from 10:00 AM to 4:00 PM.',
-        organiserContactName: 'Mike Johnson',
-        organiserContactEmail: 'mike.johnson@vicmasters.com.au',
-        organiserContactPhone: '0434 567 890',
-        registrationLink: 'https://www.vicmasters.com.au/championship',
-        feesDescription: 'Entry fee: $180 per team. Includes referee fees and ground hire.',
-        socialMediaFacebook: 'https://facebook.com/vicmasters',
-        socialMediaTwitter: 'https://twitter.com/vicmasters',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Geelong Waterfront Masters Cup',
-        date: new Date('2025-10-12'),
-        state: 'VIC',
-        locationAddress: 'Kardinia Park, Geelong VIC 3220',
-        scheduleDetails: 'Scenic waterfront tournament with post-game festivities. 9:00 AM to 6:00 PM.',
-        organiserContactName: 'Paul Anderson',
-        organiserContactEmail: 'paul.anderson@geelongmasters.com.au',
-        organiserContactPhone: '0456 444 555',
-        registrationLink: 'https://www.geelongmasters.com.au/waterfront-cup',
-        feesDescription: 'Entry: $160 per team. Evening dinner optional ($35pp).',
-        socialMediaFacebook: 'https://facebook.com/geelongmasters',
-        socialMediaInstagram: 'https://instagram.com/geelongmasters',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Perth Masters Festival',
-        date: new Date('2025-10-05'),
-        state: 'WA',
-        locationAddress: 'HBF Park, Perth WA 6004',
-        scheduleDetails: 'Festival format with social games and skill competitions. Family-friendly event.',
-        organiserContactName: 'David Brown',
-        organiserContactEmail: 'david.brown@wamasters.com.au',
-        organiserContactPhone: '0445 678 901',
-        registrationLink: 'https://www.wamasters.com.au/festival',
-        feesDescription: 'Participation fee: $100 per team. Includes BBQ lunch.',
-        callForVolunteers: 'Looking for BBQ helpers and event coordinators.',
-        socialMediaWebsite: 'https://www.wamasters.com.au',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Fremantle Dockers Masters Derby',
-        date: new Date('2025-09-28'),
-        state: 'WA',
-        locationAddress: 'Fremantle Oval, Fremantle WA 6160',
-        scheduleDetails: 'Local derby with traditional rivalries. Morning games followed by presentation lunch.',
-        organiserContactName: 'Tony Walsh',
-        organiserContactEmail: 'tony.walsh@fremantlemasters.com.au',
-        organiserContactPhone: '0467 555 666',
-        registrationLink: 'https://www.fremantlemasters.com.au/derby2025',
-        feesDescription: 'Team entry: $130. Lunch included for all participants.',
-        socialMediaFacebook: 'https://facebook.com/fremantlemasters',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Adelaide Masters Cup',
-        date: new Date('2025-06-25'),
-        state: 'SA',
-        locationAddress: 'Adelaide Oval, North Adelaide SA 5006',
-        scheduleDetails: 'Knockout tournament format. Registration 8:30 AM, first games 9:00 AM.',
-        organiserContactName: 'Lisa Taylor',
-        organiserContactEmail: 'lisa.taylor@samasters.com.au',
-        organiserContactPhone: '0456 789 012',
-        registrationLink: 'https://www.samasters.com.au/cup2025',
-        feesDescription: 'Entry: $120 per team. Trophy presentation at 5:00 PM.',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Port Adelaide Heritage Carnival',
-        date: new Date('2025-11-14'),
-        state: 'SA',
-        locationAddress: 'Alberton Oval, Port Adelaide SA 5015',
-        scheduleDetails: 'Heritage-themed carnival celebrating club history. Vintage uniforms encouraged.',
-        organiserContactName: 'Robert Power',
-        organiserContactEmail: 'robert.power@portmasters.com.au',
-        organiserContactPhone: '0478 666 777',
-        registrationLink: 'https://www.portmasters.com.au/heritage2025',
-        feesDescription: 'Team registration: $110. Heritage display entry free.',
-        callForVolunteers: 'Seeking volunteers for heritage displays and photography.',
-        socialMediaInstagram: 'https://instagram.com/portmasters',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Tasmania Devils Island Championship',
-        date: new Date('2025-08-05'),
-        state: 'TAS',
-        locationAddress: 'Bellerive Oval, Hobart TAS 7018',
-        scheduleDetails: 'Island-wide championship bringing together teams from across Tasmania.',
-        organiserContactName: 'Andrew Clark',
-        organiserContactEmail: 'andrew.clark@tasmasters.com.au',
-        organiserContactPhone: '0489 777 888',
-        registrationLink: 'https://www.tasmasters.com.au/island-championship',
-        feesDescription: 'Entry: $90 per team. Ferry discounts available for visiting teams.',
-        socialMediaFacebook: 'https://facebook.com/tasmasters',
-        socialMediaWebsite: 'https://www.tasmasters.com.au',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Launceston Lions Northern Cup',
-        date: new Date('2025-09-20'),
-        state: 'TAS',
-        locationAddress: 'York Park, Launceston TAS 7250',
-        scheduleDetails: 'Northern Tasmania competition with interstate teams welcome. Two-day format.',
-        organiserContactName: 'Karen Mitchell',
-        organiserContactEmail: 'karen.mitchell@northerntasmasters.com.au',
-        organiserContactPhone: '0491 888 999',
-        registrationLink: 'https://www.northerntasmasters.com.au/northern-cup',
-        feesDescription: 'Team entry: $100. Accommodation assistance available.',
-        socialMediaTwitter: 'https://twitter.com/northerntasmasters',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Darwin Crocodiles Top End Tournament',
-        date: new Date('2025-08-30'),
-        state: 'NT',
-        locationAddress: 'TIO Stadium, Darwin NT 0800',
-        scheduleDetails: 'Unique Top End experience with modified heat rules. Early morning and evening games.',
-        organiserContactName: 'Terry Johnson',
-        organiserContactEmail: 'terry.johnson@ntmasters.com.au',
-        organiserContactPhone: '0412 999 111',
-        registrationLink: 'https://www.ntmasters.com.au/top-end-tournament',
-        feesDescription: 'Entry: $85 per team. Heat management protocols included.',
-        callForVolunteers: 'Need volunteers familiar with tropical weather protocols.',
-        socialMediaFacebook: 'https://facebook.com/ntmasters',
-        socialMediaWebsite: 'https://www.ntmasters.com.au',
-        clubLogoURL: '/icons/seed.svg'
-    },
-    {
-        title: 'Canberra Raiders Capital Cup',
-        date: new Date('2025-07-05'),
-        state: 'ACT',
-        locationAddress: 'GIO Stadium, Canberra ACT 2617',
-        scheduleDetails: 'National capital tournament featuring teams from surrounding regions.',
-        organiserContactName: 'Michelle Green',
-        organiserContactEmail: 'michelle.green@actmasters.com.au',
-        organiserContactPhone: '0423 111 000',
-        registrationLink: 'https://www.actmasters.com.au/capital-cup',
-        feesDescription: 'Team registration: $140. Parliament House tour optional.',
-        socialMediaInstagram: 'https://instagram.com/actmasters',
-        socialMediaTwitter: 'https://twitter.com/actmasters',
-        clubLogoURL: '/icons/seed.svg'
-    }
-];
-
-/**
- * Sample email subscriptions for testing
- */
-const SAMPLE_SUBSCRIPTIONS = [
-    { email: 'fan1@example.com', states: ['NSW', 'QLD'] },
-    { email: 'fan2@example.com', states: ['VIC'] },
-    { email: 'fan3@example.com', states: ['WA', 'SA'] },
-    { email: 'rugbyfan@gmail.com', states: ['NSW'] },
-    { email: 'masters.supporter@outlook.com', states: ['QLD', 'VIC'] }
-];
-
-/**
- * Sample sponsor data for testing - diverse Australian businesses
- */
-const SAMPLE_SPONSORS = [
-    {
-        sponsorName: 'Bunnings Warehouse',
-        businessType: 'Hardware & Home Improvement',
-        location: 'Multiple Locations',
-        state: 'NSW',
-        description: 'Australia\'s leading retailer of home improvement and outdoor living products. Supporting local rugby league communities since 1994.',
-        contactPerson: 'Community Relations Team',
-        contactEmail: 'community@bunnings.com.au',
-        contactPhone: '1800 555 0001',
-        website: 'https://www.bunnings.com.au',
-        facebookUrl: 'https://facebook.com/Bunnings',
-        instagramUrl: 'https://instagram.com/bunningswarehouse',
-        twitterUrl: 'https://twitter.com/Bunnings',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Gold',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Coca-Cola Australia',
-        businessType: 'Beverages',
-        location: 'Sydney',
-        state: 'NSW',
-        description: 'Refreshing Australian communities for over 75 years. Proud supporters of grassroots sports and local clubs.',
-        contactPerson: 'Sports Marketing',
-        contactEmail: 'sports@coca-cola.com.au',
-        contactPhone: '1800 555 0002',
-        website: 'https://www.coca-cola.com.au',
-        facebookUrl: 'https://facebook.com/CocaColaAustralia',
-        instagramUrl: 'https://instagram.com/cocacolaau',
-        twitterUrl: 'https://twitter.com/CocaColaAU',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Gold',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Toyota Australia',
-        businessType: 'Automotive',
-        location: 'Melbourne',
-        state: 'VIC',
-        description: 'Built for Australia. Toyota has been supporting Australian sport and communities for decades.',
-        contactPerson: 'Community Partnerships',
-        contactEmail: 'community@toyota.com.au',
-        contactPhone: '1800 555 0003',
-        website: 'https://www.toyota.com.au',
-        facebookUrl: 'https://facebook.com/ToyotaAustralia',
-        instagramUrl: 'https://instagram.com/toyotaaustralia',
-        twitterUrl: 'https://twitter.com/ToyotaAustralia',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Gold',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Woolworths Group',
-        businessType: 'Retail & Supermarkets',
-        location: 'Sydney',
-        state: 'NSW',
-        description: 'Fresh food people. Supporting local communities and grassroots sports across Australia.',
-        contactPerson: 'Community Investment',
-        contactEmail: 'community@woolworths.com.au',
-        contactPhone: '1800 555 0004',
-        website: 'https://www.woolworthsgroup.com.au',
-        facebookUrl: 'https://facebook.com/woolworths',
-        instagramUrl: 'https://instagram.com/woolworths_au',
-        twitterUrl: 'https://twitter.com/woolworths',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Gold',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'ANZ Bank',
-        businessType: 'Banking & Finance',
-        location: 'Melbourne',
-        state: 'VIC',
-        description: 'We live in your world. ANZ is committed to supporting local communities and sporting excellence.',
-        contactPerson: 'Corporate Sponsorship',
-        contactEmail: 'sponsorship@anz.com',
-        contactPhone: '1800 555 0005',
-        website: 'https://www.anz.com.au',
-        facebookUrl: 'https://facebook.com/ANZAustralia',
-        instagramUrl: 'https://instagram.com/anz_au',
-        twitterUrl: 'https://twitter.com/ANZ_AU',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Silver',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Harvey Norman',
-        businessType: 'Electronics & Furniture',
-        location: 'Sydney',
-        state: 'NSW',
-        description: 'Go Harvey Norman! Australia\'s leading electrical, computer, furniture and bedding retailer.',
-        contactPerson: 'Marketing Department',
-        contactEmail: 'marketing@harveynorman.com.au',
-        contactPhone: '1800 555 0006',
-        website: 'https://www.harveynorman.com.au',
-        facebookUrl: 'https://facebook.com/HarveyNormanAU',
-        instagramUrl: 'https://instagram.com/harveynormanau',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Silver',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Lions Construction Group',
-        businessType: 'Construction',
-        location: 'Brisbane',
-        state: 'QLD',
-        description: 'Building Queensland communities. Local construction company specializing in residential and commercial projects.',
-        contactPerson: 'Mark Stevens',
-        contactEmail: 'mark@lionsconstruction.com.au',
-        contactPhone: '(07) 3123 4567',
-        website: 'https://www.lionsconstruction.com.au',
-        facebookUrl: 'https://facebook.com/lionsconstruction',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Bronze',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Sharks Electrical Services',
-        businessType: 'Electrical Services',
-        location: 'Cronulla',
-        state: 'NSW',
-        description: 'Your local electrical experts. Servicing the Shire for over 20 years with reliable, professional electrical services.',
-        contactPerson: 'Tony Russo',
-        contactEmail: 'tony@sharkselectrical.com.au',
-        contactPhone: '(02) 9523 7890',
-        website: 'https://www.sharkselectrical.com.au',
-        facebookUrl: 'https://facebook.com/sharkselectrical',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Bunworthy Real Estate',
-        businessType: 'Real Estate',
-        location: 'Parramatta',
-        state: 'NSW',
-        description: 'Selling Sydney\'s West for 30 years. Family-owned real estate agency committed to exceptional service and community support.',
-        contactPerson: 'Sarah Bunworthy',
-        contactEmail: 'sarah@bunworthyrealestate.com.au',
-        contactPhone: '(02) 9630 5678',
-        website: 'https://www.bunworthyrealestate.com.au',
-        facebookUrl: 'https://facebook.com/bunworthyrealestate',
-        instagramUrl: 'https://instagram.com/bunworthyrealestate',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Melbourne Storm Plumbing',
-        businessType: 'Plumbing Services',
-        location: 'Melbourne',
-        state: 'VIC',
-        description: 'Professional plumbing services across Melbourne. Emergency callouts, renovations, and maintenance - we do it all.',
-        contactPerson: 'Peter Storm',
-        contactEmail: 'peter@stormplumbing.com.au',
-        contactPhone: '(03) 9876 5432',
-        website: 'https://www.stormplumbing.com.au',
-        facebookUrl: 'https://facebook.com/stormplumbing',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Bronze',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Geelong Auto Parts',
-        businessType: 'Automotive Parts',
-        location: 'Geelong',
-        state: 'VIC',
-        description: 'Your one-stop shop for automotive parts and accessories. Serving Geelong and surrounding areas since 1995.',
-        contactPerson: 'Robert Mitchell',
-        contactEmail: 'robert@geelongautoparts.com.au',
-        contactPhone: '(03) 5248 9012',
-        website: 'https://www.geelongautoparts.com.au',
-        facebookUrl: 'https://facebook.com/geelongautoparts',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Perth Pirates Fitness',
-        businessType: 'Fitness & Gym',
-        location: 'Perth',
-        state: 'WA',
-        description: 'Train like a champion. State-of-the-art fitness facility offering personal training, group classes, and sports conditioning.',
-        contactPerson: 'Chris Walker',
-        contactEmail: 'chris@piratesfitness.com.au',
-        contactPhone: '(08) 9321 3456',
-        website: 'https://www.piratesfitness.com.au',
-        facebookUrl: 'https://facebook.com/piratesfitness',
-        instagramUrl: 'https://instagram.com/piratesfitness',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Bronze',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Fremantle Fish & Chips',
-        businessType: 'Restaurant',
-        location: 'Fremantle',
-        state: 'WA',
-        description: 'Fresh fish, crispy chips, and local hospitality. A Fremantle institution serving the community for over 40 years.',
-        contactPerson: 'Maria Antonelli',
-        contactEmail: 'maria@fremantlefish.com.au',
-        contactPhone: '(08) 9433 6789',
-        facebookUrl: 'https://facebook.com/fremantlefish',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Adelaide Hills Brewery',
-        businessType: 'Brewery',
-        location: 'Adelaide',
-        state: 'SA',
-        description: 'Crafting quality beer since 2010. Supporting local sport and bringing communities together one beer at a time.',
-        contactPerson: 'James Anderson',
-        contactEmail: 'james@adelaidehillsbrewery.com.au',
-        contactPhone: '(08) 8234 7890',
-        website: 'https://www.adelaidehillsbrewery.com.au',
-        facebookUrl: 'https://facebook.com/adelaidehillsbrewery',
-        instagramUrl: 'https://instagram.com/adelaidehillsbrewery',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Bronze',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Port Power Earthmoving',
-        businessType: 'Earthmoving & Excavation',
-        location: 'Port Adelaide',
-        state: 'SA',
-        description: 'Moving mountains for South Australia. Specialist earthmoving, excavation, and site preparation services.',
-        contactPerson: 'Daniel Power',
-        contactEmail: 'daniel@portpowerearthmoving.com.au',
-        contactPhone: '(08) 8447 2345',
-        website: 'https://www.portpowerearthmoving.com.au',
-        facebookUrl: 'https://facebook.com/portpowerearthmoving',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Tasmania Devils Transport',
-        businessType: 'Transport & Logistics',
-        location: 'Hobart',
-        state: 'TAS',
-        description: 'Island-wide transport solutions. Reliable freight and logistics services connecting Tasmania to the mainland.',
-        contactPerson: 'Michelle Green',
-        contactEmail: 'michelle@devilstransport.com.au',
-        contactPhone: '(03) 6234 5678',
-        website: 'https://www.devilstransport.com.au',
-        facebookUrl: 'https://facebook.com/devilstransport',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Bronze',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Lions Landscaping',
-        businessType: 'Landscaping',
-        location: 'Launceston',
-        state: 'TAS',
-        description: 'Creating beautiful outdoor spaces across northern Tasmania. Commercial and residential landscaping specialists.',
-        contactPerson: 'John Campbell',
-        contactEmail: 'john@lionslandscaping.com.au',
-        contactPhone: '(03) 6331 6789',
-        website: 'https://www.lionslandscaping.com.au',
-        facebookUrl: 'https://facebook.com/lionslandscaping',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Crocodile Security Services',
-        businessType: 'Security Services',
-        location: 'Darwin',
-        state: 'NT',
-        description: 'Protecting the Top End. Professional security services for commercial, residential, and event security needs.',
-        contactPerson: 'Terry Robinson',
-        contactEmail: 'terry@crocodilesecurity.com.au',
-        contactPhone: '(08) 8922 7890',
-        website: 'https://www.crocodilesecurity.com.au',
-        facebookUrl: 'https://facebook.com/crocodilesecurity',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Bronze',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Capital City Catering',
-        businessType: 'Catering Services',
-        location: 'Canberra',
-        state: 'ACT',
-        description: 'Serving the nation\'s capital with exceptional catering services. Specializing in corporate events and sporting functions.',
-        contactPerson: 'Lisa Wilson',
-        contactEmail: 'lisa@capitalcatering.com.au',
-        contactPhone: '(02) 6247 3456',
-        website: 'https://www.capitalcatering.com.au',
-        facebookUrl: 'https://facebook.com/capitalcatering',
-        instagramUrl: 'https://instagram.com/capitalcatering',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    },
-    {
-        sponsorName: 'Sunshine Coast Physiotherapy',
-        businessType: 'Healthcare',
-        location: 'Sunshine Coast',
-        state: 'QLD',
-        description: 'Keeping athletes moving. Sports physiotherapy and injury rehabilitation specialists serving the Sunshine Coast.',
-        contactPerson: 'Dr. Amanda Clarke',
-        contactEmail: 'amanda@sunshinecoastphysio.com.au',
-        contactPhone: '(07) 5444 8901',
-        website: 'https://www.sunshinecoastphysio.com.au',
-        facebookUrl: 'https://facebook.com/sunshinecoastphysio',
-        instagramUrl: 'https://instagram.com/sunshinecoastphysio',
-        logoUrl: '/icons/seed.svg',
-        sponsorshipLevel: 'Supporting',
-        isActive: true,
-        isPubliclyVisible: true
-    }
-];
-
 class DatabaseSeeder {
     constructor() {
-        this.createdClubs = [];
-        this.createdUsers = [];
-        this.createdCarnivals = [];
-        this.createdSponsors = [];
-        this.backupPath = null; // Track backup file path
+        this.backupService = new DatabaseBackupService();
+        this.cleanupService = new DataCleanupService();
+        this.basicSeedingService = new BasicSeedingService();
+        this.playerSeedingService = new PlayerSeedingService();
+        this.createdEntities = {
+            clubs: [],
+            users: [],
+            carnivals: [],
+            sponsors: []
+        };
     }
 
     /**
      * Initialize database connection and validate environment
+     * @returns {Promise<void>}
      */
     async connect() {
         try {
-            // CRITICAL: Validate environment before any database operations
             validateEnvironment();
-            
-            const { initializeDatabase } = require('../config/database');
-            await initializeDatabase();
-            console.log('✅ SQLite database initialized successfully');
+            await this.basicSeedingService.connect();
         } catch (error) {
             console.error('❌ Database initialization failed:', error.message);
             process.exit(1);
@@ -898,606 +60,18 @@ class DatabaseSeeder {
     }
 
     /**
-     * Create a backup of the current database before making changes
-     * Uses simple file copy for SQLite databases with timestamp naming
-     */
-    async createBackup() {
-        console.log('💾 Creating database backup...');
-        
-        try {
-            const dbPath = sequelize.options.storage;
-            
-            // Skip backup for in-memory databases
-            if (dbPath === ':memory:') {
-                console.log('ℹ️  Skipping backup for in-memory database');
-                return null;
-            }
-            
-            // Check if source database exists
-            if (!fs.existsSync(dbPath)) {
-                console.log('ℹ️  No existing database found - skipping backup');
-                return null;
-            }
-            
-            // Get database file info
-            const dbStats = fs.statSync(dbPath);
-            if (dbStats.size === 0) {
-                console.log('ℹ️  Database is empty - skipping backup');
-                return null;
-            }
-            
-            // Generate backup filename with timestamp
-            const timestamp = new Date().toISOString()
-                .replace(/:/g, '-')
-                .replace(/\./g, '-')
-                .substring(0, 19); // YYYY-MM-DDTHH-MM-SS
-            
-            const dbDir = path.dirname(dbPath);
-            const dbName = path.basename(dbPath, '.db');
-            const backupFileName = `${dbName}-backup-${timestamp}.db`;
-            this.backupPath = path.join(dbDir, backupFileName);
-            
-            console.log(`  📁 Source: ${dbPath}`);
-            console.log(`  💾 Backup: ${this.backupPath}`);
-            
-            // Ensure database connection is closed before backup
-            await sequelize.close();
-            console.log('  🔌 Database connection closed for backup');
-            
-            // Create the backup by copying the file
-            fs.copyFileSync(dbPath, this.backupPath);
-            
-            // Verify backup was created successfully
-            const backupStats = fs.statSync(this.backupPath);
-            if (backupStats.size !== dbStats.size) {
-                throw new Error(`Backup size mismatch: original ${dbStats.size} bytes, backup ${backupStats.size} bytes`);
-            }
-            
-            console.log(`  ✅ Backup created successfully (${Math.round(backupStats.size / 1024)} KB)`);
-            
-            // Reconnect to database
-            const { initializeDatabase } = require('../config/database');
-            await initializeDatabase();
-            console.log('  🔌 Database connection restored');
-            
-            return this.backupPath;
-            
-        } catch (error) {
-            console.error('❌ Backup creation failed:', error.message);
-            
-            // Clean up incomplete backup file
-            if (this.backupPath && fs.existsSync(this.backupPath)) {
-                try {
-                    fs.unlinkSync(this.backupPath);
-                    console.log('  🧹 Cleaned up incomplete backup file');
-                } catch (cleanupError) {
-                    console.error('⚠️  Could not clean up backup file:', cleanupError.message);
-                }
-            }
-            
-            // Try to reconnect to database
-            try {
-                const { initializeDatabase } = require('../config/database');
-                await initializeDatabase();
-                console.log('  🔌 Database connection restored after backup failure');
-            } catch (reconnectError) {
-                console.error('💥 Could not restore database connection:', reconnectError.message);
-            }
-            
-            throw error;
-        }
-    }
-
-    /**
-     * Restore from backup in case of emergency
-     * @param {string} backupPath - Path to backup file to restore from
-     */
-    async restoreFromBackup(backupPath = null) {
-        const restorePath = backupPath || this.backupPath;
-        
-        if (!restorePath || !fs.existsSync(restorePath)) {
-            throw new Error('No backup file available for restoration');
-        }
-        
-        console.log('🔄 Restoring database from backup...');
-        
-        try {
-            const dbPath = sequelize.options.storage;
-            
-            // Close database connection
-            await sequelize.close();
-            
-            // Replace current database with backup
-            fs.copyFileSync(restorePath, dbPath);
-            
-            // Reconnect to database
-            const { initializeDatabase } = require('../config/database');
-            await initializeDatabase();
-            
-            console.log(`✅ Database restored from backup: ${path.basename(restorePath)}`);
-            
-        } catch (error) {
-            console.error('❌ Database restoration failed:', error.message);
-            throw error;
-        }
-    }
-
-    /**
-     * Clean up old backup files (keep only last 5 backups)
-     */
-    async cleanupOldBackups() {
-        try {
-            const dbPath = sequelize.options.storage;
-            const dbDir = path.dirname(dbPath);
-            const dbName = path.basename(dbPath, '.db');
-            
-            // Find all backup files for this database
-            const files = fs.readdirSync(dbDir);
-            const backupFiles = files
-                .filter(file => file.startsWith(`${dbName}-backup-`) && file.endsWith('.db'))
-                .map(file => ({
-                    name: file,
-                    path: path.join(dbDir, file),
-                    mtime: fs.statSync(path.join(dbDir, file)).mtime
-                }))
-                .sort((a, b) => b.mtime - a.mtime); // Newest first
-            
-            // Keep only the 5 most recent backups
-            const backupsToDelete = backupFiles.slice(5);
-            
-            if (backupsToDelete.length > 0) {
-                console.log(`🧹 Cleaning up ${backupsToDelete.length} old backup files...`);
-                
-                for (const backup of backupsToDelete) {
-                    fs.unlinkSync(backup.path);
-                    console.log(`  🗑️  Deleted: ${backup.name}`);
-                }
-                
-                console.log(`✅ Kept ${Math.min(5, backupFiles.length)} most recent backups`);
-            }
-            
-        } catch (error) {
-            console.warn('⚠️  Could not clean up old backups:', error.message);
-        }
-    }
-
-    /**
-     * Selective database clearing - only removes seed data and related records
-     * Preserves real user data by identifying seed patterns and markers
-     */
-    async clearSeedData() {
-        console.log('🧹 Clearing existing SEED data only (preserving real user data)...');
-        
-        try {
-            // Double-check environment before destructive operations
-            validateEnvironment();
-            
-            // Disable foreign key constraints for SQLite during cleanup
-            await sequelize.query('PRAGMA foreign_keys = OFF');
-            console.log('🔓 Foreign key constraints disabled for cleanup');
-            
-            // Track what we're removing for reporting
-            const removalStats = {
-                clubs: 0,
-                users: 0,
-                carnivals: 0,
-                sponsors: 0,
-                clubSponsors: 0,
-                carnivalSponsors: 0,
-                carnivalClubs: 0,
-                emailSubscriptions: 0,
-                clubAlternateNames: 0,
-                syncLogs: 0
-            };
-
-            // 1. Identify and remove seed clubs and their related data
-            console.log('  🏢 Identifying seed clubs...');
-            const seedClubNames = SAMPLE_CLUBS.map(club => club.name);
-            const seedClubs = await Club.findAll({
-                where: {
-                    [require('sequelize').Op.or]: [
-                        { clubName: { [require('sequelize').Op.in]: seedClubNames } },
-                        { logoUrl: '/icons/seed.svg' }, // Seed marker
-                        { contactEmail: { [require('sequelize').Op.like]: '%@oldmanfooty.au' } } // Test emails
-                    ]
-                }
-            });
-            
-            const seedClubIds = seedClubs.map(club => club.id);
-            console.log(`    Found ${seedClubs.length} seed clubs to remove`);
-
-            // 2. Remove seed users (delegates and admin)
-            console.log('  👥 Removing seed users...');
-            const seedUserConditions = {
-                [require('sequelize').Op.or]: [
-                    { email: 'admin@oldmanfooty.au' }, // Admin user
-                    { clubId: { [require('sequelize').Op.in]: seedClubIds } }, // Club delegates
-                    { email: { [require('sequelize').Op.like]: '%@%masters.com.au' } }, // Test delegate emails
-                    { email: { [require('sequelize').Op.like]: '%@%mymasters.com.au' } }
-                ]
-            };
-            
-            const seedUsers = await User.findAll({ where: seedUserConditions });
-            const removedUsers = await User.destroy({ where: seedUserConditions });
-            removalStats.users = removedUsers;
-            console.log(`    Removed ${removedUsers} seed users`);
-
-            // 3. Remove seed carnivals
-            console.log('  🎪 Removing seed carnivals...');
-            const seedCarnivalTitles = SAMPLE_CARNIVALS.map(carnival => carnival.title);
-            const seedCarnivalConditions = {
-                [require('sequelize').Op.or]: [
-                    { title: { [require('sequelize').Op.in]: seedCarnivalTitles } },
-                    { clubLogoURL: '/icons/seed.svg' }, // Seed marker
-                    { organiserContactEmail: { [require('sequelize').Op.like]: '%@%masters.com.au' } }, // Test organizer emails
-                    { 
-                        // MySideline imported data (if we want to clear it too)
-                        isManuallyEntered: false,
-                        createdAt: { [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
-                    }
-                ]
-            };
-
-            const seedCarnivals = await Carnival.findAll({ where: seedCarnivalConditions });
-            const seedCarnivalIds = seedCarnivals.map(carnival => carnival.id);
-            
-            // Remove carnival-club relationships first
-            const removedCarnivalClubs = await CarnivalClub.destroy({
-                where: { carnivalId: { [require('sequelize').Op.in]: seedCarnivalIds } }
-            });
-            removalStats.carnivalClubs = removedCarnivalClubs;
-            
-            // Remove carnival-sponsor relationships
-            const removedCarnivalSponsors = await CarnivalSponsor.destroy({
-                where: { carnivalId: { [require('sequelize').Op.in]: seedCarnivalIds } }
-            });
-            removalStats.carnivalSponsors = removedCarnivalSponsors;
-            
-            // Remove the carnivals themselves
-            const removedCarnivals = await Carnival.destroy({ where: seedCarnivalConditions });
-            removalStats.carnivals = removedCarnivals;
-            console.log(`    Removed ${removedCarnivals} seed carnivals and ${removedCarnivalClubs} registrations`);
-
-            // 4. Remove seed sponsors and their relationships
-            console.log('  🤝 Removing seed sponsors...');
-            const seedSponsorNames = SAMPLE_SPONSORS.map(sponsor => sponsor.sponsorName);
-            const seedSponsorConditions = {
-                [require('sequelize').Op.or]: [
-                    { sponsorName: { [require('sequelize').Op.in]: seedSponsorNames } },
-                    { logoUrl: '/icons/seed.svg' }, // Seed marker
-                    { contactEmail: { [require('sequelize').Op.like]: '%@%test.com' } }, // Test emails
-                    { description: { [require('sequelize').Op.like]: '%Supporting local rugby league communities%' } } // Seed description pattern
-                ]
-            };
-
-            const seedSponsors = await Sponsor.findAll({ where: seedSponsorConditions });
-            const seedSponsorIds = seedSponsors.map(sponsor => sponsor.id);
-            
-            // Remove club-sponsor relationships first
-            const removedClubSponsors = await ClubSponsor.destroy({
-                where: { 
-                    [require('sequelize').Op.or]: [
-                        { sponsorId: { [require('sequelize').Op.in]: seedSponsorIds } },
-                        { clubId: { [require('sequelize').Op.in]: seedClubIds } },
-                        { notes: { [require('sequelize').Op.like]: '%Seeded relationship%' } } // Seed marker
-                    ]
-                }
-            });
-            removalStats.clubSponsors = removedClubSponsors;
-            
-            // Remove the sponsors themselves
-            const removedSponsors = await Sponsor.destroy({ where: seedSponsorConditions });
-            removalStats.sponsors = removedSponsors;
-            console.log(`    Removed ${removedSponsors} seed sponsors and ${removedClubSponsors} relationships`);
-
-            // 5. Remove seed email subscriptions
-            console.log('  📧 Removing seed email subscriptions...');
-            const seedEmails = SAMPLE_SUBSCRIPTIONS.map(sub => sub.email);
-            const seedEmailConditions = {
-                [require('sequelize').Op.or]: [
-                    { email: { [require('sequelize').Op.in]: seedEmails } },
-                    { email: { [require('sequelize').Op.like]: '%@example.com' } }, // Test emails
-                    { email: { [require('sequelize').Op.like]: '%@test.com' } }
-                ]
-            };
-            
-            const removedSubscriptions = await EmailSubscription.destroy({ where: seedEmailConditions });
-            removalStats.emailSubscriptions = removedSubscriptions;
-            console.log(`    Removed ${removedSubscriptions} seed email subscriptions`);
-
-            // 6. Remove club alternate names for seed clubs
-            console.log('  🔍 Removing seed club alternate names...');
-            const removedAlternateNames = await ClubAlternateName.destroy({
-                where: { clubId: { [require('sequelize').Op.in]: seedClubIds } }
-            });
-            removalStats.clubAlternateNames = removedAlternateNames;
-            console.log(`    Removed ${removedAlternateNames} alternate names`);
-
-            // 7. Remove seed sync logs (MySideline import logs)
-            console.log('  🔄 Removing seed sync logs...');
-            const removedSyncLogs = await SyncLog.destroy({
-                where: {
-                    [require('sequelize').Op.or]: [
-                        { operation: 'seed_data_import' },
-                        { details: { [require('sequelize').Op.like]: '%seed%' } },
-                        { createdAt: { [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } } // Last 24 hours
-                    ]
-                }
-            });
-            removalStats.syncLogs = removedSyncLogs;
-            console.log(`    Removed ${removedSyncLogs} sync logs`);
-
-            // 8. Finally remove the seed clubs themselves
-            console.log('  🏢 Removing seed clubs...');
-            const removedClubs = await Club.destroy({
-                where: { id: { [require('sequelize').Op.in]: seedClubIds } }
-            });
-            removalStats.clubs = removedClubs;
-            console.log(`    Removed ${removedClubs} seed clubs`);
-
-            // Re-enable foreign key constraints
-            await sequelize.query('PRAGMA foreign_keys = ON');
-            console.log('🔒 Foreign key constraints re-enabled');
-            
-            // Display removal summary
-            console.log('\n📊 SEED DATA REMOVAL SUMMARY');
-            console.log('=' .repeat(40));
-            console.log(`🏢 Clubs removed: ${removalStats.clubs}`);
-            console.log(`👥 Users removed: ${removalStats.users}`);
-            console.log(`🎪 Carnivals removed: ${removalStats.carnivals}`);
-            console.log(`🤝 Sponsors removed: ${removalStats.sponsors}`);
-            console.log(`🔗 Club-sponsor relationships: ${removalStats.clubSponsors}`);
-            console.log(`🎪 Carnival-sponsor relationships: ${removalStats.carnivalSponsors}`);
-            console.log(`🎟️ Carnival registrations: ${removalStats.carnivalClubs}`);
-            console.log(`📧 Email subscriptions: ${removalStats.emailSubscriptions}`);
-            console.log(`🔍 Alternate names: ${removalStats.clubAlternateNames}`);
-            console.log(`🔄 Sync logs: ${removalStats.syncLogs}`);
-            console.log('=' .repeat(40));
-            
-            // Verify real data is preserved
-            await this.verifyRealDataPreserved();
-            
-            console.log('✅ Seed data cleared successfully - real user data preserved');
-            
-        } catch (error) {
-            console.error('❌ Seed data clearing failed:', error.message);
-            throw error;
-        }
-    }
-
-    /**
-     * Verify that real user data has been preserved after seed data removal
-     */
-    async verifyRealDataPreserved() {
-        try {
-            const realDataStats = {
-                clubs: await Club.count({ where: { isActive: true } }),
-                users: await User.count({ where: { isActive: true } }),
-                carnivals: await Carnival.count({ where: { isActive: true } }),
-                sponsors: await Sponsor.count({ where: { isActive: true } }),
-                subscriptions: await EmailSubscription.count({ where: { isActive: true } })
-            };
-            
-            console.log('\n🛡️  REAL DATA PRESERVATION CHECK');
-            console.log('=' .repeat(40));
-            console.log(`🏢 Real clubs remaining: ${realDataStats.clubs}`);
-            console.log(`👥 Real users remaining: ${realDataStats.users}`);
-            console.log(`🎪 Real carnivals remaining: ${realDataStats.carnivals}`);
-            console.log(`🤝 Real sponsors remaining: ${realDataStats.sponsors}`);
-            console.log(`📧 Real subscriptions remaining: ${realDataStats.subscriptions}`);
-            console.log('=' .repeat(40));
-            
-            if (realDataStats.clubs > 0 || realDataStats.users > 0 || realDataStats.carnivals > 0) {
-                console.log('✅ Real user data successfully preserved');
-            } else {
-                console.log('ℹ️  No existing real data found (clean database)');
-            }
-            
-        } catch (error) {
-            console.error('⚠️  Could not verify data preservation:', error.message);
-        }
-    }
-
-    /**
-     * Create test clubs using Sequelize
-     */
-    async createClubs() {
-        console.log('🏢 Creating test clubs...');
-        
-        for (const clubData of SAMPLE_CLUBS) {
-            const club = await Club.create({
-                clubName: clubData.name,
-                state: clubData.state,
-                location: clubData.location,
-                contactPerson: clubData.contactPerson,
-                contactEmail: clubData.contactEmail,
-                contactPhone: clubData.contactPhone,
-                description: clubData.description,
-                website: clubData.website,
-                facebookUrl: clubData.facebookUrl,
-                instagramUrl: clubData.instagramUrl,
-                twitterUrl: clubData.twitterUrl,
-                logoUrl: clubData.logoUrl,
-                isPubliclyListed: clubData.isPubliclyListed,
-                isActive: true
-            });
-            
-            this.createdClubs.push(club);
-        }
-        
-        console.log(`✅ Created ${this.createdClubs.length} clubs`);
-    }
-
-    /**
-     * Create test users and delegates using Sequelize
-     */
-    async createUsers() {
-        console.log('👥 Creating test users...');
-        
-        // Create admin user
-        const adminUser = await User.create({
-            email: 'admin@oldmanfooty.au',
-            firstName: 'Admin',
-            lastName: 'User',
-            passwordHash: 'admin123', // Will be hashed by model hook
-            isAdmin: true,
-            isActive: true
-        });
-        this.createdUsers.push(adminUser);
-
-        // Create primary delegates for each club
-        for (const club of this.createdClubs) {
-            const primaryDelegate = await User.create({
-                email: `primary@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`,
-                firstName: 'Primary',
-                lastName: 'Delegate',
-                passwordHash: 'delegate123', // Will be hashed by model hook
-                clubId: club.id,
-                isPrimaryDelegate: true,
-                isActive: true
-            });
-            this.createdUsers.push(primaryDelegate);
-
-            // Create additional delegate for some clubs
-            if (Math.random() > 0.5) {
-                const secondaryDelegate = await User.create({
-                    email: `delegate@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`,
-                    firstName: 'Secondary',
-                    lastName: 'Delegate',
-                    passwordHash: 'delegate123', // Will be hashed by model hook
-                    clubId: club.id,
-                    isPrimaryDelegate: false,
-                    isActive: true
-                });
-                this.createdUsers.push(secondaryDelegate);
-            }
-        }
-        
-        console.log(`✅ Created ${this.createdUsers.length} users (including admin)`);
-    }
-
-    /**
-     * Create manual test carnivals using Sequelize
-     */
-    async createManualCarnivals() {
-        console.log('🎪 Creating manual test carnivals...');
-        
-        for (const carnivalData of SAMPLE_CARNIVALS) {
-            // Find a user from the same state to be the creator
-            const stateClubs = this.createdClubs.filter(club => club.state === carnivalData.state);
-            const randomClub = stateClubs[Math.floor(Math.random() * stateClubs.length)];
-            const creator = this.createdUsers.find(user => 
-                user.clubId && user.clubId === randomClub.id
-            );
-
-            const carnival = await Carnival.create({
-                ...carnivalData,
-                createdByUserId: creator ? creator.id : undefined,
-                isManuallyEntered: true,
-                isActive: true
-            });
-            
-            this.createdCarnivals.push(carnival);
-        }
-        
-        console.log(`✅ Created ${SAMPLE_CARNIVALS.length} manual carnivals`);
-    }
-
-    /**
-     * Import MySideline data using existing service
-     */
-    async importMySidelineData() {
-        console.log('🔄 Importing MySideline data...');
-        
-        try {
-            // Import events from each state
-            const states = ['NSW', 'QLD', 'VIC'];
-            let totalImported = 0;
-
-            for (const state of states) {
-                console.log(`  📡 Fetching ${state} events...`);
-                
-                try {
-                    // Use the new fetchEvents method instead of scrapeStateEvents
-                    const events = await MySidelineService.fetchEvents();
-                    
-                    // Filter events by state if needed
-                    const stateEvents = events.filter(event => event.state === state);
-                    
-                    console.log(`Found ${stateEvents.length} events for ${state}`);
-                    
-                    for (const event of stateEvents) {
-                        try {
-                            // The events are already processed by the integration service
-                            // Just need to save them to database
-                            const carnival = await Carnival.create({
-                                ...event,
-                                isManuallyEntered: false,
-                                isActive: true,
-                                createdAt: new Date(),
-                                updatedAt: new Date()
-                            });
-                            
-                            console.log(`Created carnival: ${carnival.title}`);
-                        } catch (createError) {
-                            console.error(`Failed to create carnival for ${event.title}:`, createError.message);
-                        }
-                    }
-                } catch (stateError) {
-                    console.error(`Failed to fetch ${state} events:`, stateError.message);
-                }
-            }
-            
-            console.log(`✅ Imported ${totalImported} MySideline events`);
-        } catch (error) {
-            console.log(`⚠️  MySideline import failed (using manual data only): ${error.message}`);
-        }
-    }
-
-    /**
-     * Create email subscriptions using Sequelize
-     */
-    async createEmailSubscriptions() {
-        console.log('📧 Creating email subscriptions...');
-        
-        for (const subData of SAMPLE_SUBSCRIPTIONS) {
-            await EmailSubscription.create({
-                email: subData.email,
-                states: subData.states,
-                isActive: true
-            });
-        }
-        
-        console.log(`✅ Created ${SAMPLE_SUBSCRIPTIONS.length} email subscriptions`);
-    }
-
-    /**
-     * Create test sponsors using Sequelize
-     */
-    async createSponsors() {
-        console.log('🤝 Creating test sponsors...');
-        
-        for (const sponsorData of SAMPLE_SPONSORS) {
-            const sponsor = await Sponsor.create(sponsorData);
-            this.createdSponsors.push(sponsor);
-        }
-        
-        console.log(`✅ Created ${this.createdSponsors.length} sponsors`);
-    }
-
-    /**
      * Link sponsors to clubs with realistic relationships
+     * @returns {Promise<void>}
      */
     async linkSponsorsToClubs() {
         console.log('🔗 Linking sponsors to clubs...');
         
         let totalLinks = 0;
         
-        // Create realistic sponsor-club relationships
-        for (const club of this.createdClubs) {
+        for (const club of this.createdEntities.clubs) {
             // Each club gets 1-4 sponsors with varying levels
             const numSponsors = Math.floor(Math.random() * 4) + 1;
-            const availableSponsors = [...this.createdSponsors];
+            const availableSponsors = [...this.createdEntities.sponsors];
             
             // Prefer local sponsors (same state) with 70% probability
             const localSponsors = availableSponsors.filter(sponsor => sponsor.state === club.state);
@@ -1535,10 +109,8 @@ class DatabaseSeeder {
             for (let i = 0; i < selectedSponsors.length; i++) {
                 const sponsor = selectedSponsors[i];
                 
-                // Assign sponsorship levels based on sponsor's existing level and position
+                // Assign sponsorship levels
                 let sponsorshipLevel;
-                const sponsorLevels = ['Gold', 'Silver', 'Bronze', 'Supporting'];
-                
                 if (sponsor.sponsorshipLevel === 'Gold' && i === 0) {
                     sponsorshipLevel = 'Gold';
                 } else if (sponsor.sponsorshipLevel === 'Gold' || sponsor.sponsorshipLevel === 'Silver') {
@@ -1594,6 +166,7 @@ class DatabaseSeeder {
 
     /**
      * Link sponsors to carnivals with realistic relationships
+     * @returns {Promise<void>}
      */
     async linkSponsorsToCarnivals() {
         console.log('🎪 Linking sponsors to carnivals...');
@@ -1601,7 +174,7 @@ class DatabaseSeeder {
         let totalLinks = 0;
         
         // Focus on major carnivals and upcoming events
-        const majorCarnivals = this.createdCarnivals.filter(carnival => 
+        const majorCarnivals = this.createdEntities.carnivals.filter(carnival => 
             carnival.title.includes('Grand Final') || 
             carnival.title.includes('Championship') || 
             carnival.title.includes('Cup') ||
@@ -1620,16 +193,13 @@ class DatabaseSeeder {
             if (numSponsors === 0) continue;
             
             // Prefer local sponsors (same state) with 80% probability for carnivals
-            const localSponsors = this.createdSponsors.filter(sponsor => sponsor.state === carnival.state);
-            const nationalSponsors = this.createdSponsors.filter(sponsor => 
+            const localSponsors = this.createdEntities.sponsors.filter(sponsor => sponsor.state === carnival.state);
+            const nationalSponsors = this.createdEntities.sponsors.filter(sponsor => 
                 ['Bunnings Warehouse', 'Coca-Cola Australia', 'Toyota Australia', 'Woolworths Group', 'ANZ Bank'].includes(sponsor.sponsorName)
-            );
-            const otherSponsors = this.createdSponsors.filter(sponsor => 
-                sponsor.state !== carnival.state && !nationalSponsors.includes(sponsor)
             );
             
             const selectedSponsors = [];
-            const availableSponsors = [...this.createdSponsors];
+            const availableSponsors = [...this.createdEntities.sponsors];
             
             for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
                 let sponsorPool;
@@ -1644,10 +214,7 @@ class DatabaseSeeder {
                 }
                 // Otherwise pick from remaining sponsors
                 else {
-                    sponsorPool = availableSponsors.filter(s => 
-                        !selectedSponsors.includes(s) && 
-                        (otherSponsors.includes(s) || nationalSponsors.includes(s))
-                    );
+                    sponsorPool = availableSponsors.filter(s => !selectedSponsors.includes(s));
                     if (sponsorPool.length === 0) {
                         sponsorPool = localSponsors.filter(s => availableSponsors.includes(s));
                     }
@@ -1720,14 +287,16 @@ class DatabaseSeeder {
 
     /**
      * Link clubs to carnivals as attendees with realistic registration data
+     * @returns {Promise<Array>} Created carnival club registrations
      */
     async linkClubsToCarnivals() {
         console.log('🎪 Registering clubs as carnival attendees...');
         
         let totalRegistrations = 0;
+        const carnivalClubs = [];
         
         // Process each carnival to add realistic club attendance
-        for (const carnival of this.createdCarnivals) {
+        for (const carnival of this.createdEntities.carnivals) {
             // Skip past events (older than 3 months ago) - limited attendees for historical data
             const threeMonthsAgo = new Date();
             threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -1739,15 +308,12 @@ class DatabaseSeeder {
             let minClubs, maxClubs;
             
             if (carnival.title.includes('Grand Final') || carnival.title.includes('Championship')) {
-                // Major events get more attendees
                 minClubs = isPastEvent ? 4 : 8;
                 maxClubs = isPastEvent ? 8 : 16;
             } else if (carnival.title.includes('Cup') || carnival.title.includes('Carnival')) {
-                // Medium events
                 minClubs = isPastEvent ? 3 : 5;
                 maxClubs = isPastEvent ? 6 : 12;
             } else {
-                // Regular tournaments
                 minClubs = isPastEvent ? 2 : 3;
                 maxClubs = isPastEvent ? 5 : 8;
             }
@@ -1755,10 +321,10 @@ class DatabaseSeeder {
             const numAttendees = Math.floor(Math.random() * (maxClubs - minClubs + 1)) + minClubs;
             
             // Get potential attending clubs - prefer same state with some interstate
-            const localClubs = this.createdClubs.filter(club => 
+            const localClubs = this.createdEntities.clubs.filter(club => 
                 club.state === carnival.state && club.isPubliclyListed
             );
-            const interstateClubs = this.createdClubs.filter(club => 
+            const interstateClubs = this.createdEntities.clubs.filter(club => 
                 club.state !== carnival.state && club.isPubliclyListed
             );
             
@@ -1806,17 +372,8 @@ class DatabaseSeeder {
                 // Player count (realistic for masters teams)
                 const playerCount = Math.floor(Math.random() * 8) + 13; // 13-20 players
                 
-                // Contact person (use club contact or generate variant)
-                const contactVariants = [
-                    club.contactPerson,
-                    `${club.contactPerson?.split(' ')[0]} ${club.contactPerson?.split(' ')[1]}`,
-                    'Team Manager',
-                    'Club Secretary',
-                    'Team Captain'
-                ];
-                const contactPerson = contactVariants[Math.floor(Math.random() * contactVariants.length)];
-                
-                // Contact details
+                // Contact person
+                const contactPerson = club.contactPerson || 'Team Manager';
                 const contactEmail = club.contactEmail || `team@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`;
                 const contactPhone = club.contactPhone || this.generatePhoneNumber();
                 
@@ -1865,7 +422,7 @@ class DatabaseSeeder {
                 }
                 
                 // Create the carnival-club registration
-                await CarnivalClub.create({
+                const carnivalClub = await CarnivalClub.create({
                     carnivalId: carnival.id,
                     clubId: club.id,
                     registrationDate: registrationDate,
@@ -1882,84 +439,24 @@ class DatabaseSeeder {
                     isActive: true
                 });
                 
+                carnivalClubs.push(carnivalClub);
                 totalRegistrations++;
             }
         }
         
         console.log(`✅ Created ${totalRegistrations} club-carnival registrations`);
+        return carnivalClubs;
     }
 
     /**
-     * Generate realistic special requirements for teams
+     * Generate enhanced summary statistics including player data
+     * @returns {Promise<Object>} Summary statistics
      */
-    generateSpecialRequirements() {
-        const requirements = [
-            'Wheelchair accessibility required for one player',
-            'Early departure needed - must finish by 4:00 PM',
-            'Medical officer on standby required for player with heart condition',
-            'Parking for team bus required',
-            'Late arrival - team arriving after 10:00 AM',
-            'Photography restrictions - no social media photos of certain players',
-            'Temperature controlled changing rooms needed',
-            'Injury support - physiotherapy services required',
-            'Medication storage - refrigeration required for player medications'
-        ];
-        
-        return requirements[Math.floor(Math.random() * requirements.length)];
-    }
-
-    /**
-     * Generate realistic registration notes for internal use
-     */
-    generateRegistrationNotes(club, carnival) {
-        const notes = [
-            `Strong team this year - won ${club.state} championship last season`,
-            'New club to the competition - first time attending',
-            'Regular attendees - 5th consecutive year participating',
-            'Late registration due to player availability issues',
-            'Traveling team - accommodation assistance provided',
-            'Club celebrating 25th anniversary this year',
-            'Merged team with local rival club due to numbers',
-            'Young masters team - most players aged 35-40',
-            'Veteran team - experienced players, competitive group',
-            'Social players - here for fun and camaraderie',
-            'Former NRL players in the squad',
-            'Club fundraising for new jerseys through tournament',
-            'Interstate rivals - traditional rivalry with host club',
-            'Weather-dependent attendance - may withdraw if conditions poor',
-            'Sponsored team - major local business backing'
-        ];
-        
-        return notes[Math.floor(Math.random() * notes.length)];
-    }
-
-    /**
-     * Generate realistic Australian phone numbers
-     */
-    generatePhoneNumber() {
-        const areaCodes = ['02', '03', '07', '08'];
-        const mobilePrefix = '04';
-        
-        // 70% mobile, 30% landline
-        if (Math.random() < 0.7) {
-            // Mobile number
-            const remainder = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
-            return `${mobilePrefix}${remainder.substring(0, 2)} ${remainder.substring(2, 5)} ${remainder.substring(5, 8)}`;
-        } else {
-            // Landline number
-            const areaCode = areaCodes[Math.floor(Math.random() * areaCodes.length)];
-            const number = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
-            return `(${areaCode}) ${number.substring(0, 4)} ${number.substring(4, 8)}`;
-        }
-    }
-
-    /**
-     * Generate summary statistics using Sequelize
-     */
-    async generateSummary() {
+    async generateEnhancedSummary() {
         const stats = {
             clubs: await Club.count({ where: { isActive: true } }),
             users: await User.count({ where: { isActive: true } }),
+            players: await ClubPlayer.count({ where: { isActive: true } }),
             carnivals: await Carnival.count({ where: { isActive: true } }),
             manualCarnivals: await Carnival.count({ where: { isManuallyEntered: true, isActive: true } }),
             mySidelineCarnivals: await Carnival.count({ where: { isManuallyEntered: false, isActive: true } }),
@@ -1969,6 +466,7 @@ class DatabaseSeeder {
             carnivalSponsors: await CarnivalSponsor.count({ where: { isActive: true } }),
             carnivalRegistrations: await CarnivalClub.count({ where: { isActive: true } }),
             paidRegistrations: await CarnivalClub.count({ where: { isPaid: true, isActive: true } }),
+            playerAssignments: await CarnivalClubPlayer.count({ where: { isActive: true } }),
             upcomingCarnivals: await Carnival.count({ 
                 where: { 
                     date: { [require('sequelize').Op.gte]: new Date() }, 
@@ -1977,10 +475,28 @@ class DatabaseSeeder {
             })
         };
 
+        // Calculate player age statistics
+        const playerAgeStats = await sequelize.query(`
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN (julianday('now') - julianday(dateOfBirth))/365.25 >= 35 THEN 1 ELSE 0 END) as mastersEligible,
+                AVG((julianday('now') - julianday(dateOfBirth))/365.25) as averageAge,
+                MIN((julianday('now') - julianday(dateOfBirth))/365.25) as youngestAge,
+                MAX((julianday('now') - julianday(dateOfBirth))/365.25) as oldestAge
+            FROM club_players 
+            WHERE isActive = 1
+        `, { type: sequelize.QueryTypes.SELECT });
+
+        const ageStats = playerAgeStats[0];
+
         console.log('\n📊 DATABASE SEEDING SUMMARY');
         console.log('=' .repeat(50));
         console.log(`👥 Users: ${stats.users} (including admin)`);
         console.log(`🏢 Clubs: ${stats.clubs}`);
+        console.log(`🏃 Players: ${stats.players}`);
+        console.log(`   ✅ Masters Eligible (35+): ${ageStats.mastersEligible} (${Math.round((ageStats.mastersEligible / ageStats.total) * 100)}%)`);
+        console.log(`   📊 Age Range: ${Math.round(ageStats.youngestAge)} - ${Math.round(ageStats.oldestAge)} years`);
+        console.log(`   📈 Average Age: ${Math.round(ageStats.averageAge)} years`);
         console.log(`🤝 Sponsors: ${stats.sponsors}`);
         console.log(`🔗 Club-Sponsor Relationships: ${stats.clubSponsors}`);
         console.log(`🎪 Total Carnivals: ${stats.carnivals}`);
@@ -1990,7 +506,10 @@ class DatabaseSeeder {
         console.log(`🎟️ Carnival Registrations: ${stats.carnivalRegistrations}`);
         console.log(`   💰 Paid: ${stats.paidRegistrations}`);
         console.log(`   ⏳ Pending: ${stats.carnivalRegistrations - stats.paidRegistrations}`);
+        console.log(`🏃 Player-Carnival Assignments: ${stats.playerAssignments}`);
+        console.log(`   📊 Average per Registration: ${Math.round(stats.playerAssignments / stats.carnivalRegistrations)} players`);
         console.log(`📧 Email Subscriptions: ${stats.subscriptions}`);
+        console.log(`📅 Upcoming Carnivals: ${stats.upcomingCarnivals}`);
         console.log('=' .repeat(50));
         
         return stats;
@@ -1998,6 +517,9 @@ class DatabaseSeeder {
 
     /**
      * Generate realistic contract details for club sponsorships
+     * @param {string} level - Sponsorship level
+     * @param {string} businessType - Type of business
+     * @returns {string} Contract details
      */
     generateContractDetails(level, businessType) {
         const details = [];
@@ -2044,6 +566,9 @@ class DatabaseSeeder {
 
     /**
      * Generate realistic benefits for carnival sponsorships
+     * @param {string} level - Sponsorship level
+     * @param {string} type - Sponsorship type
+     * @returns {string} Benefits description
      */
     generateCarnivalBenefits(level, type) {
         const benefits = [];
@@ -2076,7 +601,77 @@ class DatabaseSeeder {
     }
 
     /**
+     * Generate realistic special requirements for teams
+     * @returns {string} Special requirements
+     */
+    generateSpecialRequirements() {
+        const requirements = [
+            'Wheelchair accessibility required for one player',
+            'Early departure needed - must finish by 4:00 PM',
+            'Medical officer on standby required for player with heart condition',
+            'Parking for team bus required',
+            'Late arrival - team arriving after 10:00 AM',
+            'Photography restrictions - no social media photos of certain players',
+            'Temperature controlled changing rooms needed',
+            'Injury support - physiotherapy services required',
+            'Medication storage - refrigeration required for player medications'
+        ];
+        
+        return requirements[Math.floor(Math.random() * requirements.length)];
+    }
+
+    /**
+     * Generate realistic registration notes for internal use
+     * @param {Object} club - Club object
+     * @param {Object} carnival - Carnival object
+     * @returns {string} Registration notes
+     */
+    generateRegistrationNotes(club, carnival) {
+        const notes = [
+            `Strong team this year - won ${club.state} championship last season`,
+            'New club to the competition - first time attending',
+            'Regular attendees - 5th consecutive year participating',
+            'Late registration due to player availability issues',
+            'Traveling team - accommodation assistance provided',
+            'Club celebrating 25th anniversary this year',
+            'Merged team with local rival club due to numbers',
+            'Young masters team - most players aged 35-40',
+            'Veteran team - experienced players, competitive group',
+            'Social players - here for fun and camaraderie',
+            'Former NRL players in the squad',
+            'Club fundraising for new jerseys through tournament',
+            'Interstate rivals - traditional rivalry with host club',
+            'Weather-dependent attendance - may withdraw if conditions poor',
+            'Sponsored team - major local business backing'
+        ];
+        
+        return notes[Math.floor(Math.random() * notes.length)];
+    }
+
+    /**
+     * Generate realistic Australian phone numbers
+     * @returns {string} Formatted phone number
+     */
+    generatePhoneNumber() {
+        const areaCodes = ['02', '03', '07', '08'];
+        const mobilePrefix = '04';
+        
+        // 70% mobile, 30% landline
+        if (Math.random() < 0.7) {
+            // Mobile number
+            const remainder = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+            return `${mobilePrefix}${remainder.substring(0, 2)} ${remainder.substring(2, 5)} ${remainder.substring(5, 8)}`;
+        } else {
+            // Landline number
+            const areaCode = areaCodes[Math.floor(Math.random() * areaCodes.length)];
+            const number = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+            return `(${areaCode}) ${number.substring(0, 4)} ${number.substring(4, 8)}`;
+        }
+    }
+
+    /**
      * Run the complete seeding process with enhanced safety checks and backup
+     * @returns {Promise<void>}
      */
     async seed() {
         console.log('🌱 Starting PROTECTED database seeding process...\n');
@@ -2092,7 +687,7 @@ class DatabaseSeeder {
             validateEnvironment();
             
             // 🆕 CREATE BACKUP BEFORE ANY CHANGES
-            await this.createBackup();
+            await this.backupService.createBackup();
             
             console.log('🛡️  SECURITY CHECKPOINT 3: Pre-clear validation');
             validateEnvironment();
@@ -2102,35 +697,40 @@ class DatabaseSeeder {
             
             try {
                 if (fullWipe) {
-                    console.log('⚠️  FULL WIPE MODE: Clearing ALL data');
-                    await this.clearDatabase();
+                    console.log('⚠️  FULL WIPE MODE: Not implemented - use manual database deletion');
+                    throw new Error('Full wipe mode not implemented in modular version');
                 } else {
                     console.log('🎯 SELECTIVE MODE: Clearing only seed data');
-                    await this.clearSeedData();
+                    await this.cleanupService.clearSeedData();
                 }
                 
                 console.log('🛡️  SECURITY CHECKPOINT 4: Pre-seed validation');
                 validateEnvironment();
                 
-                // Proceed with seeding
-                await this.createClubs();
-                await this.createUsers();
-                await this.createSponsors();
+                // Proceed with seeding using modular services
+                this.createdEntities.clubs = await this.basicSeedingService.createClubs();
+                this.createdEntities.users = await this.basicSeedingService.createUsers();
+                await this.playerSeedingService.createClubPlayers(this.createdEntities.clubs);
+                this.createdEntities.sponsors = await this.basicSeedingService.createSponsors();
                 await this.linkSponsorsToClubs();
-                await this.createManualCarnivals();
+                this.createdEntities.carnivals = await this.basicSeedingService.createManualCarnivals();
                 await this.linkSponsorsToCarnivals();
-                await this.linkClubsToCarnivals();
-                await this.importMySidelineData();
-                await this.createEmailSubscriptions();
-                await this.generateSummary();
+                const carnivalClubs = await this.linkClubsToCarnivals();
+                await this.playerSeedingService.linkPlayersToCarnivals(carnivalClubs);
+                await this.basicSeedingService.importMySidelineData();
+                await this.basicSeedingService.createEmailSubscriptions();
+                
+                // Update summary to include player statistics
+                await this.generateEnhancedSummary();
                 
                 // Clean up old backups after successful seeding
-                await this.cleanupOldBackups();
+                await this.backupService.cleanupOldBackups();
                 
                 console.log('\n✅ Database seeding completed successfully!');
                 
-                if (this.backupPath) {
-                    console.log(`💾 Backup available at: ${path.basename(this.backupPath)}`);
+                const backupPath = this.backupService.getBackupPath();
+                if (backupPath) {
+                    console.log(`💾 Backup available at: ${require('path').basename(backupPath)}`);
                 }
                 
                 console.log('\n🔐 Login credentials:');
@@ -2140,17 +740,10 @@ class DatabaseSeeder {
                 console.error('\n❌ Seeding process failed:', seedingError.message);
                 
                 // Offer to restore from backup
-                if (this.backupPath && fs.existsSync(this.backupPath)) {
+                const backupPath = this.backupService.getBackupPath();
+                if (backupPath && require('fs').existsSync(backupPath)) {
                     console.log('\n🔄 Backup is available for restoration');
-                    console.log(`To restore: node scripts/restore-backup.js "${this.backupPath}"`);
-                    
-                    // Optionally auto-restore (commented out for safety)
-                    // const shouldRestore = process.argv.includes('--auto-restore');
-                    // if (shouldRestore) {
-                    //     console.log('🔄 Auto-restoring from backup...');
-                    //     await this.restoreFromBackup();
-                    //     console.log('✅ Database restored to pre-seeding state');
-                    // }
+                    console.log(`To restore manually: copy "${backupPath}" over your database file`);
                 }
                 
                 throw seedingError;
@@ -2172,16 +765,14 @@ class DatabaseSeeder {
 if (require.main === module) {
     // Display safety warning with updated information
     console.log('\n' + '⚠️ '.repeat(20));
-    console.log('🚨 DATABASE SEEDING SCRIPT - SELECTIVE OPERATION');
+    console.log('🚨 DATABASE SEEDING SCRIPT - MODULAR SELECTIVE OPERATION');
     console.log('⚠️ '.repeat(20));
     console.log('DEFAULT: Clears only SEED data, preserves real user data');
-    console.log('FULL WIPE: Use --full-wipe flag to clear ALL data');
     console.log('Only run this on DEVELOPMENT or TEST databases');
     console.log('Required flag: --confirm-seed');
     console.log('');
     console.log('Usage examples:');
     console.log('  npm run seed -- --confirm-seed                (selective clearing)');
-    console.log('  npm run seed -- --confirm-seed --full-wipe    (complete wipe)');
     console.log('⚠️ '.repeat(20) + '\n');
     
     const seeder = new DatabaseSeeder();
