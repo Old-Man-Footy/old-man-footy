@@ -70,6 +70,22 @@ async function showClubPlayers(req, res, next) {
 
     console.log('=== DEBUG: Found players ===', { count, playersLength: players.length });
 
+    // Get inactive players (no pagination needed as they should be fewer)
+    const inactivePlayers = await ClubPlayer.findAll({
+      where: {
+        clubId: req.user.clubId,
+        isActive: false
+      },
+      order: [['updatedAt', 'DESC']], // Most recently deactivated first
+      include: [{
+        model: Club,
+        as: 'club',
+        attributes: ['id', 'clubName']
+      }]
+    });
+
+    console.log('=== DEBUG: Found inactive players ===', { inactiveCount: inactivePlayers.length });
+
     // Calculate pagination info
     const totalPages = Math.ceil(count / limit);
     const currentPage = parseInt(page);
@@ -92,6 +108,7 @@ async function showClubPlayers(req, res, next) {
     res.render('clubs/players/index', {
       title: `${club.clubName} - Players`,
       players,
+      inactivePlayers,
       club,
       search: search || '',
       sortBy,
@@ -399,6 +416,51 @@ async function deactivatePlayer(req, res, next) {
 }
 
 /**
+ * Reactivate an inactive club player
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function reactivatePlayer(req, res, next) {
+  try {
+    const playerId = req.params.id;
+
+    // Ensure user is authenticated and has a club
+    if (!req.user || !req.user.clubId) {
+      req.flash('error', 'You must be a club delegate to reactivate players.');
+      return res.redirect('/dashboard');
+    }
+
+    // Find the inactive player (must belong to user's club)
+    const player = await ClubPlayer.findOne({
+      where: {
+        id: playerId,
+        clubId: req.user.clubId,
+        isActive: false
+      }
+    });
+
+    if (!player) {
+      req.flash('error', 'Inactive player not found or you do not have permission to reactivate this player.');
+      return res.redirect('/clubs/players');
+    }
+
+    // Reactivate the player
+    await player.update({
+      isActive: true
+    });
+
+    req.flash('success', `Player ${player.getFullName()} has been successfully reactivated.`);
+    res.redirect('/clubs/players');
+  } catch (error) {
+    console.error('Error reactivating player:', error);
+    req.flash('error', 'Failed to reactivate player. Please try again.');
+    res.redirect('/clubs/players');
+  }
+}
+
+/**
  * Validation rules for creating/updating players
  */
 const validatePlayer = [
@@ -471,6 +533,7 @@ module.exports = {
   showEditPlayerForm,
   updatePlayer,
   deactivatePlayer,
+  reactivatePlayer,
   validatePlayer,
   validatePlayerId
 };

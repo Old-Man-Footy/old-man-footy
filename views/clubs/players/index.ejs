@@ -291,6 +291,119 @@
       </div>
     </div>
   </div>
+
+  <!-- Inactive Players Section -->
+  <% if (inactivePlayers && inactivePlayers.length > 0) { %>
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="bi bi-person-x me-2 text-muted"></i>
+              Inactive Players
+              <span class="badge bg-secondary ms-2"><%= inactivePlayers.length %></span>
+            </h5>
+            <small class="text-muted">Players who have been removed but can be reactivated</small>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Age</th>
+                    <th>Email</th>
+                    <th>Shorts</th>
+                    <th>Deactivated</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% inactivePlayers.forEach(player => { %>
+                    <tr class="table-secondary">
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" 
+                               style="width: 40px; height: 40px; font-weight: 600;">
+                            <%= player.getInitials() %>
+                          </div>
+                          <div>
+                            <h6 class="mb-0 text-muted"><%= player.getFullName() %></h6>
+                            <% if (player.notes) { %>
+                              <small class="text-muted">
+                                <i class="bi bi-chat-text me-1"></i>
+                                <%= player.notes.length > 50 ? player.notes.substring(0, 50) + '...' : player.notes %>
+                              </small>
+                            <% } %>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-muted">
+                        <% const age = player.getAge(); %>
+                        <% if (age !== null) { %>
+                          <%= age %> years
+                        <% } else { %>
+                          <span class="text-muted">Unknown</span>
+                        <% } %>
+                      </td>
+                      <td class="text-muted">
+                        <%= player.email %>
+                      </td>
+                      <td>
+                        <% if (player.shorts) { %>
+                          <% 
+                            // Define color mapping for badges
+                            const shortsColorMap = {
+                              'Unrestricted': { bg: 'bg-secondary', text: 'text-white' },
+                              'Red': { bg: 'bg-danger', text: 'text-white' },
+                              'Yellow': { bg: 'bg-warning', text: 'text-dark' },
+                              'Blue': { bg: 'bg-primary', text: 'text-white' },
+                              'Green': { bg: 'bg-success', text: 'text-white' }
+                            };
+                            const colorStyle = shortsColorMap[player.shorts] || shortsColorMap['Unrestricted'];
+                          %>
+                          <span class="badge <%= colorStyle.bg %> <%= colorStyle.text %>">
+                            <%= player.shorts %>
+                          </span>
+                        <% } else { %>
+                          <span class="badge bg-secondary">
+                            Unrestricted
+                          </span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          <%= new Date(player.updatedAt).toLocaleDateString() %>
+                        </small>
+                      </td>
+                      <td class="text-end">
+                        <form method="POST" action="/clubs/players/<%= player.id %>/reactivate" class="d-inline">
+                          <button 
+                            type="submit" 
+                            class="btn btn-outline-success btn-sm"
+                            data-bs-toggle="tooltip"
+                            title="Reactivate Player"
+                            onclick="return confirm('Are you sure you want to reactivate <%= player.getFullName() %>? They will be added back to your active player roster.')"
+                          >
+                            <i class="bi bi-person-check me-1"></i>Reactivate
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="alert alert-info mt-3" role="alert">
+              <i class="bi bi-info-circle me-2"></i>
+              <strong>About Inactive Players:</strong> These players have been removed from your active roster but their records are preserved for historical purposes. You can reactivate them at any time to add them back to your team.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
 </div>
 
 <!-- Remove Player Modal -->

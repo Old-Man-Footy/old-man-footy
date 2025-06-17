@@ -64,4 +64,13 @@ router.delete('/:id',
   clubPlayerController.deactivatePlayer
 );
 
+/**
+ * POST /clubs/players/:id/reactivate
+ * Reactivate an inactive club player
+ */
+router.post('/:id/reactivate', 
+  clubPlayerController.validatePlayerId,
+  clubPlayerController.reactivatePlayer
+);
+
 module.exports = router;
