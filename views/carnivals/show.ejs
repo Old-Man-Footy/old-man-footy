@@ -7,8 +7,8 @@
                     <div class="card-body bg-light">
                         <div class="d-flex align-items-center">
                             <% 
-                            // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
-                            const hostingLogoUrl = carnival.clubLogoURL || carnival.creator.club.logoUrl || '/icons/missing.svg';
+                            // Show hosting club logo first, then fall back to carnival logo, then to missing.svg
+                            const hostingLogoUrl = (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || carnival.clubLogoURL || '/icons/missing.svg';
                             %>
                             <img src="<%= hostingLogoUrl %>" alt="<%= carnival.creator.club.clubName %> Logo" 
                                  class="me-3" style="height: 60px; width: auto;">
@@ -134,6 +134,25 @@
                                         </button>
                                     <% } %>
 
+                                    
+                                    <!-- Edit button for owners -->
+                                    <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId) { %>
+                                        <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-people"></i> Manage Attendees
+                                        </a>
+                                        
+                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-pencil"></i> Edit Event
+                                        </a>
+
+                                        <!-- Email Attendees button (only if there are attendee clubs) -->
+                                        <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
+                                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
+                                                <i class="bi bi-envelope"></i> Email Attendees
+                                            </button>
+                                        <% } %>
+                                    <% } %>
+
                                     <!-- Release ownership button for MySideline events owned by the user -->
                                     <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId && carnival.lastMySidelineSync) { %>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
@@ -141,24 +160,6 @@
                                                 data-bs-target="#releaseOwnershipModal">
                                             <i class="bi bi-unlock"></i> Release Ownership
                                         </button>
-                                    <% } %>
-
-                                    <!-- Edit button for owners -->
-                                    <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId) { %>
-                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-pencil"></i> Edit Event
-                                        </a>
-                                        
-                                        <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-people"></i> Manage Attendees
-                                        </a>
-                                        
-                                        <!-- Email Attendees button (only if there are attendee clubs) -->
-                                        <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
-                                            <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
-                                                <i class="bi bi-envelope"></i> Email Attendees
-                                            </button>
-                                        <% } %>
                                     <% } %>
                                 </div>
                             </div>
