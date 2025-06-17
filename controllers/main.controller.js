@@ -412,14 +412,48 @@ const sendNewsletter = async (req, res) => {
 /**
  * Display contact page
  */
-const getContact = (req, res) => {
-    res.render('contact', {
-        title: 'Contact Us',
-        user: req.user,
-        errors: req.flash('error'),
-        success: req.flash('success'),
-        additionalCSS: []
-    });
+const getContact = async (req, res) => {
+    try {
+        let userWithClub = null;
+        
+        // If user is logged in, fetch their club information for auto-population
+        if (req.user) {
+            userWithClub = await User.findByPk(req.user.id, {
+                include: [{
+                    model: Club,
+                    as: 'club',
+                    attributes: ['id', 'clubName', 'state', 'location']
+                }],
+                attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId']
+            });
+
+            // Transform the user object to include club information for template compatibility
+            if (userWithClub && userWithClub.club) {
+                userWithClub = {
+                    ...userWithClub.toJSON(),
+                    clubId: userWithClub.club // This provides clubId.clubName for the template
+                };
+            }
+        }
+
+        res.render('contact', {
+            title: 'Contact Us',
+            user: userWithClub || req.user,
+            errors: req.flash('error'),
+            success: req.flash('success'),
+            additionalCSS: []
+        });
+    } catch (error) {
+        console.error('Error loading contact page:', error);
+        // Fallback to basic user info if there's an error fetching club data
+        res.render('contact', {
+            title: 'Contact Us',
+            user: req.user,
+            errors: req.flash('error'),
+            success: req.flash('success'),
+            additionalCSS: []
+        });
+    }
 };
 
 /**
