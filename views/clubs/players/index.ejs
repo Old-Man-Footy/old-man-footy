@@ -13,9 +13,28 @@
           <h1 class="h2 mb-1">Club Players</h1>
           <p class="text-muted"><%= club.clubName %> - Player Management</p>
         </div>
-        <a href="/clubs/players/add" class="btn btn-success">
-          <i class="bi bi-person-plus me-2"></i>Add New Player
-        </a>
+        <div class="btn-group" role="group">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-file-earmark-spreadsheet me-2"></i>CSV Import
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" href="/clubs/players/csv-template">
+                  <i class="bi bi-download me-2"></i>Download Template
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#csvImportModal">
+                  <i class="bi bi-upload me-2"></i>Upload Player Data
+                </a>
+              </li>
+            </ul>
+          </div>
+          <a href="/clubs/players/add" class="btn btn-success">
+            <i class="bi bi-person-plus me-2"></i>Add New Player
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -430,6 +449,96 @@
           <button type="submit" class="btn btn-danger">
             <i class="bi bi-person-dash me-1"></i>Remove Player
           </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CSV Import Modal -->
+<div class="modal fade" id="csvImportModal" tabindex="-1" aria-labelledby="csvImportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="csvImportModalLabel">
+          <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+          Import Players from CSV
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="/clubs/players/csv-import" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="csvFile" class="form-label">Select CSV File</label>
+            <input 
+              class="form-control" 
+              type="file" 
+              id="csvFile" 
+              name="csvFile" 
+              accept=".csv" 
+              required
+            >
+          </div>
+          <div class="mb-3">
+            <label for="shortsColor" class="form-label">Default Shorts Color</label>
+            <select class="form-select" id="shortsColor" name="shortsColor">
+              <option value="Unrestricted" selected>Unrestricted</option>
+              <option value="Red">Red</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Blue">Blue</option>
+              <option value="Green">Green</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="teamAssignment" class="form-label">Default Team Assignment</label>
+            <select class="form-select" id="teamAssignment" name="teamAssignment">
+              <option value="A" selected>Team A</option>
+              <option value="B">Team B</option>
+              <option value="C">Team C</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Import Options</label>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="updateExisting" 
+                name="updateExisting"
+                value="true"
+              >
+              <label class="form-check-label" for="updateExisting">
+                Update existing players with matching emails
+              </label>
+            </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="sendWelcomeEmail" 
+                name="sendWelcomeEmail"
+                value="true"
+              >
+              <label class="form-check-label" for="sendWelcomeEmail">
+                Send welcome email to new players
+              </label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="notes" class="form-label">Notes</label>
+            <textarea 
+              class="form-control" 
+              id="notes" 
+              name="notes" 
+              rows="3" 
+              placeholder="Optional notes for the players being imported..."
+            ></textarea>
+          </div>
+          <div class="text-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload me-1"></i>Import Players
+            </button>
+          </div>
         </form>
       </div>
     </div>

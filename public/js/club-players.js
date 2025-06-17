@@ -32,6 +32,72 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Handle CSV import modal
+    const csvImportModal = document.getElementById('csvImportModal');
+    const csvFileInput = document.getElementById('csvFile');
+    const csvForm = csvImportModal ? csvImportModal.querySelector('form') : null;
+
+    if (csvImportModal && csvFileInput && csvForm) {
+        // File validation
+        csvFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.name.toLowerCase().endsWith('.csv')) {
+                    alert('Please select a CSV file.');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Validate file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB.');
+                    e.target.value = '';
+                    return;
+                }
+
+                console.log('CSV file selected:', file.name, 'Size:', (file.size / 1024).toFixed(2) + 'KB');
+            }
+        });
+
+        // Form submission handling
+        csvForm.addEventListener('submit', function(e) {
+            const file = csvFileInput.files[0];
+            if (!file) {
+                e.preventDefault();
+                alert('Please select a CSV file to upload.');
+                return;
+            }
+
+            // Show loading state
+            const submitButton = csvForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Importing...';
+            }
+
+            // Form will submit normally, loading state will be reset on page reload
+        });
+
+        // Reset form when modal is hidden
+        csvImportModal.addEventListener('hidden.bs.modal', function() {
+            csvForm.reset();
+            const submitButton = csvForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="bi bi-upload me-1"></i>Import Players';
+            }
+        });
+    }
+
+    // CSV template download analytics
+    const templateLink = document.querySelector('a[href="/clubs/players/csv-template"]');
+    if (templateLink) {
+        templateLink.addEventListener('click', function() {
+            console.log('CSV template downloaded');
+        });
+    }
+
     // Auto-submit search form on sort change (optional enhancement)
     const sortBySelect = document.getElementById('sortBy');
     const sortOrderSelect = document.getElementById('sortOrder');
@@ -70,4 +136,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    console.log('Club players page functionality initialized');
 });

@@ -7,8 +7,24 @@
 
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { ensureAuthenticated } = require('../middleware/auth');
 const clubPlayerController = require('../controllers/clubPlayer.controller');
+
+// Configure multer for CSV file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'), false);
+    }
+  }
+});
 
 /**
  * Apply authentication middleware to all routes
@@ -20,6 +36,22 @@ router.use(ensureAuthenticated);
  * Display club players list for the authenticated user's club
  */
 router.get('/', clubPlayerController.showClubPlayers);
+
+/**
+ * GET /clubs/players/csv-template
+ * Download CSV template for player import
+ */
+router.get('/csv-template', clubPlayerController.downloadCsvTemplate);
+
+/**
+ * POST /clubs/players/csv-import
+ * Process CSV player import
+ */
+router.post('/csv-import', 
+  upload.single('csvFile'),
+  clubPlayerController.validateCsvImport,
+  clubPlayerController.importPlayersFromCsv
+);
 
 /**
  * GET /clubs/players/add

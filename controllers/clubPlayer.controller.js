@@ -461,6 +461,250 @@ async function reactivatePlayer(req, res, next) {
 }
 
 /**
+ * Download CSV template for player import
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function downloadCsvTemplate(req, res, next) {
+  try {
+    // Ensure user is authenticated and has a club
+    if (!req.user || !req.user.clubId) {
+      req.flash('error', 'You must be a club delegate to download the template.');
+      return res.redirect('/dashboard');
+    }
+
+    // Get club information for filename
+    const club = await Club.findByPk(req.user.clubId, {
+      attributes: ['id', 'clubName']
+    });
+
+    if (!club) {
+      req.flash('error', 'Club not found.');
+      return res.redirect('/dashboard');
+    }
+
+    // Create CSV template with headers and sample data
+    const csvHeaders = [
+      'firstName',
+      'lastName', 
+      'email',
+      'dateOfBirth',
+      'notes',
+      'shorts'
+    ];
+
+    const sampleData = [
+      [
+        'John',
+        'Smith',
+        'john.smith@example.com',
+        '1985-06-15',
+        'Former professional player',
+        'Blue'
+      ],
+      [
+        'Sarah',
+        'Johnson', 
+        'sarah.johnson@example.com',
+        '1987-03-22',
+        'Available weekends only',
+        'Red'
+      ],
+      [
+        'Mike',
+        'Williams',
+        'mike.williams@example.com',
+        '1982-11-08',
+        '',
+        'Unrestricted'
+      ]
+    ];
+
+    // Build CSV content
+    const csvContent = [
+      csvHeaders.join(','),
+      ...sampleData.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    // Set response headers for file download
+    const filename = `${club.clubName.replace(/[^a-zA-Z0-9]/g, '_')}_players_template.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Send the CSV content
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Error generating CSV template:', error);
+    next(error);
+  }
+}
+
+/**
+ * Process CSV player import
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+async function importPlayersFromCsv(req, res, next) {
+  try {
+    // Ensure user is authenticated and has a club
+    if (!req.user || !req.user.clubId) {
+      req.flash('error', 'You must be a club delegate to import players.');
+      return res.redirect('/dashboard');
+    }
+
+    // Check if file was uploaded
+    if (!req.file) {
+      req.flash('error', 'Please select a CSV file to upload.');
+      return res.redirect('/clubs/players');
+    }
+
+    // Get club information
+    const club = await Club.findByPk(req.user.clubId, {
+      attributes: ['id', 'clubName']
+    });
+
+    if (!club) {
+      req.flash('error', 'Club not found.');
+      return res.redirect('/dashboard');
+    }
+
+    const { shortsColor = 'Unrestricted', updateExisting = false, notes = '' } = req.body;
+
+    // Parse CSV file
+    const csvContent = req.file.buffer.toString('utf8');
+    const lines = csvContent.split('\n').filter(line => line.trim());
+    
+    if (lines.length < 2) {
+      req.flash('error', 'CSV file must contain at least a header row and one data row.');
+      return res.redirect('/clubs/players');
+    }
+
+    // Parse headers
+    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+    
+    // Validate required headers
+    const requiredHeaders = ['firstname', 'lastname', 'email', 'dateofbirth'];
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+    
+    if (missingHeaders.length > 0) {
+      req.flash('error', `Missing required columns: ${missingHeaders.join(', ')}. Please use the template.`);
+      return res.redirect('/clubs/players');
+    }
+
+    // Process data rows
+    const results = {
+      imported: 0,
+      updated: 0,
+      duplicates: 0,
+      errors: []
+    };
+
+    for (let i = 1; i < lines.length; i++) {
+      try {
+        const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
+        
+        if (values.length !== headers.length) {
+          results.errors.push(`Row ${i + 1}: Incorrect number of columns`);
+          continue;
+        }
+
+        // Map values to object
+        const playerData = {};
+        headers.forEach((header, index) => {
+          playerData[header] = values[index];
+        });
+
+        // Validate required fields
+        if (!playerData.firstname || !playerData.lastname || !playerData.email || !playerData.dateofbirth) {
+          results.errors.push(`Row ${i + 1}: Missing required data`);
+          continue;
+        }
+
+        // Validate date format
+        const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dobRegex.test(playerData.dateofbirth)) {
+          results.errors.push(`Row ${i + 1}: Invalid date format. Use YYYY-MM-DD`);
+          continue;
+        }
+
+        // Check if player already exists
+        const existingPlayer = await ClubPlayer.findOne({
+          where: {
+            email: playerData.email.toLowerCase(),
+            isActive: true
+          }
+        });
+
+        if (existingPlayer) {
+          if (existingPlayer.clubId === req.user.clubId) {
+            if (updateExisting) {
+              // Update existing player
+              await existingPlayer.update({
+                firstName: playerData.firstname,
+                lastName: playerData.lastname,
+                dateOfBirth: playerData.dateofbirth,
+                notes: playerData.notes || notes || null,
+                shorts: playerData.shorts || shortsColor
+              });
+              results.updated++;
+            } else {
+              results.duplicates++;
+            }
+          } else {
+            results.errors.push(`Row ${i + 1}: Email already exists in another club`);
+          }
+          continue;
+        }
+
+        // Create new player
+        await ClubPlayer.create({
+          clubId: req.user.clubId,
+          firstName: playerData.firstname,
+          lastName: playerData.lastname,
+          email: playerData.email.toLowerCase(),
+          dateOfBirth: playerData.dateofbirth,
+          notes: playerData.notes || notes || null,
+          shorts: playerData.shorts || shortsColor
+        });
+
+        results.imported++;
+      } catch (error) {
+        console.error(`Error processing row ${i + 1}:`, error);
+        results.errors.push(`Row ${i + 1}: ${error.message}`);
+      }
+    }
+
+    // Generate success message
+    let message = `Import complete: ${results.imported} players imported`;
+    if (results.updated > 0) message += `, ${results.updated} updated`;
+    if (results.duplicates > 0) message += `, ${results.duplicates} duplicates skipped`;
+    if (results.errors.length > 0) message += `, ${results.errors.length} errors`;
+
+    if (results.imported > 0 || results.updated > 0) {
+      req.flash('success', message);
+    } else {
+      req.flash('warning', message);
+    }
+
+    // Log errors if any
+    if (results.errors.length > 0) {
+      console.log('CSV Import errors:', results.errors);
+      req.flash('error', `Errors encountered: ${results.errors.slice(0, 5).join('; ')}${results.errors.length > 5 ? '...' : ''}`);
+    }
+
+    res.redirect('/clubs/players');
+  } catch (error) {
+    console.error('Error importing CSV:', error);
+    req.flash('error', 'An error occurred while importing players. Please try again.');
+    res.redirect('/clubs/players');
+  }
+}
+
+/**
  * Validation rules for creating/updating players
  */
 const validatePlayer = [
@@ -526,6 +770,24 @@ const validatePlayerId = [
     .withMessage('Player ID must be a valid positive integer')
 ];
 
+/**
+ * Validation rules for CSV import
+ */
+const validateCsvImport = [
+  body('shortsColor')
+    .optional()
+    .isIn(['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'])
+    .withMessage('Invalid shorts color selection'),
+  body('updateExisting')
+    .optional()
+    .isBoolean()
+    .withMessage('Update existing must be boolean'),
+  body('notes')
+    .optional()
+    .isLength({ max: 1000 })
+    .withMessage('Notes cannot exceed 1000 characters')
+];
+
 module.exports = {
   showClubPlayers,
   showAddPlayerForm,
@@ -534,6 +796,9 @@ module.exports = {
   updatePlayer,
   deactivatePlayer,
   reactivatePlayer,
+  downloadCsvTemplate,
+  importPlayersFromCsv,
   validatePlayer,
-  validatePlayerId
+  validatePlayerId,
+  validateCsvImport
 };
