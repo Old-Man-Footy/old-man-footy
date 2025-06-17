@@ -211,41 +211,4 @@
     </div>
 </div>
 
-<!-- Remove attendee functionality -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Remove attendee functionality
-    document.querySelectorAll('.remove-attendee').forEach(button => {
-        button.addEventListener('click', function() {
-            const registrationId = this.dataset.registrationId;
-            const clubName = this.dataset.clubName;
-            
-            if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {
-                removeAttendee(registrationId);
-            }
-        });
-    });
-
-    async function removeAttendee(registrationId) {
-        try {
-            const response = await fetch(`/carnivals/<%= carnival.id %>/attendees/${registrationId}`, {
-                method: 'DELETE'
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                location.reload(); // Refresh to show updated list
-            } else {
-                alert(result.message || 'Error removing club from carnival');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error removing club from carnival');
-        }
-    }
-
-    // Sortable functionality for reordering (if needed in future)
-    // This would require additional JavaScript library like SortableJS
-});
-</script>
+<script src="/js/carnival-attendees.js"></script>

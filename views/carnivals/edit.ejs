@@ -268,14 +268,4 @@
     </div>
 </div>
 
-<script>
-// Make file upload areas clickable
-document.querySelectorAll('.file-upload-area').forEach(area => {
-    area.addEventListener('click', function() {
-        const input = this.querySelector('input[type="file"]');
-        if (input) {
-            input.click();
-        }
-    });
-});
-</script>
+<script src="/js/carnival-edit.js"></script>

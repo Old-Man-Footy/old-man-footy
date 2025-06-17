@@ -1,4 +1,4 @@
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" data-user-email="<%= user ? user.email : '' %>" data-states='<%= JSON.stringify(states) %>'>
     <div class="row justify-content-center">
         <div class="col-md-8">
             <!-- Page Header -->
@@ -220,64 +220,4 @@
     </div>
 </div>
 
-<script>
-/**
- * Form validation and interaction handling
- */
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('form');
-    const stateSelect = document.getElementById('state');
-    const inviteEmailInput = document.getElementById('inviteEmail');
-    const customMessageTextarea = document.getElementById('customMessage');
-
-    // State selection - preselect based on user's location (if available)
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-
-            // Reverse geocoding to get state from latitude and longitude
-            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
-                .then(response => response.json())
-                .then(data => {
-                    const userState = data.address.state;
-                    // Check if the state is in the predefined list
-                    <% states.forEach(state => { %>
-                        if (userState && userState.toLowerCase() === '<%= state.toLowerCase() %>') {
-                            stateSelect.value = '<%= state %>';
-                        }
-                    <% }); %>
-                })
-                .catch(err => console.error('Error fetching state from location:', err));
-        });
-    }
-
-    // Invite email - prefill based on user's email (if logged in)
-    const userEmail = '<%= user ? user.email : "" %>';
-    if (userEmail) {
-        inviteEmailInput.value = userEmail;
-        customMessageTextarea.value = `Hi, I've created a profile for your club on Old Man Footy. This platform helps connect Masters Rugby League clubs across Australia for carnivals and events. Would you like to take ownership of your club's profile?`;
-    }
-
-    // Form submission handler
-    form.addEventListener('submit', function (event) {
-        // Basic client-side validation
-        let isValid = true;
-        const requiredFields = ['clubName', 'state', 'inviteEmail'];
-        requiredFields.forEach(field => {
-            const input = document.querySelector(`[name="${field}"]`);
-            if (!input.value.trim()) {
-                isValid = false;
-                input.classList.add('is-invalid');
-            } else {
-                input.classList.remove('is-invalid');
-            }
-        });
-
-        if (!isValid) {
-            event.preventDefault();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    });
-});
-</script>
+<script src="/js/club-create-on-behalf.js"></script>

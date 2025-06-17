@@ -90,16 +90,4 @@
     </div>
 </div>
 
-<script>
-// Password confirmation validation
-document.getElementById('confirmPassword').addEventListener('input', function() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
-    
-    if (password !== confirmPassword) {
-        this.setCustomValidity('Passwords do not match');
-    } else {
-        this.setCustomValidity('');
-    }
-});
-</script>
+<script src="/js/auth-register.js"></script>

@@ -276,35 +276,4 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Remove registration functionality
-    document.querySelector('.remove-registration')?.addEventListener('click', function() {
-        const registrationId = this.dataset.registrationId;
-        const clubName = this.dataset.clubName;
-        
-        if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {
-            removeRegistration(registrationId);
-        }
-    });
-
-    async function removeRegistration(registrationId) {
-        try {
-            const response = await fetch(`/carnivals/<%= carnival.id %>/attendees/${registrationId}`, {
-                method: 'DELETE'
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                window.location.href = '/carnivals/<%= carnival.id %>/attendees';
-            } else {
-                alert(result.message || 'Error removing registration');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error removing registration');
-        }
-    }
-});
-</script>
+<script src="/js/carnival-edit-registration.js"></script>

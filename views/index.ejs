@@ -141,7 +141,7 @@
 
 <!-- Image Carousel Section -->
 <% if (carouselImages && carouselImages.length > 0) { %>
-<section class="py-4 bg-light">
+<section class="py-4 bg-light" data-carousel-images='<%= JSON.stringify(carouselImages) %>'>
     <div class="container">
         <div class="row">
             <div class="col-12">
@@ -263,11 +263,4 @@
     </div>
 </section>
 
-<script>
-    // Pass carousel images to client-side JavaScript
-    <% if (typeof carouselImages !== 'undefined') { %>
-        window.carouselImages = <%- JSON.stringify(carouselImages) %>;
-    <% } else { %>
-        window.carouselImages = [];
-    <% } %>
-</script>
+<script src="/js/index.js"></script>
