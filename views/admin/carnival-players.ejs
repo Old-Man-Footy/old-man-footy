@@ -1,0 +1,355 @@
+<%- include('../partials/header', { title: `All Players - ${carnival.title} (Admin View)` }) %>
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-decoration-none">Admin Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="/admin/carnivals" class="text-decoration-none">Carnival Management</a></li>
+                            <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>" class="text-decoration-none"><%= carnival.title %></a></li>
+                            <li class="breadcrumb-item active" aria-current="page">All Players</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h2 mb-2">All Players</h1>
+                    <h4 class="text-muted mb-3"><%= carnival.title %></h4>
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-shield-check me-2"></i>
+                        <span><strong>Admin View:</strong> You can view player lists for any carnival as an administrator.</span>
+                    </div>
+                    <p class="mb-0" id="visibleCount">Showing 0 of 0 players</p>
+                </div>
+                <div class="text-end">
+                    <div class="btn-group mb-2" role="group">
+                        <button type="button" class="btn btn-outline-success btn-sm" id="exportToCSV">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="printList">
+                            <i class="bi bi-printer"></i> Print List
+                        </button>
+                    </div>
+                    <br>
+                    <a href="/admin/carnivals" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Back to Carnival Management
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0"><%= totalPlayers %></h4>
+                            <p class="mb-0">Total Players</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-people" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0"><%= totalMastersEligible %></h4>
+                            <p class="mb-0">Masters Eligible</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-trophy" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0"><%= totalClubs %></h4>
+                            <p class="mb-0">Participating Clubs</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-building" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0"><%= Math.round((totalMastersEligible / totalPlayers) * 100) || 0 %>%</h4>
+                            <p class="mb-0">Masters Rate</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-percent" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Club Summary Cards -->
+    <% if (Object.keys(clubSummary).length > 0) { %>
+        <div class="row mb-4" id="clubSummaryCards">
+            <div class="col-12">
+                <h5 class="mb-3">Club Summary</h5>
+                <div class="row g-3">
+                    <% Object.entries(clubSummary).forEach(([clubName, club]) => { %>
+                        <div class="col-lg-3 col-md-4 col-sm-6">
+                            <div class="card h-100 shadow-sm club-summary-card" data-club="<%= clubName %>">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="me-2 d-flex align-items-center justify-content-center bg-light border rounded" 
+                                             style="height: 30px; width: 40px; min-width: 40px;">
+                                            <i class="bi bi-shield text-muted" style="font-size: 0.8rem;"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0 fw-semibold" style="font-size: 0.9rem;"><%= clubName %></h6>
+                                            <% if (club.state) { %>
+                                                <span class="badge bg-secondary" style="font-size: 0.7rem;"><%= club.state %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <div class="fw-bold text-primary" style="font-size: 1.1rem;"><%= club.total %></div>
+                                            <small class="text-muted">Total</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="fw-bold text-success" style="font-size: 1.1rem;"><%= club.mastersEligible %></div>
+                                            <small class="text-muted">Masters</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <!-- Filters and Search -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-4 col-md-6">
+                    <label for="searchInput" class="form-label fw-semibold">
+                        <i class="bi bi-search"></i> Search Players
+                    </label>
+                    <input type="text" class="form-control" id="searchInput" 
+                           placeholder="Search by name, club...">
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label for="clubFilter" class="form-label fw-semibold">
+                        <i class="bi bi-building"></i> Club
+                    </label>
+                    <select class="form-select" id="clubFilter">
+                        <option value="">All Clubs</option>
+                        <% Object.keys(clubSummary).forEach(clubName => { %>
+                            <option value="<%= clubName %>"><%= clubName %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-person"></i> Age Filter
+                    </label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="ageFilter" id="ageAll" value="all" checked>
+                            <label class="form-check-label" for="ageAll">All</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="ageFilter" id="ageMasters" value="masters">
+                            <label class="form-check-label" for="ageMasters">Masters (35+)</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="ageFilter" id="ageUnder35" value="under35">
+                            <label class="form-check-label" for="ageUnder35">Under 35</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Players Table -->
+    <% if (allPlayers && allPlayers.length > 0) { %>
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul"></i> Player List 
+                    <span class="badge bg-primary ms-2" id="playerCount"><%= allPlayers.length %></span>
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="playersTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="sortable" data-sort="club" style="cursor: pointer;">
+                                Club <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="name" style="cursor: pointer;">
+                                Player Name <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="age" style="cursor: pointer;">
+                                Age <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="dob" style="cursor: pointer;">
+                                Date of Birth <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="shorts" style="cursor: pointer;">
+                                Shorts Colour <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="status" style="cursor: pointer;">
+                                Attendance <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th>Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <% allPlayers.forEach(player => { %>
+                            <tr class="player-row" 
+                                data-club="<%= player.clubName %>"
+                                data-age="<%= player.age || 0 %>"
+                                data-masters="<%= player.isMastersEligible %>"
+                                data-status="<%= player.attendanceStatus %>">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 d-flex align-items-center justify-content-center bg-light border rounded" 
+                                             style="height: 25px; width: 35px; min-width: 35px;">
+                                            <i class="bi bi-shield text-muted" style="font-size: 0.7rem;"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold" style="font-size: 0.9rem;"><%= player.clubName %></div>
+                                            <% if (player.clubState) { %>
+                                                <span class="badge bg-secondary" style="font-size: 0.7rem;"><%= player.clubState %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">
+                                        <%= player.firstName %> <%= player.lastName %>
+                                        <% if (player.isMastersEligible) { %>
+                                            <span class="badge bg-success ms-1" style="font-size: 0.7rem;">Masters</span>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <td>
+                                    <% if (player.age) { %>
+                                        <span class="<%= player.isMastersEligible ? 'text-success fw-semibold' : '' %>">
+                                            <%= player.age %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">N/A</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (player.dateOfBirth) { %>
+                                        <%= new Date(player.dateOfBirth).toLocaleDateString('en-AU') %>
+                                    <% } else { %>
+                                        <span class="text-muted">Not provided</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (player.shortsColour && player.shortsColour.trim() && player.shortsColour !== 'Not specified') { %>
+                                        <span class="badge bg-secondary"><%= player.shortsColour %></span>
+                                    <% } else { %>
+                                        <span class="text-muted">Not specified</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (player.attendanceStatus === 'confirmed') { %>
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Confirmed
+                                        </span>
+                                    <% } else if (player.attendanceStatus === 'tentative') { %>
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-question-circle"></i> Tentative
+                                        </span>
+                                    <% } else if (player.attendanceStatus === 'unavailable') { %>
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle"></i> Unavailable
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-dash-circle"></i> Unknown
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (player.email) { %>
+                                        <a href="mailto:<%= player.email %>" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-envelope"></i>
+                                        </a>
+                                    <% } %>
+                                    <% if (player.phoneNumber) { %>
+                                        <a href="tel:<%= player.phoneNumber %>" class="btn btn-outline-success btn-sm ms-1">
+                                            <i class="bi bi-telephone"></i>
+                                        </a>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <% } else { %>
+        <!-- Empty State -->
+        <div class="card shadow">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-people text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5 class="text-muted mb-3">No Players Found</h5>
+                <p class="text-muted mb-4">
+                    There are no player registrations for this carnival yet, or no clubs have added their player lists.
+                </p>
+                <a href="/admin/carnivals" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Carnival Management
+                </a>
+            </div>
+        </div>
+    <% } %>
+
+    <!-- Empty State (for filtered results) -->
+    <div class="card shadow d-none" id="emptyState">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-funnel text-muted mb-3" style="font-size: 3rem;"></i>
+            <h5 class="text-muted mb-3">No Players Match Your Filters</h5>
+            <p class="text-muted mb-4">
+                Try adjusting your search criteria or clearing the filters to see more results.
+            </p>
+            <button type="button" class="btn btn-outline-primary" id="clearFiltersEmpty">
+                <i class="bi bi-x-circle"></i> Clear All Filters
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Include JavaScript -->
+<script src="/js/carnival-all-players.js"></script>
+
+<%- include('../partials/footer') %>

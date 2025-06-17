@@ -112,4 +112,7 @@ router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus
 router.get('/carnivals/:id/claim', adminController.showClaimCarnivalForm);
 router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
 
+// Admin player list viewing for any carnival
+router.get('/carnivals/:id/players', adminController.showCarnivalPlayers);
+
 module.exports = router;

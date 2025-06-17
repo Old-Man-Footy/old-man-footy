@@ -1135,6 +1135,125 @@ const adminClaimCarnival = async (req, res) => {
     }
 };
 
+/**
+ * Show comprehensive player list for any carnival (admin only)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showCarnivalPlayers = async (req, res) => {
+    try {
+        const carnivalId = req.params.id;
+        
+        const carnival = await Carnival.findByPk(carnivalId, {
+            include: [{ model: User, as: 'creator' }]
+        });
+
+        if (!carnival) {
+            req.flash('error_msg', 'Carnival not found');
+            return res.redirect('/admin/carnivals');
+        }
+
+        // Get all club registrations for this carnival with their players
+        const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = require('../models');
+        const clubRegistrations = await CarnivalClub.findAll({
+            where: {
+                carnivalId: carnival.id,
+                isActive: true,
+                approvalStatus: 'approved' // Only show approved clubs
+            },
+            include: [
+                {
+                    model: Club,
+                    as: 'club',
+                    attributes: ['id', 'clubName', 'state', 'location']
+                },
+                {
+                    model: CarnivalClubPlayer,
+                    as: 'players',
+                    where: { isActive: true },
+                    required: false,
+                    include: [{
+                        model: ClubPlayer,
+                        as: 'clubPlayer',
+                        where: { isActive: true },
+                        attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shortsColour', 'email', 'phoneNumber']
+                    }]
+                }
+            ],
+            order: [
+                ['club', 'clubName', 'ASC'],
+                ['players', 'clubPlayer', 'firstName', 'ASC'],
+                ['players', 'clubPlayer', 'lastName', 'ASC']
+            ]
+        });
+
+        // Flatten the data structure for easier display
+        const allPlayers = [];
+        let totalPlayers = 0;
+        let totalMastersEligible = 0;
+
+        clubRegistrations.forEach(registration => {
+            if (registration.players && registration.players.length > 0) {
+                registration.players.forEach(playerAssignment => {
+                    const player = playerAssignment.clubPlayer;
+                    const isMastersEligible = player.dateOfBirth ? 
+                        ClubPlayer.calculateAge(player.dateOfBirth) >= 35 : false;
+                    
+                    allPlayers.push({
+                        id: player.id,
+                        clubName: registration.club.clubName,
+                        clubState: registration.club.state,
+                        firstName: player.firstName,
+                        lastName: player.lastName,
+                        fullName: `${player.firstName} ${player.lastName}`,
+                        dateOfBirth: player.dateOfBirth,
+                        age: player.dateOfBirth ? ClubPlayer.calculateAge(player.dateOfBirth) : null,
+                        shortsColour: player.shortsColour || 'Not specified',
+                        attendanceStatus: playerAssignment.attendanceStatus,
+                        isMastersEligible,
+                        email: player.email,
+                        phoneNumber: player.phoneNumber
+                    });
+                    
+                    totalPlayers++;
+                    if (isMastersEligible) totalMastersEligible++;
+                });
+            }
+        });
+
+        // Group players by club for summary stats
+        const clubSummary = {};
+        allPlayers.forEach(player => {
+            if (!clubSummary[player.clubName]) {
+                clubSummary[player.clubName] = {
+                    total: 0,
+                    mastersEligible: 0,
+                    state: player.clubState
+                };
+            }
+            clubSummary[player.clubName].total++;
+            if (player.isMastersEligible) {
+                clubSummary[player.clubName].mastersEligible++;
+            }
+        });
+
+        res.render('admin/carnival-players', {
+            title: `All Players - ${carnival.title} (Admin View)",
+            carnival,
+            allPlayers,
+            clubSummary,
+            totalPlayers,
+            totalMastersEligible,
+            totalClubs: Object.keys(clubSummary).length,
+            additionalCSS: ['/styles/admin.styles.css', '/styles/carnival.styles.css']
+        });
+    } catch (error) {
+        console.error('❌ Error loading carnival player list for admin:', error);
+        req.flash('error_msg', 'Error loading carnival player list');
+        res.redirect('/admin/carnivals');
+    }
+};
+
 module.exports = {
     getAdminDashboard,
     getUserManagement,
@@ -1154,5 +1273,6 @@ module.exports = {
     toggleCarnivalStatus,
     generateReport,
     showClaimCarnivalForm,
-    adminClaimCarnival
+    adminClaimCarnival,
+    showCarnivalPlayers
 };

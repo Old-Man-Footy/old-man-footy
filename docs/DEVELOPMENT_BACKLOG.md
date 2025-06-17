@@ -96,7 +96,7 @@ Fields on the target carnival that already contain data (and are not designated 
 | As a club delegate, when I release a previous claimed carnival, the contact details on the carnival should be cleared out (bypassing validity checks). | ✅ Completed |
 | As an admin, I want to be able to claim any carnival on behalf of any other club. In that instance, the contact details should be populated with the primary delegate's contact details. | ✅ Completed |
 | As a club delegate, I want to be able to bulk import players via CSV. I want to be able to download a template from the site, and upload it filled with Player data. Duplicates should be ignored. | ✅ Completed |
-| As an admin, I want to be able to see player lists attending all club carnivals.  | ⭕ Not Started |
+| As an admin, I want to be able to see player lists for any club carnival.  | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the main site footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`. It should stand out and attract attention without being big.  | ⭕ Not Started |
 | As a administrator, I want to be able to bulk remove or update contact information from clubs or carnivals from the admin dashboard when requested to remove them. | ⭕ Not Started |
@@ -172,6 +172,7 @@ Fields on the target carnival that already contain data (and are not designated 
 | As a developer, I want comprehensive unit tests for, and limited to `views/auth/login.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/auth/register.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/admin/claim-carnival.ejs`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `views/admin/carnival-players.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/add-club.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/attendees.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/add-players.ejs`  | ⭕ Not Started |
