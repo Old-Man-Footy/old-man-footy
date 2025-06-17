@@ -1044,7 +1044,18 @@ We'll respond to your inquiry from our support team shortly.
     async sendRegistrationApprovalEmail(carnival, club, approverName) {
         try {
             const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
+            const loginUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/login`;
             const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
+            
+            // Get the primary contact's first name - try multiple sources
+            let contactFirstName = 'there'; // Default fallback
+            if (club.contactPerson) {
+                // If contactPerson exists, try to extract first name
+                contactFirstName = club.contactPerson.split(' ')[0];
+            } else if (club.primaryDelegateName) {
+                // If we have primary delegate name, use that
+                contactFirstName = club.primaryDelegateName.split(' ')[0];
+            }
 
             if (!recipientEmail) {
                 console.warn(`No email found for club: ${club.clubName}`);
@@ -1065,9 +1076,9 @@ We'll respond to your inquiry from our support team shortly.
                         <div style="padding: 30px; background: #f9f9f9;">
                             <h2 style="color: #006837;">🎉 Great News! Your Registration is Approved</h2>
                             
-                            <p>Hello <strong>${club.clubName}</strong>,</p>
+                            <p>Hello <strong>${contactFirstName}</strong>,</p>
                             
-                            <p>Excellent news! <strong>${approverName}</strong> from the hosting club has approved your registration for:</p>
+                            <p>Excellent news! <strong>${approverName}</strong> from the hosting club has approved <strong>${club.clubName}'s</strong> registration for:</p>
                             
                             <div style="background: #e8f5e8; border-left: 4px solid #006837; padding: 15px; margin: 20px 0; border-radius: 0 5px 5px 0;">
                                 <h3 style="color: #006837; margin-top: 0;">${carnival.title}</h3>
@@ -1080,19 +1091,45 @@ We'll respond to your inquiry from our support team shortly.
                                 <p><strong>📍 Location:</strong> ${carnival.locationAddress}</p>
                             </div>
                             
+                            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                                <h4 style="color: #856404; margin-top: 0;">🏉 Next Step: Add Your Players</h4>
+                                <p style="margin: 10px 0; color: #856404;">
+                                    Now that your registration is approved, you need to log into the Old Man Footy website 
+                                    and add the list of players from your club who will be attending this carnival.
+                                </p>
+                                
+                                <p style="margin: 10px 0; color: #856404;"><strong>How to add players:</strong></p>
+                                <ol style="margin: 10px 0; color: #856404; line-height: 1.6;">
+                                    <li>Log into your account at <a href="${loginUrl}" style="color: #856404; text-decoration: underline;">oldmanfooty.au/auth/login</a></li>
+                                    <li>Go to the carnival page by clicking the button below</li>
+                                    <li>Look for the "Manage Players" button in your registration section</li>
+                                    <li>Select which players from your club roster will attend</li>
+                                    <li>Save your player selections</li>
+                                </ol>
+                                
+                                <p style="margin: 10px 0 0 0; color: #856404; font-weight: bold;">
+                                    ⚠️ Important: Player selections must be completed before the carnival starts.
+                                </p>
+                            </div>
+                            
                             <p><strong>What's next?</strong></p>
                             <ul>
                                 <li>✅ Your club is now officially attending this carnival</li>
+                                <li>👥 <strong>Log in and add your players (required)</strong></li>
                                 <li>📧 The organiser will contact you with payment details if required</li>
-                                <li>👥 You can now manage your player selections</li>
                                 <li>📋 Keep an eye out for draw information and updates</li>
                             </ul>
                             
                             <div style="text-align: center; margin: 30px 0;">
                                 <a href="${carnivalUrl}" 
                                    style="background: #006837; color: white; padding: 15px 30px; 
-                                          text-decoration: none; border-radius: 5px; font-weight: bold;">
-                                    View Carnival Details
+                                          text-decoration: none; border-radius: 5px; font-weight: bold; margin: 0 5px; display: inline-block;">
+                                    🏉 Add Players to Carnival
+                                </a>
+                                <a href="${loginUrl}" 
+                                   style="background: #ffc107; color: #212529; padding: 15px 30px; 
+                                          text-decoration: none; border-radius: 5px; font-weight: bold; margin: 0 5px; display: inline-block;">
+                                    🔐 Login to Account
                                 </a>
                             </div>
                             
@@ -1136,6 +1173,16 @@ We'll respond to your inquiry from our support team shortly.
         try {
             const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
             const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
+            
+            // Get the primary contact's first name - try multiple sources
+            let contactFirstName = 'there'; // Default fallback
+            if (club.contactPerson) {
+                // If contactPerson exists, try to extract first name
+                contactFirstName = club.contactPerson.split(' ')[0];
+            } else if (club.primaryDelegateName) {
+                // If we have primary delegate name, use that
+                contactFirstName = club.primaryDelegateName.split(' ')[0];
+            }
 
             if (!recipientEmail) {
                 console.warn(`No email found for club: ${club.clubName}`);
@@ -1156,9 +1203,9 @@ We'll respond to your inquiry from our support team shortly.
                         <div style="padding: 30px; background: #f9f9f9;">
                             <h2 style="color: #006837;">Registration Update</h2>
                             
-                            <p>Hello <strong>${club.clubName}</strong>,</p>
+                            <p>Hello <strong>${contactFirstName}</strong>,</p>
                             
-                            <p>Thank you for your interest in attending <strong>${carnival.title}</strong>. Unfortunately, <strong>${rejectorName}</strong> from the hosting club was unable to approve your registration at this time.</p>
+                            <p>Thank you for <strong>${club.clubName}'s</strong> interest in attending <strong>${carnival.title}</strong>. Unfortunately, <strong>${rejectorName}</strong> from the hosting club was unable to approve your registration at this time.</p>
                             
                             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
                                 <h3 style="color: #006837; margin-top: 0;">${carnival.title}</h3>
