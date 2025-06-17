@@ -1511,22 +1511,57 @@ button[type="submit"]:contains("Complete Registration"):focus {
     box-shadow: 0 2px 8px rgba(0, 104, 55, 0.2);
 }
 
+/* ================================
+   BREADCRUMB STYLING
+   ================================ */
+
+/* Breadcrumb styling for both light and dark modes */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item {
+    color: var(--theme-text-secondary);
+}
+
+.breadcrumb-item a {
+    color: var(--rugby-link-green);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--rugby-link-green-hover);
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: var(--theme-text-primary) !important;
+    font-weight: 500;
+}
+
+/* Dark mode breadcrumb fixes */
+[data-theme="dark"] .breadcrumb-item {
+    color: var(--theme-text-secondary) !important;
+}
+
+[data-theme="dark"] .breadcrumb-item a {
+    color: #4CAF50 !important;
+}
+
+[data-theme="dark"] .breadcrumb-item a:hover {
+    color: #66BB6A !important;
+}
+
+[data-theme="dark"] .breadcrumb-item.active {
+    color: var(--theme-text-primary) !important;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--theme-text-secondary) !important;
+}
+
 /* Dark mode checklist styling */
-[data-theme="dark"] #quickStartChecklist .list-group-item {
-    background-color: var(--theme-card-bg);
-    border-color: var(--theme-border-color);
-    color: var(--theme-text-primary);
-}
-
-[data-theme="dark"] #quickStartChecklist .list-group-item:hover {
-    background-color: var(--theme-bg-tertiary);
-}
-
-[data-theme="dark"] #quickStartChecklist .list-group-item label:hover {
-    color: var(--rugby-gold);
-}
-
-[data-theme="dark"] .checklist-item:checked {
-    background-color: var(--rugby-green);
-    border-color: var(--rugby-green);
-}

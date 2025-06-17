@@ -55,7 +55,7 @@ const showCarnivalAttendees = async (req, res) => {
         const totalPlayerCount = attendingClubs.reduce((sum, cc) => sum + (cc.playerCount || 0), 0);
 
         res.render('carnivals/attendees', {
-            title: `${carnival.carnivalName} - Manage Attendees`,
+            title: `${carnival.title} - Manage Attendees`,
             carnival,
             attendingClubs,
             totalAttendees,
@@ -114,7 +114,7 @@ const showAddClubToCarnival = async (req, res) => {
         });
 
         res.render('carnivals/add-club', {
-            title: `Add Club to ${carnival.carnivalName}`,
+            title: `Add Club to ${carnival.title}`,
             carnival,
             availableClubs,
             additionalCSS: ['/styles/carnival.styles.css']
@@ -215,7 +215,7 @@ const registerClubForCarnival = async (req, res) => {
             attributes: ['clubName']
         });
 
-        req.flash('success_msg', `${club.clubName} has been successfully registered for ${carnival.carnivalName}!`);
+        req.flash('success_msg', `${club.clubName} has been successfully registered for ${carnival.title}!`);
         res.redirect(`/carnivals/${carnivalId}/attendees`);
     } catch (error) {
         console.error('Error registering club for carnival:', error);

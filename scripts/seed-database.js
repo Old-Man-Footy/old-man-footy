@@ -1635,17 +1635,14 @@ class DatabaseSeeder {
      */
     generateSpecialRequirements() {
         const requirements = [
-            'Dietary requirements: 2 vegetarian meals needed',
             'Wheelchair accessibility required for one player',
             'Early departure needed - must finish by 4:00 PM',
             'Medical officer on standby required for player with heart condition',
-            'Gluten-free meal options needed',
             'Parking for team bus required',
             'Late arrival - team arriving after 10:00 AM',
             'Photography restrictions - no social media photos of certain players',
             'Temperature controlled changing rooms needed',
             'Injury support - physiotherapy services required',
-            'Religious dietary requirements - halal meals needed',
             'Medication storage - refrigeration required for player medications'
         ];
         
