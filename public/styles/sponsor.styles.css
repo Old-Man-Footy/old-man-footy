@@ -69,7 +69,7 @@
    ================================ */
 
 .sponsor-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(0deg, var(--rugby-green) 0%, var(--rugby-gold) 100%);
     color: white;
     padding: 2rem 0;
     margin-bottom: 2rem;
@@ -88,6 +88,34 @@
     opacity: 0.9;
     margin-bottom: 0;
     line-height: 1.6;
+}
+
+/* ================================
+   SPONSOR LOGO SIZING
+   ================================ */
+
+.sponsor-logo-large {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.sponsor-logo-large img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.sponsor-logo-large i {
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 /* ================================
@@ -217,7 +245,7 @@
     flex-shrink: 0;
     width: 45px;
     height: 45px;
-    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+    background: linear-gradient(0deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
     color: white;
     border-radius: 50%;
     display: flex;

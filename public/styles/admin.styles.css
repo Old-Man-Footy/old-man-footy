@@ -21,7 +21,7 @@
  * Features gradient background using rugby theme colors
  */
 .admin-header {
-    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    background: linear-gradient(0deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
     color: white;
     padding: 2rem 0;
     margin-bottom: 2rem;

@@ -91,7 +91,7 @@
    ================================ */
 
 .carnival-management-header {
-    background: linear-gradient(135deg, var(--rugby-green), var(--rugby-dark-green));
+    background: linear-gradient(0deg, var(--rugby-green) 0%, var(--rugby-gold) 100%);
     color: white;
     padding: 1.5rem;
     border-radius: 0.75rem 0.75rem 0 0;

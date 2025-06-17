@@ -1,67 +1,67 @@
-<div class="container py-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-1">Find Carnivals</h1>
-                    <p class="text-muted mb-0">Discover Masters Rugby League events across Australia</p>
-                </div>
+<div class="bg-primary py-4 mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="h2 mb-0">Find Masters Rugby League Carnivals</h1>
+                <p class="lead mb-0">Discover Masters Rugby League events across Australia</p>
+            </div>
+            <div class="col-lg-4 text-end">
                 <% if (user) { %>
-                    <a href="/carnivals/new" class="btn btn-primary">
+                    <a href="/carnivals/new" class="btn btn-outline-light">
                         <i class="bi bi-plus-circle"></i> Add Carnival
                     </a>
                 <% } %>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Filters -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <form method="GET" action="/carnivals" class="row g-3">
-                <!-- Hidden field to track form submission -->
-                <input type="hidden" name="_submitted" value="1">
-                
-                <div class="col-md-3">
-                    <label for="state" class="form-label">State</label>
-                    <select class="form-select" id="state" name="state">
-                        <option value="all" <%= currentFilters.state === 'all' || !currentFilters.state ? 'selected' : '' %>>All States</option>
-                        <% states.forEach(state => { %>
-                            <option value="<%= state %>" <%= currentFilters.state === state ? 'selected' : '' %>>
-                                <%= state %>
-                            </option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="search" class="form-label">Search</label>
-                    <input type="text" class="form-control" id="search" name="search" 
-                           value="<%= currentFilters.search || '' %>" 
-                           placeholder="Carnival title, location, organiser...">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="upcoming" name="upcoming" value="true" 
-                               <%= currentFilters.upcoming === 'true' ? 'checked' : '' %>>
-                        <label class="form-check-label" for="upcoming">
-                            Upcoming events only
-                        </label>
+<!-- Search and Filter Section -->
+<section class="mb-4">
+    <div class="container">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="GET" action="/carnivals" class="row g-3">
+                    <!-- Hidden field to track form submission -->
+                    <input type="hidden" name="_submitted" value="1">
+                    
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Search Carnivals</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               placeholder="Carnival title, location, organiser..." 
+                               value="<%= currentFilters.search || '' %>">
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-outline-primary">
-                            <i class="bi bi-search"></i> Filter
+                    <div class="col-md-3">
+                        <label for="state" class="form-label">Filter by State</label>
+                        <select class="form-select" id="state" name="state">
+                            <option value="all" <%= currentFilters.state === 'all' || !currentFilters.state ? 'selected' : '' %>>All States</option>
+                            <% states.forEach(state => { %>
+                                <option value="<%= state %>" <%= currentFilters.state === state ? 'selected' : '' %>><%= state %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Event Type</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="upcoming" name="upcoming" value="true" 
+                                   <%= currentFilters.upcoming === 'true' ? 'checked' : '' %>>
+                            <label class="form-check-label" for="upcoming">
+                                Upcoming events only
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
+</section>
 
+<div class="container py-4">
     <!-- Results Count -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
