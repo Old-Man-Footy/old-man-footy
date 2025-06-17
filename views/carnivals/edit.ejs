@@ -16,7 +16,7 @@
                         </div>
                     <% } %>
 
-                    <form method="POST" action="/carnivals/<%= carnival._id %>/edit" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <form method="POST" action="/carnivals/<%= carnival.id %>/edit" enctype="multipart/form-data" class="needs-validation" novalidate>
                         <!-- Basic Information -->
                         <div class="mb-4">
                             <h5 class="text-primary mb-3">Basic Information</h5>
@@ -276,7 +276,7 @@
 
                         <!-- Form Actions -->
                         <div class="d-flex justify-content-between">
-                            <a href="/carnivals/<%= carnival._id %>" class="btn btn-outline-secondary">
+                            <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-warning">
