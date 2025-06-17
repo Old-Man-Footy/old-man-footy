@@ -86,4 +86,7 @@ router.post('/:id/email-attendees', ensureAuthenticated, [
     body('message').optional().trim().isLength({ max: 2000 }).withMessage('Message must be 2000 characters or less')
 ], carnivalController.sendEmailToAttendees);
 
+// Show comprehensive player list for all clubs attending a carnival
+router.get('/:id/players', ensureAuthenticated, carnivalController.showAllPlayers);
+
 module.exports = router;

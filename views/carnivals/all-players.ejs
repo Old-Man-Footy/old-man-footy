@@ -1,0 +1,239 @@
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/carnivals">Carnivals</a></li>
+                    <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>"><%= carnival.title %></a></li>
+                    <li class="breadcrumb-item active" aria-current="page">All Players</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h3 mb-2">All Players</h1>
+                    <h4 class="text-muted mb-3"><%= carnival.title %></h4>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-primary fs-6">
+                            <i class="bi bi-people-fill me-1"></i><%= totalPlayers %> Total Players
+                        </span>
+                        <span class="badge bg-success fs-6">
+                            <i class="bi bi-star-fill me-1"></i><%= totalMastersEligible %> Masters Eligible (35+)
+                        </span>
+                        <span class="badge bg-info fs-6">
+                            <i class="bi bi-building me-1"></i><%= totalClubs %> Clubs
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success" id="exportToCSV">
+                        <i class="bi bi-download"></i> Export CSV
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="printList">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Carnival
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="searchPlayers" class="form-label">Search Players</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchPlayers" 
+                               placeholder="Search by name, club, or shorts colour...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterClub" class="form-label">Filter by Club</label>
+                    <select class="form-select" id="filterClub">
+                        <option value="">All Clubs</option>
+                        <% Object.keys(clubSummary).sort().forEach(clubName => { %>
+                            <option value="<%= clubName %>"><%= clubName %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filterAge" class="form-label">Age Group</label>
+                    <select class="form-select" id="filterAge">
+                        <option value="">All Ages</option>
+                        <option value="masters">Masters (35+)</option>
+                        <option value="under35">Under 35</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filterAttendance" class="form-label">Attendance</label>
+                    <select class="form-select" id="filterAttendance">
+                        <option value="">All Status</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="maybe">Maybe</option>
+                        <option value="unavailable">Unavailable</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Club Summary Cards -->
+    <div class="row mb-4" id="clubSummaryCards">
+        <% Object.keys(clubSummary).sort().forEach(clubName => { 
+            const club = clubSummary[clubName]; %>
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                <div class="card h-100 club-summary-card" data-club="<%= clubName %>">
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate" title="<%= clubName %>">
+                            <%= clubName %>
+                        </h6>
+                        <% if (club.state) { %>
+                            <span class="badge state-<%= club.state.toLowerCase() %> mb-2"><%= club.state %></span>
+                        <% } %>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="fw-bold text-primary"><%= club.total %></div>
+                                <small class="text-muted">Total</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold text-success"><%= club.mastersEligible %></div>
+                                <small class="text-muted">Masters</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+
+    <!-- Players Table -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul me-2"></i>Complete Player List
+                </h5>
+                <span class="badge bg-light text-dark" id="visibleCount">
+                    Showing <%= totalPlayers %> of <%= totalPlayers %> players
+                </span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="playersTable">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="sortable" data-sort="club">
+                                Club <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="name">
+                                Player Name <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="age">
+                                Age <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="dob">
+                                Date of Birth <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="shorts">
+                                Shorts Colour <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                            <th class="sortable" data-sort="status">
+                                Attendance <i class="bi bi-arrow-down-up text-muted"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <% allPlayers.forEach(player => { %>
+                            <tr class="player-row" 
+                                data-club="<%= player.clubName %>"
+                                data-age="<%= player.age || 0 %>"
+                                data-masters="<%= player.isMastersEligible %>"
+                                data-status="<%= player.attendanceStatus || 'confirmed' %>"
+                                data-search="<%= (player.fullName + ' ' + player.clubName + ' ' + player.shortsColour).toLowerCase() %>">
+                                <td>
+                                    <strong><%= player.clubName %></strong>
+                                    <% if (player.clubState) { %>
+                                        <br><span class="badge state-<%= player.clubState.toLowerCase() %> small"><%= player.clubState %></span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold"><%= player.fullName %></div>
+                                    <% if (player.isMastersEligible) { %>
+                                        <span class="badge bg-success small">Masters Eligible</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (player.age) { %>
+                                        <span class="fw-bold<%= player.isMastersEligible ? ' text-success' : '' %>">
+                                            <%= player.age %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">N/A</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (player.dateOfBirth) { %>
+                                        <%= new Date(player.dateOfBirth).toLocaleDateString('en-AU') %>
+                                    <% } else { %>
+                                        <span class="text-muted">Not provided</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (player.shortsColour && player.shortsColour !== 'Not specified') { %>
+                                        <span class="badge shorts-colour-badge" style="background-color: <%= player.shortsColour.toLowerCase() %>; color: white;">
+                                            <%= player.shortsColour %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">Not specified</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% 
+                                    const status = player.attendanceStatus || 'confirmed';
+                                    let badgeClass = 'bg-success';
+                                    let statusText = 'Confirmed';
+                                    if (status === 'maybe') {
+                                        badgeClass = 'bg-warning text-dark';
+                                        statusText = 'Maybe';
+                                    } else if (status === 'unavailable') {
+                                        badgeClass = 'bg-danger';
+                                        statusText = 'Unavailable';
+                                    }
+                                    %>
+                                    <span class="badge <%= badgeClass %>"><%= statusText %></span>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="card shadow d-none" id="emptyState">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+            <h5 class="text-muted mt-3">No players found</h5>
+            <p class="text-muted">Try adjusting your search criteria or filters.</p>
+            <button type="button" class="btn btn-outline-primary" id="clearFiltersEmpty">
+                <i class="bi bi-x-circle"></i> Clear All Filters
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Include external JavaScript -->
+<script src="/js/carnival-players.js"></script>

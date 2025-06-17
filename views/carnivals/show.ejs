@@ -140,6 +140,13 @@
                                         <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-primary btn-sm">
                                             <i class="bi bi-people"></i> Manage Attendees
                                         </a>
+
+                                        <!-- View All Players button (only if there are attendee clubs) -->
+                                        <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
+                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-info btn-sm">
+                                                <i class="bi bi-list-ul"></i> View All Players
+                                            </a>
+                                        <% } %>
                                         
                                         <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-success btn-sm">
                                             <i class="bi bi-pencil"></i> Edit Event
@@ -803,6 +810,13 @@
                                 <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-sm btn-primary">
                                     <i class="bi bi-people"></i> Manage Attendees
                                 </a>
+                                
+                                <!-- View All Players button (only if there are attendee clubs) -->
+                                <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
+                                    <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-sm btn-info">
+                                        <i class="bi bi-list-ul"></i> View All Players
+                                    </a>
+                                <% } %>
                                 
                                 <!-- Email Attendees button (only if there are attendee clubs) -->
                                 <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>

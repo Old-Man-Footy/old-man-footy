@@ -86,6 +86,7 @@
 | As an administrator, I want to manage advanced user roles and permissions. Like creating new Administrators, or Delegates on behalf of others. | ✅ Completed  |
 | As a delegate, when hosting a carnival and logged in, from the carnival page I want to be able to see the player lists of all the clubs attending my carnival, so I can keep track of attendance, including name, dob and shorts colour. One full list showing club, player name, dob and shorts colour would be very useful. | ⭕ Not Started |
 | As a delegate, I want to be able to merge (claimed) carnivals with another one I own if for some reason a duplicate is imported and does not match an already created carnival. The option to select which carnival to merge with, defaulting to the latest.<br>Merging will:<br>- Populate all MySideline related fields.<br>- Set only empty fields from the 'source' carnival<br>- Deactivate the old Carnival. | ⭕ Not Started |
+
 | As an admin, I want to be able to merge carnivals on behalf of other clubs. | ⭕ Not Started |
 | As an admin, I want to be able to see player lists attending all club carnivals.  | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
@@ -166,6 +167,8 @@
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/add-players.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/club-players.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/my-club-players.ejs`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/all-players.ejs`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/players.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/edit.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/edit-registration.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/list.ejs`  | ⭕ Not Started | 

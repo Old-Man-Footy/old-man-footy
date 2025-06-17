@@ -5,7 +5,7 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Carnival, User, Club, Sponsor, CarnivalClub } = require('../models');
+const { Carnival, User, Club, Sponsor, CarnivalClub, CarnivalClubPlayer, ClubPlayer } = require('../models');
 const { validationResult } = require('express-validator');
 const mySidelineService = require('../services/mySidelineIntegrationService');
 const emailService = require('../services/emailService');
@@ -1069,6 +1069,132 @@ module.exports = {
         } catch (error) {
             console.error('Error sending carnival emails to attendees:', error);
             req.flash('error_msg', 'An error occurred while sending emails.');
+            res.redirect(`/carnivals/${req.params.id}`);
+        }
+    },
+
+    /**
+     * Show comprehensive player list for all clubs attending a carnival
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    showAllPlayers: async (req, res) => {
+        try {
+            const carnival = await Carnival.findByPk(req.params.id);
+
+            if (!carnival) {
+                req.flash('error_msg', 'Carnival not found.');
+                return res.redirect('/carnivals');
+            }
+
+            // Check if user can manage this carnival
+            const canManage = req.user && (
+                req.user.isAdmin || 
+                (carnival.createdByUserId === req.user.id) ||
+                (req.user.clubId && carnival.creator && carnival.creator.club && carnival.creator.club.id === req.user.clubId)
+            );
+
+            if (!canManage) {
+                req.flash('error_msg', 'You can only view player lists for carnivals you host.');
+                return res.redirect(`/carnivals/${carnival.id}`);
+            }
+
+            // Get all club registrations for this carnival with their players
+            const clubRegistrations = await CarnivalClub.findAll({
+                where: {
+                    carnivalId: carnival.id,
+                    isActive: true,
+                    approvalStatus: 'approved' // Only show approved clubs
+                },
+                include: [
+                    {
+                        model: Club,
+                        as: 'club',
+                        attributes: ['id', 'clubName', 'state', 'location']
+                    },
+                    {
+                        model: CarnivalClubPlayer,
+                        as: 'players',
+                        where: { isActive: true },
+                        required: false,
+                        include: [{
+                            model: ClubPlayer,
+                            as: 'clubPlayer',
+                            where: { isActive: true },
+                            attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shortsColour', 'email', 'phoneNumber']
+                        }]
+                    }
+                ],
+                order: [
+                    ['club', 'clubName', 'ASC'],
+                    ['players', 'clubPlayer', 'firstName', 'ASC'],
+                    ['players', 'clubPlayer', 'lastName', 'ASC']
+                ]
+            });
+
+            // Flatten the data structure for easier display
+            const allPlayers = [];
+            let totalPlayers = 0;
+            let totalMastersEligible = 0;
+
+            clubRegistrations.forEach(registration => {
+                if (registration.players && registration.players.length > 0) {
+                    registration.players.forEach(playerAssignment => {
+                        const player = playerAssignment.clubPlayer;
+                        const isMastersEligible = player.dateOfBirth ? 
+                            ClubPlayer.calculateAge(player.dateOfBirth) >= 35 : false;
+                        
+                        allPlayers.push({
+                            id: player.id,
+                            clubName: registration.club.clubName,
+                            clubState: registration.club.state,
+                            firstName: player.firstName,
+                            lastName: player.lastName,
+                            fullName: `${player.firstName} ${player.lastName}`,
+                            dateOfBirth: player.dateOfBirth,
+                            age: player.dateOfBirth ? ClubPlayer.calculateAge(player.dateOfBirth) : null,
+                            shortsColour: player.shortsColour || 'Not specified',
+                            attendanceStatus: playerAssignment.attendanceStatus,
+                            isMastersEligible,
+                            email: player.email,
+                            phoneNumber: player.phoneNumber
+                        });
+                        
+                        totalPlayers++;
+                        if (isMastersEligible) totalMastersEligible++;
+                    });
+                }
+            });
+
+            // Group players by club for summary stats
+            const clubSummary = {};
+            allPlayers.forEach(player => {
+                if (!clubSummary[player.clubName]) {
+                    clubSummary[player.clubName] = {
+                        total: 0,
+                        mastersEligible: 0,
+                        state: player.clubState
+                    };
+                }
+                clubSummary[player.clubName].total++;
+                if (player.isMastersEligible) {
+                    clubSummary[player.clubName].mastersEligible++;
+                }
+            });
+
+            res.render('carnivals/all-players', {
+                title: `All Players - ${carnival.title}`,
+                carnival,
+                allPlayers,
+                clubSummary,
+                totalPlayers,
+                totalMastersEligible,
+                totalClubs: Object.keys(clubSummary).length,
+                additionalCSS: ['/styles/carnival.styles.css']
+            });
+        } catch (error) {
+            console.error('Error loading carnival player list:', error);
+            req.flash('error_msg', 'Error loading player list.');
             res.redirect(`/carnivals/${req.params.id}`);
         }
     }
