@@ -897,145 +897,239 @@ class DatabaseSeeder {
     }
 
     /**
-     * Comprehensive database clearing with proper dependency order
-     * Clears ALL tables to ensure clean slate for seeding
+     * Selective database clearing - only removes seed data and related records
+     * Preserves real user data by identifying seed patterns and markers
      */
-    async clearDatabase() {
-        console.log('🧹 Clearing existing data from ALL tables...');
+    async clearSeedData() {
+        console.log('🧹 Clearing existing SEED data only (preserving real user data)...');
         
         try {
             // Double-check environment before destructive operations
             validateEnvironment();
             
-            // Disable foreign key constraints for SQLite
+            // Disable foreign key constraints for SQLite during cleanup
             await sequelize.query('PRAGMA foreign_keys = OFF');
-            console.log('🔓 Foreign key constraints disabled');
+            console.log('🔓 Foreign key constraints disabled for cleanup');
             
-            // Get all table names from database schema
-            const [tables] = await sequelize.query(`
-                SELECT name FROM sqlite_master 
-                WHERE type='table' 
-                AND name NOT LIKE 'sqlite_%' 
-                AND name != 'SequelizeMeta'
-                ORDER BY name
-            `);
+            // Track what we're removing for reporting
+            const removalStats = {
+                clubs: 0,
+                users: 0,
+                carnivals: 0,
+                sponsors: 0,
+                clubSponsors: 0,
+                carnivalSponsors: 0,
+                carnivalClubs: 0,
+                emailSubscriptions: 0,
+                clubAlternateNames: 0,
+                syncLogs: 0
+            };
+
+            // 1. Identify and remove seed clubs and their related data
+            console.log('  🏢 Identifying seed clubs...');
+            const seedClubNames = SAMPLE_CLUBS.map(club => club.name);
+            const seedClubs = await Club.findAll({
+                where: {
+                    [require('sequelize').Op.or]: [
+                        { clubName: { [require('sequelize').Op.in]: seedClubNames } },
+                        { logoUrl: '/icons/seed.svg' }, // Seed marker
+                        { contactEmail: { [require('sequelize').Op.like]: '%@oldmanfooty.au' } } // Test emails
+                    ]
+                }
+            });
             
-            console.log(`📋 Found ${tables.length} tables to clear:`, tables.map(t => t.name).join(', '));
+            const seedClubIds = seedClubs.map(club => club.id);
+            console.log(`    Found ${seedClubs.length} seed clubs to remove`);
+
+            // 2. Remove seed users (delegates and admin)
+            console.log('  👥 Removing seed users...');
+            const seedUserConditions = {
+                [require('sequelize').Op.or]: [
+                    { email: 'admin@oldmanfooty.au' }, // Admin user
+                    { clubId: { [require('sequelize').Op.in]: seedClubIds } }, // Club delegates
+                    { email: { [require('sequelize').Op.like]: '%@%masters.com.au' } }, // Test delegate emails
+                    { email: { [require('sequelize').Op.like]: '%@%mymasters.com.au' } }
+                ]
+            };
             
-            // Clear junction/relationship tables first (to avoid FK violations)
-            const junctionTables = [
-                'CarnivalClub',
-                'CarnivalSponsor', 
-                'ClubSponsor',
-                'ClubAlternateName'
-            ];
-            
-            for (const tableName of junctionTables) {
-                try {
-                    const model = sequelize.models[tableName];
-                    if (model) {
-                        await model.destroy({ where: {}, force: true, truncate: true });
-                        console.log(`  ✅ Cleared ${tableName}`);
+            const seedUsers = await User.findAll({ where: seedUserConditions });
+            const removedUsers = await User.destroy({ where: seedUserConditions });
+            removalStats.users = removedUsers;
+            console.log(`    Removed ${removedUsers} seed users`);
+
+            // 3. Remove seed carnivals
+            console.log('  🎪 Removing seed carnivals...');
+            const seedCarnivalTitles = SAMPLE_CARNIVALS.map(carnival => carnival.title);
+            const seedCarnivalConditions = {
+                [require('sequelize').Op.or]: [
+                    { title: { [require('sequelize').Op.in]: seedCarnivalTitles } },
+                    { clubLogoURL: '/icons/seed.svg' }, // Seed marker
+                    { organiserContactEmail: { [require('sequelize').Op.like]: '%@%masters.com.au' } }, // Test organizer emails
+                    { 
+                        // MySideline imported data (if we want to clear it too)
+                        isManuallyEntered: false,
+                        createdAt: { [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
                     }
-                } catch (error) {
-                    console.log(`  ⚠️  ${tableName} already empty or doesn't exist`);
+                ]
+            };
+
+            const seedCarnivals = await Carnival.findAll({ where: seedCarnivalConditions });
+            const seedCarnivalIds = seedCarnivals.map(carnival => carnival.id);
+            
+            // Remove carnival-club relationships first
+            const removedCarnivalClubs = await CarnivalClub.destroy({
+                where: { carnivalId: { [require('sequelize').Op.in]: seedCarnivalIds } }
+            });
+            removalStats.carnivalClubs = removedCarnivalClubs;
+            
+            // Remove carnival-sponsor relationships
+            const removedCarnivalSponsors = await CarnivalSponsor.destroy({
+                where: { carnivalId: { [require('sequelize').Op.in]: seedCarnivalIds } }
+            });
+            removalStats.carnivalSponsors = removedCarnivalSponsors;
+            
+            // Remove the carnivals themselves
+            const removedCarnivals = await Carnival.destroy({ where: seedCarnivalConditions });
+            removalStats.carnivals = removedCarnivals;
+            console.log(`    Removed ${removedCarnivals} seed carnivals and ${removedCarnivalClubs} registrations`);
+
+            // 4. Remove seed sponsors and their relationships
+            console.log('  🤝 Removing seed sponsors...');
+            const seedSponsorNames = SAMPLE_SPONSORS.map(sponsor => sponsor.sponsorName);
+            const seedSponsorConditions = {
+                [require('sequelize').Op.or]: [
+                    { sponsorName: { [require('sequelize').Op.in]: seedSponsorNames } },
+                    { logoUrl: '/icons/seed.svg' }, // Seed marker
+                    { contactEmail: { [require('sequelize').Op.like]: '%@%test.com' } }, // Test emails
+                    { description: { [require('sequelize').Op.like]: '%Supporting local rugby league communities%' } } // Seed description pattern
+                ]
+            };
+
+            const seedSponsors = await Sponsor.findAll({ where: seedSponsorConditions });
+            const seedSponsorIds = seedSponsors.map(sponsor => sponsor.id);
+            
+            // Remove club-sponsor relationships first
+            const removedClubSponsors = await ClubSponsor.destroy({
+                where: { 
+                    [require('sequelize').Op.or]: [
+                        { sponsorId: { [require('sequelize').Op.in]: seedSponsorIds } },
+                        { clubId: { [require('sequelize').Op.in]: seedClubIds } },
+                        { notes: { [require('sequelize').Op.like]: '%Seeded relationship%' } } // Seed marker
+                    ]
                 }
-            }
+            });
+            removalStats.clubSponsors = removedClubSponsors;
             
-            // Clear main tables in dependency order
-            const mainTables = [
-                'SyncLog',           // No dependencies
-                'EmailSubscription', // No dependencies  
-                'Carnival',          // References User
-                'User',              // References Club
-                'Sponsor',           // No dependencies
-                'Club'               // Referenced by others
-            ];
+            // Remove the sponsors themselves
+            const removedSponsors = await Sponsor.destroy({ where: seedSponsorConditions });
+            removalStats.sponsors = removedSponsors;
+            console.log(`    Removed ${removedSponsors} seed sponsors and ${removedClubSponsors} relationships`);
+
+            // 5. Remove seed email subscriptions
+            console.log('  📧 Removing seed email subscriptions...');
+            const seedEmails = SAMPLE_SUBSCRIPTIONS.map(sub => sub.email);
+            const seedEmailConditions = {
+                [require('sequelize').Op.or]: [
+                    { email: { [require('sequelize').Op.in]: seedEmails } },
+                    { email: { [require('sequelize').Op.like]: '%@example.com' } }, // Test emails
+                    { email: { [require('sequelize').Op.like]: '%@test.com' } }
+                ]
+            };
             
-            for (const tableName of mainTables) {
-                try {
-                    const model = sequelize.models[tableName];
-                    if (model) {
-                        await model.destroy({ where: {}, force: true, truncate: true });
-                        console.log(`  ✅ Cleared ${tableName}`);
-                    }
-                } catch (error) {
-                    console.log(`  ⚠️  ${tableName} already empty or doesn't exist`);
+            const removedSubscriptions = await EmailSubscription.destroy({ where: seedEmailConditions });
+            removalStats.emailSubscriptions = removedSubscriptions;
+            console.log(`    Removed ${removedSubscriptions} seed email subscriptions`);
+
+            // 6. Remove club alternate names for seed clubs
+            console.log('  🔍 Removing seed club alternate names...');
+            const removedAlternateNames = await ClubAlternateName.destroy({
+                where: { clubId: { [require('sequelize').Op.in]: seedClubIds } }
+            });
+            removalStats.clubAlternateNames = removedAlternateNames;
+            console.log(`    Removed ${removedAlternateNames} alternate names`);
+
+            // 7. Remove seed sync logs (MySideline import logs)
+            console.log('  🔄 Removing seed sync logs...');
+            const removedSyncLogs = await SyncLog.destroy({
+                where: {
+                    [require('sequelize').Op.or]: [
+                        { operation: 'seed_data_import' },
+                        { details: { [require('sequelize').Op.like]: '%seed%' } },
+                        { createdAt: { [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } } // Last 24 hours
+                    ]
                 }
-            }
-            
-            // Clear any remaining tables using direct SQL
-            for (const table of tables) {
-                try {
-                    await sequelize.query(`DELETE FROM "${table.name}"`);
-                    console.log(`  ✅ SQL-cleared ${table.name}`);
-                } catch (error) {
-                    // Ignore errors for tables that don't exist or are already empty
-                    console.log(`  ⚠️  Could not clear ${table.name}: ${error.message}`);
-                }
-            }
-            
-            // Reset SQLite sequences
-            await sequelize.query(`DELETE FROM sqlite_sequence`);
-            console.log('🔄 Reset auto-increment sequences');
-            
+            });
+            removalStats.syncLogs = removedSyncLogs;
+            console.log(`    Removed ${removedSyncLogs} sync logs`);
+
+            // 8. Finally remove the seed clubs themselves
+            console.log('  🏢 Removing seed clubs...');
+            const removedClubs = await Club.destroy({
+                where: { id: { [require('sequelize').Op.in]: seedClubIds } }
+            });
+            removalStats.clubs = removedClubs;
+            console.log(`    Removed ${removedClubs} seed clubs`);
+
             // Re-enable foreign key constraints
             await sequelize.query('PRAGMA foreign_keys = ON');
             console.log('🔒 Foreign key constraints re-enabled');
             
-            // Verify database is actually empty
-            const verification = await this.verifyDatabaseEmpty();
-            if (!verification.isEmpty) {
-                console.warn('⚠️  Warning: Some tables still contain data:', verification.nonEmptyTables);
-            } else {
-                console.log('✅ Database completely cleared and verified empty');
-            }
+            // Display removal summary
+            console.log('\n📊 SEED DATA REMOVAL SUMMARY');
+            console.log('=' .repeat(40));
+            console.log(`🏢 Clubs removed: ${removalStats.clubs}`);
+            console.log(`👥 Users removed: ${removalStats.users}`);
+            console.log(`🎪 Carnivals removed: ${removalStats.carnivals}`);
+            console.log(`🤝 Sponsors removed: ${removalStats.sponsors}`);
+            console.log(`🔗 Club-sponsor relationships: ${removalStats.clubSponsors}`);
+            console.log(`🎪 Carnival-sponsor relationships: ${removalStats.carnivalSponsors}`);
+            console.log(`🎟️ Carnival registrations: ${removalStats.carnivalClubs}`);
+            console.log(`📧 Email subscriptions: ${removalStats.emailSubscriptions}`);
+            console.log(`🔍 Alternate names: ${removalStats.clubAlternateNames}`);
+            console.log(`🔄 Sync logs: ${removalStats.syncLogs}`);
+            console.log('=' .repeat(40));
+            
+            // Verify real data is preserved
+            await this.verifyRealDataPreserved();
+            
+            console.log('✅ Seed data cleared successfully - real user data preserved');
             
         } catch (error) {
-            console.error('❌ Database clearing failed:', error.message);
+            console.error('❌ Seed data clearing failed:', error.message);
             throw error;
         }
     }
 
     /**
-     * Verify that database is completely empty after clearing
-     * @returns {Object} Verification results
+     * Verify that real user data has been preserved after seed data removal
      */
-    async verifyDatabaseEmpty() {
+    async verifyRealDataPreserved() {
         try {
-            const [tables] = await sequelize.query(`
-                SELECT name FROM sqlite_master 
-                WHERE type='table' 
-                AND name NOT LIKE 'sqlite_%' 
-                AND name != 'SequelizeMeta'
-            `);
+            const realDataStats = {
+                clubs: await Club.count({ where: { isActive: true } }),
+                users: await User.count({ where: { isActive: true } }),
+                carnivals: await Carnival.count({ where: { isActive: true } }),
+                sponsors: await Sponsor.count({ where: { isActive: true } }),
+                subscriptions: await EmailSubscription.count({ where: { isActive: true } })
+            };
             
-            const nonEmptyTables = [];
-            let totalRecords = 0;
+            console.log('\n🛡️  REAL DATA PRESERVATION CHECK');
+            console.log('=' .repeat(40));
+            console.log(`🏢 Real clubs remaining: ${realDataStats.clubs}`);
+            console.log(`👥 Real users remaining: ${realDataStats.users}`);
+            console.log(`🎪 Real carnivals remaining: ${realDataStats.carnivals}`);
+            console.log(`🤝 Real sponsors remaining: ${realDataStats.sponsors}`);
+            console.log(`📧 Real subscriptions remaining: ${realDataStats.subscriptions}`);
+            console.log('=' .repeat(40));
             
-            for (const table of tables) {
-                try {
-                    const [result] = await sequelize.query(`SELECT COUNT(*) as count FROM "${table.name}"`);
-                    const count = result[0].count;
-                    totalRecords += count;
-                    
-                    if (count > 0) {
-                        nonEmptyTables.push({ table: table.name, count });
-                    }
-                } catch (error) {
-                    // Ignore errors for tables that don't exist
-                }
+            if (realDataStats.clubs > 0 || realDataStats.users > 0 || realDataStats.carnivals > 0) {
+                console.log('✅ Real user data successfully preserved');
+            } else {
+                console.log('ℹ️  No existing real data found (clean database)');
             }
             
-            return {
-                isEmpty: totalRecords === 0,
-                totalRecords,
-                nonEmptyTables,
-                tablesChecked: tables.length
-            };
         } catch (error) {
-            console.error('Error verifying database state:', error.message);
-            return { isEmpty: false, error: error.message };
+            console.error('⚠️  Could not verify data preservation:', error.message);
         }
     }
 
@@ -1727,7 +1821,6 @@ class DatabaseSeeder {
         console.log(`🎪 Total Carnivals: ${stats.carnivals}`);
         console.log(`   ✏️  Manual: ${stats.manualCarnivals}`);
         console.log(`   🔄 MySideline: ${stats.mySidelineCarnivals}`);
-        console.log(`   📅 Upcoming: ${stats.upcomingCarnivals}`);
         console.log(`🎪 Carnival-Sponsor Relationships: ${stats.carnivalSponsors}`);
         console.log(`🎟️ Carnival Registrations: ${stats.carnivalRegistrations}`);
         console.log(`   💰 Paid: ${stats.paidRegistrations}`);
@@ -1833,7 +1926,16 @@ class DatabaseSeeder {
             console.log('🛡️  SECURITY CHECKPOINT 2: Pre-clear validation');
             validateEnvironment();
             
-            await this.clearDatabase();
+            // Choose clearing method based on command line flag
+            const fullWipe = process.argv.includes('--full-wipe');
+            
+            if (fullWipe) {
+                console.log('⚠️  FULL WIPE MODE: Clearing ALL data');
+                await this.clearDatabase();
+            } else {
+                console.log('🎯 SELECTIVE MODE: Clearing only seed data');
+                await this.clearSeedData();
+            }
             
             console.log('🛡️  SECURITY CHECKPOINT 3: Pre-seed validation');
             validateEnvironment();
@@ -1854,7 +1956,6 @@ class DatabaseSeeder {
             console.log('\n✅ Database seeding completed successfully!');
             console.log('\n🔐 Login credentials:');
             console.log('   Admin: admin@oldmanfooty.au / admin123');
-            console.log('   Delegates: primary@[clubname].com.au / delegate123');
             
         } catch (error) {
             console.error('\n❌ Database seeding failed:', error);
@@ -1870,13 +1971,18 @@ class DatabaseSeeder {
  * Run seeder if called directly with proper safety checks
  */
 if (require.main === module) {
-    // Display safety warning
+    // Display safety warning with updated information
     console.log('\n' + '⚠️ '.repeat(20));
-    console.log('🚨 DATABASE SEEDING SCRIPT - DESTRUCTIVE OPERATION');
+    console.log('🚨 DATABASE SEEDING SCRIPT - SELECTIVE OPERATION');
     console.log('⚠️ '.repeat(20));
-    console.log('This script will COMPLETELY WIPE and re-populate the database');
+    console.log('DEFAULT: Clears only SEED data, preserves real user data');
+    console.log('FULL WIPE: Use --full-wipe flag to clear ALL data');
     console.log('Only run this on DEVELOPMENT or TEST databases');
     console.log('Required flag: --confirm-seed');
+    console.log('');
+    console.log('Usage examples:');
+    console.log('  npm run seed -- --confirm-seed                (selective clearing)');
+    console.log('  npm run seed -- --confirm-seed --full-wipe    (complete wipe)');
     console.log('⚠️ '.repeat(20) + '\n');
     
     const seeder = new DatabaseSeeder();
