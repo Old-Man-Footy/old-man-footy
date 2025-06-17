@@ -100,6 +100,18 @@ const getDashboard = async (req, res) => {
             order: [['date', 'DESC']]
         });
 
+        // Get player count for user's club
+        let playerCount = 0;
+        if (userWithClub.clubId) {
+            const { ClubPlayer } = require('../models');
+            playerCount = await ClubPlayer.count({
+                where: {
+                    clubId: userWithClub.clubId,
+                    isActive: true
+                }
+            });
+        }
+
         // Get carnivals the user's club is registered to attend (both upcoming and past)
         let attendingCarnivals = [];
         if (userWithClub.clubId) {
@@ -181,6 +193,7 @@ const getDashboard = async (req, res) => {
             clubs, // Add clubs variable for the dashboard checklist
             carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
             eligibleDelegates,
+            playerCount, // New: player count for user's club
             additionalCSS: []
         });
     } catch (error) {

@@ -149,13 +149,28 @@
     <!-- Stats Cards -->
     <div class="row mb-4 dashboard-stats">
         <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="bi bi-calendar-event display-4 mb-2"></i>
-                    <h3><%= userCarnivals ? userCarnivals.length : 0 %></h3>
-                    <p class="mb-0">Your Carnivals</p>
+            <% if (user.clubId && user.clubId.clubName) { %>
+                <a href="/clubs/players" class="text-decoration-none">
+                    <div class="card dashboard-stat-card clickable-card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people display-4 mb-2"></i>
+                            <h3><%= playerCount || 0 %></h3>
+                            <p class="mb-0">Club Players</p>
+                            <small class="text-white-50 mt-1 d-block">
+                                <i class="bi bi-arrow-right"></i> Click to manage
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            <% } else { %>
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people display-4 mb-2"></i>
+                        <h3>0</h3>
+                        <p class="mb-0">Club Players</p>
+                    </div>
                 </div>
-            </div>
+            <% } %>
         </div>
         <div class="col-md-6 mb-3">
             <% if (user.clubId && user.clubId.clubName) { %>
@@ -166,7 +181,7 @@
                                 <img src="<%= user.clubId.logoUrl %>" alt="<%= user.clubId.clubName %> Logo" 
                                      class="mb-2" style="height: 4rem; width: auto; max-width: 100%; object-fit: contain;">
                             <% } else { %>
-                                <i class="bi bi-people display-4 mb-2"></i>
+                                <i class="bi bi-card-image display-4 mb-2"></i>
                             <% } %>
                             <h3><%= user.clubId.clubName %></h3>
                             <p class="mb-0">Your Club</p>
@@ -585,9 +600,6 @@
                             <button type="button" class="btn btn-outline-success" data-action="navigate" data-target="/clubs/manage">
                                 <i class="bi bi-gear"></i> Manage Club Settings
                             </button>
-                            <a href="/clubs/players" class="btn btn-outline-primary">
-                                <i class="bi bi-people"></i> Manage Players
-                            </a>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
                                 <i class="bi bi-box-arrow-right"></i> Leave Club
                             </button>
@@ -613,9 +625,6 @@
                         <div class="d-flex flex-wrap gap-2">
                             <a href="/clubs/manage" class="btn btn-outline-primary">
                                 <i class="bi bi-building"></i> Manage Club Profile
-                            </a>
-                            <a href="/clubs/players" class="btn btn-outline-success">
-                                <i class="bi bi-people"></i> Manage Players
                             </a>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
                                 <i class="bi bi-box-arrow-right"></i> Leave Club
