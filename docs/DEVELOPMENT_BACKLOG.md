@@ -122,7 +122,7 @@
 | **Testing** | |
 | As a developer, I want comprehensive unit tests for, and limited to `models/Carnival.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/Club.js`  | ⭕ Not Started |
-| As a developer, all test data (not seed data) should use `/icons/test-tube.svg` as a stand-in logo image. | ⭕ Not Started |
+| As a developer, all test data should also use `/icons/seed.svg` as a stand-in logo image. | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/User.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/CarnivalSponsor.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/ClubSponsor.js`  | ⭕ Not Started |
