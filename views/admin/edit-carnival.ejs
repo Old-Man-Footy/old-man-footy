@@ -174,6 +174,20 @@
                             <div class="form-text">Link to external registration or signup form</div>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="feesDescription" class="form-label">Fees Description</label>
+                            <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
+                                      placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
+                            <div class="form-text">Description of fees and payment information</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="callForVolunteers" class="form-label">Call for Volunteers</label>
+                            <textarea class="form-control" id="callForVolunteers" name="callForVolunteers" rows="2" 
+                                      placeholder="Volunteer opportunities, requirements, contact details"><%= carnival.callForVolunteers || '' %></textarea>
+                            <div class="form-text">Information about volunteer opportunities</div>
+                        </div>
+
                         <!-- Registration Management -->
                         <div class="mb-3">
                             <h6 class="text-primary mb-3">
@@ -207,12 +221,174 @@
                                         <div class="form-text">Uncheck to temporarily close registrations</div>
                                     </div>
                                 </div>
-                                                        <i class="bi bi-person-plus"></i>
-                                                        Manually created carnival
-                                                    </div>
-                                                <% } %>
+                                <div class="col-md-6 mb-3">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="bi bi-info-circle"></i>
+                                        <% if (carnival.mySidelineTitle) { %>
+                                            <strong>MySideline Import:</strong> Originally imported from MySideline
+                                        <% } else { %>
+                                            <strong>Manual Entry:</strong> Manually created carnival
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media Links -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-share"></i> Social Media Links
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="socialMediaFacebook" class="form-label">
+                                        <i class="bi bi-facebook label-facebook"></i> Facebook
+                                    </label>
+                                    <input type="url" class="form-control" id="socialMediaFacebook" name="socialMediaFacebook" 
+                                           value="<%= carnival.socialMediaFacebook || '' %>" placeholder="https://facebook.com/yourpage">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="socialMediaInstagram" class="form-label">
+                                        <i class="bi bi-instagram label-instagram"></i> Instagram
+                                    </label>
+                                    <input type="url" class="form-control" id="socialMediaInstagram" name="socialMediaInstagram" 
+                                           value="<%= carnival.socialMediaInstagram || '' %>" placeholder="https://instagram.com/yourpage">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="socialMediaTwitter" class="form-label">
+                                        <i class="bi bi-twitter-x label-twitter-x"></i> X (Twitter)
+                                    </label>
+                                    <input type="url" class="form-control" id="socialMediaTwitter" name="socialMediaTwitter" 
+                                           value="<%= carnival.socialMediaTwitter || '' %>" placeholder="https://x.com/yourpage">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="socialMediaWebsite" class="form-label">
+                                        <i class="bi bi-globe text-success"></i> Website
+                                    </label>
+                                    <input type="url" class="form-control" id="socialMediaWebsite" name="socialMediaWebsite" 
+                                           value="<%= carnival.socialMediaWebsite || '' %>" placeholder="https://yourwebsite.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Draw Information -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-file-earmark-text"></i> Draw Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="drawTitle" class="form-label">Draw Title</label>
+                                    <input type="text" class="form-control" id="drawTitle" name="drawTitle" 
+                                           value="<%= carnival.drawTitle || '' %>" placeholder="e.g., Pool Draw, Finals Draw">
+                                    <div class="form-text">Optional title for the draw sheet</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="drawDescription" class="form-label">Draw Description</label>
+                                    <textarea class="form-control" id="drawDescription" name="drawDescription" rows="2" 
+                                              placeholder="Brief description of the draw format or details"><%= carnival.drawDescription || '' %></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Notes -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-lock"></i> Admin Notes
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label for="adminNotes" class="form-label">Private Admin Notes</label>
+                                <textarea class="form-control" id="adminNotes" name="adminNotes" rows="3" 
+                                          placeholder="Private notes only visible to administrators and carnival organizers"><%= carnival.adminNotes || '' %></textarea>
+                                <div class="form-text">These notes are only visible to administrators and carnival organizers</div>
+                            </div>
+                        </div>
+
+                        <!-- Current Images Display -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-images"></i> Current Images & Documents
+                            </h6>
+                            <div class="row">
+                                <% if (carnival.clubLogoURL) { %>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <img src="<%= carnival.clubLogoURL %>" class="card-img-top" alt="Current Club Logo" style="height: 150px; object-fit: contain;">
+                                            <div class="card-body text-center">
+                                                <small class="text-muted">Current Club Logo</small>
                                             </div>
                                         </div>
+                                    </div>
+                                <% } %>
+                                <% if (carnival.promotionalImageURL) { %>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" alt="Current Promotional Image" style="height: 150px; object-fit: cover;">
+                                            <div class="card-body text-center">
+                                                <small class="text-muted">Current Promotional Image</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                <% if (carnival.drawFileURL) { %>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-text display-6 text-muted"></i>
+                                                <br>
+                                                <small class="text-muted">Current Draw File</small>
+                                                <br>
+                                                <a href="<%= carnival.drawFileURL %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                    <i class="bi bi-download"></i> View
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- File Uploads -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-cloud-upload"></i> Upload New Images & Documents
+                            </h6>
+                            <p class="text-muted mb-3">Upload new files to replace existing ones (optional)</p>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="clubLogo" class="form-label">New Club Logo</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="clubLogo" name="logo" 
+                                               accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp" style="display: none;">
+                                        <i class="bi bi-cloud-upload display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload new club logo</p>
+                                        <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="promotionalImage" class="form-label">New Promotional Image</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="promotionalImage" name="promotionalImage" 
+                                               accept="image/*" style="display: none;">
+                                        <i class="bi bi-image display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload new promotional image</p>
+                                        <small class="text-muted">Max 5MB, JPG/PNG only</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="drawFile" class="form-label">New Draw Sheet</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control" id="drawFile" name="drawFile" 
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
+                                        <i class="bi bi-file-earmark-text display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload new draw sheet</p>
+                                        <small class="text-muted">Max 10MB, PDF/DOC/Image files</small>
                                     </div>
                                 </div>
                             </div>

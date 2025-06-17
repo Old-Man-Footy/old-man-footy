@@ -9,7 +9,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
-const { clubUpload, handleUploadError } = require('../middleware/upload');
+const { clubUpload, carnivalUpload, handleUploadError } = require('../middleware/upload');
 const adminController = require('../controllers/admin.controller');
 
 // Apply admin authentication to all routes
@@ -107,7 +107,7 @@ const carnivalUpdateValidation = [
         .withMessage('Please provide a valid contact email when specified')
 ];
 
-router.post('/carnivals/:id/edit', carnivalUpdateValidation, adminController.updateCarnival);
+router.post('/carnivals/:id/edit', carnivalUpload, handleUploadError, carnivalUpdateValidation, adminController.updateCarnival);
 router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus);
 
 module.exports = router;

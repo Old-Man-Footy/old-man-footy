@@ -98,6 +98,7 @@ Fields on the target carnival that already contain data (and are not designated 
 | As a developer, I want to add a "Buy me a coffee" link in the main site footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`. It should stand out and attract attention without being big.  | ⭕ Not Started |
 | As a administrator, I want to be able to bulk remove or update contact information from clubs or carnivals from the admin dashboard when requested to remove them. | ⭕ Not Started |
 | As a developer, I want to use playwright to navigate to every page on the site and take screenshots to use in documentation (saved in /docs/images). Each screenshot should be named for the page it is representative of, so if a subsequent run is made, the image will be replaced with a new one. No timestamps. | ⭕ Not Started |
+| As a developer, I would prefer to use ES modules, rather than CommonJS modules. | ⭕ Not Started |
 | **Script Extraction Implementation** | |
 | As a developer, I want to ensure we are using Express Layouts script extraction in app.js to optimize script loading performance. | ⭕ Not Started |
 | As a developer, I want to update the main layout template (views/layout.ejs) to properly handle extracted scripts using <%- script %> placeholder. | ⭕ Not Started |

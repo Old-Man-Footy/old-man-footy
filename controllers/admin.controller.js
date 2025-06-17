@@ -643,11 +643,27 @@ const updateCarnival = async (req, res) => {
         const {
             title,
             date,
+            endDate,
             locationAddress,
             state,
             scheduleDetails,
             registrationLink,
-            contactEmail
+            feesDescription,
+            callForVolunteers,
+            contactName,
+            contactEmail,
+            contactPhone,
+            maxTeams,
+            registrationDeadline,
+            isRegistrationOpen,
+            socialMediaFacebook,
+            socialMediaInstagram,
+            socialMediaTwitter,
+            socialMediaWebsite,
+            drawTitle,
+            drawDescription,
+            adminNotes,
+            isActive
         } = req.body;
 
         const carnival = await Carnival.findByPk(carnivalId);
@@ -656,19 +672,78 @@ const updateCarnival = async (req, res) => {
             return res.redirect('/admin/carnivals');
         }
 
-        await carnival.update({
+        // Prepare base update data
+        const updateData = {
             title,
             date: new Date(date),
-            endDate: req.body.endDate ? new Date(req.body.endDate) : null,
+            endDate: endDate ? new Date(endDate) : null,
             locationAddress,
             state,
             scheduleDetails,
             registrationLink: registrationLink || null,
+            feesDescription: feesDescription || null,
+            callForVolunteers: callForVolunteers || null,
+            organiserContactName: contactName,
             organiserContactEmail: contactEmail,
-            isActive: req.body.isActive === 'on'
-        });
+            organiserContactPhone: contactPhone,
+            maxTeams: maxTeams ? parseInt(maxTeams) : null,
+            registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,
+            isRegistrationOpen: !!isRegistrationOpen,
+            socialMediaFacebook: socialMediaFacebook || null,
+            socialMediaInstagram: socialMediaInstagram || null,
+            socialMediaTwitter: socialMediaTwitter || null,
+            socialMediaWebsite: socialMediaWebsite || null,
+            drawTitle: drawTitle || null,
+            drawDescription: drawDescription || null,
+            adminNotes: adminNotes || null,
+            isActive: !!isActive
+        };
 
-        req.flash('success_msg', `Carnival ${title} has been updated successfully`);
+        // Handle structured file uploads
+        if (req.structuredUploads && req.structuredUploads.length > 0) {
+            const existingAdditionalImages = carnival.additionalImages || [];
+            const existingDrawFiles = carnival.drawFiles || [];
+
+            for (const upload of req.structuredUploads) {
+                switch (upload.fieldname) {
+                    case 'logo':
+                        updateData.clubLogoURL = upload.path;
+                        console.log(`📸 Admin updated carnival ${carnival.id} logo: ${upload.path}`);
+                        break;
+                    case 'promotionalImage':
+                        updateData.promotionalImageURL = upload.path;
+                        console.log(`📸 Admin updated carnival ${carnival.id} promotional image: ${upload.path}`);
+                        break;
+                    case 'drawFile':
+                        const newDrawFile = {
+                            url: upload.path,
+                            filename: upload.originalname,
+                            title: req.body.drawTitle || `Draw Document ${existingDrawFiles.length + 1}`,
+                            uploadMetadata: upload.metadata
+                        };
+                        existingDrawFiles.push(newDrawFile);
+                        updateData.drawFiles = existingDrawFiles;
+                        
+                        // Update legacy fields with first draw file
+                        if (existingDrawFiles.length === 1) {
+                            updateData.drawFileURL = newDrawFile.url;
+                            updateData.drawFileName = newDrawFile.filename;
+                            updateData.drawTitle = req.body.drawTitle || newDrawFile.title;
+                            updateData.drawDescription = req.body.drawDescription || '';
+                        }
+                        console.log(`📄 Admin added draw document to carnival ${carnival.id}: ${upload.path}`);
+                        break;
+                }
+            }
+        }
+
+        await carnival.update(updateData);
+
+        const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
+            ? `Carnival ${title} has been updated successfully, including ${req.structuredUploads.length} file upload(s)` 
+            : `Carnival ${title} has been updated successfully`;
+
+        req.flash('success_msg', successMessage);
         res.redirect('/admin/carnivals');
     } catch (error) {
         console.error('❌ Error updating carnival:', error);
