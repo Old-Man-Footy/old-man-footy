@@ -134,6 +134,33 @@
               </div>
             </div>
 
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="shorts" class="form-label">
+                    Shorts Preference
+                  </label>
+                  <select 
+                    class="form-select <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'shorts') ? 'is-invalid' : '' %>" 
+                    id="shorts" 
+                    name="shorts"
+                  >
+                    <option value="Unrestricted" <%= (formData.shorts || 'Unrestricted') === 'Unrestricted' ? 'selected' : '' %>>Unrestricted</option>
+                    <option value="Red" <%= formData.shorts === 'Red' ? 'selected' : '' %>>Red</option>
+                    <option value="Yellow" <%= formData.shorts === 'Yellow' ? 'selected' : '' %>>Yellow</option>
+                    <option value="Blue" <%= formData.shorts === 'Blue' ? 'selected' : '' %>>Blue</option>
+                    <option value="Green" <%= formData.shorts === 'Green' ? 'selected' : '' %>>Green</option>
+                  </select>
+                  <div class="form-text">
+                    Player's preferred shorts color for game day
+                  </div>
+                  <div class="invalid-feedback">
+                    Please select a valid shorts preference.
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="mb-3">
               <label for="notes" class="form-label">Notes (Optional)</label>
               <textarea 
@@ -209,6 +236,22 @@
             </p>
             <p class="small text-muted mb-1">
               <strong>Last Updated:</strong> <%= new Date(player.updatedAt).toLocaleDateString() %>
+            </p>
+            <p class="small text-muted mb-1">
+              <strong>Shorts Preference:</strong> 
+              <% 
+                const shortsColorMap = {
+                  'Unrestricted': { bg: 'bg-secondary', text: 'text-white' },
+                  'Red': { bg: 'bg-danger', text: 'text-white' },
+                  'Yellow': { bg: 'bg-warning', text: 'text-dark' },
+                  'Blue': { bg: 'bg-primary', text: 'text-white' },
+                  'Green': { bg: 'bg-success', text: 'text-white' }
+                };
+                const colorStyle = shortsColorMap[player.shorts || 'Unrestricted'] || shortsColorMap['Unrestricted'];
+              %>
+              <span class="badge <%= colorStyle.bg %> <%= colorStyle.text %>">
+                <%= player.shorts || 'Unrestricted' %>
+              </span>
             </p>
             <p class="small text-muted mb-0">
               <strong>Status:</strong> 

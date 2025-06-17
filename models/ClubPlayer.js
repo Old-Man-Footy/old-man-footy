@@ -208,6 +208,17 @@ ClubPlayer.init({
       }
     }
   },
+  shorts: {
+    type: DataTypes.ENUM('Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'),
+    allowNull: false,
+    defaultValue: 'Unrestricted',
+    validate: {
+      isIn: {
+        args: [['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green']],
+        msg: 'Shorts must be one of: Unrestricted, Red, Yellow, Blue, Green'
+      }
+    }
+  },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false

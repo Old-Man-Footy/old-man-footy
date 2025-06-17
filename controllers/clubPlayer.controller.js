@@ -182,7 +182,7 @@ async function createPlayer(req, res, next) {
     }
 
     // Extract validated data
-    const { firstName, lastName, dateOfBirth, email, notes } = req.body;
+    const { firstName, lastName, dateOfBirth, email, notes, shorts } = req.body;
 
     // Create the player
     const player = await ClubPlayer.create({
@@ -191,7 +191,8 @@ async function createPlayer(req, res, next) {
       lastName,
       dateOfBirth,
       email,
-      notes: notes || null
+      notes: notes || null,
+      shorts: shorts || 'Unrestricted'
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully added to your club.`);
@@ -321,7 +322,7 @@ async function updatePlayer(req, res, next) {
     }
 
     // Extract validated data
-    const { firstName, lastName, dateOfBirth, email, notes } = req.body;
+    const { firstName, lastName, dateOfBirth, email, notes, shorts } = req.body;
 
     // Update the player
     await player.update({
@@ -329,7 +330,8 @@ async function updatePlayer(req, res, next) {
       lastName,
       dateOfBirth,
       email,
-      notes: notes || null
+      notes: notes || null,
+      shorts: shorts || 'Unrestricted'
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully updated.`);
@@ -445,7 +447,12 @@ const validatePlayer = [
     .optional()
     .trim()
     .isLength({ max: 1000 })
-    .withMessage('Notes cannot exceed 1000 characters')
+    .withMessage('Notes cannot exceed 1000 characters'),
+
+  body('shorts')
+    .optional()
+    .isIn(['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'])
+    .withMessage('Shorts must be one of: Unrestricted, Red, Yellow, Blue, Green')
 ];
 
 /**

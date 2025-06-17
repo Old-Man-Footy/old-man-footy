@@ -132,6 +132,33 @@
               </div>
             </div>
 
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="shorts" class="form-label">
+                    Shorts Preference
+                  </label>
+                  <select 
+                    class="form-select <%= typeof errors !== 'undefined' && errors.some(e => e.param === 'shorts') ? 'is-invalid' : '' %>" 
+                    id="shorts" 
+                    name="shorts"
+                  >
+                    <option value="Unrestricted" <%= (formData.shorts || 'Unrestricted') === 'Unrestricted' ? 'selected' : '' %>>Unrestricted</option>
+                    <option value="Red" <%= formData.shorts === 'Red' ? 'selected' : '' %>>Red</option>
+                    <option value="Yellow" <%= formData.shorts === 'Yellow' ? 'selected' : '' %>>Yellow</option>
+                    <option value="Blue" <%= formData.shorts === 'Blue' ? 'selected' : '' %>>Blue</option>
+                    <option value="Green" <%= formData.shorts === 'Green' ? 'selected' : '' %>>Green</option>
+                  </select>
+                  <div class="form-text">
+                    Player's preferred shorts color for game day
+                  </div>
+                  <div class="invalid-feedback">
+                    Please select a valid shorts preference.
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="mb-3">
               <label for="notes" class="form-label">Notes (Optional)</label>
               <textarea 
