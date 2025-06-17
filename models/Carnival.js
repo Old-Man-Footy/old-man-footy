@@ -271,7 +271,7 @@ class Carnival extends Model {
         include: [{
           model: require('./Club'),
           as: 'club',
-          attributes: ['id', 'clubName', 'isActive']
+          attributes: ['id', 'clubName', 'state', 'isActive']
         }]
       });
 
@@ -286,6 +286,11 @@ class Carnival extends Model {
 
       if (!user.club || !user.club.isActive) {
         throw new Error('Your club must be active to claim carnival ownership');
+      }
+
+      // State-based restriction: delegates can only claim events in their club's state or events with no state
+      if (carnival.state && user.club.state && carnival.state !== user.club.state) {
+        throw new Error(`You can only claim events in your club's state (${user.club.state}) or events with no specific state. This event is in ${carnival.state}.`);
       }
 
       // Business rule checks

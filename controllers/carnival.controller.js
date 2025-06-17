@@ -103,7 +103,9 @@ const listCarnivals = async (req, res) => {
                                     carnival.lastMySidelineSync && 
                                     !carnival.createdByUserId && 
                                     userWithClub && 
-                                    userWithClub.clubId;
+                                    userWithClub.clubId &&
+                                    // State-based restriction: can only claim events in club's state or events with no state
+                                    (!carnival.state || !userWithClub.club.state || carnival.state === userWithClub.club.state);
             
             return {
                 ...publicData,
@@ -196,7 +198,9 @@ const showCarnival = async (req, res) => {
                                 carnival.lastMySidelineSync && 
                                 !carnival.createdByUserId && 
                                 userWithClub && 
-                                userWithClub.clubId;
+                                userWithClub.clubId &&
+                                // State-based restriction: can only claim events in club's state or events with no state
+                                (!carnival.state || !userWithClub.club.state || carnival.state === userWithClub.club.state);
 
         // Check if user's club is already registered for this carnival (only for active carnivals)
         let userClubRegistration = null;
