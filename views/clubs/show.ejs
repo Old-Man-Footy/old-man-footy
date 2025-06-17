@@ -146,7 +146,7 @@
                                                         </p>
                                                         <div class="mt-auto">
                                                             <span class="badge bg-success me-1">Upcoming</span>
-                                                            <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                            <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
                                                     </div>
                                                     <div class="card-footer bg-transparent">
@@ -210,7 +210,7 @@
                                                         </p>
                                                         <div class="mt-auto">
                                                             <span class="badge bg-secondary me-1">Past Event</span>
-                                                            <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                            <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
                                                     </div>
                                                     <div class="card-footer bg-transparent">
@@ -266,7 +266,7 @@
                                                         <% } else { %>
                                                             <span class="badge bg-secondary me-1">Past Event</span>
                                                         <% } %>
-                                                        <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                        <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                     </div>
                                                 </div>
                                                 <div class="card-footer bg-transparent">
@@ -378,7 +378,7 @@
                                                         <% } %>
                                                         <div class="mt-auto">
                                                             <span class="badge bg-info me-1">Attending</span>
-                                                            <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                            <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
                                                     </div>
                                                     <div class="card-footer bg-transparent">
@@ -448,7 +448,7 @@
                                                         <% } %>
                                                         <div class="mt-auto">
                                                             <span class="badge bg-secondary me-1">Attended</span>
-                                                            <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                            <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
                                                     </div>
                                                     <div class="card-footer bg-transparent">
@@ -510,7 +510,7 @@
                                                         <% } else { %>
                                                             <span class="badge bg-secondary me-1">Attended</span>
                                                         <% } %>
-                                                        <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                        <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                     </div>
                                                 </div>
                                                 <div class="card-footer bg-transparent">

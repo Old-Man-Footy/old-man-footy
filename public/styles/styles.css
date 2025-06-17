@@ -20,7 +20,7 @@
     --rugby-link-green-hover: #1B5E20;
     --secondary: #dc3545;
     --success: #28a745;
-    --warning: #ffc107;
+    --wa-bgrning: #ffc107;
     --light: #f8f9fa;
     --dark: #343a40;
     --info: #bdf9c0;
@@ -58,6 +58,25 @@
     --bs-primary-rgb: 0, 104, 55 !important;
     --bs-link-color: #2E7D32 !important;
     --bs-link-hover-color: #1B5E20 !important;
+
+    /* == STATES == */
+    --nsw-bg: linear-gradient(135deg, #146CFD 0%, #9BCBEB 25%, #9BCBEB 75%, #146CFD 100%);
+    --nsw-text: #001A33;
+    --vic-bg: linear-gradient(135deg, #D9D9D6 0%, #003c71 25% ,#003c71 75%, #D9D9D6 100%);
+    --vic-text: #ffffff;
+    --qld-bg: linear-gradient(135deg, #FED200 0%, #73182c 25%, #73182c 75%, #FED200 100%);
+    --qld-text: #ffffff;
+    --wa-bg: linear-gradient(135deg, #000000 0%, #ffd100 25%, #ffd100 75%, #000000 100%);
+    --wa-text: #000000;
+    --sa-bg: linear-gradient(135deg, #ffa300 0%, #d50032 25%, #d50032 75%, #ffa300 100%);
+    --sa-text: #ffffff;
+    --tas-bg: linear-gradient(135deg, #fdde40 0%, #006648 25%, #006648 75%, #fdde40 100%);
+    --tas-text: #ffffff ;
+    /* == TERRITORIES == */
+    --act-bg: linear-gradient(135deg, #002855 0%, #ffc72c 25%, #ffc72c 75%, #002855 100%);
+    --act-text: #000000;
+    --nt-bg: linear-gradient(135deg, #000000 0%, #C25E03 25%, #C25E03 75%, #000000 100%);
+    --nt-text: #ffffff;
 }
 
 /* Dark theme variables */
@@ -728,20 +747,55 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: var(--rugby-gold) !important;
 }
 
-/* State Badge Colors - Australian States */
-.badge.bg-secondary,
-.badge.state-tas {
-    background-color: var(--rugby-green) !important;
+/* State Badge Colors - Australian States & Territories with Gradients */
+.badge.state-nsw,
+.badge[data-state="nsw"] {
+    background: var(--nsw-bg) !important;
+    color: var(--nsw-text) !important;
 }
-.badge.state-nsw { background-color: #003d7a; }
-.badge.state-qld { background-color: #8b0000; }
-.badge.state-vic { background-color: #003366; }
-.badge.state-wa { background-color: #ffcd00; color: #000; }
-.badge.state-sa { background-color: #d50000; }
-.badge.state-nt { background-color: #e87722; }
-.badge.state-act { background-color: #0066cc; }
 
-/* Badge Styling - Square corners to differentiate from buttons */
+.badge.state-vic,
+.badge[data-state="vic"] {
+    background: var(--vic-bg) !important;
+    color: var(--vic-text) !important;
+}
+
+.badge.state-qld,
+.badge[data-state="qld"] {
+    background: var(--qld-bg) !important;
+    color: var(--qld-text) !important;
+}
+
+.badge.state-wa,
+.badge[data-state="wa"] {
+    background: var(--wa-bg) !important;
+    color: var(--wa-text) !important;
+}
+
+.badge.state-sa,
+.badge[data-state="sa"] {
+    background: var(--sa-bg) !important;
+    color: var(--sa-text) !important;
+}
+
+.badge.state-tas,
+.badge[data-state="tas"] {
+    background: var(--tas-bg) !important;
+    color: var(--tas-text) !important;
+}
+
+.badge.state-act,
+.badge[data-state="act"] {
+    background: var(--act-bg) !important;
+    color: var(--act-text) !important;
+}
+
+.badge.state-nt,
+.badge[data-state="nt"] {
+    background: var(--nt-bg) !important;
+    color: var(--nt-text) !important;
+}
+
 .badge {
     border-radius: 0 !important;
 }

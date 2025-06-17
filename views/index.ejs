@@ -100,7 +100,7 @@
                                                     </small>
                                                 </div>
                                                 <div class="mb-2">
-                                                    <span class="badge bg-secondary"><%= carnival.state %></span>
+                                                    <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                 </div>
                                                 <div class="d-flex gap-1">
                                                     <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
