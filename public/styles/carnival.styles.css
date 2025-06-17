@@ -408,6 +408,22 @@
 }
 
 /* ================================
+   AUTO-POPULATION STYLES
+   ================================ */
+
+.auto-populated {
+    background-color: #d4edda !important;
+    border-color: #28a745 !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.auto-populated:focus {
+    background-color: #ffffff !important;
+    border-color: var(--rugby-green) !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* ================================
    RESPONSIVE CARNIVAL STYLES
    ================================ */
 

@@ -55,10 +55,14 @@
                                         </div>
                                         <div class="col-12">
                                             <label for="clubId" class="form-label">Club *</label>
-                                            <select class="form-select" id="clubId" name="clubId" required>
+                                            <select class="form-select" id="clubId" name="clubId" required data-clubs='<%- JSON.stringify(availableClubs) %>'>
                                                 <option value="">Choose a club...</option>
                                                 <% availableClubs.forEach(club => { %>
-                                                    <option value="<%= club.id %>">
+                                                    <option value="<%= club.id %>" 
+                                                            data-club-name="<%= club.clubName %>"
+                                                            data-contact-person="<%= club.contactPerson || '' %>"
+                                                            data-contact-email="<%= club.contactEmail || '' %>"
+                                                            data-contact-phone="<%= club.contactPhone || '' %>">
                                                         <%= club.clubName %> 
                                                         (<%= club.state %><% if (club.location) { %> - <%= club.location %><% } %>)
                                                     </option>
@@ -233,3 +237,5 @@
         </div>
     </div>
 </div>
+
+<script src="/js/add-club-auto-populate.js"></script>

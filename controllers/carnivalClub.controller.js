@@ -110,7 +110,7 @@ const showAddClubToCarnival = async (req, res) => {
                 id: { [Op.notIn]: registeredClubIds }
             },
             order: [['clubName', 'ASC']],
-            attributes: ['id', 'clubName', 'state', 'location']
+            attributes: ['id', 'clubName', 'state', 'location', 'contactPerson', 'contactEmail', 'contactPhone']
         });
 
         res.render('carnivals/add-club', {
