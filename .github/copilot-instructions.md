@@ -72,7 +72,7 @@ This project enforces a strict separation of concerns.
 * **Best Practices:**
   * **AAA Pattern:** Structure tests using Arrange, Act, Assert.
   * **Isolation:** Tests MUST be independent. Use `beforeEach` and `afterEach` to reset state and mocks.
-  * **Mocking:** External dependencies (especially database and external APIs) MUST be mocked using `jest.mock()`. A unit test for a controller MUST NOT make a real database call.
+  * **Mocking:** External dependencies (except database) MUST be mocked using `jest.mock()`. Unit tests should utilise the test database `test-old-man-footy.db`.
   * **Test Order:** When generating a full test suite for a feature, create tests in this order: Model -> Service (if any) -> Controller.
   * **Running Tests:** The command to test a single component is `npm test -- "<file-name>.test.js"`.
 

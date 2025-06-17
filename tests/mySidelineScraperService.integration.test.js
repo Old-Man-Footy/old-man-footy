@@ -57,50 +57,6 @@ describe('MySidelineScraperService Integration Tests', () => {
             }
         }
     });
- 
-    // describe('End-to-End Scraping Process', () => {
-    //     it('should complete full scraping process successfully', async () => {
-    //         // Arrange
-    //         console.log('\n🚀 Starting full end-to-end scraping test...');
-
-    //         // Act
-    //         const events = await service.scrapeEvents();
-
-    //         // Assert
-    //         expect(Array.isArray(events)).toBe(true);
-    //         expect(events.length).toBeGreaterThan(0);
-
-    //         console.log(`\n📊 SCRAPING RESULTS SUMMARY:`);
-    //         console.log(`├── Total Events: ${events.length}`);
-    //         console.log(`├── Events with Icons: ${events.filter(e => e.clubLogoURL).length}`);
-    //         console.log(`├── Events with Maps: ${events.filter(e => e.googleMapsUrl?.includes('maps.google.com')).length}`);
-    //         console.log(`├── Events with Contact: ${events.filter(e => e.organiserContactName || e.organiserContactPhone || e.organiserContactEmail).length}`);
-    //         console.log(`├── Active Events: ${events.filter(e => e.isActive).length}`);
-    //         console.log(`└── Australian States: ${[...new Set(events.map(e => e.state).filter(s => s))].join(', ')}`);
-
-    //         // Validate overall data quality
-    //         const dataQualityScore = events.reduce((score, event) => {
-    //             let eventScore = 0;
-    //             if (event.title) eventScore += 1;
-    //             if (event.date) eventScore += 1;
-    //             if (event.locationAddress) eventScore += 1;
-    //             if (event.clubLogoURL) eventScore += 0.5;
-    //             if (event.organiserContactName || event.organiserContactPhone || event.organiserContactEmail) eventScore += 0.5;
-    //             return score + eventScore;
-    //         }, 0);
-
-    //         const avgQuality = dataQualityScore / (events.length * 4);
-    //         console.log(`📈 Data Quality Score: ${(avgQuality * 100).toFixed(1)}%`);
-
-    //         // Expect at least 60% data quality
-    //         expect(avgQuality).toBeGreaterThan(0.6);
-
-    //         // Ensure all async operations complete before test ends
-    //         await new Promise(resolve => setTimeout(resolve, 1000));
-
-    //     }, INTEGRATION_TIMEOUT);
-    // });
-
     describe('Data Field Tracking Through Pipeline', () => {
         /**
          * Test to identify where fields are being dropped between scraping and database

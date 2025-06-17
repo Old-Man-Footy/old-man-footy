@@ -131,6 +131,7 @@ Fields on the target carnival that already contain data (and are not designated 
 | As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
 | As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
 | **Testing** | |
+| As a developer, I want all unit tests to use the test database `test-old-man-footy.db` | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/Carnival.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/Club.js`  | ⭕ Not Started |
 | As a developer, all test data should also use `/icons/seed.svg` as a stand-in logo image. | ⭕ Not Started |

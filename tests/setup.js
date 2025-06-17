@@ -56,10 +56,18 @@ afterEach(async () => {
       
       // Delete in reverse dependency order to avoid foreign key conflicts
       const modelsToClean = [
-        'Carnival',
-        'User', 
         'Club',
-        'EmailSubscription'
+        'User',
+        'Player',
+        'PlayerAssignment',
+        'Carnival',
+        'Sponsor',  
+        'ClubSponsor',
+        'CarnivalSponsor',
+        'CarnivalClub',
+        'EmailSubscription',
+        'ClubAlternateName',
+        'SyncLog'
       ];
       
       for (const modelName of modelsToClean) {
