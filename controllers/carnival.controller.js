@@ -1318,6 +1318,106 @@ module.exports = {
                 // Update target carnival
                 await targetCarnival.update(mergeData, { transaction });
 
+                // Transfer all registered attendees from source to target carnival
+                const sourceAttendees = await CarnivalClub.findAll({
+                    where: {
+                        carnivalId: sourceCarnivalId,
+                        isActive: true
+                    },
+                    transaction
+                });
+
+                console.log(`🔄 Found ${sourceAttendees.length} attendee registrations to transfer from source carnival`);
+
+                // Transfer each attendee registration to the target carnival
+                for (const sourceAttendee of sourceAttendees) {
+                    // Check if the club is already registered for the target carnival
+                    const existingRegistration = await CarnivalClub.findOne({
+                        where: {
+                            carnivalId: targetCarnivalId,
+                            clubId: sourceAttendee.clubId,
+                            isActive: true
+                        },
+                        transaction
+                    });
+
+                    if (existingRegistration) {
+                        // Club already registered for target - deactivate source registration
+                        await sourceAttendee.update({ 
+                            isActive: false,
+                            updatedAt: new Date()
+                        }, { transaction });
+                        
+                        console.log(`⚠️  Club ${sourceAttendee.clubId} already registered for target carnival - deactivated source registration`);
+                    } else {
+                        // Transfer the registration to the target carnival
+                        // Get the highest display order for target carnival
+                        const maxDisplayOrder = await CarnivalClub.max('displayOrder', {
+                            where: {
+                                carnivalId: targetCarnivalId,
+                                isActive: true
+                            },
+                            transaction
+                        }) || 0;
+
+                        // Create new registration for target carnival
+                        const newRegistration = await CarnivalClub.create({
+                            carnivalId: targetCarnivalId,
+                            clubId: sourceAttendee.clubId,
+                            registrationDate: sourceAttendee.registrationDate,
+                            playerCount: sourceAttendee.playerCount,
+                            teamName: sourceAttendee.teamName,
+                            contactPerson: sourceAttendee.contactPerson,
+                            contactEmail: sourceAttendee.contactEmail,
+                            contactPhone: sourceAttendee.contactPhone,
+                            specialRequirements: sourceAttendee.specialRequirements,
+                            registrationNotes: `${sourceAttendee.registrationNotes || ''} [Transferred from merged MySideline carnival "${sourceCarnival.title}"]`.trim(),
+                            isActive: true,
+                            isPaid: sourceAttendee.isPaid,
+                            paymentAmount: sourceAttendee.paymentAmount,
+                            paymentDate: sourceAttendee.paymentDate,
+                            displayOrder: maxDisplayOrder + 1,
+                            approvalStatus: sourceAttendee.approvalStatus,
+                            approvedAt: sourceAttendee.approvedAt,
+                            approvedByUserId: sourceAttendee.approvedByUserId,
+                            rejectionReason: sourceAttendee.rejectionReason
+                        }, { transaction });
+
+                        // Transfer any associated player assignments
+                        const playerAssignments = await CarnivalClubPlayer.findAll({
+                            where: {
+                                carnivalClubId: sourceAttendee.id,
+                                isActive: true
+                            },
+                            transaction
+                        });
+
+                        for (const playerAssignment of playerAssignments) {
+                            await CarnivalClubPlayer.create({
+                                carnivalClubId: newRegistration.id,
+                                clubPlayerId: playerAssignment.clubPlayerId,
+                                attendanceStatus: playerAssignment.attendanceStatus,
+                                addedAt: playerAssignment.addedAt,
+                                isActive: true
+                            }, { transaction });
+
+                            // Deactivate the old player assignment
+                            await playerAssignment.update({
+                                isActive: false,
+                                updatedAt: new Date()
+                            }, { transaction });
+                        }
+
+                        // Deactivate the source registration
+                        await sourceAttendee.update({ 
+                            isActive: false,
+                            updatedAt: new Date()
+                        }, { transaction });
+
+                        console.log(`✅ Transferred club ${sourceAttendee.clubId} registration with ${playerAssignments.length} player assignments to target carnival`);
+                    }
+                }
+
                 // Deactivate source carnival
                 await sourceCarnival.update({ 
                     isActive: false,
