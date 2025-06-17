@@ -92,7 +92,7 @@ Fields on the target carnival that already contain data (and are not designated 
 | As a delegate, after I merge carnivals, any registered attendees (pending or approved) linked to the MySidelineEvent, must be moved over to the target carnival, and unlinked from the original. Commit is not made until all links are succesfully moved. | ✅ Completed |
 | As a delegate, I may want to host a multi-day carnival. On the edit carnival screens (admin and delegate) there should be a checkbox for "Multi-day event" (will show by default if no end date).  If selected, an End Date field will show up and the label for the event date will change to Event Start Date.  Views will be updated to show the dates.  If it's a period of days; Show 18-20th July 2025. Fields on the edit forms will need to be modified to fit these new multi-date fields in. | ✅ Completed |
 | As an admin, I want to be able to merge carnivals on behalf of other clubs. | ✅ Completed |
-| As a club delegate, I want to be able to bulk import players via CSV. I
+| As a club delegate, I want to be able to bulk import players via CSV. I want to be able to download a template from the site, and upload it filled with Player data. Duplicates should be ignored. | ⭕ Not Started |
 | As an admin, I want to be able to see player lists attending all club carnivals.  | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the main site footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`. It should stand out and attract attention without being big.  | ⭕ Not Started |
