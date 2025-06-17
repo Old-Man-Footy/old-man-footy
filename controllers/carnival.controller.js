@@ -259,13 +259,34 @@ const showCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showCreateForm = (req, res) => {
-    const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
-    res.render('carnivals/new', {
-        title: 'Add New Carnival',
-        states,
-        additionalCSS: ['/styles/carnival.styles.css']
-    });
+const showCreateForm = async (req, res) => {
+    try {
+        const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+        
+        // Fetch user's club information for auto-population
+        let userWithClub = null;
+        if (req.user) {
+            userWithClub = await User.findByPk(req.user.id, {
+                include: [{
+                    model: Club,
+                    as: 'club',
+                    attributes: ['id', 'clubName', 'state', 'contactPerson', 'contactEmail', 'contactPhone']
+                }],
+                attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId']
+            });
+        }
+        
+        res.render('carnivals/new', {
+            title: 'Add New Carnival',
+            states,
+            user: userWithClub, // Pass user with club data for auto-population
+            additionalCSS: ['/styles/carnival.styles.css']
+        });
+    } catch (error) {
+        console.error('Error loading carnival creation form:', error);
+        req.flash('error_msg', 'Error loading carnival creation form.');
+        res.redirect('/dashboard');
+    }
 };
 
 /**
@@ -278,11 +299,26 @@ const createCarnival = async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            
+            // Fetch user's club information for auto-population on error
+            let userWithClub = null;
+            if (req.user) {
+                userWithClub = await User.findByPk(req.user.id, {
+                    include: [{
+                        model: Club,
+                        as: 'club',
+                        attributes: ['id', 'clubName', 'state', 'contactPerson', 'contactEmail', 'contactPhone']
+                    }],
+                    attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId']
+                });
+            }
+            
             return res.render('carnivals/new', {
                 title: 'Add New Carnival',
                 states,
                 errors: errors.array(),
                 formData: req.body,
+                user: userWithClub, // Pass user data for auto-population
                 additionalCSS: ['/styles/carnival.styles.css']
             });
         }
@@ -393,11 +429,26 @@ const createCarnival = async (req, res) => {
             // Handle duplicate detection errors
             if (duplicateError.message.includes('similar carnival already exists')) {
                 const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+                
+                // Fetch user's club information for auto-population on duplicate error
+                let userWithClub = null;
+                if (req.user) {
+                    userWithClub = await User.findByPk(req.user.id, {
+                        include: [{
+                            model: Club,
+                            as: 'club',
+                            attributes: ['id', 'clubName', 'state', 'contactPerson', 'contactEmail', 'contactPhone']
+                        }],
+                        attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId']
+                    });
+                }
+                
                 return res.render('carnivals/new', {
                     title: 'Add New Carnival',
                     states,
                     errors: [{ msg: duplicateError.message }],
                     formData: req.body,
+                    user: userWithClub, // Pass user data for auto-population
                     duplicateWarning: true,
                     additionalCSS: ['/styles/carnival.styles.css']
                 });
@@ -480,11 +531,26 @@ const updateCarnival = async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            
+            // Fetch user's club information for auto-population on error
+            let userWithClub = null;
+            if (req.user) {
+                userWithClub = await User.findByPk(req.user.id, {
+                    include: [{
+                        model: Club,
+                        as: 'club',
+                        attributes: ['id', 'clubName', 'state', 'contactPerson', 'contactEmail', 'contactPhone']
+                    }],
+                    attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId']
+                });
+            }
+            
             return res.render('carnivals/edit', {
                 title: 'Edit Carnival',
                 carnival,
                 states,
                 errors: errors.array(),
+                user: userWithClub, // Pass user data for auto-population
                 additionalCSS: ['/styles/carnival.styles.css']
             });
         }

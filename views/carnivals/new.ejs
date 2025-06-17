@@ -94,12 +94,18 @@
                                         <option value="">Select State</option>
                                         <% states.forEach(state => { %>
                                             <option value="<%= state %>" 
-                                                    <%= typeof formData !== 'undefined' && formData.state === state ? 'selected' : '' %>>
+                                                    <%= typeof formData !== 'undefined' ? (formData.state === state ? 'selected' : '') : 
+                                                        (user && user.club && user.club.state === state ? 'selected' : '') %>>
                                                 <%= state %>
                                             </option>
                                         <% }) %>
                                     </select>
                                     <div class="invalid-feedback">Please select a state.</div>
+                                    <% if (user && user.club && user.club.state) { %>
+                                        <div class="form-text">
+                                            <i class="bi bi-info-circle"></i> Auto-populated from your club's state (<%= user.club.state %>)
+                                        </div>
+                                    <% } %>
                                 </div>
                             </div>
 
@@ -135,12 +141,21 @@
                                     <input type="text" class="form-control" id="organiserContactName" name="organiserContactName" 
                                            value="<%= typeof formData !== 'undefined' ? formData.organiserContactName : user.firstName + ' ' + user.lastName %>" required>
                                     <div class="invalid-feedback">Please provide a contact name.</div>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i> Auto-populated with your name
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="organiserContactPhone" class="form-label">Contact Phone *</label>
                                     <input type="tel" class="form-control" id="organiserContactPhone" name="organiserContactPhone" 
-                                           value="<%= typeof formData !== 'undefined' ? formData.organiserContactPhone : '' %>" required>
+                                           value="<%= typeof formData !== 'undefined' ? formData.organiserContactPhone : 
+                                                    (user.phoneNumber || (user.club && user.club.contactPhone ? user.club.contactPhone : '')) %>" required>
                                     <div class="invalid-feedback">Please provide a contact phone number.</div>
+                                    <% if ((user.phoneNumber || (user.club && user.club.contactPhone)) && typeof formData === 'undefined') { %>
+                                        <div class="form-text">
+                                            <i class="bi bi-info-circle"></i> Auto-populated from your <%= user.phoneNumber ? 'profile' : 'club details' %>
+                                        </div>
+                                    <% } %>
                                 </div>
                             </div>
 
@@ -151,8 +166,14 @@
                                        title="This email will be visible to clubs and used for carnival-related communications."></i>
                                 </label>
                                 <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
-                                       value="<%= typeof formData !== 'undefined' ? formData.contactEmail : '' %>" required>
+                                       value="<%= typeof formData !== 'undefined' ? formData.contactEmail : 
+                                                (user.email || (user.club && user.club.contactEmail ? user.club.contactEmail : '')) %>" required>
                                 <div class="invalid-feedback">Please provide a valid contact email.</div>
+                                <% if ((user.email || (user.club && user.club.contactEmail)) && typeof formData === 'undefined') { %>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i> Auto-populated from your <%= user.email ? 'profile' : 'club details' %>
+                                    </div>
+                                <% } %>
                             </div>
                         </div>
 
