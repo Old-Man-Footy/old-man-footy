@@ -3,6 +3,7 @@ const MySidelineDataService = require('./mySidelineDataService');
 const MySidelineEventParserService = require('./mySidelineEventParserService');
 const { Page } = require('puppeteer');
 const { options } = require('../models/User');
+const { AUSTRALIAN_STATES } = require('../config/constants');
 
 /**
  * MySideline Web Scraper Service
@@ -726,7 +727,7 @@ class MySidelineScraperService {
 
         // Handle state - allow null, but validate if present
         if (cleanedData.state) {
-            const validStates = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            const validStates = AUSTRALIAN_STATES;
             if (!validStates.includes(cleanedData.state)) {
                 console.warn(`Invalid state: ${cleanedData.state}, setting to null`);
                 cleanedData.state = null;

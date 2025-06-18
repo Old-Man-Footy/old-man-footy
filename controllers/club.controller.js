@@ -10,6 +10,7 @@ const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const ImageNamingService = require('../services/imageNamingService');
 const sponsorSortingService = require('../services/sponsorSortingService');
+const { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } = require('../config/constants');
 
 /**
  * Display public club listings with search and filter options
@@ -73,7 +74,7 @@ const showClubListings = async (req, res) => {
             title: 'Find a Masters Rugby League Club',
             clubs: clubsWithStats,
             filters: { search, state },
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            states: AUSTRALIAN_STATES,
             additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
@@ -268,7 +269,7 @@ const showClubManagement = async (req, res) => {
                 user,
                 availableClubs,
                 claimableClubs,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 additionalCSS: ['/styles/club.styles.css']
             });
         }
@@ -575,8 +576,8 @@ const showAddSponsor = async (req, res) => {
             title: 'Add Sponsor to Club',
             club,
             availableSponsors,
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'],
+            states: AUSTRALIAN_STATES,
+            sponsorshipLevels: SPONSORSHIP_LEVELS,
             additionalCSS: ['/styles/club.styles.css']
         });
     } catch (error) {
@@ -1052,7 +1053,7 @@ const getCreateOnBehalf = async (req, res) => {
         res.render('clubs/create-on-behalf', {
             title: 'Create Club on Behalf of Others',
             user: req.user,
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            states: AUSTRALIAN_STATES,
             errors: [],
             formData: {},
             additionalCSS: ['/styles/club.styles.css']
@@ -1082,7 +1083,7 @@ const postCreateOnBehalf = async (req, res) => {
             return res.render('clubs/create-on-behalf', {
                 title: 'Create Club on Behalf of Others',
                 user: req.user,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: errors.array(),
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']
@@ -1110,7 +1111,7 @@ const postCreateOnBehalf = async (req, res) => {
             return res.render('clubs/create-on-behalf', {
                 title: 'Create Club on Behalf of Others',
                 user: req.user,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: [{ msg: 'A club with this name already exists.' }],
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']
@@ -1150,7 +1151,7 @@ const postCreateOnBehalf = async (req, res) => {
         res.render('clubs/create-on-behalf', {
             title: 'Create Club on Behalf of Others',
             user: req.user,
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            states: AUSTRALIAN_STATES,
             errors: [{ msg: 'An error occurred while creating the club.' }],
             formData: req.body,
             additionalCSS: ['/styles/club.styles.css']
@@ -1304,7 +1305,7 @@ const createClub = async (req, res) => {
                 user,
                 availableClubs,
                 claimableClubs,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: errors.array(),
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']
@@ -1330,7 +1331,7 @@ const createClub = async (req, res) => {
                 user,
                 availableClubs,
                 claimableClubs,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: [{ msg: 'Club name is required.' }],
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']
@@ -1353,7 +1354,7 @@ const createClub = async (req, res) => {
                 user,
                 availableClubs,
                 claimableClubs,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: [{ msg: 'State is required.' }],
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']
@@ -1376,7 +1377,7 @@ const createClub = async (req, res) => {
                 user,
                 availableClubs,
                 claimableClubs,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: [{ msg: 'Location is required.' }],
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']
@@ -1412,7 +1413,7 @@ const createClub = async (req, res) => {
                 user,
                 availableClubs,
                 claimableClubs,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: [{ msg: 'A club with this name already exists. Please choose a different name.' }],
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']
@@ -1477,7 +1478,7 @@ const createClub = async (req, res) => {
                 user: req.user,
                 availableClubs,
                 claimableClubs,
-                states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+                states: AUSTRALIAN_STATES,
                 errors: [{ msg: 'An error occurred while creating the club. Please try again.' }],
                 formData: req.body,
                 additionalCSS: ['/styles/club.styles.css']

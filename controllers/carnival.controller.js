@@ -1,17 +1,18 @@
 /**
  * Carnival Controller - MVC Architecture Implementation
  * 
- * Handles all carnival-related business logic and request processing.
+ * Handles carnival management, club registration, and carnival operations.
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Carnival, User, Club, Sponsor, CarnivalClub, CarnivalClubPlayer, ClubPlayer } = require('../models');
+const { Carnival, Club, User, CarnivalClub, CarnivalSponsor, Sponsor } = require('../models');
+const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
+const { AUSTRALIAN_STATES } = require('../config/constants');
 const mySidelineService = require('../services/mySidelineIntegrationService');
 const emailService = require('../services/emailService');
 const ImageNamingService = require('../services/imageNamingService');
 const { sortSponsorsHierarchically } = require('../services/sponsorSortingService');
-const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 
 /**
@@ -114,7 +115,7 @@ const listCarnivals = async (req, res) => {
             };
         });
 
-        const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+        const states = AUSTRALIAN_STATES;
 
         res.render('carnivals/list', {
             title: 'Find Carnivals',
@@ -129,7 +130,7 @@ const listCarnivals = async (req, res) => {
         res.render('carnivals/list', {
             title: 'Find Carnivals',
             carnivals: [],
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            states: AUSTRALIAN_STATES,
             currentFilters: {},
             additionalCSS: ['/styles/carnival.styles.css']
         });
@@ -313,7 +314,7 @@ const showCarnival = async (req, res) => {
  */
 const showCreateForm = async (req, res) => {
     try {
-        const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+        const states = AUSTRALIAN_STATES;
         
         // Fetch user's club information for auto-population
         let userWithClub = null;
@@ -350,7 +351,7 @@ const createCarnival = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            const states = AUSTRALIAN_STATES;
             
             // Fetch user's club information for auto-population on error
             let userWithClub = null;
@@ -481,7 +482,7 @@ const createCarnival = async (req, res) => {
         } catch (duplicateError) {
             // Handle duplicate detection errors
             if (duplicateError.message.includes('similar carnival already exists')) {
-                const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+                const states = AUSTRALIAN_STATES;
                 
                 // Fetch user's club information for auto-population on duplicate error
                 let userWithClub = null;
@@ -546,7 +547,7 @@ const showEditForm = async (req, res) => {
             return res.redirect('/dashboard');
         }
 
-        const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+        const states = AUSTRALIAN_STATES;
         res.render('carnivals/edit', {
             title: 'Edit Carnival',
             carnival,
@@ -583,7 +584,7 @@ const updateCarnival = async (req, res) => {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            const states = AUSTRALIAN_STATES;
             
             // Fetch user's club information for auto-population on error
             let userWithClub = null;

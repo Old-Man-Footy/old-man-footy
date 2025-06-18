@@ -5,10 +5,11 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Sponsor, Club } = require('../models');
+const { Sponsor, Club, User, Carnival } = require('../models');
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const ImageNamingService = require('../services/imageNamingService');
+const { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } = require('../config/constants');
 
 /**
  * Display public sponsor listings with search and filter options
@@ -17,7 +18,7 @@ const ImageNamingService = require('../services/imageNamingService');
  */
 const showSponsorListings = async (req, res) => {
     try {
-        const { search, state } = req.query;
+        const { search, state, businessType } = req.query;
         
         // Build where clause for filters
         const whereClause = {
@@ -61,10 +62,10 @@ const showSponsorListings = async (req, res) => {
         }));
 
         res.render('sponsors/list', {
-            title: 'Our Sponsors',
+            title: 'Find Masters Rugby League Sponsors',
             sponsors: sponsorsWithStats,
-            filters: { search, state },
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+            filters: { search, state, businessType },
+            states: AUSTRALIAN_STATES,
             additionalCSS: ['/styles/sponsor.styles.css']
         });
     } catch (error) {
@@ -145,12 +146,14 @@ const showCreateSponsor = async (req, res) => {
             attributes: ['id', 'clubName', 'state']
         });
 
-        res.render('sponsors/new', {
+        res.render('sponsors/create', {
             title: 'Add New Sponsor',
-            clubs,
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'],
-            additionalCSS: ['/styles/sponsor.styles.css']
+            user: req.user,
+            states: AUSTRALIAN_STATES,
+            sponsorshipLevels: SPONSORSHIP_LEVELS,
+            additionalCSS: ['/styles/sponsor.styles.css'],
+            errors: [],
+            formData: {}
         });
     } catch (error) {
         console.error('Error loading sponsor creation form:', error);
@@ -174,7 +177,15 @@ const createSponsor = async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             req.flash('error_msg', 'Please correct the validation errors.');
-            return res.redirect('/sponsors/new');
+            return res.render('sponsors/create', {
+                title: 'Add New Sponsor', 
+                user: req.user,
+                states: AUSTRALIAN_STATES,
+                sponsorshipLevels: SPONSORSHIP_LEVELS,
+                errors: errors.array(),
+                formData: req.body,
+                additionalCSS: ['/styles/sponsor.styles.css']
+            });
         }
 
         const {
@@ -274,19 +285,11 @@ const showEditSponsor = async (req, res) => {
             return res.redirect('/sponsors');
         }
 
-        const allClubs = await Club.findAll({
-            where: { isActive: true },
-            order: [['clubName', 'ASC']],
-            attributes: ['id', 'clubName', 'state']
-        });
-
         res.render('sponsors/edit', {
-            title: `Edit ${sponsor.sponsorName}`,
+            title: 'Edit Sponsor',
             sponsor,
-            allClubs,
-            associatedClubIds: sponsor.clubs.map(club => club.id),
-            states: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
-            sponsorshipLevels: ['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'],
+            states: AUSTRALIAN_STATES,
+            sponsorshipLevels: SPONSORSHIP_LEVELS,
             additionalCSS: ['/styles/sponsor.styles.css']
         });
     } catch (error) {

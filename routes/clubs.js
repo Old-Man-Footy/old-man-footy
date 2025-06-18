@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { clubUpload, handleUploadError } = require('../middleware/upload');
 const clubController = require('../controllers/club.controller');
+const { AUSTRALIAN_STATES } = require('../config/constants');
 
 // Club management (authenticated delegates only) - MUST come before /:id route
 router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
@@ -11,7 +12,7 @@ router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
 // Create new club (for users without clubs)
 router.post('/create', ensureAuthenticated, [
     body('clubName').isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
-    body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state required'),
+    body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
     body('location').isLength({ min: 2, max: 100 }).withMessage('Location must be between 2 and 100 characters'),
     body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
 ], clubController.createClub);
@@ -28,7 +29,7 @@ router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 // Update club profile with structured upload support
 router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
     body('clubName').optional().isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
-    body('state').optional().isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state required'),
+    body('state').optional().isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
     body('contactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid email address required'),
     body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
@@ -76,7 +77,7 @@ router.get('/create-on-behalf', ensureAuthenticated, clubController.getCreateOnB
 router.post('/create-on-behalf', ensureAuthenticated, [
     body('clubName').isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
     body('inviteEmail').isEmail().withMessage('Valid email address required for invitation'),
-    body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state required'),
+    body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
     body('contactEmail').optional().isEmail().withMessage('Valid contact email required'),
     body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
     body('customMessage').optional().isLength({ max: 2000 }).withMessage('Custom message must be 2000 characters or less')

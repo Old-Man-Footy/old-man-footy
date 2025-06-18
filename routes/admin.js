@@ -9,7 +9,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
-const { clubUpload, carnivalUpload, handleUploadError } = require('../middleware/upload');
+const { clubUpload, carnivalUpload, logoUpload, handleUploadError } = require('../middleware/upload');
 const adminController = require('../controllers/admin.controller');
 
 // Apply admin authentication to all routes
@@ -73,7 +73,7 @@ const clubUpdateValidation = [
 ];
 
 router.post('/clubs/:id/update', 
-    clubUpload.single('logo'),
+    ...logoUpload,
     handleUploadError,
     clubUpdateValidation, 
     adminController.updateClub
@@ -114,11 +114,7 @@ const carnivalUpdateValidation = [
 ];
 
 router.post('/carnivals/:id/update',
-    carnivalUpload.fields([
-        { name: 'logo', maxCount: 1 },
-        { name: 'promotionalImage', maxCount: 1 },
-        { name: 'drawFile', maxCount: 5 }
-    ]),
+    ...carnivalUpload,
     handleUploadError,
     carnivalUpdateValidation,
     adminController.updateCarnival

@@ -157,9 +157,8 @@ ClubPlayer.init({
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
     validate: {
-      notEmpty: {
+    notEmpty: {
         msg: 'Email is required'
       },
       isEmail: {
@@ -235,7 +234,8 @@ ClubPlayer.init({
   indexes: [
     {
       unique: true,
-      fields: ['email']
+      fields: ['clubId', 'firstName', 'lastName', 'dateOfBirth'],
+      name: 'club_players_person_unique'
     },
     {
       fields: ['clubId']
@@ -248,6 +248,9 @@ ClubPlayer.init({
     },
     {
       fields: ['dateOfBirth']
+    },
+    {
+      fields: ['email']
     }
   ],
   hooks: {

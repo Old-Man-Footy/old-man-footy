@@ -1,9 +1,45 @@
 const express = require('express');
-const router = express.Router();
 const { body } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { carnivalUpload, handleUploadError } = require('../middleware/upload');
 const carnivalController = require('../controllers/carnival.controller');
+const { ensureAuthenticated } = require('../middleware/auth');
+const upload = require('../middleware/upload');
+const { AUSTRALIAN_STATES } = require('../config/constants');
+
+const router = express.Router();
+
+// Validation middleware for carnival
+const validateCarnival = [
+    body('title').trim().isLength({ min: 5, max: 200 }).withMessage('Title must be between 5 and 200 characters'),
+    body('date').isISO8601().withMessage('Valid date is required'),
+    body('endDate').optional().isISO8601().withMessage('Valid end date is required')
+        .custom((endDate, { req }) => {
+            if (endDate && req.body.date) {
+                const startDate = new Date(req.body.date);
+                const endDateObj = new Date(endDate);
+                if (endDateObj <= startDate) {
+                    throw new Error('End date must be after the start date');
+                }
+            }
+            return true;
+        }),
+    body('locationAddress').trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters'),
+    body('organiserContactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
+    body('organiserContactEmail').trim().isEmail().withMessage('Valid email is required'),
+    body('organiserContactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('scheduleDetails').optional().trim().isLength({ max: 5000 }).withMessage('Schedule details must be 5000 characters or less'),
+    body('registrationLink').optional().isURL().withMessage('Valid registration link URL required'),
+    body('feesDescription').optional().trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
+    body('callForVolunteers').optional().trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),
+    body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state is required'),
+    body('socialMediaFacebook').optional().isURL().withMessage('Valid Facebook URL required'),
+    body('socialMediaInstagram').optional().isURL().withMessage('Valid Instagram URL required'),
+    body('socialMediaTwitter').optional().isURL().withMessage('Valid Twitter URL required'),
+    body('socialMediaWebsite').optional().isURL().withMessage('Valid website URL required')
+];
+
+
 
 // List all carnivals with filtering
 router.get('/', carnivalController.list);
@@ -15,70 +51,13 @@ router.get('/new', ensureAuthenticated, carnivalController.getNew);
 router.get('/:id', carnivalController.show);
 
 // Create carnival POST with validation
-router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, [
-    body('title').trim().notEmpty().withMessage('Title is required'),
-    // Date is optional for MySideline imports but will be validated at model level
-    body('date').optional().isISO8601().withMessage('Valid date is required when provided'),
-    body('endDate').optional().isISO8601().withMessage('Valid end date is required when provided')
-        .custom((endDate, { req }) => {
-            if (endDate && req.body.date) {
-                const startDate = new Date(req.body.date);
-                const endDateObj = new Date(endDate);
-                if (endDateObj <= startDate) {
-                    throw new Error('End date must be after the start date');
-                }
-            }
-            return true;
-        }),
-    // Location is optional for MySideline imports but will be validated at model level
-    body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
-    // Contact details are optional for MySideline imports but will be validated at model level
-    body('organiserContactName').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Organiser contact name must be between 2 and 100 characters when provided'),
-    body('organiserContactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid organiser email is required when provided'),
-    body('organiserContactPhone').optional().trim().isLength({ min: 7, max: 20 }).withMessage('Organiser contact phone must be between 7 and 20 characters when provided'),
-    body('scheduleDetails').optional().trim().isLength({ min: 10, max: 2000 }).withMessage('Schedule details must be between 10 and 2000 characters when provided'),
-    body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
-    body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Facebook URL must be valid'),
-    body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Instagram URL must be valid'),
-    body('socialMediaTwitter').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Twitter URL must be valid'),
-    body('socialMediaWebsite').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Website URL must be valid'),
-    body('registrationLink').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Registration link must be valid')
-], carnivalController.postNew);
+router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, validateCarnival, carnivalController.postNew);
 
 // Edit carnival form
 router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 
 // Update carnival POST with validation
-router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError, [
-    body('title').trim().notEmpty().withMessage('Title is required'),
-    // Date is optional for MySideline imports but will be validated at model level
-    body('date').optional().isISO8601().withMessage('Valid date is required when provided'),
-    body('endDate').optional().isISO8601().withMessage('Valid end date is required when provided')
-        .custom((endDate, { req }) => {
-            if (endDate && req.body.date) {
-                const startDate = new Date(req.body.date);
-                const endDateObj = new Date(endDate);
-                if (endDateObj <= startDate) {
-                    throw new Error('End date must be after the start date');
-                }
-            }
-            return true;
-        }),
-    // Location is optional for MySideline imports but will be validated at model level
-    body('locationAddress').optional().trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters when provided'),
-    // Contact details are optional for MySideline imports but will be validated at model level
-    body('organiserContactName').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Organiser contact name must be between 2 and 100 characters when provided'),
-    body('organiserContactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid organiser email is required when provided'),
-    body('organiserContactPhone').optional().trim().isLength({ min: 10, max: 20 }).withMessage('Organiser phone must be between 10 and 20 characters when provided'),
-    // Schedule details are optional for MySideline imports but will be validated at model level
-    body('scheduleDetails').optional().trim().isLength({ min: 10 }).withMessage('Schedule details must be at least 10 characters when provided'),
-    body('state').isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT']).withMessage('Valid state is required'),
-    body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Facebook URL must be valid'),
-    body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Instagram URL must be valid'),
-    body('socialMediaTwitter').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Twitter URL must be valid'),
-    body('socialMediaWebsite').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Website URL must be valid'),
-    body('registrationLink').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Registration link must be valid')
-], carnivalController.postEdit);
+router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError, validateCarnival, carnivalController.postEdit);
 
 // Delete carnival
 router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);
