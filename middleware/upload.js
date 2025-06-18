@@ -176,16 +176,16 @@ const fileFilter = (req, file, cb) => {
             mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
         },
         [ImageNamingService.IMAGE_TYPES.PROMOTIONAL]: {
-            extensions: /jpeg|jpg|png|gif|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+            extensions: /jpeg|jpg|png|gif|svg|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
         },
         [ImageNamingService.IMAGE_TYPES.GALLERY]: {
-            extensions: /jpeg|jpg|png|gif|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+            extensions: /jpeg|jpg|png|gif|svg|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
         },
         [ImageNamingService.IMAGE_TYPES.BANNER]: {
-            extensions: /jpeg|jpg|png|gif|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+            extensions: /jpeg|jpg|png|gif|svg|webp/,
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
         },
         [ImageNamingService.IMAGE_TYPES.AVATAR]: {
             extensions: /jpeg|jpg|png|gif|webp/,
@@ -200,8 +200,8 @@ const fileFilter = (req, file, cb) => {
             mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
         },
         [ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT]: {
-            extensions: /pdf|doc|docx|xls|xlsx|txt/,
-            mimeTypes: /^(application\/(pdf|msword|vnd\.(openxmlformats-officedocument\.wordprocessingml\.document|ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet))|text\/plain)$/
+            extensions: /pdf|doc|docx|xls|xlsx|txt|csv/,
+            mimeTypes: /^(application\/(pdf|msword|vnd\.(openxmlformats-officedocument\.wordprocessingml\.document|ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet))|text\/(plain|csv))$/
         }
     };
     
