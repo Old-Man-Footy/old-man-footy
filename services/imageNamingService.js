@@ -424,7 +424,7 @@ class ImageNamingService {
      * @returns {string} Relative path
      */
     static getRelativePath(entityType, imageType) {
-        const baseDir = 'uploads';
+        const baseDir = 'uploads'; // This will be under public/ now
         
         // Organize by entity type and image type
         if (imageType === this.IMAGE_TYPES.LOGO) {

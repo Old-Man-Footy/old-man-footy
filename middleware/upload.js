@@ -5,18 +5,18 @@ const ImageNamingService = require('../services/imageNamingService');
 
 // Ensure upload directories exist
 const uploadDirs = [
-    'uploads/logos/club',
-    'uploads/logos/carnival',
-    'uploads/logos/sponsor',
-    'uploads/images/club/promo',
-    'uploads/images/club/gallery',
-    'uploads/images/carnival/promo',
-    'uploads/images/carnival/gallery',
-    'uploads/images/sponsor/promo',
-    'uploads/images/sponsor/gallery',
-    'uploads/documents/club',
-    'uploads/documents/carnival',
-    'uploads/documents/sponsor'
+    'public/uploads/logos/club',
+    'public/uploads/logos/carnival',
+    'public/uploads/logos/sponsor',
+    'public/uploads/images/club/promo',
+    'public/uploads/images/club/gallery',
+    'public/uploads/images/carnival/promo',
+    'public/uploads/images/carnival/gallery',
+    'public/uploads/images/sponsor/promo',
+    'public/uploads/images/sponsor/gallery',
+    'public/uploads/documents/club',
+    'public/uploads/documents/carnival',
+    'public/uploads/documents/sponsor'
 ];
 
 uploadDirs.forEach(dir => {
@@ -30,7 +30,7 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         // We'll determine the final path in the filename function
         // For now, use a temporary directory
-        cb(null, 'uploads/temp/');
+        cb(null, 'public/uploads/temp/');
     },
     filename: async function (req, file, cb) {
         try {
@@ -55,7 +55,7 @@ const storage = multer.diskStorage({
             });
             
             // Ensure the target directory exists
-            const targetDir = path.join('uploads', namingResult.relativePath);
+            const targetDir = path.join('public/uploads', namingResult.relativePath);
             if (!fs.existsSync(targetDir)) {
                 fs.mkdirSync(targetDir, { recursive: true });
             }
@@ -90,13 +90,31 @@ function extractUploadContext(req, file) {
     if (req.route && req.route.path) {
         if (req.route.path.includes('/clubs')) {
             context.entityType = ImageNamingService.ENTITY_TYPES.CLUB;
-            context.entityId = req.params.id || req.body.clubId || 1;
+            // For club uploads, try multiple sources for the club ID
+            context.entityId = req.params.id || 
+                             req.body.clubId || 
+                             (req.user && req.user.clubId) || 
+                             1;
         } else if (req.route.path.includes('/carnivals')) {
             context.entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL;
             context.entityId = req.params.id || req.body.carnivalId || 1;
         } else if (req.route.path.includes('/sponsors')) {
             context.entityType = ImageNamingService.ENTITY_TYPES.SPONSOR;
             context.entityId = req.params.id || req.body.sponsorId || 1;
+        }
+    }
+    
+    // Additional route-based detection for specific endpoints
+    if (req.originalUrl) {
+        if (req.originalUrl.includes('/clubs/manage')) {
+            // Club management routes - use user's club ID
+            context.entityType = ImageNamingService.ENTITY_TYPES.CLUB;
+            context.entityId = (req.user && req.user.clubId) || 1;
+        } else if (req.originalUrl.includes('/carnivals/') && req.originalUrl.includes('/edit')) {
+            // Carnival edit routes
+            context.entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL;
+            const carnivalIdMatch = req.originalUrl.match(/\/carnivals\/(\d+)\//);
+            context.entityId = carnivalIdMatch ? parseInt(carnivalIdMatch[1]) : 1;
         }
     }
     
@@ -133,6 +151,17 @@ function extractUploadContext(req, file) {
     if (req.body.uploadContext) {
         context.customSuffix = req.body.uploadContext;
     }
+    
+    // Debug logging to help troubleshoot upload context issues
+    console.log(`📸 Upload context for ${file.fieldname}:`, {
+        entityType: context.entityType,
+        entityId: context.entityId,
+        imageType: context.imageType,
+        route: req.route?.path,
+        originalUrl: req.originalUrl,
+        userClubId: req.user?.clubId,
+        paramsId: req.params?.id
+    });
     
     return context;
 }
@@ -246,7 +275,7 @@ const processStructuredUpload = async (req, res, next) => {
             if (metadata) {
                 // Move file from temp to structured location
                 const tempPath = file.path;
-                const finalPath = path.join('uploads', metadata.fullPath);
+                const finalPath = path.join('public/uploads', metadata.fullPath);
                 
                 // Ensure target directory exists
                 const targetDir = path.dirname(finalPath);
