@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: old-man-footy-dev
+    ports:
+      - "3050:3050"
+      - "9229:9229" # Debug port for Node.js inspector
+    environment:
+      - NODE_ENV=development
+      - SESSION_SECRET=${SESSION_SECRET}
+      - EMAIL_SERVICE=${EMAIL_SERVICE}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_FROM=noreply@oldmanfooty.au
+      - EMAIL_FROM_NAME="Old Man Footy"
+      - PORT=3050
+    volumes:
+      # Mount source code for hot reloading
+      - .:/app
+      - /app/node_modules # Prevent overwriting node_modules
+      # Persist database and uploads
+      - dev_data:/app/data
+      - dev_uploads:/app/public/uploads
+    networks:
+      - old-man-footy-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3050/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  dev_data:
+    driver: local
+  dev_uploads:
+    driver: local
+
+networks:
+  old-man-footy-network:
+    driver: bridge
