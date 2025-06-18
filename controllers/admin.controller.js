@@ -371,7 +371,7 @@ const issuePasswordReset = async (req, res) => {
         });
 
         // Send password reset email
-        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/reset-password/${resetToken}`;
+        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
         await EmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
         // Log successful password reset initiation

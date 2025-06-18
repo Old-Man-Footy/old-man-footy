@@ -16,7 +16,7 @@ class EmailService {
 
     // Send invitation email to new club delegates
     async sendInvitationEmail(email, inviteToken, inviterName, clubName) {
-        const inviteUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/register?token=${inviteToken}`;
+        const inviteUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/register?token=${inviteToken}`;
         
         const mailOptions = {
             from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
@@ -117,10 +117,10 @@ class EmailService {
                     headerText = '📢 Carnival Notification';
             }
 
-            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/carnivals/${carnival.id}`;
 
             const promises = subscriptions.map(subscription => {
-                const unsubscribeUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/unsubscribe?token=${subscription.unsubscribeToken}`;
+                const unsubscribeUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/unsubscribe?token=${subscription.unsubscribeToken}`;
                 
                 const mailOptions = {
                     from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
@@ -231,7 +231,7 @@ class EmailService {
 
     // Send welcome email to new subscribers
     async sendWelcomeEmail(email, states) {
-        const unsubscribeUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(email)}`;
+        const unsubscribeUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/unsubscribe?email=${encodeURIComponent(email)}`;
         
         // Handle both single state (string) and multiple states (array) for backward compatibility
         const stateArray = Array.isArray(states) ? states : [states];
@@ -271,7 +271,7 @@ class EmailService {
                         </div>
                         
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/carnivals" 
+                            <a href="${process.env.BASE_URL || 'http://localhost:3050'}/carnivals" 
                                style="background: #006837; color: white; padding: 15px 30px; 
                                       text-decoration: none; border-radius: 5px; font-weight: bold;">
                                 Browse Current Carnivals
@@ -335,7 +335,7 @@ class EmailService {
                         </div>
                         
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/dashboard" 
+                            <a href="${process.env.BASE_URL || 'http://localhost:3050'}/dashboard" 
                                style="background: #006837; color: white; padding: 15px 30px; 
                                       text-decoration: none; border-radius: 5px; font-weight: bold;">
                                 Access Your Dashboard
@@ -376,7 +376,7 @@ class EmailService {
                 return { success: true, emailsSent: 0, message: 'No attendee clubs to email' };
             }
 
-            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/carnivals/${carnival.id}`;
             
             const promises = attendeeClubs.map(club => {
                 // Get primary delegate email or use a fallback
@@ -510,8 +510,8 @@ class EmailService {
     // Send club ownership invitation email
     async sendClubOwnershipInvitation(club, proxyCreator, inviteEmail, customMessage = '') {
         try {
-            const claimUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/clubs/${club.id}/claim`;
-            const clubUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/clubs/${club.id}`;
+            const claimUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/clubs/${club.id}/claim`;
+            const clubUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/clubs/${club.id}`;
             
             const mailOptions = {
                 from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
@@ -769,12 +769,12 @@ Reply to: ${email}
                         <h3 style="color: #006837; margin-top: 0;">While you wait...</h3>
                         <p>Feel free to explore more of what Old Man Footy has to offer:</p>
                         <div style="text-align: center; margin: 20px 0;">
-                            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/carnivals" 
+                            <a href="${process.env.BASE_URL || 'http://localhost:3050'}/carnivals" 
                                style="background: #006837; color: white; padding: 12px 24px; 
                                       text-decoration: none; border-radius: 5px; margin: 0 10px; display: inline-block;">
                                 Browse Carnivals
                             </a>
-                            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/clubs" 
+                            <a href="${process.env.BASE_URL || 'http://localhost:3050'}/clubs" 
                                style="background: #006837; color: white; padding: 12px 24px; 
                                       text-decoration: none; border-radius: 5px; margin: 0 10px; display: inline-block;">
                                 Find Clubs
@@ -806,8 +806,8 @@ What happens next?
 - If your inquiry is urgent, you can also email us directly at support@oldmanfooty.au
 
 While you wait, feel free to explore more of what Old Man Footy has to offer:
-- Browse Carnivals: ${process.env.BASE_URL || 'http://localhost:3000'}/carnivals
-- Find Clubs: ${process.env.BASE_URL || 'http://localhost:3000'}/clubs
+- Browse Carnivals: ${process.env.BASE_URL || 'http://localhost:3050'}/carnivals
+- Find Clubs: ${process.env.BASE_URL || 'http://localhost:3050'}/clubs
 
 This is an automated response. Please do not reply to this email. 
 We'll respond to your inquiry from our support team shortly.
@@ -834,7 +834,7 @@ We'll respond to your inquiry from our support team shortly.
 
     // Send password reset email
     async sendPasswordResetEmail(email, resetToken, firstName) {
-        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/reset-password/${resetToken}`;
+        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
         
         const mailOptions = {
             from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
@@ -919,8 +919,8 @@ We'll respond to your inquiry from our support team shortly.
      * @param {string} newDelegateEmail - Email of the new delegate
      */
     async sendClubReactivationAlert(originalDelegateEmail, originalDelegateName, clubName, newDelegateName, newDelegateEmail) {
-        const fraudReportUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/report-fraud?club=${encodeURIComponent(clubName)}&newDelegate=${encodeURIComponent(newDelegateEmail)}`;
-        const clubUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/clubs/${encodeURIComponent(clubName)}`;
+        const fraudReportUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/report-fraud?club=${encodeURIComponent(clubName)}&newDelegate=${encodeURIComponent(newDelegateEmail)}`;
+        const clubUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/clubs/${encodeURIComponent(clubName)}`;
 
         const mailOptions = {
             from: `"Old Man Footy Security" <${process.env.EMAIL_USER}>`,
@@ -1043,8 +1043,8 @@ We'll respond to your inquiry from our support team shortly.
      */
     async sendRegistrationApprovalEmail(carnival, club, approverName) {
         try {
-            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
-            const loginUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/login`;
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/carnivals/${carnival.id}`;
+            const loginUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/login`;
             const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
             
             // Get the primary contact's first name - try multiple sources
@@ -1171,7 +1171,7 @@ We'll respond to your inquiry from our support team shortly.
      */
     async sendRegistrationRejectionEmail(carnival, club, rejectorName, rejectionReason) {
         try {
-            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/carnivals/${carnival.id}`;
+            const carnivalUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/carnivals/${carnival.id}`;
             const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
             
             // Get the primary contact's first name - try multiple sources

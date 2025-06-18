@@ -151,7 +151,7 @@ server {
 
     # Application
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:3050;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -231,7 +231,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "3050:3050"
     environment:
       - NODE_ENV=production
     env_file:

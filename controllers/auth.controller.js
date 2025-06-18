@@ -466,7 +466,7 @@ const sendInvitation = async (req, res) => {
             firstName: firstName,
             inviterName: `${req.user.firstName} ${req.user.lastName}`,
             clubName: req.user.club?.clubName || 'the club',
-            invitationUrl: `${process.env.BASE_URL || 'http://localhost:3000'}/auth/accept-invitation/${invitationToken}`
+            invitationUrl: `${process.env.BASE_URL || 'http://localhost:3050'}/auth/accept-invitation/${invitationToken}`
         });
 
         // Log successful invitation send

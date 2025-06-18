@@ -66,7 +66,7 @@ Note: SQLite database is included and requires no separate installation.
    Create a `.env` file in the root directory:
 
    ```env
-   PORT=3000
+   PORT=3050
    SESSION_SECRET=your-super-secret-session-key
    NODE_ENV=development
    ```
@@ -84,7 +84,7 @@ Note: SQLite database is included and requires no separate installation.
    ```
 
 6. **Access the application:**
-   Open your browser and navigate to `http://localhost:3000`
+   Open your browser and navigate to `http://localhost:3050`
 
 ## 📝 Environment Variables
 
