@@ -15,6 +15,12 @@
  */
 
 const { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } = require('../models');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+
+const execAsync = promisify(exec);
 
 // Import modular services
 const { validateEnvironment } = require('./services/environmentValidationService');
@@ -46,12 +52,101 @@ class DatabaseSeeder {
     }
 
     /**
+     * Get database file path based on environment
+     * @returns {string} Database file path
+     */
+    getDbPath() {
+        const env = process.env.NODE_ENV || 'development';
+        
+        switch (env) {
+            case 'production':
+                return path.join(__dirname, '..', 'data', 'rugby-league-masters.db');
+            case 'test':
+                return path.join(__dirname, '..', 'data', 'test-old-man-footy.db');
+            case 'development':
+            default:
+                return path.join(__dirname, '..', 'data', 'dev-old-man-footy.db');
+        }
+    }
+
+    /**
+     * Check if database file exists
+     * @returns {boolean} True if database exists
+     */
+    databaseExists() {
+        const dbPath = this.getDbPath();
+        return fs.existsSync(dbPath);
+    }
+
+    /**
+     * Run database migrations
+     * @returns {Promise<void>}
+     */
+    async runMigrations() {
+        try {
+            console.log('🔄 Running database migrations...');
+            
+            // Set NODE_ENV for migration command if not set
+            const env = process.env.NODE_ENV || 'development';
+            
+            // Run migrations using sequelize-cli
+            const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate', {
+                env: { ...process.env, NODE_ENV: env },
+                cwd: path.join(__dirname, '..')
+            });
+            
+            if (stderr && !stderr.includes('WARNING')) {
+                console.warn('Migration warnings:', stderr);
+            }
+            
+            console.log('✅ Database migrations completed successfully');
+            if (stdout && stdout.trim()) {
+                console.log('Migration output:', stdout);
+            }
+            
+        } catch (error) {
+            // Check if it's a "No migrations were executed" message (which is not an error)
+            if (error.message.includes('No migrations were executed')) {
+                console.log('✅ Database is up to date - no migrations needed');
+                return;
+            }
+            
+            console.error('❌ Database migration failed:', error.message);
+            throw error;
+        }
+    }
+
+    /**
      * Initialize database connection and validate environment
      * @returns {Promise<void>}
      */
     async connect() {
         try {
             validateEnvironment();
+            
+            // Check if database exists and run migrations if needed
+            const dbExists = this.databaseExists();
+            
+            if (!dbExists) {
+                console.log('📄 Database file not found - will run migrations to create schema');
+                
+                // Ensure data directory exists
+                const dbPath = this.getDbPath();
+                const dataDir = path.dirname(dbPath);
+                if (!fs.existsSync(dataDir)) {
+                    console.log(`📁 Creating data directory: ${dataDir}`);
+                    fs.mkdirSync(dataDir, { recursive: true });
+                }
+                
+                // Run migrations to create the database schema
+                await this.runMigrations();
+            } else {
+                console.log('📄 Database file exists - checking for pending migrations');
+                
+                // Run migrations to ensure database is up to date
+                await this.runMigrations();
+            }
+            
             await this.basicSeedingService.connect();
         } catch (error) {
             console.error('❌ Database initialization failed:', error.message);
