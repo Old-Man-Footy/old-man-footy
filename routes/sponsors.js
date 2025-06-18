@@ -39,7 +39,7 @@ const validateSponsorUpdate = [
     body('instagramUrl').optional().isURL().withMessage('Valid Instagram URL required'),
     body('twitterUrl').optional().isURL().withMessage('Valid Twitter URL required'),
     body('linkedinUrl').optional().isURL().withMessage('Valid LinkedIn URL required')
-};
+];
 
 // Public sponsor listings - MUST come first
 router.get('/', sponsorController.showSponsorListings);

@@ -8,6 +8,7 @@ const uploadDirs = [
     'public/uploads/logos/club',
     'public/uploads/logos/carnival',
     'public/uploads/logos/sponsor',
+    'public/uploads/logos/system',
     'public/uploads/images/club/promo',
     'public/uploads/images/club/gallery',
     'public/uploads/images/carnival/promo',
@@ -16,7 +17,8 @@ const uploadDirs = [
     'public/uploads/images/sponsor/gallery',
     'public/uploads/documents/club',
     'public/uploads/documents/carnival',
-    'public/uploads/documents/sponsor'
+    'public/uploads/documents/sponsor',
+    'public/uploads/temp'
 ];
 
 uploadDirs.forEach(dir => {
@@ -28,8 +30,7 @@ uploadDirs.forEach(dir => {
 // Configure storage with structured naming
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // We'll determine the final path in the filename function
-        // For now, use a temporary directory
+        // Use temporary directory - files will be moved to final location in processStructuredUpload
         cb(null, 'public/uploads/temp/');
     },
     filename: async function (req, file, cb) {

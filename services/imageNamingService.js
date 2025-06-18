@@ -421,18 +421,16 @@ class ImageNamingService {
      * @private
      * @param {string} entityType - Type of entity
      * @param {string} imageType - Type of image
-     * @returns {string} Relative path
+     * @returns {string} Relative path 
      */
     static getRelativePath(entityType, imageType) {
-        const baseDir = 'uploads'; // This will be under public/ now
-        
         // Organize by entity type and image type
         if (imageType === this.IMAGE_TYPES.LOGO) {
-            return path.join(baseDir, 'logos', entityType);
+            return path.join('logos', entityType);
         } else if (imageType === this.IMAGE_TYPES.DRAW_DOCUMENT) {
-            return path.join(baseDir, 'documents', entityType);
+            return path.join('documents', entityType);
         } else {
-            return path.join(baseDir, 'images', entityType, imageType);
+            return path.join('images', entityType, imageType);
         }
     }
 }
