@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/maintenance.css">
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <meta name="robots" content="noindex, nofollow">
+</head>
+<body class="maintenance-body">
+    <div class="maintenance-container">
+        <header class="maintenance-header">
+            <div class="logo-container">
+                <img src="/images/logo.png" alt="<%= appName %> Logo" class="maintenance-logo">
+                <h1 class="maintenance-title"><%= appName %></h1>
+            </div>
+        </header>
+
+        <main class="maintenance-content">
+            <div class="maintenance-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 12L14 14L18 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+
+            <h2 class="maintenance-heading">We'll be back soon!</h2>
+            
+            <div class="maintenance-message">
+                <p><%= message %></p>
+                <p><%= estimatedReturn %></p>
+            </div>
+
+            <div class="maintenance-actions">
+                <button type="button" class="refresh-button" onclick="window.location.reload()">
+                    Check Again
+                </button>
+                <a href="mailto:<%= contactEmail %>" class="contact-link">
+                    Contact Support
+                </a>
+            </div>
+
+            <div class="maintenance-info">
+                <p>Thank you for your patience.</p>
+                <p class="maintenance-timestamp">Last updated: <span id="current-time"></span></p>
+            </div>
+        </main>
+
+        <footer class="maintenance-footer">
+            <p>&copy; <%= new Date().getFullYear() %> <%= appName %>. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="/js/maintenance.js"></script>
+</body>
+</html>
