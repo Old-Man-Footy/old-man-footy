@@ -15,7 +15,7 @@ class MySidelineScraperService {
         this.requestDelay = 2000;
         this.searchUrl = process.env.MYSIDELINE_URL;
         this.eventUrl = process.env.MYSIDELINE_EVENT_URL;
-        this.useHeadlessBrowser = process.env.NODE_ENV !== 'development'; //true;
+        this.useHeadlessBrowser = true; // process.env.NODE_ENV !== 'development'; // To show browser in development
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
         

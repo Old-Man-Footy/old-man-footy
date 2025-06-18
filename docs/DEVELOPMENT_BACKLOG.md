@@ -97,8 +97,8 @@ Fields on the target carnival that already contain data (and are not designated 
 | As an admin, I want to be able to claim any carnival on behalf of any other club. In that instance, the contact details should be populated with the primary delegate's contact details. | ✅ Completed |
 | As a club delegate, I want to be able to bulk import players via CSV. I want to be able to download a template from the site, and upload it filled with Player data. Duplicates should be ignored. | ✅ Completed |
 | As an admin, I want to be able to see player lists for any club carnival.  | ✅ Completed |
-| As a developer, I want the README.md to fully reflect current Project Structure state  | ⭕ Not Started |
-| As a developer, I want to add a "Buy me a coffee" link in the main site footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/devonuto/5`. It should stand out and attract attention without being big.  | ⭕ Not Started |
+| As a developer, I want the README.md to fully reflect current Project Structure state. | ⭕ Not Started |
+| As a developer, I want to add a "Buy me a coffee" link in the main site footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`. It should stand out and attract attention without being big.  | ⭕ Not Started |
 | As a administrator, I want to be able to bulk remove or update contact information from clubs or carnivals from the admin dashboard when requested to remove them. | ⭕ Not Started |
 | As a developer, I want to use playwright to navigate to every page on the site and take screenshots to use in documentation (saved in /docs/images). Each screenshot should be named for the page it is representative of, so if a subsequent run is made, the image will be replaced with a new one. No timestamps. | ⭕ Not Started |
 | As a developer, I would prefer to use ES modules, rather than CommonJS modules. | ⭕ Not Started |
