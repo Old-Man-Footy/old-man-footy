@@ -19,6 +19,7 @@ services:
       - EMAIL_FROM=noreply@oldmanfooty.au
       - EMAIL_FROM_NAME="Old Man Footy"
       - PORT=3050
+      - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
     volumes:
       # Mount source code for hot reloading
       - .:/app

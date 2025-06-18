@@ -80,6 +80,10 @@ app.use(passport.session());
 // Flash messages
 app.use(flash());
 
+// Maintenance mode middleware (must be after session but before routes)
+const { maintenanceMode } = require('./middleware/maintenance');
+app.use(maintenanceMode);
+
 // Global variables for templates
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');

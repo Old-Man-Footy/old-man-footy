@@ -15,6 +15,8 @@ services:
       - EMAIL_SERVICE=${EMAIL_SERVICE}
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_USER=${EMAIL_USER}
+      - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
+      - PORT=3060
       - SESSION_STORE=redis
       - REDIS_URL=${REDIS_URL}
       - SENTRY_DSN=${SENTRY_DSN}
@@ -24,7 +26,6 @@ services:
       - EMAIL_FROM_NAME="Old Man Footy"
       - SSL_CERT_PATH={SSL_CERT_PATH}
       - SSL_KEY_PATH={SSL_KEY_PATH}
-      - PORT=3060
     volumes:
       # Persist database and uploads only
       - prod_data:/app/data
