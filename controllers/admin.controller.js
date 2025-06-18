@@ -1238,7 +1238,7 @@ const showCarnivalPlayers = async (req, res) => {
         });
 
         res.render('admin/carnival-players', {
-            title: `All Players - ${carnival.title} (Admin View)",
+            title: `All Players - ${carnival.title} (Admin View)`,
             carnival,
             allPlayers,
             clubSummary,
