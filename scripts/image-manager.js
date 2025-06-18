@@ -169,14 +169,14 @@ class ImageManagerCLI {
 
             // Count files by type
             const uploadDirs = [
-                'uploads/logos/club',
-                'uploads/logos/carnival',
-                'uploads/images/club/promo',
-                'uploads/images/club/gallery',
-                'uploads/images/carnival/promo',
-                'uploads/images/carnival/gallery',
-                'uploads/documents/club',
-                'uploads/documents/carnival'
+                'public/uploads/logos/club',
+                'public/uploads/logos/carnival',
+                'public/uploads/images/club/promo',
+                'public/uploads/images/club/gallery',
+                'public/uploads/images/carnival/promo',
+                'public/uploads/images/carnival/gallery',
+                'public/uploads/documents/club',
+                'public/uploads/documents/carnival'
             ];
 
             let totalFiles = 0;
@@ -237,9 +237,9 @@ class ImageManagerCLI {
      */
     async findInvalidImageNames(dryRun = true) {
         const uploadDirs = [
-            'uploads/logos',
-            'uploads/images',
-            'uploads/documents'
+            'public/uploads/logos',
+            'public/uploads/images',
+            'public/uploads/documents'
         ];
 
         const invalidFiles = [];

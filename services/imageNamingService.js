@@ -185,7 +185,7 @@ class ImageNamingService {
      */
     static async getEntityImages(entityType, entityId, imageType = null) {
         const searchPattern = this.generateSearchPattern(entityType, entityId, imageType || '*');
-        const basePath = this.getRelativePath(entityType, imageType || 'logo');
+        const basePath = path.join('public', this.getRelativePath(entityType, imageType || 'logo'));
         
         try {
             const files = await fs.readdir(path.dirname(basePath));
@@ -201,7 +201,7 @@ class ImageNamingService {
                 filename: file,
                 ...this.parseImageName(file),
                 fullPath: path.join(basePath, file),
-                url: `/uploads/${path.relative('uploads', path.join(basePath, file)).replace(/\\/g, '/')}`
+                url: `/uploads/${path.relative('public/uploads', path.join(basePath, file)).replace(/\\/g, '/')}`
             }));
         } catch (error) {
             console.error('Error reading entity images:', error);
@@ -224,7 +224,7 @@ class ImageNamingService {
         for (let i = 0; i < existingImages.length; i++) {
             try {
                 const imageUrl = existingImages[i];
-                const oldPath = path.join('uploads', imageUrl.replace(/^\/uploads\//, ''));
+                const oldPath = path.join('public/uploads', imageUrl.replace(/^\/uploads\//, ''));
                 
                 // Determine image type from old path
                 let imageType = this.IMAGE_TYPES.GALLERY;
@@ -242,7 +242,7 @@ class ImageNamingService {
                     customSuffix: 'migrated'
                 });
                 
-                const newPath = path.join('uploads', namingResult.relativePath, namingResult.filename);
+                const newPath = path.join('public/uploads', namingResult.relativePath, namingResult.filename);
                 
                 // Ensure directory exists
                 await fs.mkdir(path.dirname(newPath), { recursive: true });
@@ -253,7 +253,7 @@ class ImageNamingService {
                 results.push({
                     success: true,
                     oldPath: imageUrl,
-                    newPath: `/uploads/${path.relative('uploads', newPath).replace(/\\/g, '/')}`,
+                    newPath: `/uploads/${path.relative('public/uploads', newPath).replace(/\\/g, '/')}`,
                     metadata: namingResult.metadata
                 });
                 
@@ -303,7 +303,7 @@ class ImageNamingService {
             };
 
             // Scan upload directories
-            const uploadDirs = ['uploads/logos', 'uploads/images', 'uploads/documents'];
+            const uploadDirs = ['public/uploads/logos', 'public/uploads/images', 'public/uploads/documents'];
             
             for (const dir of uploadDirs) {
                 try {
@@ -380,7 +380,7 @@ class ImageNamingService {
      */
     static async generateSequenceId(entityType, entityId, imageType, uploadDate) {
         const pattern = `${entityType}-${entityId.toString().padStart(6, '0')}-${imageType}-${uploadDate}-*`;
-        const basePath = this.getRelativePath(entityType, imageType);
+        const basePath = path.join('public', this.getRelativePath(entityType, imageType));
         
         try {
             await fs.mkdir(basePath, { recursive: true });
