@@ -3,7 +3,6 @@ const { body } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { carnivalUpload, handleUploadError } = require('../middleware/upload');
 const carnivalController = require('../controllers/carnival.controller');
-const { ensureAuthenticated } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { AUSTRALIAN_STATES } = require('../config/constants');
 

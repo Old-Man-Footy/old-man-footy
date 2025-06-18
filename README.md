@@ -90,7 +90,7 @@ Note: SQLite database is included and requires no separate installation.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PORT` | Server port number | 3000 |
+| `PORT` | Server port number | 3050 |
 | `SESSION_SECRET` | Secret key for session encryption | Required |
 | `NODE_ENV` | Environment mode | development |
 

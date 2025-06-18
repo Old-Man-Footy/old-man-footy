@@ -176,7 +176,7 @@ async function startServer() {
         await initializeDatabase();
         
         // Step 2: Start the server
-        const PORT = process.env.PORT || 3000;
+        const PORT = process.env.PORT || 3050;
         const server = app.listen(PORT, () => {
             console.log(`🚀 Old Man Footy server running on port ${PORT}`);
             console.log('📊 Site is now accessible and ready to serve requests');
