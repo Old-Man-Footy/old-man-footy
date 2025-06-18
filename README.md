@@ -52,8 +52,8 @@ Note: SQLite database is included and requires no separate installation.
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/nrl-masters.git
-   cd nrl-masters
+   git clone https://github.com/devonuto/old-man-footy.git
+   cd old-man-footy
    ```
 
 2. **Install dependencies:**
@@ -120,7 +120,7 @@ Then use an "attach to Jest" `Launch.json` file:
 
 ## 🗂️ Project Structure
 
-```
+```sh
 ├── .github/               # GitHub configuration files (workflows, templates)
 ├── .vscode/               # VS Code workspace settings and configurations
 ├── app.js                 # Main application entry point
