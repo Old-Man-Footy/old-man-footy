@@ -11,6 +11,7 @@ const bcrypt = require('bcrypt');
 const passport = require('passport');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
+const AuditService = require('../services/auditService');
 
 /**
  * Display login form
@@ -29,12 +30,107 @@ const showLoginForm = (req, res) => {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-const loginUser = (req, res, next) => {
-    passport.authenticate('local', {
-        successRedirect: '/dashboard',
-        failureRedirect: '/auth/login',
-        failureFlash: true
-    })(req, res, next);
+const loginUser = async (req, res, next) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            // Log failed login attempt due to validation
+            await AuditService.logAuthAction(
+                AuditService.ACTIONS.USER_LOGIN,
+                req,
+                null,
+                { 
+                    result: 'FAILURE',
+                    reason: 'Validation failed',
+                    validationErrors: errors.array()
+                }
+            );
+
+            req.flash('error_msg', errors.array()[0].msg);
+            return res.redirect('/auth/login');
+        }
+
+        const { email, password } = req.body;
+
+        // Find user by email
+        const user = await User.findOne({ 
+            where: { email: email.toLowerCase() },
+            include: [{ model: Club, as: 'club' }]
+        });
+
+        if (!user || !user.isActive) {
+            // Log failed login attempt - user not found or inactive
+            await AuditService.logAuthAction(
+                AuditService.ACTIONS.USER_LOGIN,
+                req,
+                null,
+                { 
+                    result: 'FAILURE',
+                    reason: user ? 'User inactive' : 'User not found',
+                    attemptedEmail: email.toLowerCase()
+                }
+            );
+
+            req.flash('error_msg', 'Invalid email or password.');
+            return res.redirect('/auth/login');
+        }
+
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) {
+            // Log failed login attempt - wrong password
+            await AuditService.logAuthAction(
+                AuditService.ACTIONS.USER_LOGIN,
+                req,
+                user,
+                { 
+                    result: 'FAILURE',
+                    reason: 'Invalid password'
+                }
+            );
+
+            req.flash('error_msg', 'Invalid email or password.');
+            return res.redirect('/auth/login');
+        }
+
+        // Update last login timestamp
+        await user.update({ lastLoginAt: new Date() });
+
+        // Log successful login
+        await AuditService.logAuthAction(
+            AuditService.ACTIONS.USER_LOGIN,
+            req,
+            user,
+            { result: 'SUCCESS' }
+        );
+
+        req.login(user, (err) => {
+            if (err) {
+                console.error('Login error:', err);
+                req.flash('error_msg', 'Login failed. Please try again.');
+                return res.redirect('/auth/login');
+            }
+            res.redirect('/dashboard');
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        
+        // Log system error during login
+        await AuditService.logAuthAction(
+            AuditService.ACTIONS.USER_LOGIN,
+            req,
+            null,
+            { 
+                result: 'FAILURE',
+                reason: 'System error',
+                errorMessage: error.message
+            }
+        );
+
+        req.flash('error_msg', 'An error occurred during login.');
+        res.redirect('/auth/login');
+    }
 };
 
 /**
@@ -77,6 +173,15 @@ const registerUser = async (req, res) => {
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
         if (existingUser) {
+            // Log failed registration attempt
+            await AuditService.logUserAction(AuditService.ACTIONS.USER_REGISTER, {
+                req,
+                entityType: AuditService.ENTITIES.USER,
+                result: 'FAILURE',
+                errorMessage: 'Email already exists',
+                metadata: { attemptedEmail: email.toLowerCase() }
+            });
+
             return res.render('auth/register', {
                 title: 'Create Account',
                 errors: [{ msg: 'User with this email already exists' }],
@@ -96,15 +201,43 @@ const registerUser = async (req, res) => {
             isActive: true
         });
 
+        // Log successful user registration
+        await AuditService.logUserAction(AuditService.ACTIONS.USER_REGISTER, {
+            req,
+            entityType: AuditService.ENTITIES.USER,
+            entityId: newUser.id,
+            newValues: AuditService.sanitizeData({
+                id: newUser.id,
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+                email: newUser.email,
+                phoneNumber: newUser.phoneNumber
+            })
+        });
+
         console.log(`✅ New user registered: ${newUser.email} (ID: ${newUser.id})`);
         
         req.flash('success_msg', 'Registration successful! You can now log in and create or join a club from your dashboard.');
         res.redirect('/auth/login');
 
     } catch (error) {
-        console.error('Error during registration:', error);
-        req.flash('error_msg', 'An error occurred during registration. Please try again.');
-        res.redirect('/auth/register');
+        console.error('Registration error:', error);
+        
+        // Log system error during registration
+        await AuditService.logUserAction(AuditService.ACTIONS.USER_REGISTER, {
+            req,
+            entityType: AuditService.ENTITIES.USER,
+            result: 'FAILURE',
+            errorMessage: error.message,
+            metadata: { attemptedEmail: req.body.email?.toLowerCase() }
+        });
+
+        req.flash('error_msg', 'An error occurred during registration.');
+        res.render('auth/register', {
+            title: 'Create Account',
+            errors: [],
+            formData: req.body
+        });
     }
 };
 
@@ -160,25 +293,15 @@ const showInvitationForm = async (req, res) => {
  */
 const acceptInvitation = async (req, res) => {
     try {
-        const { token } = req.params;
         const errors = validationResult(req);
-
         if (!errors.isEmpty()) {
-            const invitedUser = await User.findOne({
-                where: { invitationToken: token },
-                include: [{ model: Club, as: 'club' }]
-            });
-
-            return res.render('auth/accept-invitation', {
-                title: 'Accept Invitation',
-                invitedUser,
-                token,
-                errors: errors.array(),
-                formData: req.body
-            });
+            req.flash('error_msg', errors.array()[0].msg);
+            return res.redirect('/auth/login');
         }
 
-        // Find and validate invitation
+        const { token } = req.params;
+
+        // Find user by invitation token
         const invitedUser = await User.findOne({
             where: {
                 invitationToken: token,
@@ -188,6 +311,14 @@ const acceptInvitation = async (req, res) => {
         });
 
         if (!invitedUser) {
+            await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_ACCEPT, {
+                req,
+                entityType: AuditService.ENTITIES.USER,
+                result: 'FAILURE',
+                errorMessage: 'Invalid or expired invitation link',
+                metadata: { token }
+            });
+
             req.flash('error_msg', 'Invalid or expired invitation link.');
             return res.redirect('/auth/login');
         }
@@ -195,6 +326,12 @@ const acceptInvitation = async (req, res) => {
         // Hash password and activate user
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
+        const oldValues = {
+            firstName: invitedUser.firstName,
+            lastName: invitedUser.lastName,
+            isActive: invitedUser.isActive
+        };
 
         // Update user with plain password (User model will hash it)
         await invitedUser.update({
@@ -206,11 +343,34 @@ const acceptInvitation = async (req, res) => {
             tokenExpires: null
         });
 
+        // Log successful invitation acceptance
+        await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_ACCEPT, {
+            req,
+            entityType: AuditService.ENTITIES.USER,
+            entityId: invitedUser.id,
+            oldValues,
+            newValues: AuditService.sanitizeData({
+                firstName: invitedUser.firstName,
+                lastName: invitedUser.lastName,
+                isActive: true
+            })
+        });
+
         req.flash('success_msg', 'Account activated successfully! You can now log in.');
         res.redirect('/auth/login');
 
     } catch (error) {
         console.error('Error accepting invitation:', error);
+        
+        // Log system error during invitation acceptance
+        await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_ACCEPT, {
+            req,
+            entityType: AuditService.ENTITIES.USER,
+            result: 'FAILURE',
+            errorMessage: error.message,
+            metadata: { token: req.params.token }
+        });
+
         req.flash('error_msg', 'An error occurred while activating your account.');
         res.redirect('/auth/login');
     }
@@ -222,11 +382,25 @@ const acceptInvitation = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const logoutUser = (req, res) => {
-    req.logout((err) => {
+    const user = req.user;
+    
+    req.logout(async (err) => {
         if (err) {
             console.error('Error during logout:', err);
             req.flash('error_msg', 'An error occurred during logout.');
             return res.redirect('/dashboard');
+        }
+        
+        // Log successful logout
+        try {
+            await AuditService.logUserAction(AuditService.ACTIONS.USER_LOGOUT, {
+                req,
+                entityType: AuditService.ENTITIES.USER,
+                entityId: user?.id || null,
+                metadata: { userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown' }
+            });
+        } catch (auditError) {
+            console.error('Failed to log logout audit:', auditError);
         }
         
         req.flash('success_msg', 'You have been logged out successfully.');
@@ -249,42 +423,81 @@ const sendInvitation = async (req, res) => {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            req.flash('error_msg', 'Please provide a valid email address.');
+            req.flash('error_msg', errors.array()[0].msg);
             return res.redirect('/dashboard');
         }
 
-        const { email } = req.body;
+        const { firstName, lastName, email } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ where: { email: email.toLowerCase() } });
         if (existingUser) {
+            await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_SEND, {
+                req,
+                entityType: AuditService.ENTITIES.USER,
+                result: 'FAILURE',
+                errorMessage: 'User already exists',
+                metadata: { targetEmail: email.toLowerCase() }
+            });
+
             req.flash('error_msg', 'A user with this email already exists.');
             return res.redirect('/dashboard');
         }
 
         // Generate invitation token
         const invitationToken = crypto.randomBytes(32).toString('hex');
-        const tokenExpires = new Date();
-        tokenExpires.setHours(tokenExpires.getHours() + 48); // 48 hour expiry
+        const tokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-        // Create inactive user record
+        // Create inactive user with invitation
         const newUser = await User.create({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
             email: email.toLowerCase(),
             clubId: req.user.clubId,
             isPrimaryDelegate: false,
             isActive: false,
-            invitationToken,
-            tokenExpires
+            invitationToken: invitationToken,
+            tokenExpires: tokenExpiry
         });
 
         // Send invitation email
-        await emailService.sendInvitation(email, invitationToken, req.user.clubId.clubName);
+        await emailService.sendInvitationEmail({
+            to: email,
+            firstName: firstName,
+            inviterName: `${req.user.firstName} ${req.user.lastName}`,
+            clubName: req.user.club?.clubName || 'the club',
+            invitationUrl: `${process.env.BASE_URL || 'http://localhost:3000'}/auth/accept-invitation/${invitationToken}`
+        });
 
-        req.flash('success_msg', 'Invitation sent successfully!');
+        // Log successful invitation send
+        await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_SEND, {
+            req,
+            entityType: AuditService.ENTITIES.USER,
+            entityId: newUser.id,
+            newValues: AuditService.sanitizeData({
+                firstName: newUser.firstName,
+                lastName: newUser.lastName,
+                email: newUser.email,
+                clubId: newUser.clubId,
+                inviterUserId: req.user.id
+            })
+        });
+
+        req.flash('success_msg', `Invitation sent to ${email}. They will receive an email with instructions to activate their account.`);
         res.redirect('/dashboard');
 
     } catch (error) {
         console.error('Error sending invitation:', error);
+        
+        // Log system error during invitation send
+        await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_SEND, {
+            req,
+            entityType: AuditService.ENTITIES.USER,
+            result: 'FAILURE',
+            errorMessage: error.message,
+            metadata: { targetEmail: req.body.email?.toLowerCase() }
+        });
+
         req.flash('error_msg', 'An error occurred while sending the invitation.');
         res.redirect('/dashboard');
     }

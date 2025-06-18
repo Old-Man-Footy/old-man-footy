@@ -45,7 +45,7 @@ const userUpdateValidation = [
 ];
 
 router.post('/users/:id/update', userUpdateValidation, adminController.updateUser);
-router.post('/users/:id/password-reset', adminController.issuePasswordReset);
+router.post('/users/:id/reset-password', adminController.issuePasswordReset);
 router.post('/users/:id/toggle-status', adminController.toggleUserStatus);
 router.post('/users/:id/delete', adminController.deleteUser);
 
@@ -62,11 +62,22 @@ const clubUpdateValidation = [
         .isLength({ min: 2, max: 100 })
         .withMessage('Club name must be between 2 and 100 characters'),
     body('state')
-        .isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'])
-        .withMessage('Please select a valid state')
+        .trim()
+        .isLength({ min: 2, max: 3 })
+        .withMessage('State is required'),
+    body('contactEmail')
+        .optional({ nullable: true, checkFalsy: true })
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid contact email')
 ];
 
-router.post('/clubs/:id/edit', clubUpload, handleUploadError, clubUpdateValidation, adminController.updateClub);
+router.post('/clubs/:id/update', 
+    clubUpload.single('logo'),
+    handleUploadError,
+    clubUpdateValidation, 
+    adminController.updateClub
+);
 router.post('/clubs/:id/toggle-status', adminController.toggleClubStatus);
 router.post('/clubs/:id/toggle-visibility', adminController.toggleClubVisibility);
 
@@ -75,44 +86,50 @@ router.post('/clubs/:id/toggle-visibility', adminController.toggleClubVisibility
  */
 router.get('/carnivals', adminController.getCarnivalManagement);
 router.get('/carnivals/:id/edit', adminController.showEditCarnival);
+router.get('/carnivals/:id/players', adminController.showCarnivalPlayers);
+router.get('/carnivals/:id/claim', adminController.showClaimCarnivalForm);
+router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
 
 // Carnival update validation
 const carnivalUpdateValidation = [
     body('title')
         .trim()
         .isLength({ min: 5, max: 200 })
-        .withMessage('Title must be between 5 and 200 characters'),
+        .withMessage('Carnival title must be between 5 and 200 characters'),
     body('date')
-        .optional()
         .isISO8601()
-        .toDate()
-        .withMessage('Please provide a valid date when specified'),
+        .withMessage('Please provide a valid date'),
     body('locationAddress')
-        .optional()
         .trim()
-        .isLength({ min: 10, max: 500 })
-        .withMessage('Location address must be between 10 and 500 characters when provided'),
-    body('state')
-        .isIn(['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'])
-        .withMessage('Please select a valid state'),
-    body('scheduleDetails')
-        .optional()
+        .isLength({ min: 5, max: 500 })
+        .withMessage('Location address must be between 5 and 500 characters'),
+    body('contactName')
         .trim()
-        .isLength({ min: 10 })
-        .withMessage('Schedule details must be at least 10 characters when provided'),
-    body('organiserContactEmail')
-        .optional({ nullable: true, checkFalsy: true })
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Contact name must be between 2 and 100 characters'),
+    body('contactEmail')
         .isEmail()
         .normalizeEmail()
-        .withMessage('Please provide a valid contact email when specified')
+        .withMessage('Please provide a valid contact email')
 ];
 
-router.post('/carnivals/:id/edit', carnivalUpload, handleUploadError, carnivalUpdateValidation, adminController.updateCarnival);
+router.post('/carnivals/:id/update',
+    carnivalUpload.fields([
+        { name: 'logo', maxCount: 1 },
+        { name: 'promotionalImage', maxCount: 1 },
+        { name: 'drawFile', maxCount: 5 }
+    ]),
+    handleUploadError,
+    carnivalUpdateValidation,
+    adminController.updateCarnival
+);
 router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus);
-router.get('/carnivals/:id/claim', adminController.showClaimCarnivalForm);
-router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
 
-// Admin player list viewing for any carnival
-router.get('/carnivals/:id/players', adminController.showCarnivalPlayers);
+/**
+ * Audit Log Management Routes
+ */
+router.get('/audit-logs', adminController.getAuditLogs);
+router.get('/audit-logs/export', adminController.exportAuditLogs);
+router.get('/audit-logs/statistics', adminController.getAuditStatistics);
 
 module.exports = router;

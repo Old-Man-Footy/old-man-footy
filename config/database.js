@@ -12,10 +12,22 @@ const { promisify } = require('util');
 
 const execAsync = promisify(exec);
 
-// Database file location
-const dbPath = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, '..', 'data', 'rugby-league-masters.db')
-  : path.join(__dirname, '..', 'data', 'dev-old-man-footy.db');
+// Database file location based on environment
+const getDbPath = () => {
+  const env = process.env.NODE_ENV || 'development';
+  
+  switch (env) {
+    case 'production':
+      return path.join(__dirname, '..', 'data', 'rugby-league-masters.db');
+    case 'test':
+      return path.join(__dirname, '..', 'data', 'test-old-man-footy.db');
+    case 'development':
+    default:
+      return path.join(__dirname, '..', 'data', 'dev-old-man-footy.db');
+  }
+};
+
+const dbPath = getDbPath();
 
 /**
  * Sequelize instance configuration

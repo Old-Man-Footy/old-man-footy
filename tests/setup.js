@@ -1,49 +1,50 @@
-const { Sequelize } = require('sequelize');
+/**
+ * Jest Test Setup
+ * 
+ * Global setup and teardown for Jest tests.
+ * Initializes test database and models before running tests.
+ */
+
+const { sequelize } = require('../models');
 const path = require('path');
 
-// Create a separate test database file to avoid conflicts
-const testDbPath = path.join(__dirname, '..', 'data', 'test-old-man-footy.db');
-
-// Initialize Sequelize for SQLite with proper test configuration
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: testDbPath,
-  logging: false, // Disable logging to reduce noise in tests
-  retry: {
-    max: 3
-  },
-  pool: {
-    max: 1,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  }
-});
-
-// Import models - this will set up the associations
-const models = require('../models');
-
-// Global test setup
+// Global setup - runs once before all tests
 beforeAll(async () => {
   try {
-    console.log('Test database connection established successfully.');
+    // Display database connection information
+    const dbPath = sequelize.options.storage;
+    const dbName = path.basename(dbPath);
+    const environment = process.env.NODE_ENV || 'development';
     
-    // Force recreate all tables and indexes
-    await sequelize.sync({ force: true, alter: false });
-    console.log('Test database synchronized.');
+    console.log('🗄️  Database Connection Information:');
+    console.log(`   Environment: ${environment}`);
+    console.log(`   Database File: ${dbName}`);
+    console.log(`   Full Path: ${dbPath}`);
+    console.log('');
+    
+    // Test database connection
+    await sequelize.authenticate();
+    console.log('✅ Test database connection established successfully.');
+    
+    // Disable foreign key constraints for SQLite during setup
+    await sequelize.query('PRAGMA foreign_keys = OFF;');
+    
+    // Drop all tables first to avoid constraint issues
+    await sequelize.drop();
+    
+    // Force sync will recreate all tables based on model definitions
+    // This ensures we have all the latest schema changes including audit logs
+    await sequelize.sync({ force: true });
+    
+    // Re-enable foreign key constraints
+    await sequelize.query('PRAGMA foreign_keys = ON;');
+    
+    console.log('✅ Test database tables created successfully.');
+    console.log('');
+    
   } catch (error) {
-    console.error('Unable to connect to the test database:', error);
+    console.error('❌ Unable to connect to test database:', error);
     throw error;
-  }
-});
-
-// Clean up after all tests
-afterAll(async () => {
-  try {
-    await sequelize.close();
-    console.log('Test database connection closed.');
-  } catch (error) {
-    console.error('Error closing test database connection:', error);
   }
 });
 
@@ -54,20 +55,24 @@ afterEach(async () => {
       // Only clean up data if connection is still active
       const models = sequelize.models;
       
+      // Disable foreign key constraints during cleanup
+      await sequelize.query('PRAGMA foreign_keys = OFF;');
+      
       // Delete in reverse dependency order to avoid foreign key conflicts
       const modelsToClean = [
+        'AuditLog',           // Audit logs first as they reference users
+        'CarnivalClubPlayer', // Junction tables first
+        'ClubPlayer',
+        'CarnivalClub',
+        'CarnivalSponsor',
+        'ClubSponsor',
+        'ClubAlternateName',
+        'SyncLog',           // System logs
+        'Carnival',          // Main entities
         'Club',
         'User',
-        'Player',
-        'PlayerAssignment',
-        'Carnival',
-        'Sponsor',  
-        'ClubSponsor',
-        'CarnivalSponsor',
-        'CarnivalClub',
-        'EmailSubscription',
-        'ClubAlternateName',
-        'SyncLog'
+        'Sponsor',
+        'EmailSubscription'
       ];
       
       for (const modelName of modelsToClean) {
@@ -75,23 +80,34 @@ afterEach(async () => {
           try {
             await models[modelName].destroy({ 
               where: {},
-              truncate: true,
-              cascade: true,
+              truncate: false,  // Use delete instead of truncate to avoid FK issues
+              cascade: false,
               force: true
             });
           } catch (cleanupError) {
-            // Ignore cleanup errors - table might not exist
+            // Ignore cleanup errors - table might not exist or have dependencies
+            // console.warn(`⚠️ Cleanup warning for ${modelName}:`, cleanupError.message);
           }
         }
       }
+      
+      // Re-enable foreign key constraints
+      await sequelize.query('PRAGMA foreign_keys = ON;');
+      
     } catch (error) {
-      // Ignore cleanup errors in tests
+      // console.warn('⚠️ Test cleanup warning:', error.message);
     }
   }
 });
 
-// Export sequelize instance for use in tests
-module.exports = {
-  sequelize,
-  models: sequelize.models
-};
+// Global teardown - runs once after all tests
+afterAll(async () => {
+  try {
+    if (sequelize.connectionManager.pool) {
+      await sequelize.close();
+      console.log('✅ Test database connection closed.');
+    }
+  } catch (error) {
+    console.error('❌ Error closing test database connection:', error);
+  }
+});

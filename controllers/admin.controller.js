@@ -10,6 +10,7 @@ const { User, Club, Carnival, Sponsor, EmailSubscription } = require('../models'
 const { Op } = require('sequelize');
 const crypto = require('crypto');
 const EmailService = require('../services/emailService');
+const AuditService = require('../services/auditService');
 
 /**
  * Get Admin Dashboard with system statistics
@@ -235,6 +236,17 @@ const updateUser = async (req, res) => {
             return res.redirect('/admin/users');
         }
 
+        // Capture old values for audit
+        const oldValues = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            clubId: user.clubId,
+            isPrimaryDelegate: user.isPrimaryDelegate,
+            isAdmin: user.isAdmin,
+            isActive: user.isActive
+        };
+
         // Check if email is already taken by another user
         if (email !== user.email) {
             const emailExists = await User.findOne({
@@ -245,6 +257,18 @@ const updateUser = async (req, res) => {
             });
             
             if (emailExists) {
+                await AuditService.logAdminAction(
+                    AuditService.ACTIONS.USER_UPDATE,
+                    req,
+                    AuditService.ENTITIES.USER,
+                    userId,
+                    {
+                        result: 'FAILURE',
+                        errorMessage: 'Email already in use',
+                        targetUserId: userId
+                    }
+                );
+
                 req.flash('error_msg', 'Email address is already in use by another user');
                 return res.redirect(`/admin/users/${userId}/edit`);
             }
@@ -261,10 +285,53 @@ const updateUser = async (req, res) => {
             isActive: !!isActive
         });
 
+        const newValues = {
+            firstName,
+            lastName,
+            email,
+            clubId: clubId || null,
+            isPrimaryDelegate: !!isPrimaryDelegate,
+            isAdmin: !!isAdmin,
+            isActive: !!isActive
+        };
+
+        // Log successful user update
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.USER_UPDATE,
+            req,
+            AuditService.ENTITIES.USER,
+            userId,
+            {
+                oldValues: AuditService.sanitizeData(oldValues),
+                newValues: AuditService.sanitizeData(newValues),
+                targetUserId: userId,
+                metadata: {
+                    adminAction: 'User profile update',
+                    changedFields: Object.keys(newValues).filter(key => 
+                        JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])
+                    )
+                }
+            }
+        );
+
         req.flash('success_msg', `User ${firstName} ${lastName} has been updated successfully`);
         res.redirect('/admin/users');
     } catch (error) {
         console.error('❌ Error updating user:', error);
+        
+        // Log system error
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.USER_UPDATE,
+            req,
+            AuditService.ENTITIES.USER,
+            req.params.id,
+            {
+                result: 'FAILURE',
+                errorMessage: error.message,
+                targetUserId: req.params.id
+            }
+        );
+
         req.flash('error_msg', 'Error updating user');
         res.redirect(`/admin/users/${req.params.id}/edit`);
     }
@@ -279,6 +346,18 @@ const issuePasswordReset = async (req, res) => {
         const user = await User.findByPk(userId);
 
         if (!user) {
+            await AuditService.logAdminAction(
+                AuditService.ACTIONS.USER_PASSWORD_RESET,
+                req,
+                AuditService.ENTITIES.USER,
+                userId,
+                {
+                    result: 'FAILURE',
+                    errorMessage: 'User not found',
+                    targetUserId: userId
+                }
+            );
+
             return res.json({ success: false, message: 'User not found' });
         }
 
@@ -292,15 +371,46 @@ const issuePasswordReset = async (req, res) => {
         });
 
         // Send password reset email
-        const emailService = new EmailService();
-        await emailService.sendPasswordResetEmail(user.email, resetToken, user.firstName);
+        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/auth/reset-password/${resetToken}`;
+        await EmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
+        // Log successful password reset initiation
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.USER_PASSWORD_RESET,
+            req,
+            AuditService.ENTITIES.USER,
+            userId,
+            {
+                targetUserId: userId,
+                metadata: {
+                    adminAction: 'Password reset initiated',
+                    targetUserEmail: user.email
+                }
+            }
+        );
+
+        console.log(`✅ Admin ${req.user.email} initiated password reset for user ${user.email}`);
+        
         res.json({ 
             success: true, 
             message: `Password reset email sent to ${user.email}` 
         });
     } catch (error) {
         console.error('❌ Error issuing password reset:', error);
+        
+        // Log system error
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.USER_PASSWORD_RESET,
+            req,
+            AuditService.ENTITIES.USER,
+            req.params.id,
+            {
+                result: 'FAILURE',
+                errorMessage: error.message,
+                targetUserId: req.params.id
+            }
+        );
+
         res.json({ 
             success: false, 
             message: 'Error sending password reset email' 
@@ -321,15 +431,56 @@ const toggleUserStatus = async (req, res) => {
             return res.json({ success: false, message: 'User not found' });
         }
 
-        await user.update({ isActive: !!isActive });
+        const oldStatus = user.isActive;
+        const newStatus = !!isActive;
+        
+        await user.update({ isActive: newStatus });
 
-        const status = isActive ? 'activated' : 'deactivated';
+        const action = newStatus ? AuditService.ACTIONS.USER_ACTIVATE : AuditService.ACTIONS.USER_DEACTIVATE;
+        const statusText = newStatus ? 'activated' : 'deactivated';
+        
+        // Log user status change
+        await AuditService.logAdminAction(
+            action,
+            req,
+            AuditService.ENTITIES.USER,
+            userId,
+            {
+                oldValues: { isActive: oldStatus },
+                newValues: { isActive: newStatus },
+                targetUserId: userId,
+                metadata: {
+                    adminAction: `User ${statusText}`,
+                    targetUserEmail: user.email
+                }
+            }
+        );
+
+        const message = `User "${user.firstName} ${user.lastName}" has been ${statusText} successfully`;
+        
+        console.log(`✅ Admin ${req.user.email} ${statusText} user: ${user.email} (ID: ${user.id})`);
+
         res.json({ 
             success: true, 
-            message: `User has been ${status} successfully` 
+            message: message,
+            newStatus: newStatus
         });
     } catch (error) {
         console.error('❌ Error toggling user status:', error);
+        
+        // Log system error
+        await AuditService.logAdminAction(
+            req.body.isActive ? AuditService.ACTIONS.USER_ACTIVATE : AuditService.ACTIONS.USER_DEACTIVATE,
+            req,
+            AuditService.ENTITIES.USER,
+            req.params.id,
+            {
+                result: 'FAILURE',
+                errorMessage: error.message,
+                targetUserId: req.params.id
+            }
+        );
+
         res.json({ 
             success: false, 
             message: 'Error updating user status' 
@@ -773,6 +924,23 @@ const toggleCarnivalStatus = async (req, res) => {
         
         console.log(`✅ Admin ${req.user.email} ${statusText} carnival: ${carnival.title} (ID: ${carnival.id})`);
 
+        // Log carnival status change
+        await AuditService.logAdminAction(
+            newStatus ? AuditService.ACTIONS.CARNIVAL_ACTIVATE : AuditService.ACTIONS.CARNIVAL_DEACTIVATE,
+            req,
+            AuditService.ENTITIES.CARNIVAL,
+            carnivalId,
+            {
+                oldValues: { isActive: !newStatus },
+                newValues: { isActive: newStatus },
+                targetCarnivalId: carnivalId,
+                metadata: {
+                    adminAction: `Carnival ${statusText}`,
+                    targetCarnivalTitle: carnival.title
+                }
+            }
+        );
+
         res.json({ 
             success: true, 
             message: message,
@@ -808,6 +976,23 @@ const toggleClubStatus = async (req, res) => {
         
         console.log(`✅ Admin ${req.user.email} ${statusText} club: ${club.clubName} (ID: ${club.id})`);
 
+        // Log club status change
+        await AuditService.logAdminAction(
+            newStatus ? AuditService.ACTIONS.CLUB_ACTIVATE : AuditService.ACTIONS.CLUB_DEACTIVATE,
+            req,
+            AuditService.ENTITIES.CLUB,
+            clubId,
+            {
+                oldValues: { isActive: !newStatus },
+                newValues: { isActive: newStatus },
+                targetClubId: clubId,
+                metadata: {
+                    adminAction: `Club ${statusText}`,
+                    targetClubName: club.clubName
+                }
+            }
+        );
+
         res.json({ 
             success: true, 
             message: message,
@@ -842,6 +1027,23 @@ const toggleClubVisibility = async (req, res) => {
         const message = `Club "${club.clubName}" is now ${visibilityText}`;
         
         console.log(`✅ Admin ${req.user.email} updated club visibility: ${club.clubName} (ID: ${club.id}) - ${visibilityText}`);
+
+        // Log club visibility change
+        await AuditService.logAdminAction(
+            newVisibility ? AuditService.ACTIONS.CLUB_SHOW : AuditService.ACTIONS.CLUB_HIDE,
+            req,
+            AuditService.ENTITIES.CLUB,
+            clubId,
+            {
+                oldValues: { isPubliclyListed: !newVisibility },
+                newValues: { isPubliclyListed: newVisibility },
+                targetClubId: clubId,
+                metadata: {
+                    adminAction: `Club ${newVisibility ? 'shown' : 'hidden'} in public listing`,
+                    targetClubName: club.clubName
+                }
+            }
+        );
 
         res.json({ 
             success: true, 
@@ -979,6 +1181,18 @@ const deleteUser = async (req, res) => {
             });
         }
 
+        // Capture user data for audit before deletion
+        const deletedUserData = {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            clubId: user.clubId,
+            isPrimaryDelegate: user.isPrimaryDelegate,
+            isAdmin: user.isAdmin,
+            clubName: user.club?.clubName
+        };
+
         const { sequelize } = require('../config/database');
         const transaction = await sequelize.transaction();
 
@@ -1022,6 +1236,24 @@ const deleteUser = async (req, res) => {
 
             await transaction.commit();
 
+            // Log user deletion
+            await AuditService.logAdminAction(
+                AuditService.ACTIONS.USER_DELETE,
+                req,
+                AuditService.ENTITIES.USER,
+                userId,
+                {
+                    oldValues: AuditService.sanitizeData(deletedUserData),
+                    targetUserId: userId,
+                    metadata: {
+                        adminAction: 'User deletion',
+                        targetUserEmail: deletedUserData.email,
+                        wasPrimaryDelegate: deletedUserData.isPrimaryDelegate,
+                        hadClub: !!deletedUserData.clubId
+                    }
+                }
+            );
+
             console.log(`✅ User ${user.firstName} ${user.lastName} (${user.email}) has been deleted by admin ${currentUser.email}`);
 
             res.json({ 
@@ -1036,6 +1268,20 @@ const deleteUser = async (req, res) => {
 
     } catch (error) {
         console.error('❌ Error deleting user:', error);
+        
+        // Log system error
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.USER_DELETE,
+            req,
+            AuditService.ENTITIES.USER,
+            req.params.id,
+            {
+                result: 'FAILURE',
+                errorMessage: error.message,
+                targetUserId: req.params.id
+            }
+        );
+
         res.json({ 
             success: false, 
             message: 'Error deleting user' 
@@ -1254,6 +1500,241 @@ const showCarnivalPlayers = async (req, res) => {
     }
 };
 
+/**
+ * Get Audit Log Management page
+ */
+const getAuditLogs = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 50;
+        const offset = (page - 1) * limit;
+
+        // Build filter conditions
+        const filters = {
+            userId: req.query.userId || '',
+            action: req.query.action || '',
+            entityType: req.query.entityType || '',
+            result: req.query.result || '',
+            startDate: req.query.startDate || '',
+            endDate: req.query.endDate || ''
+        };
+
+        const whereConditions = {};
+
+        if (filters.userId) {
+            whereConditions.userId = parseInt(filters.userId);
+        }
+
+        if (filters.action) {
+            whereConditions.action = filters.action;
+        }
+
+        if (filters.entityType) {
+            whereConditions.entityType = filters.entityType;
+        }
+
+        if (filters.result) {
+            whereConditions.result = filters.result;
+        }
+
+        if (filters.startDate && filters.endDate) {
+            whereConditions.createdAt = {
+                [Op.between]: [new Date(filters.startDate), new Date(filters.endDate)]
+            };
+        } else if (filters.startDate) {
+            whereConditions.createdAt = {
+                [Op.gte]: new Date(filters.startDate)
+            };
+        } else if (filters.endDate) {
+            whereConditions.createdAt = {
+                [Op.lte]: new Date(filters.endDate)
+            };
+        }
+
+        const { AuditLog } = require('../models');
+        const { count, rows: auditLogs } = await AuditLog.findAndCountAll({
+            where: whereConditions,
+            include: [{
+                model: User,
+                as: 'user',
+                attributes: ['id', 'firstName', 'lastName', 'email'],
+                required: false
+            }],
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
+        });
+
+        // Get unique values for filter dropdowns
+        const [users, actions, entityTypes] = await Promise.all([
+            User.findAll({
+                attributes: ['id', 'firstName', 'lastName', 'email'],
+                where: { isActive: true },
+                order: [['firstName', 'ASC']]
+            }),
+            AuditLog.findAll({
+                attributes: ['action'],
+                group: ['action'],
+                order: [['action', 'ASC']],
+                raw: true
+            }),
+            AuditLog.findAll({
+                attributes: ['entityType'],
+                group: ['entityType'],
+                order: [['entityType', 'ASC']],
+                raw: true
+            })
+        ]);
+
+        const pagination = {
+            currentPage: page,
+            totalPages: Math.ceil(count / limit),
+            totalItems: count,
+            hasNext: page < Math.ceil(count / limit),
+            hasPrev: page > 1
+        };
+
+        // Format audit logs for display
+        const formattedLogs = auditLogs.map(log => AuditService.formatAuditLog(log));
+
+        res.render('admin/audit-logs', {
+            title: 'Audit Logs - Admin Dashboard',
+            auditLogs: formattedLogs,
+            filters,
+            pagination,
+            users,
+            actions: actions.map(a => a.action),
+            entityTypes: entityTypes.map(e => e.entityType),
+            additionalCSS: ['/styles/admin.styles.css']
+        });
+    } catch (error) {
+        console.error('❌ Error loading audit logs:', error);
+        req.flash('error_msg', 'Error loading audit logs');
+        res.redirect('/admin/dashboard');
+    }
+};
+
+/**
+ * Get Audit Statistics for dashboard
+ */
+const getAuditStatistics = async (req, res) => {
+    try {
+        const { AuditLog } = require('../models');
+        
+        // Get statistics for the last 30 days
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const stats = await AuditLog.getAuditStatistics({
+            startDate: thirtyDaysAgo,
+            endDate: new Date()
+        });
+
+        res.json({
+            success: true,
+            stats
+        });
+    } catch (error) {
+        console.error('❌ Error getting audit statistics:', error);
+        res.json({
+            success: false,
+            message: 'Error loading audit statistics'
+        });
+    }
+};
+
+/**
+ * Export audit logs as CSV
+ */
+const exportAuditLogs = async (req, res) => {
+    try {
+        const { startDate, endDate, action, entityType, result } = req.query;
+        
+        const whereConditions = {};
+        
+        if (startDate && endDate) {
+            whereConditions.createdAt = {
+                [Op.between]: [new Date(startDate), new Date(endDate)]
+            };
+        }
+        
+        if (action) whereConditions.action = action;
+        if (entityType) whereConditions.entityType = entityType;
+        if (result) whereConditions.result = result;
+
+        const { AuditLog } = require('../models');
+        const auditLogs = await AuditLog.findAll({
+            where: whereConditions,
+            include: [{
+                model: User,
+                as: 'user',
+                attributes: ['firstName', 'lastName', 'email'],
+                required: false
+            }],
+            order: [['createdAt', 'DESC']],
+            limit: 10000 // Reasonable limit for exports
+        });
+
+        // Log the export action
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.ADMIN_DATA_EXPORT,
+            req,
+            AuditService.ENTITIES.SYSTEM,
+            null,
+            {
+                metadata: {
+                    exportType: 'audit_logs',
+                    recordCount: auditLogs.length,
+                    filters: { startDate, endDate, action, entityType, result }
+                }
+            }
+        );
+
+        // Create CSV content
+        const csvHeader = [
+            'Timestamp',
+            'User',
+            'User Email', 
+            'Action',
+            'Entity Type',
+            'Entity ID',
+            'Result',
+            'IP Address',
+            'Has Changes'
+        ].join(',');
+
+        const csvRows = auditLogs.map(log => {
+            const userName = log.user ? `${log.user.firstName} ${log.user.lastName}` : 'System';
+            const userEmail = log.user?.email || 'system@oldmanfooty.com';
+            const hasChanges = !!(log.oldValues || log.newValues);
+            
+            return [
+                log.createdAt.toISOString(),
+                `"${userName}"`,
+                `"${userEmail}"`,
+                `"${log.action}"`,
+                `"${log.entityType}"`,
+                log.entityId || '',
+                log.result,
+                log.ipAddress || '',
+                hasChanges
+            ].join(',');
+        });
+
+        const csvContent = [csvHeader, ...csvRows].join('\n');
+
+        // Set response headers for file download
+        const filename = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        res.send(csvContent);
+
+    } catch (error) {
+        console.error('❌ Error exporting audit logs:', error);
+        req.flash('error_msg', 'Error exporting audit logs');
+        res.redirect('/admin/audit-logs');
+    }
+};
+
 module.exports = {
     getAdminDashboard,
     getUserManagement,
@@ -1274,5 +1755,8 @@ module.exports = {
     generateReport,
     showClaimCarnivalForm,
     adminClaimCarnival,
-    showCarnivalPlayers
+    showCarnivalPlayers,
+    getAuditLogs,
+    getAuditStatistics,
+    exportAuditLogs
 };

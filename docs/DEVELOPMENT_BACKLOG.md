@@ -97,6 +97,10 @@ Fields on the target carnival that already contain data (and are not designated 
 | As an admin, I want to be able to claim any carnival on behalf of any other club. In that instance, the contact details should be populated with the primary delegate's contact details. | ✅ Completed |
 | As a club delegate, I want to be able to bulk import players via CSV. I want to be able to download a template from the site, and upload it filled with Player data. Duplicates should be ignored. | ✅ Completed |
 | As an admin, I want to be able to see player lists for any club carnival.  | ✅ Completed |
+| As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ✅ Completed |
+| As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
+| As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
+| As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
 | As a developer, I want the README.md to fully reflect current Project Structure state. | ⭕ Not Started |
 | As a developer, I want to add a "Buy me a coffee" link in the main site footer. This is to help fund hosting of the site. It links to a this link: `paypal.me/pfproductions/5`. It should stand out and attract attention without being big.  | ⭕ Not Started |
 | As a administrator, I want to be able to bulk remove or update contact information from clubs or carnivals from the admin dashboard when requested to remove them. | ⭕ Not Started |
@@ -125,11 +129,6 @@ Fields on the target carnival that already contain data (and are not designated 
 | As a developer, I want to verify that script loading order is maintained correctly after implementing script extraction across all pages. | ⭕ Not Started |
 | As a developer, I want to ensure Content Security Policy (CSP) compatibility is maintained after implementing script extraction. | ⭕ Not Started |
 | As a developer, I want to create comprehensive documentation for the script extraction pattern for future development reference. | ⭕ Not Started |
-| **Enhancements** | |
-| As an administrator, I want to view an analytics dashboard to understand carnival trends and platform usage. | ⭕ Not Started |
-| As an administrator, I want the system to create audit logs for key user and system actions. | ⭕ Not Started |
-| As an administrator, I want to generate and export custom reports on platform activity. | ⭕ Not Started |
-| As a mobile user, I want the site to function as a Progressive Web App (PWA) for an improved, near-native experience. | ⭕ Not Started |
 | **Testing** | |
 | As a developer, I want all unit tests to use the test database `test-old-man-footy.db` | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/Carnival.js`  | ⭕ Not Started |
@@ -145,12 +144,14 @@ Fields on the target carnival that already contain data (and are not designated 
 | As a developer, I want comprehensive unit tests for, and limited to `models/ClubPlayer.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/CarnivalClubPlayer.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `models/SyncLog.js`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `models/AuditLog.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/emailService.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/mySidelineLogoDownloadService.js` | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/mySidelineDataService.js` | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/mySidelineEventParserService.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/mySidelineScraperService.js` | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/mySidelineIntegrationService.js` | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `services/auditService.js` | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `services/imageNamingService.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `controllers/auth.controller.js`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `controllers/carnival.controller.js`  | ⭕ Not Started |
@@ -174,6 +175,7 @@ Fields on the target carnival that already contain data (and are not designated 
 | As a developer, I want comprehensive unit tests for, and limited to `views/auth/register.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/admin/claim-carnival.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/admin/carnival-players.ejs`  | ⭕ Not Started |
+| As a developer, I want comprehensive unit tests for, and limited to `views/admin/audit-logs.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/add-club.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/attendees.ejs`  | ⭕ Not Started |
 | As a developer, I want comprehensive unit tests for, and limited to `views/carnivals/add-players.ejs`  | ⭕ Not Started |

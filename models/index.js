@@ -20,6 +20,7 @@ const CarnivalClub = require('./CarnivalClub');
 const ClubPlayer = require('./ClubPlayer');
 const CarnivalClubPlayer = require('./CarnivalClubPlayer');
 const SyncLog = require('./SyncLog');
+const AuditLog = require('./AuditLog');
 
 /**
  * Define model associations/relationships
@@ -200,6 +201,18 @@ ClubPlayer.hasMany(CarnivalClubPlayer, {
   as: 'carnivalAssignments'
 });
 
+// AuditLog belongs to User (many-to-one)
+AuditLog.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+// User has many AuditLogs (one-to-many)
+User.hasMany(AuditLog, {
+  foreignKey: 'userId',
+  as: 'auditLogs'
+});
+
 /**
  * Export all models and database instance
  */
@@ -216,5 +229,6 @@ module.exports = {
   CarnivalClub,
   ClubPlayer,
   CarnivalClubPlayer,
-  SyncLog
+  SyncLog,
+  AuditLog
 };
