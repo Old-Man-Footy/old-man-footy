@@ -62,7 +62,7 @@ const sessionStore = new SequelizeStore({
 
 // Session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'rugby-league-masters-secret-key',
+    secret: process.env.SESSION_SECRET || 'old-man-footy-secret-key',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
