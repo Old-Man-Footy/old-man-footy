@@ -9,6 +9,7 @@ const { Carnival, Club, User, EmailSubscription } = require('../models');
 const { Op } = require('sequelize');
 const emailService = require('../services/emailService');
 const carouselImageService = require('../services/carouselImageService');
+const { AUSTRALIAN_STATES, AUSTRALIAN_STATE_NAMES } = require('../config/constants');
 const crypto = require('crypto');
 
 /**
@@ -56,6 +57,8 @@ const getIndex = async (req, res) => {
             carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
             stats,
             carouselImages,
+            AUSTRALIAN_STATES,
+            AUSTRALIAN_STATE_NAMES,
             additionalCSS: []
         });
     } catch (error) {
@@ -71,6 +74,8 @@ const getIndex = async (req, res) => {
                     clubsCount: 0
                 },
                 carouselImages: [],
+                AUSTRALIAN_STATES,
+                AUSTRALIAN_STATE_NAMES,
                 additionalCSS: []
             });
         }

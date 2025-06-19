@@ -222,18 +222,31 @@
                             <div class="invalid-feedback">Please provide a valid email.</div>
                         </div>
                         <div class="col-md-4">
-                            <select class="form-select" name="state" multiple required size="8">
-                                <option value="NSW">NSW</option>
-                                <option value="QLD">QLD</option>
-                                <option value="VIC">VIC</option>
-                                <option value="WA">WA</option>
-                                <option value="SA">SA</option>
-                                <option value="TAS">TAS</option>
-                                <option value="NT">NT</option>
-                                <option value="ACT">ACT</option>
-                            </select>
-                            <div class="invalid-feedback">Please select at least one state.</div>
-                            <div class="form-text">Hold Ctrl/Cmd to select multiple states</div>
+                            <!-- Modern compact state selector -->
+                            <div class="state-selector-container">
+                                <div class="state-selector-dropdown">
+                                    <button type="button" class="form-control state-selector-toggle" id="stateToggle" aria-expanded="false">
+                                        <span class="selected-text">Choose states...</span>
+                                        <i class="bi bi-chevron-down float-end"></i>
+                                    </button>
+                                    <div class="state-selector-menu" id="stateMenu">
+                                        <div class="state-selector-header">
+                                            <button type="button" class="btn btn-link btn-sm p-0" id="selectAll">Select All</button>
+                                            <button type="button" class="btn btn-link btn-sm p-0" id="selectNone">Clear All</button>
+                                        </div>
+                                        <div class="state-options">
+                                            <% AUSTRALIAN_STATES.forEach(state => { %>
+                                                <label class="state-option">
+                                                    <input type="checkbox" name="state" value="<%= state %>" class="state-checkbox">
+                                                    <span class="state-badge state-<%= state.toLowerCase() %>"><%= state %></span>
+                                                </label>
+                                            <% }) %>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="invalid-feedback">Please select at least one state.</div>
+                                <div class="form-text">Select the states you're interested in</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -270,3 +283,4 @@
 </section>
 
 <script src="/js/index.js"></script>
+<script src="/js/state-selector.js"></script>

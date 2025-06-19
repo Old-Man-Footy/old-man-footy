@@ -1607,3 +1607,166 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background-color: var(--rugby-green);
     border-color: var(--rugby-green);
 }
+
+/* State Selector Dropdown Component */
+.state-selector-container {
+    position: relative;
+    width: 100%;
+}
+
+.state-selector-dropdown {
+    position: relative;
+}
+
+.state-selector-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    cursor: pointer;
+    padding: 0.375rem 0.75rem;
+    min-height: 38px;
+}
+
+.state-selector-toggle:hover {
+    border-color: var(--bs-primary);
+}
+
+.state-selector-toggle[aria-expanded="true"] {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.state-selector-toggle[aria-expanded="true"] .bi-chevron-down {
+    transform: rotate(180deg);
+}
+
+.state-selector-toggle .bi-chevron-down {
+    transition: transform 0.2s ease;
+}
+
+.state-selector-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    margin-top: 0.125rem;
+    display: none;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.state-selector-menu.show {
+    display: block;
+}
+
+.state-selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-light);
+}
+
+.state-selector-header .btn-link {
+    font-size: 0.875rem;
+    text-decoration: none;
+    color: var(--bs-primary);
+}
+
+.state-selector-header .btn-link:hover {
+    color: var(--bs-primary);
+    text-decoration: underline;
+}
+
+.state-options {
+    padding: 0.25rem 0;
+}
+
+.state-option {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.state-option:hover {
+    background-color: var(--bs-light);
+}
+
+.state-option input[type="checkbox"] {
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+.state-badge {
+    margin-right: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.4rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    min-width: 2.5rem;
+    text-align: center;
+}
+
+.state-name {
+    font-size: 0.875rem;
+    color: var(--bs-body-color);
+}
+
+.selected-text {
+    color: var(--bs-body-color);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.selected-text.has-selection {
+    color: var(--bs-body-color);
+    font-weight: 500;
+}
+
+/* Dark mode support */
+[data-bs-theme="dark"] .state-selector-toggle {
+    background: var(--bs-dark);
+    border-color: var(--bs-border-color-translucent);
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .state-selector-menu {
+    background: var(--bs-dark);
+    border-color: var(--bs-border-color-translucent);
+}
+
+[data-bs-theme="dark"] .state-selector-header {
+    background: var(--bs-gray-800);
+    border-color: var(--bs-border-color-translucent);
+}
+
+[data-bs-theme="dark"] .state-option:hover {
+    background-color: var(--bs-gray-800);
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .state-selector-menu {
+        position: fixed;
+        top: auto !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        bottom: 1rem;
+        max-height: 60vh;
+        border-radius: 0.5rem;
+    }
+}
