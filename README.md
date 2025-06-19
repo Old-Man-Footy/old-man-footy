@@ -303,7 +303,9 @@ Note: For production deployments, ensure persistent storage is configured for th
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under a Custom Proprietary License - see the [LICENSE](LICENSE) file for details.
+
+**Important:** This is commercial software made available for transparency and community contributions. Commercial use, redistribution, or deployment without permission is prohibited.
 
 ## 🏉 About Rugby League Masters
 
