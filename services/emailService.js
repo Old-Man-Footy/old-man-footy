@@ -2,6 +2,10 @@ const nodemailer = require('nodemailer');
 const { EmailSubscription } = require('../models');
 const { Op } = require('sequelize');
 
+/**
+ * Email Service Class
+ * Handles all email communications with built-in mode checks
+ */
 class EmailService {
     constructor() {
         this.transporter = nodemailer.createTransport({
@@ -12,6 +16,37 @@ class EmailService {
                 pass: process.env.EMAIL_PASSWORD
             }
         });
+    }
+
+    /**
+     * Check if emails should be sent based on site mode
+     * @returns {boolean} True if emails can be sent, false otherwise
+     */
+    _canSendEmails() {
+        // Don't send emails if coming soon mode is enabled
+        if (process.env.FEATURE_COMING_SOON_MODE === 'true') {
+            console.log('📧 Email sending disabled: Coming Soon mode is active');
+            return false;
+        }
+
+        // Don't send emails if maintenance mode is enabled
+        if (process.env.FEATURE_MAINTENANCE_MODE === 'true') {
+            console.log('📧 Email sending disabled: Maintenance mode is active');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Log email that would have been sent but was blocked by mode check
+     * @param {string} type - Type of email (invitation, notification, etc.)
+     * @param {string} recipient - Email recipient
+     * @param {string} subject - Email subject
+     */
+    _logBlockedEmail(type, recipient, subject) {
+        const mode = process.env.FEATURE_COMING_SOON_MODE === 'true' ? 'Coming Soon' : 'Maintenance';
+        console.log(`📧 ${type} email blocked (${mode} mode): ${recipient} - "${subject}"`);
     }
 
     // Send invitation email to new club delegates
@@ -69,6 +104,12 @@ class EmailService {
         };
 
         try {
+            // Check if emails can be sent (not in coming soon or maintenance mode)
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Invitation', email, mailOptions.subject);
+                return { success: false, message: 'Email sending is disabled in the current site mode' };
+            }
+
             const result = await this.transporter.sendMail(mailOptions);
             console.log('Invitation email sent successfully:', result.messageId);
             return { success: true, messageId: result.messageId };
@@ -81,6 +122,12 @@ class EmailService {
     // Send carnival notification to subscribers
     async sendCarnivalNotification(carnival, type = 'new') {
         try {
+            // Check if emails can be sent (not in coming soon or maintenance mode)
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Carnival Notification', 'subscribers', `${type} carnival: ${carnival.title}`);
+                return { success: false, message: 'Email sending is disabled in the current site mode', emailsSent: 0 };
+            }
+
             // Get all email subscriptions that include this carnival's state in their stateFilter
             const subscriptions = await EmailSubscription.findAll({ 
                 where: {
@@ -294,6 +341,12 @@ class EmailService {
         };
 
         try {
+            // Check if emails can be sent (not in coming soon or maintenance mode)
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Welcome', email, mailOptions.subject);
+                return { success: false, message: 'Email sending is disabled in the current site mode' };
+            }
+
             const result = await this.transporter.sendMail(mailOptions);
             console.log('Welcome email sent successfully:', result.messageId);
             return { success: true, messageId: result.messageId };
@@ -360,6 +413,12 @@ class EmailService {
         };
 
         try {
+            // Check if emails can be sent (not in coming soon or maintenance mode)
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Delegate Role Transfer', newPrimaryEmail, mailOptions.subject);
+                return { success: false, message: 'Email sending is disabled in the current site mode' };
+            }
+
             const result = await this.transporter.sendMail(mailOptions);
             console.log('Delegate role transfer notification sent successfully:', result.messageId);
             return { success: true, messageId: result.messageId };
@@ -890,6 +949,12 @@ We'll respond to your inquiry from our support team shortly.
         };
 
         try {
+            // Check if emails can be sent (not in coming soon or maintenance mode)
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Password Reset', email, mailOptions.subject);
+                return { success: false, message: 'Email sending is disabled in the current site mode' };
+            }
+
             await this.transporter.sendMail(mailOptions);
             console.log(`✅ Password reset email sent to ${email}`);
         } catch (error) {
@@ -1026,6 +1091,12 @@ We'll respond to your inquiry from our support team shortly.
         };
 
         try {
+            // Check if emails can be sent (not in coming soon or maintenance mode)
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Club Reactivation Alert', originalDelegateEmail, mailOptions.subject);
+                return { success: false, message: 'Email sending is disabled in the current site mode' };
+            }
+
             const result = await this.transporter.sendMail(mailOptions);
             console.log(`🚨 Club reactivation alert sent to original delegate: ${originalDelegateEmail}`);
             return { success: true, messageId: result.messageId };
