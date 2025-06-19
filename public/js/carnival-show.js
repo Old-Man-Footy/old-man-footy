@@ -126,4 +126,100 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 10000);
         });
     }
+    
+    // Initialize modal and merge confirmation functionality
+    initializeCarnivalShowPage();
 });
+
+/**
+ * Initialize all carnival show page functionality
+ */
+function initializeCarnivalShowPage() {
+    initializePostCreationModal();
+    initializeMergeConfirmation();
+}
+
+/**
+ * Initialize post-creation modal functionality
+ */
+function initializePostCreationModal() {
+    const postCreationModal = document.getElementById('postCreationModal');
+    
+    if (postCreationModal) {
+        // Show the post-creation modal automatically
+        const modal = new bootstrap.Modal(postCreationModal);
+        modal.show();
+        
+        // Enable/disable acknowledge button based on checkbox states
+        const nrlCheckbox = document.getElementById('nrlAcknowledge');
+        const mysidelineCheckbox = document.getElementById('mysidelineAcknowledge');
+        const acknowledgeButton = document.getElementById('acknowledgeButton');
+        
+        if (nrlCheckbox && mysidelineCheckbox && acknowledgeButton) {
+            function updateButtonState() {
+                acknowledgeButton.disabled = !(nrlCheckbox.checked && mysidelineCheckbox.checked);
+            }
+            
+            nrlCheckbox.addEventListener('change', updateButtonState);
+            mysidelineCheckbox.addEventListener('change', updateButtonState);
+        }
+    }
+}
+
+/**
+ * Initialize merge confirmation functionality
+ */
+function initializeMergeConfirmation() {
+    // Merge confirmation functionality is handled by the global confirmMerge function
+    // which is already defined in the page
+}
+
+/**
+ * Handle post-creation modal acknowledgment and close
+ */
+function acknowledgeAndClose() {
+    // Close the modal
+    const postCreationModal = bootstrap.Modal.getInstance(document.getElementById('postCreationModal'));
+    if (postCreationModal) {
+        postCreationModal.hide();
+    }
+    
+    // Remove the query parameter from the URL without reloading the page
+    const url = new URL(window.location);
+    url.searchParams.delete('showPostCreationModal');
+    window.history.replaceState({}, document.title, url.toString());
+}
+
+/**
+ * Confirm carnival merge operation
+ */
+function confirmMerge() {
+    const targetSelect = document.getElementById('targetCarnivalId');
+    const targetCarnivalName = document.getElementById('targetCarnivalName');
+    
+    if (!targetSelect || !targetSelect.value) {
+        alert('Please select a carnival to merge into.');
+        return;
+    }
+    
+    if (targetCarnivalName) {
+        // Update confirmation modal with selected carnival name
+        const selectedOption = targetSelect.options[targetSelect.selectedIndex];
+        targetCarnivalName.textContent = selectedOption.text;
+    }
+    
+    // Hide first modal and show confirmation modal
+    const firstModal = bootstrap.Modal.getInstance(document.getElementById('mergeCarnivalModal'));
+    if (firstModal) {
+        firstModal.hide();
+    }
+    
+    setTimeout(() => {
+        const confirmModal = new bootstrap.Modal(document.getElementById('mergeCarnivalConfirmModal'));
+        confirmModal.show();
+    }, 300);
+}
+
+// Make functions available globally for onclick handlers
+window.acknowledgeAndClose = acknowledgeAndClose;
+window.confirmMerge = confirmMerge;

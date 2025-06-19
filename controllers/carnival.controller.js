@@ -473,12 +473,6 @@ const createCarnival = async (req, res) => {
             // Check if this was a merge operation
             const wasMerged = carnival.lastMySidelineSync && carnival.claimedAt;
             
-            if (wasMerged) {
-                req.flash('success_msg', `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`);
-            } else {
-                req.flash('success_msg', 'Carnival created successfully!');
-            }
-            
         } catch (duplicateError) {
             // Handle duplicate detection errors
             if (duplicateError.message.includes('similar carnival already exists')) {
@@ -517,7 +511,15 @@ const createCarnival = async (req, res) => {
             console.error('Error sending notification emails:', emailError);
         }
 
-        res.redirect(`/carnivals/${carnival.id}`);
+        // Set comprehensive success message with important next steps
+        if (wasMerged) {
+            req.flash('success_msg', `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`);
+            res.redirect(`/carnivals/${carnival.id}`);
+        } else {
+            // For manually created carnivals, redirect with flag to show important notices modal
+            req.flash('success_msg', 'Carnival created successfully! 🎉');
+            res.redirect(`/carnivals/${carnival.id}?showPostCreationModal=true`);
+        }
 
     } catch (error) {
         console.error('Error creating carnival:', error);

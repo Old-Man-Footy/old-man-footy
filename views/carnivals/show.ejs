@@ -1102,3 +1102,130 @@ function confirmMerge() {
 <!-- Include external JavaScript files -->
 <script src="/js/common-utils.js"></script>
 <script src="/js/carnival-show.js"></script>
+
+<!-- Post-Creation Important Notices Modal -->
+<% if (req.query.showPostCreationModal === 'true') { %>
+<div class="modal fade" id="postCreationModal" tabindex="-1" aria-labelledby="postCreationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="postCreationModalLabel">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Carnival Created Successfully!
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success border-0 mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-party text-success me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="mb-1">🎉 Great work!</h5>
+                            <p class="mb-0">Your carnival "<strong><%= carnival.title %></strong>" has been created and is now live on the platform.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-danger mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Important Next Steps - Please Read Carefully
+                        </h6>
+                    </div>
+                </div>
+
+                <!-- NRL Registration Requirement -->
+                <div class="card border-warning mb-3">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="bi bi-clipboard-check me-2"></i>
+                            1. Official NRL Registration Required
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            <strong>For all official NRL Masters competitions</strong>, you must also register your event 
+                            with the National Rugby League through their official portal:
+                        </p>
+                        
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="https://www.playrugbyleague.com/play/masters/host-application-form/" 
+                               class="btn btn-warning" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-box-arrow-up-right me-2"></i>
+                                Register Event with NRL Masters
+                            </a>
+                        </div>
+                        
+                        <div class="alert alert-info border-0 mb-0">
+                            <small>
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Important:</strong> This platform complements the official NRL registration 
+                                but does not replace the required NRL process for official competitions.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MySideline Integration Notice -->
+                <div class="card border-info mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            2. MySideline Integration Notice
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            <strong>Potential Duplicate Events:</strong> MySideline may import a similar event that didn't 
+                            automatically merge with your carnival. If this happens, you may need to manually merge the 
+                            MySideline carnival with your event to avoid duplicates.
+                        </p>
+                        
+                        <div class="alert alert-warning border-0 mb-0">
+                            <small>
+                                <i class="bi bi-gear me-1"></i>
+                                <strong>What to expect:</strong> Our system attempts automatic matching, but manual review 
+                                may be required for events with different naming, dates, or locations. You'll be notified 
+                                if merge options become available.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acknowledgment Checkboxes -->
+                <div class="card border-secondary">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="bi bi-check-square me-2"></i>
+                            Please Acknowledge
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="nrlAcknowledge" required>
+                            <label class="form-check-label" for="nrlAcknowledge">
+                                <strong>I understand</strong> that I need to register my official NRL Masters event 
+                                through the NRL portal if this is an official competition.
+                            </label>
+                        </div>
+                        
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="mysidelineAcknowledge" required>
+                            <label class="form-check-label" for="mysidelineAcknowledge">
+                                <strong>I acknowledge</strong> that MySideline may import a similar event, and I may 
+                                need to manually merge it with my carnival to avoid duplicates.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="acknowledgeButton" disabled>
+                    <i class="bi bi-check-circle me-2"></i>
+                    I Understand - Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<% } %>
