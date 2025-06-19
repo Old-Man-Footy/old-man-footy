@@ -1,42 +1,49 @@
 <div class="container-fluid p-0">
-    <!-- Hero Section with Rugby Green Theme -->
-    <div class="hero-section bg-primary text-white py-5">
-        <div class="container text-center">
-            <div class="row align-items-center justify-content-center">
-                <div class="col-md-2">
-                    <img src="/icons/old-man-footy.svg" alt="Old Man Footy Logo" class="img-fluid" style="max-height: 100px; filter: brightness(0) invert(1);">
+    <!-- Hero Banner - Matching Coming Soon Page Design -->
+    <section class="hero-banner bg-primary py-4">
+        <div class="hero-background-pattern"></div>
+        <div class="container position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-4 text-center">
+                    <div class="logo-container">
+                        <img src="/icons/old-man-footy.svg" alt="Old Man Footy Logo" class="img-fluid hero-logo">
+                    </div>
                 </div>
-                <div class="col-md-8">
-                    <h1 class="display-4 fw-bold">We'll be back soon!</h1>
-                    <p class="lead"><%= message %></p>
-                    <p class="fs-5"><%= estimatedReturn %></p>
+                <div class="col-lg-8">
+                    <div class="hero-content">
+                        <h1 class="hero-title mb-3">We'll be back soon!</h1>
+                        <div class="hero-description mb-4">
+                            <p class="lead"><%= message %></p>
+                            <p class="lead text-warning fw-bold"><%= estimatedReturn %></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Maintenance Icon Section -->
-    <div class="container my-5">
+    <!-- Maintenance Information Section -->
+    <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <div class="card shadow-sm text-center">
-                    <div class="card-body py-5">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-center py-2">
+                        <h2 class="mb-2 fw-bold text-dark">Site Maintenance in Progress</h2>
+                        <p class="mb-0 lead text-dark opacity-90">We're currently performing scheduled maintenance to improve your experience</p>
+                    </div>
+                    <div class="card-body p-4 text-center">
+                        <!-- Maintenance Icon -->
                         <div class="text-warning mb-4">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M12 12L14 14L18 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                            <i class="bi bi-tools" style="font-size: 4rem;"></i>
                         </div>
-                        <h2 class="h3 mb-4">Site Maintenance in Progress</h2>
-                        <p class="text-muted mb-4">We're currently performing scheduled maintenance to improve your experience. Thank you for your patience.</p>
+                        
+                        <h3 class="h4 mb-4">Thank you for your patience</h3>
+                        <p class="text-muted mb-4">We're working hard to improve our services and will be back online shortly. All your data is safe and secure.</p>
                         
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-center gap-3 flex-wrap">
-                            <button type="button" class="btn btn-primary btn-lg" onclick="window.location.reload()">
-                                <i class="bi bi-arrow-clockwise"></i> Check Again
-                            </button>
                             <a href="mailto:<%= contactEmail %>" class="btn btn-outline-primary btn-lg">
-                                <i class="bi bi-envelope"></i> Contact Support
+                                <i class="bi bi-envelope me-2"></i>Contact Support
                             </a>
                         </div>
                     </div>
@@ -48,7 +55,7 @@
     <!-- Info Section -->
     <div class="bg-light py-4">
         <div class="container text-center">
-            <p class="mb-1 text-muted">Thank you for your patience while we improve our service.</p>
+            <p class="mb-1 text-muted">Masters Rugby League for the passionate players</p>
             <p class="mb-0 small text-muted">Last updated: <span id="current-time"></span></p>
         </div>
     </div>
