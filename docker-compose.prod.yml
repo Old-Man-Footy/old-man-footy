@@ -23,7 +23,7 @@ services:
       - EMAIL_FROM_NAME="Old Man Footy"
       - PORT=3060
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
-
+      - FEATURE_COMING_SOON=${FEATURE_COMING_SOON:-false}
     volumes:
       # Persist database and uploads to host directories only
       - /volume2/docker/old-man-footy-prod/data:/app/data

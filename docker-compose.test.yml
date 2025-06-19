@@ -9,7 +9,6 @@ services:
       - "3055:3055"
       - "9230:9230" # Debug port for Node.js inspector (different from dev)
     environment:
-      - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
       - NODE_ENV=test
       - SESSION_SECRET=${SESSION_SECRET}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
