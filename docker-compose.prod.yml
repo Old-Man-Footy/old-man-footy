@@ -14,16 +14,15 @@ services:
       - EMAIL_SERVICE=${EMAIL_SERVICE}
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_USER=${EMAIL_USER}
-      - SESSION_STORE=redis
-      - REDIS_URL=${REDIS_URL} # Make sure this points to your Redis service (e.g., redis://redis-service-name:6379)
       - SENTRY_DSN=${SENTRY_DSN}
       - GA_TRACKING_ID=${GA_TRACKING_ID}
       - APPINSIGHTS_INSTRUMENTATIONKEY=${APPINSIGHTS_INSTRUMENTATIONKEY}
-      - EMAIL_FROM=noreply@oldmanfooty.au
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@oldmanfooty.au}
       - EMAIL_FROM_NAME="Old Man Footy"
       - PORT=3060
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
       - FEATURE_COMING_SOON=${FEATURE_COMING_SOON:-false}
+      - MYSIDELINE_SYNC_ENABLED=${MYSIDELINE_SYNC_ENABLED:-true}
     volumes:
       # Persist database and uploads to host directories only
       - /volume2/docker/old-man-footy-prod/data:/app/data
