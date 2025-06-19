@@ -84,6 +84,10 @@ app.use(flash());
 const { maintenanceMode } = require('./middleware/maintenance');
 app.use(maintenanceMode);
 
+// Coming soon mode middleware (must be after maintenance but before routes)
+const { comingSoonMode } = require('./middleware/comingSoon');
+app.use(comingSoonMode);
+
 // Global variables for templates
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');

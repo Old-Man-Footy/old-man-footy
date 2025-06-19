@@ -5,9 +5,13 @@ const { ensureAuthenticated } = require('../middleware/auth');
 const mainController = require('../controllers/main.controller');
 const userGuideController = require('../controllers/userGuide.controller');
 const maintenanceController = require('../controllers/maintenance.controller');
+const comingSoonController = require('../controllers/comingSoon.controller');
 
 // Maintenance routes (must be before other routes)
 router.get('/maintenance', maintenanceController.showMaintenancePage);
+
+// Coming Soon routes (must be before other routes)
+router.get('/coming-soon', comingSoonController.showComingSoonPage);
 
 // Home page - Display upcoming carnivals
 router.get('/', mainController.getIndex);
@@ -71,6 +75,10 @@ router.get('/health', (req, res) => {
         uptime: process.uptime()
     });
 });
+
+// API endpoints for status checking
+router.get('/api/maintenance/status', maintenanceController.getMaintenanceStatus);
+router.get('/api/coming-soon/status', comingSoonController.getComingSoonStatus);
 
 // Admin statistics (for primary delegates and admins)
 router.get('/admin/stats', ensureAuthenticated, mainController.getStats);
