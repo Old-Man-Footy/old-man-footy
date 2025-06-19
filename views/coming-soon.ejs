@@ -228,6 +228,12 @@
                 <div class="col-lg-6 text-center">
                     <h3 class="mb-4">Get Notified When We Launch!</h3>
                     <form class="subscription-form" action="/subscribe" method="POST">
+                        <!-- Bot protection: Honeypot field (hidden) -->
+                        <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
+                        
+                        <!-- Bot protection: Timestamp field -->
+                        <input type="hidden" name="form_timestamp" id="form_timestamp">
+                        
                         <div class="input-group mb-3">
                             <input type="email" name="email" class="form-control form-control-lg" placeholder="Enter your email address" required>
                             <button type="submit" class="btn btn-success btn-lg px-4">

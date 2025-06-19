@@ -47,6 +47,11 @@ const comingSoonMode = (req, res, next) => {
     return next();
   }
 
+  // Allow access to subscription endpoint for coming soon page
+  if (req.path === '/subscribe') {
+    return next();
+  }
+
   // Block register route during coming soon mode
   if (req.path === '/auth/register') {
     req.flash('error_msg', 'Registration is currently disabled. Please check back when we launch!');

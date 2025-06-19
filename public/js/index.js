@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeCarousel();
     }
     
+    // Initialize subscription form with bot protection
+    initializeSubscriptionForm();
+    
     function initializeCarousel() {
         const carousel = document.getElementById('imageCarousel');
         const track = document.querySelector('.carousel-track');
@@ -79,4 +82,121 @@ document.addEventListener('DOMContentLoaded', function() {
             moveToSlide(nextIndex);
         }, 5000); // Change slide every 5 seconds
     }
+    
+    /**
+     * Initialize subscription form with bot protection
+     */
+    function initializeSubscriptionForm() {
+        const form = document.getElementById('subscribeForm');
+        const timestampField = document.getElementById('main_form_timestamp');
+        
+        // Set timestamp when form loads (bot protection)
+        if (timestampField) {
+            timestampField.value = Date.now();
+        }
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const email = formData.get('email');
+                const states = formData.getAll('state');
+                const submitButton = form.querySelector('button[type="submit"]');
+                
+                // Basic validation
+                if (!email) {
+                    showMessage('Please enter your email address.', 'error');
+                    return;
+                }
+                
+                if (!states || states.length === 0) {
+                    showMessage('Please select at least one state.', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                const originalText = submitButton.innerHTML;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Subscribing...';
+                submitButton.disabled = true;
+                
+                // Submit form
+                fetch('/subscribe', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('Thanks! You\'ll receive carnival notifications for the selected states.', 'success');
+                        form.reset();
+                        // Reset timestamp for potential retry
+                        if (timestampField) {
+                            timestampField.value = Date.now();
+                        }
+                    } else {
+                        showMessage(data.message || 'Something went wrong. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Subscription error:', error);
+                    showMessage('Something went wrong. Please try again.', 'error');
+                })
+                .finally(() => {
+                    // Restore button
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                });
+            });
+        }
+    }
+    
+    /**
+     * Show a temporary message to the user
+     */
+    function showMessage(message, type = 'info') {
+        // Remove any existing messages
+        const existingMessage = document.querySelector('.subscription-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // Create new message element
+        const messageEl = document.createElement('div');
+        messageEl.className = `subscription-message alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} mt-3`;
+        messageEl.textContent = message;
+        messageEl.style.cssText = 'animation: slideInFromTop 0.3s ease-out;';
+        
+        // Insert after the form
+        const form = document.getElementById('subscribeForm');
+        if (form) {
+            form.parentNode.insertBefore(messageEl, form.nextSibling);
+        }
+        
+        // Remove message after 5 seconds
+        setTimeout(() => {
+            if (messageEl.parentNode) {
+                messageEl.style.animation = 'slideOutToTop 0.3s ease-in';
+                setTimeout(() => {
+                    if (messageEl.parentNode) {
+                        messageEl.remove();
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
 });
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInFromTop {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes slideOutToTop {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(-20px); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);

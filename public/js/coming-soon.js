@@ -72,12 +72,19 @@ function setupAutoRefresh() {
 function setupEmailSubscription() {
     const form = document.querySelector('.subscription-form');
     const submitBtn = document.querySelector('.subscribe-btn');
+    const timestampField = document.getElementById('form_timestamp');
+    
+    // Set timestamp when form loads (bot protection)
+    if (timestampField) {
+        timestampField.value = Date.now();
+    }
     
     if (form && submitBtn) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const emailInput = form.querySelector('input[type="email"]');
+            const websiteField = form.querySelector('input[name="website"]');
             const email = emailInput.value.trim();
             
             if (!email) {
@@ -90,19 +97,23 @@ function setupEmailSubscription() {
             submitBtn.textContent = 'Subscribing...';
             submitBtn.disabled = true;
             
+            // Prepare form data with bot protection fields
+            const formData = new FormData(form);
+            
             // Submit the form
             fetch('/subscribe', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `email=${encodeURIComponent(email)}`
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     showMessage('Thanks! We\'ll notify you when we launch.', 'success');
                     emailInput.value = '';
+                    // Reset timestamp for potential retry
+                    if (timestampField) {
+                        timestampField.value = Date.now();
+                    }
                 } else {
                     showMessage(data.message || 'Something went wrong. Please try again.', 'error');
                 }

@@ -209,7 +209,13 @@
                 <h2 class="h3 mb-4">Stay Updated</h2>
                 <p class="mb-4">Subscribe to receive notifications about new carnivals in your selected states.</p>
                 
-                <form method="POST" action="/subscribe" class="needs-validation" novalidate>
+                <form method="POST" action="/subscribe" class="needs-validation" novalidate id="subscribeForm">
+                    <!-- Bot protection: Honeypot field (hidden) -->
+                    <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
+                    
+                    <!-- Bot protection: Timestamp field -->
+                    <input type="hidden" name="form_timestamp" id="main_form_timestamp">
+                    
                     <div class="row g-3 justify-content-center">
                         <div class="col-md-6">
                             <input type="email" class="form-control" name="email" placeholder="Enter your email" required>

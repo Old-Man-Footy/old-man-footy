@@ -225,11 +225,52 @@ const getAbout = (req, res) => {
 };
 
 /**
- * Handle email subscription
+ * Handle email subscription with bot protection
  */
 const postSubscribe = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email, website, form_timestamp } = req.body;
+
+        // Bot protection: Check honeypot field
+        if (website && website.trim() !== '') {
+            console.log('Bot detected: honeypot field filled');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request'
+            });
+        }
+
+        // Bot protection: Also check if honeypot field exists but contains only whitespace
+        if (website !== undefined && website !== null && website !== '') {
+            console.log('Bot detected: honeypot field contains whitespace');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request'
+            });
+        }
+
+        // Bot protection: Check form timing (minimum 3 seconds to fill form)
+        if (form_timestamp) {
+            const timeDiff = Date.now() - parseInt(form_timestamp, 10);
+            const minimumTime = 3000; // 3 seconds
+            const maximumTime = 30 * 60 * 1000; // 30 minutes
+            
+            if (timeDiff < minimumTime) {
+                console.log(`Bot detected: form submitted too quickly (${timeDiff}ms)`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please wait a moment before submitting'
+                });
+            }
+            
+            if (timeDiff > maximumTime) {
+                console.log(`Bot detected: form submission timeout (${timeDiff}ms)`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Form session expired, please refresh and try again'
+                });
+            }
+        }
 
         // Validate email
         if (!email) {
@@ -246,6 +287,27 @@ const postSubscribe = async (req, res) => {
                 message: 'Invalid email address'
             });
         }
+
+        // Rate limiting: Check IP address for recent submissions
+        const userIP = req.ip || req.connection.remoteAddress;
+        const recentSubmissionTime = 60000; // 1 minute
+        
+        // Simple in-memory rate limiting (for production, use Redis or database)
+        if (!global.subscriptionAttempts) {
+            global.subscriptionAttempts = new Map();
+        }
+        
+        const lastAttempt = global.subscriptionAttempts.get(userIP);
+        if (lastAttempt && (Date.now() - lastAttempt) < recentSubmissionTime) {
+            console.log(`Rate limit exceeded for IP: ${userIP}`);
+            return res.status(429).json({
+                success: false,
+                message: 'Too many requests. Please wait a moment before trying again.'
+            });
+        }
+        
+        // Record this attempt
+        global.subscriptionAttempts.set(userIP, Date.now());
 
         // Check if email already exists
         const existingSubscription = await EmailSubscription.findOne({
@@ -273,6 +335,9 @@ const postSubscribe = async (req, res) => {
                 subscribedAt: new Date()
             });
         }
+
+        // Log successful subscription (without sensitive data)
+        console.log(`New email subscription: ${email.toLowerCase()}`);
 
         res.json({
             success: true,
