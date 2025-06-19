@@ -32,7 +32,7 @@ services:
     networks:
       - old-man-footy-network-prod # 5. Use a distinct network name for production
 
-    restart: always # Good for production, ensures container tries to restart automatically
+    restart: unless-stopped
 
     deploy:
       resources:
@@ -59,11 +59,11 @@ services:
     read_only: true # Makes the container's filesystem read-only after startup
     
     tmpfs:
-      # 9. tmpfs mounts: Essential when using read_only: true for temporary files.
-      # These directories must be writable by the application.
+      # tmpfs mounts: Essential for temporary files and when using read_only: true
       - /tmp         # Standard temporary directory
       - /var/cache   # Often used for caching
       - /var/log     # For internal application logs (if not using logging driver for all logs)
+      # Note: /app/public/uploads is handled by volume mount, not tmpfs
 
 networks:
   old-man-footy-network-prod: # Distinct production network

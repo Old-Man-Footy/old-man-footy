@@ -58,7 +58,21 @@ COPY --from=deps --chown=appuser:nodejs /app/node_modules ./node_modules
 COPY --chown=appuser:nodejs . .
 
 # Create necessary directories with proper permissions
-RUN mkdir -p data public/uploads && \
+RUN mkdir -p data \
+    public/uploads/logos/club \
+    public/uploads/logos/carnival \
+    public/uploads/logos/sponsor \
+    public/uploads/logos/system \
+    public/uploads/images/club/promo \
+    public/uploads/images/club/gallery \
+    public/uploads/images/carnival/promo \
+    public/uploads/images/carnival/gallery \
+    public/uploads/images/sponsor/promo \
+    public/uploads/images/sponsor/gallery \
+    public/uploads/documents/club \
+    public/uploads/documents/carnival \
+    public/uploads/documents/sponsor \
+    public/uploads/temp && \
     chown -R appuser:nodejs data public/uploads
 
 # Switch to non-root user

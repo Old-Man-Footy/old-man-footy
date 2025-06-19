@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const ImageNamingService = require('../services/imageNamingService');
 
-// Ensure upload directories exist
+// Ensure upload directories exist (with error handling for read-only filesystems)
 const uploadDirs = [
     'public/uploads/logos/club',
     'public/uploads/logos/carnival',
@@ -22,8 +22,15 @@ const uploadDirs = [
 ];
 
 uploadDirs.forEach(dir => {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+    try {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+    } catch (error) {
+        // In read-only filesystems (like Docker), this might fail
+        // Log the error but don't crash the application
+        console.warn(`Warning: Could not create directory ${dir}:`, error.message);
+        console.warn('Ensure directories are pre-created in your deployment environment');
     }
 });
 
@@ -278,10 +285,29 @@ const processStructuredUpload = async (req, res, next) => {
                 const tempPath = file.path;
                 const finalPath = path.join('public/uploads', metadata.fullPath);
                 
-                // Ensure target directory exists
+                // Ensure target directory exists (with error handling for read-only filesystems)
                 const targetDir = path.dirname(finalPath);
-                if (!fs.existsSync(targetDir)) {
-                    fs.mkdirSync(targetDir, { recursive: true });
+                try {
+                    if (!fs.existsSync(targetDir)) {
+                        fs.mkdirSync(targetDir, { recursive: true });
+                    }
+                } catch (dirError) {
+                    console.warn(`Warning: Could not create target directory ${targetDir}:`, dirError.message);
+                    // If we can't create the directory, try to use the temp directory as fallback
+                    const fallbackPath = path.join('public/uploads/temp', metadata.filename);
+                    file.path = fallbackPath;
+                    file.structuredPath = `temp/${metadata.filename}`;
+                    
+                    uploadResults.push({
+                        fieldname: file.fieldname,
+                        originalname: file.originalname,
+                        filename: metadata.filename,
+                        path: `/uploads/temp/${metadata.filename}`,
+                        size: file.size,
+                        metadata: metadata.metadata,
+                        warning: 'File saved to temp directory due to filesystem restrictions'
+                    });
+                    continue;
                 }
                 
                 // Move file
