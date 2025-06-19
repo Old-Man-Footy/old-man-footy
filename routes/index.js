@@ -8,10 +8,30 @@ const maintenanceController = require('../controllers/maintenance.controller');
 const comingSoonController = require('../controllers/comingSoon.controller');
 
 // Maintenance routes (must be before other routes)
-router.get('/maintenance', maintenanceController.showMaintenancePage);
+router.get('/maintenance', (req, res, next) => {
+    // Check if maintenance mode is disabled
+    const isMaintenanceMode = process.env.FEATURE_MAINTENANCE_MODE === 'true';
+    
+    if (!isMaintenanceMode) {
+        return res.redirect('/');
+    }
+    
+    // If maintenance mode is enabled, show the maintenance page
+    maintenanceController.showMaintenancePage(req, res, next);
+});
 
 // Coming Soon routes (must be before other routes)
-router.get('/coming-soon', comingSoonController.showComingSoonPage);
+router.get('/coming-soon', (req, res, next) => {
+    // Check if coming soon mode is disabled
+    const isComingSoonMode = process.env.FEATURE_COMING_SOON_MODE === 'true';
+    
+    if (!isComingSoonMode) {
+        return res.redirect('/');
+    }
+    
+    // If coming soon mode is enabled, show the coming soon page
+    comingSoonController.showComingSoonPage(req, res, next);
+});
 
 // Home page - Display upcoming carnivals
 router.get('/', mainController.getIndex);

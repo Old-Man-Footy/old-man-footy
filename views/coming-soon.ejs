@@ -240,40 +240,12 @@
                                 Notify Me
                             </button>
                         </div>
-                        <p class="small mb-0 opacity-75">We'll send you one email when we go live. No spam, promise!</p>
+                        <p class="small mb-0 opacity-75">We'll send you one email when we go live. No spam, guaranteed!</p>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Social Media Links -->
-    <% if (socialMedia.facebook || socialMedia.instagram || socialMedia.twitter) { %>
-    <div class="container my-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-6 text-center">
-                <h4 class="mb-4">Follow our journey:</h4>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <% if (socialMedia.facebook) { %>
-                        <a href="<%= socialMedia.facebook %>" target="_blank" class="btn btn-facebook">
-                            <i class="bi bi-facebook"></i> Facebook
-                        </a>
-                    <% } %>
-                    <% if (socialMedia.instagram) { %>
-                        <a href="<%= socialMedia.instagram %>" target="_blank" class="btn btn-instagram">
-                            <i class="bi bi-instagram"></i> Instagram
-                        </a>
-                    <% } %>
-                    <% if (socialMedia.twitter) { %>
-                        <a href="<%= socialMedia.twitter %>" target="_blank" class="btn btn-twitter-x">
-                            <i class="bi bi-twitter-x"></i> Twitter
-                        </a>
-                    <% } %>
-                </div>
-            </div>
-        </div>
-    </div>
-    <% } %>
 
     <!-- Info Section -->
     <div class="bg-light py-4">

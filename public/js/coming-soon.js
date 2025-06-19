@@ -133,7 +133,7 @@ function setupEmailSubscription() {
             .then(data => {
                 console.log('Response data:', data);
                 if (data.success) {
-                    showMessage('🎉 Thanks! We\'ll notify you when we launch. No spam, promise!', 'success');
+                    showMessage('🎉 Thanks! We\'ll notify you when we launch. No spam, guaranteed!', 'success');
                     emailInput.value = '';
                     // Reset timestamp for potential retry
                     if (timestampField) {
