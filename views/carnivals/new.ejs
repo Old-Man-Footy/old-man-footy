@@ -1,6 +1,6 @@
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-12">
             <div class="card shadow">
                 <div class="card-header bg-primary">
                     <h4 class="mb-0">
@@ -52,8 +52,10 @@
                             </div>
                             <div>
                                 <h6 class="alert-heading mb-2">Smart Duplicate Prevention</h6>
-                                <p class="mb-1">Our system automatically checks for similar events from MySideline to prevent duplicates.</p>
-                                <small class="text-muted">If a matching MySideline event exists, your data will be merged with the imported event.</small>
+                                <p class="mb-1">Our system automatically checks for similar events from MySideline to attempt to prevent duplicates.</p>
+                                <small class="text-muted">If a matching MySideline event exists, your data will be merged with the imported event.
+                                    othgerwise the option to manually merge synced carnivals will be availble within the event management page.</small>
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -89,21 +91,30 @@
                                     <div class="invalid-feedback">Please select a date.</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <div class="form-check mb-2">
+                                    <div id="endDateContainer" style="<%= typeof formData !== 'undefined' && formData.endDate ? '' : 'display: none;' %>">
+                                        <label for="endDate" class="form-label">End Date *</label>
+                                        <input type="date" class="form-control" id="endDate" name="endDate" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.endDate : '' %>">
+                                        <div class="invalid-feedback">End date must be after start date.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Multi-day event section -->
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="isMultiDay" name="isMultiDay" 
                                                <%= typeof formData !== 'undefined' && formData.endDate ? 'checked' : '' %>>
                                         <label class="form-check-label" for="isMultiDay">
                                             Multi-day event
                                         </label>
                                     </div>
-                                    <div id="endDateContainer" style="<%= typeof formData !== 'undefined' && formData.endDate ? '' : 'display: none;' %>">
-                                        <label for="endDate" class="form-label">End Date</label>
-                                        <input type="date" class="form-control" id="endDate" name="endDate" 
-                                               value="<%= typeof formData !== 'undefined' ? formData.endDate : '' %>">
-                                        <div class="invalid-feedback">End date must be after start date.</div>
-                                        <div class="form-text">Leave blank for single-day events</div>
-                                    </div>
                                 </div>
+                            </div>
+
+                            <!-- State field -->
+                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="state" class="form-label">State *</label>
                                     <select class="form-select" id="state" name="state" required>
