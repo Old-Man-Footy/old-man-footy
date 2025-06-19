@@ -37,8 +37,24 @@ const maintenanceMode = (req, res, next) => {
     return next();
   }
 
-  // Allow access to admin login routes so admins can still log in
-  if (req.path.startsWith('/admin') || req.path.startsWith('/auth')) {
+  // Allow logged-in users to access regular screens
+  if (req.user && req.isAuthenticated()) {
+    return next();
+  }
+
+  // Allow access to login route so users can still log in
+  if (req.path === '/auth/login') {
+    return next();
+  }
+
+  // Block register route during maintenance mode
+  if (req.path === '/auth/register') {
+    req.flash('error_msg', 'Registration is currently disabled during maintenance. Please try again later.');
+    return res.redirect('/maintenance');
+  }
+
+  // Allow other admin routes for login functionality
+  if (req.path.startsWith('/admin')) {
     return next();
   }
 

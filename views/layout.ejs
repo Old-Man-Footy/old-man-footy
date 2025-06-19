@@ -90,11 +90,19 @@
                                 <i class="bi bi-box-arrow-in-right"></i> Login
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/auth/register">
-                                <i class="bi bi-person-plus"></i> Register
-                            </a>
-                        </li>
+                        <% 
+                        // Hide register button during coming soon or maintenance mode
+                        const isComingSoonMode = process.env.FEATURE_COMING_SOON_MODE === 'true';
+                        const isMaintenanceMode = process.env.FEATURE_MAINTENANCE_MODE === 'true';
+                        const showRegisterButton = !isComingSoonMode && !isMaintenanceMode;
+                        %>
+                        <% if (showRegisterButton) { %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/auth/register">
+                                    <i class="bi bi-person-plus"></i> Register
+                                </a>
+                            </li>
+                        <% } %>
                     <% } %>
                     <!-- Theme Toggle Button -->
                     <li class="nav-item me-2">

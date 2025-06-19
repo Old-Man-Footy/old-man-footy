@@ -37,8 +37,24 @@ const comingSoonMode = (req, res, next) => {
     return next();
   }
 
-  // Allow access to admin login routes so admins can still log in
-  if (req.path.startsWith('/admin') || req.path.startsWith('/auth')) {
+  // Allow logged-in users to access regular screens
+  if (req.user && req.isAuthenticated()) {
+    return next();
+  }
+
+  // Allow access to login route so users can still log in
+  if (req.path === '/auth/login') {
+    return next();
+  }
+
+  // Block register route during coming soon mode
+  if (req.path === '/auth/register') {
+    req.flash('error_msg', 'Registration is currently disabled. Please check back when we launch!');
+    return res.redirect('/coming-soon');
+  }
+
+  // Allow other admin routes for login functionality
+  if (req.path.startsWith('/admin')) {
     return next();
   }
 

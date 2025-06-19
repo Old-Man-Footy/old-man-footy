@@ -6,8 +6,8 @@
 
 /* CSS Custom Properties for theming */
 :root {
-  --maintenance-primary: #1a472a;
-  --maintenance-secondary: #2d5f3f;
+  --maintenance-primary: #006837;
+  --maintenance-secondary: #004d27;
   --maintenance-accent: #e67e22;
   --maintenance-background: rgba(255, 255, 255, 0.95);
   --maintenance-text-primary: #2c3e50;
@@ -42,39 +42,51 @@
 
 .maintenance-container {
   background: var(--maintenance-background);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px var(--maintenance-shadow);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px var(--maintenance-shadow);
   max-width: 600px;
   width: 100%;
   text-align: center;
   overflow: hidden;
   backdrop-filter: blur(10px);
+  animation: fadeInUp 0.8s ease-out;
 }
 
+/* Header - styled like main site navbar */
 .maintenance-header {
-  background: rgba(26, 71, 42, 0.1);
-  padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid var(--maintenance-border);
+  background: linear-gradient(135deg, #006837 0%, #004d27 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 1rem;
+  font-weight: 700;
 }
 
 .maintenance-logo {
-  width: 48px;
-  height: 48px;
+  width: 48px !important;
+  height: 48px !important;
+  max-width: 48px !important;
+  max-height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
   object-fit: contain;
+  filter: brightness(0) invert(1);
+  display: block;
+  flex-shrink: 0;
 }
 
 .maintenance-title {
-  color: var(--maintenance-primary);
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0;
+  color: white;
 }
 
 .maintenance-content {
@@ -230,6 +242,18 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive adjustments */

@@ -27,32 +27,41 @@
     animation: fadeInUp 0.8s ease-out;
 }
 
-/* Header */
+/* Header - styled like main site navbar */
 .coming-soon-header {
-    background: var(--bs-primary, #0d6efd);
+    background: linear-gradient(135deg, #006837 0%, #004d27 100%);
     color: white;
-    padding: 2rem 1rem 1rem;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .logo-container {
     display: flex;
-    flex-direction: column;
     align-items: center;
     gap: 1rem;
+    font-weight: 700;
 }
 
 .coming-soon-logo {
-    max-height: 80px;
-    width: auto;
+    width: 48px !important;
+    height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    object-fit: contain;
     filter: brightness(0) invert(1);
-    animation: pulse 2s infinite;
+    display: block;
+    flex-shrink: 0;
 }
 
 .coming-soon-title {
-    font-size: 2.5rem;
-    font-weight: bold;
+    font-size: 1.8rem;
+    font-weight: 700;
     margin: 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    color: white;
 }
 
 /* Main Content */
