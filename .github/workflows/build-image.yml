@@ -1,0 +1,62 @@
+name: Build and Push Docker Image to GHCR
+
+on:
+  push:
+    branches: [ main ] # Or your default branch, e.g., master
+  # You can also trigger on other events, like pull requests or releases
+  # pull_request:
+  #   branches: [ main ]
+
+env:
+  # Define your image name.
+  # It's good practice to use your GitHub username (or org name) and repo name.
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest # Use the latest GitHub-hosted Linux runner
+
+    permissions:
+      contents: read      # To read repository contents (checkout)
+      packages: write     # To push packages (Docker images) to GHCR
+      # id-token: write  # Uncomment if you need to authenticate to a cloud provider
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.4 # Fetches your repository code
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }} # Your GitHub username or organization
+          password: ${{ secrets.GITHUB_TOKEN }}    # GITHUB_TOKEN is automatically generated
+
+      - name: Extract Docker metadata
+        id: meta # Assign an ID to this step to reference its outputs later
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          # Generates tags like:
+          # type=sha,prefix=,suffix=,format=short (short git SHA)
+          # type=ref,event=branch (branch name, e.g., main)
+          # type=ref,event=tag (git tag name)
+          # type=semver,pattern={{version}} (if you use git tags like v1.0.0)
+          # For simple use, pushing with 'latest' and git SHA is common
+          tags: |
+            type=sha,prefix=,suffix=,format=short
+            type=edge,branch=main  # This will tag the image for the 'main' branch as 'edge'
+            # If you push a git tag like v1.2.3, it will create a Docker tag v1.2.3
+            type=ref,event=tag
+            # For the main branch, also tag as 'latest'
+            ${{ github.ref == format('refs/heads/{0}', 'main') && 'type=raw,value=latest' || '' }}
+
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5.2.0
+        with:
+          context: . # Path to the directory containing your Dockerfile ('.' is the root)
+          push: ${{ github.event_name != 'pull_request' }} # Push only on direct pushes, not on PRs by default
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
