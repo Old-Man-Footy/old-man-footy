@@ -1,14 +1,13 @@
+# docker-compose.prod.yml
 version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
+    image: ghcr.io/devonuto/old-man-footy:latest
     container_name: old-man-footy-prod
     ports:
-      - "3060:3060"
+      - "3060:3060" # Maps host port 3060 to container port 3060
+
     environment:
       - NODE_ENV=production
       - SESSION_SECRET=${SESSION_SECRET}
@@ -18,47 +17,54 @@ services:
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
       - PORT=3060
       - SESSION_STORE=redis
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_URL=${REDIS_URL} # Make sure this points to your Redis service (e.g., redis://redis-service-name:6379)
       - SENTRY_DSN=${SENTRY_DSN}
       - GA_TRACKING_ID=${GA_TRACKING_ID}
       - APPINSIGHTS_INSTRUMENTATIONKEY=${APPINSIGHTS_INSTRUMENTATIONKEY}
       - EMAIL_FROM=noreply@oldmanfooty.au
       - EMAIL_FROM_NAME="Old Man Footy"
-      - SSL_CERT_PATH={SSL_CERT_PATH}
-      - SSL_KEY_PATH={SSL_KEY_PATH}
+
     volumes:
-      # Persist database and uploads only
       - prod_data:/app/data
       - prod_uploads:/app/public/uploads
+
     networks:
-      - old-man-footy-network
-    restart: always
+      - old-man-footy-network-prod # 5. Use a distinct network name for production
+
+    restart: always # Good for production, ensures container tries to restart automatically
+
     deploy:
       resources:
         limits:
           memory: 512M
-          cpus: '0.5'
+          cpus: '0.5' # Limit to 50% of one CPU core
         reservations:
           memory: 256M
-          cpus: '0.25'
-    healthcheck:
+          cpus: '0.25' # Reserve 25% of one CPU core
+    
+    healthcheck:     
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3060/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5 # Increased for production stability
+      start_period: 30s # Allows more time for app to warm up
+
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "3"
+        max-file: "3"        
     security_opt:
-      - no-new-privileges:true
-    read_only: true
+      - no-new-privileges:true # Prevents privilege escalation
+    
+    read_only: true # Makes the container's filesystem read-only after startup
+    
     tmpfs:
-      - /tmp
-      - /var/cache
-      - /var/log
+      # 9. tmpfs mounts: Essential when using read_only: true for temporary files.
+      # These directories must be writable by the application.
+      - /tmp         # Standard temporary directory
+      - /var/cache   # Often used for caching
+      - /var/log     # For internal application logs (if not using logging driver for all logs)
 
 volumes:
   prod_data:
@@ -67,5 +73,5 @@ volumes:
     driver: local
 
 networks:
-  old-man-footy-network:
+  old-man-footy-network-prod: # Distinct production network
     driver: bridge

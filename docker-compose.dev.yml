@@ -1,16 +1,15 @@
+# docker-compose.dev.yml
 version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: development
+    image: ghcr.io/devonuto/old-man-footy:latest
     container_name: old-man-footy-dev
     ports:
       - "3050:3050"
-      - "9229:9229" # Debug port for Node.js inspector
+      - "9229:9229" # Debug port for Node.js inspector 
     environment:
+      - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
       - NODE_ENV=development
       - SESSION_SECRET=${SESSION_SECRET}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
@@ -18,26 +17,50 @@ services:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_FROM=noreply@oldmanfooty.au
       - EMAIL_FROM_NAME="Old Man Footy"
-      - PORT=3050
-      - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
     volumes:
-      # Mount source code for hot reloading
-      - .:/app
-      - /app/node_modules # Prevent overwriting node_modules
-      # Persist database and uploads
       - dev_data:/app/data
       - dev_uploads:/app/public/uploads
     networks:
-      - old-man-footy-network
+      - old-man-footy-network-dev # 5. Use a distinct network name for development
+
     restart: unless-stopped
-    stdin_open: true
-    tty: true
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5' # Limit to 50% of one CPU core
+        reservations:
+          memory: 256M
+          cpus: '0.25' # Reserve 25% of one CPU core
+    
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3050/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 30s
+
+    logging:
+      # 7. Logging: JSON file driver with rotation is good for local logging.
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        
+    security_opt:
+      # 8. Security options: Excellent additions for hardening.
+      - no-new-privileges:true # Prevents privilege escalation
+    
+    read_only: true # Makes the container's filesystem read-only after startup
+    
+    tmpfs:
+      # 9. tmpfs mounts: Essential when using read_only: true for temporary files.
+      # These directories must be writable by the application.
+      - /tmp         # Standard temporary directory
+      - /var/cache   # Often used for caching
+      - /var/log     # For internal application logs (if not using logging driver for all logs)
+      # Ensure your Node.js application actually writes logs/cache to these paths if it needs to.
 
 volumes:
   dev_data:
@@ -46,5 +69,5 @@ volumes:
     driver: local
 
 networks:
-  old-man-footy-network:
+  old-man-footy-network-dev:
     driver: bridge
