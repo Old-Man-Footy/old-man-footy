@@ -55,9 +55,7 @@ services:
         max-file: "3"        
     security_opt:
       - no-new-privileges:true # Prevents privilege escalation
-    
-    read_only: true # Makes the container's filesystem read-only after startup
-    
+        
     tmpfs:
       # tmpfs mounts: Essential for temporary files and when using read_only: true
       - /tmp         # Standard temporary directory
