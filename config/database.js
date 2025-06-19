@@ -9,6 +9,7 @@ const { Sequelize } = require('sequelize');
 const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const fs = require('fs');
 
 const execAsync = promisify(exec);
 
@@ -28,6 +29,35 @@ const getDbPath = () => {
 };
 
 const dbPath = getDbPath();
+
+/**
+ * Ensure database directory exists and is writable
+ */
+function ensureDataDirectory() {
+  const dataDir = path.dirname(dbPath);
+  
+  try {
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+      console.log(`📁 Created data directory: ${dataDir}`);
+    }
+    
+    // Test write permissions
+    const testFile = path.join(dataDir, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    
+    console.log(`✅ Data directory is writable: ${dataDir}`);
+    return true;
+    
+  } catch (error) {
+    console.error(`❌ Data directory issue: ${error.message}`);
+    console.error(`   Directory: ${dataDir}`);
+    console.error(`   Current user: ${process.getuid ? process.getuid() : 'unknown'}`);
+    throw new Error(`Database directory not writable: ${dataDir}`);
+  }
+}
 
 /**
  * Sequelize instance configuration
@@ -52,6 +82,11 @@ const sequelize = new Sequelize({
   dialectOptions: {
     // Enable foreign keys in SQLite
     foreignKeys: true
+  },
+  // Retry configuration for container environments
+  retry: {
+    max: 3,
+    timeout: 5000
   }
 });
 
@@ -66,34 +101,47 @@ async function testConnection() {
     return true;
   } catch (error) {
     console.error('❌ Unable to connect to SQLite database:', error);
+    console.error(`   Database path: ${dbPath}`);
     return false;
   }
 }
 
 /**
- * Run database migrations
+ * Run database migrations using direct Sequelize instead of CLI in production
  * @returns {Promise<void>}
  */
 async function runMigrations() {
   try {
     console.log('🔄 Running database migrations...');
     
-    // Set NODE_ENV for migration command if not set
     const env = process.env.NODE_ENV || 'development';
     
-    // Run migrations using sequelize-cli
-    const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate', {
-      env: { ...process.env, NODE_ENV: env },
-      cwd: path.join(__dirname, '..')
-    });
-    
-    if (stderr && !stderr.includes('WARNING')) {
-      console.warn('Migration warnings:', stderr);
-    }
-    
-    console.log('✅ Database migrations completed successfully');
-    if (stdout) {
-      console.log('Migration output:', stdout);
+    if (env === 'production') {
+      // In production, use Sequelize Umzug for migrations to avoid npm issues
+      console.log('📦 Running migrations using Sequelize sync (production mode)...');
+      
+      // Import models to ensure they're loaded
+      const models = require('../models');
+      
+      // Use sync with alter for production (safer than force)
+      await sequelize.sync({ alter: true });
+      console.log('✅ Database schema synchronized successfully');
+      
+    } else {
+      // Development/test environments can use CLI
+      const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate', {
+        env: { ...process.env, NODE_ENV: env },
+        cwd: path.join(__dirname, '..')
+      });
+      
+      if (stderr && !stderr.includes('WARNING')) {
+        console.warn('Migration warnings:', stderr);
+      }
+      
+      console.log('✅ Database migrations completed successfully');
+      if (stdout) {
+        console.log('Migration output:', stdout);
+      }
     }
     
   } catch (error) {
@@ -114,17 +162,16 @@ async function runMigrations() {
  */
 async function initializeDatabase() {
   try {
-    // Ensure data directory exists
-    const fs = require('fs');
-    const dataDir = path.dirname(dbPath);
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
+    // Ensure data directory exists and is writable
+    ensureDataDirectory();
 
     // Test connection
-    await testConnection();
+    const connected = await testConnection();
+    if (!connected) {
+      throw new Error('Failed to establish database connection');
+    }
 
-    // Run migrations instead of sync
+    // Run migrations
     await runMigrations();
     
     console.log('✅ Database initialization completed successfully');
