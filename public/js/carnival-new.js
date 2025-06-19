@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // MySideline link generation functionality
-    const generateBtn = document.getElementById('generateMysidelineBtn');
     const titleInput = document.getElementById('title');
     const registrationLinkInput = document.getElementById('registrationLink');
     const mysidelineContainer = document.getElementById('mysidelineButtonContainer');
@@ -34,34 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (titleInput.value.trim().length > 3) {
             mysidelineContainer.style.display = 'block';
         }
-    }
-
-    if (generateBtn && titleInput && registrationLinkInput) {
-        generateBtn.addEventListener('click', function() {
-            const title = titleInput.value.trim();
-            if (title) {
-                // Generate MySideline-style URL based on title
-                const slug = title.toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-                    .replace(/\s+/g, '-') // Replace spaces with hyphens
-                    .replace(/-+/g, '-') // Replace multiple hyphens with single
-                    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-                
-                const mysidelineUrl = `https://www.mysideline.com.au/event/${slug}`;
-                registrationLinkInput.value = mysidelineUrl;
-                
-                // Show feedback
-                generateBtn.innerHTML = '<i class="bi bi-check-circle"></i> Generated!';
-                generateBtn.classList.remove('btn-outline-success');
-                generateBtn.classList.add('btn-success');
-                
-                setTimeout(() => {
-                    generateBtn.innerHTML = '<i class="bi bi-link-45deg"></i> Generate MySideline Link';
-                    generateBtn.classList.remove('btn-success');
-                    generateBtn.classList.add('btn-outline-success');
-                }, 2000);
-            }
-        });
     }
 
     // Multi-day event functionality

@@ -206,24 +206,7 @@
 
                         <!-- Additional Information -->
                         <div class="mb-4">
-                            <h5 class="text-primary mb-3">Additional Information</h5>
-                            
-                            <div class="mb-3">
-                                <label for="registrationLink" class="form-label">Registration Link</label>
-                                
-                                <!-- Generate MySideline Link Button (hidden by default) -->
-                                <div class="mb-2" id="mysidelineButtonContainer" style="display: none;">
-                                    <button type="button" class="btn btn-outline-success btn-sm" id="generateMysidelineBtn">
-                                        <i class="bi bi-link-45deg"></i> Generate MySideline Link
-                                    </button>
-                                    <small class="text-muted ms-2">Creates a registration link based on the carnival title</small>
-                                </div>
-                                
-                                <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
-                                       value="<%= typeof formData !== 'undefined' ? formData.registrationLink : '' %>"
-                                       placeholder="https://...">
-                                <div class="form-text">Link to online registration or MySideline event</div>
-                            </div>
+                            <h5 class="text-primary mb-3">Additional Information</h5>                           
 
                             <div class="mb-3">
                                 <label for="feesDescription" class="form-label">Fees Description</label>
