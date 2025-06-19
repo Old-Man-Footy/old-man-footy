@@ -229,6 +229,15 @@ const getAbout = (req, res) => {
  */
 const postSubscribe = async (req, res) => {
     try {
+        // Add defensive check for req.body
+        if (!req.body) {
+            console.error('Subscription error: req.body is undefined');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request data'
+            });
+        }
+
         const { email, website, form_timestamp } = req.body;
 
         // Bot protection: Check honeypot field
@@ -249,11 +258,24 @@ const postSubscribe = async (req, res) => {
             });
         }
 
-        // Bot protection: Check form timing (minimum 3 seconds to fill form)
+        // Bot protection: Check form timing (minimum 1 second to fill form)
         if (form_timestamp) {
-            const timeDiff = Date.now() - parseInt(form_timestamp, 10);
-            const minimumTime = 3000; // 3 seconds
-            const maximumTime = 30 * 60 * 1000; // 30 minutes
+            const submittedTimestamp = parseInt(form_timestamp, 10);
+            const currentTime = Date.now();
+            const timeDiff = currentTime - submittedTimestamp;
+            const minimumTime = 1000; // 1 second (more reasonable)
+            const maximumTime = 24 * 60 * 60 * 1000; // 24 hours (very generous)
+            
+            console.log(`Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`);
+            
+            // Check if timestamp is in the future (suspicious)
+            if (submittedTimestamp > currentTime) {
+                console.log(`Bot detected: timestamp in future (${submittedTimestamp} > ${currentTime})`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid form timestamp'
+                });
+            }
             
             if (timeDiff < minimumTime) {
                 console.log(`Bot detected: form submitted too quickly (${timeDiff}ms)`);
@@ -309,45 +331,62 @@ const postSubscribe = async (req, res) => {
         // Record this attempt
         global.subscriptionAttempts.set(userIP, Date.now());
 
-        // Check if email already exists
-        const existingSubscription = await EmailSubscription.findOne({
-            where: { email: email.toLowerCase() }
-        });
+        // Check if email already exists - wrap in try-catch for better error handling
+        let existingSubscription;
+        try {
+            existingSubscription = await EmailSubscription.findOne({
+                where: { email: email.toLowerCase() }
+            });
+        } catch (dbError) {
+            console.error('Database error when checking existing subscription:', dbError);
+            return res.status(500).json({
+                success: false,
+                message: 'Database error. Please try again later.'
+            });
+        }
 
         if (existingSubscription && existingSubscription.isActive) {
+            console.log(`Attempted resubscription for already active email: ${email.toLowerCase()}`);
             return res.status(400).json({
                 success: false,
-                message: 'Email already subscribed'
+                message: 'This email is already subscribed to our newsletter!'
             });
         }
 
-        if (existingSubscription && !existingSubscription.isActive) {
-            // Reactivate existing subscription
-            await existingSubscription.update({
-                isActive: true,
-                subscribedAt: new Date()
-            });
-        } else {
-            // Create new subscription
-            await EmailSubscription.create({
-                email: email.toLowerCase(),
-                isActive: true,
-                subscribedAt: new Date()
+        try {
+            if (existingSubscription && !existingSubscription.isActive) {
+                // Reactivate existing subscription
+                await existingSubscription.update({
+                    isActive: true,
+                    subscribedAt: new Date()
+                });
+                console.log(`Reactivated subscription for: ${email.toLowerCase()}`);
+            } else {
+                // Create new subscription
+                await EmailSubscription.create({
+                    email: email.toLowerCase(),
+                    isActive: true,
+                    subscribedAt: new Date()
+                });
+                console.log(`New email subscription created: ${email.toLowerCase()}`);
+            }
+        } catch (dbError) {
+            console.error('Database error when creating/updating subscription:', dbError);
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to save subscription. Please try again.'
             });
         }
-
-        // Log successful subscription (without sensitive data)
-        console.log(`New email subscription: ${email.toLowerCase()}`);
 
         res.json({
             success: true,
             message: 'Successfully subscribed to newsletter!'
         });
     } catch (error) {
-        console.error('Error handling email subscription:', error);
+        console.error('Unexpected error handling email subscription:', error);
         res.status(500).json({
             success: false,
-            message: 'Unable to process subscription. Please try again.'
+            message: 'An unexpected error occurred. Please try again.'
         });
     }
 };

@@ -71,21 +71,30 @@ function setupAutoRefresh() {
  */
 function setupEmailSubscription() {
     const form = document.querySelector('.subscription-form');
-    const submitBtn = document.querySelector('.subscribe-btn');
+    const submitBtn = form?.querySelector('button[type="submit"]');
     const timestampField = document.getElementById('form_timestamp');
+    
+    console.log('Setting up email subscription...');
+    console.log('Form found:', !!form);
+    console.log('Submit button found:', !!submitBtn);
+    console.log('Timestamp field found:', !!timestampField);
     
     // Set timestamp when form loads (bot protection)
     if (timestampField) {
         timestampField.value = Date.now();
+        console.log('Timestamp set:', timestampField.value);
     }
     
     if (form && submitBtn) {
+        console.log('Adding event listener to form');
         form.addEventListener('submit', function(e) {
+            console.log('Form submitted!');
             e.preventDefault();
             
             const emailInput = form.querySelector('input[type="email"]');
-            const websiteField = form.querySelector('input[name="website"]');
             const email = emailInput.value.trim();
+            
+            console.log('Email value:', email);
             
             if (!email) {
                 showMessage('Please enter your email address.', 'error');
@@ -97,18 +106,34 @@ function setupEmailSubscription() {
             submitBtn.textContent = 'Subscribing...';
             submitBtn.disabled = true;
             
-            // Prepare form data with bot protection fields
-            const formData = new FormData(form);
+            // Prepare form data as URLSearchParams instead of FormData for better Express compatibility
+            const formData = new URLSearchParams();
+            formData.append('email', email);
+            formData.append('website', form.querySelector('input[name="website"]').value);
+            formData.append('form_timestamp', timestampField.value);
+            
+            console.log('URLSearchParams entries:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
             
             // Submit the form
+            console.log('Sending fetch request to /subscribe');
             fetch('/subscribe', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response received:', response.status, response.statusText);
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
                 if (data.success) {
-                    showMessage('Thanks! We\'ll notify you when we launch.', 'success');
+                    showMessage('🎉 Thanks! We\'ll notify you when we launch. No spam, promise!', 'success');
                     emailInput.value = '';
                     // Reset timestamp for potential retry
                     if (timestampField) {
@@ -120,7 +145,7 @@ function setupEmailSubscription() {
             })
             .catch(error => {
                 console.error('Subscription error:', error);
-                showMessage('Something went wrong. Please try again.', 'error');
+                showMessage('An unexpected error occurred. Please try again.', 'error');
             })
             .finally(() => {
                 // Re-enable button
@@ -128,6 +153,10 @@ function setupEmailSubscription() {
                 submitBtn.disabled = false;
             });
         });
+    } else {
+        console.error('Form or submit button not found');
+        if (!form) console.error('Form with class .subscription-form not found');
+        if (!submitBtn) console.error('Submit button not found in form');
     }
 }
 
