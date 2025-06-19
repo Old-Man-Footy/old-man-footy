@@ -60,7 +60,7 @@ class DatabaseSeeder {
         
         switch (env) {
             case 'production':
-                return path.join(__dirname, '..', 'data', 'rugby-league-masters.db');
+                return path.join(__dirname, '..', 'data', 'old-man-footy.db');
             case 'test':
                 return path.join(__dirname, '..', 'data', 'test-old-man-footy.db');
             case 'development':
