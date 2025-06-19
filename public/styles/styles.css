@@ -738,6 +738,28 @@ button[type="submit"]:contains("Complete Registration"):focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
 }
 
+/* Dark mode form styling */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--theme-input-bg);
+    border-color: var(--theme-border-color);
+    color: var(--theme-text-primary);
+}
+
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] .form-select::placeholder {
+    color: var(--theme-text-muted);
+    opacity: 0.7;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--theme-input-bg);
+    border-color: var(--rugby-green);
+    color: var(--theme-text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
 /* Text Colors */
 .text-primary {
     color: var(--rugby-green) !important;
