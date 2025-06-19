@@ -8,9 +8,8 @@
  * Usage: node scripts/check-sync-status.js [--detailed]
  */
 
-const path = require('path');
-const { sequelize } = require('../models');
-const { SyncLog } = require('../models');
+import path from 'path';
+import { sequelize, SyncLog } from '../models';
 
 /**
  * Check MySideline sync configuration
