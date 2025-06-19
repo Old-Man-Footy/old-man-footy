@@ -14,8 +14,6 @@ services:
       - EMAIL_SERVICE=${EMAIL_SERVICE}
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_USER=${EMAIL_USER}
-      - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
-      - PORT=3060
       - SESSION_STORE=redis
       - REDIS_URL=${REDIS_URL} # Make sure this points to your Redis service (e.g., redis://redis-service-name:6379)
       - SENTRY_DSN=${SENTRY_DSN}
@@ -23,10 +21,13 @@ services:
       - APPINSIGHTS_INSTRUMENTATIONKEY=${APPINSIGHTS_INSTRUMENTATIONKEY}
       - EMAIL_FROM=noreply@oldmanfooty.au
       - EMAIL_FROM_NAME="Old Man Footy"
+      - PORT=3060
+      - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
 
     volumes:
-      - prod_data:/app/data
-      - prod_uploads:/app/public/uploads
+      # Persist database and uploads to host directories only
+      - /volume2/docker/old-man-footy-prod/data:/app/data
+      - /volume2/docker/old-man-footy-prod/uploads:/app/public/uploads
 
     networks:
       - old-man-footy-network-prod # 5. Use a distinct network name for production
@@ -65,12 +66,6 @@ services:
       - /tmp         # Standard temporary directory
       - /var/cache   # Often used for caching
       - /var/log     # For internal application logs (if not using logging driver for all logs)
-
-volumes:
-  prod_data:
-    driver: local
-  prod_uploads:
-    driver: local
 
 networks:
   old-man-footy-network-prod: # Distinct production network

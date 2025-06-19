@@ -1,45 +1,45 @@
-# docker-compose.dev.yml
+# docker-compose.test.yml
 version: '3.8'
 
 services:
   app:
     image: ghcr.io/devonuto/old-man-footy:latest
-    container_name: old-man-footy-dev
+    container_name: old-man-footy-test
     ports:
-      - "3050:3050"
-      - "9229:9229" # Debug port for Node.js inspector 
+      - "3055:3055"
+      - "9230:9230" # Debug port for Node.js inspector (different from dev)
     environment:
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
-      - NODE_ENV=development
+      - NODE_ENV=test
       - SESSION_SECRET=${SESSION_SECRET}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_FROM=noreply@oldmanfooty.au
-      - EMAIL_FROM_NAME="Old Man Footy"
-      - PORT=3050
+      - EMAIL_FROM_NAME="Old Man Footy Test"
+      - PORT=3055
     volumes:
-      # Mount source code for hot reloading
+      # Mount source code for testing
       - .:/app
       - /app/node_modules # Prevent overwriting node_modules
-      # Persist database and uploads to host directories
-      - /volume2/docker/old-man-footy-dev/data:/app/data
-      - /volume2/docker/old-man-footy-dev/uploads:/app/public/uploads
+      # Persist test database and uploads to host directories
+      - /volume2/docker/old-man-footy-test/data:/app/data
+      - /volume2/docker/old-man-footy-test/uploads:/app/public/uploads
     networks:
-      - old-man-footy-network-dev # 5. Use a distinct network name for development
+      - old-man-footy-network-test
 
     restart: unless-stopped
     stdin_open: true
     tty: true
 
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3050/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3055/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s    
     logging:
-      # 7. Logging: JSON file driver with rotation is good for local logging.
+      # Logging: JSON file driver with rotation for test environment
       driver: "json-file"
       options:
         max-size: "10m"
@@ -56,5 +56,5 @@ services:
       - /var/log
       
 networks:
-  old-man-footy-network-dev:
+  old-man-footy-network-test:
     driver: bridge
