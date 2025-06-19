@@ -6,6 +6,7 @@ yarn-error.log*
 
 # Environment files
 .env
+.env.*
 
 # Database files (will be mounted as volumes)
 data/*.db
@@ -17,9 +18,7 @@ logs
 
 # Runtime data
 pids
-*.pid
-*.seed
-*.pid.lock
+*.pid*.pid.lock
 
 # Coverage directory used by tools like istanbul
 coverage
