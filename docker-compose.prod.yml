@@ -21,7 +21,7 @@ services:
       - EMAIL_FROM_NAME="Old Man Footy"
       - PORT=3060
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
-      - FEATURE_COMING_SOON=${FEATURE_COMING_SOON:-false}
+      - FEATURE_COMING_SOON_MODE=${FEATURE_COMING_SOON_MODE:-false}
       - MYSIDELINE_SYNC_ENABLED=${MYSIDELINE_SYNC_ENABLED:-true}
     volumes:
       # Persist database and uploads to host directories only
