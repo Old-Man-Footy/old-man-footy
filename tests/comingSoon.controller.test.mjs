@@ -3,7 +3,7 @@
  * Tests for coming soon mode functionality following TDD guidelines
  */
 
-const comingSoonController = require('../controllers/comingSoon.controller');
+import * as comingSoonController from '../controllers/comingSoon.controller.mjs';
 
 describe('Coming Soon Controller', () => {
     let req, res;

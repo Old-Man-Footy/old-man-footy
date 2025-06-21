@@ -5,10 +5,10 @@
  * and improved error messaging following TDD best practices.
  */
 
-const request = require('supertest');
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const { 
+import request from 'supertest';
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import { 
     validateEmail, 
     requiredEmail, 
     optionalEmail, 
@@ -16,7 +16,7 @@ const {
     organiserEmail, 
     playerEmail, 
     adminEmail 
-} = require('../middleware/validation');
+} from '../middleware/validation.mjs';
 
 // Create test app
 const createTestApp = (validationMiddleware) => {

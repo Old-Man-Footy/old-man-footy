@@ -5,8 +5,8 @@
  * Initializes test database and models before running tests.
  */
 
-const { sequelize } = require('../models');
-const path = require('path');
+import { sequelize } from '../models/index.mjs';
+import path from 'path';
 
 // Global setup - runs once before all tests
 beforeAll(async () => {

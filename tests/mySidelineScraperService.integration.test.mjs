@@ -1,6 +1,6 @@
-const mySidelineIntegrationService = require('../services/mySidelineIntegrationService');
-const MySidelineScraperService = require('../services/mySidelineScraperService');
-const { Carnival } = require('../models');
+import MySidelineScraperService from '../services/mySidelineScraperService.mjs';
+import { Carnival } from '../models/index.mjs';
+import { Op } from 'sequelize';
 
 /**
  * MySidelineScraperService Integration Tests
@@ -49,7 +49,7 @@ describe('MySidelineScraperService Integration Tests', () => {
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 // Force cleanup of Playwright resources
-                const { chromium } = require('playwright');
+                const { chromium } = await import('playwright');
                 await chromium.close?.();
             } catch (error) {
                 // Ignore cleanup errors in tests
@@ -139,7 +139,7 @@ describe('MySidelineScraperService Integration Tests', () => {
             console.log(`🧹 Cleaning existing data for: "${cleanedEvent.title}"`);
             const deletedCount = await Carnival.destroy({ 
                 where: { 
-                    [require('sequelize').Op.or]: [
+                    [Op.or]: [
                         { title: cleanedEvent.title },
                         { mySidelineTitle: cleanedEvent.mySidelineTitle },
                         { 
@@ -152,7 +152,7 @@ describe('MySidelineScraperService Integration Tests', () => {
             console.log(`🗑️  Deleted ${deletedCount} existing records`);
             
             // Call processScrapedEvents directly with our cleaned event
-            const MySidelineDataService = require('../services/mySidelineDataService');
+            const { default: MySidelineDataService } = await import('../services/mySidelineDataService.mjs');
             const dataService = new MySidelineDataService();
             
             console.log('\n🔧 Direct call to processScrapedEvents...');

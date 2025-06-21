@@ -3,7 +3,7 @@
  * Tests for maintenance mode middleware following TDD guidelines
  */
 
-const { maintenanceMode } = require('../middleware/maintenance');
+import { maintenanceMode } from '../middleware/maintenance.mjs';
 
 describe('Maintenance Middleware', () => {
     let req, res, next;

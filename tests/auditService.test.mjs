@@ -5,8 +5,8 @@
  * of user and system actions.
  */
 
-const { AuditLog, User } = require('../models');
-const AuditService = require('../services/auditService');
+import { AuditLog, User } from '../models/index.mjs';
+import AuditService from '../services/auditService.mjs';
 
 describe('Audit Service', () => {
     let testUser;

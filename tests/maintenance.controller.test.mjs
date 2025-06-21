@@ -3,7 +3,7 @@
  * Tests for maintenance mode functionality following TDD guidelines
  */
 
-const maintenanceController = require('../controllers/maintenance.controller');
+import * as maintenanceController from '../controllers/maintenance.controller.mjs';
 
 describe('Maintenance Controller', () => {
     let req, res;

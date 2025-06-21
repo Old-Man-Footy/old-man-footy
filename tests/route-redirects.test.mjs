@@ -3,8 +3,8 @@
  * Tests for maintenance and coming soon route redirects when disabled
  */
 
-const request = require('supertest');
-const app = require('../app');
+import request from 'supertest';
+import app from '../app.mjs';
 
 describe('Route Redirects for Disabled Modes', () => {
     let originalMaintenanceMode, originalComingSoonMode;

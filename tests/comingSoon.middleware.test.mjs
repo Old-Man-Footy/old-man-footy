@@ -3,7 +3,7 @@
  * Tests for coming soon mode middleware following TDD guidelines
  */
 
-const { comingSoonMode } = require('../middleware/comingSoon');
+import { comingSoonMode } from '../middleware/comingSoon.mjs';
 
 describe('Coming Soon Middleware', () => {
     let req, res, next;

@@ -3,18 +3,18 @@
  * Tests that the subscription form works when coming soon mode is enabled
  */
 
-const request = require('supertest');
-const { EmailSubscription } = require('../models');
-const { sequelize } = require('../config/database');
+import request from 'supertest';
+import { EmailSubscription } from '../models/index.mjs';
+import { sequelize } from '../config/database.mjs';
 
 // Mock MySideline service to prevent async operations during tests
-jest.mock('../services/mySidelineIntegrationService', () => ({
+jest.mock('../services/mySidelineIntegrationService.mjs', () => ({
     initializeScheduledSync: jest.fn(),
     checkAndRunInitialSync: jest.fn()
 }));
 
 // Import app after mocking
-const app = require('../app');
+import app from '../app.mjs';
 
 describe('Coming Soon Mode - Subscription Integration', () => {
     beforeAll(async () => {
