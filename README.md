@@ -256,18 +256,65 @@ The project maintains high test coverage standards:
 └── views/                                   # EJS templates - MVC Views
     ├── about.ejs                               # About page template
     ├── contact.ejs                             # Contact page template
+    ├── coming-soon.ejs                         # Coming soon page template
     ├── dashboard.ejs                           # User dashboard template
     ├── error.ejs                               # Error page template
     ├── index.ejs                               # Homepage template
     ├── layout.ejs                              # Main layout template
+    ├── maintenance.ejs                         # Maintenance mode template
     ├── user-guide.ejs                          # User guide template
     ├── admin/                                  # Admin panel view templates
-    ├── auth/                                   # Authentication views (login, register)
+    │   ├── audit-logs.ejs                         # Audit logs management
+    │   ├── carnival-players.ejs                   # Carnival player management
+    │   ├── carnivals.ejs                          # Admin carnival management
+    │   ├── claim-carnival.ejs                     # Carnival ownership claiming
+    │   ├── clubs.ejs                              # Admin club management
+    │   ├── dashboard.ejs                          # Admin dashboard
+    │   ├── edit-carnival.ejs                      # Admin carnival editing
+    │   ├── edit-club.ejs                          # Admin club editing
+    │   ├── edit-user.ejs                          # Admin user editing
+    │   ├── reports.ejs                            # System reports
+    │   ├── stats.ejs                              # System statistics
+    │   └── users.ejs                              # User management
+    ├── auth/                                   # Authentication views
+    │   ├── accept-invitation.ejs                  # User invitation acceptance
+    │   ├── login.ejs                              # User login form
+    │   └── register.ejs                           # User registration form
     ├── carnivals/                              # Carnival management view templates
+    │   ├── add-club.ejs                           # Add club to carnival
+    │   ├── add-players.ejs                        # Add players to carnival
+    │   ├── all-players.ejs                        # View all carnival players
+    │   ├── attendees.ejs                          # Carnival attendee management
+    │   ├── club-players.ejs                       # Club-specific player views
+    │   ├── edit-registration.ejs                  # Edit carnival registration
+    │   ├── edit.ejs                               # Edit carnival details
+    │   ├── list.ejs                               # List all carnivals
+    │   ├── my-club-players.ejs                    # User's club players view
+    │   ├── new.ejs                                # Create new carnival
+    │   ├── players.ejs                            # Carnival player management
+    │   ├── show.ejs                               # View carnival details
+    │   └── sponsors.ejs                           # Carnival sponsor management
     ├── clubs/                                  # Club management view templates
+    │   ├── add-sponsor.ejs                        # Add sponsor to club
+    │   ├── alternate-names.ejs                    # Club alternate name management
+    │   ├── claim-ownership.ejs                    # Club ownership claiming
+    │   ├── club-options.ejs                       # Club configuration options
+    │   ├── create-on-behalf.ejs                   # Create club on behalf of user
+    │   ├── list.ejs                               # List all clubs
+    │   ├── manage.ejs                             # Club management dashboard
+    │   ├── show.ejs                               # View club details
+    │   ├── sponsors.ejs                           # Club sponsor management
     │   └── players/                               # Club player management views
+    │       ├── add.ejs                               # Add new club player
+    │       ├── edit.ejs                              # Edit club player details
+    │       └── index.ejs                             # Club player listing
     ├── partials/                               # Reusable template components
+    │   ├── carnival-address.ejs                   # Carnival address formatting
+    │   ├── carnival-date.ejs                      # Carnival date formatting
+    │   └── flash-messages.ejs                     # Flash message display
     └── sponsors/                               # Sponsor management view templates
+        ├── list.ejs                               # List all sponsors
+        └── show.ejs                               # View sponsor details
 ```
 
 ## 🎯 Usage
