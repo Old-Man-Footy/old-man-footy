@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Create Club Players Table Migration
+ * Creates club_players table for managing rugby league club player rosters
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('club_players', {
       id: {

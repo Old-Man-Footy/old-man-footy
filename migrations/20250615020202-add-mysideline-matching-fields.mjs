@@ -5,7 +5,7 @@
  * These fields are immutable and used solely for matching MySideline events
  */
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
     /**
      * Add MySideline-specific fields that never change after initial import

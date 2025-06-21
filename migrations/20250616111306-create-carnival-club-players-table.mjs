@@ -8,7 +8,7 @@
  */
 
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('carnival_club_players', {
       id: {

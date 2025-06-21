@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Fix Club Player Email Uniqueness Constraint Migration
+ * Removes global email uniqueness to allow same person in multiple clubs
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   async up (queryInterface, Sequelize) {
     // Check if the email unique index exists before trying to remove it
     const indexes = await queryInterface.showIndex('club_players');

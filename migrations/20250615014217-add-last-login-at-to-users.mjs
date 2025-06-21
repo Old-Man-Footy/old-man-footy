@@ -5,7 +5,7 @@
  * This enables proper site interaction statistics in admin reports
  */
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
     /**
      * Add lastLoginAt column to track when users actually log into the system

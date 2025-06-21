@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Initial Database Schema Migration
+ * Creates all core tables for the Old Man Footy platform
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   async up (queryInterface, Sequelize) {
     // Create Clubs table first (referenced by Users)
     await queryInterface.createTable('clubs', {

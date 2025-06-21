@@ -5,7 +5,7 @@
  * This solves the issue where sync status was unreliable when no events were updated
  */
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('sync_logs', {
       id: {

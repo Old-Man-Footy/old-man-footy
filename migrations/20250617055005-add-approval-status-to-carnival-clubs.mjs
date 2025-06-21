@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Add Approval Status to Carnival Clubs Migration
+ * Adds approval workflow fields to carnival_clubs table
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   async up (queryInterface, Sequelize) {
     await queryInterface.addColumn('carnival_clubs', 'approvalStatus', {
       type: Sequelize.ENUM('pending', 'approved', 'rejected'),

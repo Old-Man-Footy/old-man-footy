@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Add Invitation Expires to Users Migration
+ * Adds invitationExpires column to users table for better token management
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   async up (queryInterface, Sequelize) {
     /**
      * Add the missing invitationExpires column to the users table.

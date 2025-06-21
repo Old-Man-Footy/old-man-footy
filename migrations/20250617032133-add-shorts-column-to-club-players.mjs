@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Add Shorts Column to Club Players Migration
+ * Adds shorts color restriction column to club_players table
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   /**
    * Add shorts column to club_players table
    * @param {QueryInterface} queryInterface - Sequelize query interface

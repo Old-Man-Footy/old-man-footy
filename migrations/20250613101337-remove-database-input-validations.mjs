@@ -26,7 +26,7 @@
  * as we only removed Sequelize model validations, not database constraints.
  */
 
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
     /**
      * No database schema changes required.

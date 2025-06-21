@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Update Carnival Validation Rules Migration
+ * Modifies carnival table constraints and validation rules
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   async up (queryInterface, Sequelize) {
     /**
      * Update Carnival table validation rules to be more permissive for MySideline imports

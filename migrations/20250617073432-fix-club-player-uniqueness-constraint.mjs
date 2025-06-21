@@ -1,7 +1,11 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/**
+ * Fix Club Player Uniqueness Constraint Migration
+ * Updates uniqueness constraint on club_players table to prevent duplicate players
+ * @type {import('sequelize-cli').Migration}
+ */
+export default {
   async up (queryInterface, Sequelize) {
     // Remove the unique constraint on email field
     await queryInterface.removeIndex('club_players', 'club_players_email_unique');
