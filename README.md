@@ -421,7 +421,7 @@ Rugby League Masters is a rugby league format for players aged 35+ across Austra
 
 ## 📞 Support
 
-For support, please contact the development team or create an issue in this repository.
+For support, please contact the development team at [support@oldmanfooty.au](mailto:support@oldmanfooty.au) or create an issue in this repository.
 
 ---
 
