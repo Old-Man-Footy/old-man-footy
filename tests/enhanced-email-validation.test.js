@@ -64,7 +64,7 @@ describe('Enhanced Email Validation Middleware', () => {
                 'invalid-email',
                 '@domain.com',
                 'user@',
-                'user@domain' // Changed this one since user..double@domain.com triggers our custom validation
+                'user@domain' // Missing TLD - tests basic email format validation without triggering our custom security rules that block consecutive special chars (like user..double@domain.com)
             ];
             
             for (const email of invalidEmails) {
