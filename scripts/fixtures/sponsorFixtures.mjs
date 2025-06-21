@@ -8,7 +8,7 @@
  * Sample sponsors data for testing
  * @type {Array<Object>}
  */
-const SAMPLE_SPONSORS = [
+export const SAMPLE_SPONSORS = [
     {
         sponsorName: 'Bunnings Warehouse',
         businessType: 'Hardware & Home Improvement',
@@ -270,12 +270,10 @@ const SAMPLE_SPONSORS = [
  * Sample email subscriptions for testing
  * @type {Array<Object>}
  */
-const SAMPLE_SUBSCRIPTIONS = [
+export const SAMPLE_SUBSCRIPTIONS = [
     { email: 'fan1@example.com', states: ['NSW', 'QLD'] },
     { email: 'fan2@example.com', states: ['VIC'] },
     { email: 'fan3@example.com', states: ['WA', 'SA'] },
     { email: 'rugbyfan@gmail.com', states: ['NSW'] },
     { email: 'masters.supporter@outlook.com', states: ['QLD', 'VIC'] }
 ];
-
-module.exports = { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS };

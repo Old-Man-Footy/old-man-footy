@@ -5,11 +5,12 @@
  * Uses identification patterns to distinguish seed data from production data
  */
 
-const { sequelize, Club, User, ClubPlayer, CarnivalClubPlayer, Carnival, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub, EmailSubscription, ClubAlternateName, SyncLog } = require('../../models');
-const { SAMPLE_CLUBS } = require('../fixtures/clubFixtures');
-const { SAMPLE_CARNIVALS } = require('../fixtures/carnivalFixtures');
-const { SAMPLE_SPONSORS } = require('../fixtures/sponsorFixtures');
-const { validateEnvironment } = require('./environmentValidation');
+import { sequelize, Club, User, ClubPlayer, CarnivalClubPlayer, Carnival, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub, EmailSubscription, ClubAlternateName, SyncLog } from '../../models/index.mjs';
+import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
+import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
+import { SAMPLE_SPONSORS } from '../fixtures/sponsorFixtures.mjs';
+import { validateEnvironment } from './environmentValidation.mjs';
+import { Op } from 'sequelize';
 
 class DataCleanup {
     /**
@@ -49,10 +50,10 @@ class DataCleanup {
             const seedClubNames = SAMPLE_CLUBS.map(club => club.name);
             const seedClubs = await Club.findAll({
                 where: {
-                    [require('sequelize').Op.or]: [
-                        { clubName: { [require('sequelize').Op.in]: seedClubNames } },
+                    [Op.or]: [
+                        { clubName: { [Op.in]: seedClubNames } },
                         { logoUrl: '/icons/seed.svg' }, // Seed marker
-                        { contactEmail: { [require('sequelize').Op.like]: '%@oldmanfooty.au' } } // Test emails
+                        { contactEmail: { [Op.like]: '%@oldmanfooty.au' } } // Test emails
                     ]
                 }
             });
@@ -65,14 +66,14 @@ class DataCleanup {
             if (seedClubIds.length > 0) {
                 // Get carnival registrations for seed clubs
                 const seedCarnivalClubs = await CarnivalClub.findAll({
-                    where: { clubId: { [require('sequelize').Op.in]: seedClubIds } },
+                    where: { clubId: { [Op.in]: seedClubIds } },
                     attributes: ['id']
                 });
                 const seedCarnivalClubIds = seedCarnivalClubs.map(cc => cc.id);
                 
                 // Remove player assignments for these registrations
                 const removedPlayerAssignments = await CarnivalClubPlayer.destroy({
-                    where: { carnivalClubId: { [require('sequelize').Op.in]: seedCarnivalClubIds } }
+                    where: { carnivalClubId: { [Op.in]: seedCarnivalClubIds } }
                 });
                 removalStats.playerAssignments = removedPlayerAssignments;
                 console.log(`    Removed ${removedPlayerAssignments} player assignments`);
@@ -81,7 +82,7 @@ class DataCleanup {
             // 3. Remove seed players
             console.log('  🏃 Removing seed players...');
             const removedPlayers = await ClubPlayer.destroy({
-                where: { clubId: { [require('sequelize').Op.in]: seedClubIds } }
+                where: { clubId: { [Op.in]: seedClubIds } }
             });
             removalStats.players = removedPlayers;
             console.log(`    Removed ${removedPlayers} seed players`);
@@ -89,11 +90,11 @@ class DataCleanup {
             // 4. Remove seed users (delegates and admin)
             console.log('  👥 Removing seed users...');
             const seedUserConditions = {
-                [require('sequelize').Op.or]: [
+                [Op.or]: [
                     { email: 'admin@oldmanfooty.au' }, // Admin user
-                    { clubId: { [require('sequelize').Op.in]: seedClubIds } }, // Club delegates
-                    { email: { [require('sequelize').Op.like]: '%@%masters.com.au' } }, // Test delegate emails
-                    { email: { [require('sequelize').Op.like]: '%@%mymasters.com.au' } }
+                    { clubId: { [Op.in]: seedClubIds } }, // Club delegates
+                    { email: { [Op.like]: '%@%masters.com.au' } }, // Test delegate emails
+                    { email: { [Op.like]: '%@%mymasters.com.au' } }
                 ]
             };
             
@@ -106,14 +107,14 @@ class DataCleanup {
             console.log('  🎪 Removing seed carnivals...');
             const seedCarnivalTitles = SAMPLE_CARNIVALS.map(carnival => carnival.title);
             const seedCarnivalConditions = {
-                [require('sequelize').Op.or]: [
-                    { title: { [require('sequelize').Op.in]: seedCarnivalTitles } },
+                [Op.or]: [
+                    { title: { [Op.in]: seedCarnivalTitles } },
                     { clubLogoURL: '/icons/seed.svg' }, // Seed marker
-                    { organiserContactEmail: { [require('sequelize').Op.like]: '%@%masters.com.au' } }, // Test organizer emails
+                    { organiserContactEmail: { [Op.like]: '%@%masters.com.au' } }, // Test organizer emails
                     { 
                         // MySideline imported data (if we want to clear it too)
                         isManuallyEntered: false,
-                        createdAt: { [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+                        createdAt: { [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
                     }
                 ]
             };
@@ -123,13 +124,13 @@ class DataCleanup {
             
             // Remove carnival-club relationships first
             const removedCarnivalClubs = await CarnivalClub.destroy({
-                where: { carnivalId: { [require('sequelize').Op.in]: seedCarnivalIds } }
+                where: { carnivalId: { [Op.in]: seedCarnivalIds } }
             });
             removalStats.carnivalClubs = removedCarnivalClubs;
             
             // Remove carnival-sponsor relationships
             const removedCarnivalSponsors = await CarnivalSponsor.destroy({
-                where: { carnivalId: { [require('sequelize').Op.in]: seedCarnivalIds } }
+                where: { carnivalId: { [Op.in]: seedCarnivalIds } }
             });
             removalStats.carnivalSponsors = removedCarnivalSponsors;
             
@@ -142,11 +143,11 @@ class DataCleanup {
             console.log('  🤝 Removing seed sponsors...');
             const seedSponsorNames = SAMPLE_SPONSORS.map(sponsor => sponsor.sponsorName);
             const seedSponsorConditions = {
-                [require('sequelize').Op.or]: [
-                    { sponsorName: { [require('sequelize').Op.in]: seedSponsorNames } },
+                [Op.or]: [
+                    { sponsorName: { [Op.in]: seedSponsorNames } },
                     { logoUrl: '/icons/seed.svg' }, // Seed marker
-                    { contactEmail: { [require('sequelize').Op.like]: '%@%test.com' } }, // Test emails
-                    { description: { [require('sequelize').Op.like]: '%Supporting local rugby league communities%' } } // Seed description pattern
+                    { contactEmail: { [Op.like]: '%@%test.com' } }, // Test emails
+                    { description: { [Op.like]: '%Supporting local rugby league communities%' } } // Seed description pattern
                 ]
             };
 
@@ -156,10 +157,10 @@ class DataCleanup {
             // Remove club-sponsor relationships first
             const removedClubSponsors = await ClubSponsor.destroy({
                 where: { 
-                    [require('sequelize').Op.or]: [
-                        { sponsorId: { [require('sequelize').Op.in]: seedSponsorIds } },
-                        { clubId: { [require('sequelize').Op.in]: seedClubIds } },
-                        { notes: { [require('sequelize').Op.like]: '%Seeded relationship%' } } // Seed marker
+                    [Op.or]: [
+                        { sponsorId: { [Op.in]: seedSponsorIds } },
+                        { clubId: { [Op.in]: seedClubIds } },
+                        { notes: { [Op.like]: '%Seeded relationship%' } } // Seed marker
                     ]
                 }
             });
@@ -173,9 +174,9 @@ class DataCleanup {
             // 7. Remove seed email subscriptions
             console.log('  📧 Removing seed email subscriptions...');
             const seedEmailConditions = {
-                [require('sequelize').Op.or]: [
-                    { email: { [require('sequelize').Op.like]: '%@example.com' } }, // Test emails
-                    { email: { [require('sequelize').Op.like]: '%@test.com' } }
+                [Op.or]: [
+                    { email: { [Op.like]: '%@example.com' } }, // Test emails
+                    { email: { [Op.like]: '%@test.com' } }
                 ]
             };
             
@@ -186,7 +187,7 @@ class DataCleanup {
             // 8. Remove club alternate names for seed clubs
             console.log('  🔍 Removing seed club alternate names...');
             const removedAlternateNames = await ClubAlternateName.destroy({
-                where: { clubId: { [require('sequelize').Op.in]: seedClubIds } }
+                where: { clubId: { [Op.in]: seedClubIds } }
             });
             removalStats.clubAlternateNames = removedAlternateNames;
             console.log(`    Removed ${removedAlternateNames} alternate names`);
@@ -195,11 +196,11 @@ class DataCleanup {
             console.log('  🔄 Removing seed sync logs...');
             const removedSyncLogs = await SyncLog.destroy({
                 where: {
-                    [require('sequelize').Op.or]: [
+                    [Op.or]: [
                         { syncType: 'seed_data_import' },
-                        { syncType: { [require('sequelize').Op.like]: '%seed%' } },
-                        { errorMessage: { [require('sequelize').Op.like]: '%seed%' } },
-                        { createdAt: { [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } } // Last 24 hours
+                        { syncType: { [Op.like]: '%seed%' } },
+                        { errorMessage: { [Op.like]: '%seed%' } },
+                        { createdAt: { [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) } } // Last 24 hours
                     ]
                 }
             });
@@ -209,7 +210,7 @@ class DataCleanup {
             // 10. Finally remove the seed clubs themselves
             console.log('  🏢 Removing seed clubs...');
             const removedClubs = await Club.destroy({
-                where: { id: { [require('sequelize').Op.in]: seedClubIds } }
+                where: { id: { [Op.in]: seedClubIds } }
             });
             removalStats.clubs = removedClubs;
             console.log(`    Removed ${removedClubs} seed clubs`);
@@ -291,4 +292,4 @@ class DataCleanup {
     }
 }
 
-module.exports = DataCleanup;
+export default DataCleanup;

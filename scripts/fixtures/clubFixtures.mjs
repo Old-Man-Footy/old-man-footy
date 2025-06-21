@@ -8,7 +8,7 @@
  * Sample clubs data for testing - diverse across all Australian states
  * @type {Array<Object>}
  */
-const SAMPLE_CLUBS = [
+export const SAMPLE_CLUBS = [
     { 
         name: 'Canterbury Bankstown Masters', 
         state: 'NSW', 
@@ -230,5 +230,3 @@ const SAMPLE_CLUBS = [
         twitterUrl: 'https://x.com/canberramasters'
     }
 ];
-
-module.exports = { SAMPLE_CLUBS };

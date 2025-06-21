@@ -9,7 +9,10 @@
  */
 
 import path from 'path';
-import { sequelize, SyncLog } from '../models';
+import { sequelize, SyncLog } from '../models/index.mjs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
 
 /**
  * Check MySideline sync configuration
@@ -218,11 +221,12 @@ async function main() {
 }
 
 // Run if called directly
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
     main();
 }
 
-module.exports = {
+export {
     checkSyncConfiguration,
     getRecentSyncLogs,
     getSyncStatistics,

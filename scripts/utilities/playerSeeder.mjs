@@ -5,8 +5,8 @@
  * Includes age requirements and carnival attendance linking
  */
 
-const { ClubPlayer, CarnivalClubPlayer } = require('../../models');
-const { FIRST_NAMES, LAST_NAMES, EMAIL_DOMAINS, PLAYER_NOTES, ATTENDANCE_NOTES } = require('../fixtures/playerFixtures');
+import { ClubPlayer, CarnivalClubPlayer } from '../../models/index.mjs';
+import { FIRST_NAMES, LAST_NAMES, EMAIL_DOMAINS, PLAYER_NOTES, ATTENDANCE_NOTES } from '../fixtures/playerFixtures.mjs';
 
 class PlayerSeeder {
     /**
@@ -193,4 +193,4 @@ class PlayerSeeder {
     }
 }
 
-module.exports = PlayerSeeder;
+export default PlayerSeeder;

@@ -5,8 +5,8 @@
  * Used during seeding to ensure data safety
  */
 
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
 
 class DatabaseBackup {
     constructor() {
@@ -22,7 +22,7 @@ class DatabaseBackup {
         console.log('💾 Creating database backup...');
         
         try {
-            const { sequelize } = require('../../models');
+            const { sequelize } = await import('../../models/index.mjs');
             const dbPath = sequelize.options.storage;
             
             // Skip backup for in-memory databases
@@ -90,7 +90,7 @@ class DatabaseBackup {
             
             // Try to reconnect to database
             try {
-                const { initializeDatabase } = require('../../config/database');
+                const { initializeDatabase } = await import('../../config/database.mjs');
                 await initializeDatabase();
                 console.log('  🔌 Database connection restored after backup failure');
             } catch (reconnectError) {
@@ -116,7 +116,7 @@ class DatabaseBackup {
         console.log('🔄 Restoring database from backup...');
         
         try {
-            const { sequelize } = require('../../models');
+            const { sequelize } = await import('../../models/index.mjs');
             const dbPath = sequelize.options.storage;
             
             // Close database connection
@@ -126,7 +126,7 @@ class DatabaseBackup {
             fs.copyFileSync(restorePath, dbPath);
             
             // Reconnect to database
-            const { initializeDatabase } = require('../../config/database');
+            const { initializeDatabase } = await import('../../config/database.mjs');
             await initializeDatabase();
             
             console.log(`✅ Database restored from backup: ${path.basename(restorePath)}`);
@@ -143,7 +143,7 @@ class DatabaseBackup {
      */
     async cleanupOldBackups() {
         try {
-            const { sequelize } = require('../../models');
+            const { sequelize } = await import('../../models/index.mjs');
             const dbPath = sequelize.options.storage;
             const dbDir = path.dirname(dbPath);
             const dbName = path.basename(dbPath, '.db');
@@ -187,4 +187,4 @@ class DatabaseBackup {
     }
 }
 
-module.exports = DatabaseBackup;
+export default DatabaseBackup;

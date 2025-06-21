@@ -166,19 +166,19 @@ The project maintains high test coverage standards:
 ## 🗂️ Project Structure
 
 ```
-├── app.mjs                                     # Main application entry point (ES Module)
-├── package.json                                # Project dependencies and scripts
-├── docker-compose.*.yml                       # Docker configuration files
-├── Dockerfile                                  # Docker container definition
-├── LICENSE                                     # Custom proprietary license
-├── README.md                                   # This documentation file
-├── config/                                     # Application configuration
+├── app.mjs                                  # Main application entry point (ES Module)
+├── package.json                             # Project dependencies and scripts
+├── docker-compose.*.yml                     # Docker configuration files
+├── Dockerfile                               # Docker container definition
+├── LICENSE                                  # Custom proprietary license
+├── README.md                                # This documentation file
+├── config/                                  # Application configuration
 │   ├── config.mjs                              # Main application configuration
 │   ├── constants.mjs                           # Application constants and enums
 │   ├── database.mjs                            # Database connection and setup
 │   ├── database-optimizer.mjs                  # Database performance optimization
 │   └── passport.mjs                            # Passport authentication configuration
-├── controllers/                                # MVC Controllers - Handle HTTP requests
+├── controllers/                             # MVC Controllers - Handle HTTP requests
 │   ├── admin.controller.mjs                    # Admin panel functionality
 │   ├── auth.controller.mjs                     # User authentication logic
 │   ├── carnival.controller.mjs                 # Carnival management operations
@@ -192,21 +192,21 @@ The project maintains high test coverage standards:
 │   ├── maintenance.controller.mjs              # Maintenance mode handling
 │   ├── sponsor.controller.mjs                  # Sponsor management operations
 │   └── userGuide.controller.mjs                # User guide functionality
-├── data/                                       # Database files
+├── data/                                    # Database files
 │   ├── dev-old-man-footy.db                    # Development SQLite database
 │   └── test-old-man-footy.db                   # Test SQLite database
-├── docs/                                       # Project documentation
+├── docs/                                    # Project documentation
 │   ├── DATABASE_SEEDING.md                     # Database seeding guide
 │   └── USER_GUIDE_DELEGATES.md                 # User guide for delegates
-├── middleware/                                 # Express middleware functions
+├── middleware/                              # Express middleware functions
 │   ├── auth.mjs                                # Authentication middleware
 │   ├── comingSoon.mjs                          # Coming soon mode middleware
 │   ├── maintenance.mjs                         # Maintenance mode middleware
 │   ├── upload.mjs                              # File upload middleware
 │   └── validation.mjs                          # Input validation middleware
-├── migrations/                                 # Sequelize database migrations
+├── migrations/                              # Sequelize database migrations
 │   └── *.mjs                                   # Database schema migration files
-├── models/                                     # MVC Models - Database schemas and logic
+├── models/                                  # MVC Models - Database schemas and logic
 │   ├── AuditLog.mjs                            # Audit logging model
 │   ├── Carnival.mjs                            # Carnival event model
 │   ├── CarnivalClub.mjs                        # Carnival-club relationship model
@@ -221,13 +221,13 @@ The project maintains high test coverage standards:
 │   ├── Sponsor.mjs                             # Sponsor information model
 │   ├── SyncLog.mjs                             # Data synchronization logging
 │   └── User.mjs                                # User account model
-├── public/                                     # Static assets served to clients
+├── public/                                  # Static assets served to clients
 │   ├── icons/                                  # Application icons and favicons
 │   ├── images/                                 # Static images and graphics
 │   ├── js/                                     # Client-side JavaScript files
 │   ├── styles/                                 # CSS stylesheets with light/dark themes
 │   └── uploads/                                # User-uploaded files directory
-├── routes/                                     # Express route definitions
+├── routes/                                  # Express route definitions
 │   ├── admin.mjs                               # Admin panel routes
 │   ├── auth.mjs                                # Authentication routes
 │   ├── carnivalClubs.mjs                       # Carnival club management routes
@@ -238,23 +238,11 @@ The project maintains high test coverage standards:
 │   ├── index.mjs                               # Main application routes
 │   ├── sponsors.mjs                            # Sponsor management routes
 │   └── api/                                    # API route definitions
-│       └── index.mjs                           # API routes index
-├── scripts/                                    # Development and maintenance scripts
-│   ├── check-sync-status.mjs                   # MySideline sync monitoring
-│   ├── generate-secret.mjs                     # Secret generation utility
-│   ├── image-manager.mjs                       # Image processing and management
-│   ├── purge-seed-data.mjs                     # Database cleanup scripts
-│   ├── seed-database.mjs                       # Database seeding scripts
-│   ├── fixtures/                               # Test data and sample fixtures
-│   └── utilities/                              # Script-specific helper utilities
-│       ├── basicSeeder.mjs                     # Basic data seeding utilities
-│       ├── databaseBackup.mjs                  # Database backup operations
-│       ├── dataCleanup.mjs                     # Data cleanup utilities
-│       ├── environmentValidation.mjs           # Environment validation
-│       └── playerSeeder.mjs                    # Player data seeding utilities
-├── services/                                   # Business logic services and utilities
+│       └── index.mjs                              # API routes index
+├── scripts/                                 # Utility and maintenance scripts
+├── services/                                # Business logic services and utilities
 │   ├── auditService.mjs                        # Audit logging service
-│   ├── carouselImageService.mjs                # Image carousel management
+│   ├── carouselImageService.js                 # Image carousel management
 │   ├── emailService.mjs                        # Email notification service
 │   ├── imageNamingService.mjs                  # Image file naming utilities
 │   ├── mySidelineDataService.mjs               # MySideline data processing
@@ -263,9 +251,9 @@ The project maintains high test coverage standards:
 │   ├── mySidelineLogoDownloadService.mjs       # Logo downloading
 │   ├── mySidelineScraperService.mjs            # Web scraping service
 │   └── sponsorSortingService.mjs               # Sponsor sorting logic
-├── tests/                                      # Test files and utilities
-│   └── *.test.mjs                              # Jest unit and integration tests
-└── views/                                      # EJS templates - MVC Views
+├── tests/                                   # Test files and utilities
+│   └── *.test.js                               # Jest unit and integration tests
+└── views/                                   # EJS templates - MVC Views
     ├── about.ejs                               # About page template
     ├── contact.ejs                             # Contact page template
     ├── dashboard.ejs                           # User dashboard template
@@ -277,37 +265,10 @@ The project maintains high test coverage standards:
     ├── auth/                                   # Authentication views (login, register)
     ├── carnivals/                              # Carnival management view templates
     ├── clubs/                                  # Club management view templates
-    │   └── players/                            # Club player management views
+    │   └── players/                               # Club player management views
     ├── partials/                               # Reusable template components
     └── sponsors/                               # Sponsor management view templates
 ```
-
-### **📁 Folder Structure Explanation**
-
-The project follows a clean **Model-View-Controller (MVC)** architecture with clear separation of concerns:
-
-#### **Core Application Structure**
-- **`config/`** - Application configuration, database setup, and authentication strategies
-- **`controllers/`** - HTTP request handlers that orchestrate between models and views
-- **`models/`** - Database schemas, relationships, and data access logic (Sequelize ORM)
-- **`routes/`** - Express route definitions that map URLs to controller actions
-- **`views/`** - EJS templates for server-side rendering (presentation layer)
-- **`middleware/`** - Express middleware for authentication, validation, and request processing
-
-#### **Business Logic & Services**
-- **`services/`** - Reusable business logic services (email, audit, MySideline integration, etc.)
-
-#### **Development & Maintenance**
-- **`scripts/`** - Development tools and database management scripts
-  - **`utilities/`** - Helper services specifically for script operations (renamed from `services/` to avoid confusion)
-  - **`fixtures/`** - Test data and sample content for seeding
-
-#### **Static Assets & Testing**
-- **`public/`** - Client-side assets (CSS, JavaScript, images) served directly by Express
-- **`tests/`** - Jest unit and integration tests
-- **`migrations/`** - Database schema versioning and updates
-
-This structure ensures **clean separation of concerns**, making the codebase maintainable and following Node.js best practices.
 
 ## 🎯 Usage
 

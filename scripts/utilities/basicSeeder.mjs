@@ -5,11 +5,11 @@
  * and their basic relationships
  */
 
-const { Club, User, Carnival, Sponsor, EmailSubscription, ClubSponsor, CarnivalSponsor, CarnivalClub } = require('../../models');
-const { SAMPLE_CLUBS } = require('../fixtures/clubFixtures');
-const { SAMPLE_CARNIVALS } = require('../fixtures/carnivalFixtures');
-const { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } = require('../fixtures/sponsorFixtures');
-const MySidelineService = require('../../services/mySidelineIntegrationService');
+import { Club, User, Carnival, Sponsor, EmailSubscription, ClubSponsor, CarnivalSponsor, CarnivalClub } from '../../models/index.mjs';
+import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
+import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
+import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
+import MySidelineService from '../../services/mySidelineIntegrationService.mjs';
 
 class BasicSeeder {
     constructor() {
@@ -25,7 +25,7 @@ class BasicSeeder {
      */
     async connect() {
         try {
-            const { initializeDatabase } = require('../../config/database');
+            const { initializeDatabase } = await import('../../config/database.mjs');
             await initializeDatabase();
             console.log('✅ SQLite database initialized successfully');
         } catch (error) {
@@ -261,4 +261,4 @@ class BasicSeeder {
     }
 }
 
-module.exports = BasicSeeder;
+export default BasicSeeder;

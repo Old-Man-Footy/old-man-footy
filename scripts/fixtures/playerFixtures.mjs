@@ -8,7 +8,7 @@
  * Sample player first names for realistic generation
  * @type {Array<string>}
  */
-const FIRST_NAMES = [
+export const FIRST_NAMES = [
     'Adam', 'Alan', 'Andrew', 'Anthony', 'Brett', 'Brian', 'Bruce', 'Carl', 'Chris', 'Craig',
     'Daniel', 'David', 'Dean', 'Derek', 'Gareth', 'Gary', 'Glenn', 'Graham', 'Grant', 'Greg',
     'Ian', 'Jason', 'Jeff', 'John', 'Keith', 'Kevin', 'Lance', 'Mark', 'Martin', 'Matthew',
@@ -21,12 +21,12 @@ const FIRST_NAMES = [
  * Sample player last names for realistic generation
  * @type {Array<string>}
  */
-const LAST_NAMES = [
+export const LAST_NAMES = [
     'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson', 'Moore', 'Taylor',
     'Anderson', 'Thomas', 'Jackson', 'White', 'Harris', 'Martin', 'Thompson', 'Garcia', 'Martinez', 'Robinson',
     'Clark', 'Rodriguez', 'Lewis', 'Lee', 'Walker', 'Hall', 'Allen', 'Young', 'Hernandez', 'King',
     'Wright', 'Lopez', 'Hill', 'Scott', 'Green', 'Adams', 'Baker', 'Gonzalez', 'Nelson', 'Carter',
-    'Mitchell', 'Perez', 'Roberts', 'Turner', 'Phillips', 'Campbell', 'Parker', 'Evans', 'Edwards', 'Collins',
+    'Mitchell', 'Perez', 'Roberts', 'Turner', 'Phillips', 'Campbell', 'Parker', 'EvANS', 'Edwards', 'Collins',
     'Stewart', 'Sanchez', 'Morris', 'Rogers', 'Reed', 'Cook', 'Morgan', 'Bell', 'Murphy', 'Bailey'
 ];
 
@@ -34,7 +34,7 @@ const LAST_NAMES = [
  * Sample domains for player email generation
  * @type {Array<string>}
  */
-const EMAIL_DOMAINS = [
+export const EMAIL_DOMAINS = [
     'gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com.au', 'bigpond.com',
     'optusnet.com.au', 'iinet.net.au', 'westnet.com.au', 'live.com.au'
 ];
@@ -43,7 +43,7 @@ const EMAIL_DOMAINS = [
  * Sample notes for players (30% of players get notes)
  * @type {Array<string>}
  */
-const PLAYER_NOTES = [
+export const PLAYER_NOTES = [
     'Experienced player - former club captain',
     'New to masters rugby league',
     'Injury concerns - knees',
@@ -60,7 +60,7 @@ const PLAYER_NOTES = [
  * Sample notes for player carnival attendance (10% of assignments get notes)
  * @type {Array<string>}
  */
-const ATTENDANCE_NOTES = [
+export const ATTENDANCE_NOTES = [
     'May need to leave early',
     'First time at this carnival',
     'Injury management required',
@@ -68,11 +68,3 @@ const ATTENDANCE_NOTES = [
     'Carpooling with teammates',
     'Confirmed availability'
 ];
-
-module.exports = {
-    FIRST_NAMES,
-    LAST_NAMES,
-    EMAIL_DOMAINS,
-    PLAYER_NOTES,
-    ATTENDANCE_NOTES
-};

@@ -11,26 +11,31 @@
  * 
  * The script has been refactored into smaller, manageable modules:
  * - fixtures/ - Contains all sample data
- * - services/ - Contains business logic for seeding operations
+ * - utilities/ - Contains business logic for seeding operations
  */
 
-const { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } = require('../models');
-const fs = require('fs');
-const path = require('path');
-const { exec } = require('child_process');
-const { promisify } = require('util');
+import { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } from '../models/index.mjs';
+import fs from 'fs';
+import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { Op } from 'sequelize';
+import { fileURLToPath } from 'url';
 
 const execAsync = promisify(exec);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import modular services
-const { validateEnvironment } = require('./utilities/environmentValidation');
-const DatabaseBackup = require('./utilities/databaseBackup');
-const DataCleanup = require('./utilities/dataCleanup');
-const BasicSeeder = require('./utilities/basicSeeder');
-const PlayerSeeder = require('./utilities/playerSeeder');
+import { validateEnvironment } from './utilities/environmentValidation.mjs';
+import DatabaseBackup from './utilities/databaseBackup.mjs';
+import DataCleanup from './utilities/dataCleanup.mjs';
+import BasicSeeder from './utilities/basicSeeder.mjs';
+import PlayerSeeder from './utilities/playerSeeder.mjs';
 
 // Load environment variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 /**
  * Database Seeder - Main Orchestrator Class
@@ -564,7 +569,7 @@ class DatabaseSeeder {
             playerAssignments: await CarnivalClubPlayer.count({ where: { isActive: true } }),
             upcomingCarnivals: await Carnival.count({ 
                 where: { 
-                    date: { [require('sequelize').Op.gte]: new Date() }, 
+                    date: { [Op.gte]: new Date() }, 
                     isActive: true 
                 }
             })
@@ -774,18 +779,18 @@ class DatabaseSeeder {
         try {
             // Multiple environment validation checkpoints
             console.log('🛡️  SECURITY CHECKPOINT 1: Initial validation');
-            validateEnvironment();
+            await validateEnvironment();
             
             await this.connect();
             
             console.log('🛡️  SECURITY CHECKPOINT 2: Pre-backup validation');
-            validateEnvironment();
+            await validateEnvironment();
             
             // 🆕 CREATE BACKUP BEFORE ANY CHANGES
             await this.backupService.createBackup();
             
             console.log('🛡️  SECURITY CHECKPOINT 3: Pre-clear validation');
-            validateEnvironment();
+            await validateEnvironment();
             
             // Choose clearing method based on command line flag
             const fullWipe = process.argv.includes('--full-wipe');
@@ -800,7 +805,7 @@ class DatabaseSeeder {
                 }
                 
                 console.log('🛡️  SECURITY CHECKPOINT 4: Pre-seed validation');
-                validateEnvironment();
+                await validateEnvironment();
                 
                 // Proceed with seeding using modular services
                 this.createdEntities.clubs = await this.basicSeedingService.createClubs();
@@ -825,7 +830,7 @@ class DatabaseSeeder {
                 
                 const backupPath = this.backupService.getBackupPath();
                 if (backupPath) {
-                    console.log(`💾 Backup available at: ${require('path').basename(backupPath)}`);
+                    console.log(`💾 Backup available at: ${path.basename(backupPath)}`);
                 }
                 
                 console.log('\n🔐 Login credentials:');
@@ -836,7 +841,7 @@ class DatabaseSeeder {
                 
                 // Offer to restore from backup
                 const backupPath = this.backupService.getBackupPath();
-                if (backupPath && require('fs').existsSync(backupPath)) {
+                if (backupPath && fs.existsSync(backupPath)) {
                     console.log('\n🔄 Backup is available for restoration');
                     console.log(`To restore manually: copy "${backupPath}" over your database file`);
                 }
@@ -857,7 +862,8 @@ class DatabaseSeeder {
 /**
  * Run seeder if called directly with proper safety checks
  */
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
     // Display safety warning with updated information
     console.log('\n' + '⚠️ '.repeat(20));
     console.log('🚨 DATABASE SEEDING SCRIPT - MODULAR SELECTIVE OPERATION');
@@ -882,4 +888,4 @@ if (require.main === module) {
         });
 }
 
-module.exports = DatabaseSeeder;
+export default DatabaseSeeder;

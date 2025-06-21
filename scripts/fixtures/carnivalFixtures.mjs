@@ -8,7 +8,7 @@
  * Sample carnivals data for testing
  * @type {Array<Object>}
  */
-const SAMPLE_CARNIVALS = [
+export const SAMPLE_CARNIVALS = [
     {
         title: 'NSW Masters Grand Final',
         date: new Date('2025-09-15'),
@@ -234,5 +234,3 @@ const SAMPLE_CARNIVALS = [
         clubLogoURL: '/icons/seed.svg'
     }
 ];
-
-module.exports = { SAMPLE_CARNIVALS };
