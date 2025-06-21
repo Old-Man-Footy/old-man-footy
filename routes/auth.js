@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
+const { requiredEmail, adminEmail } = require('../middleware/validation');
 const authController = require('../controllers/auth.controller');
 const { ensureAuthenticated } = require('../middleware/auth');
 
@@ -13,7 +14,7 @@ router.get('/register', authController.showRegisterForm);
 router.post('/register', [
     body('firstName').trim().notEmpty().withMessage('First name is required'),
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
+    requiredEmail('email', 'A valid email address is required for account registration'),
     body('phoneNumber').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
         .custom((value) => {
             if (value && value.trim()) {
@@ -38,7 +39,7 @@ router.post('/invite/:token', [
 
 // Send invitation (for primary delegates) - requires authentication
 router.post('/send-invitation', ensureAuthenticated, [
-    body('email').isEmail().withMessage('Valid email is required')
+    requiredEmail('email', 'A valid email address is required to send the invitation')
 ], authController.sendInvitation);
 
 // Transfer delegate role (for primary delegates) - requires authentication
@@ -71,8 +72,7 @@ router.post('/update-name', ensureAuthenticated, [
 
 // Update email (for logged-in users) - requires authentication
 router.post('/update-email', ensureAuthenticated, [
-    body('email').isEmail().withMessage('Valid email is required')
-        .normalizeEmail(),
+    requiredEmail('email', 'A valid email address is required for your account'),
     body('currentPassword').notEmpty().withMessage('Current password is required for security')
 ], authController.updateEmail);
 

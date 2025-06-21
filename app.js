@@ -120,6 +120,12 @@ async function initializeDatabase() {
  * This runs after the server is up and running
  */
 async function initializeMySidelineSync() {
+    // Skip initialization in test environment
+    if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+        console.log('🧪 Skipping MySideline sync in test environment');
+        return;
+    }
+
     try {
         console.log('🔄 Initializing MySideline sync service...');
         mySidelineService.initializeScheduledSync();
@@ -176,7 +182,7 @@ app.use((error, req, res, next) => {
  * Main startup sequence
  * 1. Initialize database
  * 2. Start server
- * 3. Initialize MySideline sync
+ * 3. Initialize MySideline sync (only in non-test environments)
  */
 async function startServer() {
     try {
@@ -190,11 +196,14 @@ async function startServer() {
             console.log('📊 Site is now accessible and ready to serve requests');
         });
         
-        // Step 3: Initialize MySideline sync after server is running
-        // Add a small delay to ensure server is fully up
-        setTimeout(async () => {
-            await initializeMySidelineSync();
-        }, 1000);
+        // Step 3: Initialize MySideline sync after server is running (skip in tests)
+        if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
+            // Store timeout ID globally so it can be cleared during test cleanup
+            global.mySidelineInitTimeout = setTimeout(async () => {
+                await initializeMySidelineSync();
+                global.mySidelineInitTimeout = null; // Clear reference after execution
+            }, 1000);
+        }
         
         return server;
     } catch (error) {

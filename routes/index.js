@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
+const { requiredEmail } = require('../middleware/validation');
 const mainController = require('../controllers/main.controller');
 const userGuideController = require('../controllers/userGuide.controller');
 const maintenanceController = require('../controllers/maintenance.controller');
@@ -45,7 +46,7 @@ router.get('/about', mainController.getAbout);
 // Contact page routes
 router.get('/contact', mainController.getContact);
 
-// Contact form submission with validation
+// Contact form submission with enhanced email validation
 router.post('/contact', [
     body('firstName')
         .trim()
@@ -55,10 +56,7 @@ router.post('/contact', [
         .trim()
         .isLength({ min: 1, max: 50 })
         .withMessage('Last name is required and must be less than 50 characters'),
-    body('email')
-        .isEmail()
-        .normalizeEmail()
-        .withMessage('Valid email address is required'),
+    requiredEmail('email', 'A valid email address is required to respond to your inquiry'),
     body('phone')
         .optional()
         .trim()

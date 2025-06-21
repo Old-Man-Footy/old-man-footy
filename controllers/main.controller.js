@@ -263,13 +263,13 @@ const postSubscribe = async (req, res) => {
             });
         }
 
-        // Bot protection: Check form timing (minimum 1 second to fill form)
+        // Bot protection: Check form timing (minimum 3 seconds to fill form)
         if (form_timestamp) {
             const submittedTimestamp = parseInt(form_timestamp, 10);
             const currentTime = Date.now();
             const timeDiff = currentTime - submittedTimestamp;
-            const minimumTime = 1000; // 1 second (more reasonable)
-            const maximumTime = 24 * 60 * 60 * 1000; // 24 hours (very generous)
+            const minimumTime = 3000; // 3 seconds (anti-bot protection)
+            const maximumTime = 30 * 60 * 1000; // 30 minutes (reasonable session timeout)
             
             console.log(`Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`);
             

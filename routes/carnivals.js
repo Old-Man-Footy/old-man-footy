@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { carnivalUpload, handleUploadError } = require('../middleware/upload');
+const { organiserEmail } = require('../middleware/validation');
 const carnivalController = require('../controllers/carnival.controller');
 const upload = require('../middleware/upload');
 const { AUSTRALIAN_STATES } = require('../config/constants');
@@ -25,7 +26,7 @@ const validateCarnival = [
         }),
     body('locationAddress').trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters'),
     body('organiserContactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
-    body('organiserContactEmail').trim().isEmail().withMessage('Valid email is required'),
+    organiserEmail('organiserContactEmail'),
     body('organiserContactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
     body('scheduleDetails').optional().trim().isLength({ max: 5000 }).withMessage('Schedule details must be 5000 characters or less'),
     body('registrationLink').optional().isURL().withMessage('Valid registration link URL required'),

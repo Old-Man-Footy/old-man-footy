@@ -98,7 +98,7 @@ Note: SQLite database is included and requires no separate installation.
 
 To debug in vscode, change the following line in `package.json`
 
-- from: `"test": "jest",`
+- from: `"test": "jest --detectOpenHandles --forceExit",`
 - to: `"test": "node --inspect-brk=9229 node_modules/jest/bin/jest.js --runInBand",`
 
 Then use an "attach to Jest" `Launch.json` file:

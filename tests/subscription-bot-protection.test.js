@@ -304,7 +304,7 @@ describe('POST /subscribe - Bot Protection', () => {
 
             expect(response.status).toBe(400);
             expect(response.body.success).toBe(false);
-            expect(response.body.message).toBe('Email already subscribed');
+            expect(response.body.message).toBe('This email is already subscribed to our newsletter!');
         });
     });
 
