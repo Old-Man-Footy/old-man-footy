@@ -1,9 +1,9 @@
-const express = require('express');
-const { body } = require('express-validator');
-const sponsorController = require('../controllers/sponsor.controller');
-const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
-const upload = require('../middleware/upload');
-const { AUSTRALIAN_STATES } = require('../config/constants');
+import express from 'express';
+import { body } from 'express-validator';
+import * as sponsorController from '../controllers/sponsor.controller.mjs';
+import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
+import upload from '../middleware/upload.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
 
@@ -48,4 +48,4 @@ router.delete('/:id', ensureAuthenticated, ensureAdmin, sponsorController.delete
 // Toggle sponsor status
 router.put('/:id/status', ensureAuthenticated, ensureAdmin, sponsorController.toggleSponsorStatus);
 
-module.exports = router;
+export default router;

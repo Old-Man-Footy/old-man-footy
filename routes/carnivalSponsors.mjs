@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import * as carnivalSponsorController from '../controllers/carnivalSponsor.controller.mjs';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const { ensureAuthenticated } = require('../middleware/auth');
-const carnivalSponsorController = require('../controllers/carnivalSponsor.controller');
 
 // Get all carnival-sponsor relationships with filtering
 router.get('/', carnivalSponsorController.getCarnivalSponsors);
@@ -51,4 +52,4 @@ router.patch('/carnival/:carnivalId/reorder', ensureAuthenticated, [
     body('sponsorOrders.*.displayOrder').isInt({ min: 0 }).withMessage('Display order must be a non-negative integer')
 ], carnivalSponsorController.reorderCarnivalSponsors);
 
-module.exports = router;
+export default router;

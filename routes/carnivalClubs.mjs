@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import * as carnivalClubController from '../controllers/carnivalClub.controller.mjs';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const { ensureAuthenticated } = require('../middleware/auth');
-const carnivalClubController = require('../controllers/carnivalClub.controller');
 
 // Carnival attendees management routes (for carnival organizers)
 // View attendees for a carnival
@@ -98,4 +99,4 @@ router.post('/:carnivalId/register/players', ensureAuthenticated, [
 // Unregister delegate's own club from a carnival (API endpoint)
 router.delete('/:carnivalId/register', ensureAuthenticated, carnivalClubController.unregisterMyClubFromCarnival);
 
-module.exports = router;
+export default router;

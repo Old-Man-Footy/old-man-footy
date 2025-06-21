@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import { requiredEmail, adminEmail } from '../middleware/validation.mjs';
+import * as authController from '../controllers/auth.controller.mjs';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const { requiredEmail, adminEmail } = require('../middleware/validation');
-const authController = require('../controllers/auth.controller');
-const { ensureAuthenticated } = require('../middleware/auth');
 
 // Login routes
 router.get('/login', authController.showLoginForm);
@@ -79,4 +80,4 @@ router.post('/update-email', ensureAuthenticated, [
 // Logout
 router.post('/logout', authController.logoutUser);
 
-module.exports = router;
+export default router;

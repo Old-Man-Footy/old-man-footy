@@ -5,13 +5,14 @@
  * Implements proper authentication and authorization middleware.
  */
 
-const express = require('express');
+import express from 'express';
+import multer from 'multer';
+import { body } from 'express-validator';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { playerEmail } from '../middleware/validation.mjs';
+import * as clubPlayerController from '../controllers/clubPlayer.controller.mjs';
+
 const router = express.Router();
-const multer = require('multer');
-const { body } = require('express-validator');
-const { ensureAuthenticated } = require('../middleware/auth');
-const { playerEmail } = require('../middleware/validation');
-const clubPlayerController = require('../controllers/clubPlayer.controller');
 
 // Configure multer for CSV file uploads
 const upload = multer({ 
@@ -161,4 +162,4 @@ const validatePlayer = [
     .withMessage('Shorts must be one of: Unrestricted, Red, Yellow, Blue, Green')
 ];
 
-module.exports = router;
+export default router;

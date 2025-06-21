@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { clubUpload, handleUploadError } from '../middleware/upload.mjs';
+import * as clubController from '../controllers/club.controller.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const { ensureAuthenticated } = require('../middleware/auth');
-const { clubUpload, handleUploadError } = require('../middleware/upload');
-const clubController = require('../controllers/club.controller');
-const { AUSTRALIAN_STATES } = require('../config/constants');
 
 // Club management (authenticated delegates only) - MUST come before /:id route
 router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
@@ -93,4 +94,4 @@ router.get('/', clubController.showClubListings);
 // Individual club profile (public) - MUST come LAST as it catches all /:id patterns
 router.get('/:id', clubController.showClubProfile);
 
-module.exports = router;
+export default router;

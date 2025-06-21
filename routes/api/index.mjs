@@ -1,9 +1,8 @@
-const express = require('express');
-const router = express.Router();
+import express from 'express';
+import sponsorApiRoutes from './sponsors.mjs';
+import * as maintenanceController from '../../controllers/maintenance.controller.mjs';
 
-// Import API sub-routes
-const sponsorApiRoutes = require('./sponsors');
-const maintenanceController = require('../../controllers/maintenance.controller');
+const router = express.Router();
 
 // Register API sub-routes
 router.use('/sponsors', sponsorApiRoutes);
@@ -11,4 +10,4 @@ router.use('/sponsors', sponsorApiRoutes);
 // Maintenance API routes
 router.get('/maintenance/status', maintenanceController.getMaintenanceStatus);
 
-module.exports = router;
+export default router;

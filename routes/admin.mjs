@@ -5,12 +5,13 @@
  * and authorization middleware.
  */
 
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
+import { clubUpload, carnivalUpload, logoUpload, handleUploadError } from '../middleware/upload.mjs';
+import * as adminController from '../controllers/admin.controller.mjs';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
-const { clubUpload, carnivalUpload, logoUpload, handleUploadError } = require('../middleware/upload');
-const adminController = require('../controllers/admin.controller');
 
 // Apply admin authentication to all routes
 router.use(ensureAuthenticated);
@@ -72,8 +73,10 @@ const clubUpdateValidation = [
         .withMessage('Please provide a valid contact email')
 ];
 
+// Use clubUpload for full club management (logos + gallery + banners)
+// OR logoUpload for logo-only updates - depending on admin UI needs
 router.post('/clubs/:id/update', 
-    ...logoUpload,
+    clubUpload,  // Allows multiple file types for comprehensive club updates
     handleUploadError,
     clubUpdateValidation, 
     adminController.updateClub
@@ -114,7 +117,7 @@ const carnivalUpdateValidation = [
 ];
 
 router.post('/carnivals/:id/update',
-    ...carnivalUpload,
+    carnivalUpload,
     handleUploadError,
     carnivalUpdateValidation,
     adminController.updateCarnival
@@ -128,4 +131,4 @@ router.get('/audit-logs', adminController.getAuditLogs);
 router.get('/audit-logs/export', adminController.exportAuditLogs);
 router.get('/audit-logs/statistics', adminController.getAuditStatistics);
 
-module.exports = router;
+export default router;

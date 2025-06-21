@@ -1,12 +1,13 @@
-const express = require('express');
+import express from 'express';
+import { body } from 'express-validator';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { requiredEmail } from '../middleware/validation.mjs';
+import * as mainController from '../controllers/main.controller.mjs';
+import * as userGuideController from '../controllers/userGuide.controller.mjs';
+import * as maintenanceController from '../controllers/maintenance.controller.mjs';
+import * as comingSoonController from '../controllers/comingSoon.controller.mjs';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const { ensureAuthenticated } = require('../middleware/auth');
-const { requiredEmail } = require('../middleware/validation');
-const mainController = require('../controllers/main.controller');
-const userGuideController = require('../controllers/userGuide.controller');
-const maintenanceController = require('../controllers/maintenance.controller');
-const comingSoonController = require('../controllers/comingSoon.controller');
 
 // Maintenance routes (must be before other routes)
 router.get('/maintenance', (req, res, next) => {
@@ -104,4 +105,4 @@ router.get('/admin/stats', ensureAuthenticated, mainController.getStats);
 // User Guide for Club Delegates - now using proper controller
 router.get('/user-guide', ensureAuthenticated, userGuideController.getUserGuide);
 
-module.exports = router;
+export default router;

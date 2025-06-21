@@ -1,11 +1,10 @@
-const express = require('express');
-const { body } = require('express-validator');
-const { ensureAuthenticated } = require('../middleware/auth');
-const { carnivalUpload, handleUploadError } = require('../middleware/upload');
-const { organiserEmail } = require('../middleware/validation');
-const carnivalController = require('../controllers/carnival.controller');
-const upload = require('../middleware/upload');
-const { AUSTRALIAN_STATES } = require('../config/constants');
+import express from 'express';
+import { body } from 'express-validator';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
+import { organiserEmail } from '../middleware/validation.mjs';
+import * as carnivalController from '../controllers/carnival.controller.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
 
@@ -94,4 +93,4 @@ router.post('/:id/email-attendees', ensureAuthenticated, [
 // Show comprehensive player list for all clubs attending a carnival
 router.get('/:id/players', ensureAuthenticated, carnivalController.showAllPlayers);
 
-module.exports = router;
+export default router;
