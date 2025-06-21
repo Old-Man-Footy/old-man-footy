@@ -1,18 +1,26 @@
-require('dotenv').config();
+import 'dotenv/config'; // Modern way to load dotenv with ESM
 
-const express = require('express');
-const session = require('express-session');
-const SequelizeStore = require('connect-session-sequelize')(session.Store);
-const passport = require('./config/passport'); // Updated to use our config
-const flash = require('connect-flash');
-const path = require('path');
-const helmet = require('helmet');
-const expressLayouts = require('express-ejs-layouts');
-const methodOverride = require('method-override');
-const mySidelineService = require('./services/mySidelineIntegrationService');
-const { sequelize } = require('./models');
+import express from 'express';
+import session from 'express-session';
+import connectSessionSequelize from 'connect-session-sequelize';
+import passport from './config/passport.mjs';
+import flash from 'connect-flash';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import helmet from 'helmet';
+import expressLayouts from 'express-ejs-layouts';
+import methodOverride from 'method-override';
+import mySidelineService from './services/mySidelineIntegrationService.mjs';
+import { sequelize } from './models/index.mjs';
+
+// ES Module equivalents of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
+
+// Configure session store with proper ES Module import
+const SequelizeStore = connectSessionSequelize(session.Store);
 
 // Security middleware
 app.use(helmet({
@@ -28,7 +36,7 @@ app.use(helmet({
 
 // View engine setup
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', join(__dirname, 'views'));
 
 // Layout middleware (must come after view engine setup)
 app.use(expressLayouts);
@@ -38,7 +46,7 @@ app.set('layout extractScripts', false); // Disabled to allow individual page sc
 app.set('layout extractStyles', true);
 
 // Static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(join(__dirname, 'public')));
 
 // Body parsing middleware
 app.use(express.json());
@@ -81,11 +89,11 @@ app.use(passport.session());
 app.use(flash());
 
 // Maintenance mode middleware (must be after session but before routes)
-const { maintenanceMode } = require('./middleware/maintenance');
+const { maintenanceMode } = await import('./middleware/maintenance.mjs');
 app.use(maintenanceMode);
 
 // Coming soon mode middleware (must be after maintenance but before routes)
-const { comingSoonMode } = require('./middleware/comingSoon');
+const { comingSoonMode } = await import('./middleware/comingSoon.mjs');
 app.use(comingSoonMode);
 
 // Global variables for templates
@@ -97,10 +105,13 @@ app.use((req, res, next) => {
     next();
 });
 
-// Database connection and initialization
+/**
+ * Initialize database connection and setup
+ * @returns {Promise<boolean>} Success status
+ */
 async function initializeDatabase() {
     try {
-        const { initializeDatabase } = require('./config/database');
+        const { initializeDatabase } = await import('./config/database.mjs');
         await initializeDatabase();
         
         // Create session store table
@@ -136,29 +147,30 @@ async function initializeMySidelineSync() {
     }
 }
 
-// Routes
-const indexRoutes = require('./routes/index');
-const authRoutes = require('./routes/auth');
-const carnivalRoutes = require('./routes/carnivals');
-const carnivalClubRoutes = require('./routes/carnivalClubs');
-const carnivalSponsorRoutes = require('./routes/carnivalSponsors');
-const clubRoutes = require('./routes/clubs');
-const clubPlayerRoutes = require('./routes/clubPlayers');
-const sponsorRoutes = require('./routes/sponsors');
-const adminRoutes = require('./routes/admin');
-const apiRoutes = require('./routes/api');
+// Import routes using dynamic imports
+const indexRoutes = await import('./routes/index.mjs');
+const authRoutes = await import('./routes/auth.mjs');
+const carnivalRoutes = await import('./routes/carnivals.mjs');
+const carnivalClubRoutes = await import('./routes/carnivalClubs.mjs');
+const carnivalSponsorRoutes = await import('./routes/carnivalSponsors.mjs');
+const clubRoutes = await import('./routes/clubs.mjs');
+const clubPlayerRoutes = await import('./routes/clubPlayers.mjs');
+const sponsorRoutes = await import('./routes/sponsors.mjs');
+const adminRoutes = await import('./routes/admin.mjs');
+const apiRoutes = await import('./routes/api/index.mjs');
 
-app.use('/', indexRoutes);
-app.use('/auth', authRoutes);
-app.use('/carnivals', carnivalRoutes);
-app.use('/carnivals', carnivalClubRoutes);
-app.use('/carnival-sponsors', carnivalSponsorRoutes);
+// Mount routes
+app.use('/', indexRoutes.default);
+app.use('/auth', authRoutes.default);
+app.use('/carnivals', carnivalRoutes.default);
+app.use('/carnivals', carnivalClubRoutes.default);
+app.use('/carnival-sponsors', carnivalSponsorRoutes.default);
 // Mount specific routes before general ones
-app.use('/clubs/players', clubPlayerRoutes);
-app.use('/clubs', clubRoutes);
-app.use('/sponsors', sponsorRoutes);
-app.use('/admin', adminRoutes);
-app.use('/api', apiRoutes);
+app.use('/clubs/players', clubPlayerRoutes.default);
+app.use('/clubs', clubRoutes.default);
+app.use('/sponsors', sponsorRoutes.default);
+app.use('/admin', adminRoutes.default);
+app.use('/api', apiRoutes.default);
 
 // Error handling middleware
 app.use((req, res, next) => {
@@ -215,4 +227,4 @@ async function startServer() {
 // Start the server with the new sequence
 startServer();
 
-module.exports = app;
+export default app;
