@@ -9,20 +9,10 @@ RUN apk add --no-cache dumb-init
 WORKDIR /app
 
 # Test stage - for user testing and CI/CD pipelines
-FROM base AS test
+FROM browser-deps AS test
 ENV NODE_ENV=test
 
-# TEST STAGE: Install browser dependencies needed for testing
-# KEPT: Full browser support for comprehensive testing including visual regression tests
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    bash
+# TEST STAGE: Browser dependencies are inherited from browser-deps stage
 
 # Configure Playwright for test environment
 ENV PLAYWRIGHT_BROWSERS_PATH=0
