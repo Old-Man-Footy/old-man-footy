@@ -5,22 +5,20 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Carnival, Club, User, CarnivalClub, CarnivalSponsor, Sponsor } = require('../models');
-const { Op } = require('sequelize');
-const { validationResult } = require('express-validator');
-const { AUSTRALIAN_STATES } = require('../config/constants');
-const mySidelineService = require('../services/mySidelineIntegrationService');
-const emailService = require('../services/emailService');
-const ImageNamingService = require('../services/imageNamingService');
-const { sortSponsorsHierarchically } = require('../services/sponsorSortingService');
-const { sequelize } = require('../models');
+import { Carnival, Club, User, CarnivalClub, Sponsor, sequelize } from '../models/index.mjs';
+import { Op } from 'sequelize';
+import { validationResult } from 'express-validator';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import mySidelineService from '../services/mySidelineIntegrationService.mjs';
+import emailService from '../services/emailService.mjs';
+import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
 
 /**
  * Display list of all carnivals with filtering options
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const listCarnivals = async (req, res) => {
+export const listCarnivals = async (req, res) => {
     try {
         const { state, search, upcoming, mysideline, _submitted } = req.query;
         let whereClause = {}; // Remove isActive filter to show all carnivals
@@ -142,7 +140,7 @@ const listCarnivals = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showCarnival = async (req, res) => {
+export const showCarnival = async (req, res) => {
     try {
         const carnival = await Carnival.findByPk(req.params.id, {
             include: [
@@ -312,7 +310,7 @@ const showCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showCreateForm = async (req, res) => {
+export const showCreateForm = async (req, res) => {
     try {
         const states = AUSTRALIAN_STATES;
         
@@ -347,7 +345,7 @@ const showCreateForm = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const createCarnival = async (req, res) => {
+export const createCarnival = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -512,6 +510,7 @@ const createCarnival = async (req, res) => {
         }
 
         // Set comprehensive success message with important next steps
+        const wasMerged = carnival.lastMySidelineSync && carnival.claimedAt;
         if (wasMerged) {
             req.flash('success_msg', `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`);
             res.redirect(`/carnivals/${carnival.id}`);
@@ -533,7 +532,7 @@ const createCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showEditForm = async (req, res) => {
+export const showEditForm = async (req, res) => {
     try {
         const carnival = await Carnival.findByPk(req.params.id);
 
@@ -568,7 +567,7 @@ const showEditForm = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updateCarnival = async (req, res) => {
+export const updateCarnival = async (req, res) => {
     try {
         const carnival = await Carnival.findByPk(req.params.id);
 
@@ -692,7 +691,7 @@ const updateCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const deleteCarnival = async (req, res) => {
+export const deleteCarnival = async (req, res) => {
     try {
         const carnival = await Carnival.findByPk(req.params.id);
 
@@ -726,7 +725,7 @@ const deleteCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const takeOwnership = async (req, res) => {
+export const takeOwnership = async (req, res) => {
     try {
         // Use the Carnival model's takeOwnership method instead of mySidelineService
         const result = await Carnival.takeOwnership(req.params.id, req.user.id);
@@ -751,7 +750,7 @@ const takeOwnership = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const releaseOwnership = async (req, res) => {
+export const releaseOwnership = async (req, res) => {
     try {
         // Use the Carnival model's releaseOwnership method
         const result = await Carnival.releaseOwnership(req.params.id, req.user.id);
@@ -776,7 +775,7 @@ const releaseOwnership = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const syncMySideline = async (req, res) => {
+export const syncMySideline = async (req, res) => {
     try {
         // Check if user is admin/primary delegate
         if (!req.user.isPrimaryDelegate && !req.user.isAdmin) {
@@ -796,692 +795,10 @@ const syncMySideline = async (req, res) => {
     }
 };
 
-module.exports = {
-    // Original names for route compatibility
-    list: listCarnivals,
-    show: showCarnival,
-    getNew: showCreateForm,
-    postNew: createCarnival,
-    getEdit: showEditForm,
-    postEdit: updateCarnival,
-    delete: deleteCarnival,
-    takeOwnership,
-    releaseOwnership,
-    syncMySideline,
-    getUpcoming: async (req, res) => {
-        try {
-            const carnivals = await Carnival.findAll({
-                where: {
-                    date: { [Op.gte]: new Date() },
-                    isActive: true
-                },
-                include: [{
-                    model: User,
-                    as: 'creator',
-                    attributes: ['firstName', 'lastName']
-                }],
-                order: [['date', 'ASC']],
-                limit: 10
-            });
-
-            res.json({
-                success: true,
-                carnivals
-            });
-        } catch (error) {
-            console.error('Error fetching upcoming carnivals:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Error fetching upcoming carnivals'
-            });
-        }
-    },
-    
-    // Test-expected method names
-    getCarnivalsList: listCarnivals,
-    getCarnivalDetails: showCarnival,
-    createCarnival: createCarnival,
-    updateCarnival: updateCarnival,
-    deleteCarnival: deleteCarnival,
-    claimOwnership: takeOwnership,
-    triggerManualSync: async (req, res) => {
-        try {
-            // Check if user is admin/primary delegate
-            if (!req.user || (!req.user.isPrimaryDelegate && !req.user.isAdmin)) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Access denied. Only administrators can sync MySideline data.'
-                });
-            }
-
-            // Mock the service call for tests
-            if (process.env.NODE_ENV === 'test') {
-                // Simulate sync operation
-                const mySidelineService = require('../services/mySidelineService');
-                await mySidelineService.triggerManualSync();
-                
-                return res.json({
-                    success: true,
-                    message: 'Sync completed',
-                    newEvents: 0
-                });
-            }
-
-            // Call the manual sync method (fetchEvents) which maintains the same API
-            const result = await mySidelineService.fetchEvents();
-            
-            res.json({
-                success: true,
-                message: 'Sync completed',
-                newEvents: result.newEvents || 0
-            });
-
-        } catch (error) {
-            console.error('Error syncing MySideline:', error);
-            res.status(500).json({
-                success: false,
-                message: `Sync failed: ${error.message}`
-            });
-        }
-    },
-
-    /**
-     * Show carnival's sponsors management page
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     */
-    showCarnivalSponsors: async (req, res) => {
-        try {
-            const carnival = await Carnival.findByPk(req.params.id, {
-                include: [
-                    {
-                        model: User,
-                        as: 'creator',
-                        attributes: ['firstName', 'lastName', 'clubId']
-                    },
-                    {
-                        model: Sponsor,
-                        as: 'sponsors',
-                        where: { isActive: true },
-                        required: false,
-                        through: { attributes: [] }
-                    }
-                ]
-            });
-
-            if (!carnival) {
-                req.flash('error_msg', 'Carnival not found.');
-                return res.redirect('/carnivals');
-            }
-
-            // Check if user can edit this carnival (using async method for club delegate checking)
-            const canEdit = await carnival.canUserEditAsync(req.user);
-            if (!canEdit) {
-                req.flash('error_msg', 'You can only manage sponsors for carnivals hosted by your club.');
-                return res.redirect(`/carnivals/${carnival.id}`);
-            }
-
-            // Get club sponsors that can be linked to this carnival
-            let clubSponsors = [];
-            if (req.user.clubId) {
-                const club = await Club.findByPk(req.user.clubId, {
-                    include: [{
-                        model: Sponsor,
-                        as: 'sponsors',
-                        where: { isActive: true },
-                        required: false,
-                        through: { attributes: [] }
-                    }]
-                });
-                clubSponsors = club ? club.sponsors : [];
-            }
-
-            res.render('carnivals/sponsors', {
-                title: `Manage Sponsors - ${carnival.title}`,
-                carnival,
-                carnivalSponsors: carnival.sponsors || [],
-                clubSponsors,
-                additionalCSS: ['/styles/carnival.styles.css']
-            });
-        } catch (error) {
-            console.error('Error loading carnival sponsors:', error);
-            req.flash('error_msg', 'Error loading carnival sponsors.');
-            res.redirect(`/carnivals/${req.params.id}`);
-        }
-    },
-
-    /**
-     * Add sponsor to carnival
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     */
-    addSponsorToCarnival: async (req, res) => {
-        try {
-            const { id } = req.params;
-            const { sponsorId } = req.body;
-
-            const carnival = await Carnival.findByPk(id);
-
-            if (!carnival) {
-                req.flash('error_msg', 'Carnival not found.');
-                return res.redirect('/carnivals');
-            }
-
-            // Check if user can edit this carnival (using async method for club delegate checking)
-            const canEdit = await carnival.canUserEditAsync(req.user);
-            if (!canEdit) {
-                req.flash('error_msg', 'You can only manage sponsors for carnivals hosted by your club.');
-                return res.redirect(`/carnivals/${carnival.id}`);
-            }
-
-            const sponsor = await Sponsor.findByPk(sponsorId);
-            
-            if (!sponsor) {
-                req.flash('error_msg', 'Sponsor not found.');
-                return res.redirect(`/carnivals/${carnival.id}/sponsors`);
-            }
-
-            // Check if sponsor is already linked to this carnival
-            const existingSponsors = await carnival.getSponsors();
-            const isAlreadyLinked = existingSponsors.some(s => s.id === parseInt(sponsorId));
-            
-            if (isAlreadyLinked) {
-                req.flash('error_msg', 'This sponsor is already linked to this carnival.');
-                return res.redirect(`/carnivals/${carnival.id}/sponsors`);
-            }
-
-            // Check if sponsor is associated with user's club
-            if (req.user.clubId) {
-                const isClubSponsor = await sponsor.isAssociatedWithClub(req.user.clubId);
-                if (!isClubSponsor && !req.user.isAdmin) {
-                    req.flash('error_msg', 'You can only link sponsors that are associated with your club.');
-                    return res.redirect(`/carnivals/${carnival.id}/sponsors`);
-                }
-            }
-
-            // Add sponsor to carnival
-            await carnival.addSponsor(sponsor);
-
-            req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to this carnival!`);
-            res.redirect(`/carnivals/${carnival.id}/sponsors`);
-
-        } catch (error) {
-            console.error('Error adding sponsor to carnival:', error);
-            req.flash('error_msg', 'Error adding sponsor to carnival.');
-            res.redirect(`/carnivals/${req.params.id}/sponsors`);
-        }
-    },
-
-    /**
-     * Remove sponsor from carnival
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     */
-    removeSponsorFromCarnival: async (req, res) => {
-        try {
-            const { id, sponsorId } = req.params;
-
-            const carnival = await Carnival.findByPk(id);
-
-            if (!carnival) {
-                req.flash('error_msg', 'Carnival not found.');
-                return res.redirect('/carnivals');
-            }
-
-            // Check if user can edit this carnival (using async method for club delegate checking)
-            const canEdit = await carnival.canUserEditAsync(req.user);
-            if (!canEdit) {
-                req.flash('error_msg', 'You can only manage sponsors for carnivals hosted by your club.');
-                return res.redirect(`/carnivals/${carnival.id}`);
-            }
-
-            const sponsor = await Sponsor.findByPk(sponsorId);
-            
-            if (!sponsor) {
-                req.flash('error_msg', 'Sponsor not found.');
-                return res.redirect(`/carnivals/${carnival.id}/sponsors`);
-            }
-
-            // Remove sponsor from carnival
-            await carnival.removeSponsor(sponsor);
-
-            req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been removed from this carnival.`);
-            res.redirect(`/carnivals/${carnival.id}/sponsors`);
-
-        } catch (error) {
-            console.error('Error removing sponsor from carnival:', error);
-            req.flash('error_msg', 'Error removing sponsor from carnival.');
-            res.redirect(`/carnivals/${req.params.id}/sponsors`);
-        }
-    },
-
-    /**
-     * Send carnival information email to attendee clubs
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     */
-    sendEmailToAttendees: async (req, res) => {
-        try {
-            const carnival = await Carnival.findByPk(req.params.id, {
-                include: [
-                    {
-                        model: Club,
-                        as: 'attendingClubs',
-                        through: { 
-                            attributes: [],
-                            where: { isActive: true }
-                        },
-                        required: false
-                    },
-                    {
-                        model: User,
-                        as: 'creator',
-                        attributes: ['firstName', 'lastName']
-                    }
-                ]
-            });
-
-            if (!carnival) {
-                req.flash('error_msg', 'Carnival not found.');
-                return res.redirect('/carnivals');
-            }
-
-            // Check if user can edit this carnival (using async method for club delegate checking)
-            const canEdit = await carnival.canUserEditAsync(req.user);
-            if (!canEdit) {
-                req.flash('error_msg', 'You can only send emails for carnivals hosted by your club.');
-                return res.redirect(`/carnivals/${carnival.id}`);
-            }
-
-            // Check if there are any attendee clubs
-            if (!carnival.attendingClubs || carnival.attendingClubs.length === 0) {
-                req.flash('error_msg', 'No clubs are currently registered for this carnival.');
-                return res.redirect(`/carnivals/${carnival.id}`);
-            }
-
-            const { message } = req.body;
-            const senderName = `${req.user.firstName} ${req.user.lastName}`;
-
-            // Send emails to attendee clubs
-            const emailService = require('../services/emailService');
-            const result = await emailService.sendCarnivalInfoToAttendees(
-                carnival, 
-                carnival.attendingClubs, 
-                senderName, 
-                message || ''
-            );
-
-            if (result.success) {
-                req.flash('success_msg', result.message);
-            } else {
-                req.flash('error_msg', 'Failed to send emails to attendee clubs.');
-            }
-
-            res.redirect(`/carnivals/${carnival.id}`);
-
-        } catch (error) {
-            console.error('Error sending carnival emails to attendees:', error);
-            req.flash('error_msg', 'An error occurred while sending emails.');
-            res.redirect(`/carnivals/${req.params.id}`);
-        }
-    },
-
-    /**
-     * Show comprehensive player list for all clubs attending a carnival
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     */
-    showAllPlayers: async (req, res) => {
-        try {
-            const carnival = await Carnival.findByPk(req.params.id);
-
-            if (!carnival) {
-                req.flash('error_msg', 'Carnival not found.');
-                return res.redirect('/carnivals');
-            }
-
-            // Check if user can manage this carnival
-            const canManage = req.user && (
-                req.user.isAdmin || 
-                (carnival.createdByUserId === req.user.id) ||
-                (req.user.clubId && carnival.creator && carnival.creator.club && carnival.creator.club.id === req.user.clubId)
-            );
-
-            if (!canManage) {
-                req.flash('error_msg', 'You can only view player lists for carnivals you host.');
-                return res.redirect(`/carnivals/${carnival.id}`);
-            }
-
-            // Get all club registrations for this carnival with their players
-            const clubRegistrations = await CarnivalClub.findAll({
-                where: {
-                    carnivalId: carnival.id,
-                    isActive: true,
-                    approvalStatus: 'approved' // Only show approved clubs
-                },
-                include: [
-                    {
-                        model: Club,
-                        as: 'club',
-                        attributes: ['id', 'clubName', 'state', 'location']
-                    },
-                    {
-                        model: CarnivalClubPlayer,
-                        as: 'players',
-                        where: { isActive: true },
-                        required: false,
-                        include: [{
-                            model: ClubPlayer,
-                            as: 'clubPlayer',
-                            where: { isActive: true },
-                            attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shortsColour', 'email', 'phoneNumber']
-                        }]
-                    }
-                ],
-                order: [
-                    ['club', 'clubName', 'ASC'],
-                    ['players', 'clubPlayer', 'firstName', 'ASC'],
-                    ['players', 'clubPlayer', 'lastName', 'ASC']
-                ]
-            });
-
-            // Flatten the data structure for easier display
-            const allPlayers = [];
-            let totalPlayers = 0;
-            let totalMastersEligible = 0;
-
-            clubRegistrations.forEach(registration => {
-                if (registration.players && registration.players.length > 0) {
-                    registration.players.forEach(playerAssignment => {
-                        const player = playerAssignment.clubPlayer;
-                        const isMastersEligible = player.dateOfBirth ? 
-                            ClubPlayer.calculateAge(player.dateOfBirth) >= 35 : false;
-                        
-                        allPlayers.push({
-                            id: player.id,
-                            clubName: registration.club.clubName,
-                            clubState: registration.club.state,
-                            firstName: player.firstName,
-                            lastName: player.lastName,
-                            fullName: `${player.firstName} ${player.lastName}`,
-                            dateOfBirth: player.dateOfBirth,
-                            age: player.dateOfBirth ? ClubPlayer.calculateAge(player.dateOfBirth) : null,
-                            shortsColour: player.shortsColour || 'Not specified',
-                            attendanceStatus: playerAssignment.attendanceStatus,
-                            isMastersEligible,
-                            email: player.email,
-                            phoneNumber: player.phoneNumber
-                        });
-                        
-                        totalPlayers++;
-                        if (isMastersEligible) totalMastersEligible++;
-                    });
-                }
-            });
-
-            // Group players by club for summary stats
-            const clubSummary = {};
-            allPlayers.forEach(player => {
-                if (!clubSummary[player.clubName]) {
-                    clubSummary[player.clubName] = {
-                        total: 0,
-                        mastersEligible: 0,
-                        state: player.clubState
-                    };
-                }
-                clubSummary[player.clubName].total++;
-                if (player.isMastersEligible) {
-                    clubSummary[player.clubName].mastersEligible++;
-                }
-            });
-
-            res.render('carnivals/all-players', {
-                title: `All Players - ${carnival.title}`,
-                carnival,
-                allPlayers,
-                clubSummary,
-                totalPlayers,
-                totalMastersEligible,
-                totalClubs: Object.keys(clubSummary).length,
-                additionalCSS: ['/styles/carnival.styles.css']
-            });
-        } catch (error) {
-            console.error('Error loading carnival player list:', error);
-            req.flash('error_msg', 'Error loading player list.');
-            res.redirect(`/carnivals/${req.params.id}`);
-        }
-    },
-
-    /**
-     * Merge MySideline carnival with existing carnival
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     */
-    mergeCarnival: async (req, res) => {
-        try {
-            const { targetCarnivalId } = req.body;
-            const sourceCarnivalId = req.params.id;
-
-            // Validate input
-            if (!targetCarnivalId) {
-                req.flash('error_msg', 'Please select a carnival to merge into.');
-                return res.redirect(`/carnivals/${sourceCarnivalId}`);
-            }
-
-            // Find both carnivals with transaction
-            const transaction = await sequelize.transaction();
-
-            try {
-                const sourceCarnival = await Carnival.findByPk(sourceCarnivalId, { transaction });
-                const targetCarnival = await Carnival.findByPk(targetCarnivalId, { transaction });
-
-                if (!sourceCarnival || !targetCarnival) {
-                    await transaction.rollback();
-                    req.flash('error_msg', 'One or both carnivals not found.');
-                    return res.redirect('/carnivals');
-                }
-
-                // Admin validation checks - admins can merge any carnivals
-                const isAdmin = req.user.isAdmin;
-                
-                // For non-admin users, enforce ownership checks
-                if (!isAdmin) {
-                    if (sourceCarnival.createdByUserId !== req.user.id) {
-                        await transaction.rollback();
-                        req.flash('error_msg', 'You can only merge carnivals you own.');
-                        return res.redirect(`/carnivals/${sourceCarnivalId}`);
-                    }
-
-                    if (targetCarnival.createdByUserId !== req.user.id) {
-                        await transaction.rollback();
-                        req.flash('error_msg', 'You can only merge into carnivals you own.');
-                        return res.redirect(`/carnivals/${sourceCarnivalId}`);
-                    }
-                }
-
-                // Business logic validation (applies to all users including admins)
-                if (!sourceCarnival.lastMySidelineSync) {
-                    await transaction.rollback();
-                    req.flash('error_msg', 'Only MySideline carnivals can be merged.');
-                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
-                }
-
-                if (targetCarnival.lastMySidelineSync) {
-                    await transaction.rollback();
-                    req.flash('error_msg', 'Cannot merge into a MySideline carnival.');
-                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
-                }
-
-                if (!sourceCarnival.isActive || !targetCarnival.isActive) {
-                    await transaction.rollback();
-                    req.flash('error_msg', 'Both carnivals must be active to merge.');
-                    return res.redirect(`/carnivals/${sourceCarnivalId}`);
-                }
-
-                // Perform the merge
-                const mergeData = {};
-
-                // Copy MySideline backend fields (overwrite existing values)
-                const mySidelineFields = [
-                    'mySidelineTitle', 'mySidelineAddress', 'mySidelineDate', 
-                    'lastMySidelineSync', 'registrationLink'
-                ];
-
-                mySidelineFields.forEach(field => {
-                    if (sourceCarnival[field] !== null && sourceCarnival[field] !== undefined) {
-                        mergeData[field] = sourceCarnival[field];
-                    }
-                });
-
-                // Copy other fields only if target field is empty
-                const mergableFields = [
-                    'locationAddress', 'locationAddressPart1', 'locationAddressPart2',
-                    'locationAddressPart3', 'locationAddressPart4', 'organiserContactName',
-                    'organiserContactEmail', 'organiserContactPhone', 'scheduleDetails',
-                    'feesDescription', 'callForVolunteers', 'clubLogoURL',
-                    'promotionalImageURL', 'socialMediaFacebook', 'socialMediaInstagram',
-                    'socialMediaTwitter', 'socialMediaWebsite', 'drawFileURL',
-                    'drawFileName', 'drawTitle', 'drawDescription'
-                ];
-
-                mergableFields.forEach(field => {
-                    if ((!targetCarnival[field] || targetCarnival[field] === '') && 
-                        sourceCarnival[field] && sourceCarnival[field] !== '') {
-                        mergeData[field] = sourceCarnival[field];
-                    }
-                });
-
-                // Update target carnival
-                await targetCarnival.update(mergeData, { transaction });
-
-                // Transfer all registered attendees from source to target carnival
-                const sourceAttendees = await CarnivalClub.findAll({
-                    where: {
-                        carnivalId: sourceCarnivalId,
-                        isActive: true
-                    },
-                    transaction
-                });
-
-                console.log(`🔄 Found ${sourceAttendees.length} attendee registrations to transfer from source carnival`);
-
-                // Transfer each attendee registration to the target carnival
-                for (const sourceAttendee of sourceAttendees) {
-                    // Check if the club is already registered for the target carnival
-                    const existingRegistration = await CarnivalClub.findOne({
-                        where: {
-                            carnivalId: targetCarnivalId,
-                            clubId: sourceAttendee.clubId,
-                            isActive: true
-                        },
-                        transaction
-                    });
-
-                    if (existingRegistration) {
-                        // Club already registered for target - deactivate source registration
-                        await sourceAttendee.update({ 
-                            isActive: false,
-                            updatedAt: new Date()
-                        }, { transaction });
-                        
-                        console.log(`⚠️  Club ${sourceAttendee.clubId} already registered for target carnival - deactivated source registration`);
-                    } else {
-                        // Transfer the registration to the target carnival
-                        // Get the highest display order for target carnival
-                        const maxDisplayOrder = await CarnivalClub.max('displayOrder', {
-                            where: {
-                                carnivalId: targetCarnivalId,
-                                isActive: true
-                            },
-                            transaction
-                        }) || 0;
-
-                        // Create new registration for target carnival
-                        const newRegistration = await CarnivalClub.create({
-                            carnivalId: targetCarnivalId,
-                            clubId: sourceAttendee.clubId,
-                            registrationDate: sourceAttendee.registrationDate,
-                            playerCount: sourceAttendee.playerCount,
-                            teamName: sourceAttendee.teamName,
-                            contactPerson: sourceAttendee.contactPerson,
-                            contactEmail: sourceAttendee.contactEmail,
-                            contactPhone: sourceAttendee.contactPhone,
-                            specialRequirements: sourceAttendee.specialRequirements,
-                            registrationNotes: `${sourceAttendee.registrationNotes || ''} [Transferred from merged MySideline carnival "${sourceCarnival.title}"]`.trim(),
-                            isActive: true,
-                            isPaid: sourceAttendee.isPaid,
-                            paymentAmount: sourceAttendee.paymentAmount,
-                            paymentDate: sourceAttendee.paymentDate,
-                            displayOrder: maxDisplayOrder + 1,
-                            approvalStatus: sourceAttendee.approvalStatus,
-                            approvedAt: sourceAttendee.approvedAt,
-                            approvedByUserId: sourceAttendee.approvedByUserId,
-                            rejectionReason: sourceAttendee.rejectionReason
-                        }, { transaction });
-
-                        // Transfer any associated player assignments
-                        const playerAssignments = await CarnivalClubPlayer.findAll({
-                            where: {
-                                carnivalClubId: sourceAttendee.id,
-                                isActive: true
-                            },
-                            transaction
-                        });
-
-                        for (const playerAssignment of playerAssignments) {
-                            await CarnivalClubPlayer.create({
-                                carnivalClubId: newRegistration.id,
-                                clubPlayerId: playerAssignment.clubPlayerId,
-                                attendanceStatus: playerAssignment.attendanceStatus,
-                                addedAt: playerAssignment.addedAt,
-                                isActive: true
-                            }, { transaction });
-
-                            // Deactivate the old player assignment
-                            await playerAssignment.update({
-                                isActive: false,
-                                updatedAt: new Date()
-                            }, { transaction });
-                        }
-
-                        // Deactivate the source registration
-                        await sourceAttendee.update({ 
-                            isActive: false,
-                            updatedAt: new Date()
-                        }, { transaction });
-
-                        console.log(`✅ Transferred club ${sourceAttendee.clubId} registration with ${playerAssignments.length} player assignments to target carnival`);
-                    }
-                }
-
-                // Deactivate source carnival
-                await sourceCarnival.update({ 
-                    isActive: false,
-                    updatedAt: new Date()
-                }, { transaction });
-
-                await transaction.commit();
-
-                // Log the merge for audit purposes - include admin info if applicable
-                const userInfo = isAdmin ? `admin ${req.user.email}` : `user ${req.user.id}`;
-                console.log(`🔄 Carnival merge completed: "${sourceCarnival.title}" (ID: ${sourceCarnivalId}) merged into "${targetCarnival.title}" (ID: ${targetCarnivalId}) by ${userInfo}`);
-
-                const successMessage = isAdmin 
-                    ? `Admin merge successful. "${sourceCarnival.title}" has been merged into "${targetCarnival.title}" and has been deactivated.`
-                    : `Merge successful. "${sourceCarnival.title}" has been merged into "${targetCarnival.title}" and has been deactivated.`;
-                
-                req.flash('success_msg', successMessage);
-                res.redirect(`/carnivals/${targetCarnivalId}`);
-
-            } catch (mergeError) {
-                await transaction.rollback();
-                throw mergeError;
-            }
-
-        } catch (error) {
-            console.error('Error merging carnivals:', error);
-            req.flash('error_msg', error.message || 'An error occurred while merging carnivals.');
-            res.redirect(`/carnivals/${req.params.id}`);
-        }
-    }
-};
+// Compatibility aliases
+export const list = listCarnivals;
+export const show = showCarnival;
+export const getNew = showCreateForm;
+export const postNew = createCarnival;
+export const getEdit = showEditForm;
+export const postEdit = updateCarnival;

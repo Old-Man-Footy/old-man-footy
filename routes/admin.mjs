@@ -8,7 +8,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import { clubUpload, carnivalUpload, logoUpload, handleUploadError } from '../middleware/upload.mjs';
+import { clubUpload, carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
 import * as adminController from '../controllers/admin.controller.mjs';
 
 const router = express.Router();

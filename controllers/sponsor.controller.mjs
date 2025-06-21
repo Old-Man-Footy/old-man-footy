@@ -5,18 +5,18 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Sponsor, Club, User, Carnival } = require('../models');
-const { Op } = require('sequelize');
-const { validationResult } = require('express-validator');
-const ImageNamingService = require('../services/imageNamingService');
-const { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } = require('../config/constants');
+import { Sponsor, Club, User, Carnival } from '../models/index.mjs';
+import { Op } from 'sequelize';
+import { validationResult } from 'express-validator';
+import ImageNamingService from '../services/imageNamingService.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 /**
  * Display public sponsor listings with search and filter options
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showSponsorListings = async (req, res) => {
+export const showSponsorListings = async (req, res) => {
     try {
         const { search, state, businessType } = req.query;
         
@@ -80,7 +80,7 @@ const showSponsorListings = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showSponsorProfile = async (req, res) => {
+export const showSponsorProfile = async (req, res) => {
     try {
         const { id } = req.params;
         console.log(`showSponsorProfile called with ID: ${id}`);
@@ -133,7 +133,7 @@ const showSponsorProfile = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showCreateSponsor = async (req, res) => {
+export const showCreateSponsor = async (req, res) => {
     try {
         if (!req.user || !req.user.isAdmin) {
             req.flash('error_msg', 'Access denied. Admin privileges required.');
@@ -167,7 +167,7 @@ const showCreateSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const createSponsor = async (req, res) => {
+export const createSponsor = async (req, res) => {
     try {
         if (!req.user || !req.user.isAdmin) {
             req.flash('error_msg', 'Access denied. Admin privileges required.');
@@ -259,7 +259,7 @@ const createSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showEditSponsor = async (req, res) => {
+export const showEditSponsor = async (req, res) => {
     try {
         if (!req.user || !req.user.isAdmin) {
             req.flash('error_msg', 'Access denied. Admin privileges required.');
@@ -304,7 +304,7 @@ const showEditSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updateSponsor = async (req, res) => {
+export const updateSponsor = async (req, res) => {
     try {
         if (!req.user || !req.user.isAdmin) {
             req.flash('error_msg', 'Access denied. Admin privileges required.');
@@ -404,7 +404,7 @@ const updateSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const deleteSponsor = async (req, res) => {
+export const deleteSponsor = async (req, res) => {
     try {
         if (!req.user || !req.user.isAdmin) {
             return res.status(403).json({
@@ -446,7 +446,7 @@ const deleteSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const toggleSponsorStatus = async (req, res) => {
+export const toggleSponsorStatus = async (req, res) => {
     try {
         if (!req.user || !req.user.isAdmin) {
             return res.status(403).json({
@@ -488,7 +488,7 @@ const toggleSponsorStatus = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const checkDuplicateSponsor = async (req, res) => {
+export const checkDuplicateSponsor = async (req, res) => {
     try {
         const { sponsorName } = req.body;
         
@@ -599,15 +599,3 @@ function levenshteinDistance(str1, str2) {
     
     return matrix[str2.length][str1.length];
 }
-
-module.exports = {
-    showSponsorListings,
-    showSponsorProfile,
-    showCreateSponsor,
-    createSponsor,
-    showEditSponsor,
-    updateSponsor,
-    deleteSponsor,
-    toggleSponsorStatus,
-    checkDuplicateSponsor
-};

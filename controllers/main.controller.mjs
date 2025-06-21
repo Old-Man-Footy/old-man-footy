@@ -5,17 +5,18 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Carnival, Club, User, EmailSubscription } = require('../models');
-const { Op } = require('sequelize');
-const emailService = require('../services/emailService');
-const carouselImageService = require('../services/carouselImageService');
-const { AUSTRALIAN_STATES, AUSTRALIAN_STATE_NAMES } = require('../config/constants');
-const crypto = require('crypto');
+import { Carnival, Club, User, EmailSubscription, ClubPlayer, CarnivalClub } from '../models/index.mjs';
+import { Op } from 'sequelize';
+import emailService from '../services/emailService.mjs';
+import carouselImageService from '../services/carouselImageService.mjs';
+import { AUSTRALIAN_STATES, AUSTRALIAN_STATE_NAMES } from '../config/constants.mjs';
+import crypto from 'crypto';
+import { validationResult } from 'express-validator';
 
 /**
  * Display homepage with upcoming carnivals
  */
-const getIndex = async (req, res) => {
+export const getIndex = async (req, res) => {
     try {
         const upcomingCarnivals = await Carnival.findAll({
             where: {
@@ -85,7 +86,7 @@ const getIndex = async (req, res) => {
 /**
  * Display user dashboard
  */
-const getDashboard = async (req, res) => {
+export const getDashboard = async (req, res) => {
     try {
         // Load user with full club information
         const userWithClub = await User.findByPk(req.user.id, {
@@ -108,7 +109,6 @@ const getDashboard = async (req, res) => {
         // Get player count for user's club
         let playerCount = 0;
         if (userWithClub.clubId) {
-            const { ClubPlayer } = require('../models');
             playerCount = await ClubPlayer.count({
                 where: {
                     clubId: userWithClub.clubId,
@@ -120,7 +120,6 @@ const getDashboard = async (req, res) => {
         // Get carnivals the user's club is registered to attend (both upcoming and past)
         let attendingCarnivals = [];
         if (userWithClub.clubId) {
-            const { CarnivalClub } = require('../models');
             const carnivalRegistrations = await CarnivalClub.findAll({
                 where: {
                     clubId: userWithClub.clubId,
@@ -222,7 +221,7 @@ const getDashboard = async (req, res) => {
 /**
  * Display about page
  */
-const getAbout = (req, res) => {
+export const getAbout = (req, res) => {
     res.render('about', { 
         title: 'About Old Man Footy',
         additionalCSS: []
@@ -232,7 +231,7 @@ const getAbout = (req, res) => {
 /**
  * Handle email subscription with bot protection
  */
-const postSubscribe = async (req, res) => {
+export const postSubscribe = async (req, res) => {
     try {
         // Add defensive check for req.body
         if (!req.body) {
@@ -399,7 +398,7 @@ const postSubscribe = async (req, res) => {
 /**
  * Display unsubscribe page
  */
-const getUnsubscribe = async (req, res) => {
+export const getUnsubscribe = async (req, res) => {
     try {
         const { token } = req.params;
         
@@ -440,7 +439,7 @@ const getUnsubscribe = async (req, res) => {
 /**
  * Process unsubscribe request
  */
-const postUnsubscribe = async (req, res) => {
+export const postUnsubscribe = async (req, res) => {
     try {
         const { email } = req.body;
 
@@ -473,7 +472,7 @@ const postUnsubscribe = async (req, res) => {
 /**
  * Display admin statistics
  */
-const getStats = async (req, res) => {
+export const getStats = async (req, res) => {
     try {
         const stats = {
             totalUsers: await User.count(),
@@ -500,7 +499,7 @@ const getStats = async (req, res) => {
 /**
  * Send newsletter to subscribers
  */
-const sendNewsletter = async (req, res) => {
+export const sendNewsletter = async (req, res) => {
     try {
         const { subject, content } = req.body;
 
@@ -534,7 +533,7 @@ const sendNewsletter = async (req, res) => {
 /**
  * Display contact page
  */
-const getContact = async (req, res) => {
+export const getContact = async (req, res) => {
     try {
         let userWithClub = null;
         
@@ -581,9 +580,8 @@ const getContact = async (req, res) => {
 /**
  * Handle contact form submission
  */
-const postContact = async (req, res) => {
+export const postContact = async (req, res) => {
     try {
-        const { validationResult } = require('express-validator');
         const errors = validationResult(req);
         
         if (!errors.isEmpty()) {
@@ -609,7 +607,6 @@ const postContact = async (req, res) => {
 
         // Send contact email using the email service
         try {
-            const emailService = require('../services/emailService');
             await emailService.sendContactFormEmail({
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
@@ -667,17 +664,4 @@ const postContact = async (req, res) => {
             additionalCSS: []
         });
     }
-};
-
-module.exports = {
-    getIndex,
-    getDashboard,
-    getAbout,
-    postSubscribe,
-    getUnsubscribe,
-    postUnsubscribe,
-    getStats,
-    sendNewsletter,
-    getContact,
-    postContact
 };

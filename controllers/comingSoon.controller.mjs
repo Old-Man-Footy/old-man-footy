@@ -5,10 +5,10 @@
 
 /**
  * Display coming soon page
- * @param {Object} req - Express request object
+ * @param {Object} _req - Express request object
  * @param {Object} res - Express response object
  */
-const showComingSoonPage = (req, res) => {
+export const showComingSoonPage = (_req, res) => {
   const comingSoonData = {
     title: 'Coming Soon - Old Man Footy',
     heading: 'Something Exciting is Coming!',
@@ -33,16 +33,11 @@ const showComingSoonPage = (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const getComingSoonStatus = (req, res) => {
+export const getComingSoonStatus = (req, res) => {
   const isComingSoonMode = process.env.FEATURE_COMING_SOON_MODE === 'true';
   
   res.json({
     comingSoonMode: isComingSoonMode,
     message: isComingSoonMode ? 'Site is currently in coming soon mode' : 'Site is live and operational'
   });
-};
-
-module.exports = {
-  showComingSoonPage,
-  getComingSoonStatus
 };

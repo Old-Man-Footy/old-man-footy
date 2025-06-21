@@ -6,16 +6,16 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { CarnivalClub, Carnival, Club, User, ClubPlayer, CarnivalClubPlayer } = require('../models');
-const { Op } = require('sequelize');
-const { validationResult } = require('express-validator');
+import { CarnivalClub, Carnival, Club, ClubPlayer, CarnivalClubPlayer } from '../models/index.mjs';
+import { Op } from 'sequelize';
+import { validationResult } from 'express-validator';
 
 /**
  * Show carnival attendees management page (for carnival organizers)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showCarnivalAttendees = async (req, res) => {
+export const showCarnivalAttendees = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const user = req.user;
@@ -77,7 +77,7 @@ const showCarnivalAttendees = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showAddClubToCarnival = async (req, res) => {
+export const showAddClubToCarnival = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const user = req.user;
@@ -133,7 +133,7 @@ const showAddClubToCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const registerClubForCarnival = async (req, res) => {
+export const registerClubForCarnival = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const user = req.user;
@@ -232,7 +232,7 @@ const registerClubForCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showEditRegistration = async (req, res) => {
+export const showEditRegistration = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const user = req.user;
@@ -288,7 +288,7 @@ const showEditRegistration = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updateRegistration = async (req, res) => {
+export const updateRegistration = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const user = req.user;
@@ -375,7 +375,7 @@ const updateRegistration = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const removeClubFromCarnival = async (req, res) => {
+export const removeClubFromCarnival = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const user = req.user;
@@ -438,7 +438,7 @@ const removeClubFromCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const reorderAttendingClubs = async (req, res) => {
+export const reorderAttendingClubs = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const { clubOrder } = req.body; // Array of registration IDs in new order
@@ -499,7 +499,7 @@ const reorderAttendingClubs = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const registerMyClubForCarnival = async (req, res) => {
+export const registerMyClubForCarnival = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const user = req.user;
@@ -613,7 +613,7 @@ const registerMyClubForCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const unregisterMyClubFromCarnival = async (req, res) => {
+export const unregisterMyClubFromCarnival = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const user = req.user;
@@ -691,7 +691,7 @@ const unregisterMyClubFromCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showCarnivalClubPlayers = async (req, res) => {
+export const showCarnivalClubPlayers = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const user = req.user;
@@ -767,7 +767,7 @@ const showCarnivalClubPlayers = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showAddPlayersToRegistration = async (req, res) => {
+export const showAddPlayersToRegistration = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const user = req.user;
@@ -843,7 +843,7 @@ const showAddPlayersToRegistration = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const addPlayersToRegistration = async (req, res) => {
+export const addPlayersToRegistration = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const user = req.user;
@@ -925,7 +925,7 @@ const addPlayersToRegistration = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const removePlayerFromRegistration = async (req, res) => {
+export const removePlayerFromRegistration = async (req, res) => {
     try {
         const { carnivalId, registrationId, assignmentId } = req.params;
         const user = req.user;
@@ -988,7 +988,7 @@ const removePlayerFromRegistration = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updatePlayerAttendanceStatus = async (req, res) => {
+export const updatePlayerAttendanceStatus = async (req, res) => {
     try {
         const { carnivalId, registrationId, assignmentId } = req.params;
         const user = req.user;
@@ -1059,7 +1059,7 @@ const updatePlayerAttendanceStatus = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showMyClubPlayersForCarnival = async (req, res) => {
+export const showMyClubPlayersForCarnival = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const user = req.user;
@@ -1148,7 +1148,7 @@ const showMyClubPlayersForCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const addPlayersToMyClubRegistration = async (req, res) => {
+export const addPlayersToMyClubRegistration = async (req, res) => {
     try {
         const { carnivalId } = req.params;
         const user = req.user;
@@ -1222,7 +1222,7 @@ const addPlayersToMyClubRegistration = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const approveClubRegistration = async (req, res) => {
+export const approveClubRegistration = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const user = req.user;
@@ -1309,7 +1309,7 @@ const approveClubRegistration = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const rejectClubRegistration = async (req, res) => {
+export const rejectClubRegistration = async (req, res) => {
     try {
         const { carnivalId, registrationId } = req.params;
         const { rejectionReason } = req.body;
@@ -1391,26 +1391,4 @@ const rejectClubRegistration = async (req, res) => {
             message: 'Error rejecting registration.'
         });
     }
-};
-
-module.exports = {
-    showCarnivalAttendees,
-    showAddClubToCarnival,
-    registerClubForCarnival,
-    showEditRegistration,
-    updateRegistration,
-    removeClubFromCarnival,
-    reorderAttendingClubs,
-    registerMyClubForCarnival,
-    unregisterMyClubFromCarnival,
-    // New player management functions
-    showCarnivalClubPlayers,
-    showAddPlayersToRegistration,
-    addPlayersToRegistration,
-    removePlayerFromRegistration,
-    updatePlayerAttendanceStatus,
-    showMyClubPlayersForCarnival,
-    addPlayersToMyClubRegistration,
-    approveClubRegistration,
-    rejectClubRegistration
 };

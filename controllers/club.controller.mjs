@@ -5,19 +5,22 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { Club, User, Carnival, Sponsor, ClubAlternateName } = require('../models');
-const { Op } = require('sequelize');
-const { validationResult } = require('express-validator');
-const ImageNamingService = require('../services/imageNamingService');
-const sponsorSortingService = require('../services/sponsorSortingService');
-const { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } = require('../config/constants');
+import { Club, User, Carnival, Sponsor, ClubAlternateName, CarnivalClub, ClubSponsor, sequelize } from '../models/index.mjs';
+import { Op } from 'sequelize';
+import { validationResult } from 'express-validator';
+import ImageNamingService from '../services/imageNamingService.mjs';
+import sponsorSortingService from '../services/sponsorSortingService.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
+import emailService from '../services/emailService.mjs';
+import path from 'path';
+import fs from 'fs/promises';
 
 /**
  * Display public club listings with search and filter options
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showClubListings = async (req, res) => {
+export const showClubListings = async (req, res) => {
     try {
         const { search, state } = req.query;
         
@@ -89,7 +92,7 @@ const showClubListings = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showClubProfile = async (req, res) => {
+export const showClubProfile = async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -162,7 +165,6 @@ const showClubProfile = async (req, res) => {
         });
 
         // Get carnivals this club is registered to attend
-        const { CarnivalClub } = require('../models');
         const attendingCarnivals = await CarnivalClub.findAll({
             where: {
                 clubId: club.id,
@@ -233,7 +235,7 @@ const showClubProfile = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showClubManagement = async (req, res) => {
+export const showClubManagement = async (req, res) => {
     try {
         const user = req.user;
         
@@ -299,7 +301,7 @@ const showClubManagement = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updateClubProfile = async (req, res) => {
+export const updateClubProfile = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -389,7 +391,7 @@ const updateClubProfile = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const getClubImages = async (req, res) => {
+export const getClubImages = async (req, res) => {
     try {
         const { clubId } = req.params;
         const { imageType } = req.query;
@@ -427,7 +429,7 @@ const getClubImages = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const deleteClubImage = async (req, res) => {
+export const deleteClubImage = async (req, res) => {
     try {
         const { clubId, filename } = req.params;
 
@@ -452,7 +454,6 @@ const deleteClubImage = async (req, res) => {
         const imagePath = ImageNamingService.getRelativePath(parsed.entityType, parsed.imageType);
         const fullPath = path.join(imagePath, filename);
         
-        const fs = require('fs').promises;
         await fs.unlink(path.join('uploads', fullPath));
 
         // If this was the club's logo, update the database
@@ -481,7 +482,7 @@ const deleteClubImage = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showClubSponsors = async (req, res) => {
+export const showClubSponsors = async (req, res) => {
     try {
         const user = req.user;
         
@@ -533,7 +534,7 @@ const showClubSponsors = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showAddSponsor = async (req, res) => {
+export const showAddSponsor = async (req, res) => {
     try {
         const user = req.user;
         
@@ -592,7 +593,7 @@ const showAddSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const addSponsorToClub = async (req, res) => {
+export const addSponsorToClub = async (req, res) => {
     try {
         const user = req.user;
         
@@ -702,7 +703,7 @@ const addSponsorToClub = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const removeSponsorFromClub = async (req, res) => {
+export const removeSponsorFromClub = async (req, res) => {
     try {
         const user = req.user;
         const { sponsorId } = req.params;
@@ -751,7 +752,7 @@ const removeSponsorFromClub = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showClubAlternateNames = async (req, res) => {
+export const showClubAlternateNames = async (req, res) => {
     try {
         const user = req.user;
         
@@ -793,7 +794,7 @@ const showClubAlternateNames = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const addAlternateName = async (req, res) => {
+export const addAlternateName = async (req, res) => {
     try {
         const user = req.user;
         const { alternateName } = req.body;
@@ -860,7 +861,7 @@ const addAlternateName = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updateAlternateName = async (req, res) => {
+export const updateAlternateName = async (req, res) => {
     try {
         const user = req.user;
         const { id } = req.params;
@@ -933,7 +934,7 @@ const updateAlternateName = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const deleteAlternateName = async (req, res) => {
+export const deleteAlternateName = async (req, res) => {
     try {
         const user = req.user;
         const { id } = req.params;
@@ -982,7 +983,7 @@ const deleteAlternateName = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const reorderClubSponsors = async (req, res) => {
+export const reorderClubSponsors = async (req, res) => {
     try {
         const user = req.user;
         const { sponsorOrder } = req.body; // Array of sponsor IDs in new order
@@ -1042,7 +1043,7 @@ const reorderClubSponsors = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const getCreateOnBehalf = async (req, res) => {
+export const getCreateOnBehalf = async (req, res) => {
     try {
         // Only allow club delegates and admins to create clubs on behalf of others
         if (!req.user.clubId && !req.user.isAdmin) {
@@ -1070,7 +1071,7 @@ const getCreateOnBehalf = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const postCreateOnBehalf = async (req, res) => {
+export const postCreateOnBehalf = async (req, res) => {
     try {
         // Validate authorization
         if (!req.user.clubId && !req.user.isAdmin) {
@@ -1134,7 +1135,6 @@ const postCreateOnBehalf = async (req, res) => {
         });
 
         // Send ownership invitation email
-        const emailService = require('../services/emailService');
         await emailService.sendClubOwnershipInvitation(
             newClub,
             req.user,
@@ -1164,7 +1164,7 @@ const postCreateOnBehalf = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const getClaimOwnership = async (req, res) => {
+export const getClaimOwnership = async (req, res) => {
     try {
         const club = await Club.findByPk(req.params.id);
 
@@ -1209,7 +1209,7 @@ const getClaimOwnership = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const postClaimOwnership = async (req, res) => {
+export const postClaimOwnership = async (req, res) => {
     try {
         const club = await Club.findByPk(req.params.id);
 
@@ -1249,352 +1249,11 @@ const postClaimOwnership = async (req, res) => {
 };
 
 /**
- * Create a new club (for users without clubs)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-const createClub = async (req, res) => {
-    try {
-        const user = req.user;
-        
-        // Ensure user doesn't already have a club
-        if (user.clubId) {
-            req.flash('error_msg', 'You are already associated with a club. You can only be a member of one club at a time.');
-            return res.redirect('/clubs/manage');
-        }
-
-        // Check if this is actually a form submission (not just a page load)
-        if (req.method !== 'POST') {
-            req.flash('error_msg', 'Invalid request method.');
-            return res.redirect('/clubs/manage');
-        }
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            // Log the specific validation errors for debugging
-            console.error('Club creation validation errors:', errors.array());
-            
-            // Get available clubs that user could potentially join
-            const availableClubs = await Club.findAll({
-                where: {
-                    isActive: true,
-                    isPubliclyListed: true
-                },
-                include: [{
-                    model: User,
-                    as: 'delegates',
-                    where: { isActive: true },
-                    required: false,
-                    attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
-                }],
-                order: [['clubName', 'ASC']]
-            });
-
-            // Get clubs that were created on behalf of others and might match this user's email
-            const claimableClubs = await Club.findAll({
-                where: {
-                    createdByProxy: true,
-                    inviteEmail: user.email,
-                    isActive: true
-                }
-            });
-
-            // Render the form with errors and preserved data instead of redirecting
-            return res.render('clubs/club-options', {
-                title: 'Join or Create a Club',
-                user,
-                availableClubs,
-                claimableClubs,
-                states: AUSTRALIAN_STATES,
-                errors: errors.array(),
-                formData: req.body,
-                additionalCSS: ['/styles/club.styles.css']
-            });
-        }
-
-        // Validate required fields are present and not empty
-        const { clubName, state, location, description } = req.body;
-
-        if (!clubName || !clubName.trim()) {
-            // Get clubs data for re-rendering
-            const availableClubs = await Club.findAll({
-                where: { isActive: true, isPubliclyListed: true },
-                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
-                order: [['clubName', 'ASC']]
-            });
-            const claimableClubs = await Club.findAll({
-                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
-            });
-
-            return res.render('clubs/club-options', {
-                title: 'Join or Create a Club',
-                user,
-                availableClubs,
-                claimableClubs,
-                states: AUSTRALIAN_STATES,
-                errors: [{ msg: 'Club name is required.' }],
-                formData: req.body,
-                additionalCSS: ['/styles/club.styles.css']
-            });
-        }
-
-        if (!state) {
-            // Get clubs data for re-rendering
-            const availableClubs = await Club.findAll({
-                where: { isActive: true, isPubliclyListed: true },
-                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
-                order: [['clubName', 'ASC']]
-            });
-            const claimableClubs = await Club.findAll({
-                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
-            });
-
-            return res.render('clubs/club-options', {
-                title: 'Join or Create a Club',
-                user,
-                availableClubs,
-                claimableClubs,
-                states: AUSTRALIAN_STATES,
-                errors: [{ msg: 'State is required.' }],
-                formData: req.body,
-                additionalCSS: ['/styles/club.styles.css']
-            });
-        }
-
-        if (!location || !location.trim()) {
-            // Get clubs data for re-rendering
-            const availableClubs = await Club.findAll({
-                where: { isActive: true, isPubliclyListed: true },
-                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
-                order: [['clubName', 'ASC']]
-            });
-            const claimableClubs = await Club.findAll({
-                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
-            });
-
-            return res.render('clubs/club-options', {
-                title: 'Join or Create a Club',
-                user,
-                availableClubs,
-                claimableClubs,
-                states: AUSTRALIAN_STATES,
-                errors: [{ msg: 'Location is required.' }],
-                formData: req.body,
-                additionalCSS: ['/styles/club.styles.css']
-            });
-        }
-
-        // Debug log the received data
-        console.log('Club creation data received:', {
-            clubName: clubName?.trim(),
-            state,
-            location: location?.trim(),
-            description: description?.trim()
-        });
-
-        // Check if club name already exists
-        const existingClub = await Club.findOne({
-            where: { clubName: clubName.trim() }
-        });
-
-        if (existingClub) {
-            // Get clubs data for re-rendering
-            const availableClubs = await Club.findAll({
-                where: { isActive: true, isPubliclyListed: true },
-                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
-                order: [['clubName', 'ASC']]
-            });
-            const claimableClubs = await Club.findAll({
-                where: { createdByProxy: true, inviteEmail: user.email, isActive: true }
-            });
-
-            return res.render('clubs/club-options', {
-                title: 'Join or Create a Club',
-                user,
-                availableClubs,
-                claimableClubs,
-                states: AUSTRALIAN_STATES,
-                errors: [{ msg: 'A club with this name already exists. Please choose a different name.' }],
-                formData: req.body,
-                additionalCSS: ['/styles/club.styles.css']
-            });
-        }
-
-        // Use database transaction for safe club creation and user association
-        const { sequelize } = require('../models');
-        const transaction = await sequelize.transaction();
-
-        try {
-            // Create the new club
-            const newClub = await Club.create({
-                clubName: clubName.trim(),
-                state,
-                location: location.trim(),
-                description: description?.trim(),
-                contactEmail: user.email, // Auto-populate from user
-                contactPhone: user.phoneNumber, // Auto-populate from user's phone number
-                contactPerson: user.getFullName(), // Auto-populate from user's name
-                isActive: true,
-                isPubliclyListed: true,
-                createdByUserId: user.id
-            }, { transaction });
-
-            // Associate user with the new club as primary delegate
-            await user.update({
-                clubId: newClub.id,
-                isPrimaryDelegate: true
-            }, { transaction });
-
-            // Commit the transaction
-            await transaction.commit();
-
-            console.log(`✅ New club created: ${newClub.clubName} (ID: ${newClub.id}) by user ${user.email}`);
-            
-            req.flash('success_msg', `Congratulations! You have successfully created "${newClub.clubName}" and are now the primary delegate. You can start creating carnivals and managing your club.`);
-            res.redirect('/dashboard');
-
-        } catch (transactionError) {
-            // Rollback the transaction
-            await transaction.rollback();
-            throw transactionError;
-        }
-
-    } catch (error) {
-        console.error('Error creating club:', error);
-        
-        // Even in case of unexpected errors, try to preserve form data
-        try {
-            const availableClubs = await Club.findAll({
-                where: { isActive: true, isPubliclyListed: true },
-                include: [{ model: User, as: 'delegates', where: { isActive: true }, required: false, attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate'] }],
-                order: [['clubName', 'ASC']]
-            });
-            const claimableClubs = await Club.findAll({
-                where: { createdByProxy: true, inviteEmail: req.user.email, isActive: true }
-            });
-
-            return res.render('clubs/club-options', {
-                title: 'Join or Create a Club',
-                user: req.user,
-                availableClubs,
-                claimableClubs,
-                states: AUSTRALIAN_STATES,
-                errors: [{ msg: 'An error occurred while creating the club. Please try again.' }],
-                formData: req.body,
-                additionalCSS: ['/styles/club.styles.css']
-            });
-        } catch (renderError) {
-            // Fallback to redirect if rendering fails
-            req.flash('error_msg', 'An error occurred while creating the club. Please try again.');
-            res.redirect('/clubs/manage');
-        }
-    }
-};
-
-/**
- * API endpoint for club autocomplete search
- * Searches both club names and alternate names
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-const searchClubs = async (req, res) => {
-    try {
-        const { q } = req.query;
-        
-        if (!q || q.trim().length < 2) {
-            return res.json({
-                success: true,
-                clubs: []
-            });
-        }
-
-        const searchTerm = q.trim();
-
-        // Search clubs by name
-        const clubsByName = await Club.findAll({
-            where: {
-                clubName: { [Op.like]: `%${searchTerm}%` },
-                isActive: true
-            },
-            attributes: ['id', 'clubName', 'location', 'state'],
-            order: [['clubName', 'ASC']],
-            limit: 10
-        });
-
-        // Search clubs by alternate names
-        const clubIdsByAlternate = await ClubAlternateName.searchClubsByAlternateName(searchTerm);
-        
-        let clubsByAlternate = [];
-        if (clubIdsByAlternate.length > 0) {
-            clubsByAlternate = await Club.findAll({
-                where: {
-                    id: { [Op.in]: clubIdsByAlternate },
-                    isActive: true
-                },
-                attributes: ['id', 'clubName', 'location', 'state'],
-                include: [{
-                    model: ClubAlternateName,
-                    as: 'alternateNames',
-                    where: {
-                        alternateName: { [Op.like]: `%${searchTerm}%` },
-                        isActive: true
-                    },
-                    attributes: ['alternateName'],
-                    required: true
-                }],
-                order: [['clubName', 'ASC']],
-                limit: 10
-            });
-        }
-
-        // Combine and deduplicate results
-        const allClubs = [...clubsByName];
-        
-        clubsByAlternate.forEach(altClub => {
-            if (!allClubs.find(club => club.id === altClub.id)) {
-                allClubs.push(altClub);
-            }
-        });
-
-        // Format results for autocomplete
-        const formattedClubs = allClubs.slice(0, 10).map(club => {
-            const matchedAlternate = club.alternateNames && club.alternateNames.length > 0 
-                ? club.alternateNames[0].alternateName 
-                : null;
-
-            return {
-                id: club.id,
-                clubName: club.clubName,
-                location: club.location,
-                state: club.state,
-                matchedAlternate,
-                displayText: matchedAlternate 
-                    ? `${club.clubName} (also known as: ${matchedAlternate})`
-                    : club.clubName,
-                subtitle: `${club.location}, ${club.state}`
-            };
-        });
-
-        res.json({
-            success: true,
-            clubs: formattedClubs
-        });
-
-    } catch (error) {
-        console.error('Error searching clubs:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error searching clubs'
-        });
-    }
-};
-
-/**
  * Join an existing club
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const joinClub = async (req, res) => {
+export const joinClub = async (req, res) => {
     try {
         const user = req.user;
         const { id } = req.params;
@@ -1635,7 +1294,6 @@ const joinClub = async (req, res) => {
 
         // Club doesn't have a primary delegate - allow direct joining
         // Use database transaction for safe user association
-        const { sequelize } = require('../models');
         const transaction = await sequelize.transaction();
 
         try {
@@ -1671,7 +1329,7 @@ const joinClub = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const leaveClub = async (req, res) => {
+export const leaveClub = async (req, res) => {
     try {
         const user = req.user;
         const { confirmed, leaveAction, newPrimaryDelegateId } = req.body;
@@ -1699,7 +1357,6 @@ const leaveClub = async (req, res) => {
         }
 
         // Use database transaction for safe user disassociation
-        const { sequelize } = require('../models');
         const transaction = await sequelize.transaction();
 
         try {
@@ -1801,28 +1458,100 @@ const leaveClub = async (req, res) => {
     }
 };
 
-module.exports = {
-    showClubListings,
-    showClubProfile,
-    showClubManagement,
-    createClub,
-    searchClubs,
-    joinClub,
-    updateClubProfile,
-    getClubImages,
-    deleteClubImage,
-    showClubSponsors,
-    showAddSponsor,
-    addSponsorToClub,
-    removeSponsorFromClub,
-    reorderClubSponsors,
-    showClubAlternateNames,
-    addAlternateName,
-    updateAlternateName,
-    deleteAlternateName,
-    getCreateOnBehalf,
-    postCreateOnBehalf,
-    getClaimOwnership,
-    postClaimOwnership,
-    leaveClub
+/**
+ * API endpoint for club autocomplete search
+ * Searches both club names and alternate names
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const searchClubs = async (req, res) => {
+    try {
+        const { q } = req.query;
+        
+        if (!q || q.trim().length < 2) {
+            return res.json({
+                success: true,
+                clubs: []
+            });
+        }
+
+        const searchTerm = q.trim();
+
+        // Search clubs by name
+        const clubsByName = await Club.findAll({
+            where: {
+                clubName: { [Op.like]: `%${searchTerm}%` },
+                isActive: true
+            },
+            attributes: ['id', 'clubName', 'location', 'state'],
+            order: [['clubName', 'ASC']],
+            limit: 10
+        });
+
+        // Search clubs by alternate names
+        const clubIdsByAlternate = await ClubAlternateName.searchClubsByAlternateName(searchTerm);
+        
+        let clubsByAlternate = [];
+        if (clubIdsByAlternate.length > 0) {
+            clubsByAlternate = await Club.findAll({
+                where: {
+                    id: { [Op.in]: clubIdsByAlternate },
+                    isActive: true
+                },
+                attributes: ['id', 'clubName', 'location', 'state'],
+                include: [{
+                    model: ClubAlternateName,
+                    as: 'alternateNames',
+                    where: {
+                        alternateName: { [Op.like]: `%${searchTerm}%` },
+                        isActive: true
+                    },
+                    attributes: ['alternateName'],
+                    required: true
+                }],
+                order: [['clubName', 'ASC']],
+                limit: 10
+            });
+        }
+
+        // Combine and deduplicate results
+        const allClubs = [...clubsByName];
+        
+        clubsByAlternate.forEach(altClub => {
+            if (!allClubs.find(club => club.id === altClub.id)) {
+                allClubs.push(altClub);
+            }
+        });
+
+        // Format results for autocomplete
+        const formattedClubs = allClubs.slice(0, 10).map(club => {
+            const matchedAlternate = club.alternateNames && club.alternateNames.length > 0 
+                ? club.alternateNames[0].alternateName 
+                : null;
+
+            return {
+                id: club.id,
+                clubName: club.clubName,
+                location: club.location,
+                state: club.state,
+                matchedAlternate,
+                displayText: matchedAlternate 
+                    ? `${club.clubName} (also known as: ${matchedAlternate})`
+                    : club.clubName,
+                subtitle: `${club.location}, ${club.state}`
+            };
+        });
+
+        res.json({
+            success: true,
+            clubs: formattedClubs
+        });
+
+    } catch (error) {
+        console.error('Error searching clubs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error searching clubs'
+        });
+    }
 };

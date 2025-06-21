@@ -5,15 +5,15 @@
  * for the Old Man Footy platform.
  */
 
-const { ClubSponsor, Club, Sponsor } = require('../models');
-const { Op } = require('sequelize');
+import { ClubSponsor, Club, Sponsor } from '../models/index.mjs';
+import { Op } from 'sequelize';
 
 /**
  * Create a new club-sponsor relationship
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.createClubSponsor = async (req, res) => {
+export const createClubSponsor = async (req, res) => {
   try {
     const {
       clubId,
@@ -113,7 +113,7 @@ exports.createClubSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getClubSponsors = async (req, res) => {
+export const getClubSponsors = async (req, res) => {
   try {
     const {
       clubId,
@@ -172,7 +172,7 @@ exports.getClubSponsors = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getClubSponsor = async (req, res) => {
+export const getClubSponsor = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -210,7 +210,7 @@ exports.getClubSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.updateClubSponsor = async (req, res) => {
+export const updateClubSponsor = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -256,7 +256,7 @@ exports.updateClubSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.deleteClubSponsor = async (req, res) => {
+export const deleteClubSponsor = async (req, res) => {
   try {
     const { id } = req.params;
     const { permanent = false } = req.query;
@@ -304,7 +304,7 @@ exports.deleteClubSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getClubSponsorsForClub = async (req, res) => {
+export const getClubSponsorsForClub = async (req, res) => {
   try {
     const { clubId } = req.params;
     const { activeOnly = 'true' } = req.query;
@@ -334,7 +334,7 @@ exports.getClubSponsorsForClub = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getClubsForSponsor = async (req, res) => {
+export const getClubsForSponsor = async (req, res) => {
   try {
     const { sponsorId } = req.params;
 

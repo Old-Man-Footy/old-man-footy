@@ -5,15 +5,15 @@
  * for the Old Man Footy platform.
  */
 
-const { CarnivalSponsor, Carnival, Sponsor } = require('../models');
-const { Op } = require('sequelize');
+import { CarnivalSponsor, Carnival, Sponsor } from '../models/index.mjs';
+import { Op } from 'sequelize';
 
 /**
  * Create a new carnival-sponsor relationship
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.createCarnivalSponsor = async (req, res) => {
+export const createCarnivalSponsor = async (req, res) => {
   try {
     const {
       carnivalId,
@@ -113,7 +113,7 @@ exports.createCarnivalSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getCarnivalSponsors = async (req, res) => {
+export const getCarnivalSponsors = async (req, res) => {
   try {
     const {
       carnivalId,
@@ -172,7 +172,7 @@ exports.getCarnivalSponsors = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getCarnivalSponsor = async (req, res) => {
+export const getCarnivalSponsor = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -210,7 +210,7 @@ exports.getCarnivalSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.updateCarnivalSponsor = async (req, res) => {
+export const updateCarnivalSponsor = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -256,7 +256,7 @@ exports.updateCarnivalSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.deleteCarnivalSponsor = async (req, res) => {
+export const deleteCarnivalSponsor = async (req, res) => {
   try {
     const { id } = req.params;
     const { permanent = false } = req.query;
@@ -303,7 +303,7 @@ exports.deleteCarnivalSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getCarnivalSponsorsForCarnival = async (req, res) => {
+export const getCarnivalSponsorsForCarnival = async (req, res) => {
   try {
     const { carnivalId } = req.params;
     const { activeOnly = 'true' } = req.query;
@@ -333,7 +333,7 @@ exports.getCarnivalSponsorsForCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getCarnivalsForSponsor = async (req, res) => {
+export const getCarnivalsForSponsor = async (req, res) => {
   try {
     const { sponsorId } = req.params;
 
@@ -362,7 +362,7 @@ exports.getCarnivalsForSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.getCarnivalSponsorshipSummary = async (req, res) => {
+export const getCarnivalSponsorshipSummary = async (req, res) => {
   try {
     const { carnivalId } = req.params;
 
@@ -391,7 +391,7 @@ exports.getCarnivalSponsorshipSummary = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-exports.reorderCarnivalSponsors = async (req, res) => {
+export const reorderCarnivalSponsors = async (req, res) => {
   try {
     const { carnivalId } = req.params;
     const { sponsorOrders } = req.body; // Array of { id, displayOrder }

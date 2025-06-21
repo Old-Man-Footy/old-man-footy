@@ -5,10 +5,10 @@
 
 /**
  * Display maintenance page
- * @param {Object} req - Express request object
+ * @param {Object} _req - Express request object
  * @param {Object} res - Express response object
  */
-const showMaintenancePage = (req, res) => {
+export const showMaintenancePage = (_req, res) => {
   const maintenanceData = {
     title: 'Site Maintenance - Old Man Footy',
     message: 'We\'re currently performing scheduled maintenance to improve your experience.',
@@ -23,19 +23,14 @@ const showMaintenancePage = (req, res) => {
 
 /**
  * API endpoint to check maintenance status
- * @param {Object} req - Express request object
+ * @param {Object} _req - Express request object
  * @param {Object} res - Express response object
  */
-const getMaintenanceStatus = (req, res) => {
+export const getMaintenanceStatus = (_req, res) => {
   const isMaintenanceMode = process.env.FEATURE_MAINTENANCE_MODE === 'true';
   
   res.json({
     maintenanceMode: isMaintenanceMode,
     message: isMaintenanceMode ? 'Site is currently in maintenance mode' : 'Site is operational'
   });
-};
-
-module.exports = {
-  showMaintenancePage,
-  getMaintenanceStatus
 };

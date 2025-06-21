@@ -5,20 +5,21 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const { User, Club } = require('../models');
-const { validationResult } = require('express-validator');
-const bcrypt = require('bcrypt');
-const passport = require('passport');
-const crypto = require('crypto');
-const emailService = require('../services/emailService');
-const AuditService = require('../services/auditService');
+import { User, Club } from '../models/index.mjs';
+import { validationResult } from 'express-validator';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import emailService from '../services/emailService.mjs';
+import AuditService from '../services/auditService.mjs';
+import { sequelize } from '../config/database.mjs';
+import { Op } from 'sequelize';
 
 /**
  * Display login form
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showLoginForm = (req, res) => {
+export const showLoginForm = (req, res) => {
     res.render('auth/login', {
         title: 'Login'
     });
@@ -30,7 +31,7 @@ const showLoginForm = (req, res) => {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-const loginUser = async (req, res, next) => {
+export const loginUser = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -138,7 +139,7 @@ const loginUser = async (req, res, next) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showRegisterForm = async (req, res) => {
+export const showRegisterForm = async (req, res) => {
     try {
         return res.render('auth/register', {
             title: 'Create Account'
@@ -156,7 +157,7 @@ const showRegisterForm = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
     try {
         const errors = validationResult(req);
         
@@ -246,7 +247,7 @@ const registerUser = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showInvitationForm = async (req, res) => {
+export const showInvitationForm = async (req, res) => {
     try {
         const { token } = req.params;
 
@@ -259,7 +260,7 @@ const showInvitationForm = async (req, res) => {
         const invitedUser = await User.findOne({
             where: {
                 invitationToken: token,
-                tokenExpires: { [require('sequelize').Op.gt]: new Date() },
+                tokenExpires: { [Op.gt]: new Date() },
                 isActive: false
             },
             include: [{
@@ -291,7 +292,7 @@ const showInvitationForm = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const acceptInvitation = async (req, res) => {
+export const acceptInvitation = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -305,7 +306,7 @@ const acceptInvitation = async (req, res) => {
         const invitedUser = await User.findOne({
             where: {
                 invitationToken: token,
-                tokenExpires: { [require('sequelize').Op.gt]: new Date() },
+                tokenExpires: { [Op.gt]: new Date() },
                 isActive: false
             }
         });
@@ -381,7 +382,7 @@ const acceptInvitation = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const logoutUser = (req, res) => {
+export const logoutUser = (req, res) => {
     const user = req.user;
     
     req.logout(async (err) => {
@@ -413,7 +414,7 @@ const logoutUser = (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const sendInvitation = async (req, res) => {
+export const sendInvitation = async (req, res) => {
     try {
         // Check if user is primary delegate
         if (!req.user.isPrimaryDelegate) {
@@ -508,7 +509,7 @@ const sendInvitation = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const transferDelegateRole = async (req, res) => {
+export const transferDelegateRole = async (req, res) => {
     try {
         // Check if current user is primary delegate
         if (!req.user.isPrimaryDelegate) {
@@ -540,7 +541,6 @@ const transferDelegateRole = async (req, res) => {
         }
 
         // Perform the transfer in a transaction to ensure data consistency
-        const { sequelize } = require('../config/database');
         const transaction = await sequelize.transaction();
 
         try {
@@ -587,7 +587,7 @@ const transferDelegateRole = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updatePhoneNumber = async (req, res) => {
+export const updatePhoneNumber = async (req, res) => {
     try {
         const { phoneNumber } = req.body;
         
@@ -616,7 +616,7 @@ const updatePhoneNumber = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updateName = async (req, res) => {
+export const updateName = async (req, res) => {
     try {
         const errors = validationResult(req);
         
@@ -650,7 +650,7 @@ const updateName = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const updateEmail = async (req, res) => {
+export const updateEmail = async (req, res) => {
     try {
         const errors = validationResult(req);
         
@@ -672,7 +672,7 @@ const updateEmail = async (req, res) => {
         const existingUser = await User.findOne({ 
             where: { 
                 email: email.toLowerCase(),
-                id: { [require('sequelize').Op.ne]: req.user.id }
+                id: { [Op.ne]: req.user.id }
             } 
         });
         
@@ -696,19 +696,4 @@ const updateEmail = async (req, res) => {
         req.flash('error_msg', 'An error occurred while updating your email address. Please try again.');
         res.redirect('/dashboard');
     }
-};
-
-module.exports = {
-    showLoginForm,
-    loginUser,
-    showRegisterForm,
-    registerUser,
-    showInvitationForm,
-    acceptInvitation,
-    logoutUser,
-    sendInvitation,
-    transferDelegateRole,
-    updatePhoneNumber,
-    updateName,
-    updateEmail
 };

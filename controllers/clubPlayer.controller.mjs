@@ -5,9 +5,9 @@
  * Follows strict MVC pattern with proper input validation and error handling.
  */
 
-const { body, validationResult, param } = require('express-validator');
-const { ClubPlayer, Club } = require('../models');
-const { Op } = require('sequelize');
+import { body, validationResult, param } from 'express-validator';
+import { ClubPlayer, Club } from '../models/index.mjs';
+import { Op } from 'sequelize';
 
 /**
  * Display club players list for the authenticated user's club
@@ -16,7 +16,7 @@ const { Op } = require('sequelize');
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function showClubPlayers(req, res, next) {
+export async function showClubPlayers(req, res, next) {
   try {
     console.log('=== DEBUG: showClubPlayers called ===');
     console.log('User:', req.user ? { id: req.user.id, email: req.user.email, clubId: req.user.clubId } : 'No user');
@@ -138,7 +138,7 @@ async function showClubPlayers(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function showAddPlayerForm(req, res, next) {
+export async function showAddPlayerForm(req, res, next) {
   try {
     // Ensure user is authenticated and has a club
     if (!req.user || !req.user.clubId) {
@@ -174,7 +174,7 @@ async function showAddPlayerForm(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function createPlayer(req, res, next) {
+export async function createPlayer(req, res, next) {
   try {
     // Check for validation errors
     const errors = validationResult(req);
@@ -238,7 +238,7 @@ async function createPlayer(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function showEditPlayerForm(req, res, next) {
+export async function showEditPlayerForm(req, res, next) {
   try {
     const playerId = req.params.id;
 
@@ -285,7 +285,7 @@ async function showEditPlayerForm(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function updatePlayer(req, res, next) {
+export async function updatePlayer(req, res, next) {
   try {
     const playerId = req.params.id;
 
@@ -377,7 +377,7 @@ async function updatePlayer(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function deactivatePlayer(req, res, next) {
+export async function deactivatePlayer(req, res, next) {
   try {
     const playerId = req.params.id;
 
@@ -422,7 +422,7 @@ async function deactivatePlayer(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function reactivatePlayer(req, res, next) {
+export async function reactivatePlayer(req, res, next) {
   try {
     const playerId = req.params.id;
 
@@ -467,7 +467,7 @@ async function reactivatePlayer(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function downloadCsvTemplate(req, res, next) {
+export async function downloadCsvTemplate(req, res, next) {
   try {
     // Ensure user is authenticated and has a club
     if (!req.user || !req.user.clubId) {
@@ -548,7 +548,7 @@ async function downloadCsvTemplate(req, res, next) {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-async function importPlayersFromCsv(req, res, next) {
+export async function importPlayersFromCsv(req, res, next) {
   try {
     // Ensure user is authenticated and has a club
     if (!req.user || !req.user.clubId) {
@@ -707,7 +707,7 @@ async function importPlayersFromCsv(req, res, next) {
 /**
  * Validation rules for creating/updating players
  */
-const validatePlayer = [
+export const validatePlayer = [
   body('firstName')
     .trim()
     .isLength({ min: 1, max: 50 })
@@ -764,7 +764,7 @@ const validatePlayer = [
 /**
  * Validation rules for player ID parameter
  */
-const validatePlayerId = [
+export const validatePlayerId = [
   param('id')
     .isInt({ min: 1 })
     .withMessage('Player ID must be a valid positive integer')
@@ -773,7 +773,7 @@ const validatePlayerId = [
 /**
  * Validation rules for CSV import
  */
-const validateCsvImport = [
+export const validateCsvImport = [
   body('shortsColor')
     .optional()
     .isIn(['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'])
@@ -787,18 +787,3 @@ const validateCsvImport = [
     .isLength({ max: 1000 })
     .withMessage('Notes cannot exceed 1000 characters')
 ];
-
-module.exports = {
-  showClubPlayers,
-  showAddPlayerForm,
-  createPlayer,
-  showEditPlayerForm,
-  updatePlayer,
-  deactivatePlayer,
-  reactivatePlayer,
-  downloadCsvTemplate,
-  importPlayersFromCsv,
-  validatePlayer,
-  validatePlayerId,
-  validateCsvImport
-};

@@ -5,17 +5,17 @@
  * club management, carnival management, and system administration.
  */
 
-const { validationResult } = require('express-validator');
-const { User, Club, Carnival, Sponsor, EmailSubscription } = require('../models');
-const { Op } = require('sequelize');
-const crypto = require('crypto');
-const EmailService = require('../services/emailService');
-const AuditService = require('../services/auditService');
+import { validationResult } from 'express-validator';
+import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
+import { Op } from 'sequelize';
+import crypto from 'crypto';
+import EmailService from '../services/emailService.mjs';
+import AuditService from '../services/auditService.mjs';
 
 /**
  * Get Admin Dashboard with system statistics
  */
-const getAdminDashboard = async (req, res) => {
+export const getAdminDashboard = async (req, res) => {
     try {
         // Get system statistics
         const [
@@ -106,7 +106,7 @@ const getAdminDashboard = async (req, res) => {
 /**
  * Get User Management page with search and filters
  */
-const getUserManagement = async (req, res) => {
+export const getUserManagement = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
@@ -176,7 +176,7 @@ const getUserManagement = async (req, res) => {
 /**
  * Show Edit User form
  */
-const showEditUser = async (req, res) => {
+export const showEditUser = async (req, res) => {
     try {
         const userId = req.params.id;
         
@@ -211,7 +211,7 @@ const showEditUser = async (req, res) => {
 /**
  * Update User
  */
-const updateUser = async (req, res) => {
+export const updateUser = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -340,7 +340,7 @@ const updateUser = async (req, res) => {
 /**
  * Issue Password Reset
  */
-const issuePasswordReset = async (req, res) => {
+export const issuePasswordReset = async (req, res) => {
     try {
         const userId = req.params.id;
         const user = await User.findByPk(userId);
@@ -421,7 +421,7 @@ const issuePasswordReset = async (req, res) => {
 /**
  * Toggle User Status
  */
-const toggleUserStatus = async (req, res) => {
+export const toggleUserStatus = async (req, res) => {
     try {
         const userId = req.params.id;
         const { isActive } = req.body;
@@ -491,7 +491,7 @@ const toggleUserStatus = async (req, res) => {
 /**
  * Get Club Management page
  */
-const getClubManagement = async (req, res) => {
+export const getClubManagement = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
@@ -571,7 +571,7 @@ const getClubManagement = async (req, res) => {
 /**
  * Show Edit Club form
  */
-const showEditClub = async (req, res) => {
+export const showEditClub = async (req, res) => {
     try {
         const clubId = req.params.id;
         
@@ -611,7 +611,7 @@ const showEditClub = async (req, res) => {
 /**
  * Update Club
  */
-const updateClub = async (req, res) => {
+export const updateClub = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -685,7 +685,7 @@ const updateClub = async (req, res) => {
 /**
  * Get Carnival Management page
  */
-const getCarnivalManagement = async (req, res) => {
+export const getCarnivalManagement = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
@@ -754,7 +754,7 @@ const getCarnivalManagement = async (req, res) => {
 /**
  * Show Edit Carnival form
  */
-const showEditCarnival = async (req, res) => {
+export const showEditCarnival = async (req, res) => {
     try {
         const carnivalId = req.params.id;
         
@@ -782,7 +782,7 @@ const showEditCarnival = async (req, res) => {
 /**
  * Update Carnival
  */
-const updateCarnival = async (req, res) => {
+export const updateCarnival = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -906,7 +906,7 @@ const updateCarnival = async (req, res) => {
 /**
  * Toggle Carnival Status (Activate/Deactivate)
  */
-const toggleCarnivalStatus = async (req, res) => {
+export const toggleCarnivalStatus = async (req, res) => {
     try {
         const carnivalId = req.params.id;
         const { isActive } = req.body;
@@ -958,7 +958,7 @@ const toggleCarnivalStatus = async (req, res) => {
 /**
  * Toggle Club Status (Activate/Deactivate)
  */
-const toggleClubStatus = async (req, res) => {
+export const toggleClubStatus = async (req, res) => {
     try {
         const clubId = req.params.id;
         const { isActive } = req.body;
@@ -1010,7 +1010,7 @@ const toggleClubStatus = async (req, res) => {
 /**
  * Toggle Club Visibility (Publicly Listed status)
  */
-const toggleClubVisibility = async (req, res) => {
+export const toggleClubVisibility = async (req, res) => {
     try {
         const clubId = req.params.id;
         const { isPubliclyListed } = req.body;
@@ -1062,7 +1062,7 @@ const toggleClubVisibility = async (req, res) => {
 /**
  * Generate System Reports
  */
-const generateReport = async (req, res) => {
+export const generateReport = async (req, res) => {
     try {
         // Define time periods for activity analysis
         const now = new Date();
@@ -1152,7 +1152,7 @@ const generateReport = async (req, res) => {
 /**
  * Delete User
  */
-const deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
     try {
         const userId = req.params.id;
         const currentUser = req.user;
@@ -1193,7 +1193,6 @@ const deleteUser = async (req, res) => {
             clubName: user.club?.clubName
         };
 
-        const { sequelize } = require('../config/database');
         const transaction = await sequelize.transaction();
 
         try {
@@ -1292,7 +1291,7 @@ const deleteUser = async (req, res) => {
 /**
  * Show claim carnival on behalf of club form
  */
-const showClaimCarnivalForm = async (req, res) => {
+export const showClaimCarnivalForm = async (req, res) => {
     try {
         const carnivalId = req.params.id;
         
@@ -1353,7 +1352,7 @@ const showClaimCarnivalForm = async (req, res) => {
 /**
  * Process admin claim carnival on behalf of club
  */
-const adminClaimCarnival = async (req, res) => {
+export const adminClaimCarnival = async (req, res) => {
     try {
         const carnivalId = req.params.id;
         const { targetClubId } = req.body;
@@ -1386,7 +1385,7 @@ const adminClaimCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showCarnivalPlayers = async (req, res) => {
+export const showCarnivalPlayers = async (req, res) => {
     try {
         const carnivalId = req.params.id;
         
@@ -1503,7 +1502,7 @@ const showCarnivalPlayers = async (req, res) => {
 /**
  * Get Audit Log Management page
  */
-const getAuditLogs = async (req, res) => {
+export const getAuditLogs = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 50;
@@ -1551,7 +1550,6 @@ const getAuditLogs = async (req, res) => {
             };
         }
 
-        const { AuditLog } = require('../models');
         const { count, rows: auditLogs } = await AuditLog.findAndCountAll({
             where: whereConditions,
             include: [{
@@ -1617,10 +1615,8 @@ const getAuditLogs = async (req, res) => {
 /**
  * Get Audit Statistics for dashboard
  */
-const getAuditStatistics = async (req, res) => {
+export const getAuditStatistics = async (req, res) => {
     try {
-        const { AuditLog } = require('../models');
-        
         // Get statistics for the last 30 days
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const stats = await AuditLog.getAuditStatistics({
@@ -1644,7 +1640,7 @@ const getAuditStatistics = async (req, res) => {
 /**
  * Export audit logs as CSV
  */
-const exportAuditLogs = async (req, res) => {
+export const exportAuditLogs = async (req, res) => {
     try {
         const { startDate, endDate, action, entityType, result } = req.query;
         
@@ -1660,7 +1656,6 @@ const exportAuditLogs = async (req, res) => {
         if (entityType) whereConditions.entityType = entityType;
         if (result) whereConditions.result = result;
 
-        const { AuditLog } = require('../models');
         const auditLogs = await AuditLog.findAll({
             where: whereConditions,
             include: [{
@@ -1733,30 +1728,4 @@ const exportAuditLogs = async (req, res) => {
         req.flash('error_msg', 'Error exporting audit logs');
         res.redirect('/admin/audit-logs');
     }
-};
-
-module.exports = {
-    getAdminDashboard,
-    getUserManagement,
-    showEditUser,
-    updateUser,
-    issuePasswordReset,
-    toggleUserStatus,
-    deleteUser,
-    getClubManagement,
-    showEditClub,
-    updateClub,
-    toggleClubStatus,
-    toggleClubVisibility,
-    getCarnivalManagement,
-    showEditCarnival,
-    updateCarnival,
-    toggleCarnivalStatus,
-    generateReport,
-    showClaimCarnivalForm,
-    adminClaimCarnival,
-    showCarnivalPlayers,
-    getAuditLogs,
-    getAuditStatistics,
-    exportAuditLogs
 };

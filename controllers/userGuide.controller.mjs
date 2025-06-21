@@ -5,15 +5,19 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Display user guide page with modular CSS
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const getUserGuide = (req, res) => {
+export const getUserGuide = (req, res) => {
     try {
         const guidePath = path.join(__dirname, '..', 'docs', 'USER_GUIDE_DELEGATES.md');
         const guideContent = fs.readFileSync(guidePath, 'utf8');
@@ -29,8 +33,4 @@ const getUserGuide = (req, res) => {
         req.flash('error_msg', 'User guide is temporarily unavailable.');
         res.redirect('/dashboard');
     }
-};
-
-module.exports = {
-    getUserGuide
 };
