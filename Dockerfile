@@ -1,8 +1,22 @@
 # Multi-stage build for optimized production image
 FROM node:22-alpine AS base
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and system dependencies required for Playwright
+RUN apk add --no-cache \
+    dumb-init \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    bash
+
+# Configure Playwright to use system Chromium
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create app directory with proper permissions
 RUN addgroup -g 1001 -S nodejs && \
@@ -18,6 +32,10 @@ COPY package*.json ./
 FROM base AS development
 ENV NODE_ENV=development
 RUN npm ci --include=dev
+
+# Install Playwright browsers for development
+RUN npx playwright install --with-deps || echo "Playwright install failed, continuing..."
+
 COPY . .
 RUN chown -R nextjs:nodejs /app
 USER nextjs
@@ -34,6 +52,10 @@ FROM base AS build
 ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --include=dev
+
+# Install Playwright browsers for build stage if needed
+RUN if npm list @playwright/test >/dev/null 2>&1; then npx playwright install --with-deps; fi
+
 COPY . .
 # Run any build steps if needed (none for this app currently)
 RUN npm prune --production
@@ -42,8 +64,22 @@ RUN npm prune --production
 FROM node:22-alpine AS production
 ENV NODE_ENV=production
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and system dependencies required for Playwright
+RUN apk add --no-cache \
+    dumb-init \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    bash
+
+# Configure Playwright to use system Chromium
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create non-root user with specific UID/GID for consistency
 RUN addgroup -g 1001 -S nodejs && \
@@ -60,6 +96,11 @@ COPY --from=deps --chown=appuser:nodejs /app/node_modules ./node_modules
 
 # Copy application code
 COPY --chown=appuser:nodejs . .
+
+# Install Playwright browsers in production if the package exists
+RUN if [ -f node_modules/@playwright/test/package.json ]; then \
+    npm_config_cache=/home/appuser/.npm npx playwright install --with-deps; \
+    fi
 
 # Create necessary directories with proper permissions
 RUN mkdir -p data \

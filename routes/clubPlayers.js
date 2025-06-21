@@ -8,7 +8,9 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const { body } = require('express-validator');
 const { ensureAuthenticated } = require('../middleware/auth');
+const { playerEmail } = require('../middleware/validation');
 const clubPlayerController = require('../controllers/clubPlayer.controller');
 
 // Configure multer for CSV file uploads
@@ -104,5 +106,59 @@ router.post('/:id/reactivate',
   clubPlayerController.validatePlayerId,
   clubPlayerController.reactivatePlayer
 );
+
+// Validation rules for player creation and updates
+const validatePlayer = [
+  body('firstName')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('First name is required and must be between 1 and 50 characters')
+    .matches(/^[a-zA-Z\s\-'\.]+$/)
+    .withMessage('First name can only contain letters, spaces, hyphens, apostrophes, and periods'),
+
+  body('lastName')
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Last name is required and must be between 1 and 50 characters')
+    .matches(/^[a-zA-Z\s\-'\.]+$/)
+    .withMessage('Last name can only contain letters, spaces, hyphens, apostrophes, and periods'),
+
+  body('dateOfBirth')
+    .isISO8601()
+    .withMessage('Date of birth must be a valid date')
+    .custom((value) => {
+      const birthDate = new Date(value);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 35) {
+        throw new Error('Player must be at least 35 years old for Masters Rugby League');
+      }
+      
+      if (age > 80) {
+        throw new Error('Please verify the date of birth - player would be over 80 years old');
+      }
+      
+      return true;
+    }),
+
+  playerEmail('email'),
+
+  body('notes')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Notes cannot exceed 1000 characters'),
+
+  body('shorts')
+    .optional()
+    .isIn(['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'])
+    .withMessage('Shorts must be one of: Unrestricted, Red, Yellow, Blue, Green')
+];
 
 module.exports = router;

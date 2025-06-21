@@ -33,7 +33,7 @@ function formatCarnivalAddress(carnival) {
         return null;
     }
     
-    const googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(fullAddressForMaps)}`;
+    const googleMapsUrl = `https://maps.google.com/maps?q=$${encodeURIComponent(fullAddressForMaps)}`;
     
     return {
         parts: displayParts,
