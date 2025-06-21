@@ -67,6 +67,7 @@ class MySidelineScraperService {
     async fetchEventsWithBrowser() {
         let browser = null;
         let context = null;
+        let page = null;
 
         try {
             // Launch browser
@@ -76,7 +77,7 @@ class MySidelineScraperService {
             });
             
             context = await browser.newContext();
-            const page = await context.newPage();
+            page = await context.newPage();
             
             // Set a longer timeout for navigation and actions
             page.setDefaultTimeout(this.timeout);
@@ -98,12 +99,47 @@ class MySidelineScraperService {
             return [];
         } finally {
             try {
+                console.log('🧹 Starting browser cleanup...');
+                
+                // Explicit page cleanup before closing
+                if (page) {
+                    console.log('Cleaning up page resources...');
+                    // Cancel any pending navigations or requests
+                    await page.evaluate(() => {
+                        // Clear any running timers or intervals
+                        const highestId = Math.max(
+                            setTimeout(() => {}, 0),
+                            setInterval(() => {}, 99999)
+                        );
+                        for (let i = 0; i <= highestId; i++) {
+                            clearTimeout(i);
+                            clearInterval(i);
+                        }
+                        
+                        // Remove all event listeners to prevent memory leaks
+                        document.querySelectorAll('*').forEach(el => {
+                            if (el.cloneNode) {
+                                const newEl = el.cloneNode(true);
+                                if (el.parentNode) {
+                                    el.parentNode.replaceChild(newEl, el);
+                                }
+                            }
+                        });
+                    }).catch(() => {}); // Ignore errors during cleanup
+                    
+                    // Short delay to allow cleanup to complete
+                    await page.waitForTimeout(500);
+                }
+                
                 if (context) {
+                    console.log('Closing browser context...');
                     await context.close();
                 }
                 if (browser) {
+                    console.log('Closing browser...');
                     await browser.close();
                 }
+                console.log('✅ Browser cleanup completed');
             } catch (closeError) {
                 console.log('Error closing browser resources:', closeError.message);
             }
@@ -435,15 +471,6 @@ class MySidelineScraperService {
         } catch (error) {
             console.error(`❌ Error extracting data from card ${cardIndex + 1}:`, error.message);
             return null;
-        }
-        finally {
-            // Ensure the card is collapsed after processing, even if an error occurs.
-            try {
-                await clickExpandElement.click();
-                await this.delay(300); // Short delay to ensure the card collapses properly
-            } catch (collapseError) {
-                console.warn(`⚠️ Could not collapse card ${cardIndex + 1}:`, collapseError.message);
-            }
         }
     }
 
