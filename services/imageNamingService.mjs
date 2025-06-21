@@ -279,7 +279,7 @@ class ImageNamingService {
      * @returns {Promise<Object>} Cleanup results
      */
     static async cleanupOrphanedImages(dryRun = true) {
-        const { Club, Carnival, Sponsor, User } = require('../models');
+        const { Club, Carnival, Sponsor, User } = await import('../models/index.mjs');
         const results = {
             processed: 0,
             orphaned: [],
@@ -435,4 +435,8 @@ class ImageNamingService {
     }
 }
 
+// Export both default and named exports for flexibility
 export default ImageNamingService;
+export const { ENTITY_TYPES, IMAGE_TYPES } = ImageNamingService;
+export const generateImageName = ImageNamingService.generateImageName.bind(ImageNamingService);
+export const parseImageName = ImageNamingService.parseImageName.bind(ImageNamingService);

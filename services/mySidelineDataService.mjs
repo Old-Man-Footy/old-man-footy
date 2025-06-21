@@ -1,8 +1,11 @@
 import { Carnival, SyncLog } from '../models';
 import { Op } from 'sequelize';
-import emailService from './emailService.mjs'; // WILL BE USED FOR NOTIFICATIONS IN THE FUTURE
 import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
 import { ENTITY_TYPES, IMAGE_TYPES, parseImageName, generateImageName } from './imageNamingService.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import { promises as fs } from 'fs';
+import { join, dirname } from 'path';
+
 
 /**
  * MySideline Data Processing Service
@@ -10,7 +13,7 @@ import { ENTITY_TYPES, IMAGE_TYPES, parseImageName, generateImageName } from './
  */
 class MySidelineDataService {
     constructor() {
-        this.australianStates = ['NSW', 'QLD', 'VIC', 'SA', 'WA', 'NT', 'ACT', 'TAS'];
+        this.australianStates = AUSTRALIAN_STATES;
         this.logoDownloadService = new MySidelineLogoDownloadService();
     }
 
@@ -463,20 +466,15 @@ class MySidelineDataService {
                 entityType: ENTITY_TYPES.CARNIVAL,
                 entityId: carnivalId,
                 imageType: IMAGE_TYPES.LOGO,
-                uploaderId: 1, // System user
-                originalName: `mysideline-logo${parsed.extension}`,
                 customSuffix: 'mysideline'
             });
 
             // Move the file to the new location
-            const fs = require('fs').promises;
-            const path = require('path');
-            
-            const oldPath = path.join('uploads', tempLogoUrl.replace('/uploads/', ''));
-            const newPath = path.join('uploads', newNamingResult.fullPath);
+            const oldPath = join('uploads', tempLogoUrl.replace('/uploads/', ''));
+            const newPath = join('uploads', newNamingResult.fullPath);
             
             // Ensure new directory exists
-            await fs.mkdir(path.dirname(newPath), { recursive: true });
+            await fs.mkdir(dirname(newPath), { recursive: true });
             
             // Move the file
             await fs.rename(oldPath, newPath);
