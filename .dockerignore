@@ -98,3 +98,9 @@ docs/
 
 # Development files
 debug-*.png
+
+# Additional size optimizations
+LICENSE
+public/uploads/temp/
+.github/
+.gitattributes
