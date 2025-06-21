@@ -1,4 +1,4 @@
-# Old Man Footy:  Rugby League Masters Carnival Management Platform
+# Old Man Footy: Rugby League Masters Carnival Management Platform
 
 A comprehensive web application for managing Rugby League Masters carnivals across Australia. This platform allows club delegates to create, manage, and promote rugby league carnivals while providing a centralized directory for players and fans to discover upcoming tournaments.
 
@@ -6,42 +6,53 @@ A comprehensive web application for managing Rugby League Masters carnivals acro
 
 ### Core Functionality
 
-- **Carnival Management:** Create, edit, and delete carnivals
+- **Carnival Management:** Create, edit, and delete carnivals with comprehensive details
+- **Club & Player Management:** Manage club information and player registrations
+- **Sponsor Management:** Handle carnival and club sponsorships
 - **Multi-State Support:** Support for all Australian states (NSW, QLD, VIC, WA, SA, TAS, NT, ACT)
-- **File Uploads:** Club logos, promotional images, and draw files
+- **File Uploads:** Club logos, promotional images, and draw files with organized storage
 - **Social Media Integration:** Facebook, Instagram, Twitter, and website links
 - **Advanced Search & Filtering:** Filter by state, search terms, and upcoming events
 - **Email Subscriptions:** State-based email notifications for carnival updates
+- **MySideline Integration:** Automated import and synchronization of events from MySideline platform
 
 ### User Management
 
-- **Authentication System:** Secure user registration and login
-- **Role-based Access:** Club delegates can manage their carnivals
-- **MySideline Integration:** Import and claim events from MySideline platform
-- **Dashboard:** Personalized view of user's carnivals
+- **Authentication System:** Secure user registration and login with Passport.js
+- **Role-based Access:** Club delegates can manage their carnivals and players
+- **Admin Panel:** Administrative interface for system management
+- **Dashboard:** Personalized view of user's carnivals and activities
+- **Audit Logging:** Comprehensive tracking of user actions and system changes
 
 ### Enhanced User Experience
 
-- **Responsive Design:** Mobile-optimized interface
+- **Responsive Design:** Mobile-optimized interface with Bootstrap 5
 - **Drag & Drop Uploads:** Enhanced file upload experience
 - **Real-time Search:** Auto-submit filtering with debouncing
 - **Accessibility Features:** Screen reader support and keyboard navigation
+- **Maintenance & Coming Soon Modes:** System-wide status management
+- **Security Headers:** Helmet.js integration for enhanced security
 
 ## 🚀 Technology Stack
 
-- **Backend:** Node.js with Express.js
-- **Database:** SQLite with Sequelize ORM
+- **Backend:** Node.js with Express.js 5.x
+- **Module System:** ES Modules (ESM) - modern import/export syntax
+- **Database:** SQLite with Sequelize ORM v6
 - **Authentication:** Passport.js with local strategy
 - **File Uploads:** Multer for handling multipart/form-data
-- **Frontend:** EJS templating engine
-- **Styling:** Bootstrap 5 with custom CSS
-- **JavaScript:** Vanilla ES6+ with modern browser APIs
+- **Frontend:** EJS templating engine with express-ejs-layouts
+- **Styling:** Bootstrap 5 with custom CSS and dark/light mode support
+- **JavaScript:** Modern ES2020+ with vanilla browser APIs
+- **Testing:** Jest with comprehensive coverage reporting
+- **Security:** Helmet.js, express-validator, bcrypt password hashing
+- **Web Scraping:** Puppeteer and Playwright for MySideline integration
+- **Task Scheduling:** node-cron for automated data synchronization
 
 ## 📋 Prerequisites
 
 Before running this application, make sure you have the following installed:
 
-- **Node.js** (version 14.0 or higher)
+- **Node.js** (version 18.0 or higher) - Required for ES Modules support
 - **npm** (comes with Node.js)
 - **Git** (for version control)
 
@@ -74,34 +85,59 @@ Note: SQLite database is included and requires no separate installation.
 4. **Create uploads directory** (if not exists):
 
    ```bash
-   mkdir uploads
+   mkdir -p public/uploads
    ```
 
-5. **Start the application:**
+5. **Run database migrations:**
+
+   ```bash
+   npx sequelize-cli db:migrate
+   ```
+
+6. **Seed the database** (optional):
+
+   ```bash
+   npm run seed
+   ```
+
+7. **Start the application:**
 
    ```bash
    npm start
    ```
 
-6. **Access the application:**
+8. **Access the application:**
    Open your browser and navigate to `http://localhost:3050`
 
 ## 📝 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port number | 3050 |
-| `SESSION_SECRET` | Secret key for session encryption | Required |
-| `NODE_ENV` | Environment mode | development |
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `PORT` | Server port number | 3050 | No |
+| `SESSION_SECRET` | Secret key for session encryption | - | Yes |
+| `NODE_ENV` | Environment mode (development/production/test) | development | No |
 
-## Debugging
+## 🧪 Testing & Development
 
-To debug in vscode, change the following line in `package.json`
+### Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start production server |
+| `npm run dev` | Start development server with nodemon |
+| `npm test` | Run all tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run seed` | Seed database with test data |
+
+### Debugging in VS Code
+
+To debug in VS Code, change the following line in `package.json`:
 
 - from: `"test": "jest --detectOpenHandles --forceExit",`
 - to: `"test": "node --inspect-brk=9229 node_modules/jest/bin/jest.js --runInBand",`
 
-Then use an "attach to Jest" `Launch.json` file:
+Then use an "attach to Jest" `launch.json` file:
 
 ```json
 {
@@ -118,108 +154,120 @@ Then use an "attach to Jest" `Launch.json` file:
 }
 ```
 
+### Test Coverage
+
+The project maintains high test coverage standards:
+
+- **Branches:** 70% minimum
+- **Functions:** 70% minimum
+- **Lines:** 70% minimum
+- **Statements:** 70% minimum
+
 ## 🗂️ Project Structure
 
-```sh
-├── .github/               # GitHub configuration files (workflows, templates)
-├── .vscode/               # VS Code workspace settings and configurations
-├── app.js                 # Main application entry point
+```
+├── app.mjs                 # Main application entry point (ES Module)
 ├── package.json           # Project dependencies and scripts
-├── copilot-instructions.md # Development guidelines
-├── config/
-│   ├── config.js          # Application configuration settings
-│   ├── constants.js       # Application constants and enums
-│   ├── database.js        # Database connection and configuration
-│   ├── database-optimizer.js # Database performance optimization
-│   └── passport.js        # Passport authentication configuration
-├── controllers/           # MVC Controllers - Handle HTTP requests and responses
-│   ├── admin.controller.js      # Admin panel functionality
-│   ├── auth.controller.js       # User authentication logic
-│   ├── carnival.controller.js   # Carnival management operations
-│   ├── carnivalClub.controller.js # Carnival-club relationship management
-│   ├── carnivalSponsor.controller.js # Carnival sponsorship management
-│   ├── club.controller.js       # Club management operations
-│   ├── clubPlayer.controller.js # Club player management
-│   ├── clubSponsor.controller.js # Club sponsorship management
-│   ├── main.controller.js       # Main application routes
-│   ├── sponsor.controller.js    # Sponsor management operations
-│   └── userGuide.controller.js  # User guide and help functionality
-├── data/                  # Database files
+├── docker-compose.*.yml   # Docker configuration files
+├── Dockerfile            # Docker container definition
+├── LICENSE               # Custom proprietary license
+├── README.md             # This documentation file
+├── config/               # Application configuration
+│   ├── config.mjs        # Main application configuration
+│   ├── constants.mjs     # Application constants and enums
+│   ├── database.mjs      # Database connection and setup
+│   ├── database-optimizer.mjs # Database performance optimization
+│   └── passport.mjs      # Passport authentication configuration
+├── controllers/          # MVC Controllers - Handle HTTP requests
+│   ├── admin.controller.mjs      # Admin panel functionality
+│   ├── auth.controller.mjs       # User authentication logic
+│   ├── carnival.controller.mjs   # Carnival management operations
+│   ├── carnivalClub.controller.mjs # Carnival-club relationships
+│   ├── carnivalSponsor.controller.mjs # Carnival sponsorship
+│   ├── club.controller.mjs       # Club management operations
+│   ├── clubPlayer.controller.mjs # Club player management
+│   ├── clubSponsor.controller.mjs # Club sponsorship management
+│   ├── comingSoon.controller.mjs # Coming soon page handling
+│   ├── main.controller.mjs       # Main application routes
+│   ├── maintenance.controller.mjs # Maintenance mode handling
+│   ├── sponsor.controller.mjs    # Sponsor management operations
+│   └── userGuide.controller.mjs  # User guide functionality
+├── data/                 # Database files
 │   ├── dev-old-man-footy.db     # Development SQLite database
 │   └── test-old-man-footy.db    # Test SQLite database
-├── docs/                  # Project documentation
-│   ├── DATABASE_SEEDING.md      # Database seeding documentation
-│   ├── PRODUCTION_DEPLOYMENT.md # Production deployment guide
+├── docs/                 # Project documentation
+│   ├── DATABASE_SEEDING.md      # Database seeding guide
 │   └── USER_GUIDE_DELEGATES.md  # User guide for delegates
-├── middleware/            # Express middleware functions
-│   ├── auth.js            # Authentication middleware
-│   └── upload.js          # File upload middleware
-├── migrations/            # Sequelize database migrations
-│   └── [timestamp]-*.js   # Database schema migration files
-├── models/                # MVC Models - Database schemas and business logic
-│   ├── AuditLog.js        # Audit logging model
-│   ├── Carnival.js        # Carnival event model
-│   ├── CarnivalClub.js    # Carnival-club relationship model
-│   ├── CarnivalClubPlayer.js # Carnival club player model
-│   ├── CarnivalSponsor.js # Carnival sponsorship model
-│   ├── Club.js            # Club information model
-│   ├── ClubAlternateName.js # Club alternate names model
-│   ├── ClubPlayer.js      # Club player model
-│   ├── ClubSponsor.js     # Club sponsorship model
-│   ├── EmailSubscription.js # Email subscription model
-│   ├── index.js           # Model index and associations
-│   ├── Sponsor.js         # Sponsor information model
-│   ├── SyncLog.js         # Data synchronization logging model
-│   └── User.js            # User account model
-├── node_modules/          # NPM package dependencies (auto-generated)
-├── public/                # Static assets served to the client
-│   ├── icons/             # Application icons and favicons
-│   ├── images/            # Static images and graphics
-│   ├── js/                # Client-side JavaScript files
-│   ├── styles/            # CSS stylesheets and styling assets
-│   └── uploads/           # User-uploaded files directory
-│       ├── documents/     # Uploaded document files (PDFs, etc.)
-│       ├── images/        # Uploaded image files
-│       └── logos/         # Uploaded logo files
-├── routes/                # Express route definitions
-│   ├── admin.js           # Admin panel routes
-│   ├── auth.js            # Authentication routes
-│   ├── carnivalClubs.js   # Carnival club management routes
-│   ├── carnivals.js       # Carnival management routes
-│   ├── carnivalSponsors.js # Carnival sponsor routes
-│   ├── clubPlayers.js     # Club player management routes
-│   ├── clubs.js           # Club management routes
-│   ├── index.js           # Main application routes
-│   ├── sponsors.js        # Sponsor management routes
-│   └── api/               # API route definitions
-├── scripts/               # Utility and maintenance scripts
-│   ├── image-manager.js   # Image processing and management
-│   ├── purge-seed-data.js # Database cleanup scripts
-│   ├── seed-database.js   # Database seeding scripts
-│   ├── fixtures/          # Test data and fixtures
-│   └── services/          # Script-specific service utilities
-├── services/              # Business logic services and utilities
-│   ├── auditService.js    # Audit logging service
+├── middleware/           # Express middleware functions
+│   ├── auth.mjs          # Authentication middleware
+│   ├── comingSoon.mjs    # Coming soon mode middleware
+│   ├── maintenance.mjs   # Maintenance mode middleware
+│   ├── upload.mjs        # File upload middleware
+│   └── validation.mjs    # Input validation middleware
+├── migrations/           # Sequelize database migrations
+│   └── *.mjs            # Database schema migration files
+├── models/              # MVC Models - Database schemas and logic
+│   ├── AuditLog.mjs     # Audit logging model
+│   ├── Carnival.mjs     # Carnival event model
+│   ├── CarnivalClub.mjs # Carnival-club relationship model
+│   ├── CarnivalClubPlayer.mjs # Carnival club player model
+│   ├── CarnivalSponsor.mjs # Carnival sponsorship model
+│   ├── Club.mjs         # Club information model
+│   ├── ClubAlternateName.mjs # Club alternate names model
+│   ├── ClubPlayer.mjs   # Club player model
+│   ├── ClubSponsor.mjs  # Club sponsorship model
+│   ├── EmailSubscription.mjs # Email subscription model
+│   ├── index.mjs        # Model index and associations
+│   ├── Sponsor.mjs      # Sponsor information model
+│   ├── SyncLog.mjs      # Data synchronization logging
+│   └── User.mjs         # User account model
+├── public/              # Static assets served to clients
+│   ├── icons/           # Application icons and favicons
+│   ├── images/          # Static images and graphics
+│   ├── js/              # Client-side JavaScript files
+│   ├── styles/          # CSS stylesheets with light/dark themes
+│   └── uploads/         # User-uploaded files directory
+├── routes/              # Express route definitions
+│   ├── admin.mjs        # Admin panel routes
+│   ├── auth.mjs         # Authentication routes
+│   ├── carnivalClubs.mjs # Carnival club management routes
+│   ├── carnivals.mjs    # Carnival management routes
+│   ├── carnivalSponsors.mjs # Carnival sponsor routes
+│   ├── clubPlayers.mjs  # Club player management routes
+│   ├── clubs.mjs        # Club management routes
+│   ├── index.mjs        # Main application routes
+│   ├── sponsors.mjs     # Sponsor management routes
+│   └── api/            # API route definitions
+│       └── index.mjs    # API routes index
+├── scripts/             # Utility and maintenance scripts
+├── services/            # Business logic services and utilities
+│   ├── auditService.mjs # Audit logging service
 │   ├── carouselImageService.js # Image carousel management
-│   ├── emailService.js    # Email notification service
-│   └── imageNamingService.js # Image file naming utilities
-├── tests/                 # Test files and test utilities
-│   └── *.test.js          # Jest unit and integration tests
-└── views/                 # EJS templates - MVC Views
-    ├── about.ejs          # About page template
-    ├── contact.ejs        # Contact page template
-    ├── dashboard.ejs      # User dashboard template
-    ├── error.ejs          # Error page template
-    ├── index.ejs          # Homepage template
-    ├── layout.ejs         # Main layout template
-    ├── user-guide.ejs     # User guide template
-    ├── admin/             # Admin panel view templates
-    ├── auth/              # Authentication view templates (login, register)
-    ├── carnivals/         # Carnival management view templates
-    ├── clubs/             # Club management view templates
-    │   └── players/       # Club player management view templates
-    ├── partials/          # Reusable template components
-    └── sponsors/          # Sponsor management view templates
+│   ├── emailService.mjs # Email notification service
+│   ├── imageNamingService.mjs # Image file naming utilities
+│   ├── mySidelineDataService.mjs # MySideline data processing
+│   ├── mySidelineEventParserService.mjs # Event parsing
+│   ├── mySidelineIntegrationService.mjs # Main integration service
+│   ├── mySidelineLogoDownloadService.mjs # Logo downloading
+│   ├── mySidelineScraperService.mjs # Web scraping service
+│   └── sponsorSortingService.mjs # Sponsor sorting logic
+├── tests/               # Test files and utilities
+│   └── *.test.js        # Jest unit and integration tests
+└── views/               # EJS templates - MVC Views
+    ├── about.ejs        # About page template
+    ├── contact.ejs      # Contact page template
+    ├── dashboard.ejs    # User dashboard template
+    ├── error.ejs        # Error page template
+    ├── index.ejs        # Homepage template
+    ├── layout.ejs       # Main layout template
+    ├── user-guide.ejs   # User guide template
+    ├── admin/           # Admin panel view templates
+    ├── auth/            # Authentication views (login, register)
+    ├── carnivals/       # Carnival management view templates
+    ├── clubs/           # Club management view templates
+    │   └── players/     # Club player management views
+    ├── partials/        # Reusable template components
+    └── sponsors/        # Sponsor management view templates
 ```
 
 ## 🎯 Usage
@@ -229,15 +277,25 @@ Then use an "attach to Jest" `Launch.json` file:
 1. **Register an Account:** Sign up with your club details
 2. **Create Carnivals:** Add new carnivals with complete information
 3. **Manage Events:** Edit, update, or delete your carnivals
-4. **Upload Files:** Add club logos, promotional images, and draw files
-5. **Claim MySideline Events:** Take ownership of imported events
+4. **Player Management:** Add and manage club players
+5. **Upload Files:** Add club logos, promotional images, and draw files
+6. **Claim MySideline Events:** Take ownership of imported events
+7. **Sponsor Management:** Add and manage carnival/club sponsors
 
 ### For Players and Fans
 
-1. **Browse Carnivals:** View all upcoming events
+1. **Browse Carnivals:** View all upcoming events with detailed information
 2. **Filter Events:** Search by state, location, or keywords
 3. **Subscribe to Updates:** Get email notifications for specific states
 4. **View Details:** Access complete carnival information and contact details
+5. **Club Information:** Browse club details and player rosters
+
+### For Administrators
+
+1. **System Management:** Monitor and manage system-wide settings
+2. **User Management:** Oversee user accounts and permissions
+3. **Data Synchronization:** Monitor MySideline integration status
+4. **Audit Logs:** Review system activity and user actions
 
 ## 🔧 API Endpoints
 
@@ -260,6 +318,32 @@ Then use an "attach to Jest" `Launch.json` file:
 - `POST /carnivals/:id/delete` - Delete carnival (owner only)
 - `POST /carnivals/:id/take-ownership` - Claim MySideline event
 
+### Clubs & Players
+
+- `GET /clubs` - List all clubs
+- `GET /clubs/:id` - View club details
+- `GET /clubs/:id/edit` - Edit club form (owner only)
+- `POST /clubs/:id/edit` - Update club (owner only)
+- `GET /clubs/players` - Club player management
+- `POST /clubs/players` - Add new club player
+- `PUT /clubs/players/:id` - Update club player
+- `DELETE /clubs/players/:id` - Delete club player
+
+### Sponsors
+
+- `GET /sponsors` - List all sponsors
+- `GET /sponsors/new` - Create sponsor form (authenticated)
+- `POST /sponsors/new` - Create new sponsor (authenticated)
+- `GET /sponsors/:id/edit` - Edit sponsor form (owner only)
+- `POST /sponsors/:id/edit` - Update sponsor (owner only)
+
+### Admin
+
+- `GET /admin` - Admin dashboard (admin only)
+- `GET /admin/users` - User management (admin only)
+- `GET /admin/sync-logs` - MySideline sync status (admin only)
+- `GET /admin/audit-logs` - System audit logs (admin only)
+
 ### General
 
 - `GET /` - Homepage with upcoming carnivals
@@ -268,38 +352,62 @@ Then use an "attach to Jest" `Launch.json` file:
 - `POST /subscribe` - Email subscription
 - `GET /unsubscribe/:token` - Unsubscribe from emails
 
-## 🧪 Testing
-
-Run the application in development mode:
-
-```bash
-npm run dev
-```
-
-For production deployment:
-
-```bash
-npm start
-```
-
 ## 🚀 Deployment
 
 ### Environment Setup
 
-1. Set environment variables for production
-2. SQLite database will be automatically created on first run
-3. Set up file upload storage (consider cloud storage for production)
-4. Configure session store (Redis recommended for production)
+1. Set environment variables for production:
 
-Note: For production deployments, ensure persistent storage is configured for the SQLite database file.
+   ```env
+   NODE_ENV=production
+   SESSION_SECRET=your-production-secret
+   PORT=3050
+   ```
+
+2. Database setup:
+   - SQLite database will be automatically created on first run
+   - Run migrations: `npx sequelize-cli db:migrate`
+
+3. File upload storage:
+   - Ensure `/public/uploads` directory exists and is writable
+   - Consider cloud storage for production (S3, Azure Blob, etc.)
+
+4. Security considerations:
+   - Configure session store (Redis recommended for production)
+   - Set up HTTPS/SSL certificates
+   - Configure proper CORS policies
+   - Enable security headers via Helmet.js
+
+### Docker Deployment
+
+The project includes Docker support:
+
+```bash
+# Build and run with Docker Compose
+docker-compose -f docker-compose.prod.yml up -d
+
+# For testing
+docker-compose -f docker-compose.test.yml up
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Follow the coding guidelines in `copilot-instructions.md`
+4. Write tests for new functionality
+5. Ensure all tests pass (`npm test`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+### Development Guidelines
+
+- **ES Modules:** Use modern import/export syntax
+- **MVC Architecture:** Strictly separate concerns between models, views, and controllers
+- **Security First:** Always validate and sanitize inputs
+- **Test-Driven Development:** Write tests for all business logic
+- **JSDoc Comments:** Document all public functions and complex logic
 
 ## 📄 License
 
