@@ -3,7 +3,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/devonuto/old-man-footy:latest
+    image: ghcr.io/old-man-footy/old-man-footy:latest
     container_name: old-man-footy-prod
     ports:
       - "3060:3060" # Maps host port 3060 to container port 3060
