@@ -166,108 +166,108 @@ The project maintains high test coverage standards:
 ## 🗂️ Project Structure
 
 ```
-├── app.mjs                 # Main application entry point (ES Module)
-├── package.json           # Project dependencies and scripts
-├── docker-compose.*.yml   # Docker configuration files
-├── Dockerfile            # Docker container definition
-├── LICENSE               # Custom proprietary license
-├── README.md             # This documentation file
-├── config/               # Application configuration
-│   ├── config.mjs        # Main application configuration
-│   ├── constants.mjs     # Application constants and enums
-│   ├── database.mjs      # Database connection and setup
-│   ├── database-optimizer.mjs # Database performance optimization
-│   └── passport.mjs      # Passport authentication configuration
-├── controllers/          # MVC Controllers - Handle HTTP requests
-│   ├── admin.controller.mjs      # Admin panel functionality
-│   ├── auth.controller.mjs       # User authentication logic
-│   ├── carnival.controller.mjs   # Carnival management operations
-│   ├── carnivalClub.controller.mjs # Carnival-club relationships
-│   ├── carnivalSponsor.controller.mjs # Carnival sponsorship
-│   ├── club.controller.mjs       # Club management operations
-│   ├── clubPlayer.controller.mjs # Club player management
-│   ├── clubSponsor.controller.mjs # Club sponsorship management
-│   ├── comingSoon.controller.mjs # Coming soon page handling
-│   ├── main.controller.mjs       # Main application routes
-│   ├── maintenance.controller.mjs # Maintenance mode handling
-│   ├── sponsor.controller.mjs    # Sponsor management operations
-│   └── userGuide.controller.mjs  # User guide functionality
-├── data/                 # Database files
-│   ├── dev-old-man-footy.db     # Development SQLite database
-│   └── test-old-man-footy.db    # Test SQLite database
-├── docs/                 # Project documentation
-│   ├── DATABASE_SEEDING.md      # Database seeding guide
-│   └── USER_GUIDE_DELEGATES.md  # User guide for delegates
-├── middleware/           # Express middleware functions
-│   ├── auth.mjs          # Authentication middleware
-│   ├── comingSoon.mjs    # Coming soon mode middleware
-│   ├── maintenance.mjs   # Maintenance mode middleware
-│   ├── upload.mjs        # File upload middleware
-│   └── validation.mjs    # Input validation middleware
-├── migrations/           # Sequelize database migrations
-│   └── *.mjs            # Database schema migration files
-├── models/              # MVC Models - Database schemas and logic
-│   ├── AuditLog.mjs     # Audit logging model
-│   ├── Carnival.mjs     # Carnival event model
-│   ├── CarnivalClub.mjs # Carnival-club relationship model
-│   ├── CarnivalClubPlayer.mjs # Carnival club player model
-│   ├── CarnivalSponsor.mjs # Carnival sponsorship model
-│   ├── Club.mjs         # Club information model
-│   ├── ClubAlternateName.mjs # Club alternate names model
-│   ├── ClubPlayer.mjs   # Club player model
-│   ├── ClubSponsor.mjs  # Club sponsorship model
-│   ├── EmailSubscription.mjs # Email subscription model
-│   ├── index.mjs        # Model index and associations
-│   ├── Sponsor.mjs      # Sponsor information model
-│   ├── SyncLog.mjs      # Data synchronization logging
-│   └── User.mjs         # User account model
-├── public/              # Static assets served to clients
-│   ├── icons/           # Application icons and favicons
-│   ├── images/          # Static images and graphics
-│   ├── js/              # Client-side JavaScript files
-│   ├── styles/          # CSS stylesheets with light/dark themes
-│   └── uploads/         # User-uploaded files directory
-├── routes/              # Express route definitions
-│   ├── admin.mjs        # Admin panel routes
-│   ├── auth.mjs         # Authentication routes
-│   ├── carnivalClubs.mjs # Carnival club management routes
-│   ├── carnivals.mjs    # Carnival management routes
-│   ├── carnivalSponsors.mjs # Carnival sponsor routes
-│   ├── clubPlayers.mjs  # Club player management routes
-│   ├── clubs.mjs        # Club management routes
-│   ├── index.mjs        # Main application routes
-│   ├── sponsors.mjs     # Sponsor management routes
-│   └── api/            # API route definitions
-│       └── index.mjs    # API routes index
-├── scripts/             # Utility and maintenance scripts
-├── services/            # Business logic services and utilities
-│   ├── auditService.mjs # Audit logging service
-│   ├── carouselImageService.js # Image carousel management
-│   ├── emailService.mjs # Email notification service
-│   ├── imageNamingService.mjs # Image file naming utilities
-│   ├── mySidelineDataService.mjs # MySideline data processing
-│   ├── mySidelineEventParserService.mjs # Event parsing
-│   ├── mySidelineIntegrationService.mjs # Main integration service
-│   ├── mySidelineLogoDownloadService.mjs # Logo downloading
-│   ├── mySidelineScraperService.mjs # Web scraping service
-│   └── sponsorSortingService.mjs # Sponsor sorting logic
-├── tests/               # Test files and utilities
-│   └── *.test.js        # Jest unit and integration tests
-└── views/               # EJS templates - MVC Views
-    ├── about.ejs        # About page template
-    ├── contact.ejs      # Contact page template
-    ├── dashboard.ejs    # User dashboard template
-    ├── error.ejs        # Error page template
-    ├── index.ejs        # Homepage template
-    ├── layout.ejs       # Main layout template
-    ├── user-guide.ejs   # User guide template
-    ├── admin/           # Admin panel view templates
-    ├── auth/            # Authentication views (login, register)
-    ├── carnivals/       # Carnival management view templates
-    ├── clubs/           # Club management view templates
-    │   └── players/     # Club player management views
-    ├── partials/        # Reusable template components
-    └── sponsors/        # Sponsor management view templates
+├── app.mjs                                     # Main application entry point (ES Module)
+├── package.json                                # Project dependencies and scripts
+├── docker-compose.*.yml                        # Docker configuration files
+├── Dockerfile                                  # Docker container definition
+├── LICENSE                                     # Custom proprietary license
+├── README.md                                   # This documentation file
+├── config/                                     # Application configuration
+│   ├── config.mjs                              # Main application configuration
+│   ├── constants.mjs                           # Application constants and enums
+│   ├── database.mjs                            # Database connection and setup
+│   ├── database-optimizer.mjs                  # Database performance optimization
+│   └── passport.mjs                            # Passport authentication configuration
+├── controllers/                                # MVC Controllers - Handle HTTP requests
+│   ├── admin.controller.mjs                    # Admin panel functionality
+│   ├── auth.controller.mjs                     # User authentication logic
+│   ├── carnival.controller.mjs                 # Carnival management operations
+│   ├── carnivalClub.controller.mjs             # Carnival-club relationships
+│   ├── carnivalSponsor.controller.mjs          # Carnival sponsorship
+│   ├── club.controller.mjs                     # Club management operations
+│   ├── clubPlayer.controller.mjs               # Club player management
+│   ├── clubSponsor.controller.mjs              # Club sponsorship management
+│   ├── comingSoon.controller.mjs               # Coming soon page handling
+│   ├── main.controller.mjs                     # Main application routes
+│   ├── maintenance.controller.mjs              # Maintenance mode handling
+│   ├── sponsor.controller.mjs                  # Sponsor management operations
+│   └── userGuide.controller.mjs                # User guide functionality
+├── data/                                       # Database files
+│   ├── dev-old-man-footy.db                    # Development SQLite database
+│   └── test-old-man-footy.db                   # Test SQLite database
+├── docs/                                       # Project documentation
+│   ├── DATABASE_SEEDING.md                     # Database seeding guide
+│   └── USER_GUIDE_DELEGATES.md                 # User guide for delegates
+├── middleware/                                 # Express middleware functions
+│   ├── auth.mjs                                # Authentication middleware
+│   ├── comingSoon.mjs                          # Coming soon mode middleware
+│   ├── maintenance.mjs                         # Maintenance mode middleware
+│   ├── upload.mjs                              # File upload middleware
+│   └── validation.mjs                          # Input validation middleware
+├── migrations/                                 # Sequelize database migrations
+│   └── *.mjs                                   # Database schema migration files
+├── models/                                     # MVC Models - Database schemas and logic
+│   ├── AuditLog.mjs                            # Audit logging model
+│   ├── Carnival.mjs                            # Carnival event model
+│   ├── CarnivalClub.mjs                        # Carnival-club relationship model
+│   ├── CarnivalClubPlayer.mjs                  # Carnival club player model
+│   ├── CarnivalSponsor.mjs                     # Carnival sponsorship model
+│   ├── Club.mjs                                # Club information model
+│   ├── ClubAlternateName.mjs                   # Club alternate names model
+│   ├── ClubPlayer.mjs                          # Club player model
+│   ├── ClubSponsor.mjs                         # Club sponsorship model
+│   ├── EmailSubscription.mjs                   # Email subscription model
+│   ├── index.mjs                               # Model index and associations
+│   ├── Sponsor.mjs                             # Sponsor information model
+│   ├── SyncLog.mjs                             # Data synchronization logging
+│   └── User.mjs                                # User account model
+├── public/                                     # Static assets served to clients
+│   ├── icons/                                  # Application icons and favicons
+│   ├── images/                                 # Static images and graphics
+│   ├── js/                                     # Client-side JavaScript files
+│   ├── styles/                                 # CSS stylesheets with light/dark themes
+│   └── uploads/                                # User-uploaded files directory
+├── routes/                                     # Express route definitions
+│   ├── admin.mjs                               # Admin panel routes
+│   ├── auth.mjs                                # Authentication routes
+│   ├── carnivalClubs.mjs                       # Carnival club management routes
+│   ├── carnivals.mjs                           # Carnival management routes
+│   ├── carnivalSponsors.mjs                    # Carnival sponsor routes
+│   ├── clubPlayers.mjs                         # Club player management routes
+│   ├── clubs.mjs                               # Club management routes
+│   ├── index.mjs                               # Main application routes
+│   ├── sponsors.mjs                            # Sponsor management routes
+│   └── api/                                    # API route definitions
+│       └── index.mjs                           # API routes index
+├── scripts/                                    # Utility and maintenance scripts
+├── services/                                   # Business logic services and utilities
+│   ├── auditService.mjs                        # Audit logging service
+│   ├── carouselImageService.js                 # Image carousel management
+│   ├── emailService.mjs                        # Email notification service
+│   ├── imageNamingService.mjs                  # Image file naming utilities
+│   ├── mySidelineDataService.mjs               # MySideline data processing
+│   ├── mySidelineEventParserService.mjs        # Event parsing
+│   ├── mySidelineIntegrationService.mjs        # Main integration service
+│   ├── mySidelineLogoDownloadService.mjs       # Logo downloading
+│   ├── mySidelineScraperService.mjs            # Web scraping service
+│   └── sponsorSortingService.mjs               # Sponsor sorting logic
+├── tests/                                      # Test files and utilities
+│   └── *.test.js                               # Jest unit and integration tests
+└── views/                                      # EJS templates - MVC Views
+    ├── about.ejs                               # About page template
+    ├── contact.ejs                             # Contact page template
+    ├── dashboard.ejs                           # User dashboard template
+    ├── error.ejs                               # Error page template
+    ├── index.ejs                               # Homepage template
+    ├── layout.ejs                              # Main layout template
+    ├── user-guide.ejs                          # User guide template
+    ├── admin/                                  # Admin panel view templates
+    ├── auth/                                   # Authentication views (login, register)
+    ├── carnivals/                              # Carnival management view templates
+    ├── clubs/                                  # Club management view templates
+    │   └── players/                            # Club player management views
+    ├── partials/                               # Reusable template components
+    └── sponsors/                               # Sponsor management view templates
 ```
 
 ## 🎯 Usage
