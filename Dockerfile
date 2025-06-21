@@ -8,45 +8,6 @@ RUN apk add --no-cache dumb-init
 
 WORKDIR /app
 
-# Development stage - includes all dev tools and browsers
-FROM base AS development
-ENV NODE_ENV=development
-
-# DEVELOPMENT ONLY: Install full browser dependencies for testing and development
-# KEPT: All browser packages here since dev needs full Playwright functionality
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    bash
-
-# Configure Playwright to use system Chromium (prevents downloading ~300MB of browsers)
-ENV PLAYWRIGHT_BROWSERS_PATH=0
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-# CONSISTENCY FIX: Use same user name across all stages
-# CHANGED: nextjs -> appuser for consistency
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S appuser -u 1001 -G nodejs
-
-COPY package*.json ./
-RUN npm ci --include=dev
-
-# Install Playwright browsers for development (needed for testing)
-RUN npx playwright install --with-deps || echo "Playwright install failed, continuing..."
-
-COPY . .
-# CONSISTENCY FIX: Use appuser instead of nextjs
-RUN chown -R appuser:nodejs /app
-USER appuser
-EXPOSE 3000
-CMD ["dumb-init", "npm", "run", "dev"]
-
 # Test stage - for user testing and CI/CD pipelines
 FROM base AS test
 ENV NODE_ENV=test
@@ -103,9 +64,9 @@ RUN apk add --no-cache \
 
 COPY package*.json ./
 
+# Install production dependencies
 # OPTIMIZATION: Keep Playwright in production (needed for MySideline scraping)
 # but configure to use system browser instead of downloading full browser packages
-# RESTORED: Proper production dependency installation with cache cleaning
 RUN npm ci --only=production && \
     npm cache clean --force
 
