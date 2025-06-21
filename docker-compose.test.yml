@@ -3,7 +3,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/devonuto/old-man-footy:latest
+    image: ghcr.io/old-man-footy/old-man-footy:latest
     container_name: old-man-footy-test
     ports:
       - "3055:3055"
@@ -15,6 +15,7 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_FROM=noreply@oldmanfooty.au
+      - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - EMAIL_FROM_NAME="Old Man Footy Test"
       - PORT=3055
     volumes:
