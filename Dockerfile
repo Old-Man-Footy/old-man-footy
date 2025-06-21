@@ -141,12 +141,15 @@ WORKDIR /app
 
 # Copy production dependencies from deps stage
 COPY --from=deps --chown=appuser:nodejs /app/node_modules ./node_modules
-COPY --chown=appuser:nodejs package*.json ./
 
-# OPTIMIZATION: Copy only essential application files (exclude test files, docs, etc.)
-# REMOVED: Copying everything with COPY . .
-# REASON: Reduces image size by excluding tests/, docs/, scripts/, migrations/, etc.
+# CRITICAL: Copy all necessary configuration and runtime files
+COPY --chown=appuser:nodejs package*.json ./
+COPY --chown=appuser:nodejs .sequelizerc ./ 
+
+# CRITICAL: Copy application core files
 COPY --chown=appuser:nodejs app.js ./
+
+# CRITICAL: Copy all essential directories for runtime
 COPY --chown=appuser:nodejs config/ ./config/
 COPY --chown=appuser:nodejs controllers/ ./controllers/
 COPY --chown=appuser:nodejs middleware/ ./middleware/
@@ -155,6 +158,10 @@ COPY --chown=appuser:nodejs routes/ ./routes/
 COPY --chown=appuser:nodejs services/ ./services/
 COPY --chown=appuser:nodejs views/ ./views/
 COPY --chown=appuser:nodejs public/ ./public/
+
+# CRITICAL: Copy migrations for database initialization fallback
+# Even though production uses sequelize.sync(), migrations provide backup initialization method
+COPY --chown=appuser:nodejs migrations/ ./migrations/
 
 # RESTORED: Important production cleanup command
 # REASON: Removes any dev dependencies that might have been inadvertently included
