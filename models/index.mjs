@@ -1,26 +1,26 @@
 /**
- * Models Index - SQLite/Sequelize Implementation
+ * Models Index - Central Model Management
  * 
- * Establishes model relationships and exports all models
- * for the Old Man Footy platform.
+ * Manages all Sequelize models and their associations for the Old Man Footy platform.
+ * This file is responsible for importing all models and defining their relationships.
  */
 
-const { sequelize } = require('../config/database');
+import { sequelize } from '../config/database.mjs';
 
 // Import all models
-const User = require('./User');
-const Club = require('./Club');
-const Carnival = require('./Carnival');
-const EmailSubscription = require('./EmailSubscription');
-const Sponsor = require('./Sponsor');
-const ClubSponsor = require('./ClubSponsor');
-const CarnivalSponsor = require('./CarnivalSponsor');
-const ClubAlternateName = require('./ClubAlternateName');
-const CarnivalClub = require('./CarnivalClub');
-const ClubPlayer = require('./ClubPlayer');
-const CarnivalClubPlayer = require('./CarnivalClubPlayer');
-const SyncLog = require('./SyncLog');
-const AuditLog = require('./AuditLog');
+import User from './User.mjs';
+import Club from './Club.mjs';
+import ClubAlternateName from './ClubAlternateName.mjs';
+import ClubPlayer from './ClubPlayer.mjs';
+import ClubSponsor from './ClubSponsor.mjs';
+import Carnival from './Carnival.mjs';
+import CarnivalClub from './CarnivalClub.mjs';
+import CarnivalClubPlayer from './CarnivalClubPlayer.mjs';
+import CarnivalSponsor from './CarnivalSponsor.mjs';
+import Sponsor from './Sponsor.mjs';
+import EmailSubscription from './EmailSubscription.mjs';
+import AuditLog from './AuditLog.mjs';
+import SyncLog from './SyncLog.mjs';
 
 /**
  * Define model associations/relationships
@@ -213,22 +213,20 @@ User.hasMany(AuditLog, {
   as: 'auditLogs'
 });
 
-/**
- * Export all models and database instance
- */
-module.exports = {
+// Export all models and sequelize instance
+export {
   sequelize,
   User,
   Club,
-  Carnival,
-  EmailSubscription,
-  Sponsor,
-  ClubSponsor,
-  CarnivalSponsor,
   ClubAlternateName,
-  CarnivalClub,
   ClubPlayer,
+  ClubSponsor,
+  Carnival,
+  CarnivalClub,
   CarnivalClubPlayer,
-  SyncLog,
-  AuditLog
+  CarnivalSponsor,
+  Sponsor,
+  EmailSubscription,
+  AuditLog,
+  SyncLog
 };

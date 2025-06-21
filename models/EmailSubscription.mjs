@@ -5,9 +5,9 @@
  * with state-based filtering and unsubscribe functionality.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const crypto = require('crypto');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import crypto from 'crypto';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * EmailSubscription model class extending Sequelize Model
@@ -135,4 +135,4 @@ EmailSubscription.init({
   }
 });
 
-module.exports = EmailSubscription;
+export default EmailSubscription;

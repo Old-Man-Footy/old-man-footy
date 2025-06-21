@@ -5,8 +5,8 @@
  * allowing tracking of which specific players from each club will attend carnivals.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * CarnivalClubPlayer junction model class extending Sequelize Model
@@ -276,4 +276,4 @@ CarnivalClubPlayer.init({
   }
 });
 
-module.exports = CarnivalClubPlayer;
+export default CarnivalClubPlayer;

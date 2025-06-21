@@ -5,8 +5,8 @@
  * Handles player registration, validation, and club associations.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * ClubPlayer model class extending Sequelize Model
@@ -268,4 +268,4 @@ ClubPlayer.init({
   }
 });
 
-module.exports = ClubPlayer;
+export default ClubPlayer;

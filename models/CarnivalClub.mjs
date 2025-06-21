@@ -5,8 +5,8 @@
  * for the Old Man Footy platform.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * CarnivalClub junction model class extending Sequelize Model
@@ -369,4 +369,4 @@ async function updateCarnivalRegistrationCount(carnivalId) {
   }
 }
 
-module.exports = CarnivalClub;
+export default CarnivalClub;

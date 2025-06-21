@@ -5,8 +5,8 @@
  * for enhanced search functionality on the Old Man Footy platform.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * ClubAlternateName model class extending Sequelize Model
@@ -140,4 +140,4 @@ ClubAlternateName.init({
   ]
 });
 
-module.exports = ClubAlternateName;
+export default ClubAlternateName;

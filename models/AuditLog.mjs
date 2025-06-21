@@ -1,12 +1,12 @@
 /**
  * AuditLog Model - SQLite/Sequelize Implementation
  * 
- * Tracks key user and system actions for security, compliance, and administrative oversight.
- * Provides comprehensive audit trails for all critical operations in the Old Man Footy platform.
+ * Manages audit trail for all significant actions in the system,
+ * providing comprehensive tracking for security and compliance.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * AuditLog model class extending Sequelize Model
@@ -354,4 +354,4 @@ AuditLog.init({
   ]
 });
 
-module.exports = AuditLog;
+export default AuditLog;

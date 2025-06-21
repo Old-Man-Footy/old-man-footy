@@ -5,10 +5,10 @@
  * for Old Man Footy platform delegates and administrators.
  */
 
-const { DataTypes, Model, Op } = require('sequelize');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model, Op } from 'sequelize';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * User model class extending Sequelize Model
@@ -282,4 +282,4 @@ User.init({
   }
 });
 
-module.exports = User;
+export default User;

@@ -1,12 +1,12 @@
 /**
  * Club Model - SQLite/Sequelize Implementation
  * 
- * Manages Rugby League club information and associations
+ * Manages rugby league club information and associations
  * for the Old Man Footy platform.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * Club model class extending Sequelize Model
@@ -278,4 +278,4 @@ Club.init({
   ]
 });
 
-module.exports = Club;
+export default Club;

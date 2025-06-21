@@ -1,12 +1,12 @@
 /**
  * Carnival Model - SQLite/Sequelize Implementation
  * 
- * Manages Rugby League carnivals with comprehensive features including
- * MySideline integration, file management, and social media links.
+ * Manages rugby league carnival events, including MySideline integration
+ * and comprehensive event management for the Old Man Footy platform.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model, Op } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * Carnival model class extending Sequelize Model
@@ -28,7 +28,7 @@ class Carnival extends Model {
    * @returns {Promise<number>} Number of approved registrations
    */
   async updateCurrentRegistrations() {
-    const CarnivalClub = require('./CarnivalClub');
+    const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
     const approvedCount = await CarnivalClub.count({
       where: {
         carnivalId: this.id,
@@ -50,7 +50,7 @@ class Carnival extends Model {
    * @returns {Promise<number>}
    */
   async getApprovedRegistrationsCount() {
-    const CarnivalClub = require('./CarnivalClub');
+    const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
     return await CarnivalClub.count({
       where: {
         carnivalId: this.id,
@@ -156,7 +156,7 @@ class Carnival extends Model {
     
     // Allow any delegate from the hosting club to edit carnivals their club is hosting
     if (user.clubId && this.createdByUserId) {
-      const User = require('./User');
+      const User = (await import('./User.mjs')).default;
       const carnivalCreator = await User.findByPk(this.createdByUserId, {
         attributes: ['clubId']
       });
@@ -175,7 +175,7 @@ class Carnival extends Model {
    * @returns {Promise<User|null>} Creator user or null
    */
   async getCreator() {
-    const User = require('./User');
+    const User = (await import('./User.mjs')).default;
     if (!this.createdByUserId) return null;
     return await User.findByPk(this.createdByUserId);
   }
@@ -261,7 +261,7 @@ class Carnival extends Model {
       where: {
         isActive: true,
         date: {
-          [require('sequelize').Op.gte]: new Date()
+          [Op.gte]: new Date()
         }
       },
       order: [['date', 'ASC']]
@@ -305,7 +305,7 @@ class Carnival extends Model {
    * @returns {Promise<Object>} Result object with success status and message
    */
   static async takeOwnership(carnivalId, userId) {
-    const User = require('./User');
+    const User = (await import('./User.mjs')).default;
     
     try {
       // Input validation
@@ -322,7 +322,7 @@ class Carnival extends Model {
       // Find the user and include their club information
       const user = await User.findByPk(userId, {
         include: [{
-          model: require('./Club'),
+          model: (await import('./Club.mjs')).default,
           as: 'club',
           attributes: ['id', 'clubName', 'state', 'isActive']
         }]
@@ -404,7 +404,7 @@ class Carnival extends Model {
    * @returns {Promise<Object>} Result object with success status and message
    */
   static async releaseOwnership(carnivalId, userId) {
-    const User = require('./User');
+    const User = (await import('./User.mjs')).default;
     
     try {
       // Input validation
@@ -421,7 +421,7 @@ class Carnival extends Model {
       // Find the user and include their club information
       const user = await User.findByPk(userId, {
         include: [{
-          model: require('./Club'),
+          model: (await import('./Club.mjs')).default,
           as: 'club',
           attributes: ['id', 'clubName', 'isActive']
         }]
@@ -446,7 +446,7 @@ class Carnival extends Model {
       }
 
       // Check if there are registered clubs - warn but allow
-      const { CarnivalClub } = require('./index');
+      const { CarnivalClub } = await import('./index.mjs');
       const registeredClubs = await CarnivalClub.count({
         where: {
           carnivalId: carnivalId,
@@ -504,8 +504,8 @@ class Carnival extends Model {
    * @returns {Promise<Object>} Result object with success status and message
    */
   static async adminClaimOnBehalf(carnivalId, adminUserId, targetClubId) {
-    const User = require('./User');
-    const Club = require('./Club');
+    const User = (await import('./User.mjs')).default;
+    const Club = (await import('./Club.mjs')).default;
     
     try {
       // Input validation
@@ -996,4 +996,4 @@ Carnival.init({
   }
 });
 
-module.exports = Carnival;
+export default Carnival;

@@ -5,8 +5,8 @@
  * for the Old Man Footy platform.
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * ClubSponsor junction model class extending Sequelize Model
@@ -246,4 +246,4 @@ ClubSponsor.init({
   ]
 });
 
-module.exports = ClubSponsor;
+export default ClubSponsor;

@@ -5,8 +5,8 @@
  * regardless of whether individual events are updated during sync
  */
 
-const { DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * SyncLog model class extending Sequelize Model
@@ -201,4 +201,4 @@ SyncLog.init({
   ]
 });
 
-module.exports = SyncLog;
+export default SyncLog;
