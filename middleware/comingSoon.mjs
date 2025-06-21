@@ -77,6 +77,6 @@ const comingSoonMode = (req, res, next) => {
   return res.redirect('/coming-soon');
 };
 
-module.exports = {
+export {
   comingSoonMode
 };

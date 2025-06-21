@@ -72,6 +72,6 @@ const maintenanceMode = (req, res, next) => {
   return res.redirect('/maintenance');
 };
 
-module.exports = {
+export {
   maintenanceMode
 };

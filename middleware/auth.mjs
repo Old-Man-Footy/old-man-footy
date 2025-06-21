@@ -1,3 +1,10 @@
+/**
+ * Authentication Middleware
+ * 
+ * Provides authentication and authorization middleware functions
+ * for protecting routes and ensuring user permissions.
+ */
+
 // Middleware to ensure user is authenticated
 function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
@@ -33,9 +40,9 @@ function ensureAdmin(req, res, next) {
     res.redirect('/dashboard');
 }
 
-module.exports = {
-    ensureAuthenticated,
-    ensureGuest,
-    ensurePrimaryDelegate,
-    ensureAdmin
+export {
+  ensureAuthenticated,
+  ensureGuest,
+  ensureAdmin,
+  ensurePrimaryDelegate
 };

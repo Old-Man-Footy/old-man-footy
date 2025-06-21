@@ -1,7 +1,14 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const ImageNamingService = require('../services/imageNamingService');
+/**
+ * File Upload Middleware
+ * 
+ * Handles secure file uploads with validation, type checking,
+ * and virus scanning for the Old Man Footy platform.
+ */
+
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import ImageNamingService from '../services/imageNamingService.js';
 
 // Ensure upload directories exist (with error handling for read-only filesystems)
 const uploadDirs = [
@@ -350,82 +357,73 @@ const processStructuredUpload = async (req, res, next) => {
 };
 
 // Export different upload configurations
-module.exports = {
-    // For carnival creation/editing (multiple files with structured naming)
-    carnivalUpload: [
-        upload.fields([
-            { name: 'logo', maxCount: 1 },
-            { name: 'promotionalImage', maxCount: 5 },
-            { name: 'galleryImage', maxCount: 10 },
-            { name: 'drawDocument', maxCount: 5 },
-            { name: 'bannerImage', maxCount: 2 }
-        ]),
-        processStructuredUpload
-    ],
-    
-    // For sponsor management (multiple files with structured naming)
-    sponsorUpload: [
-        upload.fields([
-            { name: 'logo', maxCount: 1 },
-            { name: 'galleryImage', maxCount: 10 },
-            { name: 'promotionalImage', maxCount: 5 }
-        ]),
-        processStructuredUpload
-    ],
-    
-    // For club management (multiple files with structured naming)
-    clubUpload: [
-        upload.fields([
-            { name: 'logo', maxCount: 1 },
-            { name: 'galleryImage', maxCount: 10 },
-            { name: 'bannerImage', maxCount: 2 }
-        ]),
-        processStructuredUpload
-    ],
-    
-    // For single logo upload
-    logoUpload: [
-        upload.single('logo'),
-        processStructuredUpload
-    ],
-    
-    // For single image upload
-    imageUpload: [
-        upload.single('promotionalImage'),
-        processStructuredUpload
-    ],
-    
-    // For single document upload
-    documentUpload: [
-        upload.single('drawDocument'),
-        processStructuredUpload
-    ],
-    
-    // For user avatar upload
-    avatarUpload: [
-        upload.single('avatar'),
-        processStructuredUpload
-    ],
-    
-    // Raw multer instance for custom configurations
-    upload,
-    
-    // Utility functions
-    ImageNamingService,
-    
-    // Error handling middleware
-    handleUploadError: (error, req, res, next) => {
-        if (error instanceof multer.MulterError) {
-            if (error.code === 'LIMIT_FILE_SIZE') {
-                req.flash('error', 'File too large. Maximum size is 10MB.');
-            } else if (error.code === 'LIMIT_FILE_COUNT') {
-                req.flash('error', 'Too many files. Please reduce the number of files.');
-            } else {
-                req.flash('error', 'File upload error: ' + error.message);
-            }
-        } else if (error) {
-            req.flash('error', error.message);
+export const carnivalUpload = [
+    upload.fields([
+        { name: 'logo', maxCount: 1 },
+        { name: 'promotionalImage', maxCount: 5 },
+        { name: 'galleryImage', maxCount: 10 },
+        { name: 'drawDocument', maxCount: 5 },
+        { name: 'bannerImage', maxCount: 2 }
+    ]),
+    processStructuredUpload
+];
+
+export const sponsorUpload = [
+    upload.fields([
+        { name: 'logo', maxCount: 1 },
+        { name: 'galleryImage', maxCount: 10 },
+        { name: 'promotionalImage', maxCount: 5 }
+    ]),
+    processStructuredUpload
+];
+
+export const clubUpload = [
+    upload.fields([
+        { name: 'logo', maxCount: 1 },
+        { name: 'galleryImage', maxCount: 10 },
+        { name: 'bannerImage', maxCount: 2 }
+    ]),
+    processStructuredUpload
+];
+
+export const logoUpload = [
+    upload.single('logo'),
+    processStructuredUpload
+];
+
+export const imageUpload = [
+    upload.single('promotionalImage'),
+    processStructuredUpload
+];
+
+export const documentUpload = [
+    upload.single('drawDocument'),
+    processStructuredUpload
+];
+
+export const avatarUpload = [
+    upload.single('avatar'),
+    processStructuredUpload
+];
+
+// Raw multer instance for custom configurations
+export const uploadRaw = upload;
+
+// Utility functions
+export const ImageNamingService = ImageNamingService;
+
+// Error handling middleware
+export const handleUploadError = (error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            req.flash('error', 'File too large. Maximum size is 10MB.');
+        } else if (error.code === 'LIMIT_FILE_COUNT') {
+            req.flash('error', 'Too many files. Please reduce the number of files.');
+        } else {
+            req.flash('error', 'File upload error: ' + error.message);
         }
-        next();
+    } else if (error) {
+        req.flash('error', error.message);
     }
+    next();
 };

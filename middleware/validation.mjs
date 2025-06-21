@@ -5,7 +5,7 @@
  * and more descriptive error messages following MVC best practices.
  */
 
-const { body } = require('express-validator');
+import { body } from 'express-validator';
 
 /**
  * Enhanced email validation with security checks
@@ -144,7 +144,7 @@ const adminEmail = (fieldName = 'email') => {
     });
 };
 
-module.exports = {
+export {
     validateEmail,
     requiredEmail,
     optionalEmail,

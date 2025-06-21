@@ -5,11 +5,15 @@
  * for simplified deployment without external database dependencies.
  */
 
-const { Sequelize } = require('sequelize');
-const path = require('path');
-const { exec } = require('child_process');
-const { promisify } = require('util');
-const fs = require('fs');
+import { Sequelize } from 'sequelize';
+import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const execAsync = promisify(exec);
 
@@ -62,7 +66,7 @@ function ensureDataDirectory() {
 /**
  * Sequelize instance configuration
  */
-const sequelize = new Sequelize({
+export const sequelize = new Sequelize({
   dialect: 'sqlite',
   storage: dbPath,
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
@@ -94,7 +98,7 @@ const sequelize = new Sequelize({
  * Test database connection
  * @returns {Promise<boolean>} Connection success status
  */
-async function testConnection() {
+export async function testConnection() {
   try {
     await sequelize.authenticate();
     console.log('✅ SQLite database connection established successfully');
@@ -110,7 +114,7 @@ async function testConnection() {
  * Run database migrations using direct Sequelize instead of CLI in production
  * @returns {Promise<void>}
  */
-async function runMigrations() {
+export async function runMigrations() {
   try {
     console.log('🔄 Running database migrations...');
     
@@ -121,7 +125,7 @@ async function runMigrations() {
       console.log('📦 Running migrations using Sequelize sync (production mode)...');
       
       // Import models to ensure they're loaded
-      const models = require('../models');
+      const models = await import('../models/index.mjs');
       
       // Use sync with alter for production (safer than force)
       await sequelize.sync({ alter: true });
@@ -160,7 +164,7 @@ async function runMigrations() {
  * Initialize database and run migrations
  * @returns {Promise<void>}
  */
-async function initializeDatabase() {
+export async function initializeDatabase() {
   try {
     // Ensure data directory exists and is writable
     ensureDataDirectory();
@@ -186,7 +190,7 @@ async function initializeDatabase() {
  * Close database connection
  * @returns {Promise<void>}
  */
-async function closeConnection() {
+export async function closeConnection() {
   try {
     await sequelize.close();
     console.log('🔌 Database connection closed');
@@ -194,10 +198,3 @@ async function closeConnection() {
     console.error('❌ Error closing database connection:', error);
   }
 }
-
-module.exports = {
-  sequelize,
-  testConnection,
-  initializeDatabase,
-  closeConnection
-};

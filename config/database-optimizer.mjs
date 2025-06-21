@@ -1,4 +1,4 @@
-const { sequelize } = require('./database');
+import { sequelize } from './database.mjs';
 
 /**
  * Database optimization configurations for SQLite/Sequelize
@@ -221,7 +221,7 @@ class DatabaseOptimizer {
             // Cleanup expired tokens
             const now = new Date();
             
-            const { User } = require('../models');
+            const { User } = await import('../models/index.mjs');
             const expiredInvitations = await User.update(
                 { 
                     invitationToken: null,
@@ -241,7 +241,7 @@ class DatabaseOptimizer {
             const archiveDate = new Date();
             archiveDate.setFullYear(archiveDate.getFullYear() - 2);
 
-            const { Carnival } = require('../models');
+            const { Carnival } = await import('../models/index.mjs');
             const oldCarnivals = await Carnival.update(
                 { 
                     isActive: false,
@@ -276,8 +276,8 @@ class DatabaseOptimizer {
         try {
             console.log('Starting SQLite database backup...');
 
-            const fs = require('fs').promises;
-            const path = require('path');
+            const fs = await import('fs/promises');
+            const path = await import('path');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const backupName = `rugby-masters-backup-${timestamp}.db`;
             
@@ -327,4 +327,4 @@ class DatabaseOptimizer {
     }
 }
 
-module.exports = DatabaseOptimizer;
+export default DatabaseOptimizer;
