@@ -15,7 +15,7 @@ const showComingSoonPage = (req, res) => {
     message: 'We\'re putting the finishing touches on Old Man Footy - your ultimate hub for Masters Rugby League.',
     subMessage: 'Get ready to discover carnivals, connect with clubs, and be part of the growing Masters community across Australia.',
     launchMessage: 'Launch coming soon! Stay tuned for updates.',
-    contactEmail: process.env.EMAIL_FROM || 'support@oldmanfooty.au',
+    contactEmail: process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au',
     appName: process.env.APP_NAME || 'Old Man Footy',
     appUrl: process.env.APP_URL || 'https://oldmanfooty.au',
     socialMedia: {

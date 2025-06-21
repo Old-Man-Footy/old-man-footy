@@ -15,6 +15,7 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_FROM=noreply@oldmanfooty.au
+      - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - EMAIL_FROM_NAME="Old Man Footy Test"
       - PORT=3055
     volumes:
