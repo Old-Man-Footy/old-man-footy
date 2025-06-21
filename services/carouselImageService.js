@@ -5,12 +5,12 @@
  * Prioritizes recent uploads and excludes icons/logos.
  */
 
-const fs = require('fs').promises;
-const path = require('path');
+import { promises as fs } from 'fs';
+import { join, extname } from 'path';
 
 class CarouselImageService {
     constructor() {
-        this.uploadsPath = path.join(__dirname, '..', 'uploads');
+        this.uploadsPath = join(__dirname, '..', 'uploads');
         this.publicPath = '/uploads';
         
         // Define image directories to include (excluding logos and icons)
@@ -48,7 +48,7 @@ class CarouselImageService {
 
             // Scan all image directories
             for (const directory of this.imageDirectories) {
-                const fullPath = path.join(this.uploadsPath, directory);
+                const fullPath = join(this.uploadsPath, directory);
                 
                 try {
                     await fs.access(fullPath);
@@ -87,8 +87,8 @@ class CarouselImageService {
             const images = [];
 
             for (const file of files) {
-                const filePath = path.join(fullPath, file);
-                const ext = path.extname(file).toLowerCase();
+                const filePath = join(fullPath, file);
+                const ext = extname(file).toLowerCase();
                 
                 // Only include supported image files
                 if (this.supportedExtensions.includes(ext)) {
@@ -250,4 +250,4 @@ class CarouselImageService {
     }
 }
 
-module.exports = new CarouselImageService();
+export default new CarouselImageService();

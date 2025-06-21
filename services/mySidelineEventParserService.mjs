@@ -1,4 +1,4 @@
-const MySidelineDataService = require('./mySidelineDataService');
+import MySidelineDataService from './mySidelineDataService.mjs';
 
 /**
  * MySideline Event Parser Service
@@ -88,4 +88,4 @@ class MySidelineEventParserService {
     
 }
 
-module.exports = MySidelineEventParserService;
+export default MySidelineEventParserService;

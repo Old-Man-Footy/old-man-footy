@@ -1,8 +1,8 @@
-const cron = require('node-cron');
-const MySidelineScraperService = require('./mySidelineScraperService');
-const MySidelineEventParserService = require('./mySidelineEventParserService');
-const MySidelineDataService = require('./mySidelineDataService');
-const { SyncLog } = require('../models');
+import cron from 'node-cron';
+import MySidelineScraperService from './mySidelineScraperService.mjs';
+import MySidelineEventParserService from './mySidelineEventParserService.mjs';
+import MySidelineDataService from './mySidelineDataService.mjs';
+import { SyncLog } from '../models/index.mjs';
 
 /**
  * MySideline Integration Service (Main Orchestrator)
@@ -249,5 +249,5 @@ class MySidelineIntegrationService {
     }    
 }
 
-module.exports = new MySidelineIntegrationService();
+export default new MySidelineIntegrationService();
 

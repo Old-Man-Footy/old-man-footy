@@ -1,9 +1,7 @@
-const { chromium } = require('playwright');
-const MySidelineDataService = require('./mySidelineDataService');
-const MySidelineEventParserService = require('./mySidelineEventParserService');
-const { Page } = require('puppeteer');
-const { options } = require('../models/User');
-const { AUSTRALIAN_STATES } = require('../config/constants');
+import { chromium } from 'playwright';
+import MySidelineDataService from './mySidelineDataService.mjs';
+import MySidelineEventParserService from './mySidelineEventParserService.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 /**
  * MySideline Web Scraper Service
@@ -806,4 +804,4 @@ class MySidelineScraperService {
     }
 }
 
-module.exports = MySidelineScraperService;
+export default MySidelineScraperService;

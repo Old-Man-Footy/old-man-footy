@@ -1,6 +1,6 @@
-const nodemailer = require('nodemailer');
-const { EmailSubscription } = require('../models');
-const { Op } = require('sequelize');
+import { createTransport } from 'nodemailer';
+import { EmailSubscription } from '../models/index.mjs';
+import { Op } from 'sequelize';
 
 /**
  * Email Service Class
@@ -8,7 +8,7 @@ const { Op } = require('sequelize');
  */
 class EmailService {
     constructor() {
-        this.transporter = nodemailer.createTransport({
+        this.transporter = createTransport({
             // Gmail configuration (can be switched to other providers)
             service: 'gmail',
             auth: {
@@ -1341,4 +1341,4 @@ We'll respond to your inquiry from our support team shortly.
     }
 }
 
-module.exports = new EmailService();
+export default new EmailService();

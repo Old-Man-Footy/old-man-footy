@@ -5,12 +5,12 @@
  * using the project's image naming conventions.
  */
 
-const https = require('https');
-const http = require('http');
-const fs = require('fs').promises;
-const path = require('path');
-const { URL } = require('url');
-const ImageNamingService = require('./imageNamingService');
+import https from 'https';
+import http from 'http';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { URL } from 'url';
+import ImageNamingService from './imageNamingService.mjs';
 
 class MySidelineLogoDownloadService {
     constructor() {
@@ -374,4 +374,4 @@ class MySidelineLogoDownloadService {
     }
 }
 
-module.exports = MySidelineLogoDownloadService;
+export default MySidelineLogoDownloadService;

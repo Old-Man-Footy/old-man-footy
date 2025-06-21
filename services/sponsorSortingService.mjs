@@ -83,7 +83,7 @@ const getSponsorLevelsByPriority = () => {
     );
 };
 
-module.exports = {
+export {
     sortSponsorsHierarchically,
     getSponsorLevelDisplay,
     getSponsorLevelsByPriority,

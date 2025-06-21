@@ -13,9 +13,9 @@
  * - club-42-gallery-20250607-123-003.webp
  */
 
-const path = require('path');
-const fs = require('fs').promises;
-const crypto = require('crypto');
+import { extname, join, parse, dirname, relative, basename } from 'path';
+import { promises as fs } from 'fs';
+import { createHash } from 'crypto';
 
 class ImageNamingService {
     /**
@@ -69,7 +69,7 @@ class ImageNamingService {
         this.validateNamingOptions(options);
 
         // Extract file extension
-        const extension = path.extname(originalName).toLowerCase();
+        const extension = extname(originalName).toLowerCase();
         
         // Generate upload date (YYYYMMDD format)
         const uploadDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -119,7 +119,7 @@ class ImageNamingService {
             filename,
             metadata,
             relativePath: this.getRelativePath(entityType, imageType),
-            fullPath: path.join(this.getRelativePath(entityType, imageType), filename)
+            fullPath: join(this.getRelativePath(entityType, imageType), filename)
         };
     }
 
@@ -144,8 +144,8 @@ class ImageNamingService {
      */
     static parseImageName(filename) {
         // Remove extension
-        const nameWithoutExt = path.parse(filename).name;
-        const extension = path.extname(filename);
+        const nameWithoutExt = parse(filename).name;
+        const extension = extname(filename);
         
         // Split into components
         const parts = nameWithoutExt.split('-');
@@ -185,10 +185,10 @@ class ImageNamingService {
      */
     static async getEntityImages(entityType, entityId, imageType = null) {
         const searchPattern = this.generateSearchPattern(entityType, entityId, imageType || '*');
-        const basePath = path.join('public', this.getRelativePath(entityType, imageType || 'logo'));
+        const basePath = join('public', this.getRelativePath(entityType, imageType || 'logo'));
         
         try {
-            const files = await fs.readdir(path.dirname(basePath));
+            const files = await fs.readdir(dirname(basePath));
             const matchingFiles = files.filter(file => {
                 const parsed = this.parseImageName(file);
                 return parsed && 
@@ -200,8 +200,8 @@ class ImageNamingService {
             return matchingFiles.map(file => ({
                 filename: file,
                 ...this.parseImageName(file),
-                fullPath: path.join(basePath, file),
-                url: `/uploads/${path.relative('public/uploads', path.join(basePath, file)).replace(/\\/g, '/')}`
+                fullPath: join(basePath, file),
+                url: `/uploads/${relative('public/uploads', join(basePath, file)).replace(/\\/g, '/')}`
             }));
         } catch (error) {
             console.error('Error reading entity images:', error);
@@ -224,7 +224,7 @@ class ImageNamingService {
         for (let i = 0; i < existingImages.length; i++) {
             try {
                 const imageUrl = existingImages[i];
-                const oldPath = path.join('public/uploads', imageUrl.replace(/^\/uploads\//, ''));
+                const oldPath = join('public/uploads', imageUrl.replace(/^\/uploads\//, ''));
                 
                 // Determine image type from old path
                 let imageType = this.IMAGE_TYPES.GALLERY;
@@ -238,14 +238,14 @@ class ImageNamingService {
                     entityId,
                     imageType,
                     uploaderId,
-                    originalName: path.basename(oldPath),
+                    originalName: basename(oldPath),
                     customSuffix: 'migrated'
                 });
                 
-                const newPath = path.join('public/uploads', namingResult.relativePath, namingResult.filename);
+                const newPath = join('public/uploads', namingResult.relativePath, namingResult.filename);
                 
                 // Ensure directory exists
-                await fs.mkdir(path.dirname(newPath), { recursive: true });
+                await fs.mkdir(dirname(newPath), { recursive: true });
                 
                 // Copy file to new location
                 await fs.copyFile(oldPath, newPath);
@@ -253,7 +253,7 @@ class ImageNamingService {
                 results.push({
                     success: true,
                     oldPath: imageUrl,
-                    newPath: `/uploads/${path.relative('public/uploads', newPath).replace(/\\/g, '/')}`,
+                    newPath: `/uploads/${relative('public/uploads', newPath).replace(/\\/g, '/')}`,
                     metadata: namingResult.metadata
                 });
                 
@@ -316,13 +316,13 @@ class ImageNamingService {
                         if (parsed && validEntityIds[parsed.entityType]) {
                             if (!validEntityIds[parsed.entityType].has(parsed.entityId)) {
                                 results.orphaned.push({
-                                    file: path.join(dir, file),
+                                    file: join(dir, file),
                                     entityType: parsed.entityType,
                                     entityId: parsed.entityId
                                 });
                                 
                                 if (!dryRun) {
-                                    await fs.unlink(path.join(dir, file));
+                                    await fs.unlink(join(dir, file));
                                 }
                             }
                         }
@@ -380,7 +380,7 @@ class ImageNamingService {
      */
     static async generateSequenceId(entityType, entityId, imageType, uploadDate) {
         const pattern = `${entityType}-${entityId.toString().padStart(6, '0')}-${imageType}-${uploadDate}-*`;
-        const basePath = path.join('public', this.getRelativePath(entityType, imageType));
+        const basePath = join('public', this.getRelativePath(entityType, imageType));
         
         try {
             await fs.mkdir(basePath, { recursive: true });
@@ -412,7 +412,7 @@ class ImageNamingService {
      */
     static generateIntegrityHash(options, uploadDate, sequenceId) {
         const data = `${options.entityType}-${options.entityId}-${options.imageType}-${uploadDate}-${options.uploaderId}-${sequenceId}`;
-        return crypto.createHash('sha256').update(data).digest('hex').substring(0, 8);
+        return createHash('sha256').update(data).digest('hex').substring(0, 8);
     }
 
     /**
@@ -426,13 +426,13 @@ class ImageNamingService {
     static getRelativePath(entityType, imageType) {
         // Organize by entity type and image type
         if (imageType === this.IMAGE_TYPES.LOGO) {
-            return path.join('logos', entityType);
+            return join('logos', entityType);
         } else if (imageType === this.IMAGE_TYPES.DRAW_DOCUMENT) {
-            return path.join('documents', entityType);
+            return join('documents', entityType);
         } else {
-            return path.join('images', entityType, imageType);
+            return join('images', entityType, imageType);
         }
     }
 }
 
-module.exports = ImageNamingService;
+export default ImageNamingService;

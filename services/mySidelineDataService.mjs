@@ -1,8 +1,8 @@
-const { Carnival, SyncLog } = require('../models');
-const { Op } = require('sequelize');
-const emailService = require('./emailService');
-const MySidelineLogoDownloadService = require('./mySidelineLogoDownloadService');
-const ImageNamingService = require('./imageNamingService');
+import { Carnival, SyncLog } from '../models';
+import { Op } from 'sequelize';
+import emailService from './emailService.mjs'; // WILL BE USED FOR NOTIFICATIONS IN THE FUTURE
+import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
+import { ENTITY_TYPES, IMAGE_TYPES, parseImageName, generateImageName } from './imageNamingService.mjs';
 
 /**
  * MySideline Data Processing Service
@@ -414,9 +414,9 @@ class MySidelineDataService {
             // since clubs may not exist in our system yet
             const downloadResult = await this.logoDownloadService.downloadLogo(
                 logoUrl,
-                ImageNamingService.ENTITY_TYPES.CARNIVAL,
+                ENTITY_TYPES.CARNIVAL,
                 eventData.temporaryId || Date.now(), // Use temporary ID until carnival is created
-                ImageNamingService.IMAGE_TYPES.LOGO
+                IMAGE_TYPES.LOGO
             );
 
             if (downloadResult.success) {
@@ -453,16 +453,16 @@ class MySidelineDataService {
             const filename = urlParts[urlParts.length - 1];
             
             // Parse the filename to get components
-            const parsed = ImageNamingService.parseImageName(filename);
+            const parsed = parseImageName(filename);
             if (!parsed) {
                 return tempLogoUrl; // Keep original if parsing fails
             }
 
             // Generate new filename with actual carnival ID
-            const newNamingResult = await ImageNamingService.generateImageName({
-                entityType: ImageNamingService.ENTITY_TYPES.CARNIVAL,
+            const newNamingResult = await generateImageName({
+                entityType: ENTITY_TYPES.CARNIVAL,
                 entityId: carnivalId,
-                imageType: ImageNamingService.IMAGE_TYPES.LOGO,
+                imageType: IMAGE_TYPES.LOGO,
                 uploaderId: 1, // System user
                 originalName: `mysideline-logo${parsed.extension}`,
                 customSuffix: 'mysideline'
@@ -493,4 +493,4 @@ class MySidelineDataService {
     }
 }
 
-module.exports = MySidelineDataService;
+export default MySidelineDataService;
