@@ -13,9 +13,10 @@ RUN apk add --no-cache \
     ttf-freefont \
     bash
 
-# Tell Playwright to use installed Chromium
-ENV PLAYWRIGHT_BROWSERS_PATH=/usr/bin/chromium-browser
+# Configure Playwright to use system Chromium
+ENV PLAYWRIGHT_BROWSERS_PATH=0
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create app directory with proper permissions
 RUN addgroup -g 1001 -S nodejs && \
@@ -75,9 +76,10 @@ RUN apk add --no-cache \
     ttf-freefont \
     bash
 
-# Tell Playwright to use installed Chromium
-ENV PLAYWRIGHT_BROWSERS_PATH=/usr/bin/chromium-browser
+# Configure Playwright to use system Chromium
+ENV PLAYWRIGHT_BROWSERS_PATH=0
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create non-root user with specific UID/GID for consistency
 RUN addgroup -g 1001 -S nodejs && \
