@@ -1,13 +1,13 @@
 /**
- * Environment Validation Service
+ * Environment Validation
  * 
- * Provides security validation for database seeding operations
- * Prevents accidental seeding on production databases
+ * Validates that database operations are only performed in safe environments
+ * Prevents accidental data modification in production
  */
 
 /**
- * Environment Protection: Prevent running on production databases
- * @throws {Error} If environment is not safe for seeding
+ * Validate that we're in a safe environment for database operations
+ * @throws {Error} If environment is not safe for database modifications
  */
 function validateEnvironment() {
     const { sequelize } = require('../../models');

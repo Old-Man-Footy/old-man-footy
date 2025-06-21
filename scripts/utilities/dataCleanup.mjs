@@ -1,5 +1,5 @@
 /**
- * Data Cleanup Service
+ * Data Cleanup
  * 
  * Handles selective clearing of seed data while preserving real user data
  * Uses identification patterns to distinguish seed data from production data
@@ -9,9 +9,9 @@ const { sequelize, Club, User, ClubPlayer, CarnivalClubPlayer, Carnival, Sponsor
 const { SAMPLE_CLUBS } = require('../fixtures/clubFixtures');
 const { SAMPLE_CARNIVALS } = require('../fixtures/carnivalFixtures');
 const { SAMPLE_SPONSORS } = require('../fixtures/sponsorFixtures');
-const { validateEnvironment } = require('./environmentValidationService');
+const { validateEnvironment } = require('./environmentValidation');
 
-class DataCleanupService {
+class DataCleanup {
     /**
      * Selective database clearing - only removes seed data and related records
      * Preserves real user data by identifying seed patterns and markers
@@ -291,4 +291,4 @@ class DataCleanupService {
     }
 }
 
-module.exports = DataCleanupService;
+module.exports = DataCleanup;

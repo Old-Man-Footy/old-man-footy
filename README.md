@@ -168,7 +168,7 @@ The project maintains high test coverage standards:
 ```
 ├── app.mjs                                     # Main application entry point (ES Module)
 ├── package.json                                # Project dependencies and scripts
-├── docker-compose.*.yml                        # Docker configuration files
+├── docker-compose.*.yml                       # Docker configuration files
 ├── Dockerfile                                  # Docker container definition
 ├── LICENSE                                     # Custom proprietary license
 ├── README.md                                   # This documentation file
@@ -239,10 +239,22 @@ The project maintains high test coverage standards:
 │   ├── sponsors.mjs                            # Sponsor management routes
 │   └── api/                                    # API route definitions
 │       └── index.mjs                           # API routes index
-├── scripts/                                    # Utility and maintenance scripts
+├── scripts/                                    # Development and maintenance scripts
+│   ├── check-sync-status.mjs                   # MySideline sync monitoring
+│   ├── generate-secret.mjs                     # Secret generation utility
+│   ├── image-manager.mjs                       # Image processing and management
+│   ├── purge-seed-data.mjs                     # Database cleanup scripts
+│   ├── seed-database.mjs                       # Database seeding scripts
+│   ├── fixtures/                               # Test data and sample fixtures
+│   └── utilities/                              # Script-specific helper utilities
+│       ├── basicSeeder.mjs                     # Basic data seeding utilities
+│       ├── databaseBackup.mjs                  # Database backup operations
+│       ├── dataCleanup.mjs                     # Data cleanup utilities
+│       ├── environmentValidation.mjs           # Environment validation
+│       └── playerSeeder.mjs                    # Player data seeding utilities
 ├── services/                                   # Business logic services and utilities
 │   ├── auditService.mjs                        # Audit logging service
-│   ├── carouselImageService.js                 # Image carousel management
+│   ├── carouselImageService.mjs                # Image carousel management
 │   ├── emailService.mjs                        # Email notification service
 │   ├── imageNamingService.mjs                  # Image file naming utilities
 │   ├── mySidelineDataService.mjs               # MySideline data processing
@@ -252,7 +264,7 @@ The project maintains high test coverage standards:
 │   ├── mySidelineScraperService.mjs            # Web scraping service
 │   └── sponsorSortingService.mjs               # Sponsor sorting logic
 ├── tests/                                      # Test files and utilities
-│   └── *.test.js                               # Jest unit and integration tests
+│   └── *.test.mjs                              # Jest unit and integration tests
 └── views/                                      # EJS templates - MVC Views
     ├── about.ejs                               # About page template
     ├── contact.ejs                             # Contact page template
@@ -269,6 +281,33 @@ The project maintains high test coverage standards:
     ├── partials/                               # Reusable template components
     └── sponsors/                               # Sponsor management view templates
 ```
+
+### **📁 Folder Structure Explanation**
+
+The project follows a clean **Model-View-Controller (MVC)** architecture with clear separation of concerns:
+
+#### **Core Application Structure**
+- **`config/`** - Application configuration, database setup, and authentication strategies
+- **`controllers/`** - HTTP request handlers that orchestrate between models and views
+- **`models/`** - Database schemas, relationships, and data access logic (Sequelize ORM)
+- **`routes/`** - Express route definitions that map URLs to controller actions
+- **`views/`** - EJS templates for server-side rendering (presentation layer)
+- **`middleware/`** - Express middleware for authentication, validation, and request processing
+
+#### **Business Logic & Services**
+- **`services/`** - Reusable business logic services (email, audit, MySideline integration, etc.)
+
+#### **Development & Maintenance**
+- **`scripts/`** - Development tools and database management scripts
+  - **`utilities/`** - Helper services specifically for script operations (renamed from `services/` to avoid confusion)
+  - **`fixtures/`** - Test data and sample content for seeding
+
+#### **Static Assets & Testing**
+- **`public/`** - Client-side assets (CSS, JavaScript, images) served directly by Express
+- **`tests/`** - Jest unit and integration tests
+- **`migrations/`** - Database schema versioning and updates
+
+This structure ensures **clean separation of concerns**, making the codebase maintainable and following Node.js best practices.
 
 ## 🎯 Usage
 

@@ -1,5 +1,5 @@
 /**
- * Database Backup Service
+ * Database Backup
  * 
  * Handles backup and restoration operations for SQLite databases
  * Used during seeding to ensure data safety
@@ -8,7 +8,7 @@
 const path = require('path');
 const fs = require('fs');
 
-class DatabaseBackupService {
+class DatabaseBackup {
     constructor() {
         this.backupPath = null;
     }
@@ -187,4 +187,4 @@ class DatabaseBackupService {
     }
 }
 
-module.exports = DatabaseBackupService;
+module.exports = DatabaseBackup;

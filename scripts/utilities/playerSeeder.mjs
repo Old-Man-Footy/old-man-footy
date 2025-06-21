@@ -1,5 +1,5 @@
 /**
- * Player Seeding Service
+ * Player Seeder
  * 
  * Handles creation of test players for clubs with realistic data
  * Includes age requirements and carnival attendance linking
@@ -8,7 +8,7 @@
 const { ClubPlayer, CarnivalClubPlayer } = require('../../models');
 const { FIRST_NAMES, LAST_NAMES, EMAIL_DOMAINS, PLAYER_NOTES, ATTENDANCE_NOTES } = require('../fixtures/playerFixtures');
 
-class PlayerSeedingService {
+class PlayerSeeder {
     /**
      * Create players for each club using realistic data
      * @param {Array} clubs - Array of created clubs
@@ -193,4 +193,4 @@ class PlayerSeedingService {
     }
 }
 
-module.exports = PlayerSeedingService;
+module.exports = PlayerSeeder;

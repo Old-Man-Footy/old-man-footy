@@ -6,11 +6,16 @@
  */
 
 import { promises as fs } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// ES Module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class CarouselImageService {
     constructor() {
-        this.uploadsPath = join(__dirname, '..', 'uploads');
+        this.uploadsPath = join(__dirname, '..', 'public', 'uploads');
         this.publicPath = '/uploads';
         
         // Define image directories to include (excluding logos and icons)

@@ -23,11 +23,11 @@ const { promisify } = require('util');
 const execAsync = promisify(exec);
 
 // Import modular services
-const { validateEnvironment } = require('./services/environmentValidationService');
-const DatabaseBackupService = require('./services/databaseBackupService');
-const DataCleanupService = require('./services/dataCleanupService');
-const BasicSeedingService = require('./services/basicSeedingService');
-const PlayerSeedingService = require('./services/playerSeedingService');
+const { validateEnvironment } = require('./utilities/environmentValidation');
+const DatabaseBackup = require('./utilities/databaseBackup');
+const DataCleanup = require('./utilities/dataCleanup');
+const BasicSeeder = require('./utilities/basicSeeder');
+const PlayerSeeder = require('./utilities/playerSeeder');
 
 // Load environment variables
 require('dotenv').config();
@@ -39,10 +39,10 @@ require('dotenv').config();
  */
 class DatabaseSeeder {
     constructor() {
-        this.backupService = new DatabaseBackupService();
-        this.cleanupService = new DataCleanupService();
-        this.basicSeedingService = new BasicSeedingService();
-        this.playerSeedingService = new PlayerSeedingService();
+        this.backupService = new DatabaseBackup();
+        this.cleanupService = new DataCleanup();
+        this.basicSeedingService = new BasicSeeder();
+        this.playerSeedingService = new PlayerSeeder();
         this.createdEntities = {
             clubs: [],
             users: [],

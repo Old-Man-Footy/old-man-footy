@@ -1,5 +1,5 @@
 /**
- * Basic Seeding Service
+ * Basic Seeder
  * 
  * Handles creation of core entities (clubs, users, carnivals, sponsors)
  * and their basic relationships
@@ -11,7 +11,7 @@ const { SAMPLE_CARNIVALS } = require('../fixtures/carnivalFixtures');
 const { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } = require('../fixtures/sponsorFixtures');
 const MySidelineService = require('../../services/mySidelineIntegrationService');
 
-class BasicSeedingService {
+class BasicSeeder {
     constructor() {
         this.createdClubs = [];
         this.createdUsers = [];
@@ -261,4 +261,4 @@ class BasicSeedingService {
     }
 }
 
-module.exports = BasicSeedingService;
+module.exports = BasicSeeder;
