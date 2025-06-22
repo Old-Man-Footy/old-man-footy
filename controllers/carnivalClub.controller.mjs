@@ -10,7 +10,7 @@ import { CarnivalClub, Carnival, Club, ClubPlayer, CarnivalClubPlayer } from '..
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
-import { emailService } from '../services/emailService.mjs';
+import emailService from '../services/emailService.mjs';
 
 /**
  * Show carnival attendees management page (for carnival organizers)
