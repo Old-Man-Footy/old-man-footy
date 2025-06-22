@@ -5,6 +5,8 @@ import { carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
 import { organiserEmail } from '../middleware/validation.mjs';
 import * as carnivalController from '../controllers/carnival.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+// Import carnival club routes as a sub-router
+import carnivalClubRoutes from './carnivalClubs.mjs';
 
 const router = express.Router();
 
@@ -38,7 +40,9 @@ const validateCarnival = [
     body('socialMediaWebsite').optional().isURL().withMessage('Valid website URL required')
 ];
 
-
+// Mount carnival club routes as sub-router
+// This handles all routes like /:carnivalId/attendees, /:carnivalId/register, etc.
+router.use('/', carnivalClubRoutes);
 
 // List all carnivals with filtering
 router.get('/', carnivalController.list);

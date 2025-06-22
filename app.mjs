@@ -151,7 +151,6 @@ async function initializeMySidelineSync() {
 const indexRoutes = await import('./routes/index.mjs');
 const authRoutes = await import('./routes/auth.mjs');
 const carnivalRoutes = await import('./routes/carnivals.mjs');
-const carnivalClubRoutes = await import('./routes/carnivalClubs.mjs');
 const carnivalSponsorRoutes = await import('./routes/carnivalSponsors.mjs');
 const clubRoutes = await import('./routes/clubs.mjs');
 const clubPlayerRoutes = await import('./routes/clubPlayers.mjs');
@@ -163,7 +162,6 @@ const apiRoutes = await import('./routes/api/index.mjs');
 app.use('/', indexRoutes.default);
 app.use('/auth', authRoutes.default);
 app.use('/carnivals', carnivalRoutes.default);
-app.use('/carnivals', carnivalClubRoutes.default);
 app.use('/carnival-sponsors', carnivalSponsorRoutes.default);
 // Mount specific routes before general ones
 app.use('/clubs/players', clubPlayerRoutes.default);
