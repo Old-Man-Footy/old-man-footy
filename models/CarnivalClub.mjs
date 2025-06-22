@@ -353,19 +353,28 @@ CarnivalClub.init({
 });
 
 /**
- * Helper function to update carnival's currentRegistrations count
- * @param {number} carnivalId - The carnival ID to update
+ * Updates the registration count for a carnival after a CarnivalClub is created or destroyed.
+ * Uses dynamic import for ES module compatibility.
+ * @param {number} carnivalId - The ID of the carnival to update.
+ * @returns {Promise<void>}
  */
-async function updateCarnivalRegistrationCount(carnivalId) {
+export async function updateCarnivalRegistrationCount(carnivalId) {
   try {
-    const Carnival = require('./Carnival');
-    const carnival = await Carnival.findByPk(carnivalId);
-    
-    if (carnival) {
-      await carnival.updateCurrentRegistrations();
-    }
-  } catch (error) {
-    console.error(`Error updating carnival ${carnivalId} registration count:`, error);
+    const { default: Carnival } = await import('./Carnival.mjs');
+    const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
+    const approvedCount = await CarnivalClub.count({
+      where: {
+        carnivalId,
+        isActive: true,
+        approvalStatus: 'approved',
+      },
+    });
+    await Carnival.update(
+      { currentRegistrations: approvedCount },
+      { where: { id: carnivalId } }
+    );
+  } catch (err) {
+    console.error(`Error updating carnival ${carnivalId} registration count:`, err);
   }
 }
 
