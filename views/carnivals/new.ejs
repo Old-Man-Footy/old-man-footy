@@ -91,7 +91,7 @@
                                     <div class="invalid-feedback">Please select a date.</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <div id="endDateContainer" style="<%= typeof formData !== 'undefined' && formData.endDate ? '' : 'display: none;' %>">
+                                    <div id="endDateContainer" data-has-end-date="<%= typeof formData !== 'undefined' && formData.endDate ? 'true' : 'false' %>">
                                         <label for="endDate" class="form-label">End Date *</label>
                                         <input type="date" class="form-control" id="endDate" name="endDate" 
                                                value="<%= typeof formData !== 'undefined' ? formData.endDate : '' %>">
