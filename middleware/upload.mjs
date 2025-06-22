@@ -8,7 +8,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import ImageNamingService from '../services/imageNamingService.js';
+import ImageNamingService from '../services/imageNamingService.mjs';
 
 // Ensure upload directories exist (with error handling for read-only filesystems)
 const uploadDirs = [
@@ -408,9 +408,6 @@ export const avatarUpload = [
 
 // Raw multer instance for custom configurations
 export const uploadRaw = upload;
-
-// Utility functions
-export const ImageNamingService = ImageNamingService;
 
 // Error handling middleware
 export const handleUploadError = (error, req, res, next) => {
