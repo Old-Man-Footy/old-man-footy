@@ -1,0 +1,38 @@
+name: Build Docker Test Image
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-target:
+    name: Build Docker Image (test target)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image with test target
+        run: |
+          docker build --target test -t old-man-footy:test .
+
+      # Optional: Run tests inside the test image if your Dockerfile defines a test entrypoint
+      # - name: Run tests
+      #   run: |
+      #     docker run --rm old-man-footy:test
+
+      # Optional: Save the image as an artifact for use in other jobs
+      # - name: Save Docker image as artifact
+      #   run: |
+      #     docker save old-man-footy:test | gzip > old-man-footy-test-image.tar.gz
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: old-man-footy-test-image
+      #     path: old-man-footy-test-image.tar.gz
