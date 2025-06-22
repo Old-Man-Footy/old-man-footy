@@ -5,7 +5,7 @@
  * for the Old Man Footy platform.
  */
 
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Op } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
 
 /**
@@ -17,7 +17,7 @@ class Club extends Model {
    * @returns {Promise<Array>} Array of user delegates
    */
   async getDelegates() {
-    const User = require('./User');
+    const { User } = await import('./index.mjs');
     return await User.findAll({
       where: {
         clubId: this.id,
@@ -32,7 +32,7 @@ class Club extends Model {
    * @returns {Promise<User|null>} Primary delegate user or null
    */
   async getPrimaryDelegate() {
-    const User = require('./User');
+    const { User } = await import('./index.mjs');
     return await User.findOne({
       where: {
         clubId: this.id,
@@ -47,9 +47,7 @@ class Club extends Model {
    * @returns {Promise<number>} Number of unique active carnivals
    */
   async getCarnivalCount() {
-    const Carnival = require('./Carnival');
-    const CarnivalClub = require('./CarnivalClub');
-    const { Op } = require('sequelize');
+    const { Carnival, CarnivalClub } = await import('./index.mjs');
 
     // Get carnivals hosted by this club's delegates
     const delegateIds = await this.getDelegateIds();
@@ -109,7 +107,7 @@ class Club extends Model {
   async getProxyCreator() {
     if (!this.createdByUserId) return null;
     
-    const User = require('./User');
+    const { User } = await import('./index.mjs');
     return await User.findByPk(this.createdByUserId);
   }
 

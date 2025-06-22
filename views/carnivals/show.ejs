@@ -1104,7 +1104,7 @@ function confirmMerge() {
 <script src="/js/carnival-show.js"></script>
 
 <!-- Post-Creation Important Notices Modal -->
-<% if (req.query.showPostCreationModal === 'true') { %>
+<% if (showPostCreationModal) { %>
 <div class="modal fade" id="postCreationModal" tabindex="-1" aria-labelledby="postCreationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">

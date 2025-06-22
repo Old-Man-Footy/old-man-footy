@@ -7,7 +7,7 @@
 
 import { validationResult } from 'express-validator';
 import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
-import { Op } from 'sequelize';
+import { Op, fn } from 'sequelize';
 import crypto from 'crypto';
 import EmailService from '../services/emailService.mjs';
 import AuditService from '../services/auditService.mjs';
@@ -961,7 +961,7 @@ const generateReportHandler = async (req, res) => {
             active: await Club.count({ where: { isActive: true } }),
             inactive: await Club.count({ where: { isActive: false } }),
             byState: await Club.findAll({
-                attributes: ['state', [require('sequelize').fn('COUNT', '*'), 'count']],
+                attributes: ['state', [fn('COUNT', '*'), 'count']],
                 group: ['state'],
                 raw: true
             })
@@ -982,7 +982,7 @@ const generateReportHandler = async (req, res) => {
             }),
             byState: await Carnival.findAll({
                 where: { isActive: true },
-                attributes: ['state', [require('sequelize').fn('COUNT', '*'), 'count']],
+                attributes: ['state', [fn('COUNT', '*'), 'count']],
                 group: ['state'],
                 raw: true
             })
@@ -1217,7 +1217,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
     }
 
     // Get all club registrations for this carnival with their players
-    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = require('../models');
+    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('../models/index.mjs');
     const clubRegistrations = await CarnivalClub.findAll({
         where: {
             carnivalId: carnival.id,
