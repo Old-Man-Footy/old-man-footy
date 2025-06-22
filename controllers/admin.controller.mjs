@@ -90,7 +90,7 @@ const getAdminDashboardHandler = async (req, res) => {
         upcomingCarnivals
     };
 
-    res.render('admin/dashboard', {
+    return res.render('admin/dashboard', {
         title: 'Administrator Dashboard - Old Man Footy',
         stats,
         recentActivity,
@@ -153,7 +153,7 @@ const getUserManagementHandler = async (req, res) => {
         hasPrev: page > 1
     };
 
-    res.render('admin/users', {
+    return res.render('admin/users', {
         title: 'User Management - Admin Dashboard',
         users,
         filters,
@@ -183,7 +183,7 @@ const showEditUserHandler = async (req, res) => {
         return res.redirect('/admin/users');
     }
 
-    res.render('admin/edit-user', {
+    return res.render('admin/edit-user', {
         title: `Edit ${editUser.firstName} ${editUser.lastName} - Admin Dashboard`,
         editUser,
         clubs,
@@ -297,7 +297,7 @@ const updateUserHandler = async (req, res) => {
     );
 
     req.flash('success_msg', `User ${firstName} ${lastName} has been updated successfully`);
-    res.redirect('/admin/users');
+    return res.redirect('/admin/users');
 };
 
 /**
@@ -353,7 +353,7 @@ const issuePasswordResetHandler = async (req, res) => {
 
     console.log(`✅ Admin ${req.user.email} initiated password reset for user ${user.email}`);
     
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: `Password reset email sent to ${user.email}` 
     });
@@ -400,7 +400,7 @@ const toggleUserStatusHandler = async (req, res) => {
     
     console.log(`✅ Admin ${req.user.email} ${statusText} user: ${user.email} (ID: ${user.id})`);
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newStatus: newStatus
@@ -472,7 +472,7 @@ const getClubManagementHandler = async (req, res) => {
         hasPrev: page > 1
     };
 
-    res.render('admin/clubs', {
+    return res.render('admin/clubs', {
         title: 'Club Management - Admin Dashboard',
         clubs: clubsWithPrimaryDelegate,
         filters,
@@ -508,7 +508,7 @@ const showEditClubHandler = async (req, res) => {
         ? clubData.delegates.find(delegate => delegate.isPrimaryDelegate) 
         : null;
 
-    res.render('admin/edit-club', {
+    return res.render('admin/edit-club', {
         title: `Edit ${club.clubName} - Admin Dashboard`,
         club: clubData,
         additionalCSS: ['/styles/admin.styles.css']
@@ -580,7 +580,7 @@ const updateClubHandler = async (req, res) => {
         : `Club ${clubName} has been updated successfully`;
 
     req.flash('success_msg', successMessage);
-    res.redirect('/admin/clubs');
+    return res.redirect('/admin/clubs');
 };
 
 /**
@@ -637,7 +637,7 @@ const getCarnivalManagementHandler = async (req, res) => {
         hasPrev: page > 1
     };
 
-    res.render('admin/carnivals', {
+    return res.render('admin/carnivals', {
         title: 'Carnival Management - Admin Dashboard',
         carnivals,
         filters,
@@ -661,7 +661,7 @@ const showEditCarnivalHandler = async (req, res) => {
         return res.redirect('/admin/carnivals');
     }
 
-    res.render('admin/edit-carnival', {
+    return res.render('admin/edit-carnival', {
         title: `Edit ${carnival.title} - Admin Dashboard`,
         carnival,
         additionalCSS: ['/styles/admin.styles.css']
@@ -783,7 +783,7 @@ const updateCarnivalHandler = async (req, res) => {
         : `Carnival ${title} has been updated successfully`;
 
     req.flash('success_msg', successMessage);
-    res.redirect('/admin/carnivals');
+    return res.redirect('/admin/carnivals');
 };
 
 /**
@@ -823,7 +823,7 @@ const toggleCarnivalStatusHandler = async (req, res) => {
         }
     );
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newStatus: newStatus
@@ -867,7 +867,7 @@ const toggleClubStatusHandler = async (req, res) => {
         }
     );
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newStatus: newStatus
@@ -911,7 +911,7 @@ const toggleClubVisibilityHandler = async (req, res) => {
         }
     );
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newVisibility: newVisibility
@@ -995,7 +995,7 @@ const generateReportHandler = async (req, res) => {
         }
     };
 
-    res.render('admin/reports', {
+    return res.render('admin/reports', {
         title: 'System Reports - Admin Dashboard',
         report,
         additionalCSS: ['/styles/admin.styles.css']
@@ -1107,7 +1107,7 @@ const deleteUserHandler = async (req, res) => {
 
         console.log(`✅ User ${user.firstName} ${user.lastName} (${user.email}) has been deleted by admin ${currentUser.email}`);
 
-        res.json({ 
+        return res.json({ 
             success: true, 
             message: `User ${user.firstName} ${user.lastName} has been deleted successfully` 
         });
@@ -1166,7 +1166,7 @@ const showClaimCarnivalFormHandler = async (req, res) => {
         order: [['clubName', 'ASC']]
     });
 
-    res.render('admin/claim-carnival', {
+    return res.render('admin/claim-carnival', {
         title: `Claim Carnival - ${carnival.title}`,
         carnival,
         clubs,
@@ -1195,7 +1195,7 @@ const adminClaimCarnivalHandler = async (req, res) => {
         req.flash('error_msg', result.message);
     }
     
-    res.redirect('/admin/carnivals');
+    return res.redirect('/admin/carnivals');
 
 };
 
@@ -1300,7 +1300,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
         }
     });
 
-    res.render('admin/carnival-players', {
+    return res.render('admin/carnival-players', {
         title: `All Players - ${carnival.title} (Admin View)`,
         carnival,
         allPlayers,
@@ -1407,7 +1407,7 @@ const getAuditLogsHandler = async (req, res) => {
     // Format audit logs for display
     const formattedLogs = auditLogs.map(log => AuditService.formatAuditLog(log));
 
-    res.render('admin/audit-logs', {
+    return res.render('admin/audit-logs', {
         title: 'Audit Logs - Admin Dashboard',
         auditLogs: formattedLogs,
         filters,
@@ -1430,7 +1430,7 @@ const getAuditStatisticsHandler = async (req, res) => {
         endDate: new Date()
     });
 
-    res.json({
+    return res.json({
         success: true,
         stats
     });
