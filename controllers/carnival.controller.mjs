@@ -5,7 +5,7 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-import { Carnival, Club, User, CarnivalClub, Sponsor, sequelize } from '../models/index.mjs';
+import { Carnival, Club, User, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Sponsor, sequelize } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
@@ -771,7 +771,185 @@ export const sendEmailToAttendees = asyncHandler(async (req, res) => {
 });
 
 export const showAllPlayers = asyncHandler(async (req, res) => {
-    // Placeholder for show all players functionality
-    req.flash('error_msg', 'Show all players functionality not yet implemented.');
-    res.redirect(`/carnivals/${req.params.id}`);
+    const carnivalId = req.params.id;
+    
+    // Fetch carnival with attending clubs and their players
+    const carnival = await Carnival.findByPk(carnivalId, {
+        include: [
+            {
+                model: User,
+                as: 'creator',
+                attributes: ['firstName', 'lastName', 'id']
+            },
+            {
+                model: Club,
+                as: 'attendingClubs',
+                attributes: ['id', 'clubName', 'state', 'location', 'logoUrl'],
+                through: { 
+                    attributes: ['approvalStatus', 'isPaid', 'playerCount'],
+                    where: { isActive: true }
+                },
+                required: false,
+                include: [{
+                    model: ClubPlayer,
+                    as: 'players',
+                    attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'email', 'shorts'],
+                    where: { isActive: true },
+                    required: false,
+                    include: [{
+                        model: CarnivalClubPlayer,
+                        as: 'carnivalAssignments',
+                        attributes: ['attendanceStatus', 'notes'],
+                        where: { 
+                            isActive: true,
+                            '$attendingClubs.CarnivalClub.id$': { [Op.col]: 'attendingClubs->players->carnivalAssignments.carnivalClubId' }
+                        },
+                        required: false
+                    }]
+                }]
+            }
+        ]
+    });
+
+    if (!carnival) {
+        req.flash('error_msg', 'Carnival not found.');
+        return res.redirect('/carnivals');
+    }
+
+    // Check if user has permission to view player lists
+    // Allow: carnival owner, admin users, or delegates from attending clubs
+    let hasPermission = false;
+    
+    if (req.user) {
+        // Check if user is admin
+        if (req.user.isAdmin) {
+            hasPermission = true;
+        }
+        // Check if user is carnival creator
+        else if (carnival.createdByUserId === req.user.id) {
+            hasPermission = true;
+        }
+        // Check if user is from an attending club
+        else if (req.user.clubId) {
+            const userClubAttending = carnival.attendingClubs.some(club => 
+                club.id === req.user.clubId && 
+                (club.CarnivalClub.approvalStatus === 'approved' || club.CarnivalClub.approvalStatus === 'pending')
+            );
+            if (userClubAttending) {
+                hasPermission = true;
+            }
+        }
+    }
+
+    if (!hasPermission) {
+        req.flash('error_msg', 'You do not have permission to view the player list for this carnival.');
+        return res.redirect(`/carnivals/${carnivalId}`);
+    }
+
+    // Build comprehensive player list with club and attendance information
+    const players = [];
+    const clubSummary = [];
+
+    carnival.attendingClubs.forEach(club => {
+        const clubPlayers = club.players || [];
+        let mastersCount = 0;
+        let attendingCount = 0;
+
+        clubPlayers.forEach(player => {
+            // Calculate age
+            const age = player.dateOfBirth ? 
+                Math.floor((Date.now() - new Date(player.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+            
+            const isMasters = age && age >= 35;
+            if (isMasters) mastersCount++;
+
+            // Get attendance status from carnival assignment
+            let attendanceStatus = 'Unknown';
+            let attendanceNotes = '';
+            
+            if (player.carnivalAssignments && player.carnivalAssignments.length > 0) {
+                const assignment = player.carnivalAssignments[0];
+                switch (assignment.attendanceStatus) {
+                    case 'confirmed':
+                        attendanceStatus = 'Attending';
+                        attendingCount++;
+                        break;
+                    case 'tentative':
+                        attendanceStatus = 'Maybe';
+                        break;
+                    case 'unavailable':
+                        attendanceStatus = 'Not Attending';
+                        break;
+                    default:
+                        attendanceStatus = 'Unknown';
+                }
+                attendanceNotes = assignment.notes || '';
+            }
+
+            // Add player to the list with enriched data
+            players.push({
+                id: player.id,
+                firstName: player.firstName,
+                lastName: player.lastName,
+                dateOfBirth: player.dateOfBirth,
+                age: age,
+                email: player.email,
+                shortsColour: player.shorts,
+                Club: {
+                    id: club.id,
+                    clubName: club.clubName,
+                    state: club.state,
+                    location: club.location,
+                    logoUrl: club.logoUrl
+                },
+                CarnivalClubPlayer: {
+                    attendanceStatus: attendanceStatus,
+                    notes: attendanceNotes
+                }
+            });
+        });
+
+        // Add club summary
+        clubSummary.push({
+            clubId: club.id,
+            clubName: club.clubName,
+            state: club.state,
+            location: club.location,
+            logoUrl: club.logoUrl,
+            totalPlayers: clubPlayers.length,
+            mastersPlayers: mastersCount,
+            attendingPlayers: attendingCount,
+            approvalStatus: club.CarnivalClub.approvalStatus,
+            isPaid: club.CarnivalClub.isPaid
+        });
+    });
+
+    // Sort players by club name, then by player name
+    players.sort((a, b) => {
+        const clubCompare = (a.Club?.clubName || '').localeCompare(b.Club?.clubName || '');
+        if (clubCompare !== 0) return clubCompare;
+        
+        const nameCompare = (a.firstName || '').localeCompare(b.firstName || '');
+        if (nameCompare !== 0) return nameCompare;
+        
+        return (a.lastName || '').localeCompare(b.lastName || '');
+    });
+
+    // Sort club summary by club name
+    clubSummary.sort((a, b) => a.clubName.localeCompare(b.clubName));
+
+    res.render('carnivals/players', {
+        title: `All Players - ${carnival.title}`,
+        carnival: {
+            id: carnival.id,
+            title: carnival.title,
+            date: carnival.date,
+            locationAddress: carnival.locationAddress
+        },
+        players,
+        clubSummary,
+        totalPlayers: players.length,
+        totalClubs: clubSummary.length,
+        additionalCSS: ['/styles/carnival.styles.css']
+    });
 });

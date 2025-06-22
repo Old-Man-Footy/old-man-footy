@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeCarnivalShowPage() {
     initializePostCreationModal();
     initializeMergeConfirmation();
+    initializeAdminButtons();
 }
 
 /**
@@ -172,6 +173,74 @@ function initializePostCreationModal() {
 function initializeMergeConfirmation() {
     // Merge confirmation functionality is handled by the global confirmMerge function
     // which is already defined in the page
+}
+
+/**
+ * Initialize admin button functionality
+ */
+function initializeAdminButtons() {
+    // Handle admin carnival status toggle buttons
+    const statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
+    statusToggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const carnivalId = this.getAttribute('data-toggle-carnival-status');
+            const carnivalTitle = this.getAttribute('data-carnival-title');
+            const currentStatus = this.getAttribute('data-current-status');
+            
+            toggleCarnivalStatus(carnivalId, carnivalTitle, currentStatus);
+        });
+    });
+}
+
+/**
+ * Handle admin carnival status toggle (activate/deactivate)
+ */
+function toggleCarnivalStatus(carnivalId, carnivalTitle, currentStatus) {
+    const action = currentStatus === 'true' ? 'deactivate' : 'reactivate';
+    const confirmMessage = currentStatus === 'true' 
+        ? `Are you sure you want to deactivate "${carnivalTitle}"? This will hide it from public listings and disable registration.`
+        : `Are you sure you want to reactivate "${carnivalTitle}"? This will make it visible in public listings again.`;
+    
+    if (confirm(confirmMessage)) {
+        // Show loading state
+        const button = document.querySelector(`[data-toggle-carnival-status="${carnivalId}"]`);
+        if (button) {
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+            button.disabled = true;
+            
+            // Make the API call
+            fetch(`/admin/carnivals/${carnivalId}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    action: action
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message and reload the page to reflect changes
+                    alert(`Carnival ${action}d successfully!`);
+                    window.location.reload();
+                } else {
+                    // Show error message and restore button
+                    alert('Error: ' + (data.message || 'Failed to update carnival status'));
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the carnival status. Please try again.');
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            });
+        }
+    }
 }
 
 /**

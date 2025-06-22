@@ -111,6 +111,58 @@
                     </div>
 
                     <!-- Admin Actions Section -->
+                    <% if (user && user.isAdmin) { %>
+                        <div class="alert alert-warning mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-shield-fill me-2"></i>
+                                    <strong>Administrator Actions</strong>
+                                    <div class="small text-muted mt-1">
+                                        You have admin privileges for this carnival
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <!-- Admin Edit Button -->
+                                    <a href="/admin/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-warning btn-sm">
+                                        <i class="bi bi-gear"></i> Admin Edit
+                                    </a>
+                                    
+                                    <!-- Admin Activate/Deactivate Button -->
+                                    <% if (carnival.isActive) { %>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                data-toggle-carnival-status="<%= carnival.id %>"
+                                                data-carnival-title="<%= carnival.title %>"
+                                                data-current-status="true">
+                                            <i class="bi bi-eye-slash"></i> Deactivate
+                                        </button>
+                                    <% } else { %>
+                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                                data-toggle-carnival-status="<%= carnival.id %>"
+                                                data-carnival-title="<%= carnival.title %>"
+                                                data-current-status="false">
+                                            <i class="bi bi-eye"></i> Reactivate
+                                        </button>
+                                    <% } %>
+                                    
+                                    <!-- View in Admin Dashboard -->
+                                    <a href="/admin/carnivals?search=<%= encodeURIComponent(carnival.title) %>" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-list-ul"></i> View in Admin
+                                    </a>
+                                    
+                                    <!-- Admin Claim Button (if not already owned by someone) -->
+                                    <% if (!carnival.createdByUserId || carnival.createdByUserId === null) { %>
+                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#adminClaimModal">
+                                            <i class="bi bi-hand-thumbs-up"></i> Admin Claim
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <!-- Carnival Owner Actions Section -->
                     <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                         <div class="alert alert-info mb-4">
                             <div class="d-flex justify-content-between align-items-center">
@@ -143,7 +195,7 @@
 
                                         <!-- View All Players button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
-                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-info btn-sm">
+                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-success btn-sm">
                                                 <i class="bi bi-list-ul"></i> View All Players
                                             </a>
                                         <% } %>
@@ -171,7 +223,7 @@
 
                                     <!-- Merge carnival button for MySideline events owned by the user -->
                                     <% if (canMergeCarnival) { %>
-                                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                        <button type="button" class="btn btn-outline-success btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#mergeCarnivalModal">
                                             <i class="bi bi-arrow-down-up"></i> Merge Carnival
@@ -292,7 +344,7 @@
                             <% if (carnival.drawDescription) { %>
                                 <p><%= carnival.drawDescription %></p>
                             <% } %>
-                            <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-info" target="_blank">
+                            <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-success" target="_blank">
                                 <i class="bi bi-download"></i> Download Draw
                                 <% if (carnival.drawFileName) { %>
                                     (<%= carnival.drawFileName %>)
@@ -312,36 +364,41 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <% carnival.attendingClubs.forEach((club, index) => { %>
-                                <div class="col-lg-6 col-md-6 col-sm-12">
-                                    <div class="d-flex align-items-center p-4 border rounded bg-light h-100">
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="d-flex align-items-center p-3 border rounded bg-light h-100">
                                         <% if (club.logoUrl) { %>
                                             <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
-                                                 class="me-3" style="height: 60px; width: auto; max-width: 80px; object-fit: contain;">
+                                                 class="me-3 flex-shrink-0" style="height: 50px; width: auto; max-width: 70px; object-fit: contain;">
                                         <% } else { %>
-                                            <div class="me-3 d-flex align-items-center justify-content-center bg-white border rounded" 
-                                                 style="height: 60px; width: 80px; min-width: 80px;">
-                                                <i class="bi bi-shield text-muted" style="font-size: 1.5rem;"></i>
+                                            <div class="me-3 flex-shrink-0 d-flex align-items-center justify-content-center bg-white border rounded" 
+                                                 style="height: 50px; width: 70px; min-width: 70px;">
+                                                <i class="bi bi-shield text-muted" style="font-size: 1.25rem;"></i>
                                             </div>
                                         <% } %>
-                                        <div class="flex-grow-1">
+                                        <div class="flex-grow-1 min-width-0">
                                             <% if (club.isPubliclyListed && club.isActive) { %>
-                                                <a href="/clubs/<%= club.id %>" class="text-decoration-none fw-bold h6 mb-1 d-block">
+                                                <a href="/clubs/<%= club.id %>" class="text-decoration-none fw-bold h6 mb-1 d-block text-truncate">
                                                     <%= club.clubName %>
                                                 </a>
                                             <% } else { %>
-                                                <span class="fw-bold h6 mb-1 d-block">
+                                                <span class="fw-bold h6 mb-1 d-block text-truncate">
                                                     <%= club.clubName %>
                                                     <% if (!club.isActive) { %>
                                                         <span class="badge bg-secondary ms-2">Inactive</span>
                                                     <% } %>
                                                 </span>
                                             <% } %>
-                                            <% if (club.state) { %>
-                                                <div class="text-muted"><%= club.state %></div>
-                                            <% } %>
-                                            <% if (club.location) { %>
-                                                <div class="text-muted small"><%= club.location %></div>
-                                            <% } %>
+                                            <div class="text-muted small">
+                                                <% if (club.state) { %>
+                                                    <span><%= club.state %></span>
+                                                <% } %>
+                                                <% if (club.location && club.state) { %>
+                                                    <span> • </span>
+                                                <% } %>
+                                                <% if (club.location) { %>
+                                                    <span class="text-truncate d-inline-block" style="max-width: 150px;"><%= club.location %></span>
+                                                <% } %>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -349,7 +406,7 @@
                         </div>
                         <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                             <div class="text-center mt-4">
-                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-info">
+                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-success">
                                     <i class="bi bi-list-ul"></i> Manage Attendees
                                 </a>
                             </div>
@@ -850,6 +907,56 @@
                     <strong>Event ID:</strong> <%= carnival.id %> | 
                     <strong>Last Updated:</strong> <%= new Date(carnival.updatedAt).toLocaleDateString('en-AU') %>
                 </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Claim Modal -->
+<div class="modal fade" id="adminClaimModal" tabindex="-1" aria-labelledby="adminClaimModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminClaimModalLabel">
+                    <i class="bi bi-shield-fill text-warning me-2"></i>
+                    Administrator Claim Event
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Administrator Action:</strong> You are performing an administrative claim of this event.
+                </div>
+                
+                <p>By claiming this event as an administrator, you will:</p>
+                
+                <ul class="mb-3">
+                    <li><strong>Gain administrative control</strong> - Full access to edit and manage this event</li>
+                    <li><strong>Assign to your club</strong> - The event will be assigned to your current club</li>
+                    <li><strong>Override normal restrictions</strong> - Admin privileges bypass standard ownership rules</li>
+                    <li><strong>Accept responsibility</strong> - You become responsible for managing this event</li>
+                </ul>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Note:</strong> This action will be logged in the audit trail for administrative oversight.
+                </div>
+                
+                <p class="mb-0">
+                    <strong>Event:</strong> <%= carnival.title %><br>
+                    <strong>Your Club:</strong> <%= user && user.club ? user.club.clubName : 'No club assigned' %>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <form method="POST" action="/admin/carnivals/<%= carnival.id %>/claim" class="d-inline">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-shield-fill"></i> Admin Claim Event
+                    </button>
+                </form>
             </div>
         </div>
     </div>
