@@ -1,2 +1,2 @@
-const crypto = require('crypto');
-console.log(crypto.randomBytes(32).toString('hex'));
+import { randomBytes } from 'crypto';
+console.log(randomBytes(32).toString('hex'));

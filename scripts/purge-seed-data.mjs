@@ -9,10 +9,12 @@
  * Safe to run in production environments during transition from UAT to live.
  */
 
-const { sequelize, User, Club, Carnival, EmailSubscription } = require('../models');
+import { sequelize, User, Club, Carnival, EmailSubscription } from '../models/index.mjs';
+import dotenv from 'dotenv';
+
 
 // Load environment variables
-require('dotenv').config();
+dotenv.config();
 
 /**
  * Seed data identifiers - data matching these patterns will be removed
@@ -100,7 +102,7 @@ class SeedDataPurger {
      */
     async connect() {
         try {
-            const { initializeDatabase } = require('../config/database');
+            const { initializeDatabase } = await import('../config/database.mjs');
             await initializeDatabase();
             console.log('✅ Database connection established');
         } catch (error) {
@@ -431,7 +433,8 @@ class SeedDataPurger {
 /**
  * Run purger based on command line arguments
  */
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
     const args = process.argv.slice(2);
     const execute = args.includes('--execute');
     
@@ -454,4 +457,4 @@ if (require.main === module) {
         });
 }
 
-module.exports = SeedDataPurger;
+export default SeedDataPurger;

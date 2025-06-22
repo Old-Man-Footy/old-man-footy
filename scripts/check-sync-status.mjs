@@ -8,7 +8,6 @@
  * Usage: node scripts/check-sync-status.js [--detailed]
  */
 
-import path from 'path';
 import { sequelize, SyncLog } from '../models/index.mjs';
 import { fileURLToPath } from 'url';
 

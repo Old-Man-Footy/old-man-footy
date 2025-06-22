@@ -14,12 +14,15 @@
  * - node scripts/image-manager.js stats
  */
 
-const path = require('path');
-const fs = require('fs').promises;
-const ImageNamingService = require('../services/imageNamingService');
-const ImageMigrationScript = require('./migrate-image-names');
-const { Club, Carnival, User } = require('../models');
+import path from 'path';
+import { promises as fs } from 'fs';
+import ImageNamingService from '../services/imageNamingService.mjs';
+import ImageMigrationScript from './migrate-image-names.mjs';
+import { Club, Carnival, User } from '../models/index.mjs';
 
+/**
+ * Image Management CLI for structured image handling
+ */
 class ImageManagerCLI {
     constructor() {
         this.commands = {
@@ -33,6 +36,7 @@ class ImageManagerCLI {
 
     /**
      * Main entry point for CLI
+     * @returns {Promise<void>}
      */
     async run() {
         const args = process.argv.slice(2);
@@ -53,6 +57,8 @@ class ImageManagerCLI {
 
     /**
      * Migrate existing images to structured naming
+     * @param {string[]} args - Command line arguments
+     * @returns {Promise<void>}
      */
     async migrate(args) {
         const dryRun = !args.includes('--execute');
@@ -69,6 +75,8 @@ class ImageManagerCLI {
 
     /**
      * Cleanup orphaned or invalid images
+     * @param {string[]} args - Command line arguments
+     * @returns {Promise<void>}
      */
     async cleanup(args) {
         const dryRun = !args.includes('--execute');
@@ -104,6 +112,8 @@ class ImageManagerCLI {
 
     /**
      * Validate images for a specific entity
+     * @param {string[]} args - Command line arguments
+     * @returns {Promise<void>}
      */
     async validate(args) {
         const entityTypeIndex = args.indexOf('--entity');
@@ -149,6 +159,7 @@ class ImageManagerCLI {
 
     /**
      * Display statistics about the image system
+     * @returns {Promise<void>}
      */
     async stats() {
         console.log('📊 Image System Statistics');
@@ -234,6 +245,8 @@ class ImageManagerCLI {
 
     /**
      * Find images with invalid naming conventions
+     * @param {boolean} dryRun - Whether to perform a dry run
+     * @returns {Promise<void>}
      */
     async findInvalidImageNames(dryRun = true) {
         const uploadDirs = [
@@ -281,6 +294,7 @@ class ImageManagerCLI {
 
     /**
      * Find potential duplicate images
+     * @returns {Promise<void>}
      */
     async findDuplicateImages() {
         // This would require implementing file hash comparison
@@ -326,9 +340,10 @@ class ImageManagerCLI {
 }
 
 // Run CLI if called directly
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
     const cli = new ImageManagerCLI();
     cli.run().catch(console.error);
 }
 
-module.exports = ImageManagerCLI;
+export default ImageManagerCLI;
