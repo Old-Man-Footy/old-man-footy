@@ -98,7 +98,7 @@ COPY --chown=appuser:nodejs package*.json ./
 COPY --chown=appuser:nodejs .sequelizerc ./ 
 
 # CRITICAL: Copy application core files
-COPY --chown=appuser:nodejs app.js ./
+COPY --chown=appuser:nodejs app.mjs ./
 
 # CRITICAL: Copy all essential directories for runtime
 COPY --chown=appuser:nodejs config/ ./config/
