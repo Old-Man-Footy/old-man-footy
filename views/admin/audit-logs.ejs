@@ -1,6 +1,4 @@
-<%- include('../../partials/header') %>
-
-<div class="container-fluid mt-4">
+<div class="container mt-4">
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -221,7 +219,7 @@
                                             </td>
                                             <td>
                                                 <% if (log.hasChanges || Object.keys(log.metadata).length > 0) { %>
-                                                    <button class="btn btn-sm btn-outline-info" 
+                                                    <button class="btn btn-sm btn-outline-success" 
                                                             type="button" 
                                                             data-bs-toggle="collapse" 
                                                             data-bs-target="#details-<%= log.id %>" 
@@ -328,5 +326,3 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 </script>
-
-<%- include('../../partials/footer') %>

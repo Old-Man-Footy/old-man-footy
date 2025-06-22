@@ -2,14 +2,15 @@
   "name": "old-man-footy",
   "version": "1.0.0",
   "description": "Rugby League Masters competition management system",
-  "main": "app.js",
+  "main": "app.mjs",
+  "type": "module",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
-    "test": "jest --detectOpenHandles --forceExit",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "seed": "node scripts/seed-database.js"
+    "start": "node app.mjs",
+    "dev": "nodemon app.mjs",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "seed": "node scripts/seed-database.mjs"
   },
   "dependencies": {
     "axios": "^1.9.0",
@@ -40,6 +41,7 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "nodemon": "^3.0.1",
     "sequelize-cli": "^6.6.2",
@@ -48,17 +50,17 @@
   "jest": {
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
-      "<rootDir>/tests/setup.js"
+      "<rootDir>/tests/setup.mjs"
     ],
     "testMatch": [
-      "**/tests/**/*.test.js",
-      "**/tests/**/*.spec.js"
+      "**/tests/**/*.test.mjs",
+      "**/tests/**/*.spec.mjs"
     ],
     "collectCoverageFrom": [
-      "controllers/**/*.js",
-      "services/**/*.js",
-      "models/**/*.js",
-      "middleware/**/*.js",
+      "controllers/**/*.mjs",
+      "services/**/*.mjs",
+      "models/**/*.mjs",
+      "middleware/**/*.mjs",
       "!**/node_modules/**"
     ],
     "coverageThreshold": {
@@ -70,7 +72,20 @@
       }
     },
     "setupFiles": [
-      "<rootDir>/tests/jest.env.js"
-    ]
+      "<rootDir>/tests/jest.env.mjs"
+    ],
+    "transform": {},
+    "verbose": false,
+    "forceExit": true,
+    "detectOpenHandles": true,
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "testTimeout": 30000,
+    "clearMocks": true,
+    "resetModules": true,
+    "resetMocks": true
   }
 }

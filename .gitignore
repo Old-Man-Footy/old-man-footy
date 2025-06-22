@@ -62,8 +62,30 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# ===========================
+# SECRETS AND ENVIRONMENT FILES
+# ===========================
+# Environment files with secrets (CRITICAL - DO NOT COMMIT)
+.env.local
+.env.production
+.env.staging
+.env.*.local
+
+# Legacy dotenv files (keep for backward compatibility)
 .env
+
+# Development environment files that may contain secrets
+.env.development.local
+.env.test.local
+
+# ===========================
+# CONFIGURATION FILES WITH SECRETS
+# ===========================
+# Config files with sensitive data
+config/keys.js
+config/secrets.js
+config/secrets.json
+config/production.json
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -141,9 +163,6 @@ sessions/
 *.sqlite
 *.sqlite3
 
-# Config files with sensitive data
-config/keys.js
-
 # PM2 process file
 ecosystem.config.js
 
@@ -154,6 +173,10 @@ public/uploads/*.jpeg
 public/images/*.png
 public/images/*.jpg 
 public/images/*.jpeg
+*.png
+*.jpg
+
 
 # Keep icon files - they should be committed to the repo
 
+.env.local
