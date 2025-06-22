@@ -1,6 +1,8 @@
 import MySidelineScraperService from '../services/mySidelineScraperService.mjs';
 import { Carnival } from '../models/index.mjs';
 import { Op } from 'sequelize';
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+
 
 /**
  * MySidelineScraperService Integration Tests

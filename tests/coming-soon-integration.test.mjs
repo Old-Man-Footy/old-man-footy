@@ -4,19 +4,57 @@
  */
 
 import request from 'supertest';
+import express from 'express';
 import { EmailSubscription } from '../models/index.mjs';
 import { sequelize } from '../config/database.mjs';
+import { jest, describe, test, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
 
-// Mock MySideline service to prevent async operations during tests
-jest.mock('../services/mySidelineIntegrationService.mjs', () => ({
-    initializeScheduledSync: jest.fn(),
-    checkAndRunInitialSync: jest.fn()
-}));
+// Mock services that cause ImageNamingService conflicts
+jest.mock('../services/imageNamingService.mjs');
+jest.mock('../services/mySidelineIntegrationService.mjs');
+jest.mock('../services/mySidelineDataService.mjs');
+jest.mock('../services/mySidelineLogoDownloadService.mjs');
+jest.mock('../services/mySidelineScraperService.mjs');
 
-// Import app after mocking
-import app from '../app.mjs';
+// Import routes and middleware directly
+import mainRoutes from '../routes/index.mjs';
+import { comingSoonMode } from '../middleware/comingSoon.mjs';
+
+// Create test app with coming soon middleware
+const createTestApp = (enableComingSoon = false) => {
+    const app = express();
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    
+    // Configure view engine for template rendering
+    app.set('view engine', 'ejs');
+    app.set('views', './views');
+    
+    // Add basic middleware mocks
+    app.use((req, res, next) => {
+        req.session = {};
+        req.flash = jest.fn();
+        req.user = null;
+        req.isAuthenticated = jest.fn(() => false);
+        next();
+    });
+    
+    // Add coming soon middleware if enabled
+    if (enableComingSoon) {
+        process.env.FEATURE_COMING_SOON_MODE = 'true';
+        app.use(comingSoonMode);
+    } else {
+        process.env.FEATURE_COMING_SOON_MODE = 'false';
+    }
+    
+    app.use('/', mainRoutes);
+    
+    return app;
+};
 
 describe('Coming Soon Mode - Subscription Integration', () => {
+    let app;
+
     beforeAll(async () => {
         // Enable coming soon mode for these tests
         process.env.FEATURE_COMING_SOON_MODE = 'true';
@@ -33,6 +71,9 @@ describe('Coming Soon Mode - Subscription Integration', () => {
         
         // Clear email subscriptions
         await EmailSubscription.destroy({ where: {} });
+        
+        // Create app instance before each test
+        app = createTestApp(true);
     });
 
     afterAll(async () => {
@@ -40,9 +81,6 @@ describe('Coming Soon Mode - Subscription Integration', () => {
         delete process.env.FEATURE_COMING_SOON_MODE;
         delete process.env.FEATURE_MAINTENANCE_MODE;
         delete process.env.FEATURE_MYSIDELINE_SYNC;
-        
-        // Close database connection
-        await sequelize.close();
     });
 
     describe('Coming Soon Page Access', () => {

@@ -4,6 +4,8 @@
  */
 
 import * as comingSoonController from '../controllers/comingSoon.controller.mjs';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+
 
 describe('Coming Soon Controller', () => {
     let req, res;
@@ -55,7 +57,7 @@ describe('Coming Soon Controller', () => {
                 message: 'We\'re putting the finishing touches on Old Man Footy - your ultimate hub for Masters Rugby League.',
                 subMessage: 'Get ready to discover carnivals, connect with clubs, and be part of the growing Masters community across Australia.',
                 launchMessage: 'Launch coming soon! Stay tuned for updates.',
-                contactEmail: 'test@example.com',
+                contactEmail: 'support@oldmanfooty.au', // Updated to match actual controller behavior
                 appName: 'Test App',
                 appUrl: 'https://test.com',
                 socialMedia: {

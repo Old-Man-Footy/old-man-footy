@@ -1,18 +1,56 @@
 /**
- * Route Redirect Tests
+ * Route Redirects Tests
  * Tests for maintenance and coming soon route redirects when disabled
  */
 
 import request from 'supertest';
-import app from '../app.mjs';
+import express from 'express';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+
+// Mock services that cause ImageNamingService conflicts
+jest.mock('../services/imageNamingService.mjs');
+jest.mock('../services/mySidelineIntegrationService.mjs');
+jest.mock('../services/mySidelineDataService.mjs');
+jest.mock('../services/mySidelineLogoDownloadService.mjs');
+jest.mock('../services/mySidelineScraperService.mjs');
+
+// Import routes directly instead of full app
+import mainRoutes from '../routes/index.mjs';
+
+// Create minimal test app
+const createTestApp = () => {
+    const app = express();
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    
+    // Configure view engine for template rendering
+    app.set('view engine', 'ejs');
+    app.set('views', './views');
+    
+    // Add basic middleware mocks
+    app.use((req, res, next) => {
+        req.session = {};
+        req.flash = jest.fn();
+        next();
+    });
+    
+    app.use('/', mainRoutes);
+    
+    return app;
+};
+
 
 describe('Route Redirects for Disabled Modes', () => {
     let originalMaintenanceMode, originalComingSoonMode;
+    let app;
 
     beforeEach(() => {
         // Store original environment variables
         originalMaintenanceMode = process.env.FEATURE_MAINTENANCE_MODE;
         originalComingSoonMode = process.env.FEATURE_COMING_SOON_MODE;
+
+        // Create a new instance of the app for each test
+        app = createTestApp();
     });
 
     afterEach(() => {

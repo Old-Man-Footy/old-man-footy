@@ -103,11 +103,17 @@ afterEach(async () => {
 // Global teardown - runs once after all tests
 afterAll(async () => {
   try {
-    if (sequelize.connectionManager.pool) {
+    // Check if connection is still open before attempting to close
+    if (sequelize.connectionManager && 
+        sequelize.connectionManager.pool && 
+        !sequelize.connectionManager.pool._draining) {
       await sequelize.close();
       console.log('✅ Test database connection closed.');
     }
   } catch (error) {
-    console.error('❌ Error closing test database connection:', error);
+    // Only log actual errors, not "already closed" situations
+    if (error.code !== 'SQLITE_MISUSE') {
+      console.error('❌ Error closing test database connection:', error);
+    }
   }
 });

@@ -7,6 +7,8 @@
 
 import { AuditLog, User } from '../models/index.mjs';
 import AuditService from '../services/auditService.mjs';
+import { describe, test, expect, beforeEach } from '@jest/globals';
+
 
 describe('Audit Service', () => {
     let testUser;

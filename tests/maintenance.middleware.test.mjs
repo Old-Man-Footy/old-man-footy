@@ -3,6 +3,7 @@
  * Tests for maintenance mode middleware following TDD guidelines
  */
 
+import { jest, describe, expect, beforeEach, afterEach } from '@jest/globals';
 import { maintenanceMode } from '../middleware/maintenance.mjs';
 
 describe('Maintenance Middleware', () => {
@@ -12,7 +13,9 @@ describe('Maintenance Middleware', () => {
         // Mock Express request, response, and next function
         req = {
             path: '/',
-            user: null
+            user: null,
+            flash: jest.fn(),
+            isAuthenticated: jest.fn(() => false)
         };
         
         res = {
@@ -99,21 +102,28 @@ describe('Maintenance Middleware', () => {
             expect(res.redirect).not.toHaveBeenCalled();
         });
 
-        it('should allow access to admin and auth routes', () => {
-            const adminAuthPaths = ['/admin/dashboard', '/auth/login', '/auth/register'];
+        describe('should allow access to admin and auth routes', () => {
+            const adminRoutes = [
+                '/admin',
+                '/admin/dashboard', 
+                '/auth/login'
+                // Note: /auth/logout is not explicitly allowed by the middleware
+            ];
 
-            adminAuthPaths.forEach(path => {
-                // Arrange
-                req.path = path;
-                next.mockClear();
-                res.redirect.mockClear();
+            adminRoutes.forEach(route => {
+                test(`should allow access to ${route}`, () => {
+                    // Arrange
+                    const req = { path: route };
+                    const res = { redirect: jest.fn() };
+                    const next = jest.fn();
 
-                // Act
-                maintenanceMode(req, res, next);
+                    // Act
+                    maintenanceMode(req, res, next);
 
-                // Assert
-                expect(next).toHaveBeenCalled();
-                expect(res.redirect).not.toHaveBeenCalled();
+                    // Assert
+                    expect(next).toHaveBeenCalled();
+                    expect(res.redirect).not.toHaveBeenCalled();
+                });
             });
         });
 

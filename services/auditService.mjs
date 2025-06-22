@@ -6,7 +6,7 @@
  * context extraction and standardized action naming.
  */
 
-import { logAction } from '../models/AuditLog.mjs';
+import AuditLog from '../models/AuditLog.mjs';
 
 /**
  * Audit Service Class
@@ -113,7 +113,7 @@ class AuditService {
 
     const userId = req?.user?.id || null;
 
-    return await logAction({
+    return await AuditLog.logAction({
       userId,
       action,
       entityType,
@@ -151,7 +151,7 @@ class AuditService {
       errorMessage
     } = options;
 
-    return await logAction({
+    return await AuditLog.logAction({
       userId: null, // System actions have no user
       action,
       entityType,

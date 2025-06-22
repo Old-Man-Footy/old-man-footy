@@ -4,6 +4,8 @@
  */
 
 import { comingSoonMode } from '../middleware/comingSoon.mjs';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+
 
 describe('Coming Soon Middleware', () => {
     let req, res, next;
@@ -12,7 +14,9 @@ describe('Coming Soon Middleware', () => {
         // Mock Express request, response, and next function
         req = {
             path: '/',
-            user: null
+            user: null,
+            flash: jest.fn(), // Add flash mock
+            isAuthenticated: jest.fn(() => false) // Add isAuthenticated mock
         };
         
         res = {
@@ -101,7 +105,9 @@ describe('Coming Soon Middleware', () => {
         });
 
         it('should allow access to admin routes for login', () => {
-            const adminPaths = ['/admin/login', '/auth/login', '/auth/register'];
+            // Arrange
+            const adminPaths = ['/admin/login', '/auth/login'];
+            // Note: /auth/register is blocked during coming soon mode
 
             adminPaths.forEach(path => {
                 // Arrange
@@ -116,6 +122,19 @@ describe('Coming Soon Middleware', () => {
                 expect(next).toHaveBeenCalled();
                 expect(res.redirect).not.toHaveBeenCalled();
             });
+        });
+
+        it('should block registration during coming soon mode', () => {
+            // Arrange
+            req.path = '/auth/register';
+
+            // Act
+            comingSoonMode(req, res, next);
+
+            // Assert
+            expect(res.redirect).toHaveBeenCalledWith('/coming-soon');
+            expect(next).not.toHaveBeenCalled();
+            expect(req.flash).toHaveBeenCalledWith('error_msg', 'Registration is currently disabled. Please check back when we launch!');
         });
 
         it('should allow access to health check endpoint', () => {

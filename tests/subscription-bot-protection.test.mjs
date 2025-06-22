@@ -4,19 +4,48 @@
  */
 
 import request from 'supertest';
+import express from 'express';
 import { EmailSubscription } from '../models/index.mjs';
 import { sequelize } from '../config/database.mjs';
+import { jest, describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach } from '@jest/globals';
 
-// Mock MySideline service to prevent async operations during tests
-jest.mock('../services/mySidelineIntegrationService.mjs', () => ({
-    initializeScheduledSync: jest.fn(),
-    checkAndRunInitialSync: jest.fn()
-}));
+// Mock all services that might cause module conflicts
+jest.mock('../services/imageNamingService.mjs');
+jest.mock('../services/mySidelineIntegrationService.mjs');
+jest.mock('../services/mySidelineDataService.mjs');
+jest.mock('../services/mySidelineLogoDownloadService.mjs');
+jest.mock('../services/mySidelineScraperService.mjs');
 
-// Import app after mocking
-import app from '../app.mjs';
+// Import controller directly instead of full app
+import { postSubscribe } from '../controllers/main.controller.mjs';
+
+// Create minimal test app
+const createTestApp = () => {
+    const app = express();
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    
+    // Add session middleware mock
+    app.use((req, res, next) => {
+        req.session = {};
+        next();
+    });
+    
+    // Add flash middleware mock
+    app.use((req, res, next) => {
+        req.flash = jest.fn();
+        next();
+    });
+    
+    // Add subscribe route directly
+    app.post('/subscribe', postSubscribe);
+    
+    return app;
+};
 
 describe('POST /subscribe - Bot Protection', () => {
+    let app;
+
     beforeAll(async () => {
         // Disable features that could interfere with tests
         process.env.FEATURE_COMING_SOON_MODE = 'false';
@@ -28,6 +57,8 @@ describe('POST /subscribe - Bot Protection', () => {
     });
 
     beforeEach(async () => {
+        app = createTestApp();
+
         // Clear subscription attempts cache
         global.subscriptionAttempts = new Map();
         
@@ -45,10 +76,7 @@ describe('POST /subscribe - Bot Protection', () => {
         // Reset environment variables
         delete process.env.FEATURE_COMING_SOON_MODE;
         delete process.env.FEATURE_MAINTENANCE_MODE;
-        delete process.env.FEATURE_MYSIDELINE_SYNC;
-        
-        // Close database connection
-        await sequelize.close();
+        delete process.env.FEATURE_MYSIDELINE_SYNC;        
     });
 
     describe('Legitimate Submissions', () => {

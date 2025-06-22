@@ -5,7 +5,7 @@
  * providing comprehensive tracking for security and compliance.
  */
 
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Op, fn } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
 
 /**
@@ -99,23 +99,26 @@ class AuditLog extends Model {
 
     if (startDate && endDate) {
       whereConditions.createdAt = {
-        [require('sequelize').Op.between]: [startDate, endDate]
+        [Op.between]: [startDate, endDate]
       };
     } else if (startDate) {
       whereConditions.createdAt = {
-        [require('sequelize').Op.gte]: startDate
+        [Op.gte]: startDate
       };
     } else if (endDate) {
       whereConditions.createdAt = {
-        [require('sequelize').Op.lte]: endDate
+        [Op.lte]: endDate
       };
     }
 
     if (actions && actions.length > 0) {
       whereConditions.action = {
-        [require('sequelize').Op.in]: actions
+        [Op.in]: actions
       };
     }
+
+    // Import User model dynamically to avoid circular dependency
+    const { default: User } = await import('./User.mjs');
 
     return await this.findAndCountAll({
       where: whereConditions,
@@ -123,7 +126,7 @@ class AuditLog extends Model {
       limit,
       offset,
       include: [{
-        model: require('./User'),
+        model: User,
         as: 'user',
         attributes: ['id', 'firstName', 'lastName', 'email'],
         required: false
@@ -141,6 +144,9 @@ class AuditLog extends Model {
   static async getEntityAuditLogs(entityType, entityId, options = {}) {
     const { limit = 50, offset = 0 } = options;
 
+    // Import User model dynamically to avoid circular dependency
+    const { default: User } = await import('./User.mjs');
+
     return await this.findAll({
       where: {
         entityType,
@@ -150,7 +156,7 @@ class AuditLog extends Model {
       limit,
       offset,
       include: [{
-        model: require('./User'),
+        model: User,
         as: 'user',
         attributes: ['id', 'firstName', 'lastName', 'email'],
         required: false
@@ -171,7 +177,7 @@ class AuditLog extends Model {
     const whereConditions = {};
     if (startDate && endDate) {
       whereConditions.createdAt = {
-        [require('sequelize').Op.between]: [startDate, endDate]
+        [Op.between]: [startDate, endDate]
       };
     }
 
@@ -187,25 +193,25 @@ class AuditLog extends Model {
         where: whereConditions,
         attributes: [
           'action',
-          [require('sequelize').fn('COUNT', '*'), 'count']
+          [fn('COUNT', '*'), 'count']
         ],
         group: ['action'],
-        order: [[require('sequelize').fn('COUNT', '*'), 'DESC']],
+        order: [[fn('COUNT', '*'), 'DESC']],
         limit: 10,
         raw: true
       }),
       this.findAll({
-        where: { ...whereConditions, userId: { [require('sequelize').Op.ne]: null } },
+        where: { ...whereConditions, userId: { [Op.ne]: null } },
         attributes: [
           'userId',
-          [require('sequelize').fn('COUNT', '*'), 'count']
+          [fn('COUNT', '*'), 'count']
         ],
         group: ['userId'],
-        order: [[require('sequelize').fn('COUNT', '*'), 'DESC']],
+        order: [[fn('COUNT', '*'), 'DESC']],
         limit: 10,
         raw: true,
         include: [{
-          model: require('./User'),
+          model: (await import('./User.mjs')).default,
           as: 'user',
           attributes: ['firstName', 'lastName', 'email'],
           required: false
@@ -235,7 +241,7 @@ class AuditLog extends Model {
     const result = await this.destroy({
       where: {
         createdAt: {
-          [require('sequelize').Op.lt]: cutoffDate
+          [Op.lt]: cutoffDate
         }
       }
     });

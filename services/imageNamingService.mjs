@@ -437,6 +437,27 @@ class ImageNamingService {
 
 // Export both default and named exports for flexibility
 export default ImageNamingService;
-export const { ENTITY_TYPES, IMAGE_TYPES } = ImageNamingService;
-export const generateImageName = ImageNamingService.generateImageName.bind(ImageNamingService);
-export const parseImageName = ImageNamingService.parseImageName.bind(ImageNamingService);
+
+// Export static properties directly without binding to avoid duplicate declarations
+export const ENTITY_TYPES = {
+    CLUB: 'club',
+    CARNIVAL: 'carnival',
+    SPONSOR: 'sponsor',
+    USER: 'user',
+    SYSTEM: 'system'
+};
+
+export const IMAGE_TYPES = {
+    LOGO: 'logo',
+    PROMOTIONAL: 'promo',
+    GALLERY: 'gallery',
+    DRAW_DOCUMENT: 'draw',
+    AVATAR: 'avatar',
+    BANNER: 'banner',
+    THUMBNAIL: 'thumb',
+    SOCIAL_MEDIA: 'social'
+};
+
+// Export wrapper functions instead of bound methods
+export const generateImageName = (options) => ImageNamingService.generateImageName(options);
+export const parseImageName = (filename) => ImageNamingService.parseImageName(filename);
