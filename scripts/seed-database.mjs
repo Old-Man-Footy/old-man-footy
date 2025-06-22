@@ -1,7 +1,6 @@
 /**
  * Database Seeding Script for Development Environment - Modular Implementation
- * 
- * This script populates the local SQLite development database with:
+ * * This script populates the local SQLite development database with:
  * - Test clubs and users
  * - Sample carnival data (both manual and MySideline imported)
  * - Email subscriptions
@@ -421,11 +420,13 @@ class DatabaseSeeder {
             const numAttendees = Math.floor(Math.random() * (maxClubs - minClubs + 1)) + minClubs;
             
             // Get potential attending clubs - prefer same state with some interstate
+            // Exclude the hosting club from attendees
+            const hostingClubId = carnival.clubId; // Get the host club ID from the carnival record
             const localClubs = this.createdEntities.clubs.filter(club => 
-                club.state === carnival.state && club.isPubliclyListed
+                club.state === carnival.state && club.isPubliclyListed && club.id !== hostingClubId
             );
             const interstateClubs = this.createdEntities.clubs.filter(club => 
-                club.state !== carnival.state && club.isPubliclyListed
+                club.state !== carnival.state && club.isPubliclyListed && club.id !== hostingClubId
             );
             
             const selectedClubs = [];

@@ -11,6 +11,7 @@ import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
 import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
 import MySidelineService from '../../services/mySidelineIntegrationService.mjs';
 import { initializeDatabase } from '../../config/database.mjs';
+import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
 
 class BasicSeeder {
     constructor() {
@@ -135,7 +136,8 @@ class BasicSeeder {
                 ...carnivalData,
                 isManuallyEntered: true,
                 createdBy: creator ? creator.id : null,
-                isActive: true
+                isActive: true,
+                clubId: creator.clubId
             });
             
             this.createdCarnivals.push(carnival);
@@ -153,7 +155,7 @@ class BasicSeeder {
         console.log('🔄 Importing MySideline data...');
         
         try {
-            const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            const states = AUSTRALIAN_STATES;
             let totalImported = 0;
             
             for (const state of states) {
