@@ -14,7 +14,8 @@ const router = express.Router();
 const validateCarnival = [
     body('title').trim().isLength({ min: 5, max: 200 }).withMessage('Title must be between 5 and 200 characters'),
     body('date').isISO8601().withMessage('Valid date is required'),
-    body('endDate').optional().isISO8601().withMessage('Valid end date is required')
+    body('endDate')
+        .optional({ nullable: true, checkFalsy: true })
         .custom((endDate, { req }) => {
             if (endDate && req.body.date) {
                 const startDate = new Date(req.body.date);

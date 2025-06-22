@@ -378,10 +378,13 @@ const showCreateFormHandler = async (req, res) => {
   });
 };
 
+
 /**
- * Create new carnival
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ *
+ *
+ * @param {*} req
+ * @param {*} res
+ * @return {*} 
  */
 const createCarnivalHandler = async (req, res) => {
   const errors = validationResult(req);
@@ -414,7 +417,10 @@ const createCarnivalHandler = async (req, res) => {
       title: 'Add New Carnival',
       states,
       errors: errors.array(),
-      formData: req.body,
+      formData: {
+        ...req.body,
+        organiserContactEmail: req.body.organiserContactEmail // Ensure this is always preserved
+      },
       user: userWithClub, // Pass user data for auto-population
       additionalCSS: ['/styles/carnival.styles.css'],
     });
@@ -454,7 +460,7 @@ const createCarnivalHandler = async (req, res) => {
       carnival = await Carnival.create(carnivalData);
     } else {
       // Use duplicate detection and merging
-      carnival = await mySidelineService.createOrMergeEvent(carnivalData, req.user.id);
+      carnival = await createOrMergeEvent(carnivalData, req.user.id);
     }
 
     // Handle structured file uploads after carnival creation
@@ -559,7 +565,8 @@ const createCarnivalHandler = async (req, res) => {
   }
 
   // Send notification emails to subscribers
-  await emailService.notifyNewCarnival(carnival);
+  // TODO: make this so it sends a weekly summary, not one email for every new carnival.
+  // await emailService.notifyNewCarnival(carnival);
 
   // Set comprehensive success message with important next steps
   const wasMerged = carnival.lastMySidelineSync && carnival.claimedAt;
@@ -604,6 +611,59 @@ const showEditFormHandler = async (req, res) => {
     additionalCSS: ['/styles/carnival.styles.css'],
   });
 };
+
+
+/**
+ * Create or merge a carnival event, preventing duplicates.
+ * If a matching MySideline event exists (by title/mySidelineTitle and date),
+ * update it with any new data from the user-created event, otherwise create a new one.
+ * @param {Object} carnivalData - The carnival data to create.
+ * @param {number} userId - The user ID creating the event.
+ * @returns {Promise<Carnival>} The created or merged carnival instance.
+ */
+export async function createOrMergeEvent(carnivalData, userId) {
+    if (!carnivalData.title || !carnivalData.date) {
+      throw new Error('Carnival title and date are required for duplicate detection.');
+    }
+  
+    // Find a carnival with the same title or mySidelineTitle and the same date
+    const existing = await Carnival.findOne({
+      where: {
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { title: carnivalData.title },
+              { mySidelineTitle: carnivalData.title }
+            ]
+          },
+          { date: carnivalData.date },
+          { claimedAt: null } // Only consider unclaimed events for merging
+        ]
+      }
+    });
+  
+    if (existing) {
+      // Only merge if the existing event is a MySideline import
+      if (!existing.isManuallyEntered) {
+        // Merge user-provided data into the MySideline event (prefer user data if present)
+        await existing.update({
+          ...carnivalData,
+          isManuallyEntered: false, // preserve MySideline status
+          createdByUserId: userId,
+          claimedAt: new Date(),
+          updatedAt: new Date()
+        });
+        return existing;
+      } else if (existing.clubId === carnivalData.clubId) {
+        // If the existing event is manually entered but belongs to the same club, merge data
+        throw new Error('A similar manually created carnival already exists for this date. Please check for duplicates.');
+      }
+      // If the existing event is manually entered and belongs to a different club, allow creation.    
+    }
+  
+    // No duplicate found, create new carnival
+    return await Carnival.create({ ...carnivalData, createdByUserId: userId });
+  }
 
 /**
  * Update existing carnival
