@@ -1,4 +1,4 @@
-# docker-compose.test.yml
+# docker-compose.test.yml - Test Environment
 version: '3.8'
 
 services:
@@ -19,21 +19,16 @@ services:
       - EMAIL_FROM_NAME="Old Man Footy Test"
       - PORT=3055
     volumes:
-      # Mount source code for testing
-      - .:/app
-      - /app/node_modules # Prevent overwriting node_modules
-      # Persist test database and uploads to host directories
+      # Only persist data and uploads
       - /volume2/docker/old-man-footy-test/data:/app/data
       - /volume2/docker/old-man-footy-test/uploads:/app/public/uploads
     networks:
       - old-man-footy-network-test
 
     restart: unless-stopped
-    stdin_open: true
-    tty: true
 
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3055/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test: ["CMD", "node", "-e", "import('http').then(http => { http.default.get('http://localhost:3055/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1)); })"]
       interval: 30s
       timeout: 10s
       retries: 3
