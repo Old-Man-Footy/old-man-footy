@@ -17,9 +17,20 @@ export const asyncHandler = (fn) => {
     return (req, res, next) => {
         Promise.resolve(fn(req, res, next)).catch(err => {
             console.error('--- Error caught by asyncHandler ---');
-            console.error('Original Error:', err);
+            if (err) {
+                if (err instanceof Error) {
+                    console.error('Original Error:', err.stack || err.message || err);
+                } else {
+                    console.error('Original Error (non-Error object):', JSON.stringify(err));
+                }
+            } else {
+                console.error('Original Error: <undefined or null>');
+            }
             console.error('Route being processed:', req.originalUrl);
             console.error('Method:', req.method);
+            if (process.stdout && process.stdout.flush) {
+                process.stdout.flush();
+            }
             next(err);
         });
     };

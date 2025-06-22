@@ -213,6 +213,12 @@ User.hasMany(AuditLog, {
   as: 'auditLogs'
 });
 
+// Register hostClub association for Carnival (hosting club, not attendees)
+Carnival.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'hostClub'
+});
+
 // Export all models and sequelize instance
 export {
   sequelize,
