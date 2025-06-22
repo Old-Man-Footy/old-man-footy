@@ -33,7 +33,7 @@ RUN npm ci --only=production && \
 
 # UAT stage - identical to production but different port
 FROM node:22-alpine AS test
-ENV NODE_ENV=production
+ENV NODE_ENV=test
 
 # Install minimal runtime dependencies
 RUN apk add --no-cache \
