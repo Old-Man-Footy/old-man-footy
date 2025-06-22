@@ -15,7 +15,13 @@
  */
 export const asyncHandler = (fn) => {
     return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(next);
+        Promise.resolve(fn(req, res, next)).catch(err => {
+            console.error('--- Error caught by asyncHandler ---');
+            console.error('Original Error:', err);
+            console.error('Route being processed:', req.originalUrl);
+            console.error('Method:', req.method);
+            next(err);
+        });
     };
 };
 
