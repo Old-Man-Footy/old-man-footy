@@ -229,7 +229,7 @@
                 <% if (user.clubId) { %>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="attending-tab" data-bs-toggle="tab" data-bs-target="#attending-carnivals" type="button" role="tab" aria-controls="attending-carnivals" aria-selected="false">
-                        <i class="bi bi-calendar-check"></i>Registered Carnivals (<%= attendingCarnivals ? attendingCarnivals.length : 0 %>)
+                        <i class="bi bi-calendar-check"></i> Registered Carnivals (<%= attendingCarnivals ? attendingCarnivals.length : 0 %>)
                     </button>
                 </li>
                 <% } %>
@@ -472,11 +472,6 @@
                                                 <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-primary btn-sm">
                                                     View Details
                                                 </a>
-                                                <% if (carnival.registrationLink && new Date(carnival.date) >= new Date()) { %>
-                                                    <a href="<%= carnival.registrationLink %>" class="btn btn-outline-success btn-sm" target="_blank">
-                                                        Registration
-                                                    </a>
-                                                <% } %>
                                             </div>
                                         </div>
                                     </div>
