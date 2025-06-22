@@ -32,7 +32,7 @@ RUN npm ci --only=production && \
     npm cache clean --force
 
 # UAT stage - identical to production but different port
-FROM node:22-alpine AS uat
+FROM node:22-alpine AS test
 ENV NODE_ENV=production
 
 # Install minimal runtime dependencies
@@ -97,7 +97,7 @@ RUN mkdir -p data \
 
 USER appuser
 
-# UAT port (different from production)
+# Test port (different from production)
 EXPOSE 3055
 
 # Health check using ES modules syntax
@@ -107,7 +107,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Start application
 CMD ["dumb-init", "node", "app.mjs"]
 
-# Production stage - identical to UAT but different port
+# Production stage - identical to Test but different port
 FROM node:22-alpine AS production
 ENV NODE_ENV=production
 
