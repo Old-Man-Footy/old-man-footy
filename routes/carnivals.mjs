@@ -30,14 +30,14 @@ const validateCarnival = [
     organiserEmail('organiserContactEmail'),
     body('organiserContactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
     body('scheduleDetails').optional().trim().isLength({ max: 5000 }).withMessage('Schedule details must be 5000 characters or less'),
-    body('registrationLink').optional().isURL().withMessage('Valid registration link URL required'),
+    body('registrationLink').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid registration link URL required'),
     body('feesDescription').optional().trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
     body('callForVolunteers').optional().trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),
     body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state is required'),
-    body('socialMediaFacebook').optional().isURL().withMessage('Valid Facebook URL required'),
-    body('socialMediaInstagram').optional().isURL().withMessage('Valid Instagram URL required'),
-    body('socialMediaTwitter').optional().isURL().withMessage('Valid Twitter URL required'),
-    body('socialMediaWebsite').optional().isURL().withMessage('Valid website URL required')
+    body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
+    body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
+    body('socialMediaTwitter').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required'),
+    body('socialMediaWebsite').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required')
 ];
 
 // Mount carnival club routes as sub-router

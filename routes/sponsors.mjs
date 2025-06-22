@@ -17,11 +17,11 @@ const validateSponsor = [
     body('contactPerson').optional().trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
     body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
     body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('website').optional().isURL().withMessage('Valid website URL required'),
-    body('facebookUrl').optional().isURL().withMessage('Valid Facebook URL required'),
-    body('instagramUrl').optional().isURL().withMessage('Valid Instagram URL required'),
-    body('twitterUrl').optional().isURL().withMessage('Valid Twitter URL required'),
-    body('linkedinUrl').optional().isURL().withMessage('Valid LinkedIn URL required')
+    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
+    body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
+    body('twitterUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required'),
+    body('linkedinUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid LinkedIn URL required')
 ];
 
 // Public sponsor listings - MUST come first
