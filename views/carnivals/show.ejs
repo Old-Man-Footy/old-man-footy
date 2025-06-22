@@ -22,7 +22,7 @@
                                     <% } else { %>
                                         <span class="<%= hostClub.isActive ? '' : 'club-inactive-label' %>">
                                             <%= hostClub.clubName %>
-                                            <% if (!hostClub.isActive) { %>
+                                            <% if (hostClub.isActive === false) { %>
                                                 <span class="club-inactive-badge">Inactive</span>
                                             <% } %>
                                         </span>
