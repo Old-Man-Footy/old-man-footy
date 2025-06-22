@@ -1,4 +1,8 @@
-import 'dotenv/config'; // Modern way to load dotenv with ESM
+// Load configuration using ES modules approach instead of dotenv
+import { setEnvironmentVariables, getCurrentConfig } from './config/config.mjs';
+
+// Initialize configuration for current environment
+setEnvironmentVariables();
 
 import express from 'express';
 import session from 'express-session';
@@ -10,7 +14,7 @@ import { dirname, join } from 'node:path';
 import helmet from 'helmet';
 import expressLayouts from 'express-ejs-layouts';
 import methodOverride from 'method-override';
-import mySidelineService from './services/mySidelineIntegrationService.mjs';
+// MySideline service will be imported dynamically after configuration is loaded
 import { sequelize } from './models/index.mjs';
 
 // ES Module equivalents of __dirname
@@ -70,7 +74,7 @@ const sessionStore = new SequelizeStore({
 
 // Session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'old-man-footy-secret-key',
+    secret: getCurrentConfig().security.sessionSecret,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -139,6 +143,10 @@ async function initializeMySidelineSync() {
 
     try {
         console.log('🔄 Initializing MySideline sync service...');
+        
+        // Import MySideline service dynamically after configuration is loaded
+        const { default: mySidelineService } = await import('./services/mySidelineIntegrationService.mjs');
+        
         mySidelineService.initializeScheduledSync();
         console.log('✅ MySideline sync service initialized successfully');
     } catch (error) {

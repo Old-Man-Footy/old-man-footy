@@ -2,7 +2,7 @@ import express from 'express';
 import { body } from 'express-validator';
 import * as sponsorController from '../controllers/sponsor.controller.mjs';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import upload from '../middleware/upload.mjs';
+import { sponsorUpload, handleUploadError } from '../middleware/upload.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
@@ -31,7 +31,7 @@ router.get('/', sponsorController.showSponsorListings);
 router.get('/new', ensureAuthenticated, ensureAdmin, sponsorController.showCreateSponsor);
 
 // Create new sponsor - POST route can come before parameterized routes
-router.post('/', ensureAuthenticated, ensureAdmin, upload.sponsorUpload, upload.handleUploadError, validateSponsor, sponsorController.createSponsor);
+router.post('/', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploadError, validateSponsor, sponsorController.createSponsor);
 
 // Individual sponsor profile (public) - MUST come after all specific routes
 router.get('/:id', sponsorController.showSponsorProfile);
@@ -40,7 +40,7 @@ router.get('/:id', sponsorController.showSponsorProfile);
 router.get('/:id/edit', ensureAuthenticated, ensureAdmin, sponsorController.showEditSponsor);
 
 // Update sponsor
-router.post('/:id', ensureAuthenticated, ensureAdmin, upload.sponsorUpload, upload.handleUploadError, validateSponsor, sponsorController.updateSponsor);
+router.post('/:id', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploadError, validateSponsor, sponsorController.updateSponsor);
 
 // Delete sponsor (soft delete)
 router.delete('/:id', ensureAuthenticated, ensureAdmin, sponsorController.deleteSponsor);

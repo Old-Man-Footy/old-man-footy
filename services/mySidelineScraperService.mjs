@@ -211,18 +211,6 @@ class MySidelineScraperService {
             
             console.log('MySideline page info:', pageInfo);
 
-            if (!this.useHeadlessBrowser) {
-                try {
-                    await page.screenshot({ 
-                        path: 'debug-mysideline-page.png', 
-                        fullPage: true 
-                    });
-                    console.log('Debug screenshot saved as debug-mysideline-page.png');
-                } catch (screenshotError) {
-                    console.log('Could not save screenshot:', screenshotError.message);
-                }
-            }
-
             // Locate all the card elements on the page once.
             // This returns a single Locator object that points to all matching cards.
             const cardLocator = page.locator('.el-card.is-always-shadow, [id^="clubsearch_"]');
@@ -424,7 +412,7 @@ class MySidelineScraperService {
             }
 
             let { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(fullTitle);
-            if (!carnivalName) {
+            if (!carnivalName || carnivalName.trim() === '') {
                 // If no title was extracted, use the full title.
                 carnivalName = fullTitle || 'Unknown Carnival';                
             }
@@ -436,6 +424,18 @@ class MySidelineScraperService {
             }
 
             const state = this.extractStateFromAddress(locationAddress);
+
+            // Safely construct registration link with proper validation
+            let registrationLink = null;
+            if (this.eventUrl && carnivalName && carnivalName.trim() !== '') {
+                try {
+                    const safeCarnivalName = carnivalName.trim();
+                    registrationLink = `${this.eventUrl}${encodeURIComponent(safeCarnivalName)}`;
+                } catch (encodeError) {
+                    console.warn(`Failed to encode carnival name for registration link: ${carnivalName}`, encodeError.message);
+                    registrationLink = null;
+                }
+            }
 
             const processedCardData = {
                 clubLogoURL: clubLogoURL ? clubLogoURL.split('?')[0] : null, // Remove query parameters if any
@@ -454,7 +454,7 @@ class MySidelineScraperService {
                 organiserContactEmail: contactEmail,
                 organiserContactName: contactName,
                 organiserContactPhone: contactPhone,
-                registrationLink: `${this.eventUrl}${encodeURIComponent(carnivalName)}`,
+                registrationLink: registrationLink,
                 scheduleDetails: [subtitle, scheduleDetails].filter(Boolean).join('\n'),
                 socialMediaFacebook: socialMediaFacebook,
                 socialMediaWebsite: socialMediaWebsite,
