@@ -163,7 +163,6 @@ app.use('/', indexRoutes.default);
 app.use('/auth', authRoutes.default);
 app.use('/carnivals', carnivalRoutes.default);
 app.use('/carnival-sponsors', carnivalSponsorRoutes.default);
-// Mount specific routes before general ones
 app.use('/clubs/players', clubPlayerRoutes.default);
 app.use('/clubs', clubRoutes.default);
 app.use('/sponsors', sponsorRoutes.default);

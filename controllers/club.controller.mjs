@@ -14,77 +14,72 @@ import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 import emailService from '../services/emailService.mjs';
 import path from 'path';
 import fs from 'fs/promises';
+import { wrapControllers } from '../middleware/asyncHandler.mjs';
 
 /**
  * Display public club listings with search and filter options
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const showClubListings = async (req, res) => {
-    try {
-        const { search, state } = req.query;
+const showClubListingsHandler = async (req, res) => {
+    const { search, state } = req.query;
+    
+    // Build where clause for filters
+    const whereClause = {
+        isActive: true,
+        isPubliclyListed: true
+    };
+
+    let clubIdsFromAlternateNames = [];
+
+    if (search) {
+        // Search for clubs by alternate names first
+        clubIdsFromAlternateNames = await ClubAlternateName.searchClubsByAlternateName(search);
         
-        // Build where clause for filters
-        const whereClause = {
-            isActive: true,
-            isPubliclyListed: true
-        };
+        whereClause[Op.or] = [
+            { clubName: { [Op.like]: `%${search}%` } },
+            { location: { [Op.like]: `%${search}%` } },
+            { description: { [Op.like]: `%${search}%` } }
+        ];
 
-        let clubIdsFromAlternateNames = [];
-
-        if (search) {
-            // Search for clubs by alternate names first
-            clubIdsFromAlternateNames = await ClubAlternateName.searchClubsByAlternateName(search);
-            
-            whereClause[Op.or] = [
-                { clubName: { [Op.like]: `%${search}%` } },
-                { location: { [Op.like]: `%${search}%` } },
-                { description: { [Op.like]: `%${search}%` } }
-            ];
-
-            // Include clubs found by alternate names
-            if (clubIdsFromAlternateNames.length > 0) {
-                whereClause[Op.or].push({ id: { [Op.in]: clubIdsFromAlternateNames } });
-            }
+        // Include clubs found by alternate names
+        if (clubIdsFromAlternateNames.length > 0) {
+            whereClause[Op.or].push({ id: { [Op.in]: clubIdsFromAlternateNames } });
         }
-
-        if (state) {
-            whereClause.state = state;
-        }
-
-        const clubs = await Club.findAll({
-            where: whereClause,
-            order: [['clubName', 'ASC']],
-            include: [{
-                model: User,
-                as: 'delegates',
-                where: { isActive: true },
-                required: false,
-                attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
-            }]
-        });
-
-        // Get club statistics for each club
-        const clubsWithStats = await Promise.all(clubs.map(async (club) => {
-            const carnivalCount = await club.getCarnivalCount();
-            return {
-                ...club.toJSON(),
-                carnivalCount
-            };
-        }));
-
-        res.render('clubs/list', {
-            title: 'Find a Masters Rugby League Club',
-            clubs: clubsWithStats,
-            filters: { search, state },
-            states: AUSTRALIAN_STATES,
-            additionalCSS: ['/styles/club.styles.css']
-        });
-    } catch (error) {
-        console.error('Error loading club listings:', error);
-        req.flash('error_msg', 'Error loading club listings.');
-        res.redirect('/');
     }
+
+    if (state) {
+        whereClause.state = state;
+    }
+
+    const clubs = await Club.findAll({
+        where: whereClause,
+        order: [['clubName', 'ASC']],
+        include: [{
+            model: User,
+            as: 'delegates',
+            where: { isActive: true },
+            required: false,
+            attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
+        }]
+    });
+
+    // Get club statistics for each club
+    const clubsWithStats = await Promise.all(clubs.map(async (club) => {
+        const carnivalCount = await club.getCarnivalCount();
+        return {
+            ...club.toJSON(),
+            carnivalCount
+        };
+    }));
+
+    res.render('clubs/list', {
+        title: 'Find a Masters Rugby League Club',
+        clubs: clubsWithStats,
+        filters: { search, state },
+        states: AUSTRALIAN_STATES,
+        additionalCSS: ['/styles/club.styles.css']
+    });
 };
 
 /**
@@ -92,142 +87,136 @@ export const showClubListings = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const showClubProfile = async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        // First check if the club exists at all
-        const clubExists = await Club.findByPk(id);
-        
-        if (!clubExists) {
-            req.flash('error_msg', 'Club not found.');
-            return res.redirect('/clubs');
-        }
-        
-        // If club is inactive, redirect with appropriate message
-        if (!clubExists.isActive) {
-            req.flash('error_msg', 'This club is no longer active. Club profiles are only available for active clubs.');
-            return res.redirect('/clubs');
-        }
-        
-        const club = await Club.findOne({
-            where: {
-                id,
-                isActive: true,
-                isPubliclyListed: true
+const showClubProfileHandler = async (req, res) => {
+    const { id } = req.params;
+    
+    // First check if the club exists at all
+    const clubExists = await Club.findByPk(id);
+    
+    if (!clubExists) {
+        req.flash('error_msg', 'Club not found.');
+        return res.redirect('/clubs');
+    }
+    
+    // If club is inactive, redirect with appropriate message
+    if (!clubExists.isActive) {
+        req.flash('error_msg', 'This club is no longer active. Club profiles are only available for active clubs.');
+        return res.redirect('/clubs');
+    }
+    
+    const club = await Club.findOne({
+        where: {
+            id,
+            isActive: true,
+            isPubliclyListed: true
+        },
+        include: [
+            {
+                model: User,
+                as: 'delegates',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
             },
-            include: [
-                {
-                    model: User,
-                    as: 'delegates',
-                    where: { isActive: true },
-                    required: false,
-                    attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
-                },
-                {
-                    model: Sponsor,
-                    as: 'sponsors',
-                    where: { isActive: true },
-                    required: false,
-                    through: { attributes: ['displayOrder'] }
-                }
-            ]
-        });
+            {
+                model: Sponsor,
+                as: 'sponsors',
+                where: { isActive: true },
+                required: false,
+                through: { attributes: ['displayOrder'] }
+            }
+        ]
+    });
 
-        if (!club) {
-            req.flash('error_msg', 'Club not found.');
-            return res.redirect('/clubs');
-        }
+    if (!club) {
+        req.flash('error_msg', 'Club not found.');
+        return res.redirect('/clubs');
+    }
 
-        // Get club's carnivals created by this club's delegates
-        const delegates = await User.findAll({
-            where: {
-                clubId: club.id,
-                isActive: true
-            },
-            attributes: ['id']
-        });
-        
-        const delegateIds = delegates.map(d => d.id);
-        
-        // Get carnivals created by this club's delegates
-        const carnivals = await Carnival.findAll({
-            where: {
-                createdByUserId: { [Op.in]: delegateIds },
-                isActive: true
-            },
+    // Get club's carnivals created by this club's delegates
+    const delegates = await User.findAll({
+        where: {
+            clubId: club.id,
+            isActive: true
+        },
+        attributes: ['id']
+    });
+    
+    const delegateIds = delegates.map(d => d.id);
+    
+    // Get carnivals created by this club's delegates
+    const carnivals = await Carnival.findAll({
+        where: {
+            createdByUserId: { [Op.in]: delegateIds },
+            isActive: true
+        },
+        include: [{
+            model: User,
+            as: 'creator',
+            attributes: ['firstName', 'lastName', 'email']
+        }],
+        order: [['date', 'ASC']]
+    });
+
+    // Get carnivals this club is registered to attend
+    const attendingCarnivals = await CarnivalClub.findAll({
+        where: {
+            clubId: club.id,
+            isActive: true
+        },
+        include: [{
+            model: Carnival,
+            as: 'carnival',
+            where: { isActive: true },
             include: [{
                 model: User,
                 as: 'creator',
                 attributes: ['firstName', 'lastName', 'email']
-            }],
-            order: [['date', 'ASC']]
-        });
+            }]
+        }],
+        order: [['carnival', 'date', 'ASC']]
+    });
 
-        // Get carnivals this club is registered to attend
-        const attendingCarnivals = await CarnivalClub.findAll({
-            where: {
-                clubId: club.id,
-                isActive: true
-            },
-            include: [{
-                model: Carnival,
-                as: 'carnival',
-                where: { isActive: true },
-                include: [{
-                    model: User,
-                    as: 'creator',
-                    attributes: ['firstName', 'lastName', 'email']
-                }]
-            }],
-            order: [['carnival', 'date', 'ASC']]
-        });
+    // Extract carnival data from the CarnivalClub relationship
+    const attendingCarnivalsList = attendingCarnivals.map(carnivalClub => carnivalClub.carnival);
 
-        // Extract carnival data from the CarnivalClub relationship
-        const attendingCarnivalsList = attendingCarnivals.map(carnivalClub => carnivalClub.carnival);
+    // Calculate upcoming carnivals count
+    const upcomingCarnivals = carnivals.filter(carnival => 
+        new Date(carnival.date) >= new Date()
+    ).length;
 
-        // Calculate upcoming carnivals count
-        const upcomingCarnivals = carnivals.filter(carnival => 
-            new Date(carnival.date) >= new Date()
-        ).length;
+    // Calculate upcoming attending carnivals count
+    const upcomingAttendingCarnivals = attendingCarnivalsList.filter(carnival => 
+        new Date(carnival.date) >= new Date()
+    ).length;
 
-        // Calculate upcoming attending carnivals count
-        const upcomingAttendingCarnivals = attendingCarnivalsList.filter(carnival => 
-            new Date(carnival.date) >= new Date()
-        ).length;
+    // Get full delegate information
+    const delegates_full = await User.findAll({
+        where: {
+            clubId: club.id,
+            isActive: true
+        },
+        attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate']
+    });
 
-        // Get full delegate information
-        const delegates_full = await User.findAll({
-            where: {
-                clubId: club.id,
-                isActive: true
-            },
-            attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate']
-        });
+    const primaryDelegate = delegates_full.find(delegate => delegate.isPrimaryDelegate);
 
-        const primaryDelegate = delegates_full.find(delegate => delegate.isPrimaryDelegate);
+    // Sort sponsors using the hierarchical sorting service
+    const sortedSponsors = sponsorSortingService.sortSponsorsHierarchically(club.sponsors);
 
-        // Sort sponsors using the hierarchical sorting service
-        const sortedSponsors = sponsorSortingService.sortSponsorsHierarchically(club.sponsors);
-
-        res.render('clubs/show', {
-            title: `${club.clubName} - Masters Rugby League Club`,
-            club,
-            clubCarnivals: carnivals,
-            attendingCarnivals: attendingCarnivalsList,
-            upcomingCarnivals,
-            upcomingAttendingCarnivals,
-            delegates: delegates_full,
-            primaryDelegate,
-            sponsors: sortedSponsors,
-            user: req.user || null,
-            additionalCSS: ['/styles/club.styles.css']
-        });
-    } catch (error) {
-        console.error('Error loading club profile:', error);
-        req.flash('error_msg', 'Error loading club profile.');
-        res.redirect('/clubs');
-    }
+    res.render('clubs/show', {
+        title: `${club.clubName} - Masters Rugby League Club`,
+        club,
+        clubCarnivals: carnivals,
+        attendingCarnivals: attendingCarnivalsList,
+        upcomingCarnivals,
+        upcomingAttendingCarnivals,
+        delegates: delegates_full,
+        primaryDelegate,
+        sponsors: sortedSponsors,
+        user: req.user || null,
+        additionalCSS: ['/styles/club.styles.css']
+    });
 };
 
 /**
@@ -235,65 +224,59 @@ export const showClubProfile = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const showClubManagement = async (req, res) => {
-    try {
-        const user = req.user;
-        
-        // If user doesn't have a club, show creation/joining options
-        if (!user.clubId) {
-            // Get available clubs that user could potentially join
-            const availableClubs = await Club.findAll({
-                where: {
-                    isActive: true,
-                    isPubliclyListed: true
-                },
-                include: [{
-                    model: User,
-                    as: 'delegates',
-                    where: { isActive: true },
-                    required: false,
-                    attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
-                }],
-                order: [['clubName', 'ASC']]
-            });
+const showClubManagementHandler = async (req, res) => {
+    const user = req.user;
+    
+    // If user doesn't have a club, show creation/joining options
+    if (!user.clubId) {
+        // Get available clubs that user could potentially join
+        const availableClubs = await Club.findAll({
+            where: {
+                isActive: true,
+                isPubliclyListed: true
+            },
+            include: [{
+                model: User,
+                as: 'delegates',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'firstName', 'lastName', 'isPrimaryDelegate']
+            }],
+            order: [['clubName', 'ASC']]
+        });
 
-            // Get clubs that were created on behalf of others and might match this user's email
-            const claimableClubs = await Club.findAll({
-                where: {
-                    createdByProxy: true,
-                    inviteEmail: user.email,
-                    isActive: true
-                }
-            });
+        // Get clubs that were created on behalf of others and might match this user's email
+        const claimableClubs = await Club.findAll({
+            where: {
+                createdByProxy: true,
+                inviteEmail: user.email,
+                isActive: true
+            }
+        });
 
-            return res.render('clubs/club-options', {
-                title: 'Join or Create a Club',
-                user,
-                availableClubs,
-                claimableClubs,
-                states: AUSTRALIAN_STATES,
-                additionalCSS: ['/styles/club.styles.css']
-            });
-        }
-
-        // User has a club - show normal management interface
-        const club = await Club.findByPk(user.clubId);
-        
-        if (!club) {
-            req.flash('error_msg', 'Club not found.');
-            return res.redirect('/dashboard');
-        }
-
-        res.render('clubs/manage', {
-            title: 'Manage Club Profile',
-            club,
+        return res.render('clubs/club-options', {
+            title: 'Join or Create a Club',
+            user,
+            availableClubs,
+            claimableClubs,
+            states: AUSTRALIAN_STATES,
             additionalCSS: ['/styles/club.styles.css']
         });
-    } catch (error) {
-        console.error('Error loading club management:', error);
-        req.flash('error_msg', 'Error loading club management.');
-        res.redirect('/dashboard');
     }
+
+    // User has a club - show normal management interface
+    const club = await Club.findByPk(user.clubId);
+    
+    if (!club) {
+        req.flash('error_msg', 'Club not found.');
+        return res.redirect('/dashboard');
+    }
+
+    res.render('clubs/manage', {
+        title: 'Manage Club Profile',
+        club,
+        additionalCSS: ['/styles/club.styles.css']
+    });
 };
 
 /**
@@ -301,89 +284,83 @@ export const showClubManagement = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const updateClubProfile = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            // Create detailed error messages for better user feedback
-            const errorMessages = errors.array().map(error => error.msg);
-            req.flash('error_msg', `Validation errors: ${errorMessages.join(', ')}`);
-            return res.redirect('/clubs/manage');
-        }
+const updateClubProfileHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        // Create detailed error messages for better user feedback
+        const errorMessages = errors.array().map(error => error.msg);
+        req.flash('error_msg', `Validation errors: ${errorMessages.join(', ')}`);
+        return res.redirect('/clubs/manage');
+    }
 
-        const user = req.user;
-        
-        if (!user.clubId) {
-            req.flash('error_msg', 'You must be associated with a club to manage its profile.');
-            return res.redirect('/dashboard');
-        }
+    const user = req.user;
+    
+    if (!user.clubId) {
+        req.flash('error_msg', 'You must be associated with a club to manage its profile.');
+        return res.redirect('/dashboard');
+    }
 
-        const club = await Club.findByPk(user.clubId);
-        
-        if (!club) {
-            req.flash('error_msg', 'Club not found.');
-            return res.redirect('/dashboard');
-        }
+    const club = await Club.findByPk(user.clubId);
+    
+    if (!club) {
+        req.flash('error_msg', 'Club not found.');
+        return res.redirect('/dashboard');
+    }
 
-        const {
-            location,
-            description,
-            contactPerson,
-            contactEmail,
-            contactPhone,
-            website,
-            facebookUrl,
-            instagramUrl,
-            twitterUrl,
-            isPubliclyListed,
-            isActive
-        } = req.body;
+    const {
+        location,
+        description,
+        contactPerson,
+        contactEmail,
+        contactPhone,
+        website,
+        facebookUrl,
+        instagramUrl,
+        twitterUrl,
+        isPubliclyListed,
+        isActive
+    } = req.body;
 
-        // Prepare update data
-        const updateData = {
-            location: location?.trim(),
-            contactEmail: contactEmail?.trim(),
-            contactPhone: contactPhone?.trim(),
-            contactPerson: contactPerson?.trim(),
-            description: description?.trim(),
-            website: website?.trim(),
-            facebookUrl: facebookUrl?.trim(),
-            instagramUrl: instagramUrl?.trim(),
-            twitterUrl: twitterUrl?.trim(),
-            isPubliclyListed: isPubliclyListed === 'on',
-            isActive: isActive === 'on'
-        };
+    // Prepare update data
+    const updateData = {
+        location: location?.trim(),
+        contactEmail: contactEmail?.trim(),
+        contactPhone: contactPhone?.trim(),
+        contactPerson: contactPerson?.trim(),
+        description: description?.trim(),
+        website: website?.trim(),
+        facebookUrl: facebookUrl?.trim(),
+        instagramUrl: instagramUrl?.trim(),
+        twitterUrl: twitterUrl?.trim(),
+        isPubliclyListed: isPubliclyListed === 'on',
+        isActive: isActive === 'on'
+    };
 
-        // Handle structured file uploads
-        if (req.structuredUploads && req.structuredUploads.length > 0) {
-            for (const upload of req.structuredUploads) {
-                switch (upload.fieldname) {
-                    case 'logo':
-                        updateData.logoUrl = upload.path;
-                        console.log(`📸 Updated club ${club.id} logo: ${upload.path}`);
-                        break;
-                    case 'galleryImage':
-                        // For clubs, we might store gallery images differently
-                        // This could be extended to support a gallery field in the Club model
-                        console.log(`📸 Added gallery image to club ${club.id}: ${upload.path}`);
-                        break;
-                    case 'bannerImage':
-                        // Store banner image reference if the club model supports it
-                        console.log(`📸 Added banner image to club ${club.id}: ${upload.path}`);
-                        break;
-                }
+    // Handle structured file uploads
+    if (req.structuredUploads && req.structuredUploads.length > 0) {
+        for (const upload of req.structuredUploads) {
+            switch (upload.fieldname) {
+                case 'logo':
+                    updateData.logoUrl = upload.path;
+                    console.log(`📸 Updated club ${club.id} logo: ${upload.path}`);
+                    break;
+                case 'galleryImage':
+                    // For clubs, we might store gallery images differently
+                    // This could be extended to support a gallery field in the Club model
+                    console.log(`📸 Added gallery image to club ${club.id}: ${upload.path}`);
+                    break;
+                case 'bannerImage':
+                    // Store banner image reference if the club model supports it
+                    console.log(`📸 Added banner image to club ${club.id}: ${upload.path}`);
+                    break;
             }
         }
-
-        await club.update(updateData);
-
-        req.flash('success_msg', 'Club profile updated successfully!');
-        res.redirect('/clubs/manage');
-    } catch (error) {
-        console.error('Error updating club profile:', error);
-        req.flash('error_msg', 'Error updating club profile.');
-        res.redirect('/clubs/manage');
     }
+
+    await club.update(updateData);
+
+    req.flash('success_msg', 'Club profile updated successfully!');
+    res.redirect('/clubs/manage');
 };
 
 /**
@@ -391,37 +368,29 @@ export const updateClubProfile = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const getClubImages = async (req, res) => {
-    try {
-        const { clubId } = req.params;
-        const { imageType } = req.query;
+const getClubImagesHandler = async (req, res) => {
+    const { clubId } = req.params;
+    const { imageType } = req.query;
 
-        // Verify user has access to this club
-        if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
-            return res.status(403).json({
-                success: false,
-                message: 'Access denied. You can only view images for your own club.'
-            });
-        }
-
-        const images = await ImageNamingService.getEntityImages(
-            ImageNamingService.ENTITY_TYPES.CLUB,
-            parseInt(clubId),
-            imageType
-        );
-
-        res.json({
-            success: true,
-            images,
-            total: images.length
-        });
-    } catch (error) {
-        console.error('Error fetching club images:', error);
-        res.status(500).json({
+    // Verify user has access to this club
+    if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
+        return res.status(403).json({
             success: false,
-            message: 'Error fetching club images'
+            message: 'Access denied. You can only view images for your own club.'
         });
     }
+
+    const images = await ImageNamingService.getEntityImages(
+        ImageNamingService.ENTITY_TYPES.CLUB,
+        parseInt(clubId),
+        imageType
+    );
+
+    res.json({
+        success: true,
+        images,
+        total: images.length
+    });
 };
 
 /**
@@ -429,52 +398,44 @@ export const getClubImages = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const deleteClubImage = async (req, res) => {
-    try {
-        const { clubId, filename } = req.params;
+const deleteClubImageHandler = async (req, res) => {
+    const { clubId, filename } = req.params;
 
-        // Verify user has access to this club
-        if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
-            return res.status(403).json({
-                success: false,
-                message: 'Access denied. You can only delete images for your own club.'
-            });
-        }
-
-        // Parse the filename to verify it belongs to this club
-        const parsed = ImageNamingService.parseImageName(filename);
-        if (!parsed || parsed.entityType !== ImageNamingService.ENTITY_TYPES.CLUB || parsed.entityId !== parseInt(clubId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid image file or image does not belong to this club'
-            });
-        }
-
-        // Get the full path and delete the file
-        const imagePath = ImageNamingService.getRelativePath(parsed.entityType, parsed.imageType);
-        const fullPath = path.join(imagePath, filename);
-        
-        await fs.unlink(path.join('uploads', fullPath));
-
-        // If this was the club's logo, update the database
-        if (parsed.imageType === ImageNamingService.IMAGE_TYPES.LOGO) {
-            const club = await Club.findByPk(clubId);
-            if (club && club.logoUrl && club.logoUrl.includes(filename)) {
-                await club.update({ logoUrl: null });
-            }
-        }
-
-        res.json({
-            success: true,
-            message: 'Image deleted successfully'
-        });
-    } catch (error) {
-        console.error('Error deleting club image:', error);
-        res.status(500).json({
+    // Verify user has access to this club
+    if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
+        return res.status(403).json({
             success: false,
-            message: 'Error deleting image'
+            message: 'Access denied. You can only delete images for your own club.'
         });
     }
+
+    // Parse the filename to verify it belongs to this club
+    const parsed = ImageNamingService.parseImageName(filename);
+    if (!parsed || parsed.entityType !== ImageNamingService.ENTITY_TYPES.CLUB || parsed.entityId !== parseInt(clubId)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid image file or image does not belong to this club'
+        });
+    }
+
+    // Get the full path and delete the file
+    const imagePath = ImageNamingService.getRelativePath(parsed.entityType, parsed.imageType);
+    const fullPath = path.join(imagePath, filename);
+    
+    await fs.unlink(path.join('uploads', fullPath));
+
+    // If this was the club's logo, update the database
+    if (parsed.imageType === ImageNamingService.IMAGE_TYPES.LOGO) {
+        const club = await Club.findByPk(clubId);
+        if (club && club.logoUrl && club.logoUrl.includes(filename)) {
+            await club.update({ logoUrl: null });
+        }
+    }
+
+    res.json({
+        success: true,
+        message: 'Image deleted successfully'
+    });
 };
 
 /**
@@ -482,51 +443,45 @@ export const deleteClubImage = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const showClubSponsors = async (req, res) => {
-    try {
-        const user = req.user;
-        
-        if (!user.clubId) {
-            req.flash('error_msg', 'You must be associated with a club to manage sponsors.');
-            return res.redirect('/dashboard');
-        }
-
-        const club = await Club.findByPk(user.clubId, {
-            include: [{
-                model: Sponsor,
-                as: 'sponsors',
-                where: { isActive: true },
-                required: false,
-                through: { 
-                    attributes: ['displayOrder'],
-                    as: 'clubSponsor'
-                }
-            }]
-        });
-
-        if (!club) {
-            req.flash('error_msg', 'Club not found.');
-            return res.redirect('/dashboard');
-        }
-
-        // Sort sponsors by priority
-        const sponsors = club.sponsors ? club.sponsors.sort((a, b) => {
-            const priorityA = a.clubSponsor?.displayOrder || 999;
-            const priorityB = b.clubSponsor?.displayOrder || 999;
-            return priorityA - priorityB;
-        }) : [];
-
-        res.render('clubs/sponsors', {
-            title: 'Manage Club Sponsors',
-            club,
-            sponsors,
-            additionalCSS: ['/styles/club.styles.css']
-        });
-    } catch (error) {
-        console.error('Error loading club sponsors:', error);
-        req.flash('error_msg', 'Error loading club sponsors.');
-        res.redirect('/clubs/manage');
+const showClubSponsorsHandler = async (req, res) => {
+    const user = req.user;
+    
+    if (!user.clubId) {
+        req.flash('error_msg', 'You must be associated with a club to manage sponsors.');
+        return res.redirect('/dashboard');
     }
+
+    const club = await Club.findByPk(user.clubId, {
+        include: [{
+            model: Sponsor,
+            as: 'sponsors',
+            where: { isActive: true },
+            required: false,
+            through: { 
+                attributes: ['displayOrder'],
+                as: 'clubSponsor'
+            }
+        }]
+    });
+
+    if (!club) {
+        req.flash('error_msg', 'Club not found.');
+        return res.redirect('/dashboard');
+    }
+
+    // Sort sponsors by priority
+    const sponsors = club.sponsors ? club.sponsors.sort((a, b) => {
+        const priorityA = a.clubSponsor?.displayOrder || 999;
+        const priorityB = b.clubSponsor?.displayOrder || 999;
+        return priorityA - priorityB;
+    }) : [];
+
+    res.render('clubs/sponsors', {
+        title: 'Manage Club Sponsors',
+        club,
+        sponsors,
+        additionalCSS: ['/styles/club.styles.css']
+    });
 };
 
 /**
@@ -1555,3 +1510,27 @@ export const searchClubs = async (req, res) => {
         });
     }
 };
+
+// Raw controller functions object for wrapping
+const rawControllers = {
+    showClubListingsHandler,
+    showClubProfileHandler,
+    showClubManagementHandler,
+    updateClubProfileHandler,
+    getClubImagesHandler,
+    deleteClubImageHandler,
+    showClubSponsorsHandler,
+    // Continue converting all other functions here by removing try-catch blocks
+    // and adding them to this object
+};
+
+// Export wrapped versions using the wrapControllers utility
+export const {
+    showClubListingsHandler: showClubListings,
+    showClubProfileHandler: showClubProfile,
+    showClubManagementHandler: showClubManagement,
+    updateClubProfileHandler: updateClubProfile,
+    getClubImagesHandler: getClubImages,
+    deleteClubImageHandler: deleteClubImage,
+    showClubSponsorsHandler: showClubSponsors,
+} = wrapControllers(rawControllers);

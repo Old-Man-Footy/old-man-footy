@@ -30,4 +30,34 @@ export const catchAsync = (fn) => {
     };
 };
 
+/**
+ * Utility function to wrap multiple controller functions at once
+ * This helps maintain clean controller files by eliminating repetitive wrapping
+ * 
+ * @param {Object} controllers - Object containing controller functions
+ * @returns {Object} - Object with wrapped controller functions
+ * 
+ * @example
+ * const rawControllers = {
+ *   getUser: async (req, res) => { ... },
+ *   createUser: async (req, res) => { ... },
+ *   updateUser: async (req, res) => { ... }
+ * };
+ * 
+ * export const { getUser, createUser, updateUser } = wrapControllers(rawControllers);
+ */
+export const wrapControllers = (controllers) => {
+    const wrapped = {};
+    
+    for (const [name, handler] of Object.entries(controllers)) {
+        if (typeof handler === 'function') {
+            wrapped[name] = asyncHandler(handler);
+        } else {
+            wrapped[name] = handler; // Pass through non-functions unchanged
+        }
+    }
+    
+    return wrapped;
+};
+
 export default asyncHandler;

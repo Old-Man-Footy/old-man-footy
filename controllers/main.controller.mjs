@@ -12,211 +12,175 @@ import carouselImageService from '../services/carouselImageService.mjs';
 import { AUSTRALIAN_STATES, AUSTRALIAN_STATE_NAMES } from '../config/constants.mjs';
 import crypto from 'crypto';
 import { validationResult } from 'express-validator';
+import { asyncHandler } from '../middleware/asyncHandler.mjs';
 
 /**
  * Display homepage with upcoming carnivals
  */
-export const getIndex = async (req, res) => {
-    try {
-        const upcomingCarnivals = await Carnival.findAll({
+export const getIndex = asyncHandler(async (req, res) => {
+    const upcomingCarnivals = await Carnival.findAll({
+        where: {
+            date: { [Op.gte]: new Date() },
+            isActive: true
+        },
+        include: [{
+            model: User,
+            as: 'creator',
+            attributes: ['firstName', 'lastName']
+        }],
+        order: [['date', 'ASC']],
+        limit: 4
+    });
+
+    // Get statistics for the stats runner
+    const stats = {
+        totalCarnivals: await Carnival.count({ where: { isActive: true } }),
+        upcomingCount: await Carnival.count({
             where: {
                 date: { [Op.gte]: new Date() },
                 isActive: true
-            },
-            include: [{
-                model: User,
-                as: 'creator',
-                attributes: ['firstName', 'lastName']
-            }],
-            order: [['date', 'ASC']],
-            limit: 4
-        });
+            }
+        }),
+        clubsCount: await Club.count({ 
+            where: { 
+                isActive: true, 
+                isPubliclyListed: true 
+            } 
+        })
+    };
 
-        // Get statistics for the stats runner
-        const stats = {
-            totalCarnivals: await Carnival.count({ where: { isActive: true } }),
-            upcomingCount: await Carnival.count({
-                where: {
-                    date: { [Op.gte]: new Date() },
-                    isActive: true
-                }
-            }),
-            clubsCount: await Club.count({ 
-                where: { 
-                    isActive: true, 
-                    isPubliclyListed: true 
-                } 
-            })
-        };
+    // Get carousel images for the homepage
+    const carouselImages = await carouselImageService.getCarouselImages(8);
 
-        // Get carousel images for the homepage
-        const carouselImages = await carouselImageService.getCarouselImages(8);
-
-        return res.render('index', { 
-            title: 'Old Man Footy',
-            upcomingCarnivals,
-            carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
-            stats,
-            carouselImages,
-            AUSTRALIAN_STATES,
-            AUSTRALIAN_STATE_NAMES,
-            additionalCSS: []
-        });
-    } catch (error) {
-        console.error('Error loading homepage:', error);
-        if (!res.headersSent) {
-            return res.render('index', { 
-                title: 'Old Man Footy',
-                upcomingCarnivals: [],
-                carnivals: [], // Also provide as 'carnivals' for template compatibility
-                stats: {
-                    totalCarnivals: 0,
-                    upcomingCount: 0,
-                    clubsCount: 0
-                },
-                carouselImages: [],
-                AUSTRALIAN_STATES,
-                AUSTRALIAN_STATE_NAMES,
-                additionalCSS: []
-            });
-        }
-    }
-};
+    return res.render('index', { 
+        title: 'Old Man Footy',
+        upcomingCarnivals,
+        carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
+        stats,
+        carouselImages,
+        AUSTRALIAN_STATES,
+        AUSTRALIAN_STATE_NAMES,
+        additionalCSS: []
+    });
+});
 
 /**
  * Display user dashboard
  */
-export const getDashboard = async (req, res) => {
-    try {
-        // Load user with full club information
-        const userWithClub = await User.findByPk(req.user.id, {
-            include: [{
-                model: Club,
-                as: 'club',
-                attributes: ['id', 'clubName', 'state', 'location', 'isActive', 'isPubliclyListed', 'logoUrl']
-            }]
-        });
+export const getDashboard = asyncHandler(async (req, res) => {
+    // Load user with full club information
+    const userWithClub = await User.findByPk(req.user.id, {
+        include: [{
+            model: Club,
+            as: 'club',
+            attributes: ['id', 'clubName', 'state', 'location', 'isActive', 'isPubliclyListed', 'logoUrl']
+        }]
+    });
 
-        // Get user's carnivals (carnivals they've created)
-        const userCarnivals = await Carnival.findAll({
-            where: { 
-                createdByUserId: req.user.id,
-                isActive: true 
-            },
-            order: [['date', 'DESC']]
-        });
+    // Get user's carnivals (carnivals they've created)
+    const userCarnivals = await Carnival.findAll({
+        where: { 
+            createdByUserId: req.user.id,
+            isActive: true 
+        },
+        order: [['date', 'DESC']]
+    });
 
-        // Get player count for user's club
-        let playerCount = 0;
-        if (userWithClub.clubId) {
-            playerCount = await ClubPlayer.count({
-                where: {
-                    clubId: userWithClub.clubId,
-                    isActive: true
-                }
-            });
-        }
-
-        // Get carnivals the user's club is registered to attend (both upcoming and past)
-        let attendingCarnivals = [];
-        if (userWithClub.clubId) {
-            const carnivalRegistrations = await CarnivalClub.findAll({
-                where: {
-                    clubId: userWithClub.clubId,
-                    isActive: true
-                },
-                include: [{
-                    model: Carnival,
-                    as: 'carnival',
-                    where: { isActive: true }, // Only show active carnivals (not deleted ones)
-                    include: [{
-                        model: User,
-                        as: 'creator',
-                        attributes: ['firstName', 'lastName', 'email']
-                    }]
-                }],
-                order: [['carnival', 'date', 'DESC']] // Show most recent first
-            });
-            
-            // Extract carnival data from the CarnivalClub relationship
-            attendingCarnivals = carnivalRegistrations.map(registration => ({
-                ...registration.carnival.toJSON(),
-                registration: {
-                    id: registration.id,
-                    playerCount: registration.playerCount,
-                    teamName: registration.teamName,
-                    isPaid: registration.isPaid,
-                    registrationDate: registration.registrationDate
-                }
-            }));
-        }
-
-        // Get upcoming carnivals
-        const upcomingCarnivals = await Carnival.findAll({
+    // Get player count for user's club
+    let playerCount = 0;
+    if (userWithClub.clubId) {
+        playerCount = await ClubPlayer.count({
             where: {
-                date: { [Op.gte]: new Date() },
+                clubId: userWithClub.clubId,
+                isActive: true
+            }
+        });
+    }
+
+    // Get carnivals the user's club is registered to attend (both upcoming and past)
+    let attendingCarnivals = [];
+    if (userWithClub.clubId) {
+        const carnivalRegistrations = await CarnivalClub.findAll({
+            where: {
+                clubId: userWithClub.clubId,
                 isActive: true
             },
-            order: [['date', 'ASC']],
-            limit: 4
+            include: [{
+                model: Carnival,
+                as: 'carnival',
+                where: { isActive: true }, // Only show active carnivals (not deleted ones)
+                include: [{
+                    model: User,
+                    as: 'creator',
+                    attributes: ['firstName', 'lastName', 'email']
+                }]
+            }],
+            order: [['carnival', 'date', 'DESC']] // Show most recent first
         });
-
-        // Get user's clubs (if they have any associated)
-        let clubs = [];
-        if (userWithClub.clubId && userWithClub.club) {
-            clubs = [userWithClub.club];
-        }
-
-        // Get eligible delegates for transfer (if user is primary delegate)
-        let eligibleDelegates = [];
-        if (userWithClub.isPrimaryDelegate && userWithClub.clubId) {
-            eligibleDelegates = await User.findAll({
-                where: {
-                    clubId: userWithClub.clubId,
-                    isActive: true,
-                    isPrimaryDelegate: false,
-                    id: { [Op.ne]: userWithClub.id } // Exclude current user
-                },
-                attributes: ['id', 'firstName', 'lastName', 'email'],
-                order: [['firstName', 'ASC'], ['lastName', 'ASC']]
-            });
-        }
-
-        // Update the user object to include club information for template
-        const enrichedUser = {
-            ...userWithClub.toJSON(),
-            clubId: userWithClub.club // This provides clubId.clubName for the template
-        };
-
-        return res.render('dashboard', {
-            title: 'Dashboard',
-            user: enrichedUser,
-            userCarnivals,
-            attendingCarnivals, // New: carnivals the user's club is attending
-            upcomingCarnivals,
-            clubs, // Add clubs variable for the dashboard checklist
-            carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
-            eligibleDelegates,
-            playerCount, // New: player count for user's club
-            additionalCSS: []
-        });
-    } catch (error) {
-        console.error('Error loading dashboard:', error);
-        if (!res.headersSent) {
-            return res.render('dashboard', {
-                title: 'Dashboard',
-                user: req.user,
-                userCarnivals: [],
-                attendingCarnivals: [], // Ensure attending carnivals is always provided
-                upcomingCarnivals: [],
-                clubs: [], // Ensure clubs is always provided
-                carnivals: [], // Ensure carnivals is always provided
-                eligibleDelegates: [],
-                additionalCSS: []
-            });
-        }
+        
+        // Extract carnival data from the CarnivalClub relationship
+        attendingCarnivals = carnivalRegistrations.map(registration => ({
+            ...registration.carnival.toJSON(),
+            registration: {
+                id: registration.id,
+                playerCount: registration.playerCount,
+                teamName: registration.teamName,
+                isPaid: registration.isPaid,
+                registrationDate: registration.registrationDate
+            }
+        }));
     }
-};
+
+    // Get upcoming carnivals
+    const upcomingCarnivals = await Carnival.findAll({
+        where: {
+            date: { [Op.gte]: new Date() },
+            isActive: true
+        },
+        order: [['date', 'ASC']],
+        limit: 4
+    });
+
+    // Get user's clubs (if they have any associated)
+    let clubs = [];
+    if (userWithClub.clubId && userWithClub.club) {
+        clubs = [userWithClub.club];
+    }
+
+    // Get eligible delegates for transfer (if user is primary delegate)
+    let eligibleDelegates = [];
+    if (userWithClub.isPrimaryDelegate && userWithClub.clubId) {
+        eligibleDelegates = await User.findAll({
+            where: {
+                clubId: userWithClub.clubId,
+                isActive: true,
+                isPrimaryDelegate: false,
+                id: { [Op.ne]: userWithClub.id } // Exclude current user
+            },
+            attributes: ['id', 'firstName', 'lastName', 'email'],
+            order: [['firstName', 'ASC'], ['lastName', 'ASC']]
+        });
+    }
+
+    // Update the user object to include club information for template
+    const enrichedUser = {
+        ...userWithClub.toJSON(),
+        clubId: userWithClub.club // This provides clubId.clubName for the template
+    };
+
+    return res.render('dashboard', {
+        title: 'Dashboard',
+        user: enrichedUser,
+        userCarnivals,
+        attendingCarnivals, // New: carnivals the user's club is attending
+        upcomingCarnivals,
+        clubs, // Add clubs variable for the dashboard checklist
+        carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
+        eligibleDelegates,
+        playerCount, // New: player count for user's club
+        additionalCSS: []
+    });
+});
 
 /**
  * Display about page
@@ -231,437 +195,337 @@ export const getAbout = (req, res) => {
 /**
  * Handle email subscription with bot protection
  */
-export const postSubscribe = async (req, res) => {
-    try {
-        // Add defensive check for req.body
-        if (!req.body) {
-            console.error('Subscription error: req.body is undefined');
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request data'
-            });
-        }
-
-        const { email, website, form_timestamp } = req.body;
-
-        // Bot protection: Check honeypot field
-        if (website && website.trim() !== '') {
-            console.log('Bot detected: honeypot field filled');
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request'
-            });
-        }
-
-        // Bot protection: Also check if honeypot field exists but contains only whitespace
-        if (website !== undefined && website !== null && website !== '') {
-            console.log('Bot detected: honeypot field contains whitespace');
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request'
-            });
-        }
-
-        // Bot protection: Check form timing (minimum 3 seconds to fill form)
-        if (form_timestamp) {
-            const submittedTimestamp = parseInt(form_timestamp, 10);
-            const currentTime = Date.now();
-            const timeDiff = currentTime - submittedTimestamp;
-            const minimumTime = 3000; // 3 seconds (anti-bot protection)
-            const maximumTime = 30 * 60 * 1000; // 30 minutes (reasonable session timeout)
-            
-            console.log(`Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`);
-            
-            // Check if timestamp is in the future (suspicious)
-            if (submittedTimestamp > currentTime) {
-                console.log(`Bot detected: timestamp in future (${submittedTimestamp} > ${currentTime})`);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid form timestamp'
-                });
-            }
-            
-            if (timeDiff < minimumTime) {
-                console.log(`Bot detected: form submitted too quickly (${timeDiff}ms)`);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please wait a moment before submitting'
-                });
-            }
-            
-            if (timeDiff > maximumTime) {
-                console.log(`Bot detected: form submission timeout (${timeDiff}ms)`);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Form session expired, please refresh and try again'
-                });
-            }
-        }
-
-        // Validate email
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email address is required'
-            });
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email.toLowerCase())) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid email address'
-            });
-        }
-
-        // Rate limiting: Check IP address for recent submissions
-        const userIP = req.ip || req.connection.remoteAddress;
-        const recentSubmissionTime = 60000; // 1 minute
-        
-        // Simple in-memory rate limiting (for production, use Redis or database)
-        if (!global.subscriptionAttempts) {
-            global.subscriptionAttempts = new Map();
-        }
-        
-        const lastAttempt = global.subscriptionAttempts.get(userIP);
-        if (lastAttempt && (Date.now() - lastAttempt) < recentSubmissionTime) {
-            console.log(`Rate limit exceeded for IP: ${userIP}`);
-            return res.status(429).json({
-                success: false,
-                message: 'Too many requests. Please wait a moment before trying again.'
-            });
-        }
-        
-        // Record this attempt
-        global.subscriptionAttempts.set(userIP, Date.now());
-
-        // Check if email already exists - wrap in try-catch for better error handling
-        let existingSubscription;
-        try {
-            existingSubscription = await EmailSubscription.findOne({
-                where: { email: email.toLowerCase() }
-            });
-        } catch (dbError) {
-            console.error('Database error when checking existing subscription:', dbError);
-            return res.status(500).json({
-                success: false,
-                message: 'Database error. Please try again later.'
-            });
-        }
-
-        if (existingSubscription && existingSubscription.isActive) {
-            console.log(`Attempted resubscription for already active email: ${email.toLowerCase()}`);
-            return res.status(400).json({
-                success: false,
-                message: 'This email is already subscribed to our newsletter!'
-            });
-        }
-
-        try {
-            if (existingSubscription && !existingSubscription.isActive) {
-                // Reactivate existing subscription
-                await existingSubscription.update({
-                    isActive: true,
-                    subscribedAt: new Date()
-                });
-                console.log(`Reactivated subscription for: ${email.toLowerCase()}`);
-            } else {
-                // Create new subscription
-                await EmailSubscription.create({
-                    email: email.toLowerCase(),
-                    isActive: true,
-                    subscribedAt: new Date()
-                });
-                console.log(`New email subscription created: ${email.toLowerCase()}`);
-            }
-        } catch (dbError) {
-            console.error('Database error when creating/updating subscription:', dbError);
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to save subscription. Please try again.'
-            });
-        }
-
-        res.json({
-            success: true,
-            message: 'Successfully subscribed to newsletter!'
-        });
-    } catch (error) {
-        console.error('Unexpected error handling email subscription:', error);
-        res.status(500).json({
+export const postSubscribe = asyncHandler(async (req, res) => {
+    // Add defensive check for req.body
+    if (!req.body) {
+        console.error('Subscription error: req.body is undefined');
+        return res.status(400).json({
             success: false,
-            message: 'An unexpected error occurred. Please try again.'
+            message: 'Invalid request data'
         });
     }
-};
+
+    const { email, website, form_timestamp } = req.body;
+
+    // Bot protection: Check honeypot field
+    if (website && website.trim() !== '') {
+        console.log('Bot detected: honeypot field filled');
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid request'
+        });
+    }
+
+    // Bot protection: Also check if honeypot field exists but contains only whitespace
+    if (website !== undefined && website !== null && website !== '') {
+        console.log('Bot detected: honeypot field contains whitespace');
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid request'
+        });
+    }
+
+    // Bot protection: Check form timing (minimum 3 seconds to fill form)
+    if (form_timestamp) {
+        const submittedTimestamp = parseInt(form_timestamp, 10);
+        const currentTime = Date.now();
+        const timeDiff = currentTime - submittedTimestamp;
+        const minimumTime = 3000; // 3 seconds (anti-bot protection)
+        const maximumTime = 30 * 60 * 1000; // 30 minutes (reasonable session timeout)
+        
+        console.log(`Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`);
+        
+        // Check if timestamp is in the future (suspicious)
+        if (submittedTimestamp > currentTime) {
+            console.log(`Bot detected: timestamp in future (${submittedTimestamp} > ${currentTime})`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid form timestamp'
+            });
+        }
+        
+        if (timeDiff < minimumTime) {
+            console.log(`Bot detected: form submitted too quickly (${timeDiff}ms)`);
+            return res.status(400).json({
+                success: false,
+                message: 'Please wait a moment before submitting'
+            });
+        }
+        
+        if (timeDiff > maximumTime) {
+            console.log(`Bot detected: form submission timeout (${timeDiff}ms)`);
+            return res.status(400).json({
+                success: false,
+                message: 'Form session expired, please refresh and try again'
+            });
+        }
+    }
+
+    // Validate email
+    if (!email) {
+        return res.status(400).json({
+            success: false,
+            message: 'Email address is required'
+        });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.toLowerCase())) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid email address'
+        });
+    }
+
+    // Rate limiting: Check IP address for recent submissions
+    const userIP = req.ip || req.connection.remoteAddress;
+    const recentSubmissionTime = 60000; // 1 minute
+    
+    // Simple in-memory rate limiting (for production, use Redis or database)
+    if (!global.subscriptionAttempts) {
+        global.subscriptionAttempts = new Map();
+    }
+    
+    const lastAttempt = global.subscriptionAttempts.get(userIP);
+    if (lastAttempt && (Date.now() - lastAttempt) < recentSubmissionTime) {
+        console.log(`Rate limit exceeded for IP: ${userIP}`);
+        return res.status(429).json({
+            success: false,
+            message: 'Too many requests. Please wait a moment before trying again.'
+        });
+    }
+    
+    // Record this attempt
+    global.subscriptionAttempts.set(userIP, Date.now());
+
+    // Check if email already exists
+    const existingSubscription = await EmailSubscription.findOne({
+        where: { email: email.toLowerCase() }
+    });
+
+    if (existingSubscription && existingSubscription.isActive) {
+        console.log(`Attempted resubscription for already active email: ${email.toLowerCase()}`);
+        return res.status(400).json({
+            success: false,
+            message: 'This email is already subscribed to our newsletter!'
+        });
+    }
+
+    if (existingSubscription && !existingSubscription.isActive) {
+        // Reactivate existing subscription
+        await existingSubscription.update({
+            isActive: true,
+            subscribedAt: new Date()
+        });
+        console.log(`Reactivated subscription for: ${email.toLowerCase()}`);
+    } else {
+        // Create new subscription
+        await EmailSubscription.create({
+            email: email.toLowerCase(),
+            isActive: true,
+            subscribedAt: new Date()
+        });
+        console.log(`New email subscription created: ${email.toLowerCase()}`);
+    }
+
+    res.json({
+        success: true,
+        message: 'Successfully subscribed to newsletter!'
+    });
+});
 
 /**
  * Display unsubscribe page
  */
-export const getUnsubscribe = async (req, res) => {
-    try {
-        const { token } = req.params;
-        
-        // Decrypt token to get email
-        const decipher = crypto.createDecipher('aes192', process.env.ENCRYPTION_KEY || 'default-key');
-        let email = decipher.update(token, 'hex', 'utf8');
-        email += decipher.final('utf8');
+export const getUnsubscribe = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    
+    // Decrypt token to get email
+    const decipher = crypto.createDecipher('aes192', process.env.ENCRYPTION_KEY || 'default-key');
+    let email = decipher.update(token, 'hex', 'utf8');
+    email += decipher.final('utf8');
 
-        const subscription = await EmailSubscription.findOne({
-            where: { email, isActive: true }
-        });
+    const subscription = await EmailSubscription.findOne({
+        where: { email, isActive: true }
+    });
 
-        if (!subscription) {
-            return res.status(400).render('error', {
-                title: 'Invalid Link',
-                message: 'This unsubscribe link is invalid or has expired.',
-                error: null,
-                additionalCSS: []
-            });
-        }
-
-        res.render('unsubscribe', {
-            title: 'Unsubscribe',
-            email: subscription.email,
-            additionalCSS: []
-        });
-    } catch (error) {
-        console.error('Error unsubscribing:', error);
-        res.status(400).render('error', {
-            title: 'Invalid Link', 
+    if (!subscription) {
+        return res.status(400).render('error', {
+            title: 'Invalid Link',
             message: 'This unsubscribe link is invalid or has expired.',
             error: null,
             additionalCSS: []
         });
     }
-};
+
+    res.render('unsubscribe', {
+        title: 'Unsubscribe',
+        email: subscription.email,
+        additionalCSS: []
+    });
+});
 
 /**
  * Process unsubscribe request
  */
-export const postUnsubscribe = async (req, res) => {
-    try {
-        const { email } = req.body;
+export const postUnsubscribe = asyncHandler(async (req, res) => {
+    const { email } = req.body;
 
-        const subscription = await EmailSubscription.findOne({
-            where: { email }
-        });
+    const subscription = await EmailSubscription.findOne({
+        where: { email }
+    });
 
-        if (subscription) {
-            await subscription.update({
-                isActive: false,
-                unsubscribedAt: new Date()
-            });
-        }
-
-        res.render('success', {
-            title: 'Unsubscribed',
-            message: 'You have been successfully unsubscribed from our newsletter.',
-            additionalCSS: []
-        });
-    } catch (error) {
-        console.error('Error unsubscribing:', error);
-        res.status(500).render('error', {
-            title: 'Error',
-            message: 'Unable to process unsubscribe request.',
-            additionalCSS: []
+    if (subscription) {
+        await subscription.update({
+            isActive: false,
+            unsubscribedAt: new Date()
         });
     }
-};
+
+    res.render('success', {
+        title: 'Unsubscribed',
+        message: 'You have been successfully unsubscribed from our newsletter.',
+        additionalCSS: []
+    });
+});
 
 /**
  * Display admin statistics
  */
-export const getStats = async (req, res) => {
-    try {
-        const stats = {
-            totalUsers: await User.count(),
-            totalCarnivals: await Carnival.count(),
-            totalClubs: await Club.count(),
-            totalSubscriptions: await EmailSubscription.count({ where: { isActive: true } })
-        };
+export const getStats = asyncHandler(async (req, res) => {
+    const stats = {
+        totalUsers: await User.count(),
+        totalCarnivals: await Carnival.count(),
+        totalClubs: await Club.count(),
+        totalSubscriptions: await EmailSubscription.count({ where: { isActive: true } })
+    };
 
-        res.render('admin/stats', {
-            title: 'Admin Statistics',
-            stats,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('Error loading admin statistics:', error);
-        res.status(500).render('error', {
-            title: 'Error',
-            message: 'Unable to load statistics',
-            additionalCSS: []
-        });
-    }
-};
+    res.render('admin/stats', {
+        title: 'Admin Statistics',
+        stats,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+});
 
 /**
  * Send newsletter to subscribers
  */
-export const sendNewsletter = async (req, res) => {
-    try {
-        const { subject, content } = req.body;
+export const sendNewsletter = asyncHandler(async (req, res) => {
+    const { subject, content } = req.body;
 
-        if (!subject || !content) {
-            return res.status(400).json({
-                success: false,
-                message: 'Subject and content are required'
-            });
-        }
-
-        const subscribers = await EmailSubscription.findAll({
-            where: { isActive: true }
-        });
-
-        const result = await emailService.sendNewsletter(subject, content, subscribers);
-
-        res.json({
-            success: true,
-            message: `Newsletter sent to ${result.sent} subscribers`,
-            details: result
-        });
-    } catch (error) {
-        console.error('Error sending newsletter:', error);
-        res.status(500).json({
+    if (!subject || !content) {
+        return res.status(400).json({
             success: false,
-            message: 'Failed to send newsletter'
+            message: 'Subject and content are required'
         });
     }
-};
+
+    const subscribers = await EmailSubscription.findAll({
+        where: { isActive: true }
+    });
+
+    const result = await emailService.sendNewsletter(subject, content, subscribers);
+
+    res.json({
+        success: true,
+        message: `Newsletter sent to ${result.sent} subscribers`,
+        details: result
+    });
+});
 
 /**
  * Display contact page
  */
-export const getContact = async (req, res) => {
-    try {
-        let userWithClub = null;
-        
-        // If user is logged in, fetch their club information for auto-population
-        if (req.user) {
-            userWithClub = await User.findByPk(req.user.id, {
-                include: [{
-                    model: Club,
-                    as: 'club',
-                    attributes: ['id', 'clubName', 'state', 'location']
-                }],
-                attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId']
-            });
+export const getContact = asyncHandler(async (req, res) => {
+    let userWithClub = null;
+    
+    // If user is logged in, fetch their club information for auto-population
+    if (req.user) {
+        userWithClub = await User.findByPk(req.user.id, {
+            include: [{
+                model: Club,
+                as: 'club',
+                attributes: ['id', 'clubName', 'state', 'location']
+            }],
+            attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'clubId']
+        });
 
-            // Transform the user object to include club information for template compatibility
-            if (userWithClub && userWithClub.club) {
-                userWithClub = {
-                    ...userWithClub.toJSON(),
-                    clubId: userWithClub.club // This provides clubId.clubName for the template
-                };
-            }
+        // Transform the user object to include club information for template compatibility
+        if (userWithClub && userWithClub.club) {
+            userWithClub = {
+                ...userWithClub.toJSON(),
+                clubId: userWithClub.club // This provides clubId.clubName for the template
+            };
         }
-
-        res.render('contact', {
-            title: 'Contact Us',
-            user: userWithClub || req.user,
-            errors: req.flash('error'),
-            success: req.flash('success'),
-            additionalCSS: []
-        });
-    } catch (error) {
-        console.error('Error loading contact page:', error);
-        // Fallback to basic user info if there's an error fetching club data
-        res.render('contact', {
-            title: 'Contact Us',
-            user: req.user,
-            errors: req.flash('error'),
-            success: req.flash('success'),
-            additionalCSS: []
-        });
     }
-};
+
+    res.render('contact', {
+        title: 'Contact Us',
+        user: userWithClub || req.user,
+        errors: req.flash('error'),
+        success: req.flash('success'),
+        additionalCSS: []
+    });
+});
 
 /**
  * Handle contact form submission
  */
-export const postContact = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        
-        if (!errors.isEmpty()) {
-            req.flash('error_msg', 'Please correct the validation errors and try again.');
-            return res.render('contact', {
-                title: 'Contact Us',
-                errors: errors.array(),
-                formData: req.body,
-                additionalCSS: []
-            });
-        }
-
-        const {
-            firstName,
-            lastName,
-            email,
-            phone,
-            subject,
-            clubName,
-            message,
-            newsletter
-        } = req.body;
-
-        // Send contact email using the email service
-        try {
-            await emailService.sendContactFormEmail({
-                firstName: firstName.trim(),
-                lastName: lastName.trim(),
-                email: email.trim().toLowerCase(),
-                phone: phone?.trim(),
-                subject,
-                clubName: clubName?.trim(),
-                message: message.trim(),
-                newsletter: newsletter === 'on',
-                userAgent: req.get('User-Agent'),
-                ipAddress: req.ip
-            });
-
-            // If user wants newsletter and isn't already subscribed, add them
-            if (newsletter === 'on') {
-                try {
-                    const existingSubscription = await EmailSubscription.findOne({
-                        where: { email: email.trim().toLowerCase() }
-                    });
-
-                    if (!existingSubscription) {
-                        await EmailSubscription.create({
-                            email: email.trim().toLowerCase(),
-                            subscribedStates: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'], // Subscribe to all states
-                            isActive: true,
-                            subscribedAt: new Date(),
-                            source: 'contact_form'
-                        });
-                    }
-                } catch (subscriptionError) {
-                    console.error('Error adding contact form newsletter subscription:', subscriptionError);
-                    // Don't fail the contact form if newsletter subscription fails
-                }
-            }
-
-            req.flash('success_msg', 'Thank you for contacting us! We\'ll get back to you within 1-2 business days.');
-            res.redirect('/contact');
-
-        } catch (emailError) {
-            console.error('Error sending contact form email:', emailError);
-            req.flash('error_msg', 'Sorry, there was an error sending your message. Please try again or email us directly at support@oldmanfooty.au');
-            res.render('contact', {
-                title: 'Contact Us',
-                formData: req.body,
-                additionalCSS: []
-            });
-        }
-
-    } catch (error) {
-        console.error('Error processing contact form:', error);
-        req.flash('error_msg', 'An unexpected error occurred. Please try again.');
-        res.render('contact', {
+export const postContact = asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', 'Please correct the validation errors and try again.');
+        return res.render('contact', {
             title: 'Contact Us',
+            errors: errors.array(),
             formData: req.body,
             additionalCSS: []
         });
     }
-};
+
+    const {
+        firstName,
+        lastName,
+        email,
+        phone,
+        subject,
+        clubName,
+        message,
+        newsletter
+    } = req.body;
+
+    // Send contact email using the email service
+    await emailService.sendContactFormEmail({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone?.trim(),
+        subject,
+        clubName: clubName?.trim(),
+        message: message.trim(),
+        newsletter: newsletter === 'on',
+        userAgent: req.get('User-Agent'),
+        ipAddress: req.ip
+    });
+
+    // If user wants newsletter and isn't already subscribed, add them
+    if (newsletter === 'on') {
+        const existingSubscription = await EmailSubscription.findOne({
+            where: { email: email.trim().toLowerCase() }
+        });
+
+        if (!existingSubscription) {
+            await EmailSubscription.create({
+                email: email.trim().toLowerCase(),
+                subscribedStates: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'], // Subscribe to all states
+                isActive: true,
+                subscribedAt: new Date(),
+                source: 'contact_form'
+            });
+        }
+    }
+
+    req.flash('success_msg', 'Thank you for contacting us! We\'ll get back to you within 1-2 business days.');
+    res.redirect('/contact');
+});

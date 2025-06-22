@@ -11,1373 +11,1192 @@ import { Op } from 'sequelize';
 import crypto from 'crypto';
 import EmailService from '../services/emailService.mjs';
 import AuditService from '../services/auditService.mjs';
+import { wrapControllers } from '../middleware/asyncHandler.mjs';
 
 /**
  * Get Admin Dashboard with system statistics
  */
-export const getAdminDashboard = async (req, res) => {
-    try {
-        // Get system statistics
-        const [
-            totalUsers,
-            totalClubs,
-            totalCarnivals,
-            totalSponsors,
-            totalSubscriptions,
-            inactiveUsers,
-            inactiveClubs,
-            recentUsers,
-            recentCarnivals,
-            upcomingCarnivals
-        ] = await Promise.all([
-            User.count(),
-            Club.count(),
-            Carnival.count({ where: { isActive: true } }),
-            Sponsor.count(),
-            EmailSubscription.count(),
-            User.count({ where: { isActive: false } }),
-            Club.count({ where: { isActive: false } }),
-            User.count({
-                where: {
-                    createdAt: {
-                        [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                    }
+const getAdminDashboardHandler = async (req, res) => {
+    // Get system statistics
+    const [
+        totalUsers,
+        totalClubs,
+        totalCarnivals,
+        totalSponsors,
+        totalSubscriptions,
+        inactiveUsers,
+        inactiveClubs,
+        recentUsers,
+        recentCarnivals,
+        upcomingCarnivals
+    ] = await Promise.all([
+        User.count(),
+        Club.count(),
+        Carnival.count({ where: { isActive: true } }),
+        Sponsor.count(),
+        EmailSubscription.count(),
+        User.count({ where: { isActive: false } }),
+        Club.count({ where: { isActive: false } }),
+        User.count({
+            where: {
+                createdAt: {
+                    [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                 }
-            }),
-            Carnival.count({
-                where: {
-                    isActive: true,
-                    createdAt: {
-                        [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                    }
+            }
+        }),
+        Carnival.count({
+            where: {
+                isActive: true,
+                createdAt: {
+                    [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                 }
-            }),
-            Carnival.count({
-                where: {
-                    isActive: true,
-                    date: {
-                        [Op.gte]: new Date()
-                    }
+            }
+        }),
+        Carnival.count({
+            where: {
+                isActive: true,
+                date: {
+                    [Op.gte]: new Date()
                 }
-            })
-        ]);
+            }
+        })
+    ]);
 
-        // Get recent activity
-        const recentActivity = {
-            users: await User.findAll({
-                limit: 5,
-                order: [['createdAt', 'DESC']],
-                include: [{ model: Club, as: 'club' }]
-            }),
-            carnivals: await Carnival.findAll({
-                where: { isActive: true },
-                limit: 5,
-                order: [['createdAt', 'DESC']],
-                include: [{ model: User, as: 'creator' }]
-            })
-        };
+    // Get recent activity
+    const recentActivity = {
+        users: await User.findAll({
+            limit: 5,
+            order: [['createdAt', 'DESC']],
+            include: [{ model: Club, as: 'club' }]
+        }),
+        carnivals: await Carnival.findAll({
+            where: { isActive: true },
+            limit: 5,
+            order: [['createdAt', 'DESC']],
+            include: [{ model: User, as: 'creator' }]
+        })
+    };
 
-        const stats = {
-            totalUsers,
-            totalClubs,
-            totalCarnivals,
-            totalSponsors,
-            totalSubscriptions,
-            inactiveUsers,
-            inactiveClubs,
-            recentUsers,
-            recentCarnivals,
-            upcomingCarnivals
-        };
+    const stats = {
+        totalUsers,
+        totalClubs,
+        totalCarnivals,
+        totalSponsors,
+        totalSubscriptions,
+        inactiveUsers,
+        inactiveClubs,
+        recentUsers,
+        recentCarnivals,
+        upcomingCarnivals
+    };
 
-        res.render('admin/dashboard', {
-            title: 'Administrator Dashboard - Old Man Footy',
-            stats,
-            recentActivity,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading admin dashboard:', error);
-        req.flash('error_msg', 'Error loading dashboard statistics');
-        res.redirect('/dashboard');
-    }
+    res.render('admin/dashboard', {
+        title: 'Administrator Dashboard - Old Man Footy',
+        stats,
+        recentActivity,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
 };
 
 /**
  * Get User Management page with search and filters
  */
-export const getUserManagement = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 20;
-        const offset = (page - 1) * limit;
+const getUserManagementHandler = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
 
-        // Build search conditions
-        const whereConditions = {};
-        const filters = {
-            search: req.query.search || '',
-            status: req.query.status || '',
-            role: req.query.role || ''
-        };
+    // Build search conditions
+    const whereConditions = {};
+    const filters = {
+        search: req.query.search || '',
+        status: req.query.status || '',
+        role: req.query.role || ''
+    };
 
-        // Search by name or email
-        if (filters.search) {
-            whereConditions[Op.or] = [
-                { firstName: { [Op.like]: `%${filters.search}%` } },
-                { lastName: { [Op.like]: `%${filters.search}%` } },
-                { email: { [Op.like]: `%${filters.search}%` } }
-            ];
-        }
-
-        // Filter by status
-        if (filters.status === 'active') {
-            whereConditions.isActive = true;
-        } else if (filters.status === 'inactive') {
-            whereConditions.isActive = false;
-        }
-
-        // Filter by role
-        if (filters.role === 'admin') {
-            whereConditions.isAdmin = true;
-        } else if (filters.role === 'primary') {
-            whereConditions.isPrimaryDelegate = true;
-        }
-
-        const { count, rows: users } = await User.findAndCountAll({
-            where: whereConditions,
-            include: [{ model: Club, as: 'club' }],
-            order: [['createdAt', 'DESC']],
-            limit,
-            offset
-        });
-
-        const pagination = {
-            currentPage: page,
-            totalPages: Math.ceil(count / limit),
-            totalItems: count,
-            hasNext: page < Math.ceil(count / limit),
-            hasPrev: page > 1
-        };
-
-        res.render('admin/users', {
-            title: 'User Management - Admin Dashboard',
-            users,
-            filters,
-            pagination,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading user management:', error);
-        req.flash('error_msg', 'Error loading user management');
-        res.redirect('/admin/dashboard');
+    // Search by name or email
+    if (filters.search) {
+        whereConditions[Op.or] = [
+            { firstName: { [Op.like]: `%${filters.search}%` } },
+            { lastName: { [Op.like]: `%${filters.search}%` } },
+            { email: { [Op.like]: `%${filters.search}%` } }
+        ];
     }
+
+    // Filter by status
+    if (filters.status === 'active') {
+        whereConditions.isActive = true;
+    } else if (filters.status === 'inactive') {
+        whereConditions.isActive = false;
+    }
+
+    // Filter by role
+    if (filters.role === 'admin') {
+        whereConditions.isAdmin = true;
+    } else if (filters.role === 'primary') {
+        whereConditions.isPrimaryDelegate = true;
+    }
+
+    const { count, rows: users } = await User.findAndCountAll({
+        where: whereConditions,
+        include: [{ model: Club, as: 'club' }],
+        order: [['createdAt', 'DESC']],
+        limit,
+        offset
+    });
+
+    const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        hasNext: page < Math.ceil(count / limit),
+        hasPrev: page > 1
+    };
+
+    res.render('admin/users', {
+        title: 'User Management - Admin Dashboard',
+        users,
+        filters,
+        pagination,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
 };
 
 /**
  * Show Edit User form
  */
-export const showEditUser = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        
-        const [editUser, clubs] = await Promise.all([
-            User.findByPk(userId, {
-                include: [{ model: Club, as: 'club' }]
-            }),
-            Club.findAll({
-                where: { isActive: true },
-                order: [['clubName', 'ASC']]
-            })
-        ]);
+const showEditUserHandler = async (req, res) => {
+    const userId = req.params.id;
+    
+    const [editUser, clubs] = await Promise.all([
+        User.findByPk(userId, {
+            include: [{ model: Club, as: 'club' }]
+        }),
+        Club.findAll({
+            where: { isActive: true },
+            order: [['clubName', 'ASC']]
+        })
+    ]);
 
-        if (!editUser) {
-            req.flash('error_msg', 'User not found');
-            return res.redirect('/admin/users');
-        }
-
-        res.render('admin/edit-user', {
-            title: `Edit ${editUser.firstName} ${editUser.lastName} - Admin Dashboard`,
-            editUser,
-            clubs,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading edit user form:', error);
-        req.flash('error_msg', 'Error loading user details');
-        res.redirect('/admin/users');
+    if (!editUser) {
+        req.flash('error_msg', 'User not found');
+        return res.redirect('/admin/users');
     }
+
+    res.render('admin/edit-user', {
+        title: `Edit ${editUser.firstName} ${editUser.lastName} - Admin Dashboard`,
+        editUser,
+        clubs,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
 };
 
 /**
  * Update User
  */
-export const updateUser = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            req.flash('error_msg', errors.array()[0].msg);
-            return res.redirect(`/admin/users/${req.params.id}/edit`);
-        }
-
-        const userId = req.params.id;
-        const {
-            firstName,
-            lastName,
-            email,
-            clubId,
-            isPrimaryDelegate,
-            isAdmin,
-            isActive
-        } = req.body;
-
-        const user = await User.findByPk(userId);
-        if (!user) {
-            req.flash('error_msg', 'User not found');
-            return res.redirect('/admin/users');
-        }
-
-        // Capture old values for audit
-        const oldValues = {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            clubId: user.clubId,
-            isPrimaryDelegate: user.isPrimaryDelegate,
-            isAdmin: user.isAdmin,
-            isActive: user.isActive
-        };
-
-        // Check if email is already taken by another user
-        if (email !== user.email) {
-            const emailExists = await User.findOne({
-                where: {
-                    email,
-                    id: { [Op.ne]: userId }
-                }
-            });
-            
-            if (emailExists) {
-                await AuditService.logAdminAction(
-                    AuditService.ACTIONS.USER_UPDATE,
-                    req,
-                    AuditService.ENTITIES.USER,
-                    userId,
-                    {
-                        result: 'FAILURE',
-                        errorMessage: 'Email already in use',
-                        targetUserId: userId
-                    }
-                );
-
-                req.flash('error_msg', 'Email address is already in use by another user');
-                return res.redirect(`/admin/users/${userId}/edit`);
-            }
-        }
-
-        // Update user
-        await user.update({
-            firstName,
-            lastName,
-            email,
-            clubId: clubId || null,
-            isPrimaryDelegate: !!isPrimaryDelegate,
-            isAdmin: !!isAdmin,
-            isActive: !!isActive
-        });
-
-        const newValues = {
-            firstName,
-            lastName,
-            email,
-            clubId: clubId || null,
-            isPrimaryDelegate: !!isPrimaryDelegate,
-            isAdmin: !!isAdmin,
-            isActive: !!isActive
-        };
-
-        // Log successful user update
-        await AuditService.logAdminAction(
-            AuditService.ACTIONS.USER_UPDATE,
-            req,
-            AuditService.ENTITIES.USER,
-            userId,
-            {
-                oldValues: AuditService.sanitizeData(oldValues),
-                newValues: AuditService.sanitizeData(newValues),
-                targetUserId: userId,
-                metadata: {
-                    adminAction: 'User profile update',
-                    changedFields: Object.keys(newValues).filter(key => 
-                        JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])
-                    )
-                }
-            }
-        );
-
-        req.flash('success_msg', `User ${firstName} ${lastName} has been updated successfully`);
-        res.redirect('/admin/users');
-    } catch (error) {
-        console.error('❌ Error updating user:', error);
-        
-        // Log system error
-        await AuditService.logAdminAction(
-            AuditService.ACTIONS.USER_UPDATE,
-            req,
-            AuditService.ENTITIES.USER,
-            req.params.id,
-            {
-                result: 'FAILURE',
-                errorMessage: error.message,
-                targetUserId: req.params.id
-            }
-        );
-
-        req.flash('error_msg', 'Error updating user');
-        res.redirect(`/admin/users/${req.params.id}/edit`);
+const updateUserHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array()[0].msg);
+        return res.redirect(`/admin/users/${req.params.id}/edit`);
     }
-};
 
-/**
- * Issue Password Reset
- */
-export const issuePasswordReset = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const user = await User.findByPk(userId);
+    const userId = req.params.id;
+    const {
+        firstName,
+        lastName,
+        email,
+        clubId,
+        isPrimaryDelegate,
+        isAdmin,
+        isActive
+    } = req.body;
 
-        if (!user) {
+    const user = await User.findByPk(userId);
+    if (!user) {
+        req.flash('error_msg', 'User not found');
+        return res.redirect('/admin/users');
+    }
+
+    // Capture old values for audit
+    const oldValues = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        clubId: user.clubId,
+        isPrimaryDelegate: user.isPrimaryDelegate,
+        isAdmin: user.isAdmin,
+        isActive: user.isActive
+    };
+
+    // Check if email is already taken by another user
+    if (email !== user.email) {
+        const emailExists = await User.findOne({
+            where: {
+                email,
+                id: { [Op.ne]: userId }
+            }
+        });
+        
+        if (emailExists) {
             await AuditService.logAdminAction(
-                AuditService.ACTIONS.USER_PASSWORD_RESET,
+                AuditService.ACTIONS.USER_UPDATE,
                 req,
                 AuditService.ENTITIES.USER,
                 userId,
                 {
                     result: 'FAILURE',
-                    errorMessage: 'User not found',
+                    errorMessage: 'Email already in use',
                     targetUserId: userId
                 }
             );
 
-            return res.json({ success: false, message: 'User not found' });
+            req.flash('error_msg', 'Email address is already in use by another user');
+            return res.redirect(`/admin/users/${userId}/edit`);
         }
+    }
 
-        // Generate password reset token
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Update user
+    await user.update({
+        firstName,
+        lastName,
+        email,
+        clubId: clubId || null,
+        isPrimaryDelegate: !!isPrimaryDelegate,
+        isAdmin: !!isAdmin,
+        isActive: !!isActive
+    });
 
-        await user.update({
-            passwordResetToken: resetToken,
-            passwordResetExpiry: resetTokenExpiry
-        });
+    const newValues = {
+        firstName,
+        lastName,
+        email,
+        clubId: clubId || null,
+        isPrimaryDelegate: !!isPrimaryDelegate,
+        isAdmin: !!isAdmin,
+        isActive: !!isActive
+    };
 
-        // Send password reset email
-        const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
-        await EmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
+    // Log successful user update
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.USER_UPDATE,
+        req,
+        AuditService.ENTITIES.USER,
+        userId,
+        {
+            oldValues: AuditService.sanitizeData(oldValues),
+            newValues: AuditService.sanitizeData(newValues),
+            targetUserId: userId,
+            metadata: {
+                adminAction: 'User profile update',
+                changedFields: Object.keys(newValues).filter(key => 
+                    JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])
+                )
+            }
+        }
+    );
 
-        // Log successful password reset initiation
+    req.flash('success_msg', `User ${firstName} ${lastName} has been updated successfully`);
+    res.redirect('/admin/users');
+};
+
+/**
+ * Issue Password Reset
+ */
+const issuePasswordResetHandler = async (req, res) => {
+    const userId = req.params.id;
+    const user = await User.findByPk(userId);
+
+    if (!user) {
         await AuditService.logAdminAction(
             AuditService.ACTIONS.USER_PASSWORD_RESET,
             req,
             AuditService.ENTITIES.USER,
             userId,
             {
-                targetUserId: userId,
-                metadata: {
-                    adminAction: 'Password reset initiated',
-                    targetUserEmail: user.email
-                }
-            }
-        );
-
-        console.log(`✅ Admin ${req.user.email} initiated password reset for user ${user.email}`);
-        
-        res.json({ 
-            success: true, 
-            message: `Password reset email sent to ${user.email}` 
-        });
-    } catch (error) {
-        console.error('❌ Error issuing password reset:', error);
-        
-        // Log system error
-        await AuditService.logAdminAction(
-            AuditService.ACTIONS.USER_PASSWORD_RESET,
-            req,
-            AuditService.ENTITIES.USER,
-            req.params.id,
-            {
                 result: 'FAILURE',
-                errorMessage: error.message,
-                targetUserId: req.params.id
+                errorMessage: 'User not found',
+                targetUserId: userId
             }
         );
 
-        res.json({ 
-            success: false, 
-            message: 'Error sending password reset email' 
-        });
+        return res.json({ success: false, message: 'User not found' });
     }
+
+    // Generate password reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await user.update({
+        passwordResetToken: resetToken,
+        passwordResetExpiry: resetTokenExpiry
+    });
+
+    // Send password reset email
+    const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
+    await EmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
+
+    // Log successful password reset initiation
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.USER_PASSWORD_RESET,
+        req,
+        AuditService.ENTITIES.USER,
+        userId,
+        {
+            targetUserId: userId,
+            metadata: {
+                adminAction: 'Password reset initiated',
+                targetUserEmail: user.email
+            }
+        }
+    );
+
+    console.log(`✅ Admin ${req.user.email} initiated password reset for user ${user.email}`);
+    
+    res.json({ 
+        success: true, 
+        message: `Password reset email sent to ${user.email}` 
+    });
 };
 
 /**
  * Toggle User Status
  */
-export const toggleUserStatus = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const { isActive } = req.body;
-        
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return res.json({ success: false, message: 'User not found' });
-        }
-
-        const oldStatus = user.isActive;
-        const newStatus = !!isActive;
-        
-        await user.update({ isActive: newStatus });
-
-        const action = newStatus ? AuditService.ACTIONS.USER_ACTIVATE : AuditService.ACTIONS.USER_DEACTIVATE;
-        const statusText = newStatus ? 'activated' : 'deactivated';
-        
-        // Log user status change
-        await AuditService.logAdminAction(
-            action,
-            req,
-            AuditService.ENTITIES.USER,
-            userId,
-            {
-                oldValues: { isActive: oldStatus },
-                newValues: { isActive: newStatus },
-                targetUserId: userId,
-                metadata: {
-                    adminAction: `User ${statusText}`,
-                    targetUserEmail: user.email
-                }
-            }
-        );
-
-        const message = `User "${user.firstName} ${user.lastName}" has been ${statusText} successfully`;
-        
-        console.log(`✅ Admin ${req.user.email} ${statusText} user: ${user.email} (ID: ${user.id})`);
-
-        res.json({ 
-            success: true, 
-            message: message,
-            newStatus: newStatus
-        });
-    } catch (error) {
-        console.error('❌ Error toggling user status:', error);
-        
-        // Log system error
-        await AuditService.logAdminAction(
-            req.body.isActive ? AuditService.ACTIONS.USER_ACTIVATE : AuditService.ACTIONS.USER_DEACTIVATE,
-            req,
-            AuditService.ENTITIES.USER,
-            req.params.id,
-            {
-                result: 'FAILURE',
-                errorMessage: error.message,
-                targetUserId: req.params.id
-            }
-        );
-
-        res.json({ 
-            success: false, 
-            message: 'Error updating user status' 
-        });
+const toggleUserStatusHandler = async (req, res) => {
+    const userId = req.params.id;
+    const { isActive } = req.body;
+    
+    const user = await User.findByPk(userId);
+    if (!user) {
+        return res.json({ success: false, message: 'User not found' });
     }
+
+    const oldStatus = user.isActive;
+    const newStatus = !!isActive;
+    
+    await user.update({ isActive: newStatus });
+
+    const action = newStatus ? AuditService.ACTIONS.USER_ACTIVATE : AuditService.ACTIONS.USER_DEACTIVATE;
+    const statusText = newStatus ? 'activated' : 'deactivated';
+    
+    // Log user status change
+    await AuditService.logAdminAction(
+        action,
+        req,
+        AuditService.ENTITIES.USER,
+        userId,
+        {
+            oldValues: { isActive: oldStatus },
+            newValues: { isActive: newStatus },
+            targetUserId: userId,
+            metadata: {
+                adminAction: `User ${statusText}`,
+                targetUserEmail: user.email
+            }
+        }
+    );
+
+    const message = `User "${user.firstName} ${user.lastName}" has been ${statusText} successfully`;
+    
+    console.log(`✅ Admin ${req.user.email} ${statusText} user: ${user.email} (ID: ${user.id})`);
+
+    res.json({ 
+        success: true, 
+        message: message,
+        newStatus: newStatus
+    });
 };
 
 /**
  * Get Club Management page
  */
-export const getClubManagement = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 20;
-        const offset = (page - 1) * limit;
+const getClubManagementHandler = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
 
-        const whereConditions = {};
-        const filters = {
-            search: req.query.search || '',
-            state: req.query.state || '',
-            status: req.query.status || ''
-        };
+    const whereConditions = {};
+    const filters = {
+        search: req.query.search || '',
+        state: req.query.state || '',
+        status: req.query.status || ''
+    };
 
-        if (filters.search) {
-            whereConditions.clubName = { [Op.like]: `%${filters.search}%` };
-        }
-
-        if (filters.state) {
-            whereConditions.state = filters.state;
-        }
-
-        if (filters.status === 'active') {
-            whereConditions.isActive = true;
-        } else if (filters.status === 'inactive') {
-            whereConditions.isActive = false;
-        }
-
-        const { count, rows: clubs } = await Club.findAndCountAll({
-            where: whereConditions,
-            include: [
-                { 
-                    model: User, 
-                    as: 'delegates',
-                    where: { 
-                        isPrimaryDelegate: true,
-                        isActive: true 
-                    },
-                    required: false,
-                    attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate']
-                }
-            ],
-            order: [['clubName', 'ASC']],
-            limit,
-            offset
-        });
-
-        // Transform the data to add primaryDelegate for template compatibility
-        const clubsWithPrimaryDelegate = clubs.map(club => {
-            const clubData = club.toJSON();
-            clubData.primaryDelegate = clubData.delegates && clubData.delegates.length > 0 
-                ? clubData.delegates[0] 
-                : null;
-            return clubData;
-        });
-
-        const pagination = {
-            currentPage: page,
-            totalPages: Math.ceil(count / limit),
-            totalItems: count,
-            hasNext: page < Math.ceil(count / limit),
-            hasPrev: page > 1
-        };
-
-        res.render('admin/clubs', {
-            title: 'Club Management - Admin Dashboard',
-            clubs: clubsWithPrimaryDelegate,
-            filters,
-            pagination,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading club management:', error);
-        req.flash('error_msg', 'Error loading club management');
-        res.redirect('/admin/dashboard');
+    if (filters.search) {
+        whereConditions.clubName = { [Op.like]: `%${filters.search}%` };
     }
-};
 
-/**
- * Show Edit Club form
- */
-export const showEditClub = async (req, res) => {
-    try {
-        const clubId = req.params.id;
-        
-        const club = await Club.findByPk(clubId, {
-            include: [
-                { 
-                    model: User, 
-                    as: 'delegates',
-                    attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate', 'isActive']
-                }
-            ]
-        });
-
-        if (!club) {
-            req.flash('error_msg', 'Club not found');
-            return res.redirect('/admin/clubs');
-        }
-
-        // Transform the data to add primaryDelegate for template compatibility
-        const clubData = club.toJSON();
-        clubData.primaryDelegate = clubData.delegates && clubData.delegates.length > 0 
-            ? clubData.delegates.find(delegate => delegate.isPrimaryDelegate) 
-            : null;
-
-        res.render('admin/edit-club', {
-            title: `Edit ${club.clubName} - Admin Dashboard`,
-            club: clubData,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading edit club form:', error);
-        req.flash('error_msg', 'Error loading club details');
-        res.redirect('/admin/clubs');
+    if (filters.state) {
+        whereConditions.state = filters.state;
     }
-};
 
-/**
- * Update Club
- */
-export const updateClub = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            req.flash('error_msg', errors.array()[0].msg);
-            return res.redirect(`/admin/clubs/${req.params.id}/edit`);
-        }
-
-        const clubId = req.params.id;
-        const {
-            clubName,
-            state,
-            location,
-            description,
-            contactEmail,
-            contactPhone,
-            facebookUrl,
-            instagramUrl,
-            twitterUrl,
-            websiteUrl,
-            isActive,
-            isPubliclyListed
-        } = req.body;
-
-        const club = await Club.findByPk(clubId);
-        if (!club) {
-            req.flash('error_msg', 'Club not found');
-            return res.redirect('/admin/clubs');
-        }
-
-        // Prepare update data
-        const updateData = {
-            clubName,
-            state,
-            location: location || null,
-            description: description || null,
-            contactEmail: contactEmail || null,
-            contactPhone: contactPhone || null,
-            facebookUrl: facebookUrl || null,
-            instagramUrl: instagramUrl || null,
-            twitterUrl: twitterUrl || null,
-            website: websiteUrl || null,
-            isActive: !!isActive,
-            isPubliclyListed: !!isPubliclyListed
-        };
-
-        // Handle logo upload if provided
-        if (req.structuredUploads && req.structuredUploads.length > 0) {
-            const logoUpload = req.structuredUploads.find(upload => upload.fieldname === 'logo');
-            if (logoUpload) {
-                updateData.logoUrl = logoUpload.path;
-                console.log(`📸 Admin updated club ${club.id} logo: ${logoUpload.path}`);
-            }
-        }
-
-        // Update club with all editable fields
-        await club.update(updateData);
-
-        const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
-            ? `Club ${clubName} has been updated successfully, including new logo upload` 
-            : `Club ${clubName} has been updated successfully`;
-
-        req.flash('success_msg', successMessage);
-        res.redirect('/admin/clubs');
-    } catch (error) {
-        console.error('❌ Error updating club:', error);
-        req.flash('error_msg', 'Error updating club');
-        res.redirect(`/admin/clubs/${req.params.id}/edit`);
+    if (filters.status === 'active') {
+        whereConditions.isActive = true;
+    } else if (filters.status === 'inactive') {
+        whereConditions.isActive = false;
     }
-};
 
-/**
- * Get Carnival Management page
- */
-export const getCarnivalManagement = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 20;
-        const offset = (page - 1) * limit;
-
-        const whereConditions = {};
-        const filters = {
-            search: req.query.search || '',
-            state: req.query.state || '',
-            status: req.query.status || '',
-            active: req.query.active || ''
-        };
-
-        if (filters.search) {
-            whereConditions.title = { [Op.like]: `%${filters.search}%` };
-        }
-
-        if (filters.state) {
-            whereConditions.state = filters.state;
-        }
-
-        if (filters.status === 'upcoming') {
-            whereConditions.date = { [Op.gte]: new Date() };
-        } else if (filters.status === 'past') {
-            whereConditions.date = { [Op.lt]: new Date() };
-        }
-
-        // Filter by active status - admin should see all by default
-        if (filters.active === 'active') {
-            whereConditions.isActive = true;
-        } else if (filters.active === 'inactive') {
-            whereConditions.isActive = false;
-        }
-        // If no active filter specified, show both active and inactive carnivals
-
-        const { count, rows: carnivals } = await Carnival.findAndCountAll({
-            where: whereConditions,
-            include: [{ model: User, as: 'creator' }],
-            order: [['date', 'DESC']],
-            limit,
-            offset
-        });
-
-        const pagination = {
-            currentPage: page,
-            totalPages: Math.ceil(count / limit),
-            totalItems: count,
-            hasNext: page < Math.ceil(count / limit),
-            hasPrev: page > 1
-        };
-
-        res.render('admin/carnivals', {
-            title: 'Carnival Management - Admin Dashboard',
-            carnivals,
-            filters,
-            pagination,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading carnival management:', error);
-        req.flash('error_msg', 'Error loading carnival management');
-        res.redirect('/admin/dashboard');
-    }
-};
-
-/**
- * Show Edit Carnival form
- */
-export const showEditCarnival = async (req, res) => {
-    try {
-        const carnivalId = req.params.id;
-        
-        const carnival = await Carnival.findByPk(carnivalId, {
-            include: [{ model: User, as: 'creator' }]
-        });
-
-        if (!carnival) {
-            req.flash('error_msg', 'Carnival not found');
-            return res.redirect('/admin/carnivals');
-        }
-
-        res.render('admin/edit-carnival', {
-            title: `Edit ${carnival.title} - Admin Dashboard`,
-            carnival,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading edit carnival form:', error);
-        req.flash('error_msg', 'Error loading carnival details');
-        res.redirect('/admin/carnivals');
-    }
-};
-
-/**
- * Update Carnival
- */
-export const updateCarnival = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            req.flash('error_msg', errors.array()[0].msg);
-            return res.redirect(`/admin/carnivals/${req.params.id}/edit`);
-        }
-
-        const carnivalId = req.params.id;
-        const {
-            title,
-            date,
-            endDate,
-            locationAddress,
-            state,
-            scheduleDetails,
-            registrationLink,
-            feesDescription,
-            callForVolunteers,
-            contactName,
-            contactEmail,
-            contactPhone,
-            maxTeams,
-            registrationDeadline,
-            isRegistrationOpen,
-            socialMediaFacebook,
-            socialMediaInstagram,
-            socialMediaTwitter,
-            socialMediaWebsite,
-            drawTitle,
-            drawDescription,
-            adminNotes,
-            isActive
-        } = req.body;
-
-        const carnival = await Carnival.findByPk(carnivalId);
-        if (!carnival) {
-            req.flash('error_msg', 'Carnival not found');
-            return res.redirect('/admin/carnivals');
-        }
-
-        // Prepare base update data
-        const updateData = {
-            title,
-            date: new Date(date),
-            endDate: endDate ? new Date(endDate) : null,
-            locationAddress,
-            state,
-            scheduleDetails,
-            registrationLink: registrationLink || null,
-            feesDescription: feesDescription || null,
-            callForVolunteers: callForVolunteers || null,
-            organiserContactName: contactName,
-            organiserContactEmail: contactEmail,
-            organiserContactPhone: contactPhone,
-            maxTeams: maxTeams ? parseInt(maxTeams) : null,
-            registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,
-            isRegistrationOpen: !!isRegistrationOpen,
-            socialMediaFacebook: socialMediaFacebook || null,
-            socialMediaInstagram: socialMediaInstagram || null,
-            socialMediaTwitter: socialMediaTwitter || null,
-            socialMediaWebsite: socialMediaWebsite || null,
-            drawTitle: drawTitle || null,
-            drawDescription: drawDescription || null,
-            adminNotes: adminNotes || null,
-            isActive: !!isActive
-        };
-
-        // Handle structured file uploads
-        if (req.structuredUploads && req.structuredUploads.length > 0) {
-            const existingAdditionalImages = carnival.additionalImages || [];
-            const existingDrawFiles = carnival.drawFiles || [];
-
-            for (const upload of req.structuredUploads) {
-                switch (upload.fieldname) {
-                    case 'logo':
-                        updateData.clubLogoURL = upload.path;
-                        console.log(`📸 Admin updated carnival ${carnival.id} logo: ${upload.path}`);
-                        break;
-                    case 'promotionalImage':
-                        updateData.promotionalImageURL = upload.path;
-                        console.log(`📸 Admin updated carnival ${carnival.id} promotional image: ${upload.path}`);
-                        break;
-                    case 'drawFile':
-                        const newDrawFile = {
-                            url: upload.path,
-                            filename: upload.originalname,
-                            title: req.body.drawTitle || `Draw Document ${existingDrawFiles.length + 1}`,
-                            uploadMetadata: upload.metadata
-                        };
-                        existingDrawFiles.push(newDrawFile);
-                        updateData.drawFiles = existingDrawFiles;
-                        
-                        // Update legacy fields with first draw file
-                        if (existingDrawFiles.length === 1) {
-                            updateData.drawFileURL = newDrawFile.url;
-                            updateData.drawFileName = newDrawFile.filename;
-                            updateData.drawTitle = req.body.drawTitle || newDrawFile.title;
-                            updateData.drawDescription = req.body.drawDescription || '';
-                        }
-                        console.log(`📄 Admin added draw document to carnival ${carnival.id}: ${upload.path}`);
-                        break;
-                }
-            }
-        }
-
-        await carnival.update(updateData);
-
-        const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
-            ? `Carnival ${title} has been updated successfully, including ${req.structuredUploads.length} file upload(s)` 
-            : `Carnival ${title} has been updated successfully`;
-
-        req.flash('success_msg', successMessage);
-        res.redirect('/admin/carnivals');
-    } catch (error) {
-        console.error('❌ Error updating carnival:', error);
-        req.flash('error_msg', 'Error updating carnival');
-        res.redirect(`/admin/carnivals/${req.params.id}/edit`);
-    }
-};
-
-/**
- * Toggle Carnival Status (Activate/Deactivate)
- */
-export const toggleCarnivalStatus = async (req, res) => {
-    try {
-        const carnivalId = req.params.id;
-        const { isActive } = req.body;
-        
-        const carnival = await Carnival.findByPk(carnivalId);
-        if (!carnival) {
-            return res.json({ success: false, message: 'Carnival not found' });
-        }
-
-        const newStatus = !!isActive;
-        await carnival.update({ isActive: newStatus });
-
-        const statusText = newStatus ? 'reactivated' : 'deactivated';
-        const message = `Carnival "${carnival.title}" has been ${statusText} successfully`;
-        
-        console.log(`✅ Admin ${req.user.email} ${statusText} carnival: ${carnival.title} (ID: ${carnival.id})`);
-
-        // Log carnival status change
-        await AuditService.logAdminAction(
-            newStatus ? AuditService.ACTIONS.CARNIVAL_ACTIVATE : AuditService.ACTIONS.CARNIVAL_DEACTIVATE,
-            req,
-            AuditService.ENTITIES.CARNIVAL,
-            carnivalId,
-            {
-                oldValues: { isActive: !newStatus },
-                newValues: { isActive: newStatus },
-                targetCarnivalId: carnivalId,
-                metadata: {
-                    adminAction: `Carnival ${statusText}`,
-                    targetCarnivalTitle: carnival.title
-                }
-            }
-        );
-
-        res.json({ 
-            success: true, 
-            message: message,
-            newStatus: newStatus
-        });
-    } catch (error) {
-        console.error('❌ Error toggling carnival status:', error);
-        res.json({ 
-            success: false, 
-            message: 'Error updating carnival status' 
-        });
-    }
-};
-
-/**
- * Toggle Club Status (Activate/Deactivate)
- */
-export const toggleClubStatus = async (req, res) => {
-    try {
-        const clubId = req.params.id;
-        const { isActive } = req.body;
-        
-        const club = await Club.findByPk(clubId);
-        if (!club) {
-            return res.json({ success: false, message: 'Club not found' });
-        }
-
-        const newStatus = !!isActive;
-        await club.update({ isActive: newStatus });
-
-        const statusText = newStatus ? 'reactivated' : 'deactivated';
-        const message = `Club "${club.clubName}" has been ${statusText} successfully`;
-        
-        console.log(`✅ Admin ${req.user.email} ${statusText} club: ${club.clubName} (ID: ${club.id})`);
-
-        // Log club status change
-        await AuditService.logAdminAction(
-            newStatus ? AuditService.ACTIONS.CLUB_ACTIVATE : AuditService.ACTIONS.CLUB_DEACTIVATE,
-            req,
-            AuditService.ENTITIES.CLUB,
-            clubId,
-            {
-                oldValues: { isActive: !newStatus },
-                newValues: { isActive: newStatus },
-                targetClubId: clubId,
-                metadata: {
-                    adminAction: `Club ${statusText}`,
-                    targetClubName: club.clubName
-                }
-            }
-        );
-
-        res.json({ 
-            success: true, 
-            message: message,
-            newStatus: newStatus
-        });
-    } catch (error) {
-        console.error('❌ Error toggling club status:', error);
-        res.json({ 
-            success: false, 
-            message: 'Error updating club status' 
-        });
-    }
-};
-
-/**
- * Toggle Club Visibility (Publicly Listed status)
- */
-export const toggleClubVisibility = async (req, res) => {
-    try {
-        const clubId = req.params.id;
-        const { isPubliclyListed } = req.body;
-        
-        const club = await Club.findByPk(clubId);
-        if (!club) {
-            return res.json({ success: false, message: 'Club not found' });
-        }
-
-        const newVisibility = !!isPubliclyListed;
-        await club.update({ isPubliclyListed: newVisibility });
-
-        const visibilityText = newVisibility ? 'shown in public listing' : 'hidden from public listing';
-        const message = `Club "${club.clubName}" is now ${visibilityText}`;
-        
-        console.log(`✅ Admin ${req.user.email} updated club visibility: ${club.clubName} (ID: ${club.id}) - ${visibilityText}`);
-
-        // Log club visibility change
-        await AuditService.logAdminAction(
-            newVisibility ? AuditService.ACTIONS.CLUB_SHOW : AuditService.ACTIONS.CLUB_HIDE,
-            req,
-            AuditService.ENTITIES.CLUB,
-            clubId,
-            {
-                oldValues: { isPubliclyListed: !newVisibility },
-                newValues: { isPubliclyListed: newVisibility },
-                targetClubId: clubId,
-                metadata: {
-                    adminAction: `Club ${newVisibility ? 'shown' : 'hidden'} in public listing`,
-                    targetClubName: club.clubName
-                }
-            }
-        );
-
-        res.json({ 
-            success: true, 
-            message: message,
-            newVisibility: newVisibility
-        });
-    } catch (error) {
-        console.error('❌ Error toggling club visibility:', error);
-        res.json({ 
-            success: false, 
-            message: 'Error updating club visibility' 
-        });
-    }
-};
-
-/**
- * Generate System Reports
- */
-export const generateReport = async (req, res) => {
-    try {
-        // Define time periods for activity analysis
-        const now = new Date();
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-        // Generate comprehensive system report with login activity tracking
-        const report = {
-            generatedAt: now,
-            users: {
-                total: await User.count(),
-                active: await User.count({ where: { isActive: true } }),
-                inactive: await User.count({ where: { isActive: false } }),
-                admins: await User.count({ where: { isAdmin: true } }),
-                primaryDelegates: await User.count({ where: { isPrimaryDelegate: true } }),
-                // Login activity statistics
-                loggedInLast30Days: await User.count({
-                    where: {
-                        isActive: true,
-                        lastLoginAt: { [Op.gte]: thirtyDaysAgo }
-                    }
-                }),
-                loggedInLast7Days: await User.count({
-                    where: {
-                        isActive: true,
-                        lastLoginAt: { [Op.gte]: sevenDaysAgo }
-                    }
-                }),
-                neverLoggedIn: await User.count({
-                    where: {
-                        isActive: true,
-                        lastLoginAt: null
-                    }
-                })
-            },
-            clubs: {
-                total: await Club.count(),
-                active: await Club.count({ where: { isActive: true } }),
-                inactive: await Club.count({ where: { isActive: false } }),
-                byState: await Club.findAll({
-                    attributes: ['state', [require('sequelize').fn('COUNT', '*'), 'count']],
-                    group: ['state'],
-                    raw: true
-                })
-            },
-            carnivals: {
-                total: await Carnival.count({ where: { isActive: true } }),
-                upcoming: await Carnival.count({ 
-                    where: { 
-                        isActive: true,
-                        date: { [Op.gte]: new Date() } 
-                    } 
-                }),
-                past: await Carnival.count({ 
-                    where: { 
-                        isActive: true,
-                        date: { [Op.lt]: new Date() } 
-                    } 
-                }),
-                byState: await Carnival.findAll({
-                    where: { isActive: true },
-                    attributes: ['state', [require('sequelize').fn('COUNT', '*'), 'count']],
-                    group: ['state'],
-                    raw: true
-                })
-            },
-            sponsors: {
-                total: await Sponsor.count()
-            },
-            subscriptions: {
-                total: await EmailSubscription.count()
-            }
-        };
-
-        res.render('admin/reports', {
-            title: 'System Reports - Admin Dashboard',
-            report,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error generating reports:', error);
-        req.flash('error_msg', 'Error generating system reports');
-        res.redirect('/admin/dashboard');
-    }
-};
-
-/**
- * Delete User
- */
-export const deleteUser = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const currentUser = req.user;
-        
-        const user = await User.findByPk(userId, {
-            include: [{ model: Club, as: 'club' }]
-        });
-
-        if (!user) {
-            return res.json({ success: false, message: 'User not found' });
-        }
-
-        // Prevent self-deletion
-        if (user.id === currentUser.id) {
-            return res.json({ 
-                success: false, 
-                message: 'You cannot delete your own account' 
-            });
-        }
-
-        // Prevent non-admin from deleting admin users
-        if (user.isAdmin && !currentUser.isAdmin) {
-            return res.json({ 
-                success: false, 
-                message: 'Only administrators can delete admin accounts' 
-            });
-        }
-
-        // Capture user data for audit before deletion
-        const deletedUserData = {
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            clubId: user.clubId,
-            isPrimaryDelegate: user.isPrimaryDelegate,
-            isAdmin: user.isAdmin,
-            clubName: user.club?.clubName
-        };
-
-        const transaction = await sequelize.transaction();
-
-        try {
-            // Handle primary delegate transfer if user is primary delegate
-            if (user.isPrimaryDelegate && user.clubId) {
-                // Find another delegate in the same club to transfer role to
-                const alternateDelegate = await User.findOne({
-                    where: {
-                        clubId: user.clubId,
-                        isActive: true,
-                        isPrimaryDelegate: false,
-                        id: { [Op.ne]: user.id }
-                    },
-                    transaction
-                });
-
-                if (alternateDelegate) {
-                    // Transfer primary delegate role
-                    await alternateDelegate.update({
-                        isPrimaryDelegate: true
-                    }, { transaction });
-
-                    console.log(`✅ Primary delegate role transferred from ${user.email} to ${alternateDelegate.email}`);
-                } else {
-                    // No other delegates available - log warning but allow deletion
-                    console.log(`⚠️ Warning: Deleting primary delegate ${user.email} with no alternate delegates available for club ${user.club?.clubName}`);
-                }
-            }
-
-            // Soft delete user by setting isActive to false and clearing sensitive data
-            await user.update({
-                isActive: false,
-                email: `deleted_${user.id}_${user.email}`, // Preserve for audit but make unique
-                passwordHash: null,
-                invitationToken: null,
-                tokenExpires: null,
-                passwordResetToken: null,
-                passwordResetExpiry: null
-            }, { transaction });
-
-            await transaction.commit();
-
-            // Log user deletion
-            await AuditService.logAdminAction(
-                AuditService.ACTIONS.USER_DELETE,
-                req,
-                AuditService.ENTITIES.USER,
-                userId,
-                {
-                    oldValues: AuditService.sanitizeData(deletedUserData),
-                    targetUserId: userId,
-                    metadata: {
-                        adminAction: 'User deletion',
-                        targetUserEmail: deletedUserData.email,
-                        wasPrimaryDelegate: deletedUserData.isPrimaryDelegate,
-                        hadClub: !!deletedUserData.clubId
-                    }
-                }
-            );
-
-            console.log(`✅ User ${user.firstName} ${user.lastName} (${user.email}) has been deleted by admin ${currentUser.email}`);
-
-            res.json({ 
-                success: true, 
-                message: `User ${user.firstName} ${user.lastName} has been deleted successfully` 
-            });
-
-        } catch (transactionError) {
-            await transaction.rollback();
-            throw transactionError;
-        }
-
-    } catch (error) {
-        console.error('❌ Error deleting user:', error);
-        
-        // Log system error
-        await AuditService.logAdminAction(
-            AuditService.ACTIONS.USER_DELETE,
-            req,
-            AuditService.ENTITIES.USER,
-            req.params.id,
-            {
-                result: 'FAILURE',
-                errorMessage: error.message,
-                targetUserId: req.params.id
-            }
-        );
-
-        res.json({ 
-            success: false, 
-            message: 'Error deleting user' 
-        });
-    }
-};
-
-/**
- * Show claim carnival on behalf of club form
- */
-export const showClaimCarnivalForm = async (req, res) => {
-    try {
-        const carnivalId = req.params.id;
-        
-        const carnival = await Carnival.findByPk(carnivalId, {
-            include: [{ model: User, as: 'creator' }]
-        });
-
-        if (!carnival) {
-            req.flash('error_msg', 'Carnival not found');
-            return res.redirect('/admin/carnivals');
-        }
-
-        // Check if carnival can be claimed (MySideline import with no owner)
-        if (carnival.isManuallyEntered) {
-            req.flash('error_msg', 'Can only claim ownership of MySideline imported events');
-            return res.redirect('/admin/carnivals');
-        }
-
-        if (!carnival.lastMySidelineSync) {
-            req.flash('error_msg', 'This carnival was not imported from MySideline');
-            return res.redirect('/admin/carnivals');
-        }
-
-        if (carnival.createdByUserId) {
-            req.flash('error_msg', 'This carnival already has an owner');
-            return res.redirect('/admin/carnivals');
-        }
-
-        // Get all active clubs with primary delegates
-        const clubs = await Club.findAll({
-            where: { isActive: true },
-            include: [{
-                model: User,
+    const { count, rows: clubs } = await Club.findAndCountAll({
+        where: whereConditions,
+        include: [
+            { 
+                model: User, 
                 as: 'delegates',
                 where: { 
                     isPrimaryDelegate: true,
                     isActive: true 
                 },
-                required: true,
-                attributes: ['id', 'firstName', 'lastName', 'email']
-            }],
-            order: [['clubName', 'ASC']]
+                required: false,
+                attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate']
+            }
+        ],
+        order: [['clubName', 'ASC']],
+        limit,
+        offset
+    });
+
+    // Transform the data to add primaryDelegate for template compatibility
+    const clubsWithPrimaryDelegate = clubs.map(club => {
+        const clubData = club.toJSON();
+        clubData.primaryDelegate = clubData.delegates && clubData.delegates.length > 0 
+            ? clubData.delegates[0] 
+            : null;
+        return clubData;
+    });
+
+    const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        hasNext: page < Math.ceil(count / limit),
+        hasPrev: page > 1
+    };
+
+    res.render('admin/clubs', {
+        title: 'Club Management - Admin Dashboard',
+        clubs: clubsWithPrimaryDelegate,
+        filters,
+        pagination,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Show Edit Club form
+ */
+const showEditClubHandler = async (req, res) => {
+    const clubId = req.params.id;
+    
+    const club = await Club.findByPk(clubId, {
+        include: [
+            { 
+                model: User, 
+                as: 'delegates',
+                attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate', 'isActive']
+            }
+        ]
+    });
+
+    if (!club) {
+        req.flash('error_msg', 'Club not found');
+        return res.redirect('/admin/clubs');
+    }
+
+    // Transform the data to add primaryDelegate for template compatibility
+    const clubData = club.toJSON();
+    clubData.primaryDelegate = clubData.delegates && clubData.delegates.length > 0 
+        ? clubData.delegates.find(delegate => delegate.isPrimaryDelegate) 
+        : null;
+
+    res.render('admin/edit-club', {
+        title: `Edit ${club.clubName} - Admin Dashboard`,
+        club: clubData,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Update Club
+ */
+const updateClubHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array()[0].msg);
+        return res.redirect(`/admin/clubs/${req.params.id}/edit`);
+    }
+
+    const clubId = req.params.id;
+    const {
+        clubName,
+        state,
+        location,
+        description,
+        contactEmail,
+        contactPhone,
+        facebookUrl,
+        instagramUrl,
+        twitterUrl,
+        websiteUrl,
+        isActive,
+        isPubliclyListed
+    } = req.body;
+
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+        req.flash('error_msg', 'Club not found');
+        return res.redirect('/admin/clubs');
+    }
+
+    // Prepare update data
+    const updateData = {
+        clubName,
+        state,
+        location: location || null,
+        description: description || null,
+        contactEmail: contactEmail || null,
+        contactPhone: contactPhone || null,
+        facebookUrl: facebookUrl || null,
+        instagramUrl: instagramUrl || null,
+        twitterUrl: twitterUrl || null,
+        website: websiteUrl || null,
+        isActive: !!isActive,
+        isPubliclyListed: !!isPubliclyListed
+    };
+
+    // Handle logo upload if provided
+    if (req.structuredUploads && req.structuredUploads.length > 0) {
+        const logoUpload = req.structuredUploads.find(upload => upload.fieldname === 'logo');
+        if (logoUpload) {
+            updateData.logoUrl = logoUpload.path;
+            console.log(`📸 Admin updated club ${club.id} logo: ${logoUpload.path}`);
+        }
+    }
+
+    // Update club with all editable fields
+    await club.update(updateData);
+
+    const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
+        ? `Club ${clubName} has been updated successfully, including new logo upload` 
+        : `Club ${clubName} has been updated successfully`;
+
+    req.flash('success_msg', successMessage);
+    res.redirect('/admin/clubs');
+};
+
+/**
+ * Get Carnival Management page
+ */
+const getCarnivalManagementHandler = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const whereConditions = {};
+    const filters = {
+        search: req.query.search || '',
+        state: req.query.state || '',
+        status: req.query.status || '',
+        active: req.query.active || ''
+    };
+
+    if (filters.search) {
+        whereConditions.title = { [Op.like]: `%${filters.search}%` };
+    }
+
+    if (filters.state) {
+        whereConditions.state = filters.state;
+    }
+
+    if (filters.status === 'upcoming') {
+        whereConditions.date = { [Op.gte]: new Date() };
+    } else if (filters.status === 'past') {
+        whereConditions.date = { [Op.lt]: new Date() };
+    }
+
+    // Filter by active status - admin should see all by default
+    if (filters.active === 'active') {
+        whereConditions.isActive = true;
+    } else if (filters.active === 'inactive') {
+        whereConditions.isActive = false;
+    }
+    // If no active filter specified, show both active and inactive carnivals
+
+    const { count, rows: carnivals } = await Carnival.findAndCountAll({
+        where: whereConditions,
+        include: [{ model: User, as: 'creator' }],
+        order: [['date', 'DESC']],
+        limit,
+        offset
+    });
+
+    const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        hasNext: page < Math.ceil(count / limit),
+        hasPrev: page > 1
+    };
+
+    res.render('admin/carnivals', {
+        title: 'Carnival Management - Admin Dashboard',
+        carnivals,
+        filters,
+        pagination,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Show Edit Carnival form
+ */
+const showEditCarnivalHandler = async (req, res) => {
+    const carnivalId = req.params.id;
+    
+    const carnival = await Carnival.findByPk(carnivalId, {
+        include: [{ model: User, as: 'creator' }]
+    });
+
+    if (!carnival) {
+        req.flash('error_msg', 'Carnival not found');
+        return res.redirect('/admin/carnivals');
+    }
+
+    res.render('admin/edit-carnival', {
+        title: `Edit ${carnival.title} - Admin Dashboard`,
+        carnival,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Update Carnival
+ */
+const updateCarnivalHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array()[0].msg);
+        return res.redirect(`/admin/carnivals/${req.params.id}/edit`);
+    }
+
+    const carnivalId = req.params.id;
+    const {
+        title,
+        date,
+        endDate,
+        locationAddress,
+        state,
+        scheduleDetails,
+        registrationLink,
+        feesDescription,
+        callForVolunteers,
+        contactName,
+        contactEmail,
+        contactPhone,
+        maxTeams,
+        registrationDeadline,
+        isRegistrationOpen,
+        socialMediaFacebook,
+        socialMediaInstagram,
+        socialMediaTwitter,
+        socialMediaWebsite,
+        drawTitle,
+        drawDescription,
+        adminNotes,
+        isActive
+    } = req.body;
+
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+        req.flash('error_msg', 'Carnival not found');
+        return res.redirect('/admin/carnivals');
+    }
+
+    // Prepare base update data
+    const updateData = {
+        title,
+        date: new Date(date),
+        endDate: endDate ? new Date(endDate) : null,
+        locationAddress,
+        state,
+        scheduleDetails,
+        registrationLink: registrationLink || null,
+        feesDescription: feesDescription || null,
+        callForVolunteers: callForVolunteers || null,
+        organiserContactName: contactName,
+        organiserContactEmail: contactEmail,
+        organiserContactPhone: contactPhone,
+        maxTeams: maxTeams ? parseInt(maxTeams) : null,
+        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,
+        isRegistrationOpen: !!isRegistrationOpen,
+        socialMediaFacebook: socialMediaFacebook || null,
+        socialMediaInstagram: socialMediaInstagram || null,
+        socialMediaTwitter: socialMediaTwitter || null,
+        socialMediaWebsite: socialMediaWebsite || null,
+        drawTitle: drawTitle || null,
+        drawDescription: drawDescription || null,
+        adminNotes: adminNotes || null,
+        isActive: !!isActive
+    };
+
+    // Handle structured file uploads
+    if (req.structuredUploads && req.structuredUploads.length > 0) {
+        const existingAdditionalImages = carnival.additionalImages || [];
+        const existingDrawFiles = carnival.drawFiles || [];
+
+        for (const upload of req.structuredUploads) {
+            switch (upload.fieldname) {
+                case 'logo':
+                    updateData.clubLogoURL = upload.path;
+                    console.log(`📸 Admin updated carnival ${carnival.id} logo: ${upload.path}`);
+                    break;
+                case 'promotionalImage':
+                    updateData.promotionalImageURL = upload.path;
+                    console.log(`📸 Admin updated carnival ${carnival.id} promotional image: ${upload.path}`);
+                    break;
+                case 'drawFile':
+                    const newDrawFile = {
+                        url: upload.path,
+                        filename: upload.originalname,
+                        title: req.body.drawTitle || `Draw Document ${existingDrawFiles.length + 1}`,
+                        uploadMetadata: upload.metadata
+                    };
+                    existingDrawFiles.push(newDrawFile);
+                    updateData.drawFiles = existingDrawFiles;
+                    
+                    // Update legacy fields with first draw file
+                    if (existingDrawFiles.length === 1) {
+                        updateData.drawFileURL = newDrawFile.url;
+                        updateData.drawFileName = newDrawFile.filename;
+                        updateData.drawTitle = req.body.drawTitle || newDrawFile.title;
+                        updateData.drawDescription = req.body.drawDescription || '';
+                    }
+                    console.log(`📄 Admin added draw document to carnival ${carnival.id}: ${upload.path}`);
+                    break;
+            }
+        }
+    }
+
+    await carnival.update(updateData);
+
+    const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
+        ? `Carnival ${title} has been updated successfully, including ${req.structuredUploads.length} file upload(s)` 
+        : `Carnival ${title} has been updated successfully`;
+
+    req.flash('success_msg', successMessage);
+    res.redirect('/admin/carnivals');
+};
+
+/**
+ * Toggle Carnival Status (Activate/Deactivate)
+ */
+const toggleCarnivalStatusHandler = async (req, res) => {
+    const carnivalId = req.params.id;
+    const { isActive } = req.body;
+    
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+        return res.json({ success: false, message: 'Carnival not found' });
+    }
+
+    const newStatus = !!isActive;
+    await carnival.update({ isActive: newStatus });
+
+    const statusText = newStatus ? 'reactivated' : 'deactivated';
+    const message = `Carnival "${carnival.title}" has been ${statusText} successfully`;
+    
+    console.log(`✅ Admin ${req.user.email} ${statusText} carnival: ${carnival.title} (ID: ${carnival.id})`);
+
+    // Log carnival status change
+    await AuditService.logAdminAction(
+        newStatus ? AuditService.ACTIONS.CARNIVAL_ACTIVATE : AuditService.ACTIONS.CARNIVAL_DEACTIVATE,
+        req,
+        AuditService.ENTITIES.CARNIVAL,
+        carnivalId,
+        {
+            oldValues: { isActive: !newStatus },
+            newValues: { isActive: newStatus },
+            targetCarnivalId: carnivalId,
+            metadata: {
+                adminAction: `Carnival ${statusText}`,
+                targetCarnivalTitle: carnival.title
+            }
+        }
+    );
+
+    res.json({ 
+        success: true, 
+        message: message,
+        newStatus: newStatus
+    });
+};
+
+/**
+ * Toggle Club Status (Activate/Deactivate)
+ */
+const toggleClubStatusHandler = async (req, res) => {
+    const clubId = req.params.id;
+    const { isActive } = req.body;
+    
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+        return res.json({ success: false, message: 'Club not found' });
+    }
+
+    const newStatus = !!isActive;
+    await club.update({ isActive: newStatus });
+
+    const statusText = newStatus ? 'reactivated' : 'deactivated';
+    const message = `Club "${club.clubName}" has been ${statusText} successfully`;
+    
+    console.log(`✅ Admin ${req.user.email} ${statusText} club: ${club.clubName} (ID: ${club.id})`);
+
+    // Log club status change
+    await AuditService.logAdminAction(
+        newStatus ? AuditService.ACTIONS.CLUB_ACTIVATE : AuditService.ACTIONS.CLUB_DEACTIVATE,
+        req,
+        AuditService.ENTITIES.CLUB,
+        clubId,
+        {
+            oldValues: { isActive: !newStatus },
+            newValues: { isActive: newStatus },
+            targetClubId: clubId,
+            metadata: {
+                adminAction: `Club ${statusText}`,
+                targetClubName: club.clubName
+            }
+        }
+    );
+
+    res.json({ 
+        success: true, 
+        message: message,
+        newStatus: newStatus
+    });
+};
+
+/**
+ * Toggle Club Visibility (Publicly Listed status)
+ */
+const toggleClubVisibilityHandler = async (req, res) => {
+    const clubId = req.params.id;
+    const { isPubliclyListed } = req.body;
+    
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+        return res.json({ success: false, message: 'Club not found' });
+    }
+
+    const newVisibility = !!isPubliclyListed;
+    await club.update({ isPubliclyListed: newVisibility });
+
+    const visibilityText = newVisibility ? 'shown in public listing' : 'hidden from public listing';
+    const message = `Club "${club.clubName}" is now ${visibilityText}`;
+    
+    console.log(`✅ Admin ${req.user.email} updated club visibility: ${club.clubName} (ID: ${club.id}) - ${visibilityText}`);
+
+    // Log club visibility change
+    await AuditService.logAdminAction(
+        newVisibility ? AuditService.ACTIONS.CLUB_SHOW : AuditService.ACTIONS.CLUB_HIDE,
+        req,
+        AuditService.ENTITIES.CLUB,
+        clubId,
+        {
+            oldValues: { isPubliclyListed: !newVisibility },
+            newValues: { isPubliclyListed: newVisibility },
+            targetClubId: clubId,
+            metadata: {
+                adminAction: `Club ${newVisibility ? 'shown' : 'hidden'} in public listing`,
+                targetClubName: club.clubName
+            }
+        }
+    );
+
+    res.json({ 
+        success: true, 
+        message: message,
+        newVisibility: newVisibility
+    });
+};
+
+/**
+ * Generate System Reports
+ */
+const generateReportHandler = async (req, res) => {
+    // Define time periods for activity analysis
+    const now = new Date();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    // Generate comprehensive system report with login activity tracking
+    const report = {
+        generatedAt: now,
+        users: {
+            total: await User.count(),
+            active: await User.count({ where: { isActive: true } }),
+            inactive: await User.count({ where: { isActive: false } }),
+            admins: await User.count({ where: { isAdmin: true } }),
+            primaryDelegates: await User.count({ where: { isPrimaryDelegate: true } }),
+            // Login activity statistics
+            loggedInLast30Days: await User.count({
+                where: {
+                    isActive: true,
+                    lastLoginAt: { [Op.gte]: thirtyDaysAgo }
+                }
+            }),
+            loggedInLast7Days: await User.count({
+                where: {
+                    isActive: true,
+                    lastLoginAt: { [Op.gte]: sevenDaysAgo }
+                }
+            }),
+            neverLoggedIn: await User.count({
+                where: {
+                    isActive: true,
+                    lastLoginAt: null
+                }
+            })
+        },
+        clubs: {
+            total: await Club.count(),
+            active: await Club.count({ where: { isActive: true } }),
+            inactive: await Club.count({ where: { isActive: false } }),
+            byState: await Club.findAll({
+                attributes: ['state', [require('sequelize').fn('COUNT', '*'), 'count']],
+                group: ['state'],
+                raw: true
+            })
+        },
+        carnivals: {
+            total: await Carnival.count({ where: { isActive: true } }),
+            upcoming: await Carnival.count({ 
+                where: { 
+                    isActive: true,
+                    date: { [Op.gte]: new Date() } 
+                } 
+            }),
+            past: await Carnival.count({ 
+                where: { 
+                    isActive: true,
+                    date: { [Op.lt]: new Date() } 
+                } 
+            }),
+            byState: await Carnival.findAll({
+                where: { isActive: true },
+                attributes: ['state', [require('sequelize').fn('COUNT', '*'), 'count']],
+                group: ['state'],
+                raw: true
+            })
+        },
+        sponsors: {
+            total: await Sponsor.count()
+        },
+        subscriptions: {
+            total: await EmailSubscription.count()
+        }
+    };
+
+    res.render('admin/reports', {
+        title: 'System Reports - Admin Dashboard',
+        report,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Delete User
+ */
+const deleteUserHandler = async (req, res) => {
+    const userId = req.params.id;
+    const currentUser = req.user;
+    
+    const user = await User.findByPk(userId, {
+        include: [{ model: Club, as: 'club' }]
+    });
+
+    if (!user) {
+        return res.json({ success: false, message: 'User not found' });
+    }
+
+    // Prevent self-deletion
+    if (user.id === currentUser.id) {
+        return res.json({ 
+            success: false, 
+            message: 'You cannot delete your own account' 
+        });
+    }
+
+    // Prevent non-admin from deleting admin users
+    if (user.isAdmin && !currentUser.isAdmin) {
+        return res.json({ 
+            success: false, 
+            message: 'Only administrators can delete admin accounts' 
+        });
+    }
+
+    // Capture user data for audit before deletion
+    const deletedUserData = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        clubId: user.clubId,
+        isPrimaryDelegate: user.isPrimaryDelegate,
+        isAdmin: user.isAdmin,
+        clubName: user.club?.clubName
+    };
+
+    const transaction = await sequelize.transaction();
+
+    try {
+        // Handle primary delegate transfer if user is primary delegate
+        if (user.isPrimaryDelegate && user.clubId) {
+            // Find another delegate in the same club to transfer role to
+            const alternateDelegate = await User.findOne({
+                where: {
+                    clubId: user.clubId,
+                    isActive: true,
+                    isPrimaryDelegate: false,
+                    id: { [Op.ne]: user.id }
+                },
+                transaction
+            });
+
+            if (alternateDelegate) {
+                // Transfer primary delegate role
+                await alternateDelegate.update({
+                    isPrimaryDelegate: true
+                }, { transaction });
+
+                console.log(`✅ Primary delegate role transferred from ${user.email} to ${alternateDelegate.email}`);
+            } else {
+                // No other delegates available - log warning but allow deletion
+                console.log(`⚠️ Warning: Deleting primary delegate ${user.email} with no alternate delegates available for club ${user.club?.clubName}`);
+            }
+        }
+
+        // Soft delete user by setting isActive to false and clearing sensitive data
+        await user.update({
+            isActive: false,
+            email: `deleted_${user.id}_${user.email}`, // Preserve for audit but make unique
+            passwordHash: null,
+            invitationToken: null,
+            tokenExpires: null,
+            passwordResetToken: null,
+            passwordResetExpiry: null
+        }, { transaction });
+
+        await transaction.commit();
+
+        // Log user deletion
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.USER_DELETE,
+            req,
+            AuditService.ENTITIES.USER,
+            userId,
+            {
+                oldValues: AuditService.sanitizeData(deletedUserData),
+                targetUserId: userId,
+                metadata: {
+                    adminAction: 'User deletion',
+                    targetUserEmail: deletedUserData.email,
+                    wasPrimaryDelegate: deletedUserData.isPrimaryDelegate,
+                    hadClub: !!deletedUserData.clubId
+                }
+            }
+        );
+
+        console.log(`✅ User ${user.firstName} ${user.lastName} (${user.email}) has been deleted by admin ${currentUser.email}`);
+
+        res.json({ 
+            success: true, 
+            message: `User ${user.firstName} ${user.lastName} has been deleted successfully` 
         });
 
-        res.render('admin/claim-carnival', {
-            title: `Claim Carnival - ${carnival.title}`,
-            carnival,
-            clubs,
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading claim carnival form:', error);
-        req.flash('error_msg', 'Error loading claim carnival form');
-        res.redirect('/admin/carnivals');
+    } catch (transactionError) {
+        await transaction.rollback();
+        throw transactionError;
     }
+
+};
+
+/**
+ * Show claim carnival on behalf of club form
+ */
+const showClaimCarnivalFormHandler = async (req, res) => {
+    const carnivalId = req.params.id;
+    
+    const carnival = await Carnival.findByPk(carnivalId, {
+        include: [{ model: User, as: 'creator' }]
+    });
+
+    if (!carnival) {
+        req.flash('error_msg', 'Carnival not found');
+        return res.redirect('/admin/carnivals');
+    }
+
+    // Check if carnival can be claimed (MySideline import with no owner)
+    if (carnival.isManuallyEntered) {
+        req.flash('error_msg', 'Can only claim ownership of MySideline imported events');
+        return res.redirect('/admin/carnivals');
+    }
+
+    if (!carnival.lastMySidelineSync) {
+        req.flash('error_msg', 'This carnival was not imported from MySideline');
+        return res.redirect('/admin/carnivals');
+    }
+
+    if (carnival.createdByUserId) {
+        req.flash('error_msg', 'This carnival already has an owner');
+        return res.redirect('/admin/carnivals');
+    }
+
+    // Get all active clubs with primary delegates
+    const clubs = await Club.findAll({
+        where: { isActive: true },
+        include: [{
+            model: User,
+            as: 'delegates',
+            where: { 
+                isPrimaryDelegate: true,
+                isActive: true 
+            },
+            required: true,
+            attributes: ['id', 'firstName', 'lastName', 'email']
+        }],
+        order: [['clubName', 'ASC']]
+    });
+
+    res.render('admin/claim-carnival', {
+        title: `Claim Carnival - ${carnival.title}`,
+        carnival,
+        clubs,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
 };
 
 /**
  * Process admin claim carnival on behalf of club
  */
-export const adminClaimCarnival = async (req, res) => {
-    try {
-        const carnivalId = req.params.id;
-        const { targetClubId } = req.body;
+const adminClaimCarnivalHandler = async (req, res) => {
+    const carnivalId = req.params.id;
+    const { targetClubId } = req.body;
 
-        if (!targetClubId) {
-            req.flash('error_msg', 'Please select a club to claim the carnival for');
-            return res.redirect(`/admin/carnivals/${carnivalId}/claim`);
-        }
-
-        // Use the Carnival model's adminClaimOnBehalf method
-        const result = await Carnival.adminClaimOnBehalf(carnivalId, req.user.id, parseInt(targetClubId));
-        
-        if (result.success) {
-            req.flash('success_msg', result.message);
-        } else {
-            req.flash('error_msg', result.message);
-        }
-        
-        res.redirect('/admin/carnivals');
-
-    } catch (error) {
-        console.error('❌ Error claiming carnival on behalf of club:', error);
-        req.flash('error_msg', 'An error occurred while claiming the carnival');
-        res.redirect('/admin/carnivals');
+    if (!targetClubId) {
+        req.flash('error_msg', 'Please select a club to claim the carnival for');
+        return res.redirect(`/admin/carnivals/${carnivalId}/claim`);
     }
+
+    // Use the Carnival model's adminClaimOnBehalf method
+    const result = await Carnival.adminClaimOnBehalf(carnivalId, req.user.id, parseInt(targetClubId));
+    
+    if (result.success) {
+        req.flash('success_msg', result.message);
+    } else {
+        req.flash('error_msg', result.message);
+    }
+    
+    res.redirect('/admin/carnivals');
+
 };
 
 /**
@@ -1385,347 +1204,375 @@ export const adminClaimCarnival = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const showCarnivalPlayers = async (req, res) => {
-    try {
-        const carnivalId = req.params.id;
-        
-        const carnival = await Carnival.findByPk(carnivalId, {
-            include: [{ model: User, as: 'creator' }]
-        });
+const showCarnivalPlayersHandler = async (req, res) => {
+    const carnivalId = req.params.id;
+    
+    const carnival = await Carnival.findByPk(carnivalId, {
+        include: [{ model: User, as: 'creator' }]
+    });
 
-        if (!carnival) {
-            req.flash('error_msg', 'Carnival not found');
-            return res.redirect('/admin/carnivals');
-        }
-
-        // Get all club registrations for this carnival with their players
-        const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = require('../models');
-        const clubRegistrations = await CarnivalClub.findAll({
-            where: {
-                carnivalId: carnival.id,
-                isActive: true,
-                approvalStatus: 'approved' // Only show approved clubs
-            },
-            include: [
-                {
-                    model: Club,
-                    as: 'club',
-                    attributes: ['id', 'clubName', 'state', 'location']
-                },
-                {
-                    model: CarnivalClubPlayer,
-                    as: 'players',
-                    where: { isActive: true },
-                    required: false,
-                    include: [{
-                        model: ClubPlayer,
-                        as: 'clubPlayer',
-                        where: { isActive: true },
-                        attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shortsColour', 'email', 'phoneNumber']
-                    }]
-                }
-            ],
-            order: [
-                ['club', 'clubName', 'ASC'],
-                ['players', 'clubPlayer', 'firstName', 'ASC'],
-                ['players', 'clubPlayer', 'lastName', 'ASC']
-            ]
-        });
-
-        // Flatten the data structure for easier display
-        const allPlayers = [];
-        let totalPlayers = 0;
-        let totalMastersEligible = 0;
-
-        clubRegistrations.forEach(registration => {
-            if (registration.players && registration.players.length > 0) {
-                registration.players.forEach(playerAssignment => {
-                    const player = playerAssignment.clubPlayer;
-                    const isMastersEligible = player.dateOfBirth ? 
-                        ClubPlayer.calculateAge(player.dateOfBirth) >= 35 : false;
-                    
-                    allPlayers.push({
-                        id: player.id,
-                        clubName: registration.club.clubName,
-                        clubState: registration.club.state,
-                        firstName: player.firstName,
-                        lastName: player.lastName,
-                        fullName: `${player.firstName} ${player.lastName}`,
-                        dateOfBirth: player.dateOfBirth,
-                        age: player.dateOfBirth ? ClubPlayer.calculateAge(player.dateOfBirth) : null,
-                        shortsColour: player.shortsColour || 'Not specified',
-                        attendanceStatus: playerAssignment.attendanceStatus,
-                        isMastersEligible,
-                        email: player.email,
-                        phoneNumber: player.phoneNumber
-                    });
-                    
-                    totalPlayers++;
-                    if (isMastersEligible) totalMastersEligible++;
-                });
-            }
-        });
-
-        // Group players by club for summary stats
-        const clubSummary = {};
-        allPlayers.forEach(player => {
-            if (!clubSummary[player.clubName]) {
-                clubSummary[player.clubName] = {
-                    total: 0,
-                    mastersEligible: 0,
-                    state: player.clubState
-                };
-            }
-            clubSummary[player.clubName].total++;
-            if (player.isMastersEligible) {
-                clubSummary[player.clubName].mastersEligible++;
-            }
-        });
-
-        res.render('admin/carnival-players', {
-            title: `All Players - ${carnival.title} (Admin View)`,
-            carnival,
-            allPlayers,
-            clubSummary,
-            totalPlayers,
-            totalMastersEligible,
-            totalClubs: Object.keys(clubSummary).length,
-            additionalCSS: ['/styles/admin.styles.css', '/styles/carnival.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading carnival player list for admin:', error);
-        req.flash('error_msg', 'Error loading carnival player list');
-        res.redirect('/admin/carnivals');
+    if (!carnival) {
+        req.flash('error_msg', 'Carnival not found');
+        return res.redirect('/admin/carnivals');
     }
+
+    // Get all club registrations for this carnival with their players
+    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = require('../models');
+    const clubRegistrations = await CarnivalClub.findAll({
+        where: {
+            carnivalId: carnival.id,
+            isActive: true,
+            approvalStatus: 'approved' // Only show approved clubs
+        },
+        include: [
+            {
+                model: Club,
+                as: 'club',
+                attributes: ['id', 'clubName', 'state', 'location']
+            },
+            {
+                model: CarnivalClubPlayer,
+                as: 'players',
+                where: { isActive: true },
+                required: false,
+                include: [{
+                    model: ClubPlayer,
+                    as: 'clubPlayer',
+                    where: { isActive: true },
+                    attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shortsColour', 'email', 'phoneNumber']
+                }]
+            }
+        ],
+        order: [
+            ['club', 'clubName', 'ASC'],
+            ['players', 'clubPlayer', 'firstName', 'ASC'],
+            ['players', 'clubPlayer', 'lastName', 'ASC']
+        ]
+    });
+
+    // Flatten the data structure for easier display
+    const allPlayers = [];
+    let totalPlayers = 0;
+    let totalMastersEligible = 0;
+
+    clubRegistrations.forEach(registration => {
+        if (registration.players && registration.players.length > 0) {
+            registration.players.forEach(playerAssignment => {
+                const player = playerAssignment.clubPlayer;
+                const isMastersEligible = player.dateOfBirth ? 
+                    ClubPlayer.calculateAge(player.dateOfBirth) >= 35 : false;
+                
+                allPlayers.push({
+                    id: player.id,
+                    clubName: registration.club.clubName,
+                    clubState: registration.club.state,
+                    firstName: player.firstName,
+                    lastName: player.lastName,
+                    fullName: `${player.firstName} ${player.lastName}`,
+                    dateOfBirth: player.dateOfBirth,
+                    age: player.dateOfBirth ? ClubPlayer.calculateAge(player.dateOfBirth) : null,
+                    shortsColour: player.shortsColour || 'Not specified',
+                    attendanceStatus: playerAssignment.attendanceStatus,
+                    isMastersEligible,
+                    email: player.email,
+                    phoneNumber: player.phoneNumber
+                });
+                
+                totalPlayers++;
+                if (isMastersEligible) totalMastersEligible++;
+            });
+        }
+    });
+
+    // Group players by club for summary stats
+    const clubSummary = {};
+    allPlayers.forEach(player => {
+        if (!clubSummary[player.clubName]) {
+            clubSummary[player.clubName] = {
+                total: 0,
+                mastersEligible: 0,
+                state: player.clubState
+            };
+        }
+        clubSummary[player.clubName].total++;
+        if (player.isMastersEligible) {
+            clubSummary[player.clubName].mastersEligible++;
+        }
+    });
+
+    res.render('admin/carnival-players', {
+        title: `All Players - ${carnival.title} (Admin View)`,
+        carnival,
+        allPlayers,
+        clubSummary,
+        totalPlayers,
+        totalMastersEligible,
+        totalClubs: Object.keys(clubSummary).length,
+        additionalCSS: ['/styles/admin.styles.css', '/styles/carnival.styles.css']
+    });
 };
 
 /**
  * Get Audit Log Management page
  */
-export const getAuditLogs = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 50;
-        const offset = (page - 1) * limit;
+const getAuditLogsHandler = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 50;
+    const offset = (page - 1) * limit;
 
-        // Build filter conditions
-        const filters = {
-            userId: req.query.userId || '',
-            action: req.query.action || '',
-            entityType: req.query.entityType || '',
-            result: req.query.result || '',
-            startDate: req.query.startDate || '',
-            endDate: req.query.endDate || ''
-        };
+    // Build filter conditions
+    const filters = {
+        userId: req.query.userId || '',
+        action: req.query.action || '',
+        entityType: req.query.entityType || '',
+        result: req.query.result || '',
+        startDate: req.query.startDate || '',
+        endDate: req.query.endDate || ''
+    };
 
-        const whereConditions = {};
+    const whereConditions = {};
 
-        if (filters.userId) {
-            whereConditions.userId = parseInt(filters.userId);
-        }
-
-        if (filters.action) {
-            whereConditions.action = filters.action;
-        }
-
-        if (filters.entityType) {
-            whereConditions.entityType = filters.entityType;
-        }
-
-        if (filters.result) {
-            whereConditions.result = filters.result;
-        }
-
-        if (filters.startDate && filters.endDate) {
-            whereConditions.createdAt = {
-                [Op.between]: [new Date(filters.startDate), new Date(filters.endDate)]
-            };
-        } else if (filters.startDate) {
-            whereConditions.createdAt = {
-                [Op.gte]: new Date(filters.startDate)
-            };
-        } else if (filters.endDate) {
-            whereConditions.createdAt = {
-                [Op.lte]: new Date(filters.endDate)
-            };
-        }
-
-        const { count, rows: auditLogs } = await AuditLog.findAndCountAll({
-            where: whereConditions,
-            include: [{
-                model: User,
-                as: 'user',
-                attributes: ['id', 'firstName', 'lastName', 'email'],
-                required: false
-            }],
-            order: [['createdAt', 'DESC']],
-            limit,
-            offset
-        });
-
-        // Get unique values for filter dropdowns
-        const [users, actions, entityTypes] = await Promise.all([
-            User.findAll({
-                attributes: ['id', 'firstName', 'lastName', 'email'],
-                where: { isActive: true },
-                order: [['firstName', 'ASC']]
-            }),
-            AuditLog.findAll({
-                attributes: ['action'],
-                group: ['action'],
-                order: [['action', 'ASC']],
-                raw: true
-            }),
-            AuditLog.findAll({
-                attributes: ['entityType'],
-                group: ['entityType'],
-                order: [['entityType', 'ASC']],
-                raw: true
-            })
-        ]);
-
-        const pagination = {
-            currentPage: page,
-            totalPages: Math.ceil(count / limit),
-            totalItems: count,
-            hasNext: page < Math.ceil(count / limit),
-            hasPrev: page > 1
-        };
-
-        // Format audit logs for display
-        const formattedLogs = auditLogs.map(log => AuditService.formatAuditLog(log));
-
-        res.render('admin/audit-logs', {
-            title: 'Audit Logs - Admin Dashboard',
-            auditLogs: formattedLogs,
-            filters,
-            pagination,
-            users,
-            actions: actions.map(a => a.action),
-            entityTypes: entityTypes.map(e => e.entityType),
-            additionalCSS: ['/styles/admin.styles.css']
-        });
-    } catch (error) {
-        console.error('❌ Error loading audit logs:', error);
-        req.flash('error_msg', 'Error loading audit logs');
-        res.redirect('/admin/dashboard');
+    if (filters.userId) {
+        whereConditions.userId = parseInt(filters.userId);
     }
+
+    if (filters.action) {
+        whereConditions.action = filters.action;
+    }
+
+    if (filters.entityType) {
+        whereConditions.entityType = filters.entityType;
+    }
+
+    if (filters.result) {
+        whereConditions.result = filters.result;
+    }
+
+    if (filters.startDate && filters.endDate) {
+        whereConditions.createdAt = {
+            [Op.between]: [new Date(filters.startDate), new Date(filters.endDate)]
+        };
+    } else if (filters.startDate) {
+        whereConditions.createdAt = {
+            [Op.gte]: new Date(filters.startDate)
+        };
+    } else if (filters.endDate) {
+        whereConditions.createdAt = {
+            [Op.lte]: new Date(filters.endDate)
+        };
+    }
+
+    const { count, rows: auditLogs } = await AuditLog.findAndCountAll({
+        where: whereConditions,
+        include: [{
+            model: User,
+            as: 'user',
+            attributes: ['id', 'firstName', 'lastName', 'email'],
+            required: false
+        }],
+        order: [['createdAt', 'DESC']],
+        limit,
+        offset
+    });
+
+    // Get unique values for filter dropdowns
+    const [users, actions, entityTypes] = await Promise.all([
+        User.findAll({
+            attributes: ['id', 'firstName', 'lastName', 'email'],
+            where: { isActive: true },
+            order: [['firstName', 'ASC']]
+        }),
+        AuditLog.findAll({
+            attributes: ['action'],
+            group: ['action'],
+            order: [['action', 'ASC']],
+            raw: true
+        }),
+        AuditLog.findAll({
+            attributes: ['entityType'],
+            group: ['entityType'],
+            order: [['entityType', 'ASC']],
+            raw: true
+        })
+    ]);
+
+    const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        hasNext: page < Math.ceil(count / limit),
+        hasPrev: page > 1
+    };
+
+    // Format audit logs for display
+    const formattedLogs = auditLogs.map(log => AuditService.formatAuditLog(log));
+
+    res.render('admin/audit-logs', {
+        title: 'Audit Logs - Admin Dashboard',
+        auditLogs: formattedLogs,
+        filters,
+        pagination,
+        users,
+        actions: actions.map(a => a.action),
+        entityTypes: entityTypes.map(e => e.entityType),
+        additionalCSS: ['/styles/admin.styles.css']
+    });
 };
 
 /**
  * Get Audit Statistics for dashboard
  */
-export const getAuditStatistics = async (req, res) => {
-    try {
-        // Get statistics for the last 30 days
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const stats = await AuditLog.getAuditStatistics({
-            startDate: thirtyDaysAgo,
-            endDate: new Date()
-        });
+const getAuditStatisticsHandler = async (req, res) => {
+    // Get statistics for the last 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const stats = await AuditLog.getAuditStatistics({
+        startDate: thirtyDaysAgo,
+        endDate: new Date()
+    });
 
-        res.json({
-            success: true,
-            stats
-        });
-    } catch (error) {
-        console.error('❌ Error getting audit statistics:', error);
-        res.json({
-            success: false,
-            message: 'Error loading audit statistics'
-        });
-    }
+    res.json({
+        success: true,
+        stats
+    });
 };
 
 /**
  * Export audit logs as CSV
  */
-export const exportAuditLogs = async (req, res) => {
-    try {
-        const { startDate, endDate, action, entityType, result } = req.query;
-        
-        const whereConditions = {};
-        
-        if (startDate && endDate) {
-            whereConditions.createdAt = {
-                [Op.between]: [new Date(startDate), new Date(endDate)]
-            };
-        }
-        
-        if (action) whereConditions.action = action;
-        if (entityType) whereConditions.entityType = entityType;
-        if (result) whereConditions.result = result;
-
-        const auditLogs = await AuditLog.findAll({
-            where: whereConditions,
-            include: [{
-                model: User,
-                as: 'user',
-                attributes: ['firstName', 'lastName', 'email'],
-                required: false
-            }],
-            order: [['createdAt', 'DESC']],
-            limit: 10000 // Reasonable limit for exports
-        });
-
-        // Log the export action
-        await AuditService.logAdminAction(
-            AuditService.ACTIONS.ADMIN_DATA_EXPORT,
-            req,
-            AuditService.ENTITIES.SYSTEM,
-            null,
-            {
-                metadata: {
-                    exportType: 'audit_logs',
-                    recordCount: auditLogs.length,
-                    filters: { startDate, endDate, action, entityType, result }
-                }
-            }
-        );
-
-        // Create CSV content
-        const csvHeader = [
-            'Timestamp',
-            'User',
-            'User Email', 
-            'Action',
-            'Entity Type',
-            'Entity ID',
-            'Result',
-            'IP Address',
-            'Has Changes'
-        ].join(',');
-
-        const csvRows = auditLogs.map(log => {
-            const userName = log.user ? `${log.user.firstName} ${log.user.lastName}` : 'System';
-            const userEmail = log.user?.email || 'system@oldmanfooty.com';
-            const hasChanges = !!(log.oldValues || log.newValues);
-            
-            return [
-                log.createdAt.toISOString(),
-                `"${userName}"`,
-                `"${userEmail}"`,
-                `"${log.action}"`,
-                `"${log.entityType}"`,
-                log.entityId || '',
-                log.result,
-                log.ipAddress || '',
-                hasChanges
-            ].join(',');
-        });
-
-        const csvContent = [csvHeader, ...csvRows].join('\n');
-
-        // Set response headers for file download
-        const filename = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        
-        res.send(csvContent);
-
-    } catch (error) {
-        console.error('❌ Error exporting audit logs:', error);
-        req.flash('error_msg', 'Error exporting audit logs');
-        res.redirect('/admin/audit-logs');
+const exportAuditLogsHandler = async (req, res) => {
+    const { startDate, endDate, action, entityType, result } = req.query;
+    
+    const whereConditions = {};
+    
+    if (startDate && endDate) {
+        whereConditions.createdAt = {
+            [Op.between]: [new Date(startDate), new Date(endDate)]
+        };
     }
+    
+    if (action) whereConditions.action = action;
+    if (entityType) whereConditions.entityType = entityType;
+    if (result) whereConditions.result = result;
+
+    const auditLogs = await AuditLog.findAll({
+        where: whereConditions,
+        include: [{
+            model: User,
+            as: 'user',
+            attributes: ['firstName', 'lastName', 'email'],
+            required: false
+        }],
+        order: [['createdAt', 'DESC']],
+        limit: 10000 // Reasonable limit for exports
+    });
+
+    // Log the export action
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.ADMIN_DATA_EXPORT,
+        req,
+        AuditService.ENTITIES.SYSTEM,
+        null,
+        {
+            metadata: {
+                exportType: 'audit_logs',
+                recordCount: auditLogs.length,
+                filters: { startDate, endDate, action, entityType, result }
+            }
+        }
+    );
+
+    // Create CSV content
+    const csvHeader = [
+        'Timestamp',
+        'User',
+        'User Email', 
+        'Action',
+        'Entity Type',
+        'Entity ID',
+        'Result',
+        'IP Address',
+        'Has Changes'
+    ].join(',');
+
+    const csvRows = auditLogs.map(log => {
+        const userName = log.user ? `${log.user.firstName} ${log.user.lastName}` : 'System';
+        const userEmail = log.user?.email || 'system@oldmanfooty.com';
+        const hasChanges = !!(log.oldValues || log.newValues);
+        
+        return [
+            log.createdAt.toISOString(),
+            `"${userName}"`,
+            `"${userEmail}"`,
+            `"${log.action}"`,
+            `"${log.entityType}"`,
+            log.entityId || '',
+            log.result,
+            log.ipAddress || '',
+            hasChanges
+        ].join(',');
+    });
+
+    const csvContent = [csvHeader, ...csvRows].join('\n');
+
+    // Set response headers for file download
+    const filename = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    res.send(csvContent);
+
 };
+
+// Raw controller functions object for wrapping
+const rawControllers = {
+    getAdminDashboardHandler,
+    getUserManagementHandler,
+    showEditUserHandler,
+    updateUserHandler,
+    issuePasswordResetHandler,
+    toggleUserStatusHandler,
+    getClubManagementHandler,
+    showEditClubHandler,
+    updateClubHandler,
+    getCarnivalManagementHandler,
+    showEditCarnivalHandler,
+    updateCarnivalHandler,
+    toggleCarnivalStatusHandler,
+    toggleClubStatusHandler,
+    toggleClubVisibilityHandler,
+    generateReportHandler,
+    deleteUserHandler,
+    showClaimCarnivalFormHandler,
+    adminClaimCarnivalHandler,
+    showCarnivalPlayersHandler,
+    getAuditLogsHandler,
+    getAuditStatisticsHandler,
+    exportAuditLogsHandler
+};
+
+// Export wrapped versions using the wrapControllers utility
+export const {
+    getAdminDashboardHandler: getAdminDashboard,
+    getUserManagementHandler: getUserManagement,
+    showEditUserHandler: showEditUser,
+    updateUserHandler: updateUser,
+    issuePasswordResetHandler: issuePasswordReset,
+    toggleUserStatusHandler: toggleUserStatus,
+    getClubManagementHandler: getClubManagement,
+    showEditClubHandler: showEditClub,
+    updateClubHandler: updateClub,
+    getCarnivalManagementHandler: getCarnivalManagement,
+    showEditCarnivalHandler: showEditCarnival,
+    updateCarnivalHandler: updateCarnival,
+    toggleCarnivalStatusHandler: toggleCarnivalStatus,
+    toggleClubStatusHandler: toggleClubStatus,
+    toggleClubVisibilityHandler: toggleClubVisibility,
+    generateReportHandler: generateReport,
+    deleteUserHandler: deleteUser,
+    showClaimCarnivalFormHandler: showClaimCarnivalForm,
+    adminClaimCarnivalHandler: adminClaimCarnival,
+    showCarnivalPlayersHandler: showCarnivalPlayers,
+    getAuditLogsHandler: getAuditLogs,
+    getAuditStatisticsHandler: getAuditStatistics,
+    exportAuditLogsHandler: exportAuditLogs
+} = wrapControllers(rawControllers);
