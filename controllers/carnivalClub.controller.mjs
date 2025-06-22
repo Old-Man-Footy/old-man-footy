@@ -28,6 +28,14 @@ const showCarnivalAttendeesHandler = async (req, res) => {
       createdByUserId: user.id,
       isActive: true,
     },
+    include: [
+      {
+        model: Club,
+        as: 'hostClub',
+        attributes: ['id', 'clubName', 'isActive', 'state', 'location', 'logoUrl'],
+        required: false,
+      },
+    ],
   });
 
   if (!carnival) {
