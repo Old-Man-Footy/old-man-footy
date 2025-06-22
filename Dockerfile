@@ -13,7 +13,20 @@ FROM browser-deps AS test
 ENV NODE_ENV=test
 
 # TEST STAGE: Browser dependencies are inherited from browser-deps stage
+# OPTIMIZATION: Only install essential system dependencies in base
+# REMOVED: chromium, nss, freetype, freetype-dev, harfbuzz, ttf-freefont, bash from base
+# REASON: These are only needed in stages that actually use browsers, not in every stage
+RUN apk add --no-cache dumb-init
 
+WORKDIR /app
+
+# Test stage - for user testing and CI/CD pipelines
+FROM browser-deps AS test
+ENV NODE_ENV=test
+
+# TEST STAGE: Browser dependencies are inherited from browser-deps stage
+
+# Configure Playwright for test environment
 # Configure Playwright for test environment
 ENV PLAYWRIGHT_BROWSERS_PATH=0
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
@@ -21,11 +34,14 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S appuser -u 1001 -G nodejs
+    adduser -S appuser -u 1001 -G nodejs
 
 COPY package*.json ./
 # IMPORTANT: Install ALL dependencies for testing (dev + production)
+# IMPORTANT: Install ALL dependencies for testing (dev + production)
 RUN npm ci --include=dev
 
+# Install Playwright browsers for testing
 # Install Playwright browsers for testing
 RUN npx playwright install --with-deps || echo "Playwright install failed, continuing..."
 
@@ -37,10 +53,29 @@ EXPOSE 3055
 # FIXED: For user testing, start the server, not run tests
 # Tests can be run with: docker run --rm old-man-footy:test npm test
 CMD ["dumb-init", "npm", "start"]
+RUN chown -R appuser:nodejs /app
+USER appuser
+# FIXED: Port matches docker-compose.test.yml expectation
+EXPOSE 3055
+# FIXED: For user testing, start the server, not run tests
+# Tests can be run with: docker run --rm old-man-footy:test npm test
+CMD ["dumb-init", "npm", "start"]
 
+# Production dependencies stage - minimal dependencies only
 # Production dependencies stage - minimal dependencies only
 FROM base AS deps
 ENV NODE_ENV=production
+
+# OPTIMIZATION: Install only minimal browser deps needed for Playwright in production
+# REMOVED: freetype-dev, harfbuzz, ttf-freefont, bash from production
+# REASON: freetype-dev is dev headers, harfbuzz/ttf-freefont are for font rendering (not needed for headless scraping), bash not needed
+# KEPT: chromium, nss, freetype, ca-certificates (minimal set for Playwright to work)
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    ca-certificates
+
 
 # OPTIMIZATION: Install only minimal browser deps needed for Playwright in production
 # REMOVED: freetype-dev, harfbuzz, ttf-freefont, bash from production
@@ -66,9 +101,25 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Production stage - optimized final image
+
+# Install production dependencies
+# OPTIMIZATION: Keep Playwright in production (needed for MySideline scraping)
+# but configure to use system browser instead of downloading full browser packages
+RUN npm ci --only=production && \
+    npm cache clean --force
+
+# Configure Playwright to use system Chromium (saves ~300MB by not downloading browsers)
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Production stage - optimized final image
 FROM node:22-alpine AS production
 ENV NODE_ENV=production
 
+# OPTIMIZATION: Install only minimal runtime dependencies
+# REMOVED: freetype-dev, harfbuzz, ttf-freefont, bash
+# REASON: Same as deps stage - these are not needed for headless browser automation
 # OPTIMIZATION: Install only minimal runtime dependencies
 # REMOVED: freetype-dev, harfbuzz, ttf-freefont, bash
 # REASON: Same as deps stage - these are not needed for headless browser automation
@@ -78,18 +129,22 @@ RUN apk add --no-cache \
     nss \
     freetype \
     ca-certificates
+    ca-certificates
 
+# Configure Playwright environment (no browser downloads)
 # Configure Playwright environment (no browser downloads)
 ENV PLAYWRIGHT_BROWSERS_PATH=0
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # CONSISTENCY: Use same user name as other stages
+# CONSISTENCY: Use same user name as other stages
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S appuser -u 1001 -G nodejs
 
 WORKDIR /app
 
+# Copy production dependencies from deps stage
 # Copy production dependencies from deps stage
 COPY --from=deps --chown=appuser:nodejs /app/node_modules ./node_modules
 
@@ -137,17 +192,22 @@ RUN mkdir -p data \
     public/uploads/temp && \
     chown -R appuser:nodejs data public/uploads && \
     chmod 755 data && \
+    chown -R appuser:nodejs data public/uploads && \
+    chmod 755 data && \
     touch data/.gitkeep && \
     chown appuser:nodejs data/.gitkeep
 
 USER appuser
 
 # Expose port
+# Expose port
 EXPOSE 3060
 
+# Health check
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3060/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
+# Start application
 # Start application
 CMD ["dumb-init", "node", "app.js"]
