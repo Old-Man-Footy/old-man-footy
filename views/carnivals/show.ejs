@@ -151,11 +151,9 @@
                                     
                                     <!-- Admin Claim Button (if not already owned by someone) -->
                                     <% if (!carnival.createdByUserId || carnival.createdByUserId === null) { %>
-                                        <button type="button" class="btn btn-outline-success btn-sm" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#adminClaimModal">
+                                        <a href="/admin/carnivals/<%= carnival.id %>/claim" class="btn btn-outline-success btn-sm">
                                             <i class="bi bi-hand-thumbs-up"></i> Admin Claim
-                                        </button>
+                                        </a>
                                     <% } %>
                                 </div>
                             </div>
@@ -907,56 +905,6 @@
                     <strong>Event ID:</strong> <%= carnival.id %> | 
                     <strong>Last Updated:</strong> <%= new Date(carnival.updatedAt).toLocaleDateString('en-AU') %>
                 </small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Admin Claim Modal -->
-<div class="modal fade" id="adminClaimModal" tabindex="-1" aria-labelledby="adminClaimModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="adminClaimModalLabel">
-                    <i class="bi bi-shield-fill text-warning me-2"></i>
-                    Administrator Claim Event
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Administrator Action:</strong> You are performing an administrative claim of this event.
-                </div>
-                
-                <p>By claiming this event as an administrator, you will:</p>
-                
-                <ul class="mb-3">
-                    <li><strong>Gain administrative control</strong> - Full access to edit and manage this event</li>
-                    <li><strong>Assign to your club</strong> - The event will be assigned to your current club</li>
-                    <li><strong>Override normal restrictions</strong> - Admin privileges bypass standard ownership rules</li>
-                    <li><strong>Accept responsibility</strong> - You become responsible for managing this event</li>
-                </ul>
-                
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>
-                    <strong>Note:</strong> This action will be logged in the audit trail for administrative oversight.
-                </div>
-                
-                <p class="mb-0">
-                    <strong>Event:</strong> <%= carnival.title %><br>
-                    <strong>Your Club:</strong> <%= user && user.club ? user.club.clubName : 'No club assigned' %>
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle"></i> Cancel
-                </button>
-                <form method="POST" action="/admin/carnivals/<%= carnival.id %>/claim" class="d-inline">
-                    <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-shield-fill"></i> Admin Claim Event
-                    </button>
-                </form>
             </div>
         </div>
     </div>
