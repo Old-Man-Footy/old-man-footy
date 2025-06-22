@@ -726,25 +726,51 @@ const syncMySidelineHandler = async (req, res) => {
 };
 
 // Export wrapped versions using asyncHandler to eliminate manual try-catch blocks
-export const listCarnivals = asyncHandler(listCarnivalsHandler);
-export const showCarnival = asyncHandler(showCarnivalHandler);
-export const showCreateForm = asyncHandler(showCreateFormHandler);
-export const createCarnival = asyncHandler(createCarnivalHandler);
-export const showEditForm = asyncHandler(showEditFormHandler);
-export const updateCarnival = asyncHandler(updateCarnivalHandler);
+export const list = asyncHandler(listCarnivalsHandler);
+export const show = asyncHandler(showCarnivalHandler);
+export const getNew = asyncHandler(showCreateFormHandler);
+export const postNew = asyncHandler(createCarnivalHandler);
+export const getEdit = asyncHandler(showEditFormHandler);
+export const postEdit = asyncHandler(updateCarnivalHandler);
 export const deleteCarnival = asyncHandler(deleteCarnivalHandler);
 export const takeOwnership = asyncHandler(takeOwnershipHandler);
 export const releaseOwnership = asyncHandler(releaseOwnershipHandler);
 export const syncMySideline = asyncHandler(syncMySidelineHandler);
 
-// Compatibility aliases
-export const list = listCarnivals;
-export const show = showCarnival;
-export const getNew = showCreateForm;
-export const postNew = createCarnival;
-export const getEdit = showEditForm;
-export const postEdit = updateCarnival;
-// Note: 'delete' is a reserved keyword, so we export deleteCarnival directly
+// Add the missing exports that routes are expecting
+export { deleteCarnival as delete }; // 'delete' alias for deleteCarnival
+export const mergeCarnival = asyncHandler(async (req, res) => {
+    // Placeholder for merge carnival functionality
+    req.flash('error_msg', 'Merge carnival functionality not yet implemented.');
+    res.redirect(`/carnivals/${req.params.id}`);
+});
 
-// Additional controller functions that may exist but need wrapping
-// ...existing code for other carnival controller functions...
+export const showCarnivalSponsors = asyncHandler(async (req, res) => {
+    // Placeholder for carnival sponsors functionality
+    req.flash('error_msg', 'Carnival sponsors functionality not yet implemented.');
+    res.redirect(`/carnivals/${req.params.id}`);
+});
+
+export const addSponsorToCarnival = asyncHandler(async (req, res) => {
+    // Placeholder for add sponsor functionality
+    req.flash('error_msg', 'Add sponsor functionality not yet implemented.');
+    res.redirect(`/carnivals/${req.params.id}/sponsors`);
+});
+
+export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
+    // Placeholder for remove sponsor functionality
+    req.flash('error_msg', 'Remove sponsor functionality not yet implemented.');
+    res.redirect(`/carnivals/${req.params.id}/sponsors`);
+});
+
+export const sendEmailToAttendees = asyncHandler(async (req, res) => {
+    // Placeholder for email attendees functionality
+    req.flash('error_msg', 'Email attendees functionality not yet implemented.');
+    res.redirect(`/carnivals/${req.params.id}`);
+});
+
+export const showAllPlayers = asyncHandler(async (req, res) => {
+    // Placeholder for show all players functionality
+    req.flash('error_msg', 'Show all players functionality not yet implemented.');
+    res.redirect(`/carnivals/${req.params.id}`);
+});
