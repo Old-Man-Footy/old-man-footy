@@ -137,7 +137,7 @@ class BasicSeeder {
                 isManuallyEntered: true,
                 createdBy: creator ? creator.id : null,
                 isActive: true,
-                clubId: creator.clubId
+                clubId: randomClub.id // Always assign a valid host club
             });
             
             this.createdCarnivals.push(carnival);
