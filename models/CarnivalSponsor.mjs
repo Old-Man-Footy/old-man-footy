@@ -7,6 +7,8 @@
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import Sponsor from './Sponsor.mjs';
+import Carnival from './Carnival.mjs';
 
 /**
  * CarnivalSponsor junction model class extending Sequelize Model
@@ -17,7 +19,6 @@ class CarnivalSponsor extends Model {
    * @returns {Promise<Sponsor>} Sponsor instance
    */
   async getSponsorDetails() {
-    const Sponsor = require('./Sponsor');
     return await Sponsor.findByPk(this.sponsorId);
   }
 
@@ -26,7 +27,6 @@ class CarnivalSponsor extends Model {
    * @returns {Promise<Carnival>} Carnival instance
    */
   async getCarnivalDetails() {
-    const Carnival = require('./Carnival');
     return await Carnival.findByPk(this.carnivalId);
   }
 
@@ -51,7 +51,7 @@ class CarnivalSponsor extends Model {
       },
       include: [
         {
-          model: require('./Sponsor'),
+          model: Sponsor,
           as: 'sponsor'
         }
       ],
@@ -72,7 +72,7 @@ class CarnivalSponsor extends Model {
       },
       include: [
         {
-          model: require('./Carnival'),
+          model: Carnival,
           as: 'carnival'
         }
       ],
@@ -93,7 +93,7 @@ class CarnivalSponsor extends Model {
       },
       include: [
         {
-          model: require('./Sponsor'),
+          model: Sponsor,
           as: 'sponsor'
         }
       ]

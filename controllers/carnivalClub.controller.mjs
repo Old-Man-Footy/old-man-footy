@@ -10,6 +10,7 @@ import { CarnivalClub, Carnival, Club, ClubPlayer, CarnivalClubPlayer } from '..
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import { emailService } from '../services/emailService.mjs';
 
 /**
  * Show carnival attendees management page (for carnival organizers)
@@ -1227,7 +1228,7 @@ const approveClubRegistrationHandler = async (req, res) => {
   });
 
   // Send approval notification email
-  const emailService = require('../services/emailService');
+  
   await emailService.sendRegistrationApprovalEmail(
     carnival,
     registration.club,
@@ -1305,7 +1306,6 @@ const rejectClubRegistrationHandler = async (req, res) => {
   });
 
   // Send rejection notification email
-  const emailService = require('../services/emailService');
   await emailService.sendRegistrationRejectionEmail(
     carnival,
     registration.club,

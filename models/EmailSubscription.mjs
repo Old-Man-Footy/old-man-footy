@@ -5,7 +5,7 @@
  * with state-based filtering and unsubscribe functionality.
  */
 
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Op } from 'sequelize';
 import crypto from 'crypto';
 import { sequelize } from '../config/database.mjs';
 
@@ -62,7 +62,7 @@ class EmailSubscription extends Model {
       where: {
         isActive: true,
         states: {
-          [require('sequelize').Op.like]: `%"${state}"%`
+          [Op.like]: `%"${state}"%`
         }
       }
     });

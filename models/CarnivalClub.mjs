@@ -7,6 +7,8 @@
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import Carnival from './Carnival.mjs';
+import Club from './Club.mjs';
 
 /**
  * CarnivalClub junction model class extending Sequelize Model
@@ -17,7 +19,7 @@ class CarnivalClub extends Model {
    * @returns {Promise<Carnival>} Carnival instance
    */
   async getCarnivalDetails() {
-    const Carnival = require('./Carnival');
+    
     return await Carnival.findByPk(this.carnivalId);
   }
 
@@ -26,7 +28,6 @@ class CarnivalClub extends Model {
    * @returns {Promise<Club>} Club instance
    */
   async getClubDetails() {
-    const Club = require('./Club');
     return await Club.findByPk(this.clubId);
   }
 
@@ -51,7 +52,7 @@ class CarnivalClub extends Model {
       },
       include: [
         {
-          model: require('./Club'),
+          model: Club,
           as: 'club'
         }
       ],
@@ -72,7 +73,7 @@ class CarnivalClub extends Model {
       },
       include: [
         {
-          model: require('./Carnival'),
+          model: Carnival,
           as: 'carnival'
         }
       ],

@@ -5,8 +5,10 @@
  * for the Old Man Footy platform.
  */
 
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Op } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import Sponsor from './Sponsor.mjs';
+import Club from './Club.mjs';
 
 /**
  * ClubSponsor junction model class extending Sequelize Model
@@ -17,7 +19,6 @@ class ClubSponsor extends Model {
    * @returns {Promise<Sponsor>} Sponsor instance
    */
   async getSponsorDetails() {
-    const Sponsor = require('./Sponsor');
     return await Sponsor.findByPk(this.sponsorId);
   }
 
@@ -26,7 +27,6 @@ class ClubSponsor extends Model {
    * @returns {Promise<Club>} Club instance
    */
   async getClubDetails() {
-    const Club = require('./Club');
     return await Club.findByPk(this.clubId);
   }
 
@@ -50,15 +50,15 @@ class ClubSponsor extends Model {
         clubId: clubId,
         isActive: true,
         endDate: {
-          [require('sequelize').Op.or]: [
+          [Op.or]: [
             null,
-            { [require('sequelize').Op.gt]: new Date() }
+            { [Op.gt]: new Date() }
           ]
         }
       },
       include: [
         {
-          model: require('./Sponsor'),
+          model: Sponsor,
           as: 'sponsor'
         }
       ]
@@ -106,15 +106,15 @@ class ClubSponsor extends Model {
         sponsorId: sponsorId,
         isActive: true,
         endDate: {
-          [require('sequelize').Op.or]: [
+          [Op.or]: [
             null,
-            { [require('sequelize').Op.gt]: new Date() }
+            { [Op.gt]: new Date() }
           ]
         }
       },
       include: [
         {
-          model: require('./Club'),
+          model: Club,
           as: 'club'
         }
       ],

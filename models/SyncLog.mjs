@@ -5,7 +5,7 @@
  * regardless of whether individual events are updated during sync
  */
 
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Op } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
 
 /**
@@ -102,7 +102,7 @@ class SyncLog extends Model {
       where: {
         syncType: syncType,
         startedAt: {
-          [require('sequelize').Op.gte]: startDate
+          [Op.gte]: startDate
         }
       },
       order: [['startedAt', 'DESC']]

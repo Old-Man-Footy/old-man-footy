@@ -5,8 +5,9 @@
  * for enhanced search functionality on the Old Man Footy platform.
  */
 
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Op } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import Club from './Club.mjs';
 
 /**
  * ClubAlternateName model class extending Sequelize Model
@@ -17,7 +18,6 @@ class ClubAlternateName extends Model {
    * @returns {Promise<Club>} Associated club
    */
   async getClub() {
-    const Club = require('./Club');
     return await Club.findByPk(this.clubId);
   }
 
@@ -35,7 +35,7 @@ class ClubAlternateName extends Model {
     };
 
     if (excludeId) {
-      whereClause.id = { [require('sequelize').Op.ne]: excludeId };
+      whereClause.id = { [Op.ne]: excludeId };
     }
 
     const existing = await this.findOne({ where: whereClause });
@@ -60,7 +60,6 @@ class ClubAlternateName extends Model {
    * @returns {Promise<Array>} Array of club IDs that match
    */
   static async searchClubsByAlternateName(searchTerm) {
-    const { Op } = require('sequelize');
     const results = await this.findAll({
       where: {
         alternateName: {

@@ -17,7 +17,6 @@ class Sponsor extends Model {
    * @returns {Promise<Array>} Array of associated clubs
    */
   async getAssociatedClubs() {
-    const Club = require('./Club');
     return await this.getClubs({
       where: { isActive: true },
       order: [['clubName', 'ASC']]
