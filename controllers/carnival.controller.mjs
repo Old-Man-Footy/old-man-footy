@@ -491,11 +491,11 @@ const createCarnivalHandler = async (req, res) => {
     const wasMerged = carnival.lastMySidelineSync && carnival.claimedAt;
     if (wasMerged) {
         req.flash('success_msg', `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`);
-        res.redirect(`/carnivals/${carnival.id}`);
+        return res.redirect(`/carnivals/${carnival.id}`);
     } else {
         // For manually created carnivals, redirect with flag to show important notices modal
         req.flash('success_msg', 'Carnival created successfully! 🎉');
-        res.redirect(`/carnivals/${carnival.id}?showPostCreationModal=true`);
+        return res.redirect(`/carnivals/${carnival.id}?showPostCreationModal=true`);
     }
 };
 
