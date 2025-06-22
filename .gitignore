@@ -157,5 +157,6 @@ public/images/*.jpeg
 *.png
 *.jpg
 
+
 # Keep icon files - they should be committed to the repo
 

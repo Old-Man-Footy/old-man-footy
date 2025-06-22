@@ -1,4 +1,4 @@
-import { Carnival, SyncLog } from '../models';
+import { Carnival, SyncLog } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
 import { ENTITY_TYPES, IMAGE_TYPES, parseImageName, generateImageName } from './imageNamingService.mjs';
