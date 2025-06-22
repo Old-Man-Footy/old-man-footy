@@ -16,6 +16,7 @@
 import { extname, join, parse, dirname, relative, basename } from 'path';
 import { promises as fs } from 'fs';
 import { createHash } from 'crypto';
+import { Club, Carnival, Sponsor, User } from '../models/index.mjs';
 
 class ImageNamingService {
     /**
@@ -279,7 +280,6 @@ class ImageNamingService {
      * @returns {Promise<Object>} Cleanup results
      */
     static async cleanupOrphanedImages(dryRun = true) {
-        const { Club, Carnival, Sponsor, User } = await import('../models/index.mjs');
         const results = {
             processed: 0,
             orphaned: [],

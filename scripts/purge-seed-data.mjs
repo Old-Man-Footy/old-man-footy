@@ -10,6 +10,7 @@
  */
 
 import { sequelize, User, Club, Carnival, EmailSubscription } from '../models/index.mjs';
+import { initializeDatabase } from '../config/database.mjs';
 import dotenv from 'dotenv';
 
 
@@ -102,7 +103,6 @@ class SeedDataPurger {
      */
     async connect() {
         try {
-            const { initializeDatabase } = await import('../config/database.mjs');
             await initializeDatabase();
             console.log('✅ Database connection established');
         } catch (error) {

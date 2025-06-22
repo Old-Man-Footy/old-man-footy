@@ -7,6 +7,7 @@
 
 import { DataTypes, Model, Op, fn } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import User from './User.mjs';
 
 /**
  * AuditLog model class extending Sequelize Model
@@ -117,9 +118,6 @@ class AuditLog extends Model {
       };
     }
 
-    // Import User model dynamically to avoid circular dependency
-    const { default: User } = await import('./User.mjs');
-
     return await this.findAndCountAll({
       where: whereConditions,
       order: [['createdAt', 'DESC']],
@@ -143,9 +141,6 @@ class AuditLog extends Model {
    */
   static async getEntityAuditLogs(entityType, entityId, options = {}) {
     const { limit = 50, offset = 0 } = options;
-
-    // Import User model dynamically to avoid circular dependency
-    const { default: User } = await import('./User.mjs');
 
     return await this.findAll({
       where: {
@@ -211,7 +206,7 @@ class AuditLog extends Model {
         limit: 10,
         raw: true,
         include: [{
-          model: (await import('./User.mjs')).default,
+          model: User,
           as: 'user',
           attributes: ['firstName', 'lastName', 'email'],
           required: false

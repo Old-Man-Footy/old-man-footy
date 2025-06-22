@@ -5,12 +5,13 @@
  * Prevents accidental data modification in production
  */
 
+import { sequelize } from '../../models/index.mjs';
+
 /**
  * Validate that we're in a safe environment for database operations
  * @throws {Error} If environment is not safe for database modifications
  */
 async function validateEnvironment() {
-    const { sequelize } = await import('../../models/index.mjs');
     const environment = process.env.NODE_ENV || 'development';
     const dbPath = sequelize.options.storage;
     

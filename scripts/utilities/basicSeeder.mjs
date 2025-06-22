@@ -10,6 +10,7 @@ import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
 import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
 import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
 import MySidelineService from '../../services/mySidelineIntegrationService.mjs';
+import { initializeDatabase } from '../../config/database.mjs';
 
 class BasicSeeder {
     constructor() {
@@ -25,7 +26,6 @@ class BasicSeeder {
      */
     async connect() {
         try {
-            const { initializeDatabase } = await import('../../config/database.mjs');
             await initializeDatabase();
             console.log('✅ SQLite database initialized successfully');
         } catch (error) {

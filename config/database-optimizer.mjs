@@ -1,9 +1,14 @@
-import { sequelize } from './database.mjs';
-
 /**
- * Database optimization configurations for SQLite/Sequelize
- * These optimizations improve performance, reliability, and monitoring for SQLite
+ * Database Optimizer
+ * 
+ * Optimizes SQLite database performance through indexing, query optimization,
+ * and maintenance operations tailored for the Old Man Footy application.
  */
+
+import { DataTypes, Op, QueryTypes } from 'sequelize';
+import { sequelize } from './database.mjs';
+import { User } from '../models/index.mjs';
+import { Carnival } from '../models/index.mjs';
 
 class DatabaseOptimizer {
     static async configureProduction() {
@@ -276,8 +281,6 @@ class DatabaseOptimizer {
         try {
             console.log('Starting SQLite database backup...');
 
-            const fs = await import('fs/promises');
-            const path = await import('path');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const backupName = `rugby-masters-backup-${timestamp}.db`;
             
@@ -323,6 +326,53 @@ class DatabaseOptimizer {
         } catch (error) {
             console.error('SQLite database backup failed:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Get user statistics for optimization decisions
+     * @returns {Promise<Object>} User statistics
+     */
+    async getUserStatistics() {
+        try {
+            const stats = await User.findAll({
+                attributes: [
+                    [sequelize.fn('COUNT', sequelize.col('id')), 'totalUsers'],
+                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isActive = 1 THEN 1 END')), 'activeUsers'],
+                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isAdmin = 1 THEN 1 END')), 'adminUsers'],
+                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isPrimaryDelegate = 1 THEN 1 END')), 'primaryDelegates'],
+                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN clubId IS NOT NULL THEN 1 END')), 'usersWithClubs']
+                ],
+                raw: true
+            });
+
+            return stats[0] || {};
+        } catch (error) {
+            console.error('Error getting user statistics:', error);
+            return {};
+        }
+    }
+
+    /**
+     * Get carnival statistics for optimization decisions
+     * @returns {Promise<Object>} Carnival statistics
+     */
+    async getCarnivalStatistics() {
+        try {
+            const stats = await Carnival.findAll({
+                attributes: [
+                    [sequelize.fn('COUNT', sequelize.col('id')), 'totalCarnivals'],
+                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isActive = 1 THEN 1 END')), 'activeCarnivals'],
+                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isManuallyEntered = 1 THEN 1 END')), 'manualCarnivals'],
+                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isManuallyEntered = 0 THEN 1 END')), 'importedCarnivals']
+                ],
+                raw: true
+            });
+
+            return stats[0] || {};
+        } catch (error) {
+            console.error('Error getting carnival statistics:', error);
+            return {};
         }
     }
 }
