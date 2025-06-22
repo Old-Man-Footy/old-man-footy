@@ -187,13 +187,13 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="contactEmail" class="form-label">
+                                <label for="organiserContactEmail" class="form-label">
                                     Contact Email *
                                     <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
                                        title="This email will be visible to clubs and used for carnival-related communications."></i>
                                 </label>
-                                <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
-                                       value="<%= typeof formData !== 'undefined' ? formData.contactEmail : 
+                                <input type="email" class="form-control" id="organiserContactEmail" name="organiserContactEmail" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.organiserContactEmail : 
                                                 (user.email || (user.club && user.club.contactEmail ? user.club.contactEmail : '')) %>" required>
                                 <div class="invalid-feedback">Please provide a valid contact email.</div>
                                 <% if ((user.email || (user.club && user.club.contactEmail)) && typeof formData === 'undefined') { %>
