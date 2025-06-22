@@ -359,9 +359,9 @@ class Carnival extends Model {
         throw new Error('This carnival already has an owner');
       }
 
-      // All checks passed - update the carnival with user's contact details
+      // All checks passed - update the carnival with user's clubId and contact details (do NOT set createdByUserId)
       const updateData = {
-        createdByUserId: userId,
+        clubId: user.clubId, // Set clubId on claim
         claimedAt: new Date(),
         updatedAt: new Date(),
         // Auto-populate contact details with the claiming user's information
@@ -896,6 +896,15 @@ Carnival.init({
       model: 'Users',
       key: 'id'
     }
+  },
+  clubId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Clubs',
+      key: 'id'
+    },
+    comment: 'The club that is hosting or claimed this carnival'
   },
   isManuallyEntered: {
     type: DataTypes.BOOLEAN,

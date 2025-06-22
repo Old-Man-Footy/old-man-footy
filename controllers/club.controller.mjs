@@ -1154,14 +1154,14 @@ const getClaimOwnershipHandler = async (req, res) => {
   }
 
   // Check if club is available for claiming
-  const isUnclaimed = await club.isUnclaimed();
+  const isUnclaimed = club.isUnclaimed();
   if (!isUnclaimed) {
     req.flash('error_msg', 'This club already has an owner or was not created for claiming.');
     return res.redirect(`/clubs/${club.id}`);
   }
 
   // Check if user can claim this club
-  const canClaim = await club.canUserClaim(req.user);
+  const canClaim = club.canUserClaim(req.user);
   if (!canClaim) {
     req.flash(
       'error_msg',

@@ -154,7 +154,7 @@ const listCarnivalsHandler = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const showCarnivalHandler = async (req, res) => {
-  const carnival = await Carnival.findByPk(req.params.id, {
+    const carnival = await Carnival.findByPk(req.params.id, {
     include: [
       {
         model: User,
@@ -174,7 +174,7 @@ const showCarnivalHandler = async (req, res) => {
         required: false,
         through: { attributes: ['displayOrder'] },
       },
-      // Include attendees relationship
+// Include attendees relationship   
       {
         model: Club,
         as: 'attendingClubs',
@@ -189,6 +189,12 @@ const showCarnivalHandler = async (req, res) => {
         ],
         through: { attributes: [] },
         required: false,
+      },      
+      {
+        model: Club,
+        as: 'hostClub',
+        required: false,
+        attributes: ['id', 'clubName', 'logoUrl', 'state', 'location', 'contactPerson', 'contactEmail', 'contactPhone'],
       },
     ],
   });
@@ -196,6 +202,14 @@ const showCarnivalHandler = async (req, res) => {
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found.');
     return res.redirect('/carnivals');
+  }
+
+  // Fetch the host club using clubId (strict MVC: no DB logic in view)
+  let hostClub = null;
+  if (carnival.clubId) {
+    hostClub = await Club.findByPk(carnival.clubId, {
+      attributes: ['id', 'clubName', 'logoUrl', 'state', 'location', 'contactPerson', 'contactEmail', 'contactPhone'],
+    });
   }
 
   // Process carnival data through getPublicDisplayData for public views
@@ -344,6 +358,7 @@ const showCarnivalHandler = async (req, res) => {
     isInactiveCarnival: !carnival.isActive,
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
     additionalCSS: ['/styles/carnival.styles.css'],
+    hostClub,
   });
 };
 
@@ -441,6 +456,7 @@ const createCarnivalHandler = async (req, res) => {
     callForVolunteers: req.body.callForVolunteers || '',
     state: req.body.state,
     createdByUserId: req.user.id,
+    clubId: req.user.clubId || null, // Set clubId on creation
     isManuallyEntered: true,
     // Social media links
     socialMediaFacebook: req.body.socialMediaFacebook || '',
