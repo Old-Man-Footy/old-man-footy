@@ -174,7 +174,7 @@ const showCarnivalHandler = async (req, res) => {
         required: false,
         through: { attributes: ['displayOrder'] },
       },
-// Include attendees relationship   
+      // Include attendees relationship   
       {
         model: Club,
         as: 'attendingClubs',
@@ -189,12 +189,23 @@ const showCarnivalHandler = async (req, res) => {
         ],
         through: { attributes: [] },
         required: false,
-      },      
+      }, 
       {
         model: Club,
         as: 'hostClub',
         required: false,
-        attributes: ['id', 'clubName', 'logoUrl', 'state', 'location', 'contactPerson', 'contactEmail', 'contactPhone'],
+        attributes: [
+          'id', 
+          'clubName', 
+          'logoUrl', 
+          'state', 
+          'location', 
+          'contactPerson', 
+          'contactEmail', 
+          'contactPhone',
+          'isActive',
+          'isPubliclyListed'
+        ]
       },
     ],
   });
@@ -208,7 +219,18 @@ const showCarnivalHandler = async (req, res) => {
   let hostClub = null;
   if (carnival.clubId) {
     hostClub = await Club.findByPk(carnival.clubId, {
-      attributes: ['id', 'clubName', 'logoUrl', 'state', 'location', 'contactPerson', 'contactEmail', 'contactPhone'],
+      attributes: [
+        'id', 
+        'clubName', 
+        'logoUrl', 
+        'state', 
+        'location', 
+        'contactPerson', 
+        'contactEmail', 
+        'contactPhone',
+        'isActive',
+        'isPubliclyListed',
+      ],
     });
   }
 
