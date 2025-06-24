@@ -86,6 +86,7 @@
     "testTimeout": 30000,
     "clearMocks": true,
     "resetModules": true,
-    "resetMocks": true
+    "resetMocks": true,
+    "globalTeardown": "<rootDir>/tests/teardown.mjs"
   }
 }
