@@ -234,21 +234,18 @@ class Carnival extends Model {
 
   /**
    * Obfuscate phone number for display
-   * @param {string} phone - Phone number to obfuscate
+   * @param {string} phone - Phone number to obfuscate (can include letters or digits)
    * @returns {string} Obfuscated phone or placeholder
    */
   obfuscatePhone(phone) {
     if (!phone) return 'Contact details not available';
-    
-    // Remove all non-digit characters for processing
-    const digitsOnly = phone.replace(/\D/g, '');
-    
-    if (digitsOnly.length < 6) {
+    // Keep only alphanumeric characters for obfuscation
+    const alnum = phone.replace(/[^a-zA-Z0-9]/g, '');
+    if (alnum.length < 6) {
       return 'Contact details not available';
     }
-    
-    // Show first 2 and last 2 digits
-    const visible = `${digitsOnly.substring(0, 2)}***${digitsOnly.slice(-2)}`;
+    // Show first 2 and last 2 alphanumeric characters
+    const visible = `${alnum.substring(0, 2)}***${alnum.slice(-2)}`;
     return visible;
   }
 
