@@ -29,8 +29,10 @@ class ClubAlternateName extends Model {
    * @returns {Promise<boolean>} True if unique, false otherwise
    */
   static async isUniqueForClub(alternateName, clubId, excludeId = null) {
+    // Normalize input for comparison
+    const normalizedName = alternateName.trim().toLowerCase();
     const whereClause = {
-      alternateName: alternateName.trim().toLowerCase(),
+      alternateName: normalizedName,
       clubId
     };
 
@@ -38,7 +40,10 @@ class ClubAlternateName extends Model {
       whereClause.id = { [Op.ne]: excludeId };
     }
 
-    const existing = await this.findOne({ where: whereClause });
+    // Ensure alternateName is normalized in DB query
+    const existing = await this.findOne({
+      where: whereClause
+    });
     return !existing;
   }
 
@@ -101,7 +106,7 @@ ClubAlternateName.init({
       len: [2, 100]
     },
     set(value) {
-      this.setDataValue('alternateName', value.trim());
+      this.setDataValue('alternateName', value.trim().toLowerCase());
     }
   },
   isActive: {
