@@ -35,6 +35,9 @@ RUN npm ci --only=production && \
 FROM node:22-alpine AS test
 ENV NODE_ENV=test
 
+# Install Playwright browsers
+RUN npx playwright install --with-deps
+
 # Install minimal runtime dependencies
 RUN apk add --no-cache \
     dumb-init \
