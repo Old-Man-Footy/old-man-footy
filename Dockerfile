@@ -35,9 +35,6 @@ RUN npm ci --only=production && \
 FROM node:22-alpine AS test
 ENV NODE_ENV=test
 
-# Install Playwright browsers
-RUN npx playwright install --with-deps
-
 # Install minimal runtime dependencies
 RUN apk add --no-cache \
     dumb-init \
@@ -46,10 +43,13 @@ RUN apk add --no-cache \
     freetype \
     ca-certificates
 
-# Configure Playwright environment
-ENV PLAYWRIGHT_BROWSERS_PATH=0
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Install Playwright browsers
+RUN npx playwright install --with-deps
+
+# # Configure Playwright environment
+# ENV PLAYWRIGHT_BROWSERS_PATH=0
+# ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+# ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Create user
 RUN addgroup -g 1001 -S nodejs && \
