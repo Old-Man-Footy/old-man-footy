@@ -128,10 +128,10 @@ class EmailService {
                 return { success: false, message: 'Email sending is disabled in the current site mode', emailsSent: 0 };
             }
 
-            // Get all email subscriptions that include this carnival's state in their stateFilter
+            // Get all email subscriptions that include this carnival's state in their states array
             const subscriptions = await EmailSubscription.findAll({ 
                 where: {
-                    stateFilter: { [Op.contains]: [carnival.state] },
+                    states: { [Op.contains]: [carnival.state] },
                     isActive: true
                 }
             });

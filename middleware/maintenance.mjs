@@ -23,12 +23,38 @@ const maintenanceMode = (req, res, next) => {
     return next();
   }
 
+  // Allow access to subscription endpoint for BOTH coming soon and homepage
+  // This must come BEFORE other authentication checks
+  if (req.path === '/subscribe') {
+    return next();
+  }
+
   // Allow access to static assets (CSS, JS, images)
   if (req.path.startsWith('/styles') || 
       req.path.startsWith('/scripts') || 
       req.path.startsWith('/images') || 
       req.path.startsWith('/icons') ||
       req.path.startsWith('/js')) {
+    return next();
+  }
+
+  // Allow access to login route so users can still log in
+  if (req.path === '/auth/login') {
+    return next();
+  }
+
+  // Allow health check endpoint for container monitoring
+  if (req.path === '/health') {
+    return next();
+  }
+
+  // Allow API maintenance status endpoint
+  if (req.path === '/api/maintenance/status') {
+    return next();
+  }
+
+  // Allow other admin routes for login functionality
+  if (req.path.startsWith('/admin')) {
     return next();
   }
 
@@ -42,30 +68,10 @@ const maintenanceMode = (req, res, next) => {
     return next();
   }
 
-  // Allow access to login route so users can still log in
-  if (req.path === '/auth/login') {
-    return next();
-  }
-
   // Block register route during maintenance mode
   if (req.path === '/auth/register') {
     req.flash('error_msg', 'Registration is currently disabled during maintenance. Please try again later.');
     return res.redirect('/maintenance');
-  }
-
-  // Allow other admin routes for login functionality
-  if (req.path.startsWith('/admin')) {
-    return next();
-  }
-
-  // Allow health check endpoint for container monitoring
-  if (req.path === '/health') {
-    return next();
-  }
-
-  // Allow API maintenance status endpoint
-  if (req.path === '/api/maintenance/status') {
-    return next();
   }
 
   // Redirect all other users to maintenance page

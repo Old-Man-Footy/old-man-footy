@@ -125,8 +125,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response received:', response.status, response.statusText);
+                    console.log('Content-Type:', response.headers.get('content-type'));
+                    
+                    // Check if the response is actually JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.error('Expected JSON but received:', contentType);
+                        throw new Error(`Expected JSON response but received ${contentType || 'unknown content type'}`);
+                    }
+                    
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Response data:', data);
                     if (data.success) {
                         showMessage('Thanks! You\'ll receive carnival notifications for the selected states.', 'success');
                         form.reset();
@@ -140,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Subscription error:', error);
-                    showMessage('Something went wrong. Please try again.', 'error');
+                    showMessage('An unexpected error occurred. Please try again.', 'error');
                 })
                 .finally(() => {
                     // Restore button

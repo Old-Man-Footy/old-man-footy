@@ -23,12 +23,38 @@ const comingSoonMode = (req, res, next) => {
     return next();
   }
 
+  // Allow access to subscription endpoint for BOTH coming soon and homepage
+  // This must come BEFORE other authentication checks
+  if (req.path === '/subscribe') {
+    return next();
+  }
+
   // Allow access to static assets (CSS, JS, images)
   if (req.path.startsWith('/styles') || 
       req.path.startsWith('/scripts') || 
       req.path.startsWith('/images') || 
       req.path.startsWith('/icons') ||
       req.path.startsWith('/js')) {
+    return next();
+  }
+
+  // Allow access to login route so users can still log in
+  if (req.path === '/auth/login') {
+    return next();
+  }
+
+  // Allow health check endpoint for container monitoring
+  if (req.path === '/health') {
+    return next();
+  }
+
+  // Allow API coming soon status endpoint
+  if (req.path === '/api/coming-soon/status') {
+    return next();
+  }
+
+  // Allow other admin routes for login functionality
+  if (req.path.startsWith('/admin')) {
     return next();
   }
 
@@ -42,35 +68,10 @@ const comingSoonMode = (req, res, next) => {
     return next();
   }
 
-  // Allow access to login route so users can still log in
-  if (req.path === '/auth/login') {
-    return next();
-  }
-
-  // Allow access to subscription endpoint for coming soon page
-  if (req.path === '/subscribe') {
-    return next();
-  }
-
   // Block register route during coming soon mode
   if (req.path === '/auth/register') {
     req.flash('error_msg', 'Registration is currently disabled. Please check back when we launch!');
     return res.redirect('/coming-soon');
-  }
-
-  // Allow other admin routes for login functionality
-  if (req.path.startsWith('/admin')) {
-    return next();
-  }
-
-  // Allow health check endpoint for container monitoring
-  if (req.path === '/health') {
-    return next();
-  }
-
-  // Allow API coming soon status endpoint
-  if (req.path === '/api/coming-soon/status') {
-    return next();
   }
 
   // Redirect all other users to coming soon page
