@@ -207,7 +207,15 @@ export const postSubscribe = async (req, res) => {
             });
         }
 
-        const { email, website, form_timestamp, states } = req.body;
+        // Extract form data with proper handling for multiple state values
+        const { email, website, form_timestamp } = req.body;
+        
+        // Handle states separately to ensure we get all values when multiple checkboxes are selected
+        let states = req.body.state; // This could be a string (single) or array (multiple)
+        
+        console.log('Raw states from req.body.state:', states);
+        console.log('Type of states:', typeof states);
+        console.log('Is array:', Array.isArray(states));
 
         // Bot protection: Check honeypot field
         if (website && website.trim() !== '') {
@@ -227,18 +235,18 @@ export const postSubscribe = async (req, res) => {
             });
         }
 
-        // Bot protection: Check form timing (minimum 3 seconds to fill form)
+        // Bot protection: Check form timing (minimum 2 seconds to fill form, but more lenient)
         if (form_timestamp) {
             const submittedTimestamp = parseInt(form_timestamp, 10);
             const currentTime = Date.now();
             const timeDiff = currentTime - submittedTimestamp;
-            const minimumTime = 3000; // 3 seconds (anti-bot protection)
-            const maximumTime = 30 * 60 * 1000; // 30 minutes (reasonable session timeout)
+            const minimumTime = 2000; // 2 seconds (reduced from 3 seconds)
+            const maximumTime = 60 * 60 * 1000; // 1 hour (increased from 30 minutes)
             
             console.log(`Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`);
             
             // Check if timestamp is in the future (suspicious)
-            if (submittedTimestamp > currentTime) {
+            if (submittedTimestamp > currentTime + 5000) { // Allow 5 second clock drift
                 console.log(`Bot detected: timestamp in future (${submittedTimestamp} > ${currentTime})`);
                 return res.status(400).json({
                     success: false,
@@ -255,12 +263,15 @@ export const postSubscribe = async (req, res) => {
             }
             
             if (timeDiff > maximumTime) {
-                console.log(`Bot detected: form submission timeout (${timeDiff}ms)`);
+                console.log(`Form session timeout: form submitted after ${timeDiff}ms`);
                 return res.status(400).json({
                     success: false,
                     message: 'Form session expired, please refresh and try again'
                 });
             }
+        } else {
+            // If no timestamp is provided, allow it but log for monitoring
+            console.log('No form timestamp provided - allowing submission but monitoring for abuse');
         }
 
         // Validate email
