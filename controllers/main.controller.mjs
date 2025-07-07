@@ -224,147 +224,210 @@ export const getAbout = (_req, res) => {
 
 /**
  * Handle email subscription with bot protection
+ * Following MVC pattern - returns JSON responses for AJAX requests
  */
-export const postSubscribe = asyncHandler(async (req, res) => {
-  // Add defensive check for req.body
-  if (!req.body) {
-    console.error('Subscription error: req.body is undefined');
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid request data',
-    });
-  }
+export const postSubscribe = async (req, res) => {
+    try {
+        // Add defensive check for req.body
+        if (!req.body) {
+            console.error('Subscription error: req.body is undefined');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request data'
+            });
+        }
 
-  const { email, website, form_timestamp } = req.body;
+        // Extract form data with proper handling for multiple state values
+        const { email, website, form_timestamp } = req.body;
+        
+        // Handle states separately to ensure we get all values when multiple checkboxes are selected
+        let states = req.body.state; // This could be a string (single) or array (multiple)
+        
+        console.log('Raw states from req.body.state:', states);
+        console.log('Type of states:', typeof states);
+        console.log('Is array:', Array.isArray(states));
 
-  // Bot protection: Check honeypot field
-  if (website && website.trim() !== '') {
-    console.log('Bot detected: honeypot field filled');
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid request',
-    });
-  }
+        // Bot protection: Check honeypot field
+        if (website && website.trim() !== '') {
+            console.log('Bot detected: honeypot field filled');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request'
+            });
+        }
 
-  // Bot protection: Also check if honeypot field exists but contains only whitespace
-  if (website !== undefined && website !== null && website !== '') {
-    console.log('Bot detected: honeypot field contains whitespace');
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid request',
-    });
-  }
+        // Bot protection: Also check if honeypot field exists but contains only whitespace
+        if (website !== undefined && website !== null && website !== '') {
+            console.log('Bot detected: honeypot field contains whitespace');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request'
+            });
+        }
 
-  // Bot protection: Check form timing (minimum 3 seconds to fill form)
-  if (form_timestamp) {
-    const submittedTimestamp = parseInt(form_timestamp, 10);
-    const currentTime = Date.now();
-    const timeDiff = currentTime - submittedTimestamp;
-    const minimumTime = 3000; // 3 seconds (anti-bot protection)
-    const maximumTime = 30 * 60 * 1000; // 30 minutes (reasonable session timeout)
+        // Bot protection: Check form timing (minimum 2 seconds to fill form, but more lenient)
+        if (form_timestamp) {
+            const submittedTimestamp = parseInt(form_timestamp, 10);
+            const currentTime = Date.now();
+            const timeDiff = currentTime - submittedTimestamp;
+            const minimumTime = 2000; // 2 seconds (reduced from 3 seconds)
+            const maximumTime = 60 * 60 * 1000; // 1 hour (increased from 30 minutes)
+            
+            console.log(`Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`);
+            
+            // Check if timestamp is in the future (suspicious)
+            if (submittedTimestamp > currentTime + 5000) { // Allow 5 second clock drift
+                console.log(`Bot detected: timestamp in future (${submittedTimestamp} > ${currentTime})`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid form timestamp'
+                });
+            }
+            
+            if (timeDiff < minimumTime) {
+                console.log(`Bot detected: form submitted too quickly (${timeDiff}ms)`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please wait a moment before submitting'
+                });
+            }
+            
+            if (timeDiff > maximumTime) {
+                console.log(`Form session timeout: form submitted after ${timeDiff}ms`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Form session expired, please refresh and try again'
+                });
+            }
+        } else {
+            // If no timestamp is provided, allow it but log for monitoring
+            console.log('No form timestamp provided - allowing submission but monitoring for abuse');
+        }
 
-    console.log(
-      `Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`
-    );
+        // Validate email
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email address is required'
+            });
+        }
 
-    // Check if timestamp is in the future (suspicious)
-    if (submittedTimestamp > currentTime) {
-      console.log(`Bot detected: timestamp in future (${submittedTimestamp} > ${currentTime})`);
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid form timestamp',
-      });
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email address'
+            });
+        }
+
+        // Handle both single state (string) and multiple states (array) submissions
+        let stateArray;
+        if (typeof states === 'string') {
+            stateArray = [states]; // Single state selected comes as string
+        } else if (Array.isArray(states)) {
+            stateArray = states; // Multiple states selected comes as array
+        } else {
+            stateArray = []; // No states selected
+        }
+        
+        console.log(`States received: ${JSON.stringify(states)}, parsed as array: ${JSON.stringify(stateArray)}`);
+        
+        // Validate that at least one state is selected
+        if (!stateArray || stateArray.length === 0) {
+            console.log('State validation failed: No states selected');
+            return res.status(400).json({
+                success: false,
+                message: 'Please select at least one state'
+            });
+        }
+        
+        // Security: Validate that selected states are valid Australian states
+        const validStates = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+        const invalidStates = stateArray.filter(state => !validStates.includes(state));
+        if (invalidStates.length > 0) {
+            console.log(`Invalid states submitted: ${invalidStates.join(', ')}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Please select valid Australian states'
+            });
+        }
+
+        // Rate limiting: Check IP address for recent submissions
+        const userIP = req.ip || req.connection.remoteAddress;
+        const recentSubmissionTime = 60000; // 1 minute
+        
+        // Simple in-memory rate limiting (for production, use Redis or database)
+        if (!global.subscriptionAttempts) {
+            global.subscriptionAttempts = new Map();
+        }
+        
+        const lastAttempt = global.subscriptionAttempts.get(userIP);
+        if (lastAttempt && (Date.now() - lastAttempt) < recentSubmissionTime) {
+            console.log(`Rate limit exceeded for IP: ${userIP}`);
+            return res.status(429).json({
+                success: false,
+                message: 'Too many requests. Please wait a moment before trying again.'
+            });
+        }
+        
+        // Record this attempt
+        global.subscriptionAttempts.set(userIP, Date.now());
+
+        // Check if email already exists
+        const existingSubscription = await EmailSubscription.findOne({
+            where: { email: email.toLowerCase() }
+        });
+
+        if (existingSubscription && existingSubscription.isActive) {
+            console.log(`Attempted resubscription for already active email: ${email.toLowerCase()}`);
+            return res.status(400).json({
+                success: false,
+                message: 'This email is already subscribed to our newsletter!'
+            });
+        }
+
+        if (existingSubscription && !existingSubscription.isActive) {
+            // Reactivate existing subscription with new state preferences
+            await existingSubscription.update({
+                isActive: true,
+                subscribedAt: new Date(),
+                states: stateArray
+            });
+            console.log(`Reactivated subscription for: ${email.toLowerCase()}`);
+        } else {
+            // Create new subscription
+            await EmailSubscription.create({
+                email: email.toLowerCase(),
+                isActive: true,
+                subscribedAt: new Date(),
+                states: stateArray,
+                source: 'homepage'
+            });
+            console.log(`New email subscription created: ${email.toLowerCase()}`);
+        }
+
+        // Send welcome email (optional - don't fail the subscription if email fails)
+        try {
+            await emailService.sendWelcomeEmail(email.toLowerCase(), stateArray);
+        } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+            // Continue - don't fail the subscription just because email failed
+        }
+
+        return res.json({
+            success: true,
+            message: 'Successfully subscribed to newsletter!'
+        });
+
+    } catch (error) {
+        // Ensure we always return JSON even if an unexpected error occurs
+        console.error('Subscription controller error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An unexpected error occurred. Please try again.'
+        });
     }
-
-    if (timeDiff < minimumTime) {
-      console.log(`Bot detected: form submitted too quickly (${timeDiff}ms)`);
-      return res.status(400).json({
-        success: false,
-        message: 'Please wait a moment before submitting',
-      });
-    }
-
-    if (timeDiff > maximumTime) {
-      console.log(`Bot detected: form submission timeout (${timeDiff}ms)`);
-      return res.status(400).json({
-        success: false,
-        message: 'Form session expired, please refresh and try again',
-      });
-    }
-  }
-
-  // Validate email
-  if (!email) {
-    return res.status(400).json({
-      success: false,
-      message: 'Email address is required',
-    });
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.toLowerCase())) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid email address',
-    });
-  }
-
-  // Rate limiting: Check IP address for recent submissions
-  const userIP = req.ip || req.connection.remoteAddress;
-  const recentSubmissionTime = 60000; // 1 minute
-
-  // Simple in-memory rate limiting (for production, use Redis or database)
-  if (!global.subscriptionAttempts) {
-    global.subscriptionAttempts = new Map();
-  }
-
-  const lastAttempt = global.subscriptionAttempts.get(userIP);
-  if (lastAttempt && Date.now() - lastAttempt < recentSubmissionTime) {
-    console.log(`Rate limit exceeded for IP: ${userIP}`);
-    return res.status(429).json({
-      success: false,
-      message: 'Too many requests. Please wait a moment before trying again.',
-    });
-  }
-
-  // Record this attempt
-  global.subscriptionAttempts.set(userIP, Date.now());
-
-  // Check if email already exists
-  const existingSubscription = await EmailSubscription.findOne({
-    where: { email: email.toLowerCase() },
-  });
-
-  if (existingSubscription && existingSubscription.isActive) {
-    console.log(`Attempted resubscription for already active email: ${email.toLowerCase()}`);
-    return res.status(400).json({
-      success: false,
-      message: 'This email is already subscribed to our newsletter!',
-    });
-  }
-
-  if (existingSubscription && !existingSubscription.isActive) {
-    // Reactivate existing subscription
-    await existingSubscription.update({
-      isActive: true,
-      subscribedAt: new Date(),
-    });
-    console.log(`Reactivated subscription for: ${email.toLowerCase()}`);
-  } else {
-    // Create new subscription
-    await EmailSubscription.create({
-      email: email.toLowerCase(),
-      isActive: true,
-      subscribedAt: new Date(),
-    });
-    console.log(`New email subscription created: ${email.toLowerCase()}`);
-  }
-
-  return res.json({
-    success: true,
-    message: 'Successfully subscribed to newsletter!',
-  });
-});
+};
 
 /**
  * Display unsubscribe page
@@ -540,16 +603,16 @@ export const postContact = asyncHandler(async (req, res) => {
       where: { email: email.trim().toLowerCase() },
     });
 
-    if (!existingSubscription) {
-      await EmailSubscription.create({
-        email: email.trim().toLowerCase(),
-        subscribedStates: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'], // Subscribe to all states
-        isActive: true,
-        subscribedAt: new Date(),
-        source: 'contact_form',
-      });
+        if (!existingSubscription) {
+            await EmailSubscription.create({
+                email: email.trim().toLowerCase(),
+                states: AUSTRALIAN_STATES, // Fixed: Use 'states' instead of 'subscribedStates'
+                isActive: true,
+                subscribedAt: new Date(),
+                source: 'contact_form'
+            });
+        }
     }
-  }
 
   req.flash(
     'success_msg',

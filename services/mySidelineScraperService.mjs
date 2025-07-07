@@ -70,6 +70,7 @@ class MySidelineScraperService {
         try {
             // Launch browser
             browser = await chromium.launch({
+                executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium',
                 headless: this.useHeadlessBrowser,
                 timeout: this.timeout
             });

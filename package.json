@@ -11,7 +11,16 @@
     "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=mySidelineScraperService.integration.test.mjs",
-    "seed": "node scripts/seed-database.mjs"
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:single": "playwright test --headed --project=chromium-debug",
+    "test:e2e:homepage": "playwright test --headed --project=chromium-debug homepage-simple.spec.js",
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "seed": "node scripts/seed-database.mjs",
+    "playwright:install": "playwright install"
   },
   "dependencies": {
     "axios": "^1.9.0",
@@ -42,6 +51,7 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.2",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "nodemon": "^3.0.1",
