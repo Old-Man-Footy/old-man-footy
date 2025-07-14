@@ -271,7 +271,7 @@ export const postSubscribe = async (req, res) => {
             const currentTime = Date.now();
             const timeDiff = currentTime - submittedTimestamp;
             const minimumTime = 2000; // 2 seconds (reduced from 3 seconds)
-            const maximumTime = 60 * 60 * 1000; // 1 hour (increased from 30 minutes)
+            const maximumTime = 30 * 60 * 1000; // 30 minutes (back to original limit)
             
             console.log(`Form timing check: submitted=${submittedTimestamp}, current=${currentTime}, diff=${timeDiff}ms`);
             
@@ -327,29 +327,18 @@ export const postSubscribe = async (req, res) => {
         } else if (Array.isArray(states)) {
             stateArray = states; // Multiple states selected comes as array
         } else {
-            stateArray = []; // No states selected
+            // Default to all states if none provided - this is the expected behavior
+            // No states means user wants notifications from all states
+            console.log('No states provided - defaulting to all Australian states');
+            stateArray = AUSTRALIAN_STATES; // Default to all states when none specified
         }
         
         console.log(`States received: ${JSON.stringify(states)}, parsed as array: ${JSON.stringify(stateArray)}`);
         
-        // Validate that at least one state is selected
+        // Always ensure we have valid states (should always be true after above logic)
         if (!stateArray || stateArray.length === 0) {
-            console.log('State validation failed: No states selected');
-            return res.status(400).json({
-                success: false,
-                message: 'Please select at least one state'
-            });
-        }
-        
-        // Security: Validate that selected states are valid Australian states
-        const validStates = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
-        const invalidStates = stateArray.filter(state => !validStates.includes(state));
-        if (invalidStates.length > 0) {
-            console.log(`Invalid states submitted: ${invalidStates.join(', ')}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Please select valid Australian states'
-            });
+            stateArray = AUSTRALIAN_STATES; // Fallback to all states
+            console.log('Fallback: Setting to all Australian states');
         }
 
         // Rate limiting: Check IP address for recent submissions

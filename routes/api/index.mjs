@@ -1,5 +1,5 @@
 import express from 'express';
-import { applySecurity } from '../../middleware/security.mjs';
+import { applyApiSecurity } from '../../middleware/security.mjs';
 import sponsorApiRoutes from './sponsors.mjs';
 import debugApiRoutes from './debug.mjs';
 import * as maintenanceController from '../../controllers/maintenance.controller.mjs';
@@ -7,7 +7,7 @@ import * as maintenanceController from '../../controllers/maintenance.controller
 const router = express.Router();
 
 // Apply centralized API security to all routes
-router.use(applySecurity);
+router.use(applyApiSecurity);
 
 // Register API sub-routes
 router.use('/sponsors', sponsorApiRoutes);

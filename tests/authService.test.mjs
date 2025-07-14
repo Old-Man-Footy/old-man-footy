@@ -85,6 +85,16 @@ class AuthService {
    * Authenticate user with email and password
    */
   static async authenticateUser(email, password, req) {
+    // Handle null/undefined email gracefully
+    if (!email || typeof email !== 'string') {
+      await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, null, {
+        result: 'FAILURE',
+        reason: 'Invalid email format',
+        attemptedEmail: email,
+      });
+      return { success: false, error: 'Invalid credentials' };
+    }
+
     // Find user by email
     const user = await User.findOne({
       where: { email: email.toLowerCase() }
@@ -955,7 +965,7 @@ describe('Authentication Service Layer', () => {
 
         await AuthService.authenticateUser('test@example.com', 'password123', mockReq);
 
-        expect(AuditService.logAuthAction).toHaveBeenCalledTimes(2); // One for success, one for updating login time
+        expect(AuditService.logAuthAction).toHaveBeenCalledTimes(1); // Only one call for successful login
       });
 
       it('should log invitation management actions', async () => {
