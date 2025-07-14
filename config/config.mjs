@@ -126,7 +126,7 @@ export const getCurrentConfig = () => {
     // Email Settings
     email: {
       serviceUser: getEnvVar('EMAIL_USER', null, false),
-      servicePassword: getEnvVar('EMAIL_PASS', null, false),
+      servicePassword: getEnvVar('EMAIL_PASSWORD', null, false),
       serviceFrom: getEnvVar('EMAIL_FROM', null, false),
       serviceApiKey: getEnvVar('EMAIL_API_KEY', null, false)
     },

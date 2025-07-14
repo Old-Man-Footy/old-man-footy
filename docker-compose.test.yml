@@ -12,7 +12,7 @@ services:
       - NODE_ENV=test
       - SESSION_SECRET=${SESSION_SECRET}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
-      - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_FROM=noreply@oldmanfooty.au
       - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
