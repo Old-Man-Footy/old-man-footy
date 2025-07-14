@@ -3,9 +3,13 @@ import { body } from 'express-validator';
 import * as sponsorController from '../controllers/sponsor.controller.mjs';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
 import { sponsorUpload, handleUploadError } from '../middleware/upload.mjs';
+import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
+
+// Apply centralized security to all routes
+router.use(applySecurity);
 
 // Validation middleware for sponsor creation and updates
 const validateSponsor = [
@@ -15,7 +19,15 @@ const validateSponsor = [
     body('state').optional().isIn(AUSTRALIAN_STATES).withMessage('Invalid state selection'),
     body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
     body('contactPerson').optional().trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
-    body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
+    body('contactEmail').optional().custom((email) => {
+        if (email && email.trim()) {
+            const result = validateSecureEmail(email);
+            if (!result.isValid) {
+                throw new Error(result.errors[0]);
+            }
+        }
+        return true;
+    }),
     body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
     body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),

@@ -9,10 +9,14 @@ import express from 'express';
 import multer from 'multer';
 import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { playerEmail } from '../middleware/validation.mjs';
 import * as clubPlayerController from '../controllers/clubPlayer.controller.mjs';
 
 const router = express.Router();
+
+// Apply centralized security to all routes
+router.use(applySecurity);
 
 // Configure multer for CSV file uploads
 const upload = multer({ 

@@ -1,8 +1,12 @@
 import express from 'express';
 import { User } from '../../models/index.mjs';
 import bcrypt from 'bcryptjs';
+import { applyApiSecurity } from '../../middleware/security.mjs';
 
 const router = express.Router();
+
+// Apply centralized API security to all routes
+router.use(applyApiSecurity);
 
 /**
  * DEBUG ENDPOINT: Check user data and password verification

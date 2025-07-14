@@ -2,10 +2,14 @@ import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
 import { clubUpload, handleUploadError } from '../middleware/upload.mjs';
+import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as clubController from '../controllers/club.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
+
+// Apply centralized security to all routes
+router.use(applySecurity);
 
 // Club management (authenticated delegates only) - MUST come before /:id route
 router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
@@ -15,6 +19,15 @@ router.post('/create', ensureAuthenticated, [
     body('clubName').isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
     body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
     body('location').isLength({ min: 2, max: 100 }).withMessage('Location must be between 2 and 100 characters'),
+    body('contactEmail').custom((email) => {
+        if (email && email.trim()) {
+            const result = validateSecureEmail(email);
+            if (!result.isValid) {
+                throw new Error(result.errors[0]);
+            }
+        }
+        return true;
+    }),
     body('description').optional().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
 ], clubController.createClub);
 
@@ -31,7 +44,15 @@ router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
     body('clubName').optional().isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
     body('state').optional().isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
-    body('contactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid email address required'),
+    body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
+        if (email && email.trim()) {
+            const result = validateSecureEmail(email);
+            if (!result.isValid) {
+                throw new Error(result.errors[0]);
+            }
+        }
+        return true;
+    }),
     body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
     body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),

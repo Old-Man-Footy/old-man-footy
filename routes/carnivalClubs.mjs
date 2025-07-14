@@ -1,9 +1,13 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { applySecurity } from '../middleware/security.mjs';
 import * as carnivalClubController from '../controllers/carnivalClub.controller.mjs';
 
 const router = express.Router();
+
+// Apply centralized security to all routes
+router.use(applySecurity);
 
 // Carnival attendees management routes (for carnival organizers)
 // View attendees for a carnival

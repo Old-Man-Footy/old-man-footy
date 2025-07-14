@@ -10,9 +10,10 @@ import connectSessionSequelize from 'connect-session-sequelize';
 import flash from 'connect-flash';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import helmet from 'helmet';
 import expressLayouts from 'express-ejs-layouts';
 import methodOverride from 'method-override';
+// Import centralized security middleware
+import { applySecurity } from './middleware/security.mjs';
 // MySideline service will be imported dynamically after configuration is loaded
 import { sequelize } from './models/index.mjs';
 import { setupSessionAuth, loadSessionUser } from './middleware/auth.mjs';
@@ -26,17 +27,8 @@ const app = express();
 // Configure session store with proper ES Module import
 const SequelizeStore = connectSessionSequelize(session.Store);
 
-// Security middleware
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
-            imgSrc: ["'self'", "data:", "https:"],
-        },
-    },
-}));
+// Apply centralized security middleware (replaces individual helmet config)
+app.use(applySecurity);
 
 // View engine setup
 app.set('view engine', 'ejs');

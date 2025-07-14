@@ -9,9 +9,13 @@ import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
 import { clubUpload, carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
+import { applyAdminSecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as adminController from '../controllers/admin.controller.mjs';
 
 const router = express.Router();
+
+// Apply centralized admin security to all routes
+router.use(applyAdminSecurity);
 
 // Apply admin authentication to all routes
 router.use(ensureAuthenticated);
@@ -29,7 +33,7 @@ router.get('/reports', adminController.generateReport);
 router.get('/users', adminController.getUserManagement);
 router.get('/users/:id/edit', adminController.showEditUser);
 
-// User update validation
+// User update validation using centralized security
 const userUpdateValidation = [
     body('firstName')
         .trim()
@@ -39,10 +43,13 @@ const userUpdateValidation = [
         .trim()
         .isLength({ min: 2, max: 50 })
         .withMessage('Last name must be between 2 and 50 characters'),
-    body('email')
-        .isEmail()
-        .normalizeEmail()
-        .withMessage('Please provide a valid email address')
+    body('email').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    })
 ];
 
 router.post('/users/:id/update', userUpdateValidation, adminController.updateUser);
@@ -56,7 +63,7 @@ router.post('/users/:id/delete', adminController.deleteUser);
 router.get('/clubs', adminController.getClubManagement);
 router.get('/clubs/:id/edit', adminController.showEditClub);
 
-// Club update validation
+// Club update validation using centralized security
 const clubUpdateValidation = [
     body('clubName')
         .trim()
@@ -66,34 +73,37 @@ const clubUpdateValidation = [
         .trim()
         .isLength({ min: 2, max: 3 })
         .withMessage('State is required'),
-    body('contactEmail')
-        .optional({ nullable: true, checkFalsy: true })
-        .isEmail()
-        .normalizeEmail()
-        .withMessage('Please provide a valid contact email')
+    body('contactEmail').custom((email) => {
+        if (email && email.trim()) {
+            const result = validateSecureEmail(email);
+            if (!result.isValid) {
+                throw new Error(result.errors[0]);
+            }
+        }
+        return true;
+    }),
+    body('contactPhone')
+        .optional()
+        .isLength({ max: 20 })
+        .withMessage('Contact phone must be 20 characters or less')
 ];
 
-// Use clubUpload for full club management (logos + gallery + banners)
-// OR logoUpload for logo-only updates - depending on admin UI needs
-router.post('/clubs/:id/update', 
-    clubUpload,  // Allows multiple file types for comprehensive club updates
+router.post('/clubs/:id/update',
+    clubUpload,
     handleUploadError,
-    clubUpdateValidation, 
+    clubUpdateValidation,
     adminController.updateClub
 );
-router.post('/clubs/:id/toggle-status', adminController.toggleClubStatus);
-router.post('/clubs/:id/toggle-visibility', adminController.toggleClubVisibility);
+router.post('/clubs/:id/delete', adminController.deleteClub);
 
 /**
  * Carnival Management Routes
  */
 router.get('/carnivals', adminController.getCarnivalManagement);
 router.get('/carnivals/:id/edit', adminController.showEditCarnival);
-router.get('/carnivals/:id/players', adminController.showCarnivalPlayers);
-router.get('/carnivals/:id/claim', adminController.showClaimCarnivalForm);
 router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
 
-// Carnival update validation
+// Carnival update validation using centralized security
 const carnivalUpdateValidation = [
     body('title')
         .trim()
@@ -110,10 +120,13 @@ const carnivalUpdateValidation = [
         .trim()
         .isLength({ min: 2, max: 100 })
         .withMessage('Contact name must be between 2 and 100 characters'),
-    body('contactEmail')
-        .isEmail()
-        .normalizeEmail()
-        .withMessage('Please provide a valid contact email')
+    body('contactEmail').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    })
 ];
 
 router.post('/carnivals/:id/update',
@@ -122,13 +135,13 @@ router.post('/carnivals/:id/update',
     carnivalUpdateValidation,
     adminController.updateCarnival
 );
-router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus);
+router.post('/carnivals/:id/delete', adminController.deleteCarnival);
 
 /**
- * Audit Log Management Routes
+ * Sponsor Management Routes
  */
-router.get('/audit-logs', adminController.getAuditLogs);
-router.get('/audit-logs/export', adminController.exportAuditLogs);
-router.get('/audit-logs/statistics', adminController.getAuditStatistics);
+router.get('/sponsors', adminController.getSponsorManagement);
+router.get('/sponsors/:id/edit', adminController.showEditSponsor);
+router.post('/sponsors/:id/delete', adminController.deleteSponsor);
 
 export default router;
