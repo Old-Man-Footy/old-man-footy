@@ -7,7 +7,6 @@ setEnvironmentVariables();
 import express from 'express';
 import session from 'express-session';
 import connectSessionSequelize from 'connect-session-sequelize';
-import passport from './config/passport.mjs';
 import flash from 'connect-flash';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -16,6 +15,7 @@ import expressLayouts from 'express-ejs-layouts';
 import methodOverride from 'method-override';
 // MySideline service will be imported dynamically after configuration is loaded
 import { sequelize } from './models/index.mjs';
+import { setupSessionAuth, loadSessionUser } from './middleware/auth.mjs';
 
 // ES Module equivalents of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -85,9 +85,9 @@ app.use(session({
     }
 }));
 
-// Passport initialization
-app.use(passport.initialize());
-app.use(passport.session());
+// Session-based authentication middleware (replaces Passport)
+app.use(setupSessionAuth);
+app.use(loadSessionUser);
 
 // Flash messages
 app.use(flash());

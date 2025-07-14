@@ -28,7 +28,7 @@ async function globalSetup() {
     
     console.log('✅ Test database initialized and schema synced');
     
-    // Create test data
+    // Create test data using consistent authentication approach
     await createTestData();
     console.log('✅ Test data created');
     
@@ -44,17 +44,17 @@ async function globalSetup() {
 }
 
 /**
- * Create essential test data
+ * Create essential test data using the same approach as production
  */
 async function createTestData() {
   const { User, Club, Carnival, Sponsor } = await import('../../models/index.mjs');
   
-  // Create test admin user
+  // Create test admin user - using plain password that will be hashed by User model
   const adminUser = await User.create({
     email: 'admin@test.com',
     firstName: 'Test',
     lastName: 'Admin',
-    passwordHash: 'admin123', // Will be hashed by model hook
+    passwordHash: 'admin123', // Plain password - User model's beforeSave hook will hash it with bcryptjs
     isAdmin: true,
     isActive: true
   });
@@ -72,12 +72,12 @@ async function createTestData() {
     isPubliclyListed: true
   });
   
-  // Create test delegate user
+  // Create test delegate user - using plain password that will be hashed by User model
   const delegateUser = await User.create({
     email: 'delegate@test.com',
     firstName: 'Test',
     lastName: 'Delegate',
-    passwordHash: 'delegate123',
+    passwordHash: 'delegate123', // Plain password - User model's beforeSave hook will hash it with bcryptjs
     clubId: testClub.id,
     isPrimaryDelegate: true,
     isActive: true
@@ -96,7 +96,7 @@ async function createTestData() {
     feesDescription: 'Test fees: $100 per team',
     isActive: true,
     isManuallyEntered: true,
-    createdBy: adminUser.id
+    createdByUserId: adminUser.id
   });
   
   // Create test sponsor

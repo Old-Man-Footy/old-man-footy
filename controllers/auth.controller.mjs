@@ -7,7 +7,7 @@
 
 import { User, Club } from '../models/index.mjs';
 import { validationResult } from 'express-validator';
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs'; // Fixed: Use bcryptjs to match User model
 import crypto from 'crypto';
 import emailService from '../services/emailService.mjs';
 import AuditService from '../services/auditService.mjs';
@@ -33,8 +33,18 @@ const showLoginForm = (req, res) => {
  * @param {Function} next - Express next middleware function
  */
 const loginUser = async (req, res, next) => {
+  const DEBUG_AUTH = process.env.NODE_ENV === 'test';
+  
+  if (DEBUG_AUTH) {
+    console.log(`[AUTH CONTROLLER DEBUG] Login attempt for email: ${req.body.email}`);
+  }
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    if (DEBUG_AUTH) {
+      console.log(`[AUTH CONTROLLER DEBUG] Validation errors:`, errors.array());
+    }
+    
     // Log failed login attempt due to validation
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, null, {
       result: 'FAILURE',
@@ -48,13 +58,31 @@ const loginUser = async (req, res, next) => {
 
   const { email, password } = req.body;
 
+  if (DEBUG_AUTH) {
+    console.log(`[AUTH CONTROLLER DEBUG] Looking up user with email: ${email.toLowerCase()}`);
+  }
+
   // Find user by email
   const user = await User.findOne({
     where: { email: email.toLowerCase() },
     include: [{ model: Club, as: 'club' }],
   });
 
+  if (DEBUG_AUTH) {
+    console.log(`[AUTH CONTROLLER DEBUG] User lookup result:`, {
+      userFound: !!user,
+      isActive: user?.isActive,
+      email: user?.email,
+      passwordHashLength: user?.passwordHash?.length,
+      passwordHashPrefix: user?.passwordHash?.substring(0, 10)
+    });
+  }
+
   if (!user || !user.isActive) {
+    if (DEBUG_AUTH) {
+      console.log(`[AUTH CONTROLLER DEBUG] Authentication failed: ${user ? 'User inactive' : 'User not found'}`);
+    }
+    
     // Log failed login attempt - user not found or inactive
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, null, {
       result: 'FAILURE',
@@ -66,9 +94,22 @@ const loginUser = async (req, res, next) => {
     return res.redirect('/auth/login');
   }
 
+  if (DEBUG_AUTH) {
+    console.log(`[AUTH CONTROLLER DEBUG] Starting password comparison...`);
+  }
+
   // Check password
-  const isMatch = await bcrypt.compare(password, user.passwordHash);
+  const isMatch = await bcryptjs.compare(password, user.passwordHash);
+  
+  if (DEBUG_AUTH) {
+    console.log(`[AUTH CONTROLLER DEBUG] Password comparison result: ${isMatch}`);
+  }
+  
   if (!isMatch) {
+    if (DEBUG_AUTH) {
+      console.log(`[AUTH CONTROLLER DEBUG] Authentication failed: Password mismatch`);
+    }
+    
     // Log failed login attempt - wrong password
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, user, {
       result: 'FAILURE',
@@ -79,6 +120,10 @@ const loginUser = async (req, res, next) => {
     return res.redirect('/auth/login');
   }
 
+  if (DEBUG_AUTH) {
+    console.log(`[AUTH CONTROLLER DEBUG] Authentication successful, updating last login...`);
+  }
+
   // Update last login timestamp
   await user.update({ lastLoginAt: new Date() });
 
@@ -87,11 +132,25 @@ const loginUser = async (req, res, next) => {
     result: 'SUCCESS',
   });
 
+  if (DEBUG_AUTH) {
+    console.log(`[AUTH CONTROLLER DEBUG] Calling req.login() with user ID: ${user.id}`);
+  }
+
   req.login(user, (err) => {
     if (err) {
-      console.error('Login error:', err);
+      if (DEBUG_AUTH) {
+        console.log(`[AUTH CONTROLLER DEBUG] req.login() error:`, err);
+      }
+      // Only log errors in non-test environments
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Login error:', err);
+      }
       req.flash('error_msg', 'Login failed. Please try again.');
       return res.redirect('/auth/login');
+    }
+    
+    if (DEBUG_AUTH) {
+      console.log(`[AUTH CONTROLLER DEBUG] req.login() successful, redirecting to dashboard`);
     }
     return res.redirect('/dashboard');
   });
@@ -258,7 +317,7 @@ const acceptInvitation = async (req, res) => {
 
   // Hash password and activate user
   const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+  const hashedPassword = await bcryptjs.hash(req.body.password, saltRounds);
 
   const oldValues = {
     firstName: invitedUser.firstName,
@@ -303,7 +362,10 @@ const logoutUser = (req, res) => {
 
   req.logout(async (err) => {
     if (err) {
-      console.error('Error during logout:', err);
+      // Only log errors in non-test environments
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Error during logout:', err);
+      }
       req.flash('error_msg', 'An error occurred during logout.');
       return res.redirect('/dashboard');
     }
@@ -317,7 +379,10 @@ const logoutUser = (req, res) => {
         metadata: { userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown' },
       });
     } catch (auditError) {
-      console.error('Failed to log logout audit:', auditError);
+      // Only log audit errors in non-test environments
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Failed to log logout audit:', auditError);
+      }
     }
 
     req.flash('success_msg', 'You have been logged out successfully.');

@@ -95,33 +95,25 @@ export default defineConfig({
     // },
   ],
   
-  // Run your local dev server before starting the tests
+  // Use existing server instead of starting our own
+  // Comment out webServer config to use external server
   webServer: {
-    command: 'npm run dev',
+    command: 'npm start',
     url: 'http://localhost:3050',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 120 * 1000,
     env: {
-      NODE_ENV: 'test',
-      PORT: '3050',
-      // Use test database for E2E tests
-      DATABASE_URL: 'sqlite:./data/test-old-man-footy.db',
-      // Disable features that might interfere with tests
-      FEATURE_MYSIDELINE_SYNC: 'false',
-      FEATURE_MAINTENANCE_MODE: 'false',
-      FEATURE_COMING_SOON_MODE: 'false',
-      // Test-specific settings
-      SESSION_SECRET: 'test-session-secret-for-e2e-tests-min-32-chars',
-      BCRYPT_ROUNDS: '1'
+      NODE_ENV: 'development',
+      PORT: '3050'
     }
   },
   
-  // Test timeout (increased for debugging)
-  timeout: 120 * 1000,
+  // Test timeout
+  timeout: 30 * 1000,
   
-  // Expect timeout (increased for debugging)
+  // Expect timeout
   expect: {
-    timeout: 20 * 1000
+    timeout: 5 * 1000
   },
   
   // Output directory
