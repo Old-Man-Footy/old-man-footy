@@ -202,7 +202,7 @@ export const sanitizeInput = (req, res, next) => {
   // Sanitize request body
   if (req.body && typeof req.body === 'object') {
     for (const key in req.body) {
-      if (req.body.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
         try {
           req.body[key] = sanitizeString(req.body[key]);
           validateInputSecurity(req.body[key]);
@@ -221,7 +221,7 @@ export const sanitizeInput = (req, res, next) => {
   // Sanitize query parameters
   if (req.query && typeof req.query === 'object') {
     for (const key in req.query) {
-      if (req.query.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(req.query, key)) {
         try {
           req.query[key] = sanitizeString(req.query[key]);
           validateInputSecurity(req.query[key]);
