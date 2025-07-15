@@ -133,11 +133,74 @@ class BasicSeeder {
             );
 
             const carnival = await Carnival.create({
-                ...carnivalData,
+                // Core carnival fields
+                title: carnivalData.title,
+                date: carnivalData.date,
+                endDate: carnivalData.endDate,
+                state: carnivalData.state,
+                
+                // Location fields - structured address
+                locationAddress: carnivalData.locationAddress,
+                locationSuburb: carnivalData.locationSuburb,
+                locationPostcode: carnivalData.locationPostcode,
+                locationCountry: carnivalData.locationCountry,
+                locationAddressLine1: carnivalData.locationAddressLine1,
+                locationAddressLine2: carnivalData.locationAddressLine2,
+                venueName: carnivalData.venueName,
+                locationLatitude: carnivalData.locationLatitude,
+                locationLongitude: carnivalData.locationLongitude,
+                
+                // Contact and organization fields
+                organiserContactName: carnivalData.organiserContactName,
+                organiserContactEmail: carnivalData.organiserContactEmail,
+                organiserContactPhone: carnivalData.organiserContactPhone,
+                
+                // Event details
+                scheduleDetails: carnivalData.scheduleDetails,
+                registrationLink: carnivalData.registrationLink,
+                feesDescription: carnivalData.feesDescription,
+                callForVolunteers: carnivalData.callForVolunteers,
+                
+                // Social media and branding
+                socialMediaFacebook: carnivalData.socialMediaFacebook,
+                socialMediaInstagram: carnivalData.socialMediaInstagram,
+                socialMediaTwitter: carnivalData.socialMediaTwitter,
+                socialMediaWebsite: carnivalData.socialMediaWebsite,
+                clubLogoURL: carnivalData.clubLogoURL,
+                promotionalImageURL: carnivalData.promotionalImageURL,
+                additionalImages: carnivalData.additionalImages || [],
+                
+                // Draw and documents
+                drawFiles: carnivalData.drawFiles || [],
+                drawFileURL: carnivalData.drawFileURL,
+                drawFileName: carnivalData.drawFileName,
+                drawTitle: carnivalData.drawTitle,
+                drawDescription: carnivalData.drawDescription,
+                
+                // Registration management
+                maxTeams: carnivalData.maxTeams,
+                currentRegistrations: carnivalData.currentRegistrations || 0,
+                isRegistrationOpen: carnivalData.isRegistrationOpen !== false, // Default true
+                registrationDeadline: carnivalData.registrationDeadline,
+                
+                // Admin and metadata
+                adminNotes: carnivalData.adminNotes,
+                createdByUserId: creator ? creator.id : null,
+                clubId: randomClub ? randomClub.id : null, // Always assign a valid host club
+                
+                // MySideline fields (for manual entries these are null/false)
+                mySidelineTitle: null,
+                mySidelineId: null,
+                mySidelineAddress: null,
+                mySidelineDate: null,
                 isManuallyEntered: true,
-                createdBy: creator ? creator.id : null,
+                lastMySidelineSync: null,
+                claimedAt: null,
+                
+                // Status
                 isActive: true,
-                clubId: randomClub.id // Always assign a valid host club
+                createdAt: new Date(),
+                updatedAt: new Date()
             });
             
             this.createdCarnivals.push(carnival);

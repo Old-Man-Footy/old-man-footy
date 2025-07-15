@@ -134,7 +134,7 @@ export const getCurrentConfig = () => {
     // MySideline Integration
     mysideline: {
       url: getEnvVar('MYSIDELINE_URL', 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league'),
-      eventUrl: getEnvVar('MYSIDELINE_EVENT_URL', 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&criteria='),
+      eventUrl: getEnvVar('MYSIDELINE_EVENT_URL', 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria='),
       syncEnabled: getBooleanEnv('MYSIDELINE_SYNC_ENABLED', env !== 'test'),
       useMock: getBooleanEnv('MYSIDELINE_USE_MOCK', env === 'test'),
       enableScraping: getBooleanEnv('MYSIDELINE_ENABLE_SCRAPING', env !== 'test'),

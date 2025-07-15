@@ -179,32 +179,78 @@ class MySidelineDataService {
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
+                        // Core event fields
+                        title: eventData.title,
                         date: eventData.date,
-                        googleMapsUrl: eventData.googleMapsUrl,
-                        isManuallyEntered: false,
-                        lastMySidelineSync: lastMySidelineSync,
-                        locationAddress: eventData.locationAddress,
-                        locationAddressLine1: eventData.locationAddressLine1,
-                        locationAddressLine2: eventData.locationAddressLine2,
-                        locationSuburb: eventData.locationSuburb,
-                        locationPostcode: eventData.locationPostcode,
-                        locationLatitude: eventData.locationLatitude,
-                        locationLongitude: eventData.locationLongitude,
-                        locationCountry: eventData.locationCountry || 'Australia',
+                        endDate: eventData.endDate || null,
+                        state: eventData.state,
+                        
+                        // MySideline-specific tracking fields
                         mySidelineId: eventData.mySidelineId,
                         mySidelineTitle: eventData.mySidelineTitle,
                         mySidelineAddress: eventData.mySidelineAddress,
                         mySidelineDate: eventData.mySidelineDate,
-                        organiserContactEmail: eventData.organiserContactEmail,
+                        
+                        // Location fields - structured address
+                        locationAddress: eventData.locationAddress,
+                        locationSuburb: eventData.locationSuburb,
+                        locationPostcode: eventData.locationPostcode,
+                        locationCountry: eventData.locationCountry || 'Australia',
+                        locationAddressLine1: eventData.locationAddressLine1,
+                        locationAddressLine2: eventData.locationAddressLine2,
+                        venueName: eventData.venueName,
+                        locationLatitude: eventData.locationLatitude,
+                        locationLongitude: eventData.locationLongitude,
+                        
+                        // Contact fields
                         organiserContactName: eventData.organiserContactName,
+                        organiserContactEmail: eventData.organiserContactEmail,
                         organiserContactPhone: eventData.organiserContactPhone,
-                        registrationLink: eventData.registrationLink,
+                        
+                        // Event details
                         scheduleDetails: eventData.scheduleDetails,
+                        registrationLink: eventData.registrationLink,
+                        feesDescription: eventData.feesDescription,
+                        callForVolunteers: eventData.callForVolunteers,
+                        
+                        // Social media fields
                         socialMediaFacebook: eventData.socialMediaFacebook,
+                        socialMediaInstagram: eventData.socialMediaInstagram,
+                        socialMediaTwitter: eventData.socialMediaTwitter,
                         socialMediaWebsite: eventData.socialMediaWebsite,
+                        
+                        // Media and branding
+                        clubLogoURL: eventData.clubLogoURL,
+                        promotionalImageURL: eventData.promotionalImageURL,
+                        additionalImages: eventData.additionalImages || [],
+                        
+                        // Draw and documents
+                        drawFiles: eventData.drawFiles || [],
+                        drawFileURL: eventData.drawFileURL,
+                        drawFileName: eventData.drawFileName,
+                        drawTitle: eventData.drawTitle,
+                        drawDescription: eventData.drawDescription,
+                        
+                        // Registration management
+                        maxTeams: eventData.maxTeams,
+                        currentRegistrations: 0, // Start with 0 registrations
+                        isRegistrationOpen: eventData.isRegistrationOpen !== false, // Default true
+                        registrationDeadline: eventData.registrationDeadline,
+                        
+                        // Admin fields
+                        adminNotes: eventData.adminNotes,
+                        createdByUserId: null, // MySideline events have no initial creator
+                        clubId: eventData.clubId || null, // May be null for unclaimed events
+                        claimedAt: null, // Not claimed initially
+                        
+                        // MySideline metadata
+                        isManuallyEntered: false,
+                        lastMySidelineSync: lastMySidelineSync,
                         source: eventData.source,
-                        state: eventData.state,
-                        title: eventData.title,
+                        googleMapsUrl: eventData.googleMapsUrl,
+                        
+                        // Status
+                        isActive: true
                     });
 
                     // If the event is more than 7 days in the future, set registration open

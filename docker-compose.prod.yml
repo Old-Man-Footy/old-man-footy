@@ -23,7 +23,13 @@ services:
       - PORT=3060
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
       - FEATURE_COMING_SOON_MODE=${FEATURE_COMING_SOON_MODE:-false}
+      - MYSIDELINE_ENABLE_SCRAPING=${MYSIDELINE_ENABLE_SCRAPING:-true}
+      - MYSIDELINE_REQUEST_TIMEOUT=${MYSIDELINE_REQUEST_TIMEOUT:-10000}
+      - MYSIDELINE_RETRY_ATTEMPTS=${MYSIDELINE_RETRY_ATTEMPTS:-3}
       - MYSIDELINE_SYNC_ENABLED=${MYSIDELINE_SYNC_ENABLED:-true}
+      - MYSIDELINE_USE_MOCK=${MYSIDELINE_USE_MOCK:-false}
+      - MYSIDELINE_URL=${MYSIDELINE_URL:-https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league}
+      - MYSIDELINE_EVENT_URL=${MYSIDELINE_EVENT_URL:-https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=}
     volumes:
       # Persist database and uploads to host directories only
       - /volume2/docker/old-man-footy-prod/data:/app/data

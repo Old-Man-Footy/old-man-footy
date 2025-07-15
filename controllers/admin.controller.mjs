@@ -1635,6 +1635,201 @@ const exportAuditLogsHandler = async (req, res) => {
 
 };
 
+/**
+ * Get Sponsor Management page
+ */
+const getSponsorManagementHandler = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const whereConditions = {};
+    const filters = {
+        search: req.query.search || '',
+        state: req.query.state || '',
+        status: req.query.status || '',
+        businessType: req.query.businessType || ''
+    };
+
+    if (filters.search) {
+        whereConditions[Op.or] = [
+            { sponsorName: { [Op.like]: `%${filters.search}%` } },
+            { businessType: { [Op.like]: `%${filters.search}%` } },
+            { location: { [Op.like]: `%${filters.search}%` } }
+        ];
+    }
+
+    if (filters.state) {
+        whereConditions.state = filters.state;
+    }
+
+    if (filters.businessType) {
+        whereConditions.businessType = { [Op.like]: `%${filters.businessType}%` };
+    }
+
+    if (filters.status === 'active') {
+        whereConditions.isActive = true;
+    } else if (filters.status === 'inactive') {
+        whereConditions.isActive = false;
+    }
+
+    const { count, rows: sponsors } = await Sponsor.findAndCountAll({
+        where: whereConditions,
+        include: [
+            {
+                model: Club,
+                as: 'clubs',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'clubName', 'state'],
+                through: { attributes: [] }
+            }
+        ],
+        order: [['sponsorName', 'ASC']],
+        limit,
+        offset
+    });
+
+    // Add club count to each sponsor
+    const sponsorsWithStats = sponsors.map(sponsor => {
+        const sponsorData = sponsor.toJSON();
+        sponsorData.clubCount = sponsorData.clubs ? sponsorData.clubs.length : 0;
+        return sponsorData;
+    });
+
+    const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        hasNext: page < Math.ceil(count / limit),
+        hasPrev: page > 1
+    };
+
+    return res.render('admin/sponsors', {
+        title: 'Sponsor Management - Admin Dashboard',
+        sponsors: sponsorsWithStats,
+        filters,
+        pagination,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Show Edit Sponsor form
+ */
+const showEditSponsorHandler = async (req, res) => {
+    const sponsorId = req.params.id;
+    
+    const sponsor = await Sponsor.findByPk(sponsorId, {
+        include: [
+            {
+                model: Club,
+                as: 'clubs',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'clubName', 'state'],
+                through: { attributes: [] }
+            }
+        ]
+    });
+
+    if (!sponsor) {
+        req.flash('error_msg', 'Sponsor not found');
+        return res.redirect('/admin/sponsors');
+    }
+
+    // Get all active clubs for association options
+    const allClubs = await Club.findAll({
+        where: { isActive: true },
+        order: [['clubName', 'ASC']],
+        attributes: ['id', 'clubName', 'state']
+    });
+
+    return res.render('admin/edit-sponsor', {
+        title: `Edit ${sponsor.sponsorName} - Admin Dashboard`,
+        sponsor,
+        allClubs,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Delete Sponsor (deactivate)
+ */
+const deleteSponsorHandler = async (req, res) => {
+    const sponsorId = req.params.id;
+    
+    const sponsor = await Sponsor.findByPk(sponsorId, {
+        include: [
+            {
+                model: Club,
+                as: 'clubs',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'clubName']
+            }
+        ]
+    });
+
+    if (!sponsor) {
+        return res.json({ success: false, message: 'Sponsor not found' });
+    }
+
+    // Check if sponsor is already inactive
+    if (!sponsor.isActive) {
+        return res.json({ 
+            success: false, 
+            message: 'Sponsor is already deactivated' 
+        });
+    }
+
+    // Check if sponsor has active club associations
+    const activeClubCount = sponsor.clubs ? sponsor.clubs.length : 0;
+    let warningMessage = '';
+    if (activeClubCount > 0) {
+        warningMessage = ` Note: This sponsor is currently associated with ${activeClubCount} club(s). These relationships will be maintained but the sponsor will be hidden from public listings.`;
+    }
+
+    // Deactivate the sponsor (soft delete)
+    await sponsor.update({
+        isActive: false,
+        isPubliclyVisible: false,
+        updatedAt: new Date()
+    });
+
+    // Log sponsor deactivation
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.SPONSOR_DEACTIVATE,
+        req,
+        AuditService.ENTITIES.SPONSOR,
+        sponsorId,
+        {
+            oldValues: { 
+                isActive: true, 
+                isPubliclyVisible: sponsor.isPubliclyVisible 
+            },
+            newValues: { 
+                isActive: false, 
+                isPubliclyVisible: false 
+            },
+            targetSponsorId: sponsorId,
+            metadata: {
+                adminAction: 'Sponsor deactivation via admin interface',
+                targetSponsorName: sponsor.sponsorName,
+                activeClubAssociations: activeClubCount
+            }
+        }
+    );
+
+    console.log(`✅ Sponsor ${sponsor.sponsorName} has been deactivated by admin ${req.user.email}`);
+
+    return res.json({ 
+        success: true, 
+        message: `Sponsor "${sponsor.sponsorName}" has been deactivated successfully.${warningMessage}`,
+        action: 'deactivated'
+    });
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
     getAdminDashboardHandler,

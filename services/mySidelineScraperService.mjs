@@ -262,7 +262,7 @@ class MySidelineScraperService {
         }
 
         // Generate registration link using the top-level _id
-        const registrationLink = `https://profile.mysideline.com.au/register/clubsearch/?criteria=${item._id}&source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true`;
+        const registrationLink = `${MYSIDELINE_EVENT_LINK}${item._id}`;
 
         return {
             // Core event data
@@ -395,7 +395,7 @@ class MySidelineScraperService {
                     mySidelineAddress: `${template.locationSuffix} Sports Complex, ${state}`,
                     mySidelineDate: eventDate,
                     mySidelineId: 99000000 + mockEvents.length,
-                    registrationLink: `https://profile.mysideline.com.au/register/clubsearch/?criteria=99000${mockEvents.length}&source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true`,
+                    registrationLink: `${MYSIDELINE_EVENT_LINK}${item._id}99000${mockEvents.length}`,
                     organiserContactName: `${state} Rugby League Masters`,
                     organiserContactEmail: `masters@${state.toLowerCase()}rl.com.au`,
                     organiserContactPhone: `0${index + 2} ${Math.floor(Math.random() * 9000) + 1000} ${Math.floor(Math.random() * 9000) + 1000}`,

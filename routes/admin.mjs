@@ -101,7 +101,6 @@ router.post('/clubs/:id/delete', adminController.deactivateClub);
  */
 router.get('/carnivals', adminController.getCarnivalManagement);
 router.get('/carnivals/:id/edit', adminController.showEditCarnival);
-router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
 
 // Carnival update validation using centralized security
 const carnivalUpdateValidation = [
@@ -135,7 +134,16 @@ router.post('/carnivals/:id/update',
     carnivalUpdateValidation,
     adminController.updateCarnival
 );
-router.post('/carnivals/:id/delete', adminController.deleteCarnival);
+router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus);
+router.get('/carnivals/:id/claim', adminController.showClaimCarnivalForm);
+router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
+router.get('/carnivals/:id/players', adminController.showCarnivalPlayers);
+
+/**
+ * Additional Club Management Routes
+ */
+router.post('/clubs/:id/toggle-status', adminController.toggleClubStatus);
+router.post('/clubs/:id/toggle-visibility', adminController.toggleClubVisibility);
 
 /**
  * Sponsor Management Routes
@@ -143,5 +151,12 @@ router.post('/carnivals/:id/delete', adminController.deleteCarnival);
 router.get('/sponsors', adminController.getSponsorManagement);
 router.get('/sponsors/:id/edit', adminController.showEditSponsor);
 router.post('/sponsors/:id/delete', adminController.deleteSponsor);
+
+/**
+ * Audit Log Management Routes
+ */
+router.get('/audit-logs', adminController.getAuditLogs);
+router.get('/audit-logs/export', adminController.exportAuditLogs);
+router.get('/audit-logs/statistics', adminController.getAuditStatistics);
 
 export default router;
