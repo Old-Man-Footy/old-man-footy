@@ -364,6 +364,10 @@ function initializeMySidelineIntegration() {
         return; // Elements not found, exit gracefully
     }
 
+    // Get the MySideline event URL from the form's data attribute
+    const form = document.querySelector('form[data-mysideline-event-url]');
+    const mySidelineBaseUrl = form ? form.dataset.mysidelineEventUrl : '';
+
     /**
      * Generate MySideline registration URL from event ID
      * @param {string} eventId - The MySideline event ID
@@ -372,10 +376,10 @@ function initializeMySidelineIntegration() {
     function generateMySidelineUrl(eventId) {
         // Clean the event ID - remove any non-numeric characters
         const cleanId = eventId.replace(/\D/g, '');
-        if (!cleanId) return '';
+        if (!cleanId || !mySidelineBaseUrl) return '';
         
         // Generate the MySideline registration URL
-        return `${MYSIDELINE_EVENT_URL}${cleanId}`;
+        return `${mySidelineBaseUrl}${cleanId}`;
     }
 
     /**
