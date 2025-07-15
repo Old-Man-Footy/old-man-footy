@@ -36,12 +36,12 @@ if (carnival.locationSuburb || carnival.locationPostcode || carnival.locationLat
     // Use MySideline format: Street, Suburb State Postcode, Country
     const addressComponents = [];
     
-    // Add street address from legacy fields
-    if (carnival.locationAddressPart1) {
-        addressComponents.push(carnival.locationAddressPart1);
+    // Add structured address lines from MySideline
+    if (carnival.locationAddressLine1) {
+        addressComponents.push(carnival.locationAddressLine1.trim());
     }
-    if (carnival.locationAddressPart2) {
-        addressComponents.push(carnival.locationAddressPart2);
+    if (carnival.locationAddressLine2) {
+        addressComponents.push(carnival.locationAddressLine2.trim());
     }
     
     // Add suburb, state, postcode line
@@ -74,19 +74,8 @@ if (carnival.locationSuburb || carnival.locationPostcode || carnival.locationLat
         googleMapsUrl = `https://maps.google.com/?q=${carnival.locationLatitude},${carnival.locationLongitude}`;
     }
 } else {
-    // Fall back to legacy address structure
-    const legacyParts = [
-        carnival.locationAddressPart1,
-        carnival.locationAddressPart2,
-        carnival.locationAddressPart3,
-        carnival.locationAddressPart4
-    ].filter(part => part && part.trim().length > 0);
-    
-    if (legacyParts.length > 0) {
-        displayParts = legacyParts;
-        fullAddressForMaps = legacyParts.join(', ');
-        hasStructuredParts = true;
-    } else if (carnival.locationAddress && carnival.locationAddress.trim().length > 0) {
+    // Fall back to main locationAddress field only
+    if (carnival.locationAddress && carnival.locationAddress.trim().length > 0) {
         displayParts = [carnival.locationAddress.trim()];
         fullAddressForMaps = carnival.locationAddress.trim();
     }

@@ -217,10 +217,16 @@ class MySidelineScraperService {
         let suburb = null;
         let postcode = null;
         let country = 'Australia';
+        let addressLine1 = null;
+        let addressLine2 = null;
 
         if (item.venue && item.venue.address) {
             const addr = item.venue.address;
-            locationAddress = addr.formatted || '';
+            
+            // Extract structured address fields from MySideline
+            addressLine1 = addr.addressLine1 || null;
+            addressLine2 = addr.addressLine2 || null;            
+            locationAddress = addr.formatted || null;            
             state = addr.state || null;
             latitude = addr.lat || null;
             longitude = addr.lng || null;
@@ -231,10 +237,18 @@ class MySidelineScraperService {
             // Create Google Maps URL from coordinates
             if (addr.lat && addr.lng) {
                 googleMapsUrl = `https://maps.google.com/?q=${addr.lat},${addr.lng}`;
-            }
+            }            
+            else if (addr.formatted) {
+                // Fallback to formatted address if no coordinates
+                googleMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(addr.formatted)}`;
+            }            
         } else if (item.contact && item.contact.address) {
             const addr = item.contact.address;
-            locationAddress = addr.formatted || '';
+            
+            // Extract structured address fields from MySideline
+            addressLine1 = addr.addressLine1 || null;
+            addressLine2 = addr.addressLine2 || null;
+            locationAddress = addr.formatted || null;
             state = addr.state || null;
             latitude = addr.lat || null;
             longitude = addr.lng || null;
@@ -244,6 +258,10 @@ class MySidelineScraperService {
             
             if (addr.lat && addr.lng) {
                 googleMapsUrl = `https://maps.google.com/?q=${addr.lat},${addr.lng}`;
+            }
+            else if (addr.formatted) {
+                // Fallback to formatted address if no coordinates
+                googleMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(addr.formatted)}`;
             }
         }
 
@@ -284,19 +302,15 @@ class MySidelineScraperService {
             isManuallyEntered: false,
             
             // MySideline-compatible address fields
+            locationAddressLine1: addressLine1,
+            locationAddressLine2: addressLine2,
             locationLatitude: latitude,
             locationLongitude: longitude,
             locationSuburb: suburb,
             locationPostcode: postcode,
-            locationCountry: country,
-            
-            // Legacy location fields for backward compatibility
-            locationAddressPart1: item.venue?.address?.addressLine1 || item.contact?.address?.addressLine1 || null,
-            locationAddressPart2: item.venue?.address?.addressLine2 || item.contact?.address?.addressLine2 || null,
-            locationAddressPart3: suburb, // Map suburb to Part3 for compatibility
-            locationAddressPart4: state
+            locationCountry: country
         };
-    }
+    }    
 
     /**
      * Clean and standardize event titles
@@ -395,10 +409,11 @@ class MySidelineScraperService {
                     isActive: true,
                     isMySidelineCard: true,
                     isManuallyEntered: false,
-                    locationAddressPart1: `${template.locationSuffix} Sports Complex`,
-                    locationAddressPart2: null,
-                    locationAddressPart3: template.locationSuffix,
-                    locationAddressPart4: state,
+                    locationLatitude: null,
+                    locationLongitude: null,
+                    locationSuburb: template.locationSuffix,
+                    locationPostcode: null,
+                    locationCountry: 'Australia',
                     googleMapsUrl: null
                 });
             });

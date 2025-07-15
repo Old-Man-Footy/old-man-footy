@@ -753,34 +753,6 @@ Carnival.init({
       this.setDataValue('locationAddress', value ? value.trim() : value);
     }
   },
-  locationAddressPart1: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    set(value) {
-      this.setDataValue('locationAddressPart1', value ? value.trim() : value);
-    }
-  },
-  locationAddressPart2: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    set(value) {
-      this.setDataValue('locationAddressPart2', value ? value.trim() : value);
-    }
-  },
-  locationAddressPart3: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    set(value) {
-      this.setDataValue('locationAddressPart3', value ? value.trim() : value);
-    }
-  },
-  locationAddressPart4: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    set(value) {
-      this.setDataValue('locationAddressPart4', value ? value.trim() : value);
-    }
-  },
   // MySideline-compatible address fields
   locationLatitude: {
     type: DataTypes.DECIMAL(10, 8),
@@ -815,6 +787,23 @@ Carnival.init({
     comment: 'Country for the event location',
     set(value) {
       this.setDataValue('locationCountry', value ? value.trim() : value);
+    }
+  },
+  // MySideline structured address line fields
+  locationAddressLine1: {
+    type: DataTypes.STRING(200),
+    allowNull: true,
+    comment: 'First line of structured address from MySideline (street address, venue name)',
+    set(value) {
+      this.setDataValue('locationAddressLine1', value ? value.trim() : value);
+    }
+  },
+  locationAddressLine2: {
+    type: DataTypes.STRING(200),
+    allowNull: true,
+    comment: 'Second line of structured address from MySideline (additional address info)',
+    set(value) {
+      this.setDataValue('locationAddressLine2', value ? value.trim() : value);
     }
   },
   organiserContactName: {

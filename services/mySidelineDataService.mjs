@@ -22,8 +22,7 @@ class MySidelineDataService {
         if (eventData.mySidelineId) {
             const match = await Carnival.findOne({ 
                 where: { 
-                    mySidelineId: eventData.mySidelineId,
-                    isManuallyEntered: false
+                    mySidelineId: eventData.mySidelineId
                 } 
             });
             
@@ -110,8 +109,18 @@ class MySidelineDataService {
                     // Update MySideline ID if we didn't have one before
                     if (!existingEvent.mySidelineId && eventData.mySidelineId) {
                         updateData.mySidelineId = eventData.mySidelineId;
+                        if (eventData.registrationLink) {
+                            // If we have a registration link, update it when updating MySidelineID
+                            updateData.registrationLink = eventData.registrationLink;
+                        }
                     }
                     // Update location fields independently
+                    if (!existingEvent.locationAddressLine1 && eventData.locationAddressLine1) {
+                        updateData.locationAddressLine1 = eventData.locationAddressLine1;
+                    }
+                    if (!existingEvent.locationAddressLine2 && eventData.locationAddressLine2) {
+                        updateData.locationAddressLine2 = eventData.locationAddressLine2;
+                    }
                     if (!existingEvent.locationAddress && eventData.locationAddress) {
                         updateData.locationAddress = eventData.locationAddress;
                     }
@@ -175,6 +184,8 @@ class MySidelineDataService {
                         isManuallyEntered: false,
                         lastMySidelineSync: lastMySidelineSync,
                         locationAddress: eventData.locationAddress,
+                        locationAddressLine1: eventData.locationAddressLine1,
+                        locationAddressLine2: eventData.locationAddressLine2,
                         locationSuburb: eventData.locationSuburb,
                         locationPostcode: eventData.locationPostcode,
                         locationLatitude: eventData.locationLatitude,
