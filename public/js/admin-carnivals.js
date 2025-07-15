@@ -167,6 +167,19 @@ function showToast(type, message) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Admin carnival management functionality loaded...');
     
+    // Initialize page styling
+    initializeAdminPageStyling();
+    
+    // Make file upload areas clickable
+    document.querySelectorAll('.file-upload-area').forEach(area => {
+        area.addEventListener('click', function() {
+            const input = this.querySelector('input[type="file"]');
+            if (input) {
+                input.click();
+            }
+        });
+    });
+    
     // Multi-day event functionality
     initializeMultiDayEventFunctionality();
     
@@ -222,6 +235,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Admin carnival management functionality initialized successfully');
 });
+
+/**
+ * Initialize page styling that was previously done with inline styles
+ */
+function initializeAdminPageStyling() {
+    // Handle end date container visibility based on data attribute
+    const endDateContainer = document.getElementById('endDateContainer');
+    if (endDateContainer) {
+        const hasEndDate = endDateContainer.dataset.hasEndDate === 'true';
+        if (!hasEndDate) {
+            endDateContainer.style.display = 'none';
+        }
+    }
+
+    // Style admin carnival logo preview images
+    const adminLogoPreviewImages = document.querySelectorAll('.admin-carnival-logo-preview');
+    adminLogoPreviewImages.forEach(img => {
+        img.style.height = '150px';
+        img.style.objectFit = 'contain';
+    });
+
+    // Style admin carnival promotional preview images
+    const adminPromoPreviewImages = document.querySelectorAll('.admin-carnival-promo-preview');
+    adminPromoPreviewImages.forEach(img => {
+        img.style.height = '150px';
+        img.style.objectFit = 'cover';
+    });
+
+    // Hide admin file input elements
+    const adminFileInputs = document.querySelectorAll('.admin-file-input-hidden');
+    adminFileInputs.forEach(input => {
+        input.style.display = 'none';
+    });
+}
 
 /**
  * Initialize multi-day event functionality for admin forms

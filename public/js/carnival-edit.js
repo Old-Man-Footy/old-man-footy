@@ -4,6 +4,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize page styling
+    initializePageStyling();
+    
     // Make file upload areas clickable
     document.querySelectorAll('.file-upload-area').forEach(area => {
         area.addEventListener('click', function() {
@@ -15,6 +18,47 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Multi-day event functionality
+    initializeMultiDayEventFunctionality();
+});
+
+/**
+ * Initialize page styling that was previously done with inline styles
+ */
+function initializePageStyling() {
+    // Handle end date container visibility based on data attribute
+    const endDateContainer = document.getElementById('endDateContainer');
+    if (endDateContainer) {
+        const hasEndDate = endDateContainer.dataset.hasEndDate === 'true';
+        if (!hasEndDate) {
+            endDateContainer.style.display = 'none';
+        }
+    }
+
+    // Style carnival logo preview images
+    const logoPreviewImages = document.querySelectorAll('.carnival-logo-preview');
+    logoPreviewImages.forEach(img => {
+        img.style.height = '150px';
+        img.style.objectFit = 'contain';
+    });
+
+    // Style carnival promotional preview images
+    const promoPreviewImages = document.querySelectorAll('.carnival-promo-preview');
+    promoPreviewImages.forEach(img => {
+        img.style.height = '150px';
+        img.style.objectFit = 'cover';
+    });
+
+    // Hide file input elements
+    const fileInputs = document.querySelectorAll('.file-input-hidden');
+    fileInputs.forEach(input => {
+        input.style.display = 'none';
+    });
+}
+
+/**
+ * Initialize multi-day event functionality
+ */
+function initializeMultiDayEventFunctionality() {
     const isMultiDayCheckbox = document.getElementById('isMultiDay');
     const endDateContainer = document.getElementById('endDateContainer');
     const endDateInput = document.getElementById('endDate');
@@ -84,4 +128,4 @@ document.addEventListener('DOMContentLoaded', function() {
             updateEndDateMin();
         }
     }
-});
+}

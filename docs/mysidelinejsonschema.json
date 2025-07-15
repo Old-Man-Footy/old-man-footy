@@ -1,0 +1,347 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "",
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "minLength": 1
+      },
+      "data": {
+        "type": "array",
+        "uniqueItems": true,
+        "minItems": 1,
+        "items": {
+          "required": [
+            "_id",
+            "name",
+            "ageLvl",
+            "teamInManyComps",
+            "regoOpen",
+            "entityType"
+          ],
+          "properties": {
+            "_id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "orgtree": {
+              "type": "object",
+              "properties": {
+                "club": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "_id",
+                    "name"
+                  ]
+                },
+                "association": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "_id",
+                    "name"
+                  ]
+                },
+                "region": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "_id",
+                    "name"
+                  ]
+                },
+                "state": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "_id",
+                    "name",
+                    "type"
+                  ]
+                },
+                "national": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "_id",
+                    "name"
+                  ]
+                }
+              },
+              "required": [
+                "club",
+                "association",
+                "region",
+                "state",
+                "national"
+              ]
+            },
+            "ageLvl": {
+              "type": "string",
+              "minLength": 1
+            },
+            "contact": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "meta": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            },
+            "competition": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "gender": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "venue": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "suburb": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "venueTimezone": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "_id",
+                        "name",
+                        "suburb",
+                        "venueTimezone"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "venue"
+                  ]
+                }
+              },
+              "required": [
+                "_id",
+                "name",
+                "gender",
+                "meta"
+              ]
+            },
+            "teamInManyComps": {
+              "type": "boolean"
+            },
+            "association": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "contact": {
+                  "type": "object",
+                  "properties": {
+                    "number": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "email": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "number",
+                    "email"
+                  ]
+                },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "akv": {
+                      "type": "object",
+                      "properties": {
+                        "businessId": {
+                          "type": "string"
+                        },
+                        "locationId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "businessId",
+                        "locationId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "akv"
+                  ]
+                }
+              },
+              "required": [
+                "_id",
+                "name",
+                "contact",
+                "meta"
+              ]
+            },
+            "venue": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "address": {
+                  "type": "object",
+                  "properties": {
+                    "formatted": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "lat": {
+                      "type": "number"
+                    },
+                    "lng": {
+                      "type": "number"
+                    },
+                    "addressLine1": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "addressLine2": {
+                      "type": "string"
+                    },
+                    "suburb": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "state": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "postcode": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "country": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "formatted",
+                    "lat",
+                    "lng",
+                    "addressLine1",
+                    "addressLine2",
+                    "suburb",
+                    "state",
+                    "postcode",
+                    "country"
+                  ]
+                }
+              },
+              "required": [
+                "_id",
+                "name",
+                "address"
+              ]
+            },
+            "regoOpen": {
+              "type": "boolean"
+            },
+            "entityType": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "required": [
+      "status",
+      "data"
+    ]
+  }

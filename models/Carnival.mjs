@@ -776,6 +776,42 @@ Carnival.init({
       this.setDataValue('locationAddressPart4', value ? value.trim() : value);
     }
   },
+  // MySideline-compatible address fields
+  locationLatitude: {
+    type: DataTypes.DECIMAL(10, 8),
+    allowNull: true,
+    comment: 'Latitude coordinate for the event location'
+  },
+  locationLongitude: {
+    type: DataTypes.DECIMAL(11, 8),
+    allowNull: true,
+    comment: 'Longitude coordinate for the event location'
+  },
+  locationSuburb: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    comment: 'Suburb/city name for the event location',
+    set(value) {
+      this.setDataValue('locationSuburb', value ? value.trim() : value);
+    }
+  },
+  locationPostcode: {
+    type: DataTypes.STRING(10),
+    allowNull: true,
+    comment: 'Postcode for the event location',
+    set(value) {
+      this.setDataValue('locationPostcode', value ? value.trim() : value);
+    }
+  },
+  locationCountry: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    defaultValue: 'Australia',
+    comment: 'Country for the event location',
+    set(value) {
+      this.setDataValue('locationCountry', value ? value.trim() : value);
+    }
+  },
   organiserContactName: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports

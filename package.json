@@ -66,6 +66,10 @@
       "**/tests/**/*.test.mjs",
       "**/tests/**/*.spec.mjs"
     ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/e2e/"
+    ],
     "collectCoverageFrom": [
       "controllers/**/*.mjs",
       "services/**/*.mjs",

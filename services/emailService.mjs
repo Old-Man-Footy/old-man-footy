@@ -23,6 +23,12 @@ class EmailService {
      * @returns {boolean} True if emails can be sent, false otherwise
      */
     _canSendEmails() {
+        // Don't send emails in test environment
+        if (process.env.NODE_ENV === 'test') {
+            console.log('📧 Email sending disabled: Test environment');
+            return false;
+        }
+
         // Don't send emails if coming soon mode is enabled
         if (process.env.FEATURE_COMING_SOON_MODE === 'true') {
             console.log('📧 Email sending disabled: Coming Soon mode is active');

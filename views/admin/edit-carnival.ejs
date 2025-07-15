@@ -108,7 +108,7 @@
                                        value="<%= carnival.date.toISOString().split('T')[0] %>" required>
                             </div>
                             <div class="col-md-6">
-                                <div id="endDateContainer" style="<%= carnival.endDate ? '' : 'display: none;' %>">
+                                <div id="endDateContainer" data-has-end-date="<%= carnival.endDate ? 'true' : 'false' %>">
                                     <label for="endDate" class="form-label">End Date</label>
                                     <input type="date" class="form-control" id="endDate" name="endDate" 
                                            value="<%= carnival.endDate ? carnival.endDate.toISOString().split('T')[0] : '' %>">
@@ -158,6 +158,66 @@
                             <textarea class="form-control" id="locationAddress" name="locationAddress" 
                                       rows="3" required maxlength="500"><%= carnival.locationAddress %></textarea>
                             <div class="form-text">Full address or venue details</div>
+                        </div>
+
+                        <!-- MySideline-Compatible Address Fields -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-geo-alt"></i> Detailed Location Information
+                                <small class="text-muted">(MySideline-compatible fields)</small>
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="locationSuburb" class="form-label">Suburb/City</label>
+                                    <input type="text" class="form-control" id="locationSuburb" name="locationSuburb" 
+                                           value="<%= carnival.locationSuburb || '' %>"
+                                           placeholder="e.g., Parramatta">
+                                    <div class="form-text">Suburb or city name</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="locationPostcode" class="form-label">Postcode</label>
+                                    <input type="text" class="form-control" id="locationPostcode" name="locationPostcode" 
+                                           value="<%= carnival.locationPostcode || '' %>"
+                                           placeholder="e.g., 2150" maxlength="10">
+                                    <div class="form-text">Australian postcode</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="locationLatitude" class="form-label">Latitude</label>
+                                    <input type="number" class="form-control" id="locationLatitude" name="locationLatitude" 
+                                           value="<%= carnival.locationLatitude || '' %>"
+                                           step="0.000001" min="-90" max="90"
+                                           placeholder="e.g., -33.8568">
+                                    <div class="form-text">GPS latitude (decimal degrees)</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="locationLongitude" class="form-label">Longitude</label>
+                                    <input type="number" class="form-control" id="locationLongitude" name="locationLongitude" 
+                                           value="<%= carnival.locationLongitude || '' %>"
+                                           step="0.000001" min="-180" max="180"
+                                           placeholder="e.g., 151.2153">
+                                    <div class="form-text">GPS longitude (decimal degrees)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="locationCountry" class="form-label">Country</label>
+                                    <input type="text" class="form-control" id="locationCountry" name="locationCountry" 
+                                           value="<%= carnival.locationCountry || 'Australia' %>"
+                                           placeholder="Australia">
+                                    <div class="form-text">Country name</div>
+                                </div>
+                                <div class="col-md-6 mb-3 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
+                                        <i class="bi bi-geo"></i> Get GPS from Address
+                                    </button>
+                                    <small class="text-muted ms-2">Auto-fill coordinates</small>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -318,7 +378,7 @@
                                 <% if (carnival.clubLogoURL) { %>
                                     <div class="col-md-4 mb-3">
                                         <div class="card">
-                                            <img src="<%= carnival.clubLogoURL %>" class="card-img-top" alt="Current Carnival Logo" style="height: 150px; object-fit: contain;">
+                                            <img src="<%= carnival.clubLogoURL %>" class="card-img-top admin-carnival-logo-preview" alt="Current Carnival Logo">
                                             <div class="card-body text-center">
                                                 <small class="text-muted">Current Carnival Logo</small>
                                             </div>
@@ -328,7 +388,7 @@
                                 <% if (carnival.promotionalImageURL) { %>
                                     <div class="col-md-4 mb-3">
                                         <div class="card">
-                                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" alt="Current Promotional Image" style="height: 150px; object-fit: cover;">
+                                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top admin-carnival-promo-preview" alt="Current Promotional Image">
                                             <div class="card-body text-center">
                                                 <small class="text-muted">Current Promotional Image</small>
                                             </div>
@@ -364,8 +424,8 @@
                                 <div class="col-md-4 mb-3">
                                     <label for="clubLogo" class="form-label">New Club Logo</label>
                                     <div class="file-upload-area">
-                                        <input type="file" class="form-control" id="clubLogo" name="logo" 
-                                               accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp" style="display: none;">
+                                        <input type="file" class="form-control admin-file-input-hidden" id="clubLogo" name="logo" 
+                                               accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
                                         <i class="bi bi-cloud-upload display-6 text-muted"></i>
                                         <p class="upload-text mt-2">Click or drag to upload new club logo</p>
                                         <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
@@ -374,8 +434,8 @@
                                 <div class="col-md-4 mb-3">
                                     <label for="promotionalImage" class="form-label">New Promotional Image</label>
                                     <div class="file-upload-area">
-                                        <input type="file" class="form-control" id="promotionalImage" name="promotionalImage" 
-                                               accept="image/*" style="display: none;">
+                                        <input type="file" class="form-control admin-file-input-hidden" id="promotionalImage" name="promotionalImage" 
+                                               accept="image/*">
                                         <i class="bi bi-image display-6 text-muted"></i>
                                         <p class="upload-text mt-2">Click or drag to upload new promotional image</p>
                                         <small class="text-muted">Max 5MB, JPG/PNG only</small>
@@ -384,8 +444,8 @@
                                 <div class="col-md-4 mb-3">
                                     <label for="drawFile" class="form-label">New Draw Sheet</label>
                                     <div class="file-upload-area">
-                                        <input type="file" class="form-control" id="drawFile" name="drawFile" 
-                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
+                                        <input type="file" class="form-control admin-file-input-hidden" id="drawFile" name="drawFile" 
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                                         <i class="bi bi-file-earmark-text display-6 text-muted"></i>
                                         <p class="upload-text mt-2">Click or drag to upload new draw sheet</p>
                                         <small class="text-muted">Max 10MB, PDF/DOC/Image files</small>
