@@ -378,6 +378,7 @@ const showCarnivalHandler = async (req, res) => {
     canMergeCarnival, // Pass merge option availability
     availableMergeTargets, // Pass available merge targets
     isInactiveCarnival: !carnival.isActive,
+    isMySidelineEvent: !!carnival.mySidelineId,
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
     additionalCSS: ['/styles/carnival.styles.css'],
     hostClub,
@@ -600,7 +601,7 @@ const createCarnivalHandler = async (req, res) => {
         states,
         errors: [{ msg: duplicateError.message }],
         formData: req.body,
-        user: userWithClub, // Pass user data for auto-population
+        user: userWithClub, // Pass user data to auto-population
         duplicateWarning: true,
         additionalCSS: ['/styles/carnival.styles.css'],
       });
