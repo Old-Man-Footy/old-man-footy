@@ -138,7 +138,7 @@ class MySidelineScraperService {
                 const processedEvent = this.convertApiItemToEvent(item);
                 if (processedEvent) {
                     processedEvents.push(processedEvent);
-                }
+                }   
             } catch (error) {
                 console.warn(`Failed to process API item ${item._id}:`, error.message);
             }
@@ -157,40 +157,27 @@ class MySidelineScraperService {
             return false;
         }
 
-        const name = item.name.toLowerCase();
-        const ageLvl = (item.ageLvl || '').toLowerCase();
+        const ageLvl = (item.ageLevel || '').toLowerCase();
+        const region = (item.orgtree?.region?.name || '').toLowerCase();
+        const association = (item.association?.name || '').toLowerCase();
+        const competition = (item.competition?.name || '').toLowerCase();
+        const club = (item.club?.name || '').toLowerCase(); 
         
-        // Filter out Touch events
-        if (name.includes('touch') || ageLvl.includes('touch')) {
+        // Skip Touch events
+        if (association.contains('touch') || competition.contains('touch')) {
             return false;
         }
 
-        // Filter out touch association events
-        if (item.orgtree 
-            && item.orgtree.association 
-            && item.orgtree.association.name 
-            && item.orgtree.association.name.toLowerCase().includes('touch')) { 
-            return false;
-        }
-
-        // Include Masters events or rugby league events
-        if (name.includes('masters') || 
-            name.includes('rugby league') || 
-            name.includes('old boys') ||
-            ageLvl.includes('masters')) {
+        // Check for Masters keywords in age level, region, association, competition, or club
+        if (ageLvl.includes('masters')
+            || region.includes('nrl masters')
+            || association.includes('nrl masters')
+            || competition.includes('masters')
+            || club.includes('masters')) {
             return true;
         }
-
-        // Check if it's an NRL Masters event through organization tree
-        if (item.orgtree) {
-            const orgTreeStr = JSON.stringify(item.orgtree).toLowerCase();
-            if (orgTreeStr.includes('nrl masters') || 
-                orgTreeStr.includes('masters events') ||
-                orgTreeStr.includes('rugby league')) {
-                return true;
-            }
-        }
-
+        
+        // Assume Not Masters
         return false;
     }
 

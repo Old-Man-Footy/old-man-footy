@@ -94,7 +94,7 @@ router.post('/clubs/:id/update',
     clubUpdateValidation,
     adminController.updateClub
 );
-router.post('/clubs/:id/delete', adminController.deleteClub);
+router.post('/clubs/:id/delete', adminController.deactivateClub);
 
 /**
  * Carnival Management Routes

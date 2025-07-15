@@ -584,6 +584,109 @@ const updateClubHandler = async (req, res) => {
 };
 
 /**
+ * Deactivate Club (formerly deleteClub)
+ * Clubs should never be deleted, only deactivated to preserve historical data
+ */
+const deactivateClubHandler = async (req, res) => {
+    const clubId = req.params.id;
+    
+    const club = await Club.findByPk(clubId, {
+        include: [
+            { 
+                model: User, 
+                as: 'delegates',
+                attributes: ['id', 'firstName', 'lastName', 'email', 'isActive']
+            }
+        ]
+    });
+
+    if (!club) {
+        return res.json({ success: false, message: 'Club not found' });
+    }
+
+    // Check if club is already inactive
+    if (!club.isActive) {
+        return res.json({ 
+            success: false, 
+            message: 'Club is already deactivated' 
+        });
+    }
+
+    // Check if club has active delegates - warn but allow deactivation
+    const activeDelegates = club.delegates.filter(delegate => delegate.isActive);
+    let warningMessage = '';
+    if (activeDelegates.length > 0) {
+        warningMessage = ` Note: This club has ${activeDelegates.length} active delegate(s) who will need to be reassigned to other clubs.`;
+    }
+
+    // Check if club has active carnivals - warn but allow deactivation
+    const activeCarnivalCount = await Carnival.count({
+        where: { 
+            clubId: club.id, 
+            isActive: true 
+        }
+    });
+
+    if (activeCarnivalCount > 0) {
+        warningMessage += ` This club has ${activeCarnivalCount} active carnival(s) - ownership may need to be transferred.`;
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+        // Capture original data for audit
+        const originalClubData = {
+            clubName: club.clubName,
+            isActive: club.isActive,
+            isPubliclyListed: club.isPubliclyListed
+        };
+
+        // Deactivate the club (soft delete)
+        await club.update({
+            isActive: false,
+            isPubliclyListed: false, // Also hide from public listings
+            updatedAt: new Date()
+        }, { transaction });
+
+        await transaction.commit();
+
+        // Log club deactivation
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.CLUB_DEACTIVATE,
+            req,
+            AuditService.ENTITIES.CLUB,
+            clubId,
+            {
+                oldValues: originalClubData,
+                newValues: { 
+                    isActive: false, 
+                    isPubliclyListed: false 
+                },
+                targetClubId: clubId,
+                metadata: {
+                    adminAction: 'Club deactivation via admin delete action',
+                    targetClubName: club.clubName,
+                    activeDelegatesCount: activeDelegates.length,
+                    activeCarnivalsCount: activeCarnivalCount
+                }
+            }
+        );
+
+        console.log(`✅ Club ${club.clubName} has been deactivated by admin ${req.user.email}`);
+
+        return res.json({ 
+            success: true, 
+            message: `Club "${club.clubName}" has been deactivated successfully.${warningMessage}`,
+            action: 'deactivated' // Indicate this was a deactivation, not deletion
+        });
+
+    } catch (transactionError) {
+        await transaction.rollback();
+        throw transactionError;
+    }
+};
+
+/**
  * Get Carnival Management page
  */
 const getCarnivalManagementHandler = async (req, res) => {
@@ -1534,6 +1637,7 @@ const rawControllers = {
     getClubManagementHandler,
     showEditClubHandler,
     updateClubHandler,
+    deactivateClubHandler,
     getCarnivalManagementHandler,
     showEditCarnivalHandler,
     updateCarnivalHandler,
@@ -1545,6 +1649,9 @@ const rawControllers = {
     showClaimCarnivalFormHandler,
     adminClaimCarnivalHandler,
     showCarnivalPlayersHandler,
+    getSponsorManagementHandler,
+    showEditSponsorHandler,
+    deleteSponsorHandler,
     getAuditLogsHandler,
     getAuditStatisticsHandler,
     exportAuditLogsHandler
@@ -1561,6 +1668,7 @@ export const {
     getClubManagementHandler: getClubManagement,
     showEditClubHandler: showEditClub,
     updateClubHandler: updateClub,
+    deactivateClubHandler: deactivateClub,
     getCarnivalManagementHandler: getCarnivalManagement,
     showEditCarnivalHandler: showEditCarnival,
     updateCarnivalHandler: updateCarnival,
@@ -1572,6 +1680,9 @@ export const {
     showClaimCarnivalFormHandler: showClaimCarnivalForm,
     adminClaimCarnivalHandler: adminClaimCarnival,
     showCarnivalPlayersHandler: showCarnivalPlayers,
+    getSponsorManagementHandler: getSponsorManagement,
+    showEditSponsorHandler: showEditSponsor,
+    deleteSponsorHandler: deleteSponsor,
     getAuditLogsHandler: getAuditLogs,
     getAuditStatisticsHandler: getAuditStatistics,
     exportAuditLogsHandler: exportAuditLogs
