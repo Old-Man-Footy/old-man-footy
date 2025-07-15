@@ -8,6 +8,7 @@ class MySidelineScraperService {
     constructor() {
         this.timeout = parseInt(process.env.MYSIDELINE_REQUEST_TIMEOUT) || 60000;
         this.searchUrl = process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league';
+        this.eventUrl = process.env.MYSIDELINE_EVENT_URL || 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
         this.useHeadlessBrowser = process.env.NODE_ENV !== 'development';
@@ -130,6 +131,12 @@ class MySidelineScraperService {
 
         for (const item of apiResponse.data) {
             try {
+                // Add null/undefined check for the item itself
+                if (!item || typeof item !== 'object') {
+                    console.warn(`Skipping invalid API item: ${item}`);
+                    continue;
+                }
+
                 // Skip non-Masters events and Touch events
                 if (!this.isRelevantMastersEvent(item)) {
                     continue;
@@ -140,7 +147,7 @@ class MySidelineScraperService {
                     processedEvents.push(processedEvent);
                 }   
             } catch (error) {
-                console.warn(`Failed to process API item ${item._id}:`, error.message);
+                console.warn(`Failed to process API item ${item?._id || 'unknown'}:`, error.message);
             }
         }
 
@@ -153,7 +160,8 @@ class MySidelineScraperService {
      * @returns {boolean} True if relevant
      */
     isRelevantMastersEvent(item) {
-        if (!item || !item.name) {
+        // Add comprehensive null/undefined checks
+        if (!item || typeof item !== 'object' || !item.name) {
             return false;
         }
 
@@ -187,6 +195,19 @@ class MySidelineScraperService {
      * @returns {Object} Converted event object
      */
     convertApiItemToEvent(item) {
+        // Add comprehensive null/undefined checks at the start
+        if (!item || typeof item !== 'object') {
+            throw new Error('Item is null, undefined, or not an object');
+        }
+
+        if (!item.name) {
+            throw new Error('Item missing required name property');
+        }
+
+        if (!item._id) {
+            throw new Error('Item missing required _id property');
+        }
+
         // Extract date from name if present
         const dateMatch = item.name.match(/\(([^)]+)\)|\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})\b|\b(\d{1,2}\s+\w+\s+\d{4})\b/);
         let eventDate = null;
@@ -208,10 +229,10 @@ class MySidelineScraperService {
         let addressLine2 = null;
         let venueName = null;
         
-        // Extract venue name from MySideline data
-        venueName = item.venue.name || item.orgtree?.venue?.name || null;
+        // Extract venue name from MySideline data with null checks
+        venueName = item.venue?.name || item.orgtree?.venue?.name || null;
 
-        if (item.venue && item.venue.address) {
+        if (item.venue?.address) {
             const addr = item.venue.address;
 
             addressLine1 = addr.addressLine1 || null;
@@ -232,7 +253,7 @@ class MySidelineScraperService {
                 // Fallback to formatted address
                 googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(locationAddress)}`;
             }
-        } else if (item.contact && item.contact.address) {
+        } else if (item.contact?.address) {
             const addr = item.contact.address;
             
             // Extract venue name from MySideline data (try orgtree first, then venue)
@@ -262,7 +283,7 @@ class MySidelineScraperService {
         }
 
         // Generate registration link using the top-level _id
-        const registrationLink = `${MYSIDELINE_EVENT_URL}${item._id}`;
+        const registrationLink = `${this.eventUrl}${item._id}`;
 
         return {
             // Core event data
@@ -386,6 +407,8 @@ class MySidelineScraperService {
                 eventDate.setMonth(eventDate.getMonth() + template.monthOffset);
                 eventDate.setDate(15);
 
+                const mockId = 99000000 + mockEvents.length;
+
                 mockEvents.push({
                     title: template.title,
                     date: eventDate,
@@ -394,8 +417,8 @@ class MySidelineScraperService {
                     mySidelineTitle: template.title,
                     mySidelineAddress: `${template.locationSuffix} Sports Complex, ${state}`,
                     mySidelineDate: eventDate,
-                    mySidelineId: 99000000 + mockEvents.length,
-                    registrationLink: `${MYSIDELINE_EVENT_URL}${item._id}99000${mockEvents.length}`,
+                    mySidelineId: mockId,
+                    registrationLink: `${this.eventUrl}${mockId}`,
                     organiserContactName: `${state} Rugby League Masters`,
                     organiserContactEmail: `masters@${state.toLowerCase()}rl.com.au`,
                     organiserContactPhone: `0${index + 2} ${Math.floor(Math.random() * 9000) + 1000} ${Math.floor(Math.random() * 9000) + 1000}`,

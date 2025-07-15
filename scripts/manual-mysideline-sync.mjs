@@ -10,35 +10,55 @@
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
+import { config as dotenvConfig } from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Load environment variables from .env.development
+ * Load environment variables from .env files
  */
 function loadEnvironmentVariables() {
-    const envPath = path.join(__dirname, '..', '.env.development');
+    const projectRoot = path.join(__dirname, '..');
     
-    if (fs.existsSync(envPath)) {
-        const envContent = fs.readFileSync(envPath, 'utf8');
-        
-        envContent.split('\n').forEach(line => {
-            line = line.trim();
-            if (line && !line.startsWith('#') && line.includes('=')) {
-                const [key, ...valueParts] = line.split('=');
-                const value = valueParts.join('=');
-                
-                // Only set if not already defined
-                if (!process.env[key.trim()]) {
-                    process.env[key.trim()] = value.trim();
-                }
-            }
-        });
-        
+    // Try to load .env first (standard)
+    const envPath = path.join(projectRoot, '.env');
+    const envDevPath = path.join(projectRoot, '.env.development');
+    const envLocalPath = path.join(projectRoot, '.env.local');
+    
+    let loaded = false;
+    
+    // Load .env.local if it exists (highest priority)
+    if (fs.existsSync(envLocalPath)) {
+        dotenvConfig({ path: envLocalPath });
+        console.log('✅ Environment variables loaded from .env.local');
+        loaded = true;
+    }
+    
+    // Load .env.development if it exists
+    if (fs.existsSync(envDevPath)) {
+        dotenvConfig({ path: envDevPath, override: false });
         console.log('✅ Environment variables loaded from .env.development');
-    } else {
-        console.log('⚠️  No .env.development file found, using system environment variables');
+        loaded = true;
+    }
+    
+    // Load standard .env if it exists
+    if (fs.existsSync(envPath)) {
+        dotenvConfig({ path: envPath, override: false });
+        console.log('✅ Environment variables loaded from .env');
+        loaded = true;
+    }
+    
+    if (!loaded) {
+        console.log('⚠️  No .env files found, using system environment variables only');
+    }
+    
+    // Validate required environment variables
+    const requiredVars = ['NODE_ENV', 'DATABASE_URL'];
+    const missingVars = requiredVars.filter(varName => !process.env[varName]);
+    
+    if (missingVars.length > 0) {
+        console.warn(`⚠️  Missing environment variables: ${missingVars.join(', ')}`);
     }
 }
 

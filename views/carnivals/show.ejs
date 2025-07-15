@@ -281,13 +281,6 @@
                                         </small>
                                     </div>
                                 <% } else { %>
-                                    <% 
-                                    // Check if this is a MySideline event - show warning tooltip
-                                    const isMySidelineEvent = carnival.mySidelineId;
-                                    const tooltipText = isMySidelineEvent ? 
-                                        'MySideline links are not direct - you will need to follow the link and identify the exact carnival by name and date' : 
-                                        'Click to register as a player for this carnival';
-                                    %>
                                     <a href="<%= carnival.registrationLink %>" 
                                        class="btn btn-success" 
                                        target="_blank"
