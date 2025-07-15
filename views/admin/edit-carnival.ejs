@@ -254,11 +254,49 @@
                             <div class="form-text">Event schedule, timing, and format details</div>
                         </div>
 
+                        <!-- MySideline Integration -->
                         <div class="mb-3">
-                            <label for="registrationLink" class="form-label">Registration Link</label>
-                            <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
-                                   value="<%= carnival.registrationLink || '' %>" placeholder="https://">
-                            <div class="form-text">Link to external registration or signup form</div>
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-link-45deg"></i> MySideline Integration
+                            </h6>
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>MySideline Integration:</strong> Connect this carnival with MySideline for official player registrations.
+                                Enter the MySideline event ID to automatically generate the registration link.
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="mySidelineId" class="form-label">
+                                        <i class="bi bi-hash"></i> MySideline Event ID
+                                    </label>
+                                    <input type="text" class="form-control" id="mySidelineId" name="mySidelineId" 
+                                           value="<%= carnival.mySidelineId || '' %>"
+                                           placeholder="e.g., 12345">
+                                    <div class="form-text">
+                                        The 8+ digit numeric ID from your MySideline event registration page.
+                                    </div>
+                                </div>                                
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="registrationLink" class="form-label">
+                                <i class="bi bi-box-arrow-up-right"></i> Registration Link
+                            </label>
+                            <div class="input-group">
+                                <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
+                                       value="<%= carnival.registrationLink || '' %>" placeholder="https://mysideline.com/register">
+                                <button type="button" class="btn btn-outline-secondary" id="testLinkBtn" 
+                                        style="display: none;" title="Test registration link">
+                                    <i class="bi bi-arrow-up-right-square"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <span id="linkStatus" class="text-muted">
+                                    Player registration link - will auto-update when MySideline ID is entered above
+                                </span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
