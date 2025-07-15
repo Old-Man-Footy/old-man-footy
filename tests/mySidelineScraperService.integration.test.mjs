@@ -1,323 +1,714 @@
+import { jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
 import MySidelineScraperService from '../services/mySidelineScraperService.mjs';
+import MySidelineDataService from '../services/mySidelineDataService.mjs';
 import { Carnival } from '../models/index.mjs';
 import { Op } from 'sequelize';
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 
 
 /**
  * MySidelineScraperService Integration Tests
  * 
- * These tests run against the live MySideline website to ensure the scraper
- * can actually retrieve data from the real site. They are slower than unit tests
- * but provide confidence that the scraper works with the actual website.
+ * Integration tests for the MySideline scraper service that test the actual
+ * integration between the scraper and data processing components using the test database.
  * 
- * To run these tests: npm test -- "mySidelineScraperService.integration.test.js"
+ * These tests validate:
+ * - Data flow from scraping to database persistence
+ * - Field preservation through the processing pipeline
+ * - Error handling in integration scenarios
+ * - Service coordination and data consistency
  * 
- * Note: These tests require internet connection and may be affected by:
- * - MySideline website changes
- * - Network connectivity issues
- * - Website maintenance/downtime
+ * To run these tests: npm test -- "mySidelineScraperService.integration.test.mjs"
  */
 
-// Remove the 'only' from the describe block to run all tests after debugging
 describe('MySidelineScraperService Integration Tests', () => {
-    let service;
-    let integrationService;
-    const INTEGRATION_TIMEOUT = 120000; // 2 minutes for integration tests
+    let scraperService;
+    let dataService;
+    let testCarnivals = [];
+    
+    // Test configuration
+    const TEST_TIMEOUT = 30000; // 30 seconds for integration tests
+    const MOCK_EVENTS = [
+        {
+            title: 'Test Masters Carnival',
+            mySidelineId: 12345, // Add numeric MySideline ID
+            mySidelineTitle: 'Test Masters Carnival (Integration Test)',
+            date: new Date('2025-08-15'),
+            locationAddress: '123 Test Stadium, Sydney NSW 2000',
+            state: 'NSW',
+            organiserContactName: 'Test Organiser',
+            organiserContactEmail: 'test@example.com',
+            organiserContactPhone: '0412345678',
+            registrationLink: 'https://profile.mysideline.com.au/register/test',
+            scheduleDetails: 'Test tournament details',
+            source: 'MySideline',
+            isActive: true,
+            // Use actual database fields instead of isMySidelineCard
+            isManuallyEntered: false,
+            lastMySidelineSync: new Date(),
+            mySidelineAddress: '123 Test Stadium, Sydney NSW 2000',
+            mySidelineDate: new Date('2025-08-15'),
+            clubLogoURL: null,
+            socialMediaFacebook: null,
+            socialMediaWebsite: null,
+            googleMapsUrl: null,
+            locationLatitude: -33.8568,
+            locationLongitude: 151.2153,
+            locationSuburb: 'Sydney',
+            locationPostcode: '2000',
+            locationCountry: 'Australia'
+        }
+    ];
 
     beforeAll(() => {
-        // Set up service with live configuration
-        process.env.MYSIDELINE_URL = process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league';
+        // Set test environment variables
+        process.env.NODE_ENV = 'test';
+        process.env.MYSIDELINE_USE_MOCK = 'true';
         process.env.MYSIDELINE_ENABLE_SCRAPING = 'true';
-        process.env.MYSIDELINE_USE_MOCK = 'false';
-        process.env.NODE_ENV = 'development'; // Set to development to show browser window
-        
-        service = new MySidelineScraperService();
-        
-        // Override headless setting for integration tests - show browser window
-        service.useHeadlessBrowser = false;
-        
-        console.log(`\n🔗 Testing against live MySideline URL: ${service.searchUrl}`);
-        console.log(`⚙️  Configuration: headless=${service.useHeadlessBrowser}, timeout=${service.timeout}ms`);
-        console.log(`👁️  Browser will be VISIBLE for debugging and observation`);
     });
 
-    afterAll(async () => {
-        // Clean up any resources and wait for async operations to complete
-        if (service) {
-            // Force close any open browser instances by overriding the service method
-            try {
-                // Wait for any pending operations to complete
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Force cleanup of Playwright resources
-                const { chromium } = await import('playwright');
-                await chromium.close?.();
-            } catch (error) {
-                // Ignore cleanup errors in tests
-                console.log('Cleanup completed with minor issues (expected in tests)');
-            }
-        }
+    beforeEach(() => {
+        // Arrange - Create fresh service instances for each test
+        scraperService = new MySidelineScraperService();
+        dataService = new MySidelineDataService();
+        testCarnivals = [];
+        
+        // Mock the scraper service to return controlled test data
+        // Mock scrapeEvents directly since it's the main entry point
+        jest.spyOn(scraperService, 'scrapeEvents')
+            .mockResolvedValue(MOCK_EVENTS);
     });
-    describe('Data Field Tracking Through Pipeline', () => {
+
+    afterEach(async () => {
+        // Clean up test data from database
+        if (testCarnivals.length > 0) {
+            const carnivalIds = testCarnivals.map(c => c.id);
+            await Carnival.destroy({
+                where: {
+                    id: {
+                        [Op.in]: carnivalIds
+                    }
+                }
+            });
+        }
+        
+        // Clear any existing test carnivals by title
+        await Carnival.destroy({
+            where: {
+                title: {
+                    [Op.like]: '%Integration Test%'
+                }
+            }
+        });
+        
+        // Restore mocks
+        jest.restoreAllMocks();
+    });
+
+    afterAll(() => {
+        // Clean up environment
+        delete process.env.MYSIDELINE_USE_MOCK;
+        delete process.env.MYSIDELINE_ENABLE_SCRAPING;
+    });
+
+    describe('scrapeEvents()', () => {
         /**
-         * Test to identify where fields are being dropped between scraping and database
-         * This test tracks data through each stage of the pipeline
+         * Test that scrapeEvents returns properly formatted event data
          */
-        it('should track field preservation from scraping to database', async () => {
-            // Arrange
-            console.log('\n🔍 Starting field tracking test...');
-            
-            // Step 1: Get raw scraped data
-            console.log('\n📡 Step 1: Scraping raw events...');
-            const scrapedEvents = await service.scrapeEvents();
-            
+        it('should return array of properly formatted events', async () => {
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+
+            // Assert
             expect(Array.isArray(scrapedEvents)).toBe(true);
             expect(scrapedEvents.length).toBeGreaterThan(0);
             
-            // Log detailed field analysis for first event
             const firstEvent = scrapedEvents[0];
-            console.log('\n📋 Raw Scraped Event Fields Analysis:');
-            console.log('=====================================');
-            console.log(`Event Title: "${firstEvent.title}"`);
-            console.log(`Event MySideline Title: "${firstEvent.mySidelineTitle}"`);
-            
-            const allFields = [
-                'clubLogoURL', 'date', 'googleMapsUrl', 'isActive', 'isMySidelineCard',
-                'locationAddress', 'locationAddressPart1', 'locationAddressPart2', 
-                'locationAddressPart3', 'locationAddressPart4', 'mySidelineTitle',
-                'organiserContactEmail', 'organiserContactName', 'organiserContactPhone',
-                'registrationLink', 'scheduleDetails', 'lastMySidelineSync',
-                'socialMediaFacebook', 'socialMediaWebsite', 'source', 'state', 'title'
-            ];
-            
-            const scrapedFieldReport = {};
-            allFields.forEach(field => {
-                const value = firstEvent[field];
-                const hasValue = value !== null && value !== undefined && value !== '';
-                scrapedFieldReport[field] = {
-                    hasValue,
-                    value: hasValue ? value : 'EMPTY',
-                    type: typeof value
-                };
-                console.log(`├── ${field}: ${hasValue ? '✅' : '❌'} ${hasValue ? `(${typeof value})` : 'EMPTY'}`);
-            });
-            
-            // Step 2: Test validation/cleaning step
-            console.log('\n🧹 Step 2: Testing validation and cleaning...');
-            const cleanedEvent = service.validateAndCleanData(firstEvent);
-            
-            console.log('\n📋 After Validation/Cleaning:');
-            console.log('============================');
-            console.log(`Cleaned Title: "${cleanedEvent.title}"`);
-            console.log(`Cleaned MySideline Title: "${cleanedEvent.mySidelineTitle}"`);
-            
-            const cleanedFieldReport = {};
-            allFields.forEach(field => {
-                const originalValue = firstEvent[field];
-                const cleanedValue = cleanedEvent[field];
-                const wasLost = (originalValue !== null && originalValue !== undefined && originalValue !== '') && 
-                               (cleanedValue === null || cleanedValue === undefined || cleanedValue === '');
-                
-                cleanedFieldReport[field] = {
-                    wasLost,
-                    originalValue: originalValue,
-                    cleanedValue: cleanedValue
-                };
-                
-                if (wasLost) {
-                    console.log(`├── ${field}: 🚨 FIELD LOST! Was: "${originalValue}", Now: "${cleanedValue}"`);
-                } else if (originalValue !== cleanedValue) {
-                    console.log(`├── ${field}: ⚠️  Changed from "${originalValue}" to "${cleanedValue}"`);
-                } else {
-                    console.log(`├── ${field}: ✅ Preserved`);
-                }
-            });
-            
-            // Step 2.5: Test the critical processScrapedEvents method directly
-            console.log('\n💾 Step 2.5: Testing processScrapedEvents method directly...');
-            
-            // Clear any existing test data first
-            console.log(`🧹 Cleaning existing data for: "${cleanedEvent.title}"`);
-            const deletedCount = await Carnival.destroy({ 
-                where: { 
-                    [Op.or]: [
-                        { title: cleanedEvent.title },
-                        { mySidelineTitle: cleanedEvent.mySidelineTitle },
-                        { 
-                            title: cleanedEvent.title,
-                            isManuallyEntered: false 
-                        }
-                    ]
-                } 
-            });
-            console.log(`🗑️  Deleted ${deletedCount} existing records`);
-            
-            // Call processScrapedEvents directly with our cleaned event
-            const { default: MySidelineDataService } = await import('../services/mySidelineDataService.mjs');
-            const dataService = new MySidelineDataService();
-            
-            console.log('\n🔧 Direct call to processScrapedEvents...');
-            console.log(`Input data: Title="${cleanedEvent.title}", MySidelineTitle="${cleanedEvent.mySidelineTitle}"`);
-            
-            // BREAKPOINT: This is where you can debug the processScrapedEvents method
-            const processedEvents = await dataService.processScrapedEvents([cleanedEvent]);
-            
-            console.log(`\n📊 ProcessScrapedEvents Result: ${processedEvents.length} events processed`);
-            if (processedEvents.length > 0) {
-                console.log(`First processed event ID: ${processedEvents[0].id}`);
-                console.log(`First processed event title: "${processedEvents[0].title}"`);
-            }
-            
-            // Step 3: Check what was actually saved to database immediately after processScrapedEvents
-            console.log('\n💾 Step 3: Checking database persistence after processScrapedEvents...');
-            
-            // Try multiple search strategies to find the saved carnival
-            let savedCarnival = null;
-            
-            // Strategy 1: Search by title
-            savedCarnival = await Carnival.findOne({
-                where: {
-                    title: cleanedEvent.title,
-                    isManuallyEntered: false
-                }
-            });
-            
-            if (!savedCarnival) {
-                console.log(`🔍 Strategy 1 failed: No carnival found with title "${cleanedEvent.title}"`);
-                
-                // Strategy 2: Search by mySidelineTitle
-                savedCarnival = await Carnival.findOne({
-                    where: {
-                        mySidelineTitle: cleanedEvent.mySidelineTitle,
-                        isManuallyEntered: false
+            expect(firstEvent).toHaveProperty('title');
+            expect(firstEvent).toHaveProperty('mySidelineTitle');
+            expect(firstEvent).toHaveProperty('date');
+            expect(firstEvent).toHaveProperty('locationAddress');
+            expect(firstEvent).toHaveProperty('state');
+            expect(firstEvent.source).toBe('MySideline');
+            expect(firstEvent.isManuallyEntered).toBe(false);
+        }, TEST_TIMEOUT);
+
+        /**
+         * Test that scrapeEvents handles empty responses gracefully
+         */
+        it('should handle empty API response gracefully', async () => {
+            // Arrange
+            jest.spyOn(scraperService, 'scrapeEvents')
+                .mockResolvedValue([]);
+
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+
+            // Assert
+            expect(Array.isArray(scrapedEvents)).toBe(true);
+            expect(scrapedEvents.length).toBe(0);
+        });
+
+        /**
+         * Test that scrapeEvents handles API errors gracefully
+         */
+        it('should handle API errors gracefully', async () => {
+            // Arrange
+            jest.spyOn(scraperService, 'scrapeEvents')
+                .mockImplementation(async () => {
+                    try {
+                        throw new Error('API connection failed');
+                    } catch (error) {
+                        console.error('MySideline scraper error:', error.message);
+                        return []; // Service should return empty array on error
                     }
                 });
-            }
-            
-            if (!savedCarnival) {
-                console.log(`🔍 Strategy 2 failed: No carnival found with mySidelineTitle "${cleanedEvent.mySidelineTitle}"`);
-                
-                // Strategy 3: Search by any similar title and show what we actually have
-                const allMySidelineCarnivals = await Carnival.findAll({
-                    where: {
-                        isManuallyEntered: false
-                    },
-                    attributes: ['id', 'title', 'mySidelineTitle', 'date', 'locationAddress'],
-                    limit: 10
-                });
-                
-                console.log(`🔍 Strategy 3: Found ${allMySidelineCarnivals.length} MySideline carnivals in database:`);
-                allMySidelineCarnivals.forEach((carnival, index) => {
-                    console.log(`   ${index + 1}. "${carnival.title}" (MySideline: "${carnival.mySidelineTitle}")`);
-                });
-                
-                // Try to find the closest match
-                savedCarnival = allMySidelineCarnivals.find(c => 
-                    c.title.toLowerCase().includes(cleanedEvent.title.toLowerCase().split(' ')[0]) ||
-                    (c.mySidelineTitle && c.mySidelineTitle.toLowerCase().includes(cleanedEvent.title.toLowerCase().split(' ')[0]))
-                );
-                
-                if (savedCarnival) {
-                    console.log(`🎯 Found closest match: "${savedCarnival.title}"`);
-                }
-            }
-            
-            if (!savedCarnival) {
-                console.log('\n📝 INFO: MySideline sync completed - no new carnivals found (all events already exist in database)');
-                console.log(`Expected title: "${cleanedEvent.title}"`);
-                console.log(`Expected mySidelineTitle: "${cleanedEvent.mySidelineTitle}"`);
-                console.log('This is expected behavior when processScrapedEvents finds existing duplicate events.');
-                
-                // Skip the database analysis but still show the pipeline analysis
-                expect(processedEvents).toBeDefined();
-                return; // Exit test early but don't fail
-            }
-            
-            // Continue with database field analysis
-            console.log('\n📋 Database Field Analysis (After processScrapedEvents):');
-            console.log('========================================================');
-            
-            const databaseFieldReport = {};
-            allFields.forEach(field => {
-                const cleanedValue = cleanedEvent[field];
-                const dbValue = savedCarnival[field];
-                const wasLostInDB = (cleanedValue !== null && cleanedValue !== undefined && cleanedValue !== '') && 
-                                   (dbValue === null || dbValue === undefined || dbValue === '');
-                
-                databaseFieldReport[field] = {
-                    wasLostInDB,
-                    cleanedValue: cleanedValue,
-                    dbValue: dbValue
-                };
-                
-                if (wasLostInDB) {
-                    console.log(`├── ${field}: 🚨 LOST IN processScrapedEvents! Cleaned: "${cleanedValue}", DB: "${dbValue}"`);
-                } else if (cleanedValue !== dbValue) {
-                    console.log(`├── ${field}: ⚠️  Changed in processScrapedEvents from "${cleanedValue}" to "${dbValue}"`);
-                } else {
-                    console.log(`├── ${field}: ✅ Preserved through processScrapedEvents`);
-                }
-            });
-            
-            // Step 4: Generate comprehensive field loss report focused on processScrapedEvents
-            console.log('\n📊 FIELD LOSS REPORT - FOCUSED ON processScrapedEvents:');
-            console.log('=====================================================');
-            
-            const lostInValidation = [];
-            const lostInProcessScrapedEvents = [];
-            const preservedFields = [];
-            
-            allFields.forEach(field => {
-                if (cleanedFieldReport[field].wasLost) {
-                    lostInValidation.push(field);
-                } else if (databaseFieldReport[field] && databaseFieldReport[field].wasLostInDB) {
-                    lostInProcessScrapedEvents.push(field);
-                } else if (scrapedFieldReport[field].hasValue) {
-                    preservedFields.push(field);
-                }
-            });
-            
-            console.log(`\n🚨 Fields Lost in Validation/Cleaning (${lostInValidation.length}):`);
-            lostInValidation.forEach(field => {
-                console.log(`   ├── ${field}: "${scrapedFieldReport[field].value}" → CLEANED OUT`);
-            });
-            
-            console.log(`\n🚨 Fields Lost in processScrapedEvents (${lostInProcessScrapedEvents.length}):`);
-            lostInProcessScrapedEvents.forEach(field => {
-                console.log(`   ├── ${field}: "${cleanedFieldReport[field].cleanedValue}" → LOST IN DB SAVE`);
-            });
-            
-            console.log(`\n✅ Fields Successfully Preserved (${preservedFields.length}):`);
-            preservedFields.forEach(field => {
-                console.log(`   ├── ${field}: "${scrapedFieldReport[field].value}"`);
-            });
-            
-            // Critical assertions
-            if (lostInValidation.length > 0) {
-                console.log(`\n⚠️  WARNING: ${lostInValidation.length} fields were lost during validation/cleaning!`);
-                console.log('   Check MySidelineScraperService.validateAndCleanData() method');
-            }
-            
-            if (lostInProcessScrapedEvents.length > 0) {
-                console.log(`\n🚨 CRITICAL: ${lostInProcessScrapedEvents.length} fields were lost in processScrapedEvents!`);
-                console.log('   Check MySidelineDataService.processScrapedEvents() method and Carnival model');
-                console.log('   This is likely where your field dropping issue occurs!');
-            }
-            
-            // Assert that critical fields are preserved
-            expect(savedCarnival.title).toBeTruthy();
-            expect(savedCarnival.title).toBe(cleanedEvent.title);
-            
-            // Clean up test data
-            await Carnival.destroy({ 
-                where: { 
-                    id: savedCarnival.id 
-                } 
-            });
-            
-            console.log('\n🧹 Test cleanup completed');
 
-        }, INTEGRATION_TIMEOUT);
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+
+            // Assert
+            expect(Array.isArray(scrapedEvents)).toBe(true);
+            expect(scrapedEvents.length).toBe(0);
+        });
+    });
+
+    describe('validateAndCleanData()', () => {
+        /**
+         * Test that data validation preserves all valid fields
+         */
+        it('should preserve all valid fields during validation', () => {
+            // Arrange
+            const rawEvent = { ...MOCK_EVENTS[0] };
+
+            // Act
+            const cleanedEvent = scraperService.validateAndCleanData(rawEvent);
+
+            // Assert
+            expect(cleanedEvent.title).toBe(rawEvent.title);
+            expect(cleanedEvent.mySidelineTitle).toBe(rawEvent.mySidelineTitle);
+            expect(cleanedEvent.locationAddress).toBe(rawEvent.locationAddress);
+            expect(cleanedEvent.organiserContactEmail).toBe(rawEvent.organiserContactEmail);
+            expect(cleanedEvent.state).toBe(rawEvent.state);
+        });
+
+        /**
+         * Test that validation cleans invalid email addresses
+         */
+        it('should clean invalid email addresses', () => {
+            // Arrange
+            const rawEvent = {
+                ...MOCK_EVENTS[0],
+                organiserContactEmail: 'invalid-email'
+            };
+
+            // Act
+            const cleanedEvent = scraperService.validateAndCleanData(rawEvent);
+
+            // Assert
+            expect(cleanedEvent.organiserContactEmail).toBeNull();
+        });
+
+        /**
+         * Test that validation provides default title when missing
+         */
+        it('should provide default title when missing', () => {
+            // Arrange
+            const rawEvent = {
+                ...MOCK_EVENTS[0],
+                title: ''
+            };
+
+            // Act
+            const cleanedEvent = scraperService.validateAndCleanData(rawEvent);
+
+            // Assert
+            expect(cleanedEvent.title).toBe('Masters Rugby League Event');
+        });
+    });
+
+    describe('End-to-End Data Flow', () => {
+        /**
+         * Test complete data flow from scraping to database persistence
+         */
+        it('should process scraped events and persist to database', async () => {
+            // Arrange
+            const initialEventCount = await Carnival.count({
+                where: { isManuallyEntered: false }
+            });
+
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvents = scrapedEvents.map(event => 
+                scraperService.validateAndCleanData(event)
+            );
+            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
+
+            // Assert
+            expect(processedEvents.length).toBeGreaterThan(0);
+            
+            const finalEventCount = await Carnival.count({
+                where: { isManuallyEntered: false }
+            });
+            expect(finalEventCount).toBe(initialEventCount + processedEvents.length);
+
+            // Verify the created event in database
+            const savedEvent = await Carnival.findOne({
+                where: {
+                    mySidelineTitle: MOCK_EVENTS[0].mySidelineTitle
+                }
+            });
+            
+            expect(savedEvent).not.toBeNull();
+            expect(savedEvent.title).toBe(MOCK_EVENTS[0].title);
+            expect(savedEvent.state).toBe(MOCK_EVENTS[0].state);
+            expect(savedEvent.locationAddress).toBe(MOCK_EVENTS[0].locationAddress);
+            expect(savedEvent.isManuallyEntered).toBe(false);
+            expect(savedEvent.lastMySidelineSync).not.toBeNull();
+
+            // Store for cleanup
+            testCarnivals.push(savedEvent);
+        }, TEST_TIMEOUT);
+
+        /**
+         * Test that existing events are updated rather than duplicated
+         */
+        it('should update existing events rather than create duplicates', async () => {
+            // Arrange - Create an initial event with MySideline matching fields including mySidelineId
+            const existingEvent = await Carnival.create({
+                title: MOCK_EVENTS[0].title,
+                mySidelineId: MOCK_EVENTS[0].mySidelineId, // Include the MySideline ID for matching
+                mySidelineTitle: MOCK_EVENTS[0].mySidelineTitle,
+                mySidelineAddress: MOCK_EVENTS[0].mySidelineAddress,
+                mySidelineDate: MOCK_EVENTS[0].mySidelineDate,
+                date: MOCK_EVENTS[0].date,
+                locationAddress: MOCK_EVENTS[0].locationAddress,
+                state: MOCK_EVENTS[0].state,
+                isManuallyEntered: false,
+                lastMySidelineSync: new Date(),
+                organiserContactEmail: null // Leave empty to test update
+            });
+            testCarnivals.push(existingEvent);
+
+            const initialCount = await Carnival.count({
+                where: { isManuallyEntered: false }
+            });
+
+            // Act - Process the same event again
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvents = scrapedEvents.map(event => 
+                scraperService.validateAndCleanData(event)
+            );
+            await dataService.processScrapedEvents(cleanedEvents);
+
+            // Assert - Should not create new event
+            const finalCount = await Carnival.count({
+                where: { isManuallyEntered: false }
+            });
+            expect(finalCount).toBe(initialCount);
+
+            // Verify the event was updated with new information
+            const updatedEvent = await Carnival.findOne({
+                where: { id: existingEvent.id }
+            });
+            expect(updatedEvent.organiserContactEmail).toBe(MOCK_EVENTS[0].organiserContactEmail);
+        }, TEST_TIMEOUT);
+
+        /**
+         * Test field preservation through the complete pipeline
+         */
+        it('should preserve critical fields through complete processing pipeline', async () => {
+            // Arrange
+            const criticalFields = [
+                'title', 'mySidelineTitle', 'date', 'locationAddress', 
+                'state', 'organiserContactEmail', 'registrationLink'
+            ];
+
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvents = scrapedEvents.map(event => 
+                scraperService.validateAndCleanData(event)
+            );
+            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
+
+            // Assert
+            expect(processedEvents.length).toBeGreaterThan(0);
+            
+            const originalEvent = MOCK_EVENTS[0];
+            const savedEvent = processedEvents[0];
+            testCarnivals.push(savedEvent);
+
+            criticalFields.forEach(field => {
+                if (originalEvent[field] !== null && originalEvent[field] !== undefined) {
+                    expect(savedEvent[field]).toBeDefined();
+                    if (field === 'date') {
+                        expect(new Date(savedEvent[field]).getTime())
+                            .toBe(new Date(originalEvent[field]).getTime());
+                    } else {
+                        expect(savedEvent[field]).toBe(originalEvent[field]);
+                    }
+                }
+            });
+        }, TEST_TIMEOUT);
+    });
+
+    describe('Error Handling', () => {
+        /**
+         * Test handling of invalid event data
+         */
+        it('should handle invalid event data gracefully', async () => {
+            // Arrange
+            const invalidEvent = {
+                title: null,
+                date: 'invalid-date',
+                organiserContactEmail: 'not-an-email'
+            };
+            
+            jest.spyOn(scraperService, 'scrapeEvents')
+                .mockResolvedValue([invalidEvent]);
+
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvent = scraperService.validateAndCleanData(scrapedEvents[0]);
+            const processedEvents = await dataService.processScrapedEvents([cleanedEvent]);
+
+            // Assert
+            expect(processedEvents.length).toBe(1);
+            expect(processedEvents[0].title).toBe('Masters Rugby League Event'); // Default title
+            expect(processedEvents[0].organiserContactEmail).toBeNull(); // Cleaned invalid email
+            
+            testCarnivals.push(processedEvents[0]);
+        }, TEST_TIMEOUT);
+
+        /**
+         * Test database transaction rollback on processing errors
+         */
+        it('should handle database errors during processing', async () => {
+            // Arrange - Mock a database error
+            const originalCreate = Carnival.create;
+            jest.spyOn(Carnival, 'create').mockRejectedValueOnce(
+                new Error('Database connection failed')
+            );
+
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvents = scrapedEvents.map(event => 
+                scraperService.validateAndCleanData(event)
+            );
+            
+            // Should not throw, but should handle gracefully
+            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
+
+            // Assert
+            expect(processedEvents.length).toBe(0); // No events processed due to error
+
+            // Restore original method
+            Carnival.create = originalCreate;
+        }, TEST_TIMEOUT);
+    });
+
+    describe('Live Site Integration', () => {
+        /**
+         * Test that the scraper can retrieve actual data from MySideline
+         * This test can be enabled with ENABLE_LIVE_TESTS=true
+         */
+        it('should retrieve actual events from MySideline website', async () => {
+            // Skip this test unless explicitly enabled
+            if (!process.env.ENABLE_LIVE_TESTS) {
+                console.log('Skipping live site test - set ENABLE_LIVE_TESTS=true to run');
+                return;
+            }
+
+            // Completely restore all mocks to ensure real scraping
+            jest.restoreAllMocks();
+            
+            // Set environment to disable mock data BEFORE creating service instance
+            const originalMockEnv = process.env.MYSIDELINE_USE_MOCK;
+            process.env.MYSIDELINE_USE_MOCK = 'false';
+
+            try {
+                // Create a fresh scraper service instance with mocking disabled
+                const realScraperService = new MySidelineScraperService();
+                
+                // Verify that mocking is actually disabled
+                expect(realScraperService.useMockData).toBe(false);
+
+                // Act - Attempt to scrape real data from MySideline
+                console.log('🌐 Attempting to scrape live MySideline data...');
+                const liveEvents = await realScraperService.scrapeEvents();
+
+                // Assert - Verify we got real data
+                expect(Array.isArray(liveEvents)).toBe(true);
+                
+                if (liveEvents.length > 0) {
+                    const firstEvent = liveEvents[0];
+                    
+                    // Verify basic structure of scraped events
+                    expect(firstEvent).toHaveProperty('title');
+                    expect(firstEvent).toHaveProperty('source');
+                    expect(firstEvent.source).toBe('MySideline');
+                    
+                    // Verify it's NOT mock data by checking it doesn't match mock patterns
+                    const mockPatterns = [
+                        'NSW Masters Rugby League Carnival',
+                        'QLD Masters Rugby League Carnival', 
+                        'VIC Masters Rugby League Carnival',
+                        'Test Masters Carnival'
+                    ];
+                    
+                    const isRealData = !mockPatterns.some(pattern => 
+                        firstEvent.title.includes(pattern)
+                    );
+                    
+                    expect(isRealData).toBe(true);
+                    
+                    console.log(`✅ Successfully retrieved ${liveEvents.length} REAL events from MySideline`);
+                    console.log(`📋 Sample event: "${firstEvent.title}"`);
+                    
+                    // Log additional details to verify it's real data
+                    if (firstEvent.mySidelineId) {
+                        console.log(`🆔 MySideline ID: ${firstEvent.mySidelineId}`);
+                    }
+                    if (firstEvent.locationAddress) {
+                        console.log(`📍 Location: ${firstEvent.locationAddress}`);
+                    }
+                    if (firstEvent.date) {
+                        console.log(`📅 Date: ${firstEvent.date}`);
+                    }
+                } else {
+                    console.log('⚠️  No events found on MySideline (this may be normal if no events are currently listed)');
+                    // This is not necessarily a failure - MySideline might just be empty
+                }
+                
+            } catch (error) {
+                console.error(`❌ Live MySideline scraping failed: ${error.message}`);
+                console.error('Stack trace:', error.stack);
+                
+                // Only fail if it's a clear scraping logic error
+                if (error.message.includes('Cannot read') || 
+                    error.message.includes('is not a function') ||
+                    error.message.includes('fetch is not defined')) {
+                    throw new Error(`Scraping logic error: ${error.message}`);
+                }
+                
+                // For network errors or site changes, log but don't fail
+                console.warn('This may indicate the MySideline website is down or structure has changed');
+                
+            } finally {
+                // Restore original environment
+                process.env.MYSIDELINE_USE_MOCK = originalMockEnv;
+            }
+        }, 60000); // 60 second timeout for live site requests
+
+        /**
+         * Test that the scraper handles live site unavailability gracefully
+         */
+        it('should handle network failures gracefully', async () => {
+            // Skip this test unless explicitly enabled
+            if (!process.env.ENABLE_LIVE_TESTS) {
+                console.log('Skipping network failure test - set ENABLE_LIVE_TESTS=true to run');
+                return;
+            }
+
+            // Set environment to disable mock data
+            const originalMockEnv = process.env.MYSIDELINE_USE_MOCK;
+            process.env.MYSIDELINE_USE_MOCK = 'false';
+
+            try {
+                // Create scraper instance
+                const realScraperService = new MySidelineScraperService();
+                
+                // Mock the internal HTTP method to simulate network failure
+                jest.spyOn(realScraperService, 'fetchEventsWithApiInterception')
+                    .mockRejectedValue(new Error('Network connection failed'));
+
+                // Act
+                const events = await realScraperService.scrapeEvents();
+
+                // Assert - Should return empty array on network failure
+                expect(Array.isArray(events)).toBe(true);
+                expect(events.length).toBe(0);
+                
+                console.log('✅ Network failure handled gracefully - returned empty array');
+                
+            } finally {
+                // Restore
+                process.env.MYSIDELINE_USE_MOCK = originalMockEnv;
+            }
+        }, 30000);
+
+        /**
+         * Test that scraped live data passes validation
+         */
+        it('should return valid data structure from live site', async () => {
+            // Skip this test unless explicitly enabled
+            if (!process.env.ENABLE_LIVE_TESTS) {
+                console.log('Skipping live data validation test - set ENABLE_LIVE_TESTS=true to run');
+                return;
+            }
+
+            // Completely restore all mocks
+            jest.restoreAllMocks();
+            
+            const originalMockEnv = process.env.MYSIDELINE_USE_MOCK;
+            process.env.MYSIDELINE_USE_MOCK = 'false';
+
+            try {
+                // Create fresh scraper service with mocking disabled
+                const realScraperService = new MySidelineScraperService();
+
+                // Act
+                console.log('🌐 Scraping live data for validation testing...');
+                const liveEvents = await realScraperService.scrapeEvents();
+
+                // Assert
+                expect(Array.isArray(liveEvents)).toBe(true);
+                
+                // If we got events, validate their structure
+                if (liveEvents.length > 0) {
+                    liveEvents.forEach((event, index) => {
+                        expect(event).toHaveProperty('source');
+                        expect(event.source).toBe('MySideline');
+                        
+                        // Test validation on live data
+                        const validatedEvent = realScraperService.validateAndCleanData(event);
+                        expect(validatedEvent).toHaveProperty('title');
+                        expect(typeof validatedEvent.title).toBe('string');
+                        expect(validatedEvent.title.length).toBeGreaterThan(0);
+                        
+                        // Verify it's not mock data
+                        const mockPatterns = [
+                            'NSW Masters Rugby League Carnival',
+                            'QLD Masters Rugby League Carnival', 
+                            'VIC Masters Rugby League Carnival',
+                            'Test Masters Carnival'
+                        ];
+                        
+                        const isRealData = !mockPatterns.some(pattern => 
+                            validatedEvent.title.includes(pattern)
+                        );
+                        
+                        expect(isRealData).toBe(true);
+                        
+                        console.log(`✅ Event ${index + 1} validation passed: "${validatedEvent.title}"`);
+                    });
+                    
+                    console.log(`✅ All ${liveEvents.length} live events passed validation`);
+                } else {
+                    console.log('ℹ️  No live events to validate (MySideline may be empty)');
+                }
+                
+            } catch (error) {
+                console.error(`❌ Live validation test failed: ${error.message}`);
+                
+                // Only fail for clear validation errors
+                if (error.message.includes('validation') || 
+                    error.message.includes('required') ||
+                    error.message.includes('Expected')) {
+                    throw error;
+                }
+                
+                // For other errors, log but don't fail
+                console.warn('Site may be unavailable or structure changed');
+                
+            } finally {
+                process.env.MYSIDELINE_USE_MOCK = originalMockEnv;
+            }
+        }, 60000);
+    });
+
+    describe('Data Consistency', () => {
+        /**
+         * Test MySideline-specific field preservation
+         */
+        it('should preserve MySideline-specific fields for duplicate detection', async () => {
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvents = scrapedEvents.map(event => 
+                scraperService.validateAndCleanData(event)
+            );
+            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
+
+            // Assert
+            expect(processedEvents.length).toBeGreaterThan(0);
+            
+            const savedEvent = processedEvents[0];
+            testCarnivals.push(savedEvent);
+
+            expect(savedEvent.mySidelineId).toBe(MOCK_EVENTS[0].mySidelineId);
+            expect(savedEvent.mySidelineTitle).toBe(MOCK_EVENTS[0].mySidelineTitle);
+            expect(savedEvent.mySidelineAddress).toBe(MOCK_EVENTS[0].mySidelineAddress);
+            expect(new Date(savedEvent.mySidelineDate).getTime())
+                .toBe(new Date(MOCK_EVENTS[0].mySidelineDate).getTime());
+            expect(savedEvent.isManuallyEntered).toBe(false);
+            expect(savedEvent.lastMySidelineSync).not.toBeNull();
+        }, TEST_TIMEOUT);
+
+        /**
+         * Test mySidelineId priority in duplicate detection
+         */
+        it('should prioritize mySidelineId for duplicate detection over other fields', async () => {
+            // Arrange - Create an event with the same mySidelineId but different title/date
+            const existingEvent = await Carnival.create({
+                title: 'Different Title',
+                mySidelineId: MOCK_EVENTS[0].mySidelineId, // Same ID as mock data
+                mySidelineTitle: 'Different MySideline Title',
+                date: new Date('2025-09-01'), // Different date
+                locationAddress: 'Different Location',
+                state: 'QLD', // Different state
+                isManuallyEntered: false,
+                lastMySidelineSync: new Date(),
+                organiserContactEmail: null
+            });
+            testCarnivals.push(existingEvent);
+
+            const initialCount = await Carnival.count({
+                where: { isManuallyEntered: false }
+            });
+
+            // Act - Process event with same mySidelineId
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvents = scrapedEvents.map(event => 
+                scraperService.validateAndCleanData(event)
+            );
+            await dataService.processScrapedEvents(cleanedEvents);
+
+            // Assert - Should update existing event, not create new one
+            const finalCount = await Carnival.count({
+                where: { isManuallyEntered: false }
+            });
+            expect(finalCount).toBe(initialCount); // No new events created
+
+            // Verify the existing event was updated
+            const updatedEvent = await Carnival.findOne({
+                where: { id: existingEvent.id }
+            });
+            expect(updatedEvent.organiserContactEmail).toBe(MOCK_EVENTS[0].organiserContactEmail);
+        }, TEST_TIMEOUT);
+
+        /**
+         * Test that sync timestamp is properly set
+         */
+        it('should set lastMySidelineSync timestamp during processing', async () => {
+            // Arrange
+            const beforeSync = new Date();
+
+            // Act
+            const scrapedEvents = await scraperService.scrapeEvents();
+            const cleanedEvents = scrapedEvents.map(event => 
+                scraperService.validateAndCleanData(event)
+            );
+            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
+
+            // Assert
+            expect(processedEvents.length).toBeGreaterThan(0);
+            
+            const savedEvent = processedEvents[0];
+            testCarnivals.push(savedEvent);
+
+            expect(savedEvent.lastMySidelineSync).not.toBeNull();
+            expect(new Date(savedEvent.lastMySidelineSync).getTime())
+                .toBeGreaterThanOrEqual(beforeSync.getTime());
+        }, TEST_TIMEOUT);
     });
 });

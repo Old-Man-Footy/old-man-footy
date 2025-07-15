@@ -282,9 +282,8 @@
                                     </div>
                                 <% } else { %>
                                     <% 
-                                    // Check if this is a MySideline link - show warning tooltip
-                                    const isMySidelineEvent = carnival.registrationLink && 
-                                        carnival.registrationLink.toLowerCase().includes('mysideline');
+                                    // Check if this is a MySideline event - show warning tooltip
+                                    const isMySidelineEvent = carnival.mySidelineId;
                                     const tooltipText = isMySidelineEvent ? 
                                         'MySideline links are not direct - you will need to follow the link and identify the exact carnival by name and date' : 
                                         'Click to register as a player for this carnival';
@@ -305,7 +304,7 @@
                                         <div class="mt-2">
                                             <small class="text-warning">
                                                 <i class="bi bi-exclamation-triangle me-1"></i>
-                                                Registration via MySideline - manual navigation required
+                                                Registration via MySideline
                                             </small>
                                         </div>
                                     <% } %>

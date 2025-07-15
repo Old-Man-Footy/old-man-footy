@@ -722,6 +722,11 @@ Carnival.init({
     allowNull: true,
     comment: 'Original MySideline title for matching purposes - never changes once set'
   },
+  mySidelineId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Unique MySideline event identifier (numeric) for reliable duplicate detection'
+  },
   mySidelineAddress: {
     type: DataTypes.TEXT,
     allowNull: true,
