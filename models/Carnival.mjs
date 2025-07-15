@@ -806,6 +806,14 @@ Carnival.init({
       this.setDataValue('locationAddressLine2', value ? value.trim() : value);
     }
   },
+  venueName: {
+    type: DataTypes.STRING(200),
+    allowNull: true,
+    comment: 'Name of the venue/facility hosting the carnival (from MySideline venue data)',
+    set(value) {
+      this.setDataValue('venueName', value ? value.trim() : value);
+    }
+  },
   organiserContactName: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for MySideline imports

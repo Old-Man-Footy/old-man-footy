@@ -206,14 +206,17 @@ class MySidelineScraperService {
         let country = 'Australia';
         let addressLine1 = null;
         let addressLine2 = null;
+        let venueName = null;
+        
+        // Extract venue name from MySideline data
+        venueName = item.venue.name || item.orgtree?.venue?.name || null;
 
         if (item.venue && item.venue.address) {
             const addr = item.venue.address;
-            
-            // Extract structured address fields from MySideline
+
             addressLine1 = addr.addressLine1 || null;
-            addressLine2 = addr.addressLine2 || null;            
-            locationAddress = addr.formatted || null;            
+            addressLine2 = addr.addressLine2 || null;
+            locationAddress = addr.formatted || null;
             state = addr.state || null;
             latitude = addr.lat || null;
             longitude = addr.lng || null;
@@ -224,13 +227,16 @@ class MySidelineScraperService {
             // Create Google Maps URL from coordinates
             if (addr.lat && addr.lng) {
                 googleMapsUrl = `https://maps.google.com/?q=${addr.lat},${addr.lng}`;
-            }            
-            else if (addr.formatted) {
-                // Fallback to formatted address if no coordinates
-                googleMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(addr.formatted)}`;
-            }            
+            }
+            else if (locationAddress) {
+                // Fallback to formatted address
+                googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(locationAddress)}`;
+            }
         } else if (item.contact && item.contact.address) {
             const addr = item.contact.address;
+            
+            // Extract venue name from MySideline data (try orgtree first, then venue)
+            venueName = item.orgtree?.venue?.name || item.venue?.name || null;
             
             // Extract structured address fields from MySideline
             addressLine1 = addr.addressLine1 || null;
@@ -246,10 +252,13 @@ class MySidelineScraperService {
             if (addr.lat && addr.lng) {
                 googleMapsUrl = `https://maps.google.com/?q=${addr.lat},${addr.lng}`;
             }
-            else if (addr.formatted) {
-                // Fallback to formatted address if no coordinates
-                googleMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(addr.formatted)}`;
-            }
+            else if (locationAddress) {
+                // Fallback to formatted address
+                googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(locationAddress)}`;
+            }            
+        } else {
+            // No address data available, but try to extract venue name from orgtree
+            venueName = item.orgtree?.venue?.name || item.venue?.name || null;
         }
 
         // Generate registration link using the top-level _id
@@ -291,6 +300,7 @@ class MySidelineScraperService {
             // MySideline-compatible address fields
             locationAddressLine1: addressLine1,
             locationAddressLine2: addressLine2,
+            venueName: venueName,
             locationLatitude: latitude,
             locationLongitude: longitude,
             locationSuburb: suburb,
@@ -396,6 +406,9 @@ class MySidelineScraperService {
                     isActive: true,
                     isMySidelineCard: true,
                     isManuallyEntered: false,
+                    locationAddressLine1: `${template.locationSuffix} Sports Complex`,
+                    locationAddressLine2: null,
+                    venueName: `${template.locationSuffix} Sports Complex`,
                     locationLatitude: null,
                     locationLongitude: null,
                     locationSuburb: template.locationSuffix,
