@@ -154,6 +154,33 @@
                                 </h6>
                                 
                                 <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="venueName" class="form-label">Venue Name</label>
+                                        <input type="text" class="form-control" id="venueName" name="venueName" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.venueName : '' %>"
+                                               placeholder="e.g., ANZ Stadium, Parramatta Sports Complex">
+                                        <div class="form-text">Name of the venue or facility hosting the carnival</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationAddressLine1" class="form-label">Address Line 1</label>
+                                        <input type="text" class="form-control" id="locationAddressLine1" name="locationAddressLine1" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationAddressLine1 : '' %>"
+                                               placeholder="e.g., 123 Main Street">
+                                        <div class="form-text">Street address or venue address</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationAddressLine2" class="form-label">Address Line 2</label>
+                                        <input type="text" class="form-control" id="locationAddressLine2" name="locationAddressLine2" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationAddressLine2 : '' %>"
+                                               placeholder="e.g., Suite 456, Building B">
+                                        <div class="form-text">Additional address information (optional)</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="locationSuburb" class="form-label">Suburb/City</label>
                                         <input type="text" class="form-control" id="locationSuburb" name="locationSuburb" 
