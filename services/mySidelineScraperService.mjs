@@ -164,7 +164,7 @@ class MySidelineScraperService {
         const club = (item.club?.name || '').toLowerCase(); 
         
         // Skip Touch events
-        if (association.contains('touch') || competition.contains('touch')) {
+        if (association.includes('touch') || competition.includes('touch')) {
             return false;
         }
 
