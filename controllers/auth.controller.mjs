@@ -7,7 +7,9 @@
 
 import { User, Club } from '../models/index.mjs';
 import { validationResult } from 'express-validator';
-import bcrypt from 'bcrypt'; // Fixed: Use bcryptjs to match User model
+import { Op } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
+import bcrypt from 'bcrypt'; // Fixed: Use bcrypt to match User model
 import crypto from 'crypto';
 import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
 import AuditService from '../services/auditService.mjs';

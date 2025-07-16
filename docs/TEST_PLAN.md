@@ -66,28 +66,30 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 
 **Services Layer Progress**: 59/59 tests passing (3/12 services complete) 🚀
 
-### Controllers (Priority 3) - Request Handling Layer
-16. [ ] `auth.controller.test.mjs` - Authentication controller
-17. [ ] `carnivalSponsor.controller.test.mjs` - Carnival sponsorship management
-18. [ ] `comingSoon.controller.test.mjs` - Coming soon functionality
-19. [ ] `maintenance.controller.test.mjs` - Maintenance mode
+### Controllers (Priority 3) - Request Handling Layer ✅ IN PROGRESS
+22. [x] `auth.controller.test.mjs` - Authentication controller ✅ MIGRATED (41/41 tests passing)
+23. [ ] `carnivalSponsor.controller.test.mjs` - Carnival sponsorship management
+24. [ ] `comingSoon.controller.test.mjs` - Coming soon functionality
+25. [ ] `maintenance.controller.test.mjs` - Maintenance mode
+
+**Controllers Layer Progress**: 41/41 tests passing (1/4 controllers complete) 🚀
 
 ### Middleware (Priority 4) - Cross-cutting Concerns
-20. [ ] `security.middleware.test.mjs` - Security middleware stack
-21. [ ] `auth.middleware.test.mjs` - Authentication middleware
-22. [ ] `comingSoon.middleware.test.mjs` - Coming soon middleware
-23. [ ] `maintenance.middleware.test.mjs` - Maintenance middleware
+26. [ ] `security.middleware.test.mjs` - Security middleware stack
+27. [ ] `auth.middleware.test.mjs` - Authentication middleware
+28. [ ] `comingSoon.middleware.test.mjs` - Coming soon middleware
+29. [ ] `maintenance.middleware.test.mjs` - Maintenance middleware
 
 ### Integration & Specialized Tests (Priority 5)
-24. [ ] `enhanced-email-validation.test.mjs` - Email validation
-25. [ ] `subscription-bot-protection.test.mjs` - Bot protection
-26. [ ] `coming-soon-integration.test.mjs` - Coming soon integration
-27. [ ] `route-redirects.test.mjs` - Route handling
+30. [ ] `enhanced-email-validation.test.mjs` - Email validation
+31. [ ] `subscription-bot-protection.test.mjs` - Bot protection
+32. [ ] `coming-soon-integration.test.mjs` - Coming soon integration
+33. [ ] `route-redirects.test.mjs` - Route handling
 
 ### Setup & Configuration Files (Priority 6)
-28. [ ] `setup.mjs` - Test setup configuration
-29. [ ] `teardown.mjs` - Test cleanup
-30. [ ] `jest.env.mjs` - Environment setup (rename to vitest.env.mjs)
+34. [ ] `setup.mjs` - Test setup configuration
+35. [ ] `teardown.mjs` - Test cleanup
+36. [ ] `jest.env.mjs` - Environment setup (rename to vitest.env.mjs)
 
 ---
 
@@ -221,6 +223,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [x] MySideline Capture Script - 14/14 tests passing with comprehensive coverage
 - [x] Audit Service - 13/13 tests passing
 - [x] Authentication Service - 32/32 tests passing
+- [x] Auth Controller - 41/41 tests passing
 
 ### In Progress 🚧
 - [x] Service layer migration (3/5 complete)
@@ -244,7 +247,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 ### Overall Progress: 11/30 files migrated (36.7%)
 - **Models**: 10/10 ✅ COMPLETE (100%)
 - **Services**: 3/5 🚧 IN PROGRESS (60%)
-- **Controllers**: 0/4 ⏳ PENDING (0%)
+- **Controllers**: 1/4 🚧 IN PROGRESS (25%)
 - **Middleware**: 0/4 ⏳ PENDING (0%)
 - **Integration**: 0/4 ⏳ PENDING (0%)
 - **Setup**: 0/3 ⏳ PENDING (0%)

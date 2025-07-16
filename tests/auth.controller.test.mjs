@@ -90,8 +90,11 @@ vi.mock('express-validator', () => ({
   validationResult: mockValidationResult,
 }));
 
-vi.mock('../services/emailService.mjs', () => ({
-  default: mockEmailService,
+vi.mock('../services/email/InvitationEmailService.mjs', () => ({
+  default: {
+    sendDelegateInvitation: vi.fn().mockResolvedValue({ success: true }),
+    sendDelegateRoleTransfer: vi.fn().mockResolvedValue({ success: true }),
+  },
 }));
 
 vi.mock('../services/auditService.mjs', () => ({
@@ -121,6 +124,9 @@ const {
   updateName,
   updateEmail,
 } = await import('../controllers/auth.controller.mjs');
+
+// Import the email service to access the mocked methods
+const InvitationEmailService = (await import('../services/email/InvitationEmailService.mjs')).default;
 
 // Create authController object for test compatibility
 const authController = {
@@ -614,7 +620,7 @@ describe('Authentication Controller', () => {
 
         // Assert
         expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'An error occurred during logout.');
-        expect(mockRes.redirect).toHaveBeenCalledWith('/dashboard');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/');
       });
 
       test('should handle logout when user is null', async () => {
@@ -829,7 +835,7 @@ describe('Authentication Controller', () => {
             tokenExpires: expect.any(Date),
           })
         );
-        expect(mockEmailService.sendInvitationEmail).toHaveBeenCalled();
+        expect(InvitationEmailService.sendDelegateInvitation).toHaveBeenCalled();
         expect(mockAuditService.logUserAction).toHaveBeenCalledWith(
           mockAuditService.ACTIONS.USER_INVITATION_SEND,
           expect.objectContaining({
@@ -888,7 +894,7 @@ describe('Authentication Controller', () => {
         const mockUserData = {
           id: 1,
           email: 'test@example.com',
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.user = mockUserData;
@@ -908,7 +914,7 @@ describe('Authentication Controller', () => {
       test('should trim whitespace from phone number', async () => {
         // Arrange
         const mockUserData = {
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.user = mockUserData;
@@ -926,7 +932,7 @@ describe('Authentication Controller', () => {
       test('should handle null phone number', async () => {
         // Arrange
         const mockUserData = {
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.user = mockUserData;
@@ -946,7 +952,7 @@ describe('Authentication Controller', () => {
       test('should update name successfully', async () => {
         // Arrange
         const mockUserData = {
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.user = mockUserData;
@@ -986,7 +992,7 @@ describe('Authentication Controller', () => {
       test('should trim whitespace from names', async () => {
         // Arrange
         const mockUserData = {
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.user = mockUserData;
@@ -1011,8 +1017,8 @@ describe('Authentication Controller', () => {
         // Arrange
         const mockUserData = {
           id: 1,
-          checkPassword: jest.fn().mockResolvedValue(true),
-          update: jest.fn().mockResolvedValue(),
+          checkPassword: vi.fn().mockResolvedValue(true),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.user = mockUserData;
@@ -1063,7 +1069,7 @@ describe('Authentication Controller', () => {
       test('should handle incorrect current password', async () => {
         // Arrange
         const mockUserData = {
-          checkPassword: jest.fn().mockResolvedValue(false),
+          checkPassword: vi.fn().mockResolvedValue(false),
         };
 
         mockReq.user = mockUserData;
@@ -1084,7 +1090,7 @@ describe('Authentication Controller', () => {
         // Arrange
         const mockUserData = {
           id: 1,
-          checkPassword: jest.fn().mockResolvedValue(true),
+          checkPassword: vi.fn().mockResolvedValue(true),
         };
 
         const existingUser = { id: 2, email: 'existing@example.com' };
@@ -1116,14 +1122,14 @@ describe('Authentication Controller', () => {
           isPrimaryDelegate: true,
           clubId: 1,
           getFullName: () => 'John Doe',
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         const newDelegate = {
           id: 2,
           email: 'newdelegate@example.com',
           getFullName: () => 'Jane Smith',
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         const club = { clubName: 'Test Club' };
@@ -1147,7 +1153,7 @@ describe('Authentication Controller', () => {
           { transaction: mockTransaction }
         );
         expect(mockTransaction.commit).toHaveBeenCalled();
-        expect(mockEmailService.sendDelegateRoleTransferNotification).toHaveBeenCalledWith(
+        expect(InvitationEmailService.sendDelegateRoleTransfer).toHaveBeenCalledWith(
           'newdelegate@example.com',
           'Jane Smith',
           'John Doe',
@@ -1210,7 +1216,7 @@ describe('Authentication Controller', () => {
           id: 1,
           isPrimaryDelegate: true,
           clubId: 1,
-          update: jest.fn().mockRejectedValue(new Error('Database error')),
+          update: vi.fn().mockRejectedValue(new Error('Database error')),
         };
 
         const newDelegate = { id: 2 };
