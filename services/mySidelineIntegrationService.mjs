@@ -16,6 +16,7 @@ class MySidelineIntegrationService {
         this.scraperService = new MySidelineScraperService();
         this.parserService = new MySidelineEventParserService();
         this.dataService = new MySidelineDataService();
+        this.logoDownloadService = new MySidelineLogoDownloadService();
         
         this.syncEnabled = process.env.MYSIDELINE_SYNC_ENABLED === 'true';
         this.lastSyncDate = null;
@@ -185,7 +186,7 @@ class MySidelineIntegrationService {
             let results = [];
             if (imageDownloadPromises.length > 0) {
                 console.log(`Downloading logos for ${imageDownloadPromises.length} events...`);
-                results = await MySidelineLogoDownloadService.downloadLogos(imageDownloadPromises);
+                results = await this.logoDownloadService.downloadLogos(imageDownloadPromises);
             }
 
             // Process the results of logo downloads
