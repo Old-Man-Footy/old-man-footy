@@ -150,9 +150,21 @@ const loginUser = async (req, res, next) => {
     }
     
     if (DEBUG_AUTH) {
-      console.log(`[AUTH CONTROLLER DEBUG] req.login() successful, redirecting to dashboard`);
+      console.log(`[AUTH CONTROLLER DEBUG] req.login() successful, checking user role for redirect`);
     }
-    return res.redirect('/dashboard');
+    
+    // Redirect based on user role
+    if (user.isAdmin) {
+      if (DEBUG_AUTH) {
+        console.log(`[AUTH CONTROLLER DEBUG] Admin user detected, redirecting to admin dashboard`);
+      }
+      return res.redirect('/admin/dashboard');
+    } else {
+      if (DEBUG_AUTH) {
+        console.log(`[AUTH CONTROLLER DEBUG] Regular user, redirecting to standard dashboard`);
+      }
+      return res.redirect('/dashboard');
+    }
   });
 };
 
