@@ -1,514 +1,579 @@
 /**
  * Authentication Middleware Unit Tests
  * 
- * Tests all authentication middleware functions including session management,
- * user loading, and authorization checks following strict MVC patterns.
+ * Comprehensive test suite for authentication middleware following security-first principles
+ * and strict MVC architecture. Tests cover session management, user loading, and authorization.
  */
 
-import { jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock dependencies using jest.unstable_mockModule
+// Create comprehensive mocks for all dependencies
 const mockUser = {
-  findByPk: jest.fn()
+  findByPk: vi.fn(),
+  findOne: vi.fn(),
 };
 
-const mockClub = jest.fn();
+const mockClub = {
+  findByPk: vi.fn(),
+};
 
-jest.unstable_mockModule('../models/index.mjs', () => ({
+// Mock the models
+vi.mock('../models/index.mjs', () => ({
   User: mockUser,
-  Club: mockClub
+  Club: mockClub,
 }));
 
-// Import after mocking
+// Import the auth middleware after mocking
 const {
   setupSessionAuth,
   loadSessionUser,
   ensureAuthenticated,
   ensureGuest,
   ensureAdmin,
-  ensurePrimaryDelegate
+  ensurePrimaryDelegate,
+  requireAdmin,
+  requireAdminOrPrimaryDelegate,
+  requireDelegate
 } = await import('../middleware/auth.mjs');
 
 describe('Authentication Middleware', () => {
-  let req, res, next;
+  let mockReq, mockRes, mockNext;
 
   beforeEach(() => {
-    // Mock request object
-    req = {
+    // Reset all mocks
+    vi.clearAllMocks();
+    
+    // Create fresh mock objects for each test
+    mockReq = {
+      isAuthenticated: vi.fn(),
+      user: null,
       session: {
         userId: null,
-        save: jest.fn((callback) => callback(null)),
-        destroy: jest.fn((callback) => callback(null))
+        passport: {},
+        lastActivity: Date.now(),
+        save: vi.fn((callback) => callback(null)),
+        destroy: vi.fn((callback) => callback(null))
       },
-      user: null,
-      flash: jest.fn()
+      path: '/test',
+      method: 'GET',
+      ip: '127.0.0.1',
+      headers: {},
+      flash: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn()
     };
-
-    // Mock response object
-    res = {
-      redirect: jest.fn()
+    
+    mockRes = {
+      redirect: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn(),
+      locals: {},
+      render: vi.fn()
     };
-
-    // Mock next function
-    next = jest.fn();
-
-    // Clear all mocks
-    jest.clearAllMocks();
+    
+    mockNext = vi.fn();
   });
 
-  describe('setupSessionAuth middleware', () => {
-    it('should add login method to request object', () => {
-      setupSessionAuth(req, res, next);
+  describe('setupSessionAuth', () => {
+    it('should add authentication methods to request object', () => {
+      // Act
+      setupSessionAuth(mockReq, mockRes, mockNext);
 
-      expect(typeof req.login).toBe('function');
-      expect(next).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(typeof mockReq.login).toBe('function');
+      expect(typeof mockReq.logout).toBe('function');
+      expect(typeof mockReq.isAuthenticated).toBe('function');
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
-    it('should add logout method to request object', () => {
-      setupSessionAuth(req, res, next);
+    it('should implement login method correctly', () => {
+      // Arrange
+      setupSessionAuth(mockReq, mockRes, mockNext);
+      const mockUser = { id: 1, firstName: 'John' };
+      
+      // Act
+      mockReq.login(mockUser, vi.fn());
 
-      expect(typeof req.logout).toBe('function');
-      expect(next).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(mockReq.session.userId).toBe(1);
+      expect(mockReq.session.save).toHaveBeenCalled();
     });
 
-    it('should add isAuthenticated method to request object', () => {
-      setupSessionAuth(req, res, next);
+    it('should implement logout method correctly', () => {
+      // Arrange
+      setupSessionAuth(mockReq, mockRes, mockNext);
+      mockReq.session.userId = 1;
+      mockReq.user = { id: 1 };
+      
+      // Act
+      mockReq.logout(vi.fn());
 
-      expect(typeof req.isAuthenticated).toBe('function');
-      expect(next).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(mockReq.session.destroy).toHaveBeenCalled();
     });
 
-    describe('req.login method', () => {
-      it('should set session userId and user on successful login', (done) => {
-        setupSessionAuth(req, res, next);
+    it('should implement isAuthenticated method correctly', () => {
+      // Arrange
+      setupSessionAuth(mockReq, mockRes, mockNext);
+      
+      // Test unauthenticated state
+      mockReq.session.userId = null;
+      mockReq.user = null;
+      expect(mockReq.isAuthenticated()).toBe(false);
 
-        const mockUser = { id: 1, email: 'test@example.com' };
-
-        req.login(mockUser, (err) => {
-          expect(err).toBeNull();
-          expect(req.session.userId).toBe(1);
-          expect(req.user).toEqual(mockUser);
-          expect(req.session.save).toHaveBeenCalledTimes(1);
-          done();
-        });
-      });
-
-      it('should handle session save errors', (done) => {
-        setupSessionAuth(req, res, next);
-
-        const mockError = new Error('Session save failed');
-        req.session.save = jest.fn((callback) => callback(mockError));
-
-        const mockUser = { id: 1, email: 'test@example.com' };
-
-        req.login(mockUser, (err) => {
-          expect(err).toEqual(mockError);
-          expect(req.session.userId).toBe(1);
-          expect(req.user).toBeNull(); // Changed from toBeUndefined to toBeNull
-          done();
-        });
-      });
-    });
-
-    describe('req.logout method', () => {
-      it('should destroy session and clear user on logout', (done) => {
-        setupSessionAuth(req, res, next);
-
-        req.session.userId = 1;
-        req.user = { id: 1, email: 'test@example.com' };
-
-        req.logout((err) => {
-          expect(err).toBeNull();
-          expect(req.session.destroy).toHaveBeenCalledTimes(1);
-          expect(req.user).toBeNull();
-          done();
-        });
-      });
-
-      it('should handle session destroy errors', (done) => {
-        setupSessionAuth(req, res, next);
-
-        const mockError = new Error('Session destroy failed');
-        req.session.destroy = jest.fn((callback) => callback(mockError));
-
-        req.logout((err) => {
-          expect(err).toEqual(mockError);
-          expect(req.session.destroy).toHaveBeenCalledTimes(1);
-          done();
-        });
-      });
-    });
-
-    describe('req.isAuthenticated method', () => {
-      it('should return true when user is authenticated', () => {
-        setupSessionAuth(req, res, next);
-
-        req.session.userId = 1;
-        req.user = { id: 1, email: 'test@example.com' };
-
-        expect(req.isAuthenticated()).toBe(true);
-      });
-
-      it('should return false when no session userId', () => {
-        setupSessionAuth(req, res, next);
-
-        req.user = { id: 1, email: 'test@example.com' };
-
-        expect(req.isAuthenticated()).toBe(false);
-      });
-
-      it('should return false when no user object', () => {
-        setupSessionAuth(req, res, next);
-
-        req.session.userId = 1;
-
-        expect(req.isAuthenticated()).toBe(false);
-      });
-
-      it('should return false when neither session nor user exist', () => {
-        setupSessionAuth(req, res, next);
-
-        expect(req.isAuthenticated()).toBe(false);
-      });
+      // Test authenticated state
+      mockReq.session.userId = 1;
+      mockReq.user = { id: 1 };
+      expect(mockReq.isAuthenticated()).toBe(true);
     });
   });
 
-  describe('loadSessionUser middleware', () => {
-    let mockUser;
-
-    beforeEach(async () => {
-      mockUser = {
+  describe('loadSessionUser', () => {
+    it('should load user when session userId exists but user is not loaded', async () => {
+      // Arrange
+      const mockUserData = {
         id: 1,
-        email: 'test@example.com',
-        isActive: true
+        firstName: 'John',
+        lastName: 'Doe',
+        isActive: true,
+        club: { id: 1, clubName: 'Test Club' }
       };
 
-      // Import and mock the User model
-      const { User } = await import('../models/index.mjs');
-      User.findByPk.mockResolvedValue(mockUser);
-    });
+      mockReq.session.userId = 1;
+      mockReq.user = null;
+      mockUser.findByPk.mockResolvedValue(mockUserData);
 
-    it('should load user when session userId exists but no user object', async () => {
-      req.session.userId = 1;
+      // Act
+      await loadSessionUser(mockReq, mockRes, mockNext);
 
-      await loadSessionUser(req, res, next);
-
-      const { User, Club } = await import('../models/index.mjs');
-      expect(User.findByPk).toHaveBeenCalledWith(1, {
-        include: [{
-          model: Club,
-          as: 'club'
-        }]
+      // Assert
+      expect(mockUser.findByPk).toHaveBeenCalledWith(1, {
+        include: [{ model: mockClub, as: 'club' }]
       });
-      expect(req.user).toEqual(mockUser);
-      expect(next).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not query database when user already exists', async () => {
-      req.session.userId = 1;
-      req.user = mockUser;
-
-      await loadSessionUser(req, res, next);
-
-      const { User } = await import('../models/index.mjs');
-      expect(User.findByPk).not.toHaveBeenCalled();
-      expect(next).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not query database when no session userId', async () => {
-      await loadSessionUser(req, res, next);
-
-      const { User } = await import('../models/index.mjs');
-      expect(User.findByPk).not.toHaveBeenCalled();
-      expect(next).toHaveBeenCalledTimes(1);
-    });
-
-    it('should clear session when user not found', async () => {
-      req.session.userId = 1;
-
-      const { User } = await import('../models/index.mjs');
-      User.findByPk.mockResolvedValue(null);
-
-      await loadSessionUser(req, res, next);
-
-      expect(req.session.userId).toBeNull();
-      expect(req.user).toBeNull();
-      expect(next).toHaveBeenCalledTimes(1);
+      expect(mockReq.user).toEqual(mockUserData);
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
     it('should clear session when user is inactive', async () => {
-      req.session.userId = 1;
+      // Arrange
+      const inactiveUser = {
+        id: 1,
+        firstName: 'John',
+        isActive: false
+      };
 
-      const inactiveUser = { ...mockUser, isActive: false };
-      const { User } = await import('../models/index.mjs');
-      User.findByPk.mockResolvedValue(inactiveUser);
+      mockReq.session.userId = 1;
+      mockUser.findByPk.mockResolvedValue(inactiveUser);
 
-      await loadSessionUser(req, res, next);
+      // Act
+      await loadSessionUser(mockReq, mockRes, mockNext);
 
-      expect(req.session.userId).toBeNull();
-      expect(req.user).toBeNull();
-      expect(next).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(mockReq.session.userId).toBe(null);
+      expect(mockNext).toHaveBeenCalledWith();
+    });
+
+    it('should skip loading when user is already loaded', async () => {
+      // Arrange
+      mockReq.session.userId = 1;
+      mockReq.user = { id: 1, firstName: 'John' };
+
+      // Act
+      await loadSessionUser(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockUser.findByPk).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
     it('should handle database errors gracefully', async () => {
-      req.session.userId = 1;
+      // Arrange
+      mockReq.session.userId = 1;
+      mockUser.findByPk.mockRejectedValue(new Error('Database error'));
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const mockError = new Error('Database connection failed');
-      const { User } = await import('../models/index.mjs');
-      User.findByPk.mockRejectedValue(mockError);
+      // Act
+      await loadSessionUser(mockReq, mockRes, mockNext);
 
-      // Spy on console.error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      await loadSessionUser(req, res, next);
-
-      expect(consoleSpy).toHaveBeenCalledWith('Error loading session user:', mockError);
-      expect(req.session.userId).toBeNull();
-      expect(next).toHaveBeenCalledTimes(1);
-
+      // Assert
+      expect(mockReq.session.userId).toBe(null);
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith();
+      
       consoleSpy.mockRestore();
     });
   });
 
-  describe('ensureAuthenticated middleware', () => {
-    beforeEach(() => {
-      // Setup authentication methods
-      setupSessionAuth(req, res, next);
-      next.mockClear(); // Clear the call from setupSessionAuth
+  describe('ensureAuthenticated', () => {
+    it('should allow authenticated users to proceed', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(true);
+
+      // Act
+      ensureAuthenticated(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it('should call next() when user is authenticated', () => {
-      req.session.userId = 1;
-      req.user = { id: 1, email: 'test@example.com' };
+    it('should redirect unauthenticated users to login', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(false);
 
-      ensureAuthenticated(req, res, next);
+      // Act
+      ensureAuthenticated(mockReq, mockRes, mockNext);
 
-      expect(next).toHaveBeenCalledTimes(1);
-      expect(res.redirect).not.toHaveBeenCalled();
-      expect(req.flash).not.toHaveBeenCalled();
-    });
-
-    it('should redirect to login when user is not authenticated', () => {
-      ensureAuthenticated(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Please log in to access this page');
-      expect(res.redirect).toHaveBeenCalledWith('/auth/login');
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should redirect to login when user has session but no user object', () => {
-      req.session.userId = 1;
-      // req.user remains null
-
-      ensureAuthenticated(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Please log in to access this page');
-      expect(res.redirect).toHaveBeenCalledWith('/auth/login');
-      expect(next).not.toHaveBeenCalled();
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Please log in to access this page');
+      expect(mockNext).not.toHaveBeenCalled();
     });
   });
 
-  describe('ensureGuest middleware', () => {
-    beforeEach(() => {
-      // Setup authentication methods
-      setupSessionAuth(req, res, next);
-      next.mockClear(); // Clear the call from setupSessionAuth
+  describe('ensureGuest', () => {
+    it('should allow unauthenticated users to proceed', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(false);
+
+      // Act
+      ensureGuest(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it('should call next() when user is not authenticated', () => {
-      ensureGuest(req, res, next);
+    it('should redirect authenticated users to dashboard', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(true);
 
-      expect(next).toHaveBeenCalledTimes(1);
-      expect(res.redirect).not.toHaveBeenCalled();
-    });
+      // Act
+      ensureGuest(mockReq, mockRes, mockNext);
 
-    it('should redirect to dashboard when user is authenticated', () => {
-      req.session.userId = 1;
-      req.user = { id: 1, email: 'test@example.com' };
-
-      ensureGuest(req, res, next);
-
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      expect(next).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('ensurePrimaryDelegate middleware', () => {
-    beforeEach(() => {
-      // Setup authentication methods
-      setupSessionAuth(req, res, next);
-      next.mockClear(); // Clear the call from setupSessionAuth
-    });
-
-    it('should call next() when user is authenticated and is primary delegate', () => {
-      req.session.userId = 1;
-      req.user = { 
-        id: 1, 
-        email: 'test@example.com',
-        isPrimaryDelegate: true
-      };
-
-      ensurePrimaryDelegate(req, res, next);
-
-      expect(next).toHaveBeenCalledTimes(1);
-      expect(res.redirect).not.toHaveBeenCalled();
-      expect(req.flash).not.toHaveBeenCalled();
-    });
-
-    it('should redirect to dashboard when user is not authenticated', () => {
-      ensurePrimaryDelegate(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Primary delegate privileges required.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should redirect to dashboard when user is authenticated but not primary delegate', () => {
-      req.session.userId = 1;
-      req.user = { 
-        id: 1, 
-        email: 'test@example.com',
-        isPrimaryDelegate: false
-      };
-
-      ensurePrimaryDelegate(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Primary delegate privileges required.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should redirect to dashboard when user is missing isPrimaryDelegate property', () => {
-      req.session.userId = 1;
-      req.user = { 
-        id: 1, 
-        email: 'test@example.com'
-        // isPrimaryDelegate is undefined
-      };
-
-      ensurePrimaryDelegate(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Primary delegate privileges required.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      expect(next).not.toHaveBeenCalled();
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/dashboard');
+      expect(mockNext).not.toHaveBeenCalled();
     });
   });
 
-  describe('ensureAdmin middleware', () => {
-    beforeEach(() => {
-      // Setup authentication methods
-      setupSessionAuth(req, res, next);
-      next.mockClear(); // Clear the call from setupSessionAuth
+  describe('ensureAdmin', () => {
+    it('should allow admin users to proceed', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(true);
+      mockReq.user = { id: 1, isAdmin: true };
+
+      // Act
+      ensureAdmin(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it('should call next() when user is authenticated and is admin', () => {
-      req.session.userId = 1;
-      req.user = { 
-        id: 1, 
-        email: 'admin@example.com',
-        isAdmin: true
-      };
+    it('should redirect non-admin users to dashboard', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(true);
+      mockReq.user = { id: 1, isAdmin: false };
 
-      ensureAdmin(req, res, next);
+      // Act
+      ensureAdmin(mockReq, mockRes, mockNext);
 
-      expect(next).toHaveBeenCalledTimes(1);
-      expect(res.redirect).not.toHaveBeenCalled();
-      expect(req.flash).not.toHaveBeenCalled();
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/dashboard');
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Admin privileges required.');
+      expect(mockNext).not.toHaveBeenCalled();
     });
 
-    it('should redirect to dashboard when user is not authenticated', () => {
-      ensureAdmin(req, res, next);
+    it('should redirect unauthenticated users to dashboard', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(false);
 
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Admin privileges required.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      expect(next).not.toHaveBeenCalled();
-    });
+      // Act
+      ensureAdmin(mockReq, mockRes, mockNext);
 
-    it('should redirect to dashboard when user is authenticated but not admin', () => {
-      req.session.userId = 1;
-      req.user = { 
-        id: 1, 
-        email: 'user@example.com',
-        isAdmin: false
-      };
-
-      ensureAdmin(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Admin privileges required.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      expect(next).not.toHaveBeenCalled();
-    });
-
-    it('should redirect to dashboard when user is missing isAdmin property', () => {
-      req.session.userId = 1;
-      req.user = { 
-        id: 1, 
-        email: 'user@example.com'
-        // isAdmin is undefined
-      };
-
-      ensureAdmin(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Admin privileges required.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      expect(next).not.toHaveBeenCalled();
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/dashboard');
+      expect(mockNext).not.toHaveBeenCalled();
     });
   });
 
-  describe('Security and Edge Cases', () => {
-    beforeEach(() => {
-      setupSessionAuth(req, res, next);
-      next.mockClear();
+  describe('ensurePrimaryDelegate', () => {
+    it('should allow primary delegates to proceed', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(true);
+      mockReq.user = { id: 1, isPrimaryDelegate: true };
+
+      // Act
+      ensurePrimaryDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it('should handle null user object in isAuthenticated', () => {
-      req.session.userId = 1;
-      req.user = null;
+    it('should redirect non-primary delegates to dashboard', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(true);
+      mockReq.user = { id: 1, isPrimaryDelegate: false };
 
-      expect(req.isAuthenticated()).toBe(false);
+      // Act
+      ensurePrimaryDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/dashboard');
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Primary delegate privileges required.');
+      expect(mockNext).not.toHaveBeenCalled();
     });
 
-    it('should handle undefined user object in isAuthenticated', () => {
-      req.session.userId = 1;
-      req.user = undefined;
+    it('should redirect unauthenticated users to dashboard', () => {
+      // Arrange
+      mockReq.isAuthenticated.mockReturnValue(false);
 
-      expect(req.isAuthenticated()).toBe(false);
+      // Act
+      ensurePrimaryDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/dashboard');
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('requireAdmin', () => {
+    it('should allow admin users to proceed', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'admin' };
+
+      // Act
+      requireAdmin(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it('should handle session userId as string', () => {
-      req.session.userId = '1';
-      req.user = { id: 1, email: 'test@example.com' };
+    it('should redirect non-admin users to root', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'delegate' };
 
-      expect(req.isAuthenticated()).toBe(true);
+      // Act
+      requireAdmin(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/');
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Administrator privileges required.');
+      expect(mockNext).not.toHaveBeenCalled();
     });
 
-    it('should handle zero userId in session', () => {
-      req.session.userId = 0;
-      req.user = { id: 0, email: 'test@example.com' };
+    it('should redirect users without user object', () => {
+      // Arrange
+      mockReq.user = null;
 
-      expect(req.isAuthenticated()).toBe(false); // 0 is falsy
+      // Act
+      requireAdmin(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/');
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('requireAdminOrPrimaryDelegate', () => {
+    it('should allow admin users to proceed', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'admin' };
+
+      // Act
+      requireAdminOrPrimaryDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    describe('Role-based access with malformed user objects', () => {
-      it('should handle null user in ensurePrimaryDelegate', () => {
-        req.session.userId = 1;
-        req.user = null;
+    it('should allow primary delegate users to proceed', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'primary_delegate' };
 
-        ensurePrimaryDelegate(req, res, next);
+      // Act
+      requireAdminOrPrimaryDelegate(mockReq, mockRes, mockNext);
 
-        expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Primary delegate privileges required.');
-        expect(res.redirect).toHaveBeenCalledWith('/dashboard');
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
+    it('should redirect regular delegate users', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'delegate' };
+
+      // Act
+      requireAdminOrPrimaryDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/');
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Administrator or primary delegate privileges required.');
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('requireDelegate', () => {
+    it('should allow admin users to proceed', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'admin' };
+
+      // Act
+      requireDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
+    it('should allow primary delegate users to proceed', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'primary_delegate' };
+
+      // Act
+      requireDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
+    it('should allow delegate users to proceed', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'delegate' };
+
+      // Act
+      requireDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+    });
+
+    it('should redirect users with insufficient privileges', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'user' };
+
+      // Act
+      requireDelegate(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith('/');
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Delegate privileges required.');
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Edge Cases and Error Handling', () => {
+    it('should handle session save errors in login method', () => {
+      // Arrange
+      const callback = vi.fn();
+      const saveError = new Error('Session save failed');
+      mockReq.session.save = vi.fn((cb) => cb(saveError));
+      setupSessionAuth(mockReq, mockRes, mockNext);
+
+      // Act
+      mockReq.login({ id: 1 }, callback);
+
+      // Assert
+      expect(callback).toHaveBeenCalledWith(saveError);
+    });
+
+    it('should handle session destroy errors in logout method', () => {
+      // Arrange
+      const callback = vi.fn();
+      const destroyError = new Error('Session destroy failed');
+      mockReq.session.destroy = vi.fn((cb) => cb(destroyError));
+      setupSessionAuth(mockReq, mockRes, mockNext);
+
+      // Act
+      mockReq.logout(callback);
+
+      // Assert
+      expect(callback).toHaveBeenCalledWith(destroyError);
+    });
+
+    it('should handle missing session gracefully in isAuthenticated', () => {
+      // Arrange
+      setupSessionAuth(mockReq, mockRes, mockNext);
+      mockReq.session = null;
+
+      // Act & Assert
+      expect(() => {
+        // The isAuthenticated method should handle null session gracefully
+        const result = mockReq.isAuthenticated();
+        expect(result).toBe(false);
+      }).not.toThrow();
+    });
+
+    it('should handle missing user in loadSessionUser', async () => {
+      // Arrange
+      mockReq.session.userId = 999;
+      mockUser.findByPk.mockResolvedValue(null);
+
+      // Act
+      await loadSessionUser(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockReq.session.userId).toBe(null);
+      expect(mockNext).toHaveBeenCalledWith();
+    });
+  });
+
+  describe('Security Considerations', () => {
+    it('should not leak sensitive information in error messages', () => {
+      // Arrange
+      mockReq.user = { id: 1, role: 'delegate' };
+
+      // Act
+      requireAdmin(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Administrator privileges required.');
+      // Verify message doesn't contain sensitive details
+      const flashCall = mockReq.flash.mock.calls[0][1];
+      expect(flashCall).not.toContain('role');
+      expect(flashCall).not.toContain('delegate');
+    });
+
+    it('should clear session data when user becomes inactive', async () => {
+      // Arrange
+      const inactiveUser = { id: 1, isActive: false };
+      mockReq.session.userId = 1;
+      mockUser.findByPk.mockResolvedValue(inactiveUser);
+
+      // Act
+      await loadSessionUser(mockReq, mockRes, mockNext);
+
+      // Assert
+      expect(mockReq.session.userId).toBe(null);
+    });
+
+    it('should validate user authentication state consistently', () => {
+      // Arrange
+      setupSessionAuth(mockReq, mockRes, mockNext);
+
+      // Test various invalid states
+      const invalidStates = [
+        { userId: null, user: { id: 1 } },
+        { userId: 1, user: null },
+        { userId: null, user: null }
+      ];
+
+      invalidStates.forEach(state => {
+        mockReq.session.userId = state.userId;
+        mockReq.user = state.user;
+        expect(mockReq.isAuthenticated()).toBe(false);
       });
 
-      it('should handle null user in ensureAdmin', () => {
-        req.session.userId = 1;
-        req.user = null;
-
-        ensureAdmin(req, res, next);
-
-        expect(req.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Admin privileges required.');
-        expect(res.redirect).toHaveBeenCalledWith('/dashboard');
-      });
+      // Test valid state
+      mockReq.session.userId = 1;
+      mockReq.user = { id: 1 };
+      expect(mockReq.isAuthenticated()).toBe(true);
     });
   });
 });

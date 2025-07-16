@@ -38,7 +38,7 @@ function setupSessionAuth(req, res, next) {
 
   // Add isAuthenticated method to request
   req.isAuthenticated = function() {
-    return !!(req.session.userId && req.user);
+    return !!(req.session && req.session.userId && req.user);
   };
 
   next();

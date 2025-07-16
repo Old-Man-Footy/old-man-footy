@@ -75,8 +75,8 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 **Controllers Layer Summary**: 73/73 tests passing (100% success rate) 🚀
 
 ### Middleware (Priority 4) - Cross-cutting Concerns
-26. [ ] `security.middleware.test.mjs` - Security middleware stack
-27. [ ] `auth.middleware.test.mjs` - Authentication middleware
+26. [x] `security.middleware.test.mjs` - Security middleware stack ✅ MIGRATED (72/72 tests passing)
+27. [x] `auth.middleware.test.mjs` - Authentication middleware ✅ MIGRATED (35/35 tests passing)
 28. [ ] `comingSoon.middleware.test.mjs` - Coming soon middleware
 29. [ ] `maintenance.middleware.test.mjs` - Maintenance middleware
 
