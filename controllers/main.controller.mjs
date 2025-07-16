@@ -14,12 +14,11 @@ import {
   CarnivalClub,
 } from '../models/index.mjs';
 import { Op } from 'sequelize';
-import emailService from '../services/emailService.mjs';
-import carouselImageService from '../services/carouselImageService.mjs';
+import { validationResult } from 'express-validator';
+import ContactEmailService from '../services/email/ContactEmailService.mjs';
+import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 import crypto from 'crypto';
-import { validationResult } from 'express-validator';
-import { asyncHandler } from '../middleware/asyncHandler.mjs';
 
 /**
  * Display homepage with upcoming carnivals
@@ -397,7 +396,7 @@ export const postSubscribe = async (req, res) => {
 
         // Send welcome email (optional - don't fail the subscription if email fails)
         try {
-            await emailService.sendWelcomeEmail(email.toLowerCase(), stateArray);
+            await AuthEmailService.sendWelcomeEmail(email.toLowerCase(), stateArray);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
             // Continue - don't fail the subscription just because email failed
@@ -508,7 +507,7 @@ export const sendNewsletter = asyncHandler(async (req, res) => {
     where: { isActive: true },
   });
 
-  const result = await emailService.sendNewsletter(subject, content, subscribers);
+  const result = await ContactEmailService.sendNewsletter(subject, content, subscribers);
 
   return res.json({
     success: true,
@@ -573,7 +572,7 @@ export const postContact = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, phone, subject, clubName, message, newsletter } = req.body;
 
   // Send contact email using the email service
-  await emailService.sendContactFormEmail({
+  await ContactEmailService.sendContactFormEmail({
     firstName: firstName.trim(),
     lastName: lastName.trim(),
     email: email.trim().toLowerCase(),

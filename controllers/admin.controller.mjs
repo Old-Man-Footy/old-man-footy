@@ -9,7 +9,7 @@ import { validationResult } from 'express-validator';
 import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
 import { Op, fn } from 'sequelize';
 import crypto from 'crypto';
-import EmailService from '../services/emailService.mjs';
+import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import AuditService from '../services/auditService.mjs';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 
@@ -334,7 +334,7 @@ const issuePasswordResetHandler = async (req, res) => {
 
     // Send password reset email
     const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
-    await EmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
+    await AuthEmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
     // Log successful password reset initiation
     await AuditService.logAdminAction(

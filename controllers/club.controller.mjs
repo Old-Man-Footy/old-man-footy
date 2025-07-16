@@ -20,10 +20,10 @@ import { validationResult } from 'express-validator';
 import ImageNamingService from '../services/imageNamingService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
 import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
-import emailService from '../services/emailService.mjs';
 import path from 'path';
 import fs from 'fs/promises';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
 
 /**
  * Display public club listings with search and filter options
@@ -1126,7 +1126,7 @@ const postCreateOnBehalfHandler = async (req, res) => {
   });
 
   // Send ownership invitation email
-  await emailService.sendClubOwnershipInvitation(
+  await InvitationEmailService.sendClubOwnershipInvitation(
     newClub,
     req.user,
     inviteEmail.trim(),

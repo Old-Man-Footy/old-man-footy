@@ -58,8 +58,17 @@ vi.mock('../models/index.mjs', () => ({
   User: mockUser
 }));
 
-vi.mock('../services/emailService.mjs', () => ({
-  default: mockEmailService
+vi.mock('../services/email/InvitationEmailService.mjs', () => ({
+  default: {
+    sendDelegateInvitation: vi.fn().mockResolvedValue({ success: true }),
+    sendDelegateRoleTransfer: vi.fn().mockResolvedValue({ success: true }),
+  }
+}));
+
+vi.mock('../services/email/AuthEmailService.mjs', () => ({
+  default: {
+    sendPasswordResetEmail: vi.fn().mockResolvedValue({ success: true }),
+  }
 }));
 
 vi.mock('../services/auditService.mjs', () => ({
@@ -69,9 +78,23 @@ vi.mock('../services/auditService.mjs', () => ({
 vi.mock('bcryptjs', () => mockBcryptjs);
 vi.mock('crypto', () => mockCrypto);
 
+vi.mock('../services/email/InvitationEmailService.mjs', () => ({
+  default: {
+    sendDelegateInvitation: vi.fn().mockResolvedValue({ success: true }),
+    sendDelegateRoleTransfer: vi.fn().mockResolvedValue({ success: true }),
+  }
+}));
+
+vi.mock('../services/email/AuthEmailService.mjs', () => ({
+  default: {
+    sendPasswordResetEmail: vi.fn().mockResolvedValue({ success: true }),
+  }
+}));
+
 // Import the authentication service functionality
 const { User } = await import('../models/index.mjs');
-const emailService = (await import('../services/emailService.mjs')).default;
+const InvitationEmailService = (await import('../services/email/InvitationEmailService.mjs')).default;
+const AuthEmailService = (await import('../services/email/AuthEmailService.mjs')).default;
 const AuditService = (await import('../services/auditService.mjs')).default;
 const bcryptjs = await import('bcryptjs');
 const crypto = await import('crypto');
@@ -168,13 +191,12 @@ class AuthService {
     });
 
     // Send invitation email
-    await emailService.sendInvitationEmail({
-      to: email,
-      firstName: firstName,
-      inviterName: `${inviterUser.firstName} ${inviterUser.lastName}`,
-      clubName: inviterUser.club?.clubName || 'the club',
-      invitationUrl: `${process.env.BASE_URL || 'http://localhost:3050'}/auth/accept-invitation/${invitationToken}`,
-    });
+    await InvitationEmailService.sendDelegateInvitation(
+      email,
+      invitationToken,
+      `${inviterUser.firstName} ${inviterUser.lastName}`,
+      inviterUser.club?.clubName || 'the club'
+    );
 
     // Log successful invitation send
     await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_SEND, {
@@ -183,7 +205,7 @@ class AuthService {
       entityId: newUser.id,
       newValues: {
         firstName: newUser.firstName,
-        lastName: newUser.lastName,
+        last
         email: newUser.email,
         clubId: newUser.clubId,
         inviterUserId: inviterUser.id,
@@ -273,7 +295,7 @@ class AuthService {
 
     // Send password reset email
     const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
-    await emailService.sendPasswordResetEmail(user.email, resetToken, user.firstName);
+    await AuthEmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
     // Log password reset initiation
     await AuditService.logUserAction(AuditService.ACTIONS.USER_PASSWORD_RESET, {
@@ -347,7 +369,7 @@ class AuthService {
     await newPrimaryUser.update({ isPrimaryDelegate: true });
 
     // Send notification email
-    await emailService.sendDelegateRoleTransferNotification(
+    await InvitationEmailService.sendDelegateRoleTransfer(
       newPrimaryUser.email,
       newPrimaryUser.getFullName(),
       currentPrimary.getFullName(),
@@ -535,7 +557,7 @@ describe('Authentication Service Layer', () => {
           invitationToken: 'mockedinvitationtoken123456',
           tokenExpires: expect.any(Date),
         });
-        expect(emailService.sendInvitationEmail).toHaveBeenCalled();
+        expect(InvitationEmailService.sendDelegateInvitation).toHaveBeenCalled();
         expect(AuditService.logUserAction).toHaveBeenCalledWith(
           AuditService.ACTIONS.USER_INVITATION_SEND,
           expect.objectContaining({
@@ -560,7 +582,7 @@ describe('Authentication Service Layer', () => {
         expect(result.success).toBe(false);
         expect(result.error).toBe('User already exists');
         expect(User.create).not.toHaveBeenCalled();
-        expect(emailService.sendInvitationEmail).not.toHaveBeenCalled();
+        expect(InvitationEmailService.sendDelegateInvitation).not.toHaveBeenCalled();
         expect(AuditService.logUserAction).toHaveBeenCalledWith(
           AuditService.ACTIONS.USER_INVITATION_SEND,
           expect.objectContaining({
@@ -751,10 +773,10 @@ describe('Authentication Service Layer', () => {
           passwordResetToken: 'mockedinvitationtoken123456',
           passwordResetExpiry: expect.any(Date),
         });
-        expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        expect(AuthEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(
           'test@example.com',
-          'mockedinvitationtoken123456',
-          'Test'
+          'Test',
+          expect.stringContaining('/auth/reset-password/')
         );
         expect(AuditService.logUserAction).toHaveBeenCalledWith(
           AuditService.ACTIONS.USER_PASSWORD_RESET,
@@ -773,7 +795,7 @@ describe('Authentication Service Layer', () => {
 
         expect(result.success).toBe(true);
         expect(result.message).toBe('If the email exists, a reset link has been sent');
-        expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+        expect(AuthEmailService.sendPasswordResetEmail).not.toHaveBeenCalled();
         expect(AuditService.logUserAction).not.toHaveBeenCalled();
       });
 
@@ -785,7 +807,7 @@ describe('Authentication Service Layer', () => {
 
         expect(result.success).toBe(true);
         expect(result.message).toBe('If the email exists, a reset link has been sent');
-        expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+        expect(AuthEmailService.sendPasswordResetEmail).not.toHaveBeenCalled();
       });
 
       it('should normalize email to lowercase', async () => {
@@ -849,7 +871,7 @@ describe('Authentication Service Layer', () => {
         expect(result.newPrimary).toEqual(newPrimaryUser);
         expect(mockInviterUser.update).toHaveBeenCalledWith({ isPrimaryDelegate: false });
         expect(newPrimaryUser.update).toHaveBeenCalledWith({ isPrimaryDelegate: true });
-        expect(emailService.sendDelegateRoleTransferNotification).toHaveBeenCalledWith(
+        expect(InvitationEmailService.sendDelegateRoleTransfer).toHaveBeenCalledWith(
           'newprimary@example.com',
           'New Primary',
           'Inviter User',
@@ -865,7 +887,7 @@ describe('Authentication Service Layer', () => {
         expect(result.success).toBe(false);
         expect(result.error).toBe('Selected user not found or not eligible');
         expect(mockInviterUser.update).not.toHaveBeenCalled();
-        expect(emailService.sendDelegateRoleTransferNotification).not.toHaveBeenCalled();
+        expect(InvitationEmailService.sendDelegateRoleTransfer).not.toHaveBeenCalled();
       });
 
       it('should fail transfer for user from different club', async () => {

@@ -7,12 +7,10 @@
 
 import { User, Club } from '../models/index.mjs';
 import { validationResult } from 'express-validator';
-import bcryptjs from 'bcryptjs'; // Fixed: Use bcryptjs to match User model
+import bcrypt from 'bcrypt'; // Fixed: Use bcryptjs to match User model
 import crypto from 'crypto';
-import emailService from '../services/emailService.mjs';
+import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
 import AuditService from '../services/auditService.mjs';
-import { sequelize } from '../config/database.mjs';
-import { Op } from 'sequelize';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 
 /**
@@ -99,7 +97,7 @@ const loginUser = async (req, res, next) => {
   }
 
   // Check password
-  const isMatch = await bcryptjs.compare(password, user.passwordHash);
+  const isMatch = await bcrypt.compare(password, user.passwordHash);
   
   if (DEBUG_AUTH) {
     console.log(`[AUTH CONTROLLER DEBUG] Password comparison result: ${isMatch}`);
@@ -329,7 +327,7 @@ const acceptInvitation = async (req, res) => {
 
   // Hash password and activate user
   const saltRounds = 10;
-  const hashedPassword = await bcryptjs.hash(req.body.password, saltRounds);
+  const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
   const oldValues = {
     firstName: invitedUser.firstName,
@@ -456,15 +454,12 @@ const sendInvitation = async (req, res) => {
   });
 
   // Send invitation email
-  await emailService.sendInvitationEmail({
-    to: email,
-    firstName: firstName,
-    inviterName: `${req.user.firstName} ${req.user.lastName}`,
-    clubName: req.user.club?.clubName || 'the club',
-    invitationUrl: `${
-      process.env.BASE_URL || 'http://localhost:3050'
-    }/auth/accept-invitation/${invitationToken}`,
-  });
+  await InvitationEmailService.sendDelegateInvitation(
+    email,
+    invitationToken,
+    `${req.user.firstName} ${req.user.lastName}`,
+    req.user.club?.clubName || 'the club'
+  );
 
   // Log successful invitation send
   await AuditService.logUserAction(AuditService.ACTIONS.USER_INVITATION_SEND, {
@@ -547,7 +542,7 @@ const transferDelegateRole = async (req, res) => {
 
     // Send notification email to new primary delegate
     const club = await Club.findByPk(req.user.clubId);
-    await emailService.sendDelegateRoleTransferNotification(
+    await InvitationEmailService.sendDelegateRoleTransfer(
       newPrimaryUser.email,
       newPrimaryUser.getFullName(),
       req.user.getFullName(),
