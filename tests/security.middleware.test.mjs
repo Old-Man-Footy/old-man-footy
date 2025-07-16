@@ -16,20 +16,18 @@
  * - API Security
  */
 
-import { jest } from '@jest/globals';
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock helmet
-const mockHelmet = jest.fn().mockReturnValue((req, res, next) => next());
+const mockHelmet = vi.fn().mockReturnValue((req, res, next) => next());
 
-jest.unstable_mockModule('helmet', () => ({
+vi.mock('helmet', () => ({
   default: mockHelmet
 }));
 
 // Import the security middleware after mocking
 const {
   generalRateLimit,
-  authRateLimit,
-  securityHeaders,
   sanitizeInput,
   csrfProtection,
   sessionSecurity,
@@ -52,7 +50,7 @@ describe('Security Middleware', () => {
   let mockReq, mockRes, mockNext;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     mockReq = {
       ip: '127.0.0.1',
@@ -62,18 +60,18 @@ describe('Security Middleware', () => {
       headers: {},
       session: {},
       user: null,
-      get: jest.fn(),
+      get: vi.fn(),
       connection: { remoteAddress: '127.0.0.1' }
     };
     
     mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-      set: jest.fn().mockReturnThis(),
-      type: jest.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      type: vi.fn().mockReturnThis()
     };
     
-    mockNext = jest.fn();
+    mockNext = vi.fn();
   });
 
   describe('Rate Limiting', () => {
@@ -347,38 +345,42 @@ describe('Security Middleware', () => {
         expect(mockNext).toHaveBeenCalledWith();
       });
 
-      it('should regenerate session if interval exceeded', (done) => {
-        mockReq.session = {
-          lastRegeneration: Date.now() - 31 * 60 * 1000, // 31 minutes ago
-          regenerate: jest.fn((callback) => {
-            callback(null);
-          }),
-          userId: 1
-        };
-        mockReq.user = { id: 1 };
-        
-        sessionSecurity(mockReq, mockRes, (err) => {
-          expect(err).toBeUndefined();
-          expect(mockReq.session.regenerate).toHaveBeenCalled();
-          expect(mockReq.session.lastRegeneration).toBeDefined();
-          expect(mockReq.session.userId).toBe(1);
-          done();
+      it('should regenerate session if interval exceeded', () => {
+        return new Promise((done) => {
+          mockReq.session = {
+            lastRegeneration: Date.now() - 31 * 60 * 1000, // 31 minutes ago
+            regenerate: vi.fn((callback) => {
+              callback(null);
+            }),
+            userId: 1
+          };
+          mockReq.user = { id: 1 };
+          
+          sessionSecurity(mockReq, mockRes, (err) => {
+            expect(err).toBeUndefined();
+            expect(mockReq.session.regenerate).toHaveBeenCalled();
+            expect(mockReq.session.lastRegeneration).toBeDefined();
+            expect(mockReq.session.userId).toBe(1);
+            done();
+          });
         });
       });
 
-      it('should handle session regeneration errors', (done) => {
-        const regenerationError = new Error('Session regeneration failed');
-        mockReq.session = {
-          lastRegeneration: Date.now() - 31 * 60 * 1000,
-          regenerate: jest.fn((callback) => {
-            callback(regenerationError);
-          })
-        };
-        mockReq.user = { id: 1 };
-        
-        sessionSecurity(mockReq, mockRes, (err) => {
-          expect(err).toBe(regenerationError);
-          done();
+      it('should handle session regeneration errors', () => {
+        return new Promise((done) => {
+          const regenerationError = new Error('Session regeneration failed');
+          mockReq.session = {
+            lastRegeneration: Date.now() - 31 * 60 * 1000,
+            regenerate: vi.fn((callback) => {
+              callback(regenerationError);
+            })
+          };
+          mockReq.user = { id: 1 };
+          
+          sessionSecurity(mockReq, mockRes, (err) => {
+            expect(err).toBe(regenerationError);
+            done();
+          });
         });
       });
     });
@@ -596,7 +598,7 @@ describe('Security Middleware', () => {
   describe('Security Audit Logging', () => {
     describe('securityAuditLog', () => {
       beforeEach(() => {
-        jest.spyOn(console, 'log').mockImplementation(() => {});
+        vi.spyOn(console, 'log').mockImplementation(() => {});
       });
 
       afterEach(() => {

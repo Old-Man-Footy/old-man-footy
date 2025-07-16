@@ -122,56 +122,49 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
    - **Dependencies**: User model, bcrypt, session handling
    - **Priority**: Critical (security foundation)
 
-4. **MySideline Scraper Service Integration** (`mySidelineScraperService.integration.test.mjs`)
-   - **Purpose**: Tests live MySideline website integration
-   - **Key Areas**: Web scraping, API interception, data extraction
-   - **Dependencies**: Puppeteer, external MySideline website
-   - **Priority**: Medium (external dependency, can be flaky)
-   - **Note**: Already exists but needs Vitest migration
-
-5. **MySideline Data Processing Service** (`mySidelineDataService.test.mjs`)
+4. **MySideline Data Processing Service** (`mySidelineDataService.test.mjs`)
    - **Purpose**: Tests MySideline data processing and database operations
    - **Key Areas**: Event matching, data transformation, database sync
    - **Dependencies**: Carnival model, data validation
    - **Priority**: High (core MySideline integration)
 
-6. **Base Email Service** (`BaseEmailService.test.mjs`)
+5. **Base Email Service** (`BaseEmailService.test.mjs`)
    - **Purpose**: Tests core email service functionality
    - **Key Areas**: Email sending, template rendering, attachment handling
    - **Dependencies**: Nodemailer, email templates
    - **Priority**: High (core functionality for all email services)
 
-7. **Invitation Email Service** (`InvitationEmailService.test.mjs`)
+6. **Invitation Email Service** (`InvitationEmailService.test.mjs`)
    - **Purpose**: Tests invitation email sending for delegates and club owners
    - **Key Areas**: Email content, recipient handling, template usage
    - **Dependencies**: BaseEmailService, User model
    - **Priority**: Medium (important for user onboarding)
 
-8. **Carnival Email Service** (`CarnivalEmailService.test.mjs`)
+7. **Carnival Email Service** (`CarnivalEmailService.test.mjs`)
    - **Purpose**: Tests carnival-related email notifications and communications
    - **Key Areas**: Event notifications, attendee communications, template rendering
    - **Dependencies**: BaseEmailService, Carnival model
    - **Priority**: Medium (enhances carnival functionality)
 
-9. **Authentication Email Service** (`AuthEmailService.test.mjs`)
+8. **Authentication Email Service** (`AuthEmailService.test.mjs`)
    - **Purpose**: Tests email notifications for authentication events
    - **Key Areas**: Welcome emails, password reset emails, template usage
    - **Dependencies**: BaseEmailService, User model
    - **Priority**: Medium (important for user management)
 
-10. **Contact Email Service** (`ContactEmailService.test.mjs`)
+9. **Contact Email Service** (`ContactEmailService.test.mjs`)
     - **Purpose**: Tests email handling for contact form submissions
     - **Key Areas**: Form data processing, auto-replies, template rendering
     - **Dependencies**: BaseEmailService, Contact form handling
     - **Priority**: Low (supplementary functionality)
 
-11. **Security Email Service** (`SecurityEmailService.test.mjs`)
+10. **Security Email Service** (`SecurityEmailService.test.mjs`)
     - **Purpose**: Tests security-related email notifications
     - **Key Areas**: Alert emails, notification handling, template usage
     - **Dependencies**: BaseEmailService, security event triggers
     - **Priority**: Medium (important for security monitoring)
 
-12. **Main Email Service** (`emailService.test.mjs`)
+11. **Main Email Service** (`emailService.test.mjs`)
     - **Purpose**: Tests the main email service aggregator and backward compatibility
     - **Key Areas**: Service initialization, legacy support, error handling
     - **Dependencies**: All email services
