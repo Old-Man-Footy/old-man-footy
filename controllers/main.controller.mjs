@@ -462,7 +462,7 @@ export const postUnsubscribe = asyncHandler(async (req, res) => {
   if (subscription) {
     await subscription.update({
       isActive: false,
-      unsubscribedAt: new Date(),
+      // unsubscribedAt is now automatically set by the model hook
     });
   }
 

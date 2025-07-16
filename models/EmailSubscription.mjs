@@ -101,6 +101,18 @@ EmailSubscription.init({
     allowNull: true,
     unique: true
   },
+  source: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'homepage',
+    comment: 'Source of the subscription (e.g., homepage, contact_form, admin)'
+  },
+  unsubscribedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: null,
+    comment: 'Timestamp when the user unsubscribed from email notifications'
+  },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false
@@ -130,6 +142,29 @@ EmailSubscription.init({
     beforeCreate: async (subscription, options) => {
       if (!subscription.unsubscribeToken) {
         subscription.generateUnsubscribeToken();
+      }
+    },
+
+    /**
+     * Automatically set unsubscribedAt when isActive changes from true to false
+     * This ensures data consistency and audit trail for unsubscribe actions
+     */
+    beforeUpdate: async (subscription, options) => {
+      // Check if isActive is being changed from true to false
+      if (subscription.changed('isActive') && 
+          subscription.previous('isActive') === true && 
+          subscription.isActive === false) {
+        // Set unsubscribedAt timestamp if not already set
+        if (!subscription.unsubscribedAt) {
+          subscription.unsubscribedAt = new Date();
+        }
+      }
+      
+      // If reactivating subscription (false to true), clear unsubscribedAt
+      if (subscription.changed('isActive') && 
+          subscription.previous('isActive') === false && 
+          subscription.isActive === true) {
+        subscription.unsubscribedAt = null;
       }
     }
   }
