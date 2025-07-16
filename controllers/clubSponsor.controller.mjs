@@ -7,13 +7,15 @@
 
 import { ClubSponsor, Club, Sponsor } from '../models/index.mjs';
 import { Op } from 'sequelize';
+import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 /**
  * Create a new club-sponsor relationship
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const createClubSponsor = async (req, res) => {
+const createClubSponsorHandler = async (req, res) => {
   const {
     clubId,
     sponsorId,
@@ -68,11 +70,27 @@ export const createClubSponsor = async (req, res) => {
     });
   }
 
+  // Set default sponsorship level if not provided
+  let validSponsorshipLevel = sponsorshipLevel;
+  if (!validSponsorshipLevel) {
+    validSponsorshipLevel = SPONSORSHIP_LEVELS.BRONZE;
+  }
+
+  // Validate sponsorship level using constants
+  if (!Object.values(SPONSORSHIP_LEVELS).includes(validSponsorshipLevel)) {
+    return res.status(400).json({
+      error: {
+        status: 400,
+        message: `Invalid sponsorship level. Must be one of: ${Object.values(SPONSORSHIP_LEVELS).join(', ')}`
+      }
+    });
+  }
+
   // Create the relationship
   const clubSponsor = await ClubSponsor.create({
     clubId,
     sponsorId,
-    sponsorshipLevel: sponsorshipLevel || 'Supporting',
+    sponsorshipLevel: validSponsorshipLevel,
     sponsorshipValue: sponsorshipValue || null,
     startDate: startDate || new Date(),
     endDate: endDate || null,
@@ -284,3 +302,16 @@ export const getClubsForSponsor = async (req, res) => {
     },
   });
 };
+
+export default wrapControllers(
+  {
+    createClubSponsor: createClubSponsorHandler,
+    getClubSponsors,
+    getClubSponsor,
+    updateClubSponsor,
+    deleteClubSponsor,
+    getClubSponsorsForClub,
+    getClubsForSponsor,
+  },
+  'ClubSponsorController'
+);

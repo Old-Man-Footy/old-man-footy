@@ -7,6 +7,7 @@
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import { PLAYER_SHORTS_COLORS_ARRAY } from '../config/constants.mjs';
 
 /**
  * ClubPlayer model class extending Sequelize Model
@@ -208,12 +209,12 @@ ClubPlayer.init({
     }
   },
   shorts: {
-    type: DataTypes.ENUM('Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'),
+    type: DataTypes.ENUM(...PLAYER_SHORTS_COLORS_ARRAY),
     allowNull: false,
     defaultValue: 'Unrestricted',
     validate: {
       isIn: {
-        args: [['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green']],
+        args: [PLAYER_SHORTS_COLORS_ARRAY],
         msg: 'Shorts must be one of: Unrestricted, Red, Yellow, Blue, Green'
       }
     }

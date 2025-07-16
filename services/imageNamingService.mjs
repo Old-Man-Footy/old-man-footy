@@ -17,6 +17,7 @@ import { extname, join, parse, dirname, relative, basename } from 'path';
 import { promises as fs } from 'fs';
 import { createHash } from 'crypto';
 import { Club, Carnival, Sponsor, User } from '../models/index.mjs';
+import { UPLOAD_DIRECTORIES_ARRAY } from '../config/constants.mjs';
 
 class ImageNamingService {
     /**
@@ -302,7 +303,7 @@ class ImageNamingService {
                 user: new Set(users.map(u => u.id))
             };
 
-            // Scan upload directories
+            // Scan upload directories using constants
             const uploadDirs = ['public/uploads/logos', 'public/uploads/images', 'public/uploads/documents'];
             
             for (const dir of uploadDirs) {

@@ -7,6 +7,7 @@
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import { SPONSORSHIP_LEVELS_ARRAY, LOGO_DISPLAY_SIZES_ARRAY } from '../config/constants.mjs';
 import Sponsor from './Sponsor.mjs';
 import Carnival from './Carnival.mjs';
 
@@ -152,7 +153,7 @@ CarnivalSponsor.init({
     onDelete: 'CASCADE'
   },
   sponsorshipLevel: {
-    type: DataTypes.ENUM('Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'),
+    type: DataTypes.ENUM(...SPONSORSHIP_LEVELS_ARRAY),
     allowNull: false,
     defaultValue: 'Supporting'
   },
@@ -179,7 +180,7 @@ CarnivalSponsor.init({
     }
   },
   logoDisplaySize: {
-    type: DataTypes.ENUM('Large', 'Medium', 'Small'),
+    type: DataTypes.ENUM(...LOGO_DISPLAY_SIZES_ARRAY),
     allowNull: false,
     defaultValue: 'Medium'
   },

@@ -7,6 +7,7 @@
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import { ATTENDANCE_STATUS_ARRAY } from '../config/constants.mjs';
 import CarnivalClub from './CarnivalClub.mjs';
 import ClubPlayer from './ClubPlayer.mjs';
 import Carnival from './Carnival.mjs';
@@ -206,12 +207,12 @@ CarnivalClubPlayer.init({
     }
   },
   attendanceStatus: {
-    type: DataTypes.ENUM('confirmed', 'tentative', 'unavailable'),
+    type: DataTypes.ENUM(...ATTENDANCE_STATUS_ARRAY),
     defaultValue: 'confirmed',
     allowNull: false,
     validate: {
       isIn: {
-        args: [['confirmed', 'tentative', 'unavailable']],
+        args: [ATTENDANCE_STATUS_ARRAY],
         msg: 'Attendance status must be one of: confirmed, tentative, unavailable'
       }
     }

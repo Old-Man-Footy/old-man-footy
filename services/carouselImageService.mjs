@@ -8,6 +8,7 @@
 import { promises as fs } from 'fs';
 import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { IMAGE_DIRECTORIES_ARRAY, SUPPORTED_IMAGE_EXTENSIONS } from '../config/constants.mjs';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -18,18 +19,9 @@ class CarouselImageService {
         this.uploadsPath = join(__dirname, '..', 'public', 'uploads');
         this.publicPath = '/uploads';
         
-        // Define image directories to include (excluding logos and icons)
-        this.imageDirectories = [
-            'images/carnival/gallery',
-            'images/carnival/promo', 
-            'images/club/gallery',
-            'images/club/promo',
-            'images/sponsor/gallery',
-            'images/sponsor/promo'
-        ];
-        
-        // Supported image extensions
-        this.supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+        // Use constants instead of hardcoded arrays
+        this.imageDirectories = IMAGE_DIRECTORIES_ARRAY;
+        this.supportedExtensions = SUPPORTED_IMAGE_EXTENSIONS;
         
         // Cache for performance
         this.imageCache = null;

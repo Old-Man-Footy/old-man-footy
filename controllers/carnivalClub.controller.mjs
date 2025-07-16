@@ -11,6 +11,7 @@ import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import emailService from '../services/emailService.mjs';
+import { APPROVAL_STATUS } from '../config/constants.mjs';
 
 /**
  * Show carnival attendees management page (for carnival organizers)
@@ -1327,6 +1328,73 @@ const rejectClubRegistrationHandler = async (req, res) => {
   });
 };
 
+/**
+ * CarnivalClub Controller
+ * 
+ * Handles carnival club registration operations
+ */
+class CarnivalClubController {
+  /**
+   * Update carnival club registration approval status
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
+  async updateApprovalStatus(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { approvalStatus, rejectionReason } = req.body;
+
+      // Validate approval status using constants
+      if (!Object.values(APPROVAL_STATUS).includes(approvalStatus)) {
+        return res.status(400).json({
+          error: {
+            status: 400,
+            message: `Invalid approval status. Must be one of: ${Object.values(APPROVAL_STATUS).join(', ')}`
+          }
+        });
+      }
+
+      const carnivalClub = await CarnivalClub.findByPk(id);
+      if (!carnivalClub) {
+        return res.status(404).json({
+          error: {
+            status: 404,
+            message: 'Carnival club registration not found'
+          }
+        });
+      }
+
+      // Update approval status
+      carnivalClub.approvalStatus = approvalStatus;
+      
+      if (approvalStatus === APPROVAL_STATUS.APPROVED) {
+        carnivalClub.approvedAt = new Date();
+        carnivalClub.approvedByUserId = req.user?.id;
+        carnivalClub.rejectionReason = null;
+      } else if (approvalStatus === APPROVAL_STATUS.REJECTED) {
+        carnivalClub.rejectionReason = rejectionReason;
+        carnivalClub.approvedAt = null;
+        carnivalClub.approvedByUserId = null;
+      } else {
+        carnivalClub.rejectionReason = null;
+        carnivalClub.approvedAt = null;
+        carnivalClub.approvedByUserId = null;
+      }
+
+      await carnivalClub.save();
+
+      res.json({
+        success: true,
+        data: carnivalClub,
+        message: `Registration ${approvalStatus} successfully`
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
 // Raw controller functions object for wrapping
 const rawControllers = {
   showCarnivalAttendeesHandler,
@@ -1347,6 +1415,7 @@ const rawControllers = {
   addPlayersToMyClubRegistrationHandler,
   approveClubRegistrationHandler,
   rejectClubRegistrationHandler,
+  updateApprovalStatus: CarnivalClubController.prototype.updateApprovalStatus,
 };
 
 // Export wrapped versions using the wrapControllers utility
@@ -1369,4 +1438,5 @@ export const {
   addPlayersToMyClubRegistrationHandler: addPlayersToMyClubRegistration,
   approveClubRegistrationHandler: approveClubRegistration,
   rejectClubRegistrationHandler: rejectClubRegistration,
+  updateApprovalStatus: updateApprovalStatus,
 } = wrapControllers(rawControllers);

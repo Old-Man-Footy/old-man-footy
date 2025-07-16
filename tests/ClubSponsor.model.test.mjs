@@ -3,6 +3,7 @@ import ClubSponsor from '../models/ClubSponsor.mjs';
 import Club from '../models/Club.mjs';
 import Sponsor from '../models/Sponsor.mjs';
 import { sequelize } from '../models/index.mjs';
+import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 describe('ClubSponsor Model', () => {
   let club, sponsor, baseData;
@@ -104,14 +105,14 @@ describe('ClubSponsor Model', () => {
       const sponsor1 = await Sponsor.create({ sponsorName: `Sponsor1-${Date.now()}-${Math.random()}`, isActive: true, createdAt: new Date(), updatedAt: new Date() });
       const sponsor2 = await Sponsor.create({ sponsorName: `Sponsor2-${Date.now()}-${Math.random()}`, isActive: true, createdAt: new Date(), updatedAt: new Date() });
       const sponsor3 = await Sponsor.create({ sponsorName: `Sponsor3-${Date.now()}-${Math.random()}`, isActive: true, createdAt: new Date(), updatedAt: new Date() });
-      await ClubSponsor.create({ ...baseData, sponsorId: sponsor1.id, sponsorshipLevel: 'Gold', displayOrder: 2, startDate: '2022-01-01' });
-      await ClubSponsor.create({ ...baseData, sponsorId: sponsor2.id, sponsorshipLevel: 'Silver', displayOrder: 1, startDate: '2023-01-02' });
-      await ClubSponsor.create({ ...baseData, sponsorId: sponsor3.id, sponsorshipLevel: 'Bronze', displayOrder: 3, startDate: '2021-01-03' });
+      await ClubSponsor.create({ ...baseData, sponsorId: sponsor1.id, sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD, displayOrder: 2, startDate: '2022-01-01' });
+      await ClubSponsor.create({ ...baseData, sponsorId: sponsor2.id, sponsorshipLevel: SPONSORSHIP_LEVELS.SILVER, displayOrder: 1, startDate: '2023-01-02' });
+      await ClubSponsor.create({ ...baseData, sponsorId: sponsor3.id, sponsorshipLevel: SPONSORSHIP_LEVELS.BRONZE, displayOrder: 3, startDate: '2021-01-03' });
       const results = await ClubSponsor.getActiveForClub(club.id);
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThanOrEqual(3);
       const levels = results.map(r => r.sponsorshipLevel);
-      expect(levels).toEqual(expect.arrayContaining(['Gold', 'Silver', 'Bronze']));
+      expect(levels).toEqual(expect.arrayContaining([SPONSORSHIP_LEVELS.GOLD, SPONSORSHIP_LEVELS.SILVER, SPONSORSHIP_LEVELS.BRONZE]));
     });
   });
 

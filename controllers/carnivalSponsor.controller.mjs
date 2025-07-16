@@ -7,6 +7,8 @@
 
 import { CarnivalSponsor, Carnival, Sponsor } from '../models/index.mjs';
 import { Op } from 'sequelize';
+import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 /**
  * Create a new carnival-sponsor relationship
@@ -70,11 +72,29 @@ export const createCarnivalSponsor = async (req, res) => {
     });
   }
 
+  // Set default sponsorship level if not provided
+  let validSponsorshipLevel = sponsorshipLevel;
+  if (!validSponsorshipLevel) {
+    validSponsorshipLevel = SPONSORSHIP_LEVELS.BRONZE;
+  }
+
+  // Validate sponsorship level using constants
+  if (!Object.values(SPONSORSHIP_LEVELS).includes(validSponsorshipLevel)) {
+    return res.status(400).json({
+      error: {
+        status: 400,
+        message: `Invalid sponsorship level. Must be one of: ${Object.values(
+          SPONSORSHIP_LEVELS
+        ).join(', ')}`,
+      },
+    });
+  }
+
   // Create the relationship
   const carnivalSponsor = await CarnivalSponsor.create({
     carnivalId,
     sponsorId,
-    sponsorshipLevel: sponsorshipLevel || 'Supporting',
+    sponsorshipLevel: validSponsorshipLevel,
     sponsorshipValue: sponsorshipValue || null,
     packageDetails: packageDetails || null,
     displayOrder: displayOrder || 0,

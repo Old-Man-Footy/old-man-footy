@@ -1,10 +1,10 @@
 // Jest unit tests for carnivalSponsor.controller.mjs
 import { jest } from '@jest/globals';
-import { sequelize } from '../models/index.mjs';
-import * as controller from '../controllers/carnivalSponsor.controller.mjs';
+import request from 'supertest';
+import app from '../app.mjs';
+import { sequelize } from '../config/database.mjs';
 import CarnivalSponsor from '../models/CarnivalSponsor.mjs';
-import Carnival from '../models/Carnival.mjs';
-import Sponsor from '../models/Sponsor.mjs';
+import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 function mockRes() {
   const res = {};
@@ -53,7 +53,7 @@ describe('carnivalSponsor.controller', () => {
 
   it('should update a carnival-sponsor relationship', async () => {
     const cs = await CarnivalSponsor.create({ carnivalId: carnival.id, sponsorId: sponsor.id, isActive: true });
-    const req = { params: { id: cs.id }, body: { sponsorshipLevel: 'Gold' } };
+    const req = { params: { id: cs.id }, body: { sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD } };
     const res = mockRes();
     await controller.updateCarnivalSponsor(req, res);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));

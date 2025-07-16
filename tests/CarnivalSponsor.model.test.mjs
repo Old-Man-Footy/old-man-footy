@@ -3,7 +3,8 @@ import { jest } from '@jest/globals';
 import CarnivalSponsor from '../models/CarnivalSponsor.mjs';
 import Carnival from '../models/Carnival.mjs';
 import Sponsor from '../models/Sponsor.mjs';
-import { sequelize } from '../models/index.mjs';
+import { sequelize } from '../config/database.mjs';
+import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 describe('CarnivalSponsor Model', () => {
   let carnival, sponsor, carnivalSponsor;
@@ -13,7 +14,7 @@ describe('CarnivalSponsor Model', () => {
     carnivalSponsor = await CarnivalSponsor.create({
       carnivalId: carnival.id,
       sponsorId: sponsor.id,
-      sponsorshipLevel: 'Gold',
+      sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -54,6 +55,6 @@ describe('CarnivalSponsor Model', () => {
     const summary = await CarnivalSponsor.getSponsorshipSummary(carnival.id);
     expect(summary).toHaveProperty('totalSponsors', 1);
     expect(summary).toHaveProperty('totalValue');
-    expect(summary.byLevel).toHaveProperty('Gold', 1);
+    expect(summary.byLevel).toHaveProperty(SPONSORSHIP_LEVELS.GOLD, 1);
   });
 });
