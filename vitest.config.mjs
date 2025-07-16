@@ -6,9 +6,13 @@ export default defineConfig({
     // Use Node.js environment (default for server-side testing)
     environment: 'node',
     
-    // Global setup and teardown
-    globalSetup: './tests/vitest.globalSetup.mjs',
-    setupFiles: ['./tests/vitest.setup.mjs'],
+    // Global setup and teardown with our new files
+    globalSetup: './tests/setup.mjs',
+    globalTeardown: './tests/teardown.mjs',
+    setupFiles: [
+      './tests/vitest.env.mjs',
+      './tests/vitest.setup.mjs'
+    ],
     
     // Test file patterns
     include: [
@@ -20,7 +24,9 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/e2e/**',
-      '**/test-results/**'
+      '**/test-results/**',
+      '**/tests/jest.env.mjs', // Exclude old Jest config
+      '**/scripts/fix-jest-globals.mjs' // Exclude Jest migration scripts
     ],
     
     // Coverage configuration
@@ -63,7 +69,10 @@ export default defineConfig({
       forks: {
         singleFork: true // Better for database tests
       }
-    }
+    },
+    
+    // Improved test isolation and cleanup
+    isolate: true
   },
   
   // Resolve configuration for ES modules
