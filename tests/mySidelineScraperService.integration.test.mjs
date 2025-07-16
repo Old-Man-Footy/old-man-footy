@@ -6,7 +6,6 @@ import MySidelineLogoDownloadService from '../services/mySidelineLogoDownloadSer
 import { Carnival } from '../models/index.mjs';
 import { Op } from 'sequelize';
 
-
 /**
  * MySidelineScraperService Integration Tests
  * 
@@ -22,12 +21,67 @@ import { Op } from 'sequelize';
  * To run these tests: npm test -- "mySidelineScraperService.integration.test.mjs"
  */
 
+// Test configuration
+const TEST_TIMEOUT = 30000;
+
+// Mock data for integration testing
+const MOCK_EVENTS = [
+    {
+        title: 'NSW Masters Rugby League Carnival Integration Test',
+        source: 'MySideline',
+        mySidelineId: 'test-12345',
+        mySidelineTitle: 'NSW Masters Rugby League Carnival Integration Test',
+        mySidelineAddress: '123 Test Street, Sydney NSW 2000',
+        mySidelineDate: '2024-08-15T10:00:00.000Z',
+        date: new Date('2024-08-15'),
+        locationAddress: '123 Test Street, Sydney NSW 2000',
+        state: 'NSW',
+        organiserContactEmail: 'test@example.com',
+        clubLogoURL: null,
+        description: 'Integration test event for MySideline scraper'
+    }
+];
+
+describe('MySidelineScraperService Integration Tests', () => {
+    let scraperService;
+    let dataService;
+    let testCarnivals = [];
+
+    beforeAll(async () => {
+        // Initialize services
+        scraperService = new MySidelineScraperService();
+        dataService = new MySidelineDataService();
+    });
+
+    beforeEach(() => {
+        // Reset test data tracking
+        testCarnivals = [];
+        
+        // Mock the scraper to return test data by default
+        jest.spyOn(scraperService, 'scrapeEvents')
+            .mockResolvedValue(MOCK_EVENTS);
+    });
+
+    afterEach(async () => {
+        // Clean up any test carnivals created during tests
+        if (testCarnivals.length > 0) {
+            const carnivalIds = testCarnivals.map(c => c.id);
+            await Carnival.destroy({
+                where: {
+                    id: { [Op.in]: carnivalIds }
+                }
+            });
+        }
+        
+        // Restore all mocks
+        jest.restoreAllMocks();
+    });
+
     describe('Live Site Integration', () => {
         /**
-         * Test that the scraper can retrieve actual data from MySideline         * 
+         * Test that the scraper can retrieve actual data from MySideline
          */
         it('should retrieve actual events from MySideline website', async () => {
-            
             // Completely restore all mocks to ensure real scraping
             jest.restoreAllMocks();
             
@@ -52,7 +106,7 @@ import { Op } from 'sequelize';
                     
                     // Verify it's NOT mock data by checking it doesn't match mock patterns
                     const mockPatterns = [
-                        'NSW Masters Rugby League Carnival',
+                        'NSW Masters Rugby League Carnival Integration Test',
                         'QLD Masters Rugby League Carnival', 
                         'VIC Masters Rugby League Carnival',
                         'Test Masters Carnival'
@@ -119,7 +173,11 @@ import { Op } from 'sequelize';
                 
                 console.log('✅ Network failure handled gracefully - returned empty array');
                 
-            } 
+            } catch (error) {
+                // Should not throw, should handle gracefully
+                console.error('Network failure test failed:', error.message);
+                throw error;
+            }
         }, 30000);
 
         /**
