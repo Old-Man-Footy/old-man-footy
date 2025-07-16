@@ -177,7 +177,7 @@ class MySidelineIntegrationService {
                 .filter(event => event.clubLogoURL 
                     && event.clubLogoURL.startsWith('http')).map(event => {
                         const logoUrl = event.clubLogoURL;
-                        const entityType = Carnival;
+                        const entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL; // Use constant instead of string
                         const entityId = event.id;
                         const imageType = ImageNamingService.IMAGE_TYPES.LOGO;
                         return { logoUrl, entityType, entityId, imageType };                
