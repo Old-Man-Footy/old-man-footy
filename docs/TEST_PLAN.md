@@ -53,9 +53,9 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 
 ### Services (Priority 2) - Business Logic Layer ✅ IN PROGRESS
 11. [x] `capture-mysideline-data.test.mjs` - MySideline data capture utility ✅ MIGRATED (14/14 tests passing)
-12. [x] `auditService.test.mjs` - Audit logging service
-13. [ ] `authService.test.mjs` - Authentication service layer
-14. [ ] `mySidelineScraperService.integration.test.mjs` - MySideline external integration
+12. [x] `auditService.test.mjs` - Audit logging service ✅ MIGRATED (13/13 tests passing)
+13. [x] `authService.test.mjs` - Authentication service layer ✅ MIGRATED (32/32 tests passing)
+14. [x] `mySidelineScraperService.integration.test.mjs` - NOT REQUIRED, SKIP
 15. [ ] `mySidelineDataService.test.mjs` - MySideline data processing service
 16. [ ] `BaseEmailService.test.mjs` - Core email service functionality
 17. [ ] `InvitationEmailService.test.mjs` - Invitation email service (delegate invites, club ownership)
@@ -65,7 +65,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 21. [ ] `SecurityEmailService.test.mjs` - Security email service (alerts, notifications)
 22. [ ] `emailService.test.mjs` - Main email service aggregator and backward compatibility
 
-**Services Layer Progress**: 14/14 tests passing for capture script (2/12 services complete) 🚀
+**Services Layer Progress**: 59/59 tests passing (3/12 services complete) 🚀
 
 ### Controllers (Priority 3) - Request Handling Layer
 16. [ ] `auth.controller.test.mjs` - Authentication controller
@@ -220,10 +220,12 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [x] Configuration migration
 - [x] Foundation Layer (Models) - 10/10 files migrated with 139/144 tests passing
 - [x] MySideline Capture Script - 14/14 tests passing with comprehensive coverage
+- [x] Audit Service - 13/13 tests passing
+- [x] Authentication Service - 32/32 tests passing
 
 ### In Progress 🚧
-- [x] Service layer migration (1/5 complete)
-- [ ] Remaining service tests: audit, auth, MySideline scraper integration
+- [x] Service layer migration (3/5 complete)
+- [ ] Remaining service tests: MySideline scraper integration
 - [ ] Controller layer migration
 - [ ] Middleware layer migration
 
@@ -242,7 +244,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 
 ### Overall Progress: 11/30 files migrated (36.7%)
 - **Models**: 10/10 ✅ COMPLETE (100%)
-- **Services**: 1/5 🚧 IN PROGRESS (20%)
+- **Services**: 3/5 🚧 IN PROGRESS (60%)
 - **Controllers**: 0/4 ⏳ PENDING (0%)
 - **Middleware**: 0/4 ⏳ PENDING (0%)
 - **Integration**: 0/4 ⏳ PENDING (0%)

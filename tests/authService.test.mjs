@@ -96,7 +96,7 @@ const { User } = await import('../models/index.mjs');
 const InvitationEmailService = (await import('../services/email/InvitationEmailService.mjs')).default;
 const AuthEmailService = (await import('../services/email/AuthEmailService.mjs')).default;
 const AuditService = (await import('../services/auditService.mjs')).default;
-const bcryptjs = await import('bcryptjs');
+const bcrypt = await import('bcrypt');
 const crypto = await import('crypto');
 
 /**
@@ -134,7 +134,7 @@ class AuthService {
     }
 
     // Check password
-    const isMatch = await bcryptjs.compare(password, user.passwordHash);
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
     
     if (!isMatch) {
       await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, user, {
@@ -444,7 +444,7 @@ describe('Authentication Service Layer', () => {
         expect(User.findOne).toHaveBeenCalledWith({
           where: { email: 'test@example.com' }
         });
-        expect(bcryptjs.compare).toHaveBeenCalledWith('password123', mockUser.passwordHash);
+        expect(bcrypt.compare).toHaveBeenCalledWith('password123', mockUser.passwordHash);
         expect(mockUser.update).toHaveBeenCalledWith({ lastLoginAt: expect.any(Date) });
         expect(AuditService.logAuthAction).toHaveBeenCalledWith(
           AuditService.ACTIONS.USER_LOGIN,
@@ -1042,7 +1042,7 @@ describe('Authentication Service Layer', () => {
       it('should handle email service errors gracefully', async () => {
         User.findOne.mockResolvedValue(null);
         User.create.mockResolvedValue({ id: 3, invitationToken: 'token' });
-        emailService.sendInvitationEmail.mockRejectedValue(new Error('Email service unavailable'));
+        InvitationEmailService.sendDelegateInvitation.mockRejectedValue(new Error('Email service unavailable'));
 
         const inviteeData = {
           firstName: 'Test',
