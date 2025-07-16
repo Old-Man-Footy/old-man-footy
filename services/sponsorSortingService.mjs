@@ -8,6 +8,26 @@
 import { SPONSORSHIP_LEVEL_ORDER } from '../config/constants.mjs';
 
 /**
+ * Sort sponsors hierarchically for display purposes
+ * @param {Array} sponsors - Array of sponsor objects
+ * @param {string} context - Context for sorting ('carnival', 'club', etc.)
+ * @returns {Array} Hierarchically sorted array of sponsors
+ */
+export function sortSponsorsHierarchically(sponsors, context = 'default') {
+  if (!sponsors || !Array.isArray(sponsors)) {
+    return [];
+  }
+
+  // For carnival context, use display order with level fallback
+  if (context === 'carnival') {
+    return SponsorSortingService.sortByDisplayOrder(sponsors);
+  }
+  
+  // For other contexts, use level-based sorting
+  return SponsorSortingService.sortByLevel(sponsors);
+}
+
+/**
  * Sponsor sorting service class
  */
 class SponsorSortingService {

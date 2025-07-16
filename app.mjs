@@ -2,7 +2,7 @@
 import { setEnvironmentVariables, getCurrentConfig } from './config/config.mjs';
 
 // Initialize configuration for current environment
-setEnvironmentVariables();
+await setEnvironmentVariables();
 
 import express from 'express';
 import session from 'express-session';

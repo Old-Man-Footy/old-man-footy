@@ -14,24 +14,22 @@ const __dirname = path.dirname(__filename);
  * Load environment-specific .env file based on NODE_ENV
  * This replaces the manual .env file reading
  */
-export const setEnvironmentVariables = () => {
+export const setEnvironmentVariables = async () => {
   const env = process.env.NODE_ENV || 'development';
   
   try {
     // Use dynamic import to load dotenv only when needed
-    import('dotenv').then(({ config }) => {
-      // Load environment-specific .env file
-      const envFile = `.env.${env}`;
-      const result = config({ path: envFile });
-      
-      if (result.error) {
-        console.log(`📝 No ${envFile} file found - using system environment variables`);
-      } else {
-        console.log(`✅ Configuration loaded from ${envFile}`);
-      }
-    }).catch(() => {
-      console.log('📝 dotenv not available - using system environment variables only');
-    });
+    const { config } = await import('dotenv');
+    
+    // Load environment-specific .env file
+    const envFile = `.env.${env}`;
+    const result = config({ path: envFile });
+    
+    if (result.error) {
+      console.log(`📝 No ${envFile} file found - using system environment variables`);
+    } else {
+      console.log(`✅ Configuration loaded from ${envFile}`);
+    }
   } catch (error) {
     console.log('📝 Using system environment variables only');
   }
