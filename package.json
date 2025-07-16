@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node app.mjs",
     "dev": "nodemon --inspect-brk app.mjs",
-    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=mySidelineScraperService.integration.test.mjs",
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
     "test:integration": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest mySidelineScraperService.integration.test.mjs",
     "test:watch": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage",
@@ -68,7 +68,8 @@
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/e2e/"
+      "/e2e/",
+      "mySidelineScraperService.integration.test.mjs"
     ],
     "collectCoverageFrom": [
       "controllers/**/*.mjs",
