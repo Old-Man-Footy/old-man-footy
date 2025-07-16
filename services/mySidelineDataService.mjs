@@ -38,9 +38,15 @@ class MySidelineDataService {
                 isManuallyEntered: false
             };
 
-            // Add mySidelineDate if available (null matches null, value matches value)
+            // Add mySidelineDate if available and valid (null matches null, valid date matches date)
             if (eventData.mySidelineDate !== undefined) {
-                whereConditions.mySidelineDate = eventData.mySidelineDate;
+                // Validate that mySidelineDate is a valid date or null
+                if (eventData.mySidelineDate === null || 
+                    (eventData.mySidelineDate instanceof Date && !isNaN(eventData.mySidelineDate.getTime()))) {
+                    whereConditions.mySidelineDate = eventData.mySidelineDate;
+                } else {
+                    console.warn(`Invalid mySidelineDate for event "${eventData.mySidelineTitle}": ${eventData.mySidelineDate}`);
+                }
             }
 
             // Add mySidelineAddress if available (null matches null, value matches value)
@@ -58,17 +64,24 @@ class MySidelineDataService {
 
         // Strategy 3: Fall back to date and title matching (when mySidelineId is empty)
         if (eventData.date && eventData.title) {
-            const match = await Carnival.findOne({
-                where: {
-                    date: eventData.date,
-                    title: eventData.title,
-                    isManuallyEntered: false
-                }
-            });
+            // Validate that the date is actually a valid Date object
+            const isValidDate = eventData.date instanceof Date && !isNaN(eventData.date.getTime());
+            
+            if (isValidDate) {
+                const match = await Carnival.findOne({
+                    where: {
+                        date: eventData.date,
+                        title: eventData.title,
+                        isManuallyEntered: false
+                    }
+                });
 
-            if (match) {
-                console.log(`Found existing MySideline event by date and title: "${eventData.title}" on ${eventData.date}`);
-                return match;
+                if (match) {
+                    console.log(`Found existing MySideline event by date and title: "${eventData.title}" on ${eventData.date}`);
+                    return match;
+                }
+            } else {
+                console.warn(`Invalid date for event "${eventData.title}": ${eventData.date}. Skipping date-based matching.`);
             }
         }
         

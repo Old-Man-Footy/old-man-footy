@@ -3,7 +3,7 @@ import MySidelineScraperService from './mySidelineScraperService.mjs';
 import MySidelineEventParserService from './mySidelineEventParserService.mjs';
 import MySidelineDataService from './mySidelineDataService.mjs';
 import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
-import ImageNamingService from '../utils/imageNamingService.mjs';
+import ImageNamingService from './imageNamingService.mjs';
 import { Carnival, SyncLog } from '../models/index.mjs';
 
 /**

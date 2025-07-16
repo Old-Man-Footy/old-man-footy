@@ -87,9 +87,6 @@ router.post('/:id/merge', ensureAuthenticated, [
     body('targetCarnivalId').notEmpty().withMessage('Target carnival is required').isInt().withMessage('Target carnival must be a valid ID')
 ], carnivalController.mergeCarnival);
 
-// Sync MySideline events (admin only)
-router.post('/sync-mysideline', ensureAuthenticated, carnivalController.syncMySideline);
-
 // Sponsor management routes for carnivals
 // Manage sponsors for a specific carnival
 router.get('/:id/sponsors', ensureAuthenticated, carnivalController.showCarnivalSponsors);

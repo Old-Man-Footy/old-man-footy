@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
-import { cheerio } from 'cheerio';
+import * as cheerio from 'cheerio';
+import MySidelineEventParserService from './mySidelineEventParserService.mjs';
 
 /**
  * MySideline Web Scraper Service
@@ -13,6 +14,9 @@ class MySidelineScraperService {
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
         this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
         this.useHeadlessBrowser = process.env.NODE_ENV !== 'development';
+        
+        // Initialize the parser service
+        this.parserService = new MySidelineEventParserService();
     }
 
     /**

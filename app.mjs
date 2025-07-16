@@ -27,9 +27,6 @@ const app = express();
 // Configure session store with proper ES Module import
 const SequelizeStore = connectSessionSequelize(session.Store);
 
-// Apply centralized security middleware (replaces individual helmet config)
-app.use(applySecurity);
-
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views'));
@@ -64,7 +61,7 @@ const sessionStore = new SequelizeStore({
     db: sequelize,
 });
 
-// Session configuration
+// Session configuration - MUST come before any middleware that uses flash messages
 app.use(session({
     secret: getCurrentConfig().security.sessionSecret,
     store: sessionStore,
@@ -81,8 +78,11 @@ app.use(session({
 app.use(setupSessionAuth);
 app.use(loadSessionUser);
 
-// Flash messages
+// Flash messages - MUST come after session setup
 app.use(flash());
+
+// Apply centralized security middleware - MUST come after session and flash setup
+app.use(applySecurity);
 
 // Maintenance mode middleware (must be after session but before routes)
 const { maintenanceMode } = await import('./middleware/maintenance.mjs');

@@ -159,4 +159,9 @@ router.get('/audit-logs', adminController.getAuditLogs);
 router.get('/audit-logs/export', adminController.exportAuditLogs);
 router.get('/audit-logs/statistics', adminController.getAuditStatistics);
 
+/**
+ * System Management Routes
+ */
+router.post('/system/sync-mysideline', adminController.syncMySideline);
+
 export default router;

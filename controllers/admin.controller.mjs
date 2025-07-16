@@ -1830,6 +1830,78 @@ const deleteSponsorHandler = async (req, res) => {
     });
 };
 
+/**
+ * Trigger MySideline sync manually (admin only)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const syncMySidelineHandler = async (req, res) => {
+    try {
+        // Import MySideline service dynamically
+        const { default: mySidelineService } = await import('../services/mySidelineIntegrationService.mjs');
+        
+        console.log(`🔄 Admin ${req.user.email} initiated manual MySideline sync`);
+        
+        // Trigger the sync
+        const result = await mySidelineService.syncMySidelineEvents();
+        
+        // Log the admin action
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.ADMIN_SYSTEM_ACTION,
+            req,
+            AuditService.ENTITIES.SYSTEM,
+            null,
+            {
+                metadata: {
+                    adminAction: 'Manual MySideline sync triggered',
+                    syncResult: result ? {
+                        success: result.success,
+                        eventsProcessed: result.eventsProcessed || 0,
+                        eventsCreated: result.eventsCreated || 0,
+                        eventsUpdated: result.eventsUpdated || 0
+                    } : { success: false, error: 'No result returned' }
+                }
+            }
+        );
+        
+        if (result && result.success) {
+            const message = `MySideline sync completed successfully! ` +
+                `Processed ${result.eventsProcessed || 0} events ` +
+                `(${result.eventsCreated || 0} new, ${result.eventsUpdated || 0} updated)`;
+            
+            req.flash('success_msg', message);
+            console.log(`✅ Manual MySideline sync completed: ${result.eventsProcessed || 0} events processed`);
+        } else {
+            const errorMessage = result?.error || 'Sync completed but no events were processed';
+            req.flash('warning_msg', `MySideline sync completed with issues: ${errorMessage}`);
+            console.log(`⚠️ MySideline sync completed with issues: ${errorMessage}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Manual MySideline sync failed:', error);
+        
+        // Log the failure
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.ADMIN_SYSTEM_ACTION,
+            req,
+            AuditService.ENTITIES.SYSTEM,
+            null,
+            {
+                result: 'FAILURE',
+                errorMessage: error.message,
+                metadata: {
+                    adminAction: 'Manual MySideline sync triggered',
+                    error: error.message
+                }
+            }
+        );
+        
+        req.flash('error_msg', `MySideline sync failed: ${error.message}`);
+    }
+    
+    return res.redirect('/admin/dashboard');
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
     getAdminDashboardHandler,
@@ -1858,7 +1930,8 @@ const rawControllers = {
     deleteSponsorHandler,
     getAuditLogsHandler,
     getAuditStatisticsHandler,
-    exportAuditLogsHandler
+    exportAuditLogsHandler,
+    syncMySidelineHandler
 };
 
 // Export wrapped versions using the wrapControllers utility
@@ -1889,5 +1962,6 @@ export const {
     deleteSponsorHandler: deleteSponsor,
     getAuditLogsHandler: getAuditLogs,
     getAuditStatisticsHandler: getAuditStatistics,
-    exportAuditLogsHandler: exportAuditLogs
+    exportAuditLogsHandler: exportAuditLogs,
+    syncMySidelineHandler: syncMySideline
 } = wrapControllers(rawControllers);

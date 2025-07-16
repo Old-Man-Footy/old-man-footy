@@ -490,12 +490,13 @@ export const applyApiSecurity = [
 
 /**
  * Admin security middleware stack
+ * More permissive rate limiting for authenticated admin users
  */
 export const applyAdminSecurity = [
   securityHeaders,
   createRateLimiter({
-    windowMs: 15 * 60 * 1000,
-    max: 50, // Stricter limits for admin operations
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // Increased from 50 to 200 for normal admin usage
     message: {
       error: {
         status: 429,
