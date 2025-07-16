@@ -44,7 +44,6 @@ describe('MySidelineScraperService Integration Tests', () => {
             scheduleDetails: 'Test tournament details',
             source: 'MySideline',
             isActive: true,
-            // Use actual database fields instead of isMySidelineCard
             isManuallyEntered: false,
             lastMySidelineSync: new Date(),
             mySidelineAddress: '123 Test Stadium, Sydney NSW 2000',

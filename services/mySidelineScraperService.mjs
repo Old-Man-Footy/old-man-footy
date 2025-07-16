@@ -67,7 +67,7 @@ class MySidelineScraperService {
             
             context = await browser.newContext();
             page = await context.newPage();
-            
+           
             // Set up API response interception
             page.on('response', async response => {
                 if (response.url() === 'https://api.mysideline.xyz/nrl/api/v1/portal-public/registration/search') {
@@ -89,7 +89,7 @@ class MySidelineScraperService {
             console.log('✅ DOM loaded, waiting for content...');
 
             // Extract image dictionary
-            var imgDictionary = await this.extractImageDictionary();
+            var imgDictionary = await this.extractImageDictionary(page);
 
             // Wait for the API call to complete
             console.log('Waiting for API response...');
@@ -148,7 +148,7 @@ class MySidelineScraperService {
 
                     const imageUrl = imgDictionary[processedEvent.mySidelineTitle];
                     if (imageUrl) {
-                        processedEvent.clubLogoURL = imageUrl;
+                        processedEvent.clubLogoURL = imageUrl.split('?')[0]; // Remove any query parameters
                     } else {
                         console.log(`Image with alt "${processedEvent.mySidelineTitle}" not found or missing data-url attribute.`);
                     }
@@ -297,7 +297,6 @@ class MySidelineScraperService {
             // System fields
             source: 'MySideline',
             isActive: item.regoOpen || false,
-            isMySidelineCard: true,
             isManuallyEntered: false,
             
             // MySideline-compatible address fields
@@ -431,40 +430,230 @@ class MySidelineScraperService {
     /**
      * Extract images with alt tags from MySideline page
      * @param {Page} page - Playwright page object
-     * @param {string} url - MySideline URL to scrape
      * @returns {Promise<Object>} Dictionary with alt tags as keys and image sources as values
      */
     async extractImageDictionary(page) {
-        console.log('🔄 Loading MySideline page for image extraction...');
-        await this.waitForMySidelineContent(page);
+        try {
+            // Validate page parameter
+            if (!page || typeof page.evaluate !== 'function') {
+                console.error('❌ Invalid page object provided to extractImageDictionary');
+                return {};
+            }
 
-        console.log('✅ Extracting images with alt tags...');
-        
-        // Extract images and create dictionary with alt as key, src as value
-        const imageDictionary = await page.evaluate(() => {
-            const imgElements = document.querySelectorAll('img[alt]');
-            const imageDict = {};
+            console.log('🔄 Loading MySideline page for image extraction...');
+            await this.waitForMySidelineContent(page);
+
+            console.log('✅ Extracting images with alt tags...');
             
-            Array.from(imgElements).forEach(img => {
-                if (img.alt && img.src) {
-                // Use alt text as key, src as value
-                // If multiple images have same alt, this will overwrite (last one wins)
-                imageDict[img.alt] = img.src;
+            // Wait a bit more for images to load and lazy loading to complete
+            await page.waitForTimeout(3000);
+            
+            // Extract images and create dictionary with alt as key, src as value
+            const imageDictionary = await page.evaluate(() => {
+                try {
+                    // Define generic/default images to skip
+                    const genericImagePatterns = [
+                        'nrl.svg',
+                        'default.png',
+                        'placeholder',
+                        'logo-placeholder',
+                        'no-image',
+                        '/18285.png',  // Known default MySideline image
+                        'generic-logo.png' // Added new generic image pattern
+                    ];
+                    
+                    // Target only the specific MySideline image structure
+                    // Look for images within the image__wrapper containers with data-url attributes
+                    const imageWrappers = document.querySelectorAll('.image__wrapper img[alt][data-url]');
+                    
+                    console.log(`DEBUG: Found ${imageWrappers.length} images in .image__wrapper containers with alt and data-url`);
+                    
+                    const allImages = Array.from(imageWrappers);
+                    console.log(`DEBUG: Total images found: ${allImages.length}`);
+                    
+                    const imageDict = {};
+                    let processedCount = 0;
+                    let skippedCount = 0;
+                    let genericCount = 0;
+                    
+                    allImages.forEach((img, index) => {
+                        try {
+                            console.log(`DEBUG: Processing image ${index + 1}:`);
+                            console.log(`  - Alt: "${img.alt}"`);
+                            console.log(`  - Src: "${img.src}"`);
+                            console.log(`  - Data-url: "${img.getAttribute('data-url')}"`);
+                            console.log(`  - Classes: "${img.className}"`);
+                            console.log(`  - Parent classes: "${img.parentElement?.className}"`);
+                            
+                            // Validate image element has alt text
+                            if (!img.alt) {
+                                console.log(`  - Skipped: No alt text`);
+                                skippedCount++;
+                                return;
+                            }
+
+                            // Clean alt text - remove extra whitespace and normalize
+                            const altText = img.alt.trim();
+                            if (!altText) {
+                                console.log(`  - Skipped: Empty alt text after trim`);
+                                skippedCount++;
+                                return;
+                            }
+
+                            // Get image URL - prioritize data-url attribute for MySideline structure
+                            let srcUrl = img.getAttribute('data-url')?.trim() || img.src?.trim();
+                            if (!srcUrl) {
+                                console.log(`  - Skipped: No data-url or src attribute`);
+                                skippedCount++;
+                                return;
+                            }
+
+                            // Check if this is a generic/default image we should skip
+                            const isGeneric = genericImagePatterns.some(pattern => 
+                                srcUrl.toLowerCase().includes(pattern.toLowerCase())
+                            );
+                            
+                            if (isGeneric) {
+                                console.log(`  - Skipped: Generic/default image detected`);
+                                genericCount++;
+                                return;
+                            }
+
+                            // Validate URL format
+                            if (!srcUrl.startsWith('http') && !srcUrl.startsWith('data:') && !srcUrl.startsWith('/')) {
+                                console.log(`  - Skipped: Invalid URL format`);
+                                skippedCount++;
+                                return;
+                            }
+
+                            // Convert relative URLs to absolute URLs if needed
+                            if (srcUrl.startsWith('/')) {
+                                srcUrl = window.location.origin + srcUrl;
+                                console.log(`  - Converted relative URL to: ${srcUrl}`);
+                            }
+
+                            // For MySideline events, use the full alt text as the event key
+                            // Alt text format: "Team A vs Team B - Date" or just "Event Name"
+                            // We want to use this as the key to match against mySidelineTitle
+                            const eventKey = altText;
+
+                            // Store in dictionary (last one wins if duplicate alt text)
+                            imageDict[eventKey] = srcUrl;
+                            console.log(`  - ✅ Added to dictionary: "${eventKey}" -> ${srcUrl}`);
+                            processedCount++;
+                            
+                        } catch (imgError) {
+                            console.log(`  - Error processing image: ${imgError.message}`);
+                            skippedCount++;
+                        }
+                    });
+                    
+                    console.log(`DEBUG: Image extraction summary:`);
+                    console.log(`  - Total images: ${allImages.length}`);
+                    console.log(`  - Successfully processed: ${processedCount}`);
+                    console.log(`  - Skipped (missing data): ${skippedCount}`);
+                    console.log(`  - Skipped (generic): ${genericCount}`);
+                    
+                    // Return results with metadata
+                    return {
+                        images: imageDict,
+                        metadata: {
+                            totalElements: allImages.length,
+                            processed: processedCount,
+                            skipped: skippedCount,
+                            generic: genericCount
+                        }
+                    };
+                    
+                } catch (evaluationError) {
+                    console.error('Error in page.evaluate for image extraction:', evaluationError.message);
+                    return {
+                        images: {},
+                        metadata: {
+                            totalElements: 0,
+                            processed: 0,
+                            skipped: 0,
+                            generic: 0,
+                            error: evaluationError.message
+                        }
+                    };
                 }
             });
             
-            return imageDict;
-        });
-        
-        const imageCount = Object.keys(imageDictionary).length;
-        console.log(`📸 Found ${imageCount} unique images with alt tags`);
-        
-        // Log the results for debugging
-        Object.entries(imageDictionary).forEach(([alt, src]) => {
-        console.log(`"${alt}" -> ${src}`);
-        });
-        
-        return imageDictionary;
+            // Extract the actual image dictionary and metadata
+            const { images: finalImageDict, metadata } = imageDictionary;
+            const imageCount = Object.keys(finalImageDict).length;
+            
+            // Enhanced logging with detailed statistics
+            console.log(`📸 Image extraction results:`);
+            console.log(`  - Found ${metadata.totalElements} total img elements in .image__wrapper containers`);
+            console.log(`  - Successfully processed ${metadata.processed} images`);
+            console.log(`  - Skipped ${metadata.skipped} images (missing data or invalid URLs)`);
+            console.log(`  - Skipped ${metadata.generic} generic/default images (nrl.svg, etc.)`);
+            console.log(`  - Final unique images in dictionary: ${imageCount}`);
+            
+            // Log any extraction errors
+            if (metadata.error) {
+                console.error(`⚠️ Extraction error: ${metadata.error}`);
+            }
+            
+            // Always log the final dictionary contents for debugging
+            console.log('📋 Final image dictionary contents:');
+            if (imageCount === 0) {
+                console.log('  (empty - no valid non-generic images found)');
+            } else {
+                Object.entries(finalImageDict).forEach(([alt, src], index) => {
+                    console.log(`  ${index + 1}. "${alt}" -> ${src}`);
+                });
+            }
+            
+            // Additional debugging if no images found
+            if (imageCount === 0) {
+                console.warn('⚠️ No valid non-generic images found. Running additional diagnostics...');
+                
+                const debugInfo = await page.evaluate(() => {
+                    const allImages = document.querySelectorAll('img');
+                    const imageWrappers = document.querySelectorAll('.image__wrapper');
+                    const targetImages = document.querySelectorAll('.image__wrapper img[alt][data-url]');
+                    const imagesInfo = [];
+                    
+                    Array.from(allImages).slice(0, 10).forEach((img, index) => {
+                        imagesInfo.push({
+                            index: index + 1,
+                            alt: img.alt,
+                            src: img.src,
+                            dataUrl: img.getAttribute('data-url'),
+                            className: img.className,
+                            parentClass: img.parentElement?.className,
+                            hasImageWrapper: img.closest('.image__wrapper') !== null
+                        });
+                    });
+                    
+                    return {
+                        totalImages: allImages.length,
+                        totalImageWrappers: imageWrappers.length,
+                        targetImages: targetImages.length,
+                        imagesWithAlt: document.querySelectorAll('img[alt]').length,
+                        imagesWithSrc: document.querySelectorAll('img[src]').length,
+                        imagesWithDataUrl: document.querySelectorAll('img[data-url]').length,
+                        imagesWithBoth: document.querySelectorAll('img[alt][data-url]').length,
+                        imagesInWrappers: document.querySelectorAll('.image__wrapper img').length,
+                        sampleImages: imagesInfo
+                    };
+                });
+                
+                console.log('🔍 Debug info:', JSON.stringify(debugInfo, null, 2));
+            }
+            
+            return finalImageDict;
+            
+        } catch (error) {
+            console.error('❌ Failed to extract image dictionary:', error.message);
+            console.error('Stack trace:', error.stack);
+            
+            // Return empty dictionary on error to prevent downstream failures
+            return {};
+        }
     }
 
 

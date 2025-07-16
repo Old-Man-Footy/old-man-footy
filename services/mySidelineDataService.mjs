@@ -106,11 +106,11 @@ class MySidelineDataService {
                 const existingEvent = await this.findExistingMySidelineEvent(eventData);
                 
                 if (existingEvent) {
-                    if (eventData.date < new Date() || existingEvent.isActive === false) {
-                        // If the event date is in the past or already marked as inactive, skip it
-                        console.log(`Skipping update of past event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
-                        continue; // Skip to next event
-                    }
+                    // if (eventData.date < new Date() || existingEvent.isActive === false) {
+                    //     // If the event date is in the past or already marked as inactive, skip it
+                    //     console.log(`Skipping update of past event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
+                    //     continue; // Skip to next event
+                    // }
 
                     console.log(`Event already exists: ${eventData.mySidelineTitle} on ${eventData.date}`);
                     // Update existing event with any new information, but only for empty fields
@@ -125,22 +125,37 @@ class MySidelineDataService {
                             // If we have a registration link, update it when updating MySidelineID
                             updateData.registrationLink = eventData.registrationLink;
                         }
+                    } else if (!existingEvent.mySidelineTitle && eventData.mySidelineTitle) {
+                        updateData.mySidelineTitle = eventData.mySidelineTitle;
                     }
-                    // Update location fields independently
+
+                    // Update Potentially Modified Fields
+                    if (!existingEvent.clubLogoURL && eventData.clubLogoURL) {
+                        updateData.clubLogoURL = eventData.clubLogoURL;
+                    }
+                    if (!existingEvent.date && eventData.date) {
+                        updateData.date = eventData.date;
+                    }
+                    if (!existingEvent.googleMapsUrl && eventData.googleMapsUrl) {
+                        updateData.googleMapsUrl = eventData.googleMapsUrl;
+                    }
+                    if (!existingEvent.isActive && eventData.isActive !== undefined) {
+                        updateData.isActive = eventData.isActive;
+                    }
+                    if (!existingEvent.isManuallyEntered && eventData.isManuallyEntered !== undefined) {
+                        updateData.isManuallyEntered = false;
+                    }
+                    if (!existingEvent.locationAddress && eventData.locationAddress) {
+                        updateData.locationAddress = eventData.locationAddress;
+                    }
                     if (!existingEvent.locationAddressLine1 && eventData.locationAddressLine1) {
                         updateData.locationAddressLine1 = eventData.locationAddressLine1;
                     }
                     if (!existingEvent.locationAddressLine2 && eventData.locationAddressLine2) {
                         updateData.locationAddressLine2 = eventData.locationAddressLine2;
                     }
-                    if (!existingEvent.locationAddress && eventData.locationAddress) {
-                        updateData.locationAddress = eventData.locationAddress;
-                    }
-                    if (!existingEvent.locationSuburb && eventData.locationSuburb) {
-                        updateData.locationSuburb = eventData.locationSuburb;
-                    }
-                    if (!existingEvent.locationPostcode && eventData.locationPostcode) {
-                        updateData.locationPostcode = eventData.locationPostcode;
+                    if (!existingEvent.locationCountry && eventData.locationCountry) {
+                        updateData.locationCountry = eventData.locationCountry;
                     }
                     if (!existingEvent.locationLatitude && eventData.locationLatitude) {
                         updateData.locationLatitude = eventData.locationLatitude;
@@ -148,8 +163,20 @@ class MySidelineDataService {
                     if (!existingEvent.locationLongitude && eventData.locationLongitude) {
                         updateData.locationLongitude = eventData.locationLongitude;
                     }
-                    if (!existingEvent.locationCountry && eventData.locationCountry) {
-                        updateData.locationCountry = eventData.locationCountry;
+                    if (!existingEvent.locationPostcode && eventData.locationPostcode) {
+                        updateData.locationPostcode = eventData.locationPostcode;
+                    }
+                    if (!existingEvent.locationSuburb && eventData.locationSuburb) {
+                        updateData.locationSuburb = eventData.locationSuburb;
+                    }
+                    if (!existingEvent.mySidelineAddress && eventData.mySidelineAddress) {  
+                        updateData.mySidelineAddress = eventData.mySidelineAddress;
+                    } 
+                    if (!existingEvent.mySidelineDate && eventData.mySidelineDate) {
+                        updateData.mySidelineDate = eventData.mySidelineDate;
+                    }
+                    if (!existingEvent.mySidelineTitle && eventData.mySidelineTitle) {
+                        updateData.mySidelineTitle = eventData.mySidelineTitle;
                     }
                     if (!existingEvent.organiserContactEmail && eventData.organiserContactEmail) {
                         updateData.organiserContactEmail = eventData.organiserContactEmail;
@@ -175,6 +202,18 @@ class MySidelineDataService {
                     if (!existingEvent.state && eventData.state) {
                         updateData.state = eventData.state;
                     }
+                    if (!existingEvent.title && eventData.title) {
+                        updateData.title = eventData.title;
+                    }
+                    if (!existingEvent.endDate && eventData.endDate) {
+                        updateData.endDate = eventData.endDate;
+                    }   
+                    if (!existingEvent.venueName && eventData.venueName) {
+                        updateData.feesDescription = eventData.feesDescription;
+                    }
+                    if (!existingEvent.feesDescription && eventData.feesDescription) {
+                        updateData.feesDescription = eventData.feesDescription;
+                    }
                     
                     // Always update the sync timestamp
                     updateData.lastMySidelineSync = lastMySidelineSync;
@@ -193,9 +232,10 @@ class MySidelineDataService {
                     const newEvent = await Carnival.create({
                         // Core event fields
                         title: eventData.title,
-                        date: eventData.date,
-                        endDate: eventData.endDate || null,
+                        date: eventData.date,                    
+                        endDate: null,
                         state: eventData.state,
+                        clubLogoURL: eventData.clubLogoURL,
                         
                         // MySideline-specific tracking fields
                         mySidelineId: eventData.mySidelineId,
@@ -204,13 +244,13 @@ class MySidelineDataService {
                         mySidelineDate: eventData.mySidelineDate,
                         
                         // Location fields - structured address
+                        venueName: eventData.venueName,
                         locationAddress: eventData.locationAddress,
+                        locationAddressLine1: eventData.locationAddressLine1,
+                        locationAddressLine2: eventData.locationAddressLine2,
                         locationSuburb: eventData.locationSuburb,
                         locationPostcode: eventData.locationPostcode,
                         locationCountry: eventData.locationCountry || 'Australia',
-                        locationAddressLine1: eventData.locationAddressLine1,
-                        locationAddressLine2: eventData.locationAddressLine2,
-                        venueName: eventData.venueName,
                         locationLatitude: eventData.locationLatitude,
                         locationLongitude: eventData.locationLongitude,
                         
@@ -222,47 +262,18 @@ class MySidelineDataService {
                         // Event details
                         scheduleDetails: eventData.scheduleDetails,
                         registrationLink: eventData.registrationLink,
-                        feesDescription: eventData.feesDescription,
-                        callForVolunteers: eventData.callForVolunteers,
                         
                         // Social media fields
                         socialMediaFacebook: eventData.socialMediaFacebook,
-                        socialMediaInstagram: eventData.socialMediaInstagram,
-                        socialMediaTwitter: eventData.socialMediaTwitter,
                         socialMediaWebsite: eventData.socialMediaWebsite,
-                        
-                        // Media and branding
-                        clubLogoURL: eventData.clubLogoURL,
-                        promotionalImageURL: eventData.promotionalImageURL,
-                        additionalImages: eventData.additionalImages || [],
-                        
-                        // Draw and documents
-                        drawFiles: eventData.drawFiles || [],
-                        drawFileURL: eventData.drawFileURL,
-                        drawFileName: eventData.drawFileName,
-                        drawTitle: eventData.drawTitle,
-                        drawDescription: eventData.drawDescription,
-                        
-                        // Registration management
-                        maxTeams: eventData.maxTeams,
-                        currentRegistrations: 0, // Start with 0 registrations
-                        isRegistrationOpen: eventData.isRegistrationOpen !== false, // Default true
-                        registrationDeadline: eventData.registrationDeadline,
-                        
-                        // Admin fields
-                        adminNotes: eventData.adminNotes,
-                        createdByUserId: null, // MySideline events have no initial creator
-                        clubId: eventData.clubId || null, // May be null for unclaimed events
-                        claimedAt: null, // Not claimed initially
                         
                         // MySideline metadata
                         isManuallyEntered: false,
                         lastMySidelineSync: lastMySidelineSync,
-                        source: eventData.source,
                         googleMapsUrl: eventData.googleMapsUrl,
                         
                         // Status
-                        isActive: true
+                        isActive: eventData.isActive !== undefined ? eventData.isActive : true,
                     });
 
                     // If the event is more than 7 days in the future, set registration open

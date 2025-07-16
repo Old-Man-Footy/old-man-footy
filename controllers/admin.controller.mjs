@@ -1845,9 +1845,9 @@ const syncMySidelineHandler = async (req, res) => {
         // Trigger the sync
         const result = await mySidelineService.syncMySidelineEvents();
         
-        // Log the admin action
+        // Log the admin action - using correct action constant
         await AuditService.logAdminAction(
-            AuditService.ACTIONS.ADMIN_SYSTEM_ACTION,
+            AuditService.ACTIONS.ADMIN_SYSTEM_SYNC,
             req,
             AuditService.ENTITIES.SYSTEM,
             null,
@@ -1880,9 +1880,9 @@ const syncMySidelineHandler = async (req, res) => {
     } catch (error) {
         console.error('❌ Manual MySideline sync failed:', error);
         
-        // Log the failure
+        // Log the failure - using correct action constant
         await AuditService.logAdminAction(
-            AuditService.ACTIONS.ADMIN_SYSTEM_ACTION,
+            AuditService.ACTIONS.ADMIN_SYSTEM_SYNC,
             req,
             AuditService.ENTITIES.SYSTEM,
             null,

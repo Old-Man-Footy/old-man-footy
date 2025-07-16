@@ -33,7 +33,8 @@ class MySidelineLogoDownloadService {
     async downloadLogo(logoUrl, entityType, entityId, imageType = ImageNamingService.IMAGE_TYPES.LOGO) {
         try {
             // Validate input parameters, and ignore default NRL Logo.
-            if (!logoUrl || typeof logoUrl !== 'string' || logoUrl.endsWith('/18285.png')) {
+            if (!logoUrl 
+                || typeof logoUrl !== 'string') {
                 return {
                     success: false,
                     error: 'Invalid logo URL provided',
