@@ -28,7 +28,7 @@ import { asyncHandler } from '../middleware/asyncHandler.mjs';
  * @param {import('express').Response} res
  * @returns {Promise<void>}
  */
-export const getIndex = asyncHandler(async (_req, res) => {
+export const getIndex = asyncHandler(async (req, res) => {
   const upcomingCarnivals = await Carnival.findAll({
     where: {
       date: { [Op.gte]: new Date() },
@@ -67,6 +67,7 @@ export const getIndex = asyncHandler(async (_req, res) => {
 
   return res.render('index', {
     title: 'Old Man Footy',
+    user: req.user || null, // Add user variable for template
     upcomingCarnivals,
     carnivals: upcomingCarnivals, // Also provide as 'carnivals' for template compatibility
     stats,

@@ -124,6 +124,9 @@ function flashTemplateVariables(req, res, next) {
   res.locals.warning_msg = req.flash.get('warning_msg');
   res.locals.info_msg = req.flash.get('info_msg');
   
+  // Make user variable available to all templates globally
+  res.locals.user = req.user || null;
+  
   next();
 }
 

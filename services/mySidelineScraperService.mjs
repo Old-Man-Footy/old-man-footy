@@ -25,12 +25,6 @@ class MySidelineScraperService {
      */
     async scrapeEvents() {
         try {
-            // Check if we should use mock data instead of scraping
-            if (this.useMockData) {
-                console.log('Using mock MySideline data (development mode)...');
-                return this.generateMockEvents();
-            }
-
             // Check if scraping is disabled
             if (!this.enableScraping) {
                 console.log('MySideline scraping is disabled via configuration');
@@ -91,28 +85,26 @@ class MySidelineScraperService {
             });
 
             console.log(`Navigating to MySideline search URL: ${this.searchUrl}`);
-            await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded' });
+            await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded'});
+            console.log('✅ DOM loaded, waiting for content...');
 
-            // Save dom content html to variable
-            const content = await page.content(); 
-            console.log('DOM content captured successfully.');
+            // Extract image dictionary
+            var imgDictionary = await this.extractImageDictionary();
 
             // Wait for the API call to complete
             console.log('Waiting for API response...');
             await page.waitForTimeout(10000); // Wait up to 10 seconds for the API call
 
             if (jsonData && jsonData.data) {
-                const processedEvents = this.processApiResponse(jsonData, content);
+                const processedEvents = await this.processApiResponse(jsonData, imgDictionary);
                 console.log(`✅ Processed ${processedEvents.length} events from API response`);
                 return processedEvents;
             } else {
-                console.log('⚠️ No JSON data captured from API. Using fallback mock data.');
-                return this.generateMockEvents();
+                console.log('⚠️ No JSON data captured from API. Using fallback mock data.');                
             }
 
         } catch (error) {
             console.error('Error during API interception:', error.message);
-            return this.generateMockEvents();
         } finally {
             try {
                 if (page) await page.close();
@@ -130,14 +122,13 @@ class MySidelineScraperService {
      * @param {Object} apiResponse - The raw API response
      * @returns {Array} Array of processed events
      */
-    processApiResponse(apiResponse, htmlContent) {
+    processApiResponse(apiResponse, imgDictionary) {
         if (!apiResponse || !apiResponse.data || !Array.isArray(apiResponse.data)) {
             console.log('Invalid API response structure');
             return [];
         }
 
         const processedEvents = [];
-        const $ = cheerio.load(htmlContent);
 
         for (const item of apiResponse.data) {
             try {
@@ -155,14 +146,9 @@ class MySidelineScraperService {
                 const processedEvent = this.convertApiItemToEvent(item);
                 if (processedEvent) {
 
-                    // Select the img element with the specific alt attribute
-                    const element = $(`img[alt="${processedEvent.mySidelineTitle}"]`);
-                    // Check if the element exists and has the data-url attribute
-
-                    if (element.length > 0 && element.attr('data-url')) {
-                        const dataUrl = element.attr('data-url');
-                        console.log(`Data URL for alt "${processedEvent.mySidelineTitle}": ${dataUrl}`);
-                        processedEvent.clubLogoURL = dataUrl;
+                    const imageUrl = imgDictionary[processedEvent.mySidelineTitle];
+                    if (imageUrl) {
+                        processedEvent.clubLogoURL = imageUrl;
                     } else {
                         console.log(`Image with alt "${processedEvent.mySidelineTitle}" not found or missing data-url attribute.`);
                     }
@@ -188,14 +174,14 @@ class MySidelineScraperService {
             return false;
         }
 
-        const ageLvl = (item.ageLevel || '').toLowerCase();
+        const ageLvl = (item.ageLvl || '').toLowerCase();
         const region = (item.orgtree?.region?.name || '').toLowerCase();
         const association = (item.association?.name || '').toLowerCase();
         const competition = (item.competition?.name || '').toLowerCase();
         const club = (item.club?.name || '').toLowerCase(); 
         
         // Skip Touch events
-        if (association.includes('touch') || competition.includes('touch')) {
+        if (association.includes('touch') || competition.includes('touch') || ageLvl.includes('all ages')) {
             return false;
         }
 
@@ -356,72 +342,6 @@ class MySidelineScraperService {
     }
 
     /**
-     * Generate mock events for development/testing
-     * @returns {Array} Array of mock events
-     */
-    generateMockEvents() {
-        const states = ['NSW', 'QLD', 'VIC'];
-        const mockEvents = [];
-        
-        states.forEach(state => {
-            const currentYear = new Date().getFullYear();
-            const eventTemplates = [
-                {
-                    title: `${state} Masters Rugby League Carnival`,
-                    locationSuffix: state === 'NSW' ? 'Sydney' : state === 'QLD' ? 'Brisbane' : 'Melbourne',
-                    monthOffset: 2
-                },
-                {
-                    title: `${state} Over 35s Championship`,
-                    locationSuffix: state === 'NSW' ? 'Newcastle' : state === 'QLD' ? 'Gold Coast' : 'Geelong',
-                    monthOffset: 4
-                }
-            ];
-
-            eventTemplates.forEach((template, index) => {
-                const eventDate = new Date();
-                eventDate.setMonth(eventDate.getMonth() + template.monthOffset);
-                eventDate.setDate(15);
-
-                const mockId = 99000000 + mockEvents.length;
-
-                mockEvents.push({
-                    title: template.title,
-                    date: eventDate,
-                    locationAddress: `${template.locationSuffix} Sports Complex, ${state}`,
-                    state: state,
-                    mySidelineTitle: template.title,
-                    mySidelineAddress: `${template.locationSuffix} Sports Complex, ${state}`,
-                    mySidelineDate: eventDate,
-                    mySidelineId: mockId,
-                    registrationLink: `${this.eventUrl}${mockId}`,
-                    organiserContactName: `${state} Rugby League Masters`,
-                    organiserContactEmail: `masters@${state.toLowerCase()}rl.com.au`,
-                    organiserContactPhone: `0${index + 2} ${Math.floor(Math.random() * 9000) + 1000} ${Math.floor(Math.random() * 9000) + 1000}`,
-                    socialMediaWebsite: null,
-                    socialMediaFacebook: null,
-                    source: 'MySideline',
-                    scheduleDetails: `Day-long tournament starting at ${8 + index}:00 AM. Multiple age divisions available.`,
-                    isActive: true,
-                    isMySidelineCard: true,
-                    isManuallyEntered: false,
-                    locationAddressLine1: `${template.locationSuffix} Sports Complex`,
-                    locationAddressLine2: null,
-                    venueName: `${template.locationSuffix} Sports Complex`,
-                    locationLatitude: null,
-                    locationLongitude: null,
-                    locationSuburb: template.locationSuffix,
-                    locationPostcode: null,
-                    locationCountry: 'Australia',
-                    googleMapsUrl: null
-                });
-            });
-        });
-
-        return mockEvents;
-    }
-
-    /**
      * Validate and clean extracted data to ensure it meets requirements
      * @param {Object} rawData - Raw extracted data
      * @returns {Object} Cleaned and validated data
@@ -462,6 +382,92 @@ class MySidelineScraperService {
 
         return cleanedData;
     }
+
+     /**
+     * Wait for MySideline-specific content to load (replaces all other wait methods)
+     * @param {Page} page - Playwright page object
+     */
+     async waitForMySidelineContent(page) {
+        console.log('Waiting for MySideline content to load...');
+        
+        try {
+            // Step 1: Wait for basic page structure
+            await page.waitForSelector('body', { timeout: 30000 });
+            
+            // Step 2: Wait for MySideline-specific elements
+            await page.waitForSelector('.el-card.is-always-shadow, [id^="clubsearch_"]', { 
+                timeout: 45000 
+            });
+            
+            // Step 3: Wait for meaningful content with Masters events
+            await page.waitForFunction(() => {
+                const cards = document.querySelectorAll('.el-card.is-always-shadow, [id^="clubsearch_"]');
+                let mastersContent = 0;
+
+                for (let card of cards) {
+                    const text = card.textContent?.toLowerCase() || '';
+                    if (text.includes('masters') || 
+                        text.includes('rugby') || 
+                        text.includes('league') ||
+                        text.includes('tournament') ||
+                        text.includes('carnival')) {
+                        mastersContent++;
+                    }
+                }
+
+                return mastersContent >= 2; // At least 2 relevant cards
+            }, { timeout: 60000 });
+
+            // Step 4: Final stabilization wait
+            await page.waitForTimeout(5000);
+            
+            console.log('✅ MySideline content loaded and ready for extraction');
+            
+        } catch (error) {
+            console.log(`⚠️ MySideline content wait failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Extract images with alt tags from MySideline page
+     * @param {Page} page - Playwright page object
+     * @param {string} url - MySideline URL to scrape
+     * @returns {Promise<Object>} Dictionary with alt tags as keys and image sources as values
+     */
+    async extractImageDictionary(page) {
+        console.log('🔄 Loading MySideline page for image extraction...');
+        await this.waitForMySidelineContent(page);
+
+        console.log('✅ Extracting images with alt tags...');
+        
+        // Extract images and create dictionary with alt as key, src as value
+        const imageDictionary = await page.evaluate(() => {
+            const imgElements = document.querySelectorAll('img[alt]');
+            const imageDict = {};
+            
+            Array.from(imgElements).forEach(img => {
+                if (img.alt && img.src) {
+                // Use alt text as key, src as value
+                // If multiple images have same alt, this will overwrite (last one wins)
+                imageDict[img.alt] = img.src;
+                }
+            });
+            
+            return imageDict;
+        });
+        
+        const imageCount = Object.keys(imageDictionary).length;
+        console.log(`📸 Found ${imageCount} unique images with alt tags`);
+        
+        // Log the results for debugging
+        Object.entries(imageDictionary).forEach(([alt, src]) => {
+        console.log(`"${alt}" -> ${src}`);
+        });
+        
+        return imageDictionary;
+    }
+
+
 }
 
 export default MySidelineScraperService;
