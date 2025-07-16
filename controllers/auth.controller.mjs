@@ -378,8 +378,9 @@ const logoutUser = (req, res) => {
       if (process.env.NODE_ENV !== 'test') {
         console.error('Error during logout:', err);
       }
+      // Use enhanced flash - works even if session is corrupted
       req.flash('error_msg', 'An error occurred during logout.');
-      return res.redirect('/dashboard');
+      return res.redirect('/');
     }
 
     // Log successful logout
@@ -397,6 +398,7 @@ const logoutUser = (req, res) => {
       }
     }
 
+    // Enhanced flash works regardless of session status
     req.flash('success_msg', 'You have been logged out successfully.');
     return res.redirect('/');
   });

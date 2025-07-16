@@ -7,7 +7,9 @@ setEnvironmentVariables();
 import express from 'express';
 import session from 'express-session';
 import connectSessionSequelize from 'connect-session-sequelize';
-import flash from 'connect-flash';
+// Remove the old flash import and add our enhanced flash
+// import flash from 'connect-flash';
+import { enhancedFlash, flashTemplateVariables } from './middleware/flash.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import expressLayouts from 'express-ejs-layouts';
@@ -79,7 +81,7 @@ app.use(setupSessionAuth);
 app.use(loadSessionUser);
 
 // Flash messages - MUST come after session setup
-app.use(flash());
+app.use(enhancedFlash);
 
 // Apply centralized security middleware - MUST come after session and flash setup
 app.use(applySecurity);
@@ -92,14 +94,8 @@ app.use(maintenanceMode);
 const { comingSoonMode } = await import('./middleware/comingSoon.mjs');
 app.use(comingSoonMode);
 
-// Global variables for templates
-app.use((req, res, next) => {
-    res.locals.success_msg = req.flash('success_msg');
-    res.locals.error_msg = req.flash('error_msg');
-    res.locals.error = req.flash('error');
-    res.locals.user = req.user || null;
-    next();
-});
+// Global variables for templates using enhanced flash
+app.use(flashTemplateVariables);
 
 /**
  * Initialize database connection and setup
