@@ -3,9 +3,8 @@
  * Tests for maintenance mode functionality following TDD guidelines
  */
 
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as maintenanceController from '../controllers/maintenance.controller.mjs';
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-
 
 describe('Maintenance Controller', () => {
     let req, res;
@@ -19,9 +18,9 @@ describe('Maintenance Controller', () => {
         };
         
         res = {
-            status: jest.fn().mockReturnThis(),
-            render: jest.fn(),
-            json: jest.fn()
+            status: vi.fn().mockReturnThis(),
+            render: vi.fn(),
+            json: vi.fn()
         };
 
         // Clear environment variables
@@ -32,7 +31,7 @@ describe('Maintenance Controller', () => {
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('showMaintenancePage', () => {
