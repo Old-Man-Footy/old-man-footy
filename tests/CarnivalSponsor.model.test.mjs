@@ -1,9 +1,7 @@
 // Jest unit tests for CarnivalSponsor model
-import { jest } from '@jest/globals';
 import CarnivalSponsor from '../models/CarnivalSponsor.mjs';
 import Carnival from '../models/Carnival.mjs';
 import Sponsor from '../models/Sponsor.mjs';
-import { sequelize } from '../config/database.mjs';
 import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 describe('CarnivalSponsor Model', () => {

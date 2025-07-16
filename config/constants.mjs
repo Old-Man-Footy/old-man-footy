@@ -137,16 +137,138 @@ export const SUPPORTED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.g
  * Upload directory paths
  */
 export const UPLOAD_DIRECTORIES = {
+    // Parent directories
+    LOGOS: 'public/uploads/logos',
+    IMAGES: 'public/uploads/images',
+    DOCUMENTS: 'public/uploads/documents',
+    UPLOADS_ROOT: 'public/uploads',
+    
+    // Logo subdirectories
     CLUB_LOGOS: 'public/uploads/logos/club',
     CARNIVAL_LOGOS: 'public/uploads/logos/carnival',
+    SPONSOR_LOGOS: 'public/uploads/logos/sponsor',
+    SYSTEM_LOGOS: 'public/uploads/logos/system',
+    
+    // Image subdirectories
     CLUB_PROMO: 'public/uploads/images/club/promo',
-    CARNIVAL_PROMO: 'public/uploads/images/carnival/promo',
     CLUB_GALLERY: 'public/uploads/images/club/gallery',
+    CARNIVAL_PROMO: 'public/uploads/images/carnival/promo',
     CARNIVAL_GALLERY: 'public/uploads/images/carnival/gallery',
-    DOCUMENTS: 'public/uploads/documents'
+    SPONSOR_PROMO: 'public/uploads/images/sponsor/promo',
+    SPONSOR_GALLERY: 'public/uploads/images/sponsor/gallery',
+    
+    // Document subdirectories
+    CLUB_DOCUMENTS: 'public/uploads/documents/club',
+    CARNIVAL_DOCUMENTS: 'public/uploads/documents/carnival',
+    SPONSOR_DOCUMENTS: 'public/uploads/documents/sponsor',
+    
+    // Temporary directory
+    TEMP: 'public/uploads/temp'
 };
 
 /**
  * Array of upload directories for scanning
  */
 export const UPLOAD_DIRECTORIES_ARRAY = Object.values(UPLOAD_DIRECTORIES);
+
+/**
+ * User roles for authorization and access control
+ */
+export const USER_ROLES = {
+    ADMIN: 'admin',
+    PRIMARY_DELEGATE: 'primary_delegate',
+    DELEGATE: 'delegate',
+    USER: 'user'
+};
+
+/**
+ * Contact inquiry types
+ */
+export const CONTACT_INQUIRY_TYPES = {
+    GENERAL: 'general',
+    CARNIVAL: 'carnival',
+    DELEGATE: 'delegate',
+    TECHNICAL: 'technical',
+    SPONSORSHIP: 'sponsorship'
+};
+
+/**
+ * Feature flags for environment configuration
+ */
+export const FEATURE_FLAGS = {
+    COMING_SOON_MODE: 'FEATURE_COMING_SOON_MODE',
+    MAINTENANCE_MODE: 'FEATURE_MAINTENANCE_MODE',
+    DEBUG_MODE: 'DEBUG_MODE'
+};
+
+/**
+ * Boolean string values for consistency
+ */
+export const BOOLEAN_STRINGS = {
+    TRUE: 'true',
+    FALSE: 'false'
+};
+
+/**
+ * Common UI states
+ */
+export const UI_STATES = {
+    ACTIVE: 'active',
+    INACTIVE: 'inactive',
+    ENABLED: 'enabled',
+    DISABLED: 'disabled',
+    VISIBLE: 'visible',
+    HIDDEN: 'hidden'
+};
+
+/**
+ * Pagination states
+ */
+export const PAGINATION_STATES = {
+    FIRST_PAGE: 1,
+    DEFAULT_LIMIT: 10,
+    MAX_LIMIT: 100
+};
+
+/**
+ * Modal and form states
+ */
+export const FORM_STATES = {
+    EXPANDED: 'true',
+    COLLAPSED: 'false',
+    CHECKED: 'checked',
+    SELECTED: 'selected'
+};
+
+/**
+ * Audit log result constants
+ */
+export const AUDIT_RESULTS = {
+    SUCCESS: 'SUCCESS',
+    FAILURE: 'FAILURE',
+    ERROR: 'ERROR'
+};
+
+/**
+ * CSS Bootstrap color classes
+ */
+export const BOOTSTRAP_COLORS = {
+    PRIMARY: 'primary',
+    SECONDARY: 'secondary',
+    SUCCESS: 'success',
+    DANGER: 'danger',
+    WARNING: 'warning',
+    INFO: 'info',
+    LIGHT: 'light',
+    DARK: 'dark'
+};
+
+/**
+ * Flash message types
+ */
+export const FLASH_MESSAGE_TYPES = {
+    SUCCESS: 'success_msg',
+    ERROR: 'error_msg',
+    WARNING: 'warning_msg',
+    INFO: 'info_msg'
+};

@@ -6,8 +6,6 @@
  */
 
 import { CarnivalSponsor, Carnival, Sponsor } from '../models/index.mjs';
-import { Op } from 'sequelize';
-import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 /**

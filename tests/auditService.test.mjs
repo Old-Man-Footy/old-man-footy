@@ -8,6 +8,7 @@
 import { AuditLog, User } from '../models/index.mjs';
 import AuditService from '../services/auditService.mjs';
 import { describe, test, expect, beforeEach } from '@jest/globals';
+import { AUDIT_RESULTS } from '../config/constants.mjs';
 
 
 describe('Audit Service', () => {
@@ -49,7 +50,7 @@ describe('Audit Service', () => {
             expect(auditLog.action).toBe(AuditService.ACTIONS.USER_LOGIN);
             expect(auditLog.entityType).toBe(AuditService.ENTITIES.USER);
             expect(auditLog.entityId).toBe(testUser.id);
-            expect(auditLog.result).toBe('SUCCESS');
+            expect(auditLog.result).toBe(AUDIT_RESULTS.SUCCESS);
             expect(auditLog.ipAddress).toBe('192.168.1.1');
             expect(auditLog.userAgent).toBe('Test Browser');
             expect(auditLog.sessionId).toBe('test-session-123');
@@ -70,12 +71,12 @@ describe('Audit Service', () => {
                     req: mockReq,
                     entityType: AuditService.ENTITIES.USER,
                     entityId: testUser.id,
-                    result: 'FAILURE',
+                    result: AUDIT_RESULTS.FAILURE,
                     errorMessage: 'Validation failed'
                 }
             );
 
-            expect(auditLog.result).toBe('FAILURE');
+            expect(auditLog.result).toBe(AUDIT_RESULTS.FAILURE);
             expect(auditLog.errorMessage).toBe('Validation failed');
         });
     });
@@ -118,6 +119,35 @@ describe('Audit Service', () => {
             expect(auditLog.newValues.email).toBe(testUser.email);
             expect(auditLog.metadata.loginAttempt).toBe(1);
         });
+
+        it('should log successful authentication with correct result', async () => {
+            // Arrange
+            const mockReq = {
+                ip: '127.0.0.1',
+                headers: { 'user-agent': 'test-browser' }
+            };
+            const mockUser = { id: 1, email: 'test@example.com' };
+
+            // Act
+            await AuditService.logAuthAction('USER_LOGIN', mockReq, mockUser);
+
+            // Assert
+            expect(AuditLog.logAction).toHaveBeenCalledWith({
+                userId: 1,
+                action: 'USER_LOGIN',
+                entityType: 'User',
+                entityId: 1,
+                oldValues: null,
+                newValues: { id: 1, email: 'test@example.com' },
+                request: mockReq,
+                result: AUDIT_RESULTS.SUCCESS,
+                errorMessage: null,
+                metadata: expect.objectContaining({
+                    userAgent: 'test-browser',
+                    ipAddress: '127.0.0.1'
+                })
+            });
+        });
     });
 
     describe('sanitizeData', () => {
@@ -150,7 +180,7 @@ describe('Audit Service', () => {
                 action: AuditService.ACTIONS.USER_LOGIN,
                 entityType: AuditService.ENTITIES.USER,
                 entityId: testUser.id,
-                result: 'SUCCESS'
+                result: AUDIT_RESULTS.SUCCESS
             });
 
             await AuditLog.create({
@@ -158,7 +188,7 @@ describe('Audit Service', () => {
                 action: AuditService.ACTIONS.USER_UPDATE,
                 entityType: AuditService.ENTITIES.USER,
                 entityId: testUser.id,
-                result: 'SUCCESS'
+                result: AUDIT_RESULTS.SUCCESS
             });
 
             const result = await AuditLog.getUserAuditLogs(testUser.id, { limit: 10 });
@@ -174,14 +204,14 @@ describe('Audit Service', () => {
                 userId: testUser.id,
                 action: AuditService.ACTIONS.USER_LOGIN,
                 entityType: AuditService.ENTITIES.USER,
-                result: 'SUCCESS'
+                result: AUDIT_RESULTS.SUCCESS
             });
 
             await AuditLog.create({
                 userId: testUser.id,
                 action: AuditService.ACTIONS.USER_LOGIN,
                 entityType: AuditService.ENTITIES.USER,
-                result: 'FAILURE'
+                result: AUDIT_RESULTS.FAILURE
             });
 
             const stats = await AuditLog.getAuditStatistics();
@@ -201,7 +231,7 @@ describe('Audit Service', () => {
                 userId: testUser.id,
                 action: AuditService.ACTIONS.USER_LOGIN,
                 entityType: AuditService.ENTITIES.USER,
-                result: 'SUCCESS',
+                result: AUDIT_RESULTS.SUCCESS,
                 createdAt: oldDate
             });
 
@@ -210,7 +240,7 @@ describe('Audit Service', () => {
                 userId: testUser.id,
                 action: AuditService.ACTIONS.USER_LOGIN,
                 entityType: AuditService.ENTITIES.USER,
-                result: 'SUCCESS'
+                result: AUDIT_RESULTS.SUCCESS
             });
 
             const deletedCount = await AuditLog.cleanupOldLogs(365);
@@ -229,7 +259,7 @@ describe('Audit Service', () => {
                 action: AuditService.ACTIONS.USER_LOGIN,
                 entityType: AuditService.ENTITIES.USER,
                 entityId: testUser.id,
-                result: 'SUCCESS',
+                result: AUDIT_RESULTS.SUCCESS,
                 ipAddress: '192.168.1.1',
                 metadata: { loginMethod: 'password' }
             });
@@ -246,6 +276,66 @@ describe('Audit Service', () => {
             expect(formatted.result).toBe('SUCCESS');
             expect(formatted.ipAddress).toBe('192.168.1.1');
             expect(formatted.metadata.loginMethod).toBe('password');
+        });
+    });
+
+    describe('audit middleware', () => {
+        it('should log success result for 200 status codes', async () => {
+            // Arrange
+            const action = 'TEST_ACTION';
+            const middleware = AuditService.createAuditMiddleware(action, 'User', () => 1);
+            
+            const mockReq = { user: { id: 1 } };
+            const mockRes = {
+                statusCode: 200,
+                end: jest.fn()
+            };
+            const mockNext = jest.fn();
+
+            // Act
+            middleware(mockReq, mockRes, mockNext);
+            mockRes.end();
+
+            // Assert - wait for setImmediate
+            await new Promise(resolve => setImmediate(resolve));
+            
+            expect(AuditService.logUserAction).toHaveBeenCalledWith(action, {
+                req: mockReq,
+                entityType: 'User',
+                entityId: 1,
+                newValues: null,
+                result: AUDIT_RESULTS.SUCCESS,
+                errorMessage: null
+            });
+        });
+
+        it('should log failure result for 400+ status codes', async () => {
+            // Arrange
+            const action = 'TEST_ACTION';
+            const middleware = AuditService.createAuditMiddleware(action, 'User', () => 1);
+            
+            const mockReq = { user: { id: 1 } };
+            const mockRes = {
+                statusCode: 404,
+                end: jest.fn()
+            };
+            const mockNext = jest.fn();
+
+            // Act
+            middleware(mockReq, mockRes, mockNext);
+            mockRes.end();
+
+            // Assert - wait for setImmediate
+            await new Promise(resolve => setImmediate(resolve));
+            
+            expect(AuditService.logUserAction).toHaveBeenCalledWith(action, {
+                req: mockReq,
+                entityType: 'User',
+                entityId: 1,
+                newValues: null,
+                result: AUDIT_RESULTS.FAILURE,
+                errorMessage: 'HTTP 404'
+            });
         });
     });
 });

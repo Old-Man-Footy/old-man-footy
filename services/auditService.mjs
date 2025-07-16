@@ -7,6 +7,7 @@
  */
 
 import AuditLog from '../models/AuditLog.mjs';
+import { AUDIT_RESULTS } from '../config/constants.mjs';
 
 /**
  * Audit Service Class

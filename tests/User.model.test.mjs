@@ -9,6 +9,10 @@
  */
 
 import { jest } from '@jest/globals';
+import { sequelize } from '../config/database.mjs';
+import User from '../models/User.mjs';
+import Club from '../models/Club.mjs';
+import { USER_ROLES } from '../config/constants.mjs';
 
 // Create mock functions
 const mockBcrypt = {
@@ -24,10 +28,6 @@ const mockCrypto = {
 // Mock modules using jest.unstable_mockModule with proper structure
 jest.unstable_mockModule('bcryptjs', () => mockBcrypt);
 jest.unstable_mockModule('crypto', () => mockCrypto);
-
-// Import after mocking
-const { sequelize } = await import('../config/database.mjs');
-const { default: User } = await import('../models/User.mjs');
 
 describe('User Model', () => {
   beforeAll(async () => {
@@ -720,6 +720,48 @@ describe('User Model', () => {
 
         // Assert
         expect(user.isAdmin).toBe(true);
+      });
+
+      test('should correctly identify admin users', async () => {
+        const adminUser = await User.create({
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@example.com',
+          password: 'password123',
+          role: USER_ROLES.ADMIN,
+          isActive: true
+        });
+
+        expect(adminUser.isAdmin).toBe(true);
+        expect(adminUser.isPrimaryDelegate).toBe(false);
+      });
+
+      test('should correctly identify primary delegate users', async () => {
+        const delegateUser = await User.create({
+          firstName: 'Delegate',
+          lastName: 'User',
+          email: 'delegate@example.com',
+          password: 'password123',
+          role: USER_ROLES.PRIMARY_DELEGATE,
+          isActive: true
+        });
+
+        expect(delegateUser.isPrimaryDelegate).toBe(true);
+        expect(delegateUser.isAdmin).toBe(false);
+      });
+
+      test('should correctly identify regular users', async () => {
+        const regularUser = await User.create({
+          firstName: 'Regular',
+          lastName: 'User',
+          email: 'regular@example.com',
+          password: 'password123',
+          role: USER_ROLES.USER,
+          isActive: true
+        });
+
+        expect(regularUser.isAdmin).toBe(false);
+        expect(regularUser.isPrimaryDelegate).toBe(false);
       });
 
       // Skip clubId-related tests for now since they require Club model setup

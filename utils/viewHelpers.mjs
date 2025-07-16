@@ -9,7 +9,14 @@ import {
     SPONSORSHIP_LEVELS, 
     AUSTRALIAN_STATES,
     PLAYER_SHORTS_COLORS,
-    ATTENDANCE_STATUS
+    ATTENDANCE_STATUS,
+    USER_ROLES,
+    CONTACT_INQUIRY_TYPES,
+    FEATURE_FLAGS,
+    BOOLEAN_STRINGS,
+    UI_STATES,
+    BOOTSTRAP_COLORS,
+    AUDIT_RESULTS
 } from '../config/constants.mjs';
 
 /**
@@ -22,7 +29,14 @@ export function getViewConstants() {
         SPONSORSHIP_LEVELS,
         AUSTRALIAN_STATES,
         PLAYER_SHORTS_COLORS,
-        ATTENDANCE_STATUS
+        ATTENDANCE_STATUS,
+        USER_ROLES,
+        CONTACT_INQUIRY_TYPES,
+        FEATURE_FLAGS,
+        BOOLEAN_STRINGS,
+        UI_STATES,
+        BOOTSTRAP_COLORS,
+        AUDIT_RESULTS
     };
 }
 
@@ -87,4 +101,87 @@ export function getSponsorshipLevelClass(level) {
         default:
             return 'tier-supporting';
     }
+}
+
+/**
+ * Check if user has admin or primary delegate role
+ * @param {Object} user - User object
+ * @returns {boolean} True if user has admin or primary delegate role
+ */
+export function isAdminOrPrimaryDelegate(user) {
+    return user && (user.role === USER_ROLES.ADMIN || user.role === USER_ROLES.PRIMARY_DELEGATE);
+}
+
+/**
+ * Check if user has admin role
+ * @param {Object} user - User object
+ * @returns {boolean} True if user has admin role
+ */
+export function isAdmin(user) {
+    return user && user.role === USER_ROLES.ADMIN;
+}
+
+/**
+ * Get display name for user role
+ * @param {string} role - User role
+ * @returns {string} Display name for role
+ */
+export function formatUserRole(role) {
+    switch (role) {
+        case USER_ROLES.ADMIN:
+            return 'Administrator';
+        case USER_ROLES.PRIMARY_DELEGATE:
+            return 'Primary Delegate';
+        case USER_ROLES.DELEGATE:
+            return 'Delegate';
+        case USER_ROLES.USER:
+            return 'User';
+        default:
+            return 'Unknown';
+    }
+}
+
+/**
+ * Get Bootstrap color class for attendance status
+ * @param {string} status - Attendance status
+ * @returns {string} Bootstrap color class
+ */
+export function getAttendanceStatusClass(status) {
+    switch (status) {
+        case ATTENDANCE_STATUS.CONFIRMED:
+            return BOOTSTRAP_COLORS.SUCCESS;
+        case ATTENDANCE_STATUS.TENTATIVE:
+            return BOOTSTRAP_COLORS.WARNING;
+        case ATTENDANCE_STATUS.UNAVAILABLE:
+            return BOOTSTRAP_COLORS.DANGER;
+        default:
+            return BOOTSTRAP_COLORS.SECONDARY;
+    }
+}
+
+/**
+ * Get Bootstrap color class for audit result
+ * @param {string} result - Audit result
+ * @returns {string} Bootstrap color class
+ */
+export function getAuditResultClass(result) {
+    switch (result) {
+        case AUDIT_RESULTS.SUCCESS:
+            return BOOTSTRAP_COLORS.PRIMARY;
+        case AUDIT_RESULTS.FAILURE:
+            return BOOTSTRAP_COLORS.WARNING;
+        case AUDIT_RESULTS.ERROR:
+            return BOOTSTRAP_COLORS.DANGER;
+        default:
+            return BOOTSTRAP_COLORS.SECONDARY;
+    }
+}
+
+/**
+ * Get user status button class
+ * @param {boolean} isActive - User active status
+ * @returns {string} Bootstrap button class
+ */
+export function getUserStatusButtonClass(isActive) {
+    return isActive ? BOOTSTRAP_COLORS.DANGER : BOOTSTRAP_COLORS.SUCCESS;
 }

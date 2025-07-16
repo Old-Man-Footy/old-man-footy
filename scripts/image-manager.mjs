@@ -19,7 +19,7 @@ import { promises as fs } from 'fs';
 import ImageNamingService from '../services/imageNamingService.mjs';
 import ImageMigrationScript from './migrate-image-names.mjs';
 import { Club, Carnival, User } from '../models/index.mjs';
-import { UPLOAD_DIRECTORIES_ARRAY } from '../config/constants.mjs';
+import { UPLOAD_DIRECTORIES_ARRAY, UPLOAD_DIRECTORIES } from '../config/constants.mjs';
 
 /**
  * Image Management CLI for structured image handling
@@ -239,9 +239,9 @@ class ImageManagerCLI {
      */
     async findInvalidImageNames(dryRun = true) {
         const uploadDirs = [
-            'public/uploads/logos',
-            'public/uploads/images',
-            'public/uploads/documents'
+            UPLOAD_DIRECTORIES.LOGOS,
+            UPLOAD_DIRECTORIES.IMAGES,
+            UPLOAD_DIRECTORIES.DOCUMENTS
         ];
 
         const invalidFiles = [];

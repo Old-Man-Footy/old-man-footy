@@ -17,7 +17,6 @@ import { extname, join, parse, dirname, relative, basename } from 'path';
 import { promises as fs } from 'fs';
 import { createHash } from 'crypto';
 import { Club, Carnival, Sponsor, User } from '../models/index.mjs';
-import { UPLOAD_DIRECTORIES_ARRAY } from '../config/constants.mjs';
 
 class ImageNamingService {
     /**

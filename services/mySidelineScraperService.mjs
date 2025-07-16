@@ -1,5 +1,4 @@
 import { chromium } from 'playwright';
-import * as cheerio from 'cheerio';
 import MySidelineEventParserService from './mySidelineEventParserService.mjs';
 
 /**
