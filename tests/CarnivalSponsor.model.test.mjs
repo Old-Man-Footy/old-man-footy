@@ -1,4 +1,5 @@
-// Jest unit tests for CarnivalSponsor model
+// Vitest unit tests for CarnivalSponsor model
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import CarnivalSponsor from '../models/CarnivalSponsor.mjs';
 import Carnival from '../models/Carnival.mjs';
 import Sponsor from '../models/Sponsor.mjs';

@@ -8,26 +8,26 @@
  * Test execution order: Model -> Service -> Controller (as per Unit Test Plan)
  */
 
-import { jest } from '@jest/globals';
+import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
 import { sequelize } from '../config/database.mjs';
 import User from '../models/User.mjs';
 import Club from '../models/Club.mjs';
 import { USER_ROLES } from '../config/constants.mjs';
 
-// Create mock functions
+// Create mock functions using Vitest
 const mockBcrypt = {
-  genSalt: jest.fn().mockResolvedValue('mockedsalt'),
-  hash: jest.fn().mockResolvedValue('mockedhashedpassword'),
-  compare: jest.fn().mockResolvedValue(true)
+  genSalt: vi.fn().mockResolvedValue('mockedsalt'),
+  hash: vi.fn().mockResolvedValue('mockedhashedpassword'),
+  compare: vi.fn().mockResolvedValue(true)
 };
 
 const mockCrypto = {
-  randomBytes: jest.fn().mockReturnValue(Buffer.from('6d6f636b6564746f6b656e313233343536', 'hex'))
+  randomBytes: vi.fn().mockReturnValue(Buffer.from('6d6f636b6564746f6b656e313233343536', 'hex'))
 };
 
-// Mock modules using jest.unstable_mockModule with proper structure
-jest.unstable_mockModule('bcryptjs', () => mockBcrypt);
-jest.unstable_mockModule('crypto', () => mockCrypto);
+// Mock modules using Vitest hoisted mocks
+vi.mock('bcryptjs', () => mockBcrypt);
+vi.mock('crypto', () => mockCrypto);
 
 describe('User Model', () => {
   beforeAll(async () => {
@@ -38,7 +38,7 @@ describe('User Model', () => {
   beforeEach(async () => {
     // Clear database and reset mocks before each test
     await User.destroy({ where: {}, force: true });
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Reset mock implementations
     mockBcrypt.genSalt.mockResolvedValue('mockedsalt');

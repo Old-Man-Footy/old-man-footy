@@ -6,28 +6,28 @@
  * MVC patterns and security-first principles.
  */
 
-import { jest } from '@jest/globals';
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock dependencies using jest.unstable_mockModule
+// Mock dependencies using Vitest
 const mockUser = {
-  findOne: jest.fn(),
-  findByPk: jest.fn(),
-  create: jest.fn(),
-  findByEmail: jest.fn()
+  findOne: vi.fn(),
+  findByPk: vi.fn(),
+  create: vi.fn(),
+  findByEmail: vi.fn()
 };
 
 const mockEmailService = {
-  sendInvitationEmail: jest.fn(),
-  sendPasswordResetEmail: jest.fn(),
-  sendDelegateRoleTransferNotification: jest.fn(),
-  sendWelcomeEmail: jest.fn(),
-  _canSendEmails: jest.fn().mockReturnValue(true),
-  _logBlockedEmail: jest.fn()
+  sendInvitationEmail: vi.fn(),
+  sendPasswordResetEmail: vi.fn(),
+  sendDelegateRoleTransferNotification: vi.fn(),
+  sendWelcomeEmail: vi.fn(),
+  _canSendEmails: vi.fn().mockReturnValue(true),
+  _logBlockedEmail: vi.fn()
 };
 
 const mockAuditService = {
-  logAuthAction: jest.fn(),
-  logUserAction: jest.fn(),
+  logAuthAction: vi.fn(),
+  logUserAction: vi.fn(),
   ACTIONS: {
     USER_LOGIN: 'USER_LOGIN',
     USER_LOGOUT: 'USER_LOGOUT',
@@ -42,31 +42,32 @@ const mockAuditService = {
 };
 
 const mockBcryptjs = {
-  compare: jest.fn(),
-  genSalt: jest.fn().mockResolvedValue('mockedsalt'),
-  hash: jest.fn().mockResolvedValue('mockedhashedpassword')
+  compare: vi.fn(),
+  genSalt: vi.fn().mockResolvedValue('mockedsalt'),
+  hash: vi.fn().mockResolvedValue('mockedhashedpassword')
 };
 
 const mockCrypto = {
-  randomBytes: jest.fn().mockReturnValue({
-    toString: jest.fn().mockReturnValue('mockedinvitationtoken123456')
+  randomBytes: vi.fn().mockReturnValue({
+    toString: vi.fn().mockReturnValue('mockedinvitationtoken123456')
   })
 };
 
-jest.unstable_mockModule('../models/index.mjs', () => ({
+// Mock modules using Vitest
+vi.mock('../models/index.mjs', () => ({
   User: mockUser
 }));
 
-jest.unstable_mockModule('../services/emailService.mjs', () => ({
+vi.mock('../services/emailService.mjs', () => ({
   default: mockEmailService
 }));
 
-jest.unstable_mockModule('../services/auditService.mjs', () => ({
+vi.mock('../services/auditService.mjs', () => ({
   default: mockAuditService
 }));
 
-jest.unstable_mockModule('bcryptjs', () => mockBcryptjs);
-jest.unstable_mockModule('crypto', () => mockCrypto);
+vi.mock('bcryptjs', () => mockBcryptjs);
+vi.mock('crypto', () => mockCrypto);
 
 // Import the authentication service functionality
 const { User } = await import('../models/index.mjs');
@@ -362,13 +363,13 @@ describe('Authentication Service Layer', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock request object
     mockReq = {
       ip: '127.0.0.1',
       headers: {
-        'user-agent': 'Jest Test Agent'
+        'user-agent': 'Vitest Test Agent'
       },
       session: {},
       user: null
@@ -383,8 +384,8 @@ describe('Authentication Service Layer', () => {
       passwordHash: '$2b$10$hashedpassword',
       isActive: true,
       lastLoginAt: null,
-      update: jest.fn().mockResolvedValue(true),
-      getFullName: jest.fn().mockReturnValue('Test User')
+      update: vi.fn().mockResolvedValue(true),
+      getFullName: vi.fn().mockReturnValue('Test User')
     };
 
     // Mock inviter user
@@ -398,14 +399,14 @@ describe('Authentication Service Layer', () => {
       club: {
         clubName: 'Test Club'
       },
-      getFullName: jest.fn().mockReturnValue('Inviter User'),
-      update: jest.fn().mockResolvedValue(true)
+      getFullName: vi.fn().mockReturnValue('Inviter User'),
+      update: vi.fn().mockResolvedValue(true)
     };
 
     // Reset mock implementations
     mockBcryptjs.compare.mockResolvedValue(true);
     mockCrypto.randomBytes.mockReturnValue({
-      toString: jest.fn().mockReturnValue('mockedinvitationtoken123456')
+      toString: vi.fn().mockReturnValue('mockedinvitationtoken123456')
     });
   });
 
@@ -625,7 +626,7 @@ describe('Authentication Service Layer', () => {
           isActive: false,
           invitationToken: 'validtoken',
           tokenExpires: new Date(Date.now() + 1000000),
-          update: jest.fn().mockResolvedValue(true)
+          update: vi.fn().mockResolvedValue(true)
         };
 
         User.findOne.mockResolvedValue(invitedUser);
@@ -687,7 +688,7 @@ describe('Authentication Service Layer', () => {
           firstName: 'Old',
           lastName: 'Name',
           isActive: false,
-          update: jest.fn().mockResolvedValue(true)
+          update: vi.fn().mockResolvedValue(true)
         };
 
         User.findOne.mockResolvedValue(invitedUser);
@@ -836,8 +837,8 @@ describe('Authentication Service Layer', () => {
           clubId: 1,
           isActive: true,
           isPrimaryDelegate: false,
-          update: jest.fn().mockResolvedValue(true),
-          getFullName: jest.fn().mockReturnValue('New Primary')
+          update: vi.fn().mockResolvedValue(true),
+          getFullName: vi.fn().mockReturnValue('New Primary')
         };
 
         User.findOne.mockResolvedValue(newPrimaryUser);

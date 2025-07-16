@@ -1,9 +1,10 @@
 /**
  * @file AuditLog Model Unit Tests
- * @description Jest unit tests for the AuditLog Sequelize model.
+ * @description Vitest unit tests for the AuditLog Sequelize model.
  *
  * Follows AAA (Arrange, Act, Assert) pattern and project security/MVC/testing guidelines.
  */
+import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
 import { sequelize, User, AuditLog } from '../models/index.mjs';
 
 // Use the test database
@@ -45,7 +46,7 @@ describe('AuditLog Model', () => {
         newValues: { email: user.email },
         request: {
           ip: '127.0.0.1',
-          headers: { 'user-agent': 'jest-test' },
+          headers: { 'user-agent': 'vitest-test' },
           sessionID: 'sess123'
         },
         result: 'SUCCESS',
@@ -61,7 +62,7 @@ describe('AuditLog Model', () => {
       expect(log.entityType).toBe('User');
       expect(log.entityId).toBe(user.id);
       expect(log.ipAddress).toBe('127.0.0.1');
-      expect(log.userAgent).toBe('jest-test');
+      expect(log.userAgent).toBe('vitest-test');
       expect(log.sessionId).toBe('sess123');
       expect(log.result).toBe('SUCCESS');
       expect(log.metadata).toEqual({ foo: 'bar' });

@@ -16,7 +16,7 @@ This document provides guiding principles and strict rules for GitHub Copilot. Y
 * **Module System:** ES Modules (ESM) over CommonJS. We use the modern import/export syntax as it is the official standard for JavaScript and the modern approach for Node.js. This enables features like top-level `await` for cleaner asynchronous code and allows for static analysis, which can improve optimisation. This supersedes the legacy CommonJS (`require`/`module.exports`) system.
 * **Architecture:** Model-View-Controller (MVC)
 * **Database:** SQLite3 with Sequelize ORM
-* **Testing:** Jest
+* **Testing:** Vitest
 * **Code Style:** Prettier (rules are defined in `.prettierrc`)
 
 ## **2. Security (High Priority)**
@@ -67,7 +67,7 @@ This project enforces a strict separation of concerns.
 
 ## **5. Unit Testing (**tests**)**
 
-* **Framework:** Use Jest for all tests.
+* **Framework:** Use Vitest for all tests.
 * **Location:** Test files MUST located and `/tests` director and be named `[file-name].test.js` or `[file-name].spec.js`.
 * **Best Practices:**
   * **AAA Pattern:** Structure tests using Arrange, Act, Assert.

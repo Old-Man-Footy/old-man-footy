@@ -1,11 +1,11 @@
 /**
  * @file Carnival Model Unit Tests
- * @description Jest unit tests for the Carnival Sequelize model.
+ * @description Vitest unit tests for the Carnival Sequelize model.
  *
  * Follows AAA (Arrange, Act, Assert) pattern and project security/MVC/testing guidelines.
  */
 import { sequelize, Carnival } from '../models/index.mjs';
-import { jest } from '@jest/globals';
+import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
 
 describe('Carnival Model', () => {
   beforeAll(async () => {
@@ -174,7 +174,7 @@ describe('Carnival Model', () => {
     let originalConsoleError;
     beforeAll(() => {
       originalConsoleError = console.error;
-      console.error = jest.fn(); // Silence error logs for negative-path tests
+      console.error = vi.fn(); // Silence error logs for negative-path tests
     });
     afterAll(() => {
       console.error = originalConsoleError;

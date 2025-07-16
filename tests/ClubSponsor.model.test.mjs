@@ -1,4 +1,5 @@
-// Jest unit tests for ClubSponsor model
+// Vitest unit tests for ClubSponsor model
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import ClubSponsor from '../models/ClubSponsor.mjs';
 import Club from '../models/Club.mjs';
 import Sponsor from '../models/Sponsor.mjs';

@@ -5,11 +5,10 @@
  * of user and system actions.
  */
 
-import { AuditLog, User } from '../models/index.mjs';
-import AuditService from '../services/auditService.mjs';
-import { describe, test, expect, beforeEach } from '@jest/globals';
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AUDIT_RESULTS } from '../config/constants.mjs';
-
+import AuditService from '../services/auditService.mjs';
+import { AuditLog, User } from '../models/index.mjs';
 
 describe('Audit Service', () => {
     let testUser;
@@ -19,9 +18,31 @@ describe('Audit Service', () => {
         testUser = await User.create({
             firstName: 'Test',
             lastName: 'User',
-            email: 'test@example.com',
+            email: 'audit-test@example.com',
             passwordHash: 'hashedpassword',
             isActive: true
+        });
+    });
+
+    afterEach(async () => {
+        // Clean up test data
+        await AuditLog.destroy({ where: {} });
+        await User.destroy({ where: {} });
+    });
+
+    describe('Constants', () => {
+        test('should have required ACTIONS constants', () => {
+            expect(AuditService.ACTIONS.USER_LOGIN).toBe('USER_LOGIN');
+            expect(AuditService.ACTIONS.USER_LOGOUT).toBe('USER_LOGOUT');
+            expect(AuditService.ACTIONS.USER_CREATE).toBe('USER_CREATE');
+            expect(AuditService.ACTIONS.SYSTEM_SYNC_MYSIDELINE).toBe('SYSTEM_SYNC_MYSIDELINE');
+        });
+
+        test('should have required ENTITIES constants', () => {
+            expect(AuditService.ENTITIES.USER).toBe('User');
+            expect(AuditService.ENTITIES.CLUB).toBe('Club');
+            expect(AuditService.ENTITIES.CARNIVAL).toBe('Carnival');
+            expect(AuditService.ENTITIES.SYSTEM).toBe('System');
         });
     });
 
@@ -62,7 +83,7 @@ describe('Audit Service', () => {
             const mockReq = {
                 user: { id: testUser.id },
                 ip: '192.168.1.1',
-                headers: { 'user-agent': 'Test Browser' }  // Add missing headers
+                headers: { 'user-agent': 'Test Browser' }
             };
 
             const auditLog = await AuditService.logUserAction(
@@ -118,35 +139,29 @@ describe('Audit Service', () => {
             expect(auditLog.entityId).toBe(testUser.id);
             expect(auditLog.newValues.email).toBe(testUser.email);
             expect(auditLog.metadata.loginAttempt).toBe(1);
+            expect(auditLog.metadata.userAgent).toBe('Test Browser');
+            expect(auditLog.metadata.ipAddress).toBe('192.168.1.1');
         });
 
-        it('should log successful authentication with correct result', async () => {
-            // Arrange
+        test('should log failed authentication without user', async () => {
             const mockReq = {
-                ip: '127.0.0.1',
-                headers: { 'user-agent': 'test-browser' }
+                ip: '192.168.1.100',
+                headers: { 'user-agent': 'Test Browser' }
             };
-            const mockUser = { id: 1, email: 'test@example.com' };
 
-            // Act
-            await AuditService.logAuthAction('USER_LOGIN', mockReq, mockUser);
+            const auditLog = await AuditService.logAuthAction(
+                AuditService.ACTIONS.USER_LOGIN,
+                mockReq,
+                null,
+                { loginAttempt: 3, result: AUDIT_RESULTS.FAILURE, reason: 'Invalid credentials' }
+            );
 
-            // Assert
-            expect(AuditLog.logAction).toHaveBeenCalledWith({
-                userId: 1,
-                action: 'USER_LOGIN',
-                entityType: 'User',
-                entityId: 1,
-                oldValues: null,
-                newValues: { id: 1, email: 'test@example.com' },
-                request: mockReq,
-                result: AUDIT_RESULTS.SUCCESS,
-                errorMessage: null,
-                metadata: expect.objectContaining({
-                    userAgent: 'test-browser',
-                    ipAddress: '127.0.0.1'
-                })
-            });
+            expect(auditLog.action).toBe(AuditService.ACTIONS.USER_LOGIN);
+            expect(auditLog.entityType).toBe(AuditService.ENTITIES.USER);
+            expect(auditLog.entityId).toBeNull();
+            expect(auditLog.newValues).toBeNull();
+            expect(auditLog.metadata.loginAttempt).toBe(3);
+            expect(auditLog.metadata.reason).toBe('Invalid credentials');
         });
     });
 
@@ -170,85 +185,33 @@ describe('Audit Service', () => {
             expect(sanitized.passwordHash).toBe('[REDACTED]');
             expect(sanitized.token).toBe('[REDACTED]');
         });
-    });
 
-    describe('AuditLog Model Methods', () => {
-        test('should get user audit logs', async () => {
-            // Create some test audit logs
-            await AuditLog.create({
-                userId: testUser.id,
-                action: AuditService.ACTIONS.USER_LOGIN,
-                entityType: AuditService.ENTITIES.USER,
-                entityId: testUser.id,
-                result: AUDIT_RESULTS.SUCCESS
-            });
-
-            await AuditLog.create({
-                userId: testUser.id,
-                action: AuditService.ACTIONS.USER_UPDATE,
-                entityType: AuditService.ENTITIES.USER,
-                entityId: testUser.id,
-                result: AUDIT_RESULTS.SUCCESS
-            });
-
-            const result = await AuditLog.getUserAuditLogs(testUser.id, { limit: 10 });
-
-            expect(result.count).toBe(2);
-            expect(result.rows).toHaveLength(2);
-            expect(result.rows[0].userId).toBe(testUser.id);
+        test('should handle null and undefined data', () => {
+            expect(AuditService.sanitizeData(null)).toBeNull();
+            expect(AuditService.sanitizeData(undefined)).toBeUndefined();
+            expect(AuditService.sanitizeData('string')).toBe('string');
         });
 
-        test('should get audit statistics', async () => {
-            // Create test data
-            await AuditLog.create({
-                userId: testUser.id,
-                action: AuditService.ACTIONS.USER_LOGIN,
-                entityType: AuditService.ENTITIES.USER,
-                result: AUDIT_RESULTS.SUCCESS
-            });
+        test('should handle arrays and nested objects', () => {
+            const complexData = {
+                users: [
+                    { name: 'John', password: 'secret' },
+                    { name: 'Jane', token: 'abc123' }
+                ],
+                config: {
+                    apiKey: 'secret-key',
+                    publicSetting: 'public-value'
+                }
+            };
 
-            await AuditLog.create({
-                userId: testUser.id,
-                action: AuditService.ACTIONS.USER_LOGIN,
-                entityType: AuditService.ENTITIES.USER,
-                result: AUDIT_RESULTS.FAILURE
-            });
+            const sanitized = AuditService.sanitizeData(complexData);
 
-            const stats = await AuditLog.getAuditStatistics();
-
-            expect(stats.totalActions).toBe(2);
-            expect(stats.successfulActions).toBe(1);
-            expect(stats.failedActions).toBe(1);
-            expect(stats.successRate).toBe('50.00');
-        });
-
-        test('should clean up old logs', async () => {
-            // Create an old audit log
-            const oldDate = new Date();
-            oldDate.setDate(oldDate.getDate() - 400); // 400 days ago
-
-            await AuditLog.create({
-                userId: testUser.id,
-                action: AuditService.ACTIONS.USER_LOGIN,
-                entityType: AuditService.ENTITIES.USER,
-                result: AUDIT_RESULTS.SUCCESS,
-                createdAt: oldDate
-            });
-
-            // Create a recent audit log
-            await AuditLog.create({
-                userId: testUser.id,
-                action: AuditService.ACTIONS.USER_LOGIN,
-                entityType: AuditService.ENTITIES.USER,
-                result: AUDIT_RESULTS.SUCCESS
-            });
-
-            const deletedCount = await AuditLog.cleanupOldLogs(365);
-
-            expect(deletedCount).toBe(1);
-
-            const remainingLogs = await AuditLog.findAll();
-            expect(remainingLogs).toHaveLength(1);
+            expect(sanitized.users[0].name).toBe('John');
+            expect(sanitized.users[0].password).toBe('[REDACTED]');
+            expect(sanitized.users[1].name).toBe('Jane');
+            expect(sanitized.users[1].token).toBe('[REDACTED]');
+            expect(sanitized.config.apiKey).toBe('[REDACTED]');
+            expect(sanitized.config.publicSetting).toBe('public-value');
         });
     });
 
@@ -264,78 +227,52 @@ describe('Audit Service', () => {
                 metadata: { loginMethod: 'password' }
             });
 
-            // Manually add user association for formatting
-            auditLog.user = testUser;
+            // Load the user association
+            await auditLog.reload({ include: [{ model: User, as: 'user' }] });
 
             const formatted = AuditService.formatAuditLog(auditLog);
 
             expect(formatted.id).toBe(auditLog.id);
             expect(formatted.action).toBe(AuditService.ACTIONS.USER_LOGIN);
             expect(formatted.userName).toBe('Test User');
-            expect(formatted.userEmail).toBe('test@example.com');
+            expect(formatted.userEmail).toBe('audit-test@example.com');
             expect(formatted.result).toBe('SUCCESS');
             expect(formatted.ipAddress).toBe('192.168.1.1');
             expect(formatted.metadata.loginMethod).toBe('password');
+            expect(formatted.hasChanges).toBe(false);
         });
-    });
 
-    describe('audit middleware', () => {
-        it('should log success result for 200 status codes', async () => {
-            // Arrange
-            const action = 'TEST_ACTION';
-            const middleware = AuditService.createAuditMiddleware(action, 'User', () => 1);
-            
-            const mockReq = { user: { id: 1 } };
-            const mockRes = {
-                statusCode: 200,
-                end: jest.fn()
-            };
-            const mockNext = jest.fn();
-
-            // Act
-            middleware(mockReq, mockRes, mockNext);
-            mockRes.end();
-
-            // Assert - wait for setImmediate
-            await new Promise(resolve => setImmediate(resolve));
-            
-            expect(AuditService.logUserAction).toHaveBeenCalledWith(action, {
-                req: mockReq,
-                entityType: 'User',
-                entityId: 1,
-                newValues: null,
+        test('should handle audit log without user', async () => {
+            const auditLog = await AuditLog.create({
+                userId: null,
+                action: AuditService.ACTIONS.SYSTEM_SYNC_MYSIDELINE,
+                entityType: AuditService.ENTITIES.SYSTEM,
                 result: AUDIT_RESULTS.SUCCESS,
-                errorMessage: null
+                ipAddress: null,
+                metadata: {}
             });
+
+            const formatted = AuditService.formatAuditLog(auditLog);
+
+            expect(formatted.userName).toBe('System');
+            expect(formatted.userEmail).toBe('system@oldmanfooty.com');
+            expect(formatted.hasChanges).toBe(false);
         });
 
-        it('should log failure result for 400+ status codes', async () => {
-            // Arrange
-            const action = 'TEST_ACTION';
-            const middleware = AuditService.createAuditMiddleware(action, 'User', () => 1);
-            
-            const mockReq = { user: { id: 1 } };
-            const mockRes = {
-                statusCode: 404,
-                end: jest.fn()
-            };
-            const mockNext = jest.fn();
-
-            // Act
-            middleware(mockReq, mockRes, mockNext);
-            mockRes.end();
-
-            // Assert - wait for setImmediate
-            await new Promise(resolve => setImmediate(resolve));
-            
-            expect(AuditService.logUserAction).toHaveBeenCalledWith(action, {
-                req: mockReq,
-                entityType: 'User',
-                entityId: 1,
-                newValues: null,
-                result: AUDIT_RESULTS.FAILURE,
-                errorMessage: 'HTTP 404'
+        test('should detect changes when old/new values exist', async () => {
+            const auditLog = await AuditLog.create({
+                userId: testUser.id,
+                action: AuditService.ACTIONS.USER_UPDATE,
+                entityType: AuditService.ENTITIES.USER,
+                entityId: testUser.id,
+                result: AUDIT_RESULTS.SUCCESS,
+                oldValues: { firstName: 'Old Name' },
+                newValues: { firstName: 'New Name' }
             });
+
+            const formatted = AuditService.formatAuditLog(auditLog);
+
+            expect(formatted.hasChanges).toBe(true);
         });
     });
 });

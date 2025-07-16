@@ -1,5 +1,5 @@
-// Jest unit tests for CarnivalClubPlayer model
-import { jest } from '@jest/globals';
+// Vitest unit tests for CarnivalClubPlayer model
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import CarnivalClubPlayer from '../models/CarnivalClubPlayer.mjs';
 import CarnivalClub from '../models/CarnivalClub.mjs';
 import ClubPlayer from '../models/ClubPlayer.mjs';

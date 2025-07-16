@@ -1,5 +1,5 @@
-// Jest unit tests for ClubAlternateName model
-import { jest } from '@jest/globals';
+// Vitest unit tests for ClubAlternateName model
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import ClubAlternateName from '../models/ClubAlternateName.mjs';
 import Club from '../models/Club.mjs';
 import { sequelize } from '../models/index.mjs';
