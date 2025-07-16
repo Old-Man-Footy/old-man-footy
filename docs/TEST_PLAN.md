@@ -77,14 +77,14 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 ### Middleware (Priority 4) - Cross-cutting Concerns
 26. [x] `security.middleware.test.mjs` - Security middleware stack ✅ MIGRATED (72/72 tests passing)
 27. [x] `auth.middleware.test.mjs` - Authentication middleware ✅ MIGRATED (35/35 tests passing)
-28. [ ] `comingSoon.middleware.test.mjs` - Coming soon middleware
-29. [ ] `maintenance.middleware.test.mjs` - Maintenance middleware
+28. [x] `comingSoon.middleware.test.mjs` - Coming soon middleware ✅ MIGRATED (11/11 tests passing)
+29. [x] `maintenance.middleware.test.mjs` - Maintenance middleware ✅ MIGRATED (13/13 tests passing)
 
-### Integration & Specialized Tests (Priority 5)
-30. [ ] `enhanced-email-validation.test.mjs` - Email validation
-31. [ ] `subscription-bot-protection.test.mjs` - Bot protection
-32. [ ] `coming-soon-integration.test.mjs` - Coming soon integration
-33. [ ] `route-redirects.test.mjs` - Route handling
+### Integration & Specialized Tests (Priority 5) ✅ COMPLETE
+30. [x] `enhanced-email-validation.test.mjs` - Email validation ✅ MIGRATED (17/17 tests passing)
+31. [x] `subscription-bot-protection.test.mjs` - Bot protection ✅ MIGRATED (15/15 tests passing)
+32. [x] `coming-soon-integration.test.mjs` - Coming soon integration ✅ MIGRATED (11/11 tests passing)
+33. [x] `route-redirects.test.mjs` - Route handling ✅ MIGRATED (6/6 tests passing)
 
 ### Setup & Configuration Files (Priority 6)
 34. [ ] `setup.mjs` - Test setup configuration
@@ -220,6 +220,11 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [x] Carnival Sponsor Controller - 22/22 tests passing
 - [x] Coming Soon Controller - 5/5 tests passing
 - [x] Maintenance Controller - 5/5 tests passing
+- [x] Security Middleware - 72/72 tests passing
+- [x] Auth Middleware - 35/35 tests passing
+- [x] Coming Soon Middleware - 11/11 tests passing
+- [x] Maintenance Middleware - 13/13 tests passing
+- [x] Integration & Specialized Tests - 4/4 files migrated with 49/49 tests passing
 
 ### In Progress 🚧
 - [x] Service layer migration (3/5 complete)
@@ -228,7 +233,6 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [ ] Middleware layer migration
 
 ### Pending ⏳
-- [ ] Integration & specialized tests migration
 - [ ] Setup & configuration files migration
 - [ ] Remove Jest dependencies
 - [ ] Update CI/CD configurations

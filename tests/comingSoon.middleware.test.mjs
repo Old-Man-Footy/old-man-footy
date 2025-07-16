@@ -4,7 +4,7 @@
  */
 
 import { comingSoonMode } from '../middleware/comingSoon.mjs';
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 
 describe('Coming Soon Middleware', () => {
@@ -15,22 +15,22 @@ describe('Coming Soon Middleware', () => {
         req = {
             path: '/',
             user: null,
-            flash: jest.fn(), // Add flash mock
-            isAuthenticated: jest.fn(() => false) // Add isAuthenticated mock
+            flash: vi.fn(), // Add flash mock
+            isAuthenticated: vi.fn(() => false) // Add isAuthenticated mock
         };
         
         res = {
-            redirect: jest.fn()
+            redirect: vi.fn()
         };
         
-        next = jest.fn();
+        next = vi.fn();
 
         // Clear environment variables
         delete process.env.FEATURE_COMING_SOON_MODE;
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('when coming soon mode is disabled', () => {

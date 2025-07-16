@@ -3,7 +3,7 @@
  * Tests for maintenance mode middleware following TDD guidelines
  */
 
-import { jest, describe, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { maintenanceMode } from '../middleware/maintenance.mjs';
 
 describe('Maintenance Middleware', () => {
@@ -14,22 +14,22 @@ describe('Maintenance Middleware', () => {
         req = {
             path: '/',
             user: null,
-            flash: jest.fn(),
-            isAuthenticated: jest.fn(() => false)
+            flash: vi.fn(),
+            isAuthenticated: vi.fn(() => false)
         };
         
         res = {
-            redirect: jest.fn()
+            redirect: vi.fn()
         };
         
-        next = jest.fn();
+        next = vi.fn();
 
         // Clear environment variables
         delete process.env.FEATURE_MAINTENANCE_MODE;
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('when maintenance mode is disabled', () => {
@@ -111,11 +111,11 @@ describe('Maintenance Middleware', () => {
             ];
 
             adminRoutes.forEach(route => {
-                test(`should allow access to ${route}`, () => {
+                it(`should allow access to ${route}`, () => {
                     // Arrange
                     const req = { path: route };
-                    const res = { redirect: jest.fn() };
-                    const next = jest.fn();
+                    const res = { redirect: vi.fn() };
+                    const next = vi.fn();
 
                     // Act
                     maintenanceMode(req, res, next);

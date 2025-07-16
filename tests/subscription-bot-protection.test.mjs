@@ -7,14 +7,24 @@ import request from 'supertest';
 import express from 'express';
 import { EmailSubscription } from '../models/index.mjs';
 import { sequelize } from '../config/database.mjs';
-import { jest, describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach } from '@jest/globals';
+import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
+
+// Mock asyncHandler first
+vi.mock('../middleware/asyncHandler.mjs', () => ({
+  default: (fn) => fn // Simple passthrough for tests
+}));
 
 // Mock all services that might cause module conflicts
-jest.mock('../services/imageNamingService.mjs');
-jest.mock('../services/mySidelineIntegrationService.mjs');
-jest.mock('../services/mySidelineDataService.mjs');
-jest.mock('../services/mySidelineLogoDownloadService.mjs');
-jest.mock('../services/mySidelineScraperService.mjs');
+vi.mock('../services/imageNamingService.mjs');
+vi.mock('../services/mySidelineIntegrationService.mjs');
+vi.mock('../services/mySidelineDataService.mjs');
+vi.mock('../services/mySidelineLogoDownloadService.mjs');
+vi.mock('../services/mySidelineScraperService.mjs');
+vi.mock('../services/email/AuthEmailService.mjs', () => ({
+  default: {
+    sendWelcomeEmail: vi.fn().mockResolvedValue(true)
+  }
+}));
 
 // Import controller directly instead of full app
 import { postSubscribe } from '../controllers/main.controller.mjs';
@@ -33,7 +43,7 @@ const createTestApp = () => {
     
     // Add flash middleware mock
     app.use((req, res, next) => {
-        req.flash = jest.fn();
+        req.flash = vi.fn();
         next();
     });
     

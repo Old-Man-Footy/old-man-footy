@@ -7,14 +7,14 @@ import request from 'supertest';
 import express from 'express';
 import { EmailSubscription } from '../models/index.mjs';
 import { sequelize } from '../config/database.mjs';
-import { jest, describe, test, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
 
 // Mock services that cause ImageNamingService conflicts
-jest.mock('../services/imageNamingService.mjs');
-jest.mock('../services/mySidelineIntegrationService.mjs');
-jest.mock('../services/mySidelineDataService.mjs');
-jest.mock('../services/mySidelineLogoDownloadService.mjs');
-jest.mock('../services/mySidelineScraperService.mjs');
+vi.mock('../services/imageNamingService.mjs');
+vi.mock('../services/mySidelineIntegrationService.mjs');
+vi.mock('../services/mySidelineDataService.mjs');
+vi.mock('../services/mySidelineLogoDownloadService.mjs');
+vi.mock('../services/mySidelineScraperService.mjs');
 
 // Import routes and middleware directly
 import mainRoutes from '../routes/index.mjs';
@@ -33,9 +33,9 @@ const createTestApp = (enableComingSoon = false) => {
     // Add basic middleware mocks
     app.use((req, res, next) => {
         req.session = {};
-        req.flash = jest.fn();
+        req.flash = vi.fn();
         req.user = null;
-        req.isAuthenticated = jest.fn(() => false);
+        req.isAuthenticated = vi.fn(() => false);
         next();
     });
     

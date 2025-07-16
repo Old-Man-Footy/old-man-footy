@@ -5,14 +5,14 @@
 
 import request from 'supertest';
 import express from 'express';
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock services that cause ImageNamingService conflicts
-jest.mock('../services/imageNamingService.mjs');
-jest.mock('../services/mySidelineIntegrationService.mjs');
-jest.mock('../services/mySidelineDataService.mjs');
-jest.mock('../services/mySidelineLogoDownloadService.mjs');
-jest.mock('../services/mySidelineScraperService.mjs');
+vi.mock('../services/imageNamingService.mjs');
+vi.mock('../services/mySidelineIntegrationService.mjs');
+vi.mock('../services/mySidelineDataService.mjs');
+vi.mock('../services/mySidelineLogoDownloadService.mjs');
+vi.mock('../services/mySidelineScraperService.mjs');
 
 // Import routes directly instead of full app
 import mainRoutes from '../routes/index.mjs';
@@ -30,7 +30,7 @@ const createTestApp = () => {
     // Add basic middleware mocks
     app.use((req, res, next) => {
         req.session = {};
-        req.flash = jest.fn();
+        req.flash = vi.fn();
         next();
     });
     

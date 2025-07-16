@@ -19,6 +19,7 @@ import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 import crypto from 'crypto';
+import asyncHandler from '../middleware/asyncHandler.mjs';
 
 /**
  * Display homepage with upcoming carnivals
