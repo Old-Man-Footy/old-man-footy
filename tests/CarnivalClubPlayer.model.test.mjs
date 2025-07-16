@@ -25,9 +25,9 @@ describe('CarnivalClubPlayer Model', () => {
       firstName: 'John',
       lastName: 'Doe',
       dateOfBirth: '1980-01-01',
+      email: 'john.doe@example.com',
       isActive: true,
       shortsColour: 'Red',
-      email: 'john.doe@example.com',
       createdAt: new Date(),
       updatedAt: new Date(),
     });
