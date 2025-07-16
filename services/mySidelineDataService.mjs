@@ -2,7 +2,6 @@ import { Carnival, SyncLog } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
-
 /**
  * MySideline Data Processing Service
  * Handles database operations and data processing for MySideline events

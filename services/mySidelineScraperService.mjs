@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { cheerio } from 'cheerio';
 
 /**
  * MySideline Web Scraper Service
@@ -87,13 +88,17 @@ class MySidelineScraperService {
 
             console.log(`Navigating to MySideline search URL: ${this.searchUrl}`);
             await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded' });
-            
+
+            // Save dom content html to variable
+            const content = await page.content(); 
+            console.log('DOM content captured successfully.');
+
             // Wait for the API call to complete
             console.log('Waiting for API response...');
             await page.waitForTimeout(10000); // Wait up to 10 seconds for the API call
 
             if (jsonData && jsonData.data) {
-                const processedEvents = this.processApiResponse(jsonData);
+                const processedEvents = this.processApiResponse(jsonData, content);
                 console.log(`✅ Processed ${processedEvents.length} events from API response`);
                 return processedEvents;
             } else {
@@ -121,13 +126,14 @@ class MySidelineScraperService {
      * @param {Object} apiResponse - The raw API response
      * @returns {Array} Array of processed events
      */
-    processApiResponse(apiResponse) {
+    processApiResponse(apiResponse, htmlContent) {
         if (!apiResponse || !apiResponse.data || !Array.isArray(apiResponse.data)) {
             console.log('Invalid API response structure');
             return [];
         }
 
         const processedEvents = [];
+        const $ = cheerio.load(htmlContent);
 
         for (const item of apiResponse.data) {
             try {
@@ -144,6 +150,19 @@ class MySidelineScraperService {
 
                 const processedEvent = this.convertApiItemToEvent(item);
                 if (processedEvent) {
+
+                    // Select the img element with the specific alt attribute
+                    const element = $(`img[alt="${processedEvent.mySidelineTitle}"]`);
+                    // Check if the element exists and has the data-url attribute
+
+                    if (element.length > 0 && element.attr('data-url')) {
+                        const dataUrl = element.attr('data-url');
+                        console.log(`Data URL for alt "${processedEvent.mySidelineTitle}": ${dataUrl}`);
+                        processedEvent.clubLogoURL = dataUrl;
+                    } else {
+                        console.log(`Image with alt "${processedEvent.mySidelineTitle}" not found or missing data-url attribute.`);
+                    }
+
                     processedEvents.push(processedEvent);
                 }   
             } catch (error) {
@@ -208,14 +227,6 @@ class MySidelineScraperService {
             throw new Error('Item missing required _id property');
         }
 
-        // Extract date from name if present
-        const dateMatch = item.name.match(/\(([^)]+)\)|\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})\b|\b(\d{1,2}\s+\w+\s+\d{4})\b/);
-        let eventDate = null;
-        if (dateMatch) {
-            const dateStr = dateMatch[1] || dateMatch[2] || dateMatch[3];
-            eventDate = this.parseDate(dateStr);
-        }
-
         // Build address from venue or contact address
         let locationAddress = '';
         let state = null;
@@ -228,68 +239,49 @@ class MySidelineScraperService {
         let addressLine1 = null;
         let addressLine2 = null;
         let venueName = null;
+        let eventData = null;
         
         // Extract venue name from MySideline data with null checks
         venueName = item.venue?.name || item.orgtree?.venue?.name || null;
 
-        if (item.venue?.address) {
-            const addr = item.venue.address;
-
-            addressLine1 = addr.addressLine1 || null;
-            addressLine2 = addr.addressLine2 || null;
-            locationAddress = addr.formatted || null;
-            state = addr.state || null;
-            latitude = addr.lat || null;
-            longitude = addr.lng || null;
-            suburb = addr.suburb || null;
-            postcode = addr.postcode || null;
-            country = addr.country || 'Australia';
+        // Get address data (prefer venue address, fallback to contact address)
+        const addressData = item.venue?.address || item.contact?.address;
+        
+        if (addressData) {
+            // Extract all address fields
+            addressLine1 = addressData.addressLine1 || null;
+            addressLine2 = addressData.addressLine2 || null;
+            locationAddress = addressData.formatted || null;
+            state = addressData.state || null;
+            latitude = addressData.lat || null;
+            longitude = addressData.lng || null;
+            suburb = addressData.suburb || null;
+            postcode = addressData.postcode || null;
+            country = addressData.country || 'Australia';
             
-            // Create Google Maps URL from coordinates
-            if (addr.lat && addr.lng) {
-                googleMapsUrl = `https://maps.google.com/?q=${addr.lat},${addr.lng}`;
+            // Create Google Maps URL from coordinates or formatted address
+            if (addressData.lat && addressData.lng) {
+                googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${addressData.lat},${addressData.lng}`;
+            } else if (locationAddress) {
+                googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationAddress)}`;
             }
-            else if (locationAddress) {
-                // Fallback to formatted address
-                googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(locationAddress)}`;
-            }
-        } else if (item.contact?.address) {
-            const addr = item.contact.address;
-            
-            // Extract venue name from MySideline data (try orgtree first, then venue)
-            venueName = item.orgtree?.venue?.name || item.venue?.name || null;
-            
-            // Extract structured address fields from MySideline
-            addressLine1 = addr.addressLine1 || null;
-            addressLine2 = addr.addressLine2 || null;
-            locationAddress = addr.formatted || null;
-            state = addr.state || null;
-            latitude = addr.lat || null;
-            longitude = addr.lng || null;
-            suburb = addr.suburb || null;
-            postcode = addr.postcode || null;
-            country = addr.country || 'Australia';
-            
-            if (addr.lat && addr.lng) {
-                googleMapsUrl = `https://maps.google.com/?q=${addr.lat},${addr.lng}`;
-            }
-            else if (locationAddress) {
-                // Fallback to formatted address
-                googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(locationAddress)}`;
-            }            
-        } else {
-            // No address data available, but try to extract venue name from orgtree
-            venueName = item.orgtree?.venue?.name || item.venue?.name || null;
         }
 
         // Generate registration link using the top-level _id
         const registrationLink = `${this.eventUrl}${item._id}`;
 
+        // 
+        let { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(item.name);
+        if (!carnivalName || carnivalName.trim() === '') {
+            // If no title was extracted, use the full title.
+            carnivalName = item.name || 'Masters Rugby League Event';                
+        }
+
         return {
             // Core event data
-            title: this.cleanTitle(item.name),
+            title: carnivalName,
             date: eventDate,
-            locationAddress: locationAddress || 'TBA - Check MySideline for details',
+            locationAddress: locationAddress || 'TBC',
             state: state,
             
             // MySideline-specific fields
@@ -329,27 +321,7 @@ class MySidelineScraperService {
             locationCountry: country
         };
     }    
-
-    /**
-     * Clean and standardize event titles
-     * @param {string} title - Raw title from API
-     * @returns {string} Cleaned title
-     */
-    cleanTitle(title) {
-        if (!title) return 'Masters Rugby League Event';
-        
-        // Remove date information in parentheses
-        let cleaned = title.replace(/\s*\([^)]*\)\s*/g, ' ');
-        
-        // Remove trailing dashes and pipes
-        cleaned = cleaned.replace(/\s*[\-\|]\s*$/, '');
-        
-        // Normalize whitespace
-        cleaned = cleaned.replace(/\s+/g, ' ').trim();
-        
-        return cleaned || 'Masters Rugby League Event';
-    }
-
+   
     /**
      * Parse various date formats
      * @param {string} dateString - Date string to parse

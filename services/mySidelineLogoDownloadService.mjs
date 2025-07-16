@@ -32,8 +32,8 @@ class MySidelineLogoDownloadService {
      */
     async downloadLogo(logoUrl, entityType, entityId, imageType = ImageNamingService.IMAGE_TYPES.LOGO) {
         try {
-            // Validate input parameters
-            if (!logoUrl || typeof logoUrl !== 'string') {
+            // Validate input parameters, and ignore default NRL Logo.
+            if (!logoUrl || typeof logoUrl !== 'string' || logoUrl.endsWith('/18285.png')) {
                 return {
                     success: false,
                     error: 'Invalid logo URL provided',
@@ -118,7 +118,7 @@ class MySidelineLogoDownloadService {
                 fileSize: downloadResult.data.length,
                 contentType: downloadResult.contentType,
                 metadata: namingResult.metadata,
-                structuredPath: namingResult.fullPath // Same as upload middleware
+                structuredPath: namingResult.fullPath
             };
 
         } catch (error) {
