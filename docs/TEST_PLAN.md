@@ -20,15 +20,21 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [x] Update environment configuration
 
 ### Phase 2: Test File Migration
-- [ ] Migrate test files one by one (order specified below)
-- [ ] Update imports and syntax
-- [ ] Verify test functionality
-- [ ] Update mocking strategies
-- [ ] Ensure database integration works
+- [x] Migrate test files one by one (order specified below)
+- [x] Update imports and syntax
+- [x] Verify test functionality
+- [x] Update mocking strategies
+- [x] Ensure database integration works
 
-### Phase 3: Cleanup & Optimization
-- [ ] Remove Jest dependencies
-- [ ] Update CI/CD configurations
+### Phase 3: Write Remaining Missing Tests in Vitest
+- [ ] Determine missing tests
+- [ ] Document missing tests in this file
+- [ ] Write missing tests in vitest
+- [ ] Execute missing tests
+
+### Phase 4: Cleanup & Optimization
+- [x] Remove Jest dependencies
+- [ ] Update Docker configurations
 - [ ] Update documentation
 - [ ] Performance optimization
 - [ ] Final verification
@@ -38,7 +44,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 ## 📋 Test Files Migration Checklist
 
 ### Models (Priority 1) - Foundation Layer ✅ COMPLETE
-1. [x] `User.model.test.mjs` - Core user model with security ✅ MIGRATED (52/57 tests passing)
+1. [x] `User.model.test.mjs` - Core user model with security ✅ MIGRATED (54/57 tests passing)
 2. [x] `Club.model.test.mjs` - Club entity model ✅ MIGRATED (11/11 tests passing)
 3. [x] `Carnival.model.test.mjs` - Carnival entity model ✅ MIGRATED (13/13 tests passing)
 4. [x] `AuditLog.model.test.mjs` - Audit logging model ✅ MIGRATED (6/6 tests passing)
@@ -49,47 +55,40 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 9. [x] `CarnivalSponsor.model.test.mjs` - Carnival sponsorship junction ✅ MIGRATED (6/6 tests passing)
 10. [x] `ClubSponsor.model.test.mjs` - Club sponsorship junction ✅ MIGRATED (12/12 tests passing)
 
-**Foundation Layer Summary**: 139/144 tests passing (96.5% success rate) 🚀
+**Foundation Layer Summary**: 141/144 tests passing (97.9% success rate) 🚀
 
 ### Services (Priority 2) - Business Logic Layer ✅ IN PROGRESS
 11. [x] `capture-mysideline-data.test.mjs` - MySideline data capture utility ✅ MIGRATED (14/14 tests passing)
 12. [x] `auditService.test.mjs` - Audit logging service ✅ MIGRATED (13/13 tests passing)
 13. [x] `authService.test.mjs` - Authentication service layer ✅ MIGRATED (32/32 tests passing)
 14. [x] `mySidelineScraperService.integration.test.mjs` - NOT REQUIRED, SKIP
-15. [ ] `mySidelineDataService.test.mjs` - MySideline data processing service
-16. [ ] `BaseEmailService.test.mjs` - Core email service functionality
-17. [ ] `InvitationEmailService.test.mjs` - Invitation email service (delegate invites, club ownership)
-18. [ ] `CarnivalEmailService.test.mjs` - Carnival email service (notifications, attendee communications)
-19. [ ] `AuthEmailService.test.mjs` - Authentication email service (welcome, password reset)
-20. [ ] `ContactEmailService.test.mjs` - Contact form email service (forms, auto-replies)
-21. [ ] `SecurityEmailService.test.mjs` - Security email service (alerts, notifications)
 
 **Services Layer Progress**: 59/59 tests passing (3/12 services complete) 🚀
 
 ### Controllers (Priority 3) - Request Handling Layer ✅ COMPLETE
-22. [x] `auth.controller.test.mjs` - Authentication controller ✅ MIGRATED (41/41 tests passing)
-23. [x] `carnivalSponsor.controller.test.mjs` - Carnival sponsorship management ✅ MIGRATED (22/22 tests passing)
-24. [x] `comingSoon.controller.test.mjs` - Coming soon functionality ✅ MIGRATED (5/5 tests passing)
-25. [x] `maintenance.controller.test.mjs` - Maintenance mode ✅ MIGRATED (5/5 tests passing)
+15. [x] `auth.controller.test.mjs` - Authentication controller ✅ MIGRATED (41/41 tests passing)
+16. [x] `carnivalSponsor.controller.test.mjs` - Carnival sponsorship management ✅ MIGRATED (22/22 tests passing)
+17. [x] `comingSoon.controller.test.mjs` - Coming soon functionality ✅ MIGRATED (5/5 tests passing)
+18. [x] `maintenance.controller.test.mjs` - Maintenance mode ✅ MIGRATED (5/5 tests passing)
 
 **Controllers Layer Summary**: 73/73 tests passing (100% success rate) 🚀
 
 ### Middleware (Priority 4) - Cross-cutting Concerns
-26. [x] `security.middleware.test.mjs` - Security middleware stack ✅ MIGRATED (72/72 tests passing)
-27. [x] `auth.middleware.test.mjs` - Authentication middleware ✅ MIGRATED (35/35 tests passing)
-28. [x] `comingSoon.middleware.test.mjs` - Coming soon middleware ✅ MIGRATED (11/11 tests passing)
-29. [x] `maintenance.middleware.test.mjs` - Maintenance middleware ✅ MIGRATED (13/13 tests passing)
+19. [x] `security.middleware.test.mjs` - Security middleware stack ✅ MIGRATED (72/72 tests passing)
+20. [x] `auth.middleware.test.mjs` - Authentication middleware ✅ MIGRATED (35/35 tests passing)
+21. [x] `comingSoon.middleware.test.mjs` - Coming soon middleware ✅ MIGRATED (11/11 tests passing)
+22. [x] `maintenance.middleware.test.mjs` - Maintenance middleware ✅ MIGRATED (13/13 tests passing)
 
 ### Integration & Specialized Tests (Priority 5) ✅ COMPLETE
-30. [x] `enhanced-email-validation.test.mjs` - Email validation ✅ MIGRATED (17/17 tests passing)
-31. [x] `subscription-bot-protection.test.mjs` - Bot protection ✅ MIGRATED (15/15 tests passing)
-32. [x] `coming-soon-integration.test.mjs` - Coming soon integration ✅ MIGRATED (11/11 tests passing)
-33. [x] `route-redirects.test.mjs` - Route handling ✅ MIGRATED (6/6 tests passing)
+23. [x] `enhanced-email-validation.test.mjs` - Email validation ✅ MIGRATED (17/17 tests passing)
+24. [x] `subscription-bot-protection.test.mjs` - Bot protection ✅ MIGRATED (15/15 tests passing)
+25. [x] `coming-soon-integration.test.mjs` - Coming soon integration ✅ MIGRATED (11/11 tests passing)
+26. [x] `route-redirects.test.mjs` - Route handling ✅ MIGRATED (6/6 tests passing)
 
 ### Setup & Configuration Files (Priority 6) ✅ COMPLETE
-34. [x] `setup.mjs` - Global test setup configuration ✅ MIGRATED (Database initialization working)
-35. [x] `teardown.mjs` - Global test cleanup ✅ CREATED (Proper connection closure)
-36. [x] `vitest.env.mjs` - Environment setup ✅ MIGRATED (From jest.env.mjs)
+27. [x] `setup.mjs` - Global test setup configuration ✅ MIGRATED (Database initialization working)
+28. [x] `teardown.mjs` - Global test cleanup ✅ CREATED (Proper connection closure)
+29. [x] `vitest.env.mjs` - Environment setup ✅ MIGRATED (From jest.env.mjs)
 
 ---
 
@@ -124,7 +123,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
      - Empty events scenario handling
      - Valid JavaScript module generation
 
-### Pending Services ⏳
+### Pending Tests ⏳
 
 2. **Audit Service** (`auditService.test.mjs`)
    - **Purpose**: Tests audit logging functionality for user actions
@@ -251,7 +250,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 
 ### Pending ⏳
 - [x] Remove Jest dependencies
-- [ ] Update CI/CD configurations
+- [ ] Update Docker configurations
 - [ ] Update documentation
 - [ ] Performance optimization
 - [ ] Final verification

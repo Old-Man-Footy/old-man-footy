@@ -764,13 +764,54 @@ describe('User Model', () => {
         expect(regularUser.isPrimaryDelegate).toBe(false);
       });
 
-      // Skip clubId-related tests for now since they require Club model setup
-      test.skip('should allow setting primary delegate role', async () => {
-        // This test requires proper Club model setup with foreign key constraints
+      test('should allow setting primary delegate role', async () => {
+        // Act
+        const user = await User.create({
+          email: 'delegate@example.com',
+          firstName: 'Primary',
+          lastName: 'Delegate',
+          passwordHash: 'password123',
+          isPrimaryDelegate: true
+        });
+
+        // Assert
+        expect(user.isPrimaryDelegate).toBe(true);
+        expect(user.isAdmin).toBe(false);
       });
 
-      test.skip('should enforce only one primary delegate per club', async () => {
-        // This test requires proper Club model setup with foreign key constraints
+      test('should enforce only one primary delegate per club', async () => {
+        // Arrange - Create a club first (using correct field names)
+        const Club = (await import('../models/index.mjs')).Club;
+        const club = await Club.create({
+          clubName: 'Test Club',
+          location: 'Test Location',
+          website: 'https://testclub.com'
+        });
+
+        // Create first primary delegate
+        const firstDelegate = await User.create({
+          email: 'delegate1@example.com',
+          firstName: 'First',
+          lastName: 'Delegate',
+          passwordHash: 'password123',
+          clubId: club.id,
+          isPrimaryDelegate: true,
+          isActive: true
+        });
+
+        // Act & Assert - Try to create second primary delegate for same club
+        await expect(User.create({
+          email: 'delegate2@example.com',
+          firstName: 'Second',
+          lastName: 'Delegate', 
+          passwordHash: 'password123',
+          clubId: club.id,
+          isPrimaryDelegate: true,
+          isActive: true
+        })).rejects.toThrow('Club already has a primary delegate');
+
+        // Clean up
+        await Club.destroy({ where: { id: club.id }, force: true });
       });
     });
   });
@@ -966,9 +1007,40 @@ describe('User Model', () => {
       expect(user.createdAt.getTime()).toBeLessThanOrEqual(user.updatedAt.getTime());
     });
 
-    test.skip('should maintain referential integrity with clubs', async () => {
-      // Skip this test for now as it requires Club model setup
-      // This would test foreign key constraints with the Club model
+    test('should maintain referential integrity with clubs', async () => {
+      // Arrange - Create a club first
+      const Club = (await import('../models/index.mjs')).Club;
+      const club = await Club.create({
+        clubName: 'Test Club',
+        location: 'Test Location',
+        website: 'https://testclub.com'
+      });
+
+      // Act - Create user with valid clubId
+      const user = await User.create({
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        passwordHash: 'password123',
+        clubId: club.id
+      });
+
+      // Assert - User should be created with correct clubId
+      expect(user.clubId).toBe(club.id);
+
+      // Test that user can be found with club relationship
+      const userWithClub = await User.findByPk(user.id, {
+        include: [{
+          model: Club,
+          as: 'club'
+        }]
+      });
+
+      expect(userWithClub.club).toBeDefined();
+      expect(userWithClub.club.clubName).toBe('Test Club');
+
+      // Clean up
+      await Club.destroy({ where: { id: club.id }, force: true });
     });
   });
 });
