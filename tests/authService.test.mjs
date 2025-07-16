@@ -41,7 +41,7 @@ const mockAuditService = {
   }
 };
 
-const mockBcryptjs = {
+const mockBcrypt = {
   compare: vi.fn(),
   genSalt: vi.fn().mockResolvedValue('mockedsalt'),
   hash: vi.fn().mockResolvedValue('mockedhashedpassword')
@@ -75,7 +75,7 @@ vi.mock('../services/auditService.mjs', () => ({
   default: mockAuditService
 }));
 
-vi.mock('bcryptjs', () => mockBcryptjs);
+vi.mock('bcrypt', () => mockBcrypt);
 vi.mock('crypto', () => mockCrypto);
 
 vi.mock('../services/email/InvitationEmailService.mjs', () => ({
@@ -205,7 +205,7 @@ class AuthService {
       entityId: newUser.id,
       newValues: {
         firstName: newUser.firstName,
-        last
+        lastName: newUser.lastName,
         email: newUser.email,
         clubId: newUser.clubId,
         inviterUserId: inviterUser.id,
@@ -426,7 +426,7 @@ describe('Authentication Service Layer', () => {
     };
 
     // Reset mock implementations
-    mockBcryptjs.compare.mockResolvedValue(true);
+    mockBcrypt.compare.mockResolvedValue(true);
     mockCrypto.randomBytes.mockReturnValue({
       toString: vi.fn().mockReturnValue('mockedinvitationtoken123456')
     });
@@ -495,7 +495,7 @@ describe('Authentication Service Layer', () => {
 
       it('should fail authentication for invalid password', async () => {
         User.findOne.mockResolvedValue(mockUser);
-        mockBcryptjs.compare.mockResolvedValue(false);
+        mockBcrypt.compare.mockResolvedValue(false);
 
         const result = await AuthService.authenticateUser('test@example.com', 'wrongpassword', mockReq);
 

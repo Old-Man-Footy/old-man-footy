@@ -26,7 +26,7 @@ const mockCrypto = {
 };
 
 // Mock modules using Vitest hoisted mocks
-vi.mock('bcryptjs', () => mockBcrypt);
+vi.mock('bcrypt', () => mockBcrypt);
 vi.mock('crypto', () => mockCrypto);
 
 describe('User Model', () => {

@@ -1,6 +1,6 @@
 import express from 'express';
 import { User } from '../../models/index.mjs';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import { applyApiSecurity } from '../../middleware/security.mjs';
 
 const router = express.Router();

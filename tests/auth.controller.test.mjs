@@ -11,10 +11,11 @@
 import { jest } from '@jest/globals';
 import { Op } from 'sequelize';
 
-// Mock bcryptjs with CommonJS compatibility
-const mockBcryptjs = {
+// Mock bcrypt with CommonJS compatibility
+const mockBcrypt = {
   compare: jest.fn(),
   hash: jest.fn(),
+  genSalt: jest.fn()
 };
 
 // Mock crypto module
@@ -70,9 +71,9 @@ const mockSequelize = {
 const mockWrapControllers = jest.fn((controllers) => controllers);
 
 // Mock modules using jest.unstable_mockModule with proper default exports
-jest.unstable_mockModule('bcryptjs', () => ({
-  default: mockBcryptjs,
-  ...mockBcryptjs
+jest.unstable_mockModule('bcrypt', () => ({
+  default: mockBcrypt,
+  ...mockBcrypt
 }));
 
 jest.unstable_mockModule('crypto', () => ({
@@ -202,7 +203,7 @@ describe('Authentication Controller', () => {
 
         mockReq.body = { email: 'test@example.com', password: 'password123' };
         mockUser.findOne.mockResolvedValue(mockUserData);
-        mockBcryptjs.compare.mockResolvedValue(true);
+        mockBcrypt.compare.mockResolvedValue(true);
         mockReq.login.mockImplementation((user, callback) => callback(null));
 
         // Act
@@ -213,7 +214,7 @@ describe('Authentication Controller', () => {
           where: { email: 'test@example.com' },
           include: [{ model: mockClub, as: 'club' }],
         });
-        expect(mockBcryptjs.compare).toHaveBeenCalledWith('password123', '$2b$12$hashedpassword');
+        expect(mockBcrypt.compare).toHaveBeenCalledWith('password123', '$2b$12$hashedpassword');
         expect(mockUserData.update).toHaveBeenCalledWith({ lastLoginAt: expect.any(Date) });
         expect(mockAuditService.logAuthAction).toHaveBeenCalledWith(
           mockAuditService.ACTIONS.USER_LOGIN,
@@ -314,13 +315,13 @@ describe('Authentication Controller', () => {
 
         mockReq.body = { email: 'test@example.com', password: 'wrongpassword' };
         mockUser.findOne.mockResolvedValue(mockUserData);
-        mockBcryptjs.compare.mockResolvedValue(false);
+        mockBcrypt.compare.mockResolvedValue(false);
 
         // Act
         await authController.loginUser(mockReq, mockRes, mockNext);
 
         // Assert
-        expect(mockBcryptjs.compare).toHaveBeenCalledWith('wrongpassword', '$2b$12$hashedpassword');
+        expect(mockBcrypt.compare).toHaveBeenCalledWith('wrongpassword', '$2b$12$hashedpassword');
         expect(mockAuditService.logAuthAction).toHaveBeenCalledWith(
           mockAuditService.ACTIONS.USER_LOGIN,
           mockReq,
@@ -346,7 +347,7 @@ describe('Authentication Controller', () => {
 
         mockReq.body = { email: 'test@example.com', password: 'password123' };
         mockUser.findOne.mockResolvedValue(mockUserData);
-        mockBcryptjs.compare.mockResolvedValue(true);
+        mockBcrypt.compare.mockResolvedValue(true);
         mockReq.login.mockImplementation((user, callback) => callback(new Error('Session error')));
 
         // Act
@@ -369,7 +370,7 @@ describe('Authentication Controller', () => {
 
         mockReq.body = { email: 'TEST@EXAMPLE.COM', password: 'password123' };
         mockUser.findOne.mockResolvedValue(mockUserData);
-        mockBcryptjs.compare.mockResolvedValue(true);
+        mockBcrypt.compare.mockResolvedValue(true);
         mockReq.login.mockImplementation((user, callback) => callback(null));
 
         // Act
@@ -717,7 +718,7 @@ describe('Authentication Controller', () => {
         };
 
         mockUser.findOne.mockResolvedValue(invitedUser);
-        mockBcryptjs.hash.mockResolvedValue('hashedpassword');
+        mockBcrypt.hash.mockResolvedValue('hashedpassword');
 
         // Act
         await authController.acceptInvitation(mockReq, mockRes);
