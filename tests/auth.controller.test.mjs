@@ -8,43 +8,43 @@
  * Test execution order: Model -> Service -> Controller (as per Unit Test Plan)
  */
 
-import { jest } from '@jest/globals';
+import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Op } from 'sequelize';
 
-// Mock bcrypt with CommonJS compatibility
+// Mock bcrypt with Vitest
 const mockBcrypt = {
-  compare: jest.fn(),
-  hash: jest.fn(),
-  genSalt: jest.fn()
+  compare: vi.fn(),
+  hash: vi.fn(),
+  genSalt: vi.fn()
 };
 
 // Mock crypto module
 const mockCrypto = {
-  randomBytes: jest.fn(),
+  randomBytes: vi.fn(),
 };
 
 // Create comprehensive mocks for all dependencies
 const mockUser = {
-  findOne: jest.fn(),
-  findByPk: jest.fn(),
-  create: jest.fn(),
+  findOne: vi.fn(),
+  findByPk: vi.fn(),
+  create: vi.fn(),
 };
 
 const mockClub = {
-  findByPk: jest.fn(),
+  findByPk: vi.fn(),
 };
 
-const mockValidationResult = jest.fn();
+const mockValidationResult = vi.fn();
 
 // Create mock services that will be properly intercepted
 const mockEmailService = {
-  sendInvitationEmail: jest.fn(),
-  sendDelegateRoleTransferNotification: jest.fn(),
+  sendInvitationEmail: vi.fn(),
+  sendDelegateRoleTransferNotification: vi.fn(),
 };
 
 const mockAuditService = {
-  logAuthAction: jest.fn(),
-  logUserAction: jest.fn(),
+  logAuthAction: vi.fn(),
+  logUserAction: vi.fn(),
   ACTIONS: {
     USER_LOGIN: 'USER_LOGIN',
     USER_LOGOUT: 'USER_LOGOUT', 
@@ -55,54 +55,54 @@ const mockAuditService = {
   ENTITIES: {
     USER: 'USER',
   },
-  sanitizeData: jest.fn((data) => data),
+  sanitizeData: vi.fn((data) => data),
 };
 
 // Create transaction mock
 const mockTransaction = {
-  commit: jest.fn().mockResolvedValue(),
-  rollback: jest.fn().mockResolvedValue(),
+  commit: vi.fn().mockResolvedValue(),
+  rollback: vi.fn().mockResolvedValue(),
 };
 
 const mockSequelize = {
-  transaction: jest.fn().mockResolvedValue(mockTransaction),
+  transaction: vi.fn().mockResolvedValue(mockTransaction),
 };
 
-const mockWrapControllers = jest.fn((controllers) => controllers);
+const mockWrapControllers = vi.fn((controllers) => controllers);
 
-// Mock modules using jest.unstable_mockModule with proper default exports
-jest.unstable_mockModule('bcrypt', () => ({
+// Mock modules using Vitest
+vi.mock('bcrypt', () => ({
   default: mockBcrypt,
   ...mockBcrypt
 }));
 
-jest.unstable_mockModule('crypto', () => ({
+vi.mock('crypto', () => ({
   default: mockCrypto,
   ...mockCrypto
 }));
 
-jest.unstable_mockModule('../models/index.mjs', () => ({
+vi.mock('../models/index.mjs', () => ({
   User: mockUser,
   Club: mockClub,
 }));
 
-jest.unstable_mockModule('express-validator', () => ({
+vi.mock('express-validator', () => ({
   validationResult: mockValidationResult,
 }));
 
-jest.unstable_mockModule('../services/emailService.mjs', () => ({
+vi.mock('../services/emailService.mjs', () => ({
   default: mockEmailService,
 }));
 
-jest.unstable_mockModule('../services/auditService.mjs', () => ({
+vi.mock('../services/auditService.mjs', () => ({
   default: mockAuditService,
 }));
 
-jest.unstable_mockModule('../config/database.mjs', () => ({
+vi.mock('../config/database.mjs', () => ({
   sequelize: mockSequelize,
 }));
 
-jest.unstable_mockModule('../middleware/asyncHandler.mjs', () => ({ 
+vi.mock('../middleware/asyncHandler.mjs', () => ({ 
   wrapControllers: mockWrapControllers 
 }));
 
@@ -143,7 +143,7 @@ describe('Authentication Controller', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Reset transaction mock
     mockTransaction.commit.mockResolvedValue();
@@ -155,19 +155,19 @@ describe('Authentication Controller', () => {
       body: {},
       params: {},
       user: null,
-      flash: jest.fn(),
-      login: jest.fn(),
-      logout: jest.fn(),
+      flash: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
     };
     
     mockRes = {
-      render: jest.fn(),
-      redirect: jest.fn(),
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      render: vi.fn(),
+      redirect: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn(),
     };
     
-    mockNext = jest.fn();
+    mockNext = vi.fn();
 
     // Setup default mock implementations
     mockValidationResult.mockReturnValue({ isEmpty: () => true, array: () => [] });
@@ -198,7 +198,7 @@ describe('Authentication Controller', () => {
           email: 'test@example.com',
           passwordHash: '$2b$12$hashedpassword',
           isActive: true,
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.body = { email: 'test@example.com', password: 'password123' };
@@ -342,7 +342,7 @@ describe('Authentication Controller', () => {
           email: 'test@example.com',
           passwordHash: '$2b$12$hashedpassword',
           isActive: true,
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.body = { email: 'test@example.com', password: 'password123' };
@@ -365,7 +365,7 @@ describe('Authentication Controller', () => {
           email: 'test@example.com',
           passwordHash: '$2b$12$hashedpassword',
           isActive: true,
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.body = { email: 'TEST@EXAMPLE.COM', password: 'password123' };
@@ -707,7 +707,7 @@ describe('Authentication Controller', () => {
           lastName: 'Smith',
           email: 'jane@example.com',
           isActive: false,
-          update: jest.fn().mockResolvedValue(),
+          update: vi.fn().mockResolvedValue(),
         };
 
         mockReq.params = { token: 'validtoken123' };

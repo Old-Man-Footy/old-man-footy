@@ -63,7 +63,6 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 19. [ ] `AuthEmailService.test.mjs` - Authentication email service (welcome, password reset)
 20. [ ] `ContactEmailService.test.mjs` - Contact form email service (forms, auto-replies)
 21. [ ] `SecurityEmailService.test.mjs` - Security email service (alerts, notifications)
-22. [ ] `emailService.test.mjs` - Main email service aggregator and backward compatibility
 
 **Services Layer Progress**: 59/59 tests passing (3/12 services complete) 🚀
 
