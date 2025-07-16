@@ -3,9 +3,8 @@
  * Tests for coming soon mode functionality following TDD guidelines
  */
 
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as comingSoonController from '../controllers/comingSoon.controller.mjs';
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-
 
 describe('Coming Soon Controller', () => {
     let req, res;
@@ -19,9 +18,9 @@ describe('Coming Soon Controller', () => {
         };
         
         res = {
-            status: jest.fn().mockReturnThis(),
-            render: jest.fn(),
-            json: jest.fn()
+            status: vi.fn().mockReturnThis(),
+            render: vi.fn(),
+            json: vi.fn()
         };
 
         // Clear environment variables
@@ -35,7 +34,7 @@ describe('Coming Soon Controller', () => {
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('showComingSoonPage', () => {

@@ -68,11 +68,11 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 
 ### Controllers (Priority 3) - Request Handling Layer ✅ IN PROGRESS
 22. [x] `auth.controller.test.mjs` - Authentication controller ✅ MIGRATED (41/41 tests passing)
-23. [ ] `carnivalSponsor.controller.test.mjs` - Carnival sponsorship management
-24. [ ] `comingSoon.controller.test.mjs` - Coming soon functionality
+23. [x] `carnivalSponsor.controller.test.mjs` - Carnival sponsorship management ✅ MIGRATED (22/22 tests passing)
+24. [x] `comingSoon.controller.test.mjs` - Coming soon functionality ✅ MIGRATED (5/5 tests passing)
 25. [ ] `maintenance.controller.test.mjs` - Maintenance mode
 
-**Controllers Layer Progress**: 41/41 tests passing (1/4 controllers complete) 🚀
+**Controllers Layer Progress**: 68/68 tests passing (3/4 controllers complete) 🚀
 
 ### Middleware (Priority 4) - Cross-cutting Concerns
 26. [ ] `security.middleware.test.mjs` - Security middleware stack
@@ -224,6 +224,8 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [x] Audit Service - 13/13 tests passing
 - [x] Authentication Service - 32/32 tests passing
 - [x] Auth Controller - 41/41 tests passing
+- [x] Carnival Sponsor Controller - 22/22 tests passing
+- [x] Coming Soon Controller - 5/5 tests passing
 
 ### In Progress 🚧
 - [x] Service layer migration (3/5 complete)
@@ -247,7 +249,7 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 ### Overall Progress: 11/30 files migrated (36.7%)
 - **Models**: 10/10 ✅ COMPLETE (100%)
 - **Services**: 3/5 🚧 IN PROGRESS (60%)
-- **Controllers**: 1/4 🚧 IN PROGRESS (25%)
+- **Controllers**: 3/4 🚧 IN PROGRESS (75%)
 - **Middleware**: 0/4 ⏳ PENDING (0%)
 - **Integration**: 0/4 ⏳ PENDING (0%)
 - **Setup**: 0/3 ⏳ PENDING (0%)
