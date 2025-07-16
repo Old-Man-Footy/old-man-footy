@@ -16,7 +16,7 @@ import {
 import { Op } from 'sequelize';
 import emailService from '../services/emailService.mjs';
 import carouselImageService from '../services/carouselImageService.mjs';
-import { AUSTRALIAN_STATES, AUSTRALIAN_STATE_NAMES } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 import crypto from 'crypto';
 import { validationResult } from 'express-validator';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
@@ -73,7 +73,6 @@ export const getIndex = asyncHandler(async (req, res) => {
     stats,
     carouselImages,
     AUSTRALIAN_STATES,
-    AUSTRALIAN_STATE_NAMES,
     additionalCSS: [],
   });
 });

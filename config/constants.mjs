@@ -11,20 +11,6 @@
  */
 export const AUSTRALIAN_STATES = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'];
 
-/**
- * State display names mapping
- * Full names for display purposes
- */
-export const AUSTRALIAN_STATE_NAMES = {
-    'NSW': 'New South Wales',
-    'QLD': 'Queensland', 
-    'VIC': 'Victoria',
-    'WA': 'Western Australia',
-    'SA': 'South Australia',
-    'TAS': 'Tasmania',
-    'NT': 'Northern Territory',
-    'ACT': 'Australian Capital Territory'
-};
 
 /**
  * Sponsorship levels with consistent ordering
