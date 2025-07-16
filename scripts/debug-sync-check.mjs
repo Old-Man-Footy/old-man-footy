@@ -57,7 +57,6 @@ try {
     console.log('\n📋 Environment Variables:');
     console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
     console.log(`   MYSIDELINE_SYNC_ENABLED: ${process.env.MYSIDELINE_SYNC_ENABLED || 'undefined'}`);
-    console.log(`   MYSIDELINE_USE_MOCK: ${process.env.MYSIDELINE_USE_MOCK || 'undefined'}`);
     
     // Close connection
     await sequelize.close();

@@ -21,7 +21,6 @@ const __dirname = path.dirname(__filename);
 function checkSyncConfiguration() {
     const config = {
         enabled: process.env.MYSIDELINE_SYNC_ENABLED !== 'false',
-        useMock: process.env.MYSIDELINE_USE_MOCK === 'true',
         enableScraping: process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false',
         url: process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league',
         timeout: process.env.MYSIDELINE_REQUEST_TIMEOUT || '60000',
@@ -63,7 +62,6 @@ async function main() {
     const config = checkSyncConfiguration();
     console.log(`   Sync Enabled: ${config.enabled ? '✅ Yes' : '❌ No'}`);
     console.log(`   Scraping Enabled: ${config.enableScraping ? '✅ Yes' : '❌ No'}`);
-    console.log(`   Using Mock Data: ${config.useMock ? '⚠️  Yes' : '✅ No'}`);
     console.log(`   MySideline URL: ${config.url}`);
     console.log(`   Request Timeout: ${config.timeout}ms`);
     console.log(`   Retry Attempts: ${config.retryAttempts}`);
@@ -182,9 +180,6 @@ async function main() {
     if (!config.enabled) {
         console.log('   ⚠️  MySideline sync is DISABLED via MYSIDELINE_SYNC_ENABLED=false');
         console.log('   📝 To enable: Set MYSIDELINE_SYNC_ENABLED=true in environment');
-    } else if (config.useMock) {
-        console.log('   ⚠️  Using MOCK data instead of live MySideline scraping');
-        console.log('   📝 To use live data: Set MYSIDELINE_USE_MOCK=false');
     } else if (!config.enableScraping) {
         console.log('   ⚠️  MySideline scraping is DISABLED');
         console.log('   📝 To enable: Set MYSIDELINE_ENABLE_SCRAPING=true');

@@ -11,7 +11,6 @@ class MySidelineScraperService {
         this.searchUrl = process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league';
         this.eventUrl = process.env.MYSIDELINE_EVENT_URL || 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
-        this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
         this.useHeadlessBrowser = process.env.NODE_ENV !== 'development';
         
         // Initialize the parser service

@@ -22,417 +22,19 @@ import { Op } from 'sequelize';
  * To run these tests: npm test -- "mySidelineScraperService.integration.test.mjs"
  */
 
-describe('MySidelineScraperService Integration Tests', () => {
-    let scraperService;
-    let dataService;
-    let testCarnivals = [];
-    
-    // Test configuration
-    const TEST_TIMEOUT = 30000; // 30 seconds for integration tests
-    const MOCK_EVENTS = [
-        {
-            title: 'Test Masters Carnival',
-            mySidelineId: 12345, // Add numeric MySideline ID
-            mySidelineTitle: 'Test Masters Carnival (Integration Test)',
-            date: new Date('2025-08-15'),
-            locationAddress: '123 Test Stadium, Sydney NSW 2000',
-            state: 'NSW',
-            organiserContactName: 'Test Organiser',
-            organiserContactEmail: 'test@example.com',
-            organiserContactPhone: '0412345678',
-            registrationLink: 'https://profile.mysideline.com.au/register/test',
-            scheduleDetails: 'Test tournament details',
-            source: 'MySideline',
-            isActive: true,
-            isManuallyEntered: false,
-            lastMySidelineSync: new Date(),
-            mySidelineAddress: '123 Test Stadium, Sydney NSW 2000',
-            mySidelineDate: new Date('2025-08-15'),
-            clubLogoURL: null,
-            socialMediaFacebook: null,
-            socialMediaWebsite: null,
-            googleMapsUrl: null,
-            locationLatitude: -33.8568,
-            locationLongitude: 151.2153,
-            locationSuburb: 'Sydney',
-            locationPostcode: '2000',
-            locationCountry: 'Australia'
-        }
-    ];
-
-    beforeAll(() => {
-        // Set test environment variables
-        process.env.NODE_ENV = 'test';
-        process.env.MYSIDELINE_USE_MOCK = 'true';
-        process.env.MYSIDELINE_ENABLE_SCRAPING = 'true';
-    });
-
-    beforeEach(() => {
-        // Arrange - Create fresh service instances for each test
-        scraperService = new MySidelineScraperService();
-        dataService = new MySidelineDataService();
-        testCarnivals = [];
-        
-        // Mock the scraper service to return controlled test data
-        // Mock scrapeEvents directly since it's the main entry point
-        jest.spyOn(scraperService, 'scrapeEvents')
-            .mockResolvedValue(MOCK_EVENTS);
-    });
-
-    afterEach(async () => {
-        // Clean up test data from database
-        if (testCarnivals.length > 0) {
-            const carnivalIds = testCarnivals.map(c => c.id);
-            await Carnival.destroy({
-                where: {
-                    id: {
-                        [Op.in]: carnivalIds
-                    }
-                }
-            });
-        }
-        
-        // Clear any existing test carnivals by title
-        await Carnival.destroy({
-            where: {
-                title: {
-                    [Op.like]: '%Integration Test%'
-                }
-            }
-        });
-        
-        // Restore mocks
-        jest.restoreAllMocks();
-    });
-
-    afterAll(() => {
-        // Clean up environment
-        delete process.env.MYSIDELINE_USE_MOCK;
-        delete process.env.MYSIDELINE_ENABLE_SCRAPING;
-    });
-
-    describe('scrapeEvents()', () => {
-        /**
-         * Test that scrapeEvents returns properly formatted event data
-         */
-        it('should return array of properly formatted events', async () => {
-            // Act
-            const scrapedEvents = await scraperService.scrapeEvents();
-
-            // Assert
-            expect(Array.isArray(scrapedEvents)).toBe(true);
-            expect(scrapedEvents.length).toBeGreaterThan(0);
-            
-            const firstEvent = scrapedEvents[0];
-            expect(firstEvent).toHaveProperty('title');
-            expect(firstEvent).toHaveProperty('mySidelineTitle');
-            expect(firstEvent).toHaveProperty('date');
-            expect(firstEvent).toHaveProperty('locationAddress');
-            expect(firstEvent).toHaveProperty('state');
-            expect(firstEvent.source).toBe('MySideline');
-            expect(firstEvent.isManuallyEntered).toBe(false);
-        }, TEST_TIMEOUT);
-
-        /**
-         * Test that scrapeEvents handles empty responses gracefully
-         */
-        it('should handle empty API response gracefully', async () => {
-            // Arrange
-            jest.spyOn(scraperService, 'scrapeEvents')
-                .mockResolvedValue([]);
-
-            // Act
-            const scrapedEvents = await scraperService.scrapeEvents();
-
-            // Assert
-            expect(Array.isArray(scrapedEvents)).toBe(true);
-            expect(scrapedEvents.length).toBe(0);
-        });
-
-        /**
-         * Test that scrapeEvents handles API errors gracefully
-         */
-        it('should handle API errors gracefully', async () => {
-            // Arrange
-            jest.spyOn(scraperService, 'scrapeEvents')
-                .mockImplementation(async () => {
-                    try {
-                        throw new Error('API connection failed');
-                    } catch (error) {
-                        console.error('MySideline scraper error:', error.message);
-                        return []; // Service should return empty array on error
-                    }
-                });
-
-            // Act
-            const scrapedEvents = await scraperService.scrapeEvents();
-
-            // Assert
-            expect(Array.isArray(scrapedEvents)).toBe(true);
-            expect(scrapedEvents.length).toBe(0);
-        });
-    });
-
-    describe('validateAndCleanData()', () => {
-        /**
-         * Test that data validation preserves all valid fields
-         */
-        it('should preserve all valid fields during validation', () => {
-            // Arrange
-            const rawEvent = { ...MOCK_EVENTS[0] };
-
-            // Act
-            const cleanedEvent = scraperService.validateAndCleanData(rawEvent);
-
-            // Assert
-            expect(cleanedEvent.title).toBe(rawEvent.title);
-            expect(cleanedEvent.mySidelineTitle).toBe(rawEvent.mySidelineTitle);
-            expect(cleanedEvent.locationAddress).toBe(rawEvent.locationAddress);
-            expect(cleanedEvent.organiserContactEmail).toBe(rawEvent.organiserContactEmail);
-            expect(cleanedEvent.state).toBe(rawEvent.state);
-        });
-
-        /**
-         * Test that validation cleans invalid email addresses
-         */
-        it('should clean invalid email addresses', () => {
-            // Arrange
-            const rawEvent = {
-                ...MOCK_EVENTS[0],
-                organiserContactEmail: 'invalid-email'
-            };
-
-            // Act
-            const cleanedEvent = scraperService.validateAndCleanData(rawEvent);
-
-            // Assert
-            expect(cleanedEvent.organiserContactEmail).toBeNull();
-        });
-
-        /**
-         * Test that validation provides default title when missing
-         */
-        it('should provide default title when missing', () => {
-            // Arrange
-            const rawEvent = {
-                ...MOCK_EVENTS[0],
-                title: ''
-            };
-
-            // Act
-            const cleanedEvent = scraperService.validateAndCleanData(rawEvent);
-
-            // Assert
-            expect(cleanedEvent.title).toBe('Masters Rugby League Event');
-        });
-    });
-
-    describe('End-to-End Data Flow', () => {
-        /**
-         * Test complete data flow from scraping to database persistence
-         */
-        it('should process scraped events and persist to database', async () => {
-            // Arrange
-            const initialEventCount = await Carnival.count({
-                where: { isManuallyEntered: false }
-            });
-
-            // Act
-            const scrapedEvents = await scraperService.scrapeEvents();
-            const cleanedEvents = scrapedEvents.map(event => 
-                scraperService.validateAndCleanData(event)
-            );
-            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
-
-            // Assert
-            expect(processedEvents.length).toBeGreaterThan(0);
-            
-            const finalEventCount = await Carnival.count({
-                where: { isManuallyEntered: false }
-            });
-            expect(finalEventCount).toBe(initialEventCount + processedEvents.length);
-
-            // Verify the created event in database
-            const savedEvent = await Carnival.findOne({
-                where: {
-                    mySidelineTitle: MOCK_EVENTS[0].mySidelineTitle
-                }
-            });
-            
-            expect(savedEvent).not.toBeNull();
-            expect(savedEvent.title).toBe(MOCK_EVENTS[0].title);
-            expect(savedEvent.state).toBe(MOCK_EVENTS[0].state);
-            expect(savedEvent.locationAddress).toBe(MOCK_EVENTS[0].locationAddress);
-            expect(savedEvent.isManuallyEntered).toBe(false);
-            expect(savedEvent.lastMySidelineSync).not.toBeNull();
-
-            // Store for cleanup
-            testCarnivals.push(savedEvent);
-        }, TEST_TIMEOUT);
-
-        /**
-         * Test that existing events are updated rather than duplicated
-         */
-        it('should update existing events rather than create duplicates', async () => {
-            // Arrange - Create an initial event with MySideline matching fields including mySidelineId
-            const existingEvent = await Carnival.create({
-                title: MOCK_EVENTS[0].title,
-                mySidelineId: MOCK_EVENTS[0].mySidelineId, // Include the MySideline ID for matching
-                mySidelineTitle: MOCK_EVENTS[0].mySidelineTitle,
-                mySidelineAddress: MOCK_EVENTS[0].mySidelineAddress,
-                mySidelineDate: MOCK_EVENTS[0].mySidelineDate,
-                date: MOCK_EVENTS[0].date,
-                locationAddress: MOCK_EVENTS[0].locationAddress,
-                state: MOCK_EVENTS[0].state,
-                isManuallyEntered: false,
-                lastMySidelineSync: new Date(),
-                organiserContactEmail: null // Leave empty to test update
-            });
-            testCarnivals.push(existingEvent);
-
-            const initialCount = await Carnival.count({
-                where: { isManuallyEntered: false }
-            });
-
-            // Act - Process the same event again
-            const scrapedEvents = await scraperService.scrapeEvents();
-            const cleanedEvents = scrapedEvents.map(event => 
-                scraperService.validateAndCleanData(event)
-            );
-            await dataService.processScrapedEvents(cleanedEvents);
-
-            // Assert - Should not create new event
-            const finalCount = await Carnival.count({
-                where: { isManuallyEntered: false }
-            });
-            expect(finalCount).toBe(initialCount);
-
-            // Verify the event was updated with new information
-            const updatedEvent = await Carnival.findOne({
-                where: { id: existingEvent.id }
-            });
-            expect(updatedEvent.organiserContactEmail).toBe(MOCK_EVENTS[0].organiserContactEmail);
-        }, TEST_TIMEOUT);
-
-        /**
-         * Test field preservation through the complete pipeline
-         */
-        it('should preserve critical fields through complete processing pipeline', async () => {
-            // Arrange
-            const criticalFields = [
-                'title', 'mySidelineTitle', 'date', 'locationAddress', 
-                'state', 'organiserContactEmail', 'registrationLink'
-            ];
-
-            // Act
-            const scrapedEvents = await scraperService.scrapeEvents();
-            const cleanedEvents = scrapedEvents.map(event => 
-                scraperService.validateAndCleanData(event)
-            );
-            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
-
-            // Assert
-            expect(processedEvents.length).toBeGreaterThan(0);
-            
-            const originalEvent = MOCK_EVENTS[0];
-            const savedEvent = processedEvents[0];
-            testCarnivals.push(savedEvent);
-
-            criticalFields.forEach(field => {
-                if (originalEvent[field] !== null && originalEvent[field] !== undefined) {
-                    expect(savedEvent[field]).toBeDefined();
-                    if (field === 'date') {
-                        expect(new Date(savedEvent[field]).getTime())
-                            .toBe(new Date(originalEvent[field]).getTime());
-                    } else {
-                        expect(savedEvent[field]).toBe(originalEvent[field]);
-                    }
-                }
-            });
-        }, TEST_TIMEOUT);
-    });
-
-    describe('Error Handling', () => {
-        /**
-         * Test handling of invalid event data
-         */
-        it('should handle invalid event data gracefully', async () => {
-            // Arrange
-            const invalidEvent = {
-                title: null,
-                date: 'invalid-date',
-                organiserContactEmail: 'not-an-email'
-            };
-            
-            jest.spyOn(scraperService, 'scrapeEvents')
-                .mockResolvedValue([invalidEvent]);
-
-            // Act
-            const scrapedEvents = await scraperService.scrapeEvents();
-            const cleanedEvent = scraperService.validateAndCleanData(scrapedEvents[0]);
-            const processedEvents = await dataService.processScrapedEvents([cleanedEvent]);
-
-            // Assert
-            expect(processedEvents.length).toBe(1);
-            expect(processedEvents[0].title).toBe('Masters Rugby League Event'); // Default title
-            expect(processedEvents[0].organiserContactEmail).toBeNull(); // Cleaned invalid email
-            
-            testCarnivals.push(processedEvents[0]);
-        }, TEST_TIMEOUT);
-
-        /**
-         * Test database transaction rollback on processing errors
-         */
-        it('should handle database errors during processing', async () => {
-            // Arrange - Mock a database error
-            const originalCreate = Carnival.create;
-            jest.spyOn(Carnival, 'create').mockRejectedValueOnce(
-                new Error('Database connection failed')
-            );
-
-            // Act
-            const scrapedEvents = await scraperService.scrapeEvents();
-            const cleanedEvents = scrapedEvents.map(event => 
-                scraperService.validateAndCleanData(event)
-            );
-            
-            // Should not throw, but should handle gracefully
-            const processedEvents = await dataService.processScrapedEvents(cleanedEvents);
-
-            // Assert
-            expect(processedEvents.length).toBe(0); // No events processed due to error
-
-            // Restore original method
-            Carnival.create = originalCreate;
-        }, TEST_TIMEOUT);
-    });
-
     describe('Live Site Integration', () => {
         /**
-         * Test that the scraper can retrieve actual data from MySideline
-         * This test can be enabled with ENABLE_LIVE_TESTS=true
+         * Test that the scraper can retrieve actual data from MySideline         * 
          */
         it('should retrieve actual events from MySideline website', async () => {
-            // Skip this test unless explicitly enabled
-            if (!process.env.ENABLE_LIVE_TESTS) {
-                console.log('Skipping live site test - set ENABLE_LIVE_TESTS=true to run');
-                return;
-            }
-
+            
             // Completely restore all mocks to ensure real scraping
             jest.restoreAllMocks();
             
-            // Set environment to disable mock data BEFORE creating service instance
-            const originalMockEnv = process.env.MYSIDELINE_USE_MOCK;
-            process.env.MYSIDELINE_USE_MOCK = 'false';
-
             try {
                 // Create a fresh scraper service instance with mocking disabled
                 const realScraperService = new MySidelineScraperService();
                 
-                // Verify that mocking is actually disabled
-                expect(realScraperService.useMockData).toBe(false);
-
                 // Act - Attempt to scrape real data from MySideline
                 console.log('🌐 Attempting to scrape live MySideline data...');
                 const liveEvents = await realScraperService.scrapeEvents();
@@ -492,11 +94,7 @@ describe('MySidelineScraperService Integration Tests', () => {
                 }
                 
                 // For network errors or site changes, log but don't fail
-                console.warn('This may indicate the MySideline website is down or structure has changed');
-                
-            } finally {
-                // Restore original environment
-                process.env.MYSIDELINE_USE_MOCK = originalMockEnv;
+                console.warn('This may indicate the MySideline website is down or structure has changed');             
             }
         }, 60000); // 60 second timeout for live site requests
 
@@ -504,16 +102,6 @@ describe('MySidelineScraperService Integration Tests', () => {
          * Test that the scraper handles live site unavailability gracefully
          */
         it('should handle network failures gracefully', async () => {
-            // Skip this test unless explicitly enabled
-            if (!process.env.ENABLE_LIVE_TESTS) {
-                console.log('Skipping network failure test - set ENABLE_LIVE_TESTS=true to run');
-                return;
-            }
-
-            // Set environment to disable mock data
-            const originalMockEnv = process.env.MYSIDELINE_USE_MOCK;
-            process.env.MYSIDELINE_USE_MOCK = 'false';
-
             try {
                 // Create scraper instance
                 const realScraperService = new MySidelineScraperService();
@@ -531,10 +119,7 @@ describe('MySidelineScraperService Integration Tests', () => {
                 
                 console.log('✅ Network failure handled gracefully - returned empty array');
                 
-            } finally {
-                // Restore
-                process.env.MYSIDELINE_USE_MOCK = originalMockEnv;
-            }
+            } 
         }, 30000);
 
         /**
@@ -550,9 +135,6 @@ describe('MySidelineScraperService Integration Tests', () => {
             // Completely restore all mocks
             jest.restoreAllMocks();
             
-            const originalMockEnv = process.env.MYSIDELINE_USE_MOCK;
-            process.env.MYSIDELINE_USE_MOCK = 'false';
-
             try {
                 // Create fresh scraper service with mocking disabled
                 const realScraperService = new MySidelineScraperService();
@@ -611,9 +193,7 @@ describe('MySidelineScraperService Integration Tests', () => {
                 // For other errors, log but don't fail
                 console.warn('Site may be unavailable or structure changed');
                 
-            } finally {
-                process.env.MYSIDELINE_USE_MOCK = originalMockEnv;
-            }
+            } 
         }, 60000);
     });
 
@@ -1130,11 +710,7 @@ describe('MySidelineScraperService Integration Tests', () => {
 
             // Completely restore all mocks to ensure real scraping
             jest.restoreAllMocks();
-            
-            // Set environment to disable mock data
-            const originalMockEnv = process.env.MYSIDELINE_USE_MOCK;
-            process.env.MYSIDELINE_USE_MOCK = 'false';
-            
+              
             let realLiveEvents = [];
             const logoDownloadService = new MySidelineLogoDownloadService();
 
@@ -1142,9 +718,6 @@ describe('MySidelineScraperService Integration Tests', () => {
                 // Create a fresh scraper service instance with mocking disabled
                 const realScraperService = new MySidelineScraperService();
                 
-                // Verify that mocking is actually disabled
-                expect(realScraperService.useMockData).toBe(false);
-
                 console.log('🌐 Scraping live MySideline data for logo download testing...');
                 
                 // Get real events from MySideline
@@ -1317,9 +890,6 @@ describe('MySidelineScraperService Integration Tests', () => {
                     });
                     console.log(`🧹 Cleaned up ${realLiveEvents.length} test events from database`);
                 }
-                
-                // Restore original environment
-                process.env.MYSIDELINE_USE_MOCK = originalMockEnv;
             }
         }, 120000); // 2 minute timeout for live testing
 

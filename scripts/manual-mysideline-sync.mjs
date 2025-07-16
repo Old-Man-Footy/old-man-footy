@@ -81,11 +81,9 @@ async function main() {
         
         // Check if sync is enabled
         const syncEnabled = process.env.MYSIDELINE_SYNC_ENABLED !== 'false';
-        const useMock = process.env.MYSIDELINE_USE_MOCK === 'true';
         
         console.log(`📋 Configuration:`);
         console.log(`   Sync Enabled: ${syncEnabled ? '✅ Yes' : '❌ No'}`);
-        console.log(`   Using Mock Data: ${useMock ? '⚠️  Yes' : '✅ No'}`);
         
         if (!syncEnabled) {
             console.log('\n❌ MySideline sync is disabled via MYSIDELINE_SYNC_ENABLED=false');
@@ -106,12 +104,7 @@ async function main() {
             console.log(`   Events Processed: ${result.eventsProcessed || 0}`);
             console.log(`   Events Created: ${result.eventsCreated || 0}`);
             console.log(`   Events Updated: ${result.eventsUpdated || 0}`);
-            console.log(`   Last Sync: ${result.lastSync || 'Now'}`);
-            
-            if (useMock) {
-                console.log('\n⚠️  Note: This sync used MOCK data, not live MySideline data');
-                console.log('📝 To use live data: Set MYSIDELINE_USE_MOCK=false in .env.development');
-            }
+            console.log(`   Last Sync: ${result.lastSync || 'Now'}`);           
         } else if (result && !result.success) {
             console.log(`❌ Sync failed: ${result.error || 'Unknown error'}`);
         } else {
