@@ -10,7 +10,6 @@ import {
     AUSTRALIAN_STATES,
     PLAYER_SHORTS_COLORS,
     ATTENDANCE_STATUS,
-    USER_ROLES,
     CONTACT_INQUIRY_TYPES,
     FEATURE_FLAGS,
     BOOLEAN_STRINGS,
@@ -30,7 +29,6 @@ export function getViewConstants() {
         AUSTRALIAN_STATES,
         PLAYER_SHORTS_COLORS,
         ATTENDANCE_STATUS,
-        USER_ROLES,
         CONTACT_INQUIRY_TYPES,
         FEATURE_FLAGS,
         BOOLEAN_STRINGS,
@@ -109,7 +107,7 @@ export function getSponsorshipLevelClass(level) {
  * @returns {boolean} True if user has admin or primary delegate role
  */
 export function isAdminOrPrimaryDelegate(user) {
-    return user && (user.role === USER_ROLES.ADMIN || user.role === USER_ROLES.PRIMARY_DELEGATE);
+    return user && (user.isAdmin || user.isPrimaryDelegate);
 }
 
 /**
@@ -118,26 +116,23 @@ export function isAdminOrPrimaryDelegate(user) {
  * @returns {boolean} True if user has admin role
  */
 export function isAdmin(user) {
-    return user && user.role === USER_ROLES.ADMIN;
+    return user && user.isAdmin;
 }
 
 /**
- * Get display name for user role
- * @param {string} role - User role
+ * Get display name for user role based on boolean flags
+ * @param {Object} user - User object with isAdmin and isPrimaryDelegate boolean fields
  * @returns {string} Display name for role
  */
-export function formatUserRole(role) {
-    switch (role) {
-        case USER_ROLES.ADMIN:
-            return 'Administrator';
-        case USER_ROLES.PRIMARY_DELEGATE:
-            return 'Primary Delegate';
-        case USER_ROLES.DELEGATE:
-            return 'Delegate';
-        case USER_ROLES.USER:
-            return 'User';
-        default:
-            return 'Unknown';
+export function formatUserRole(user) {
+    if (!user) return 'Unknown';
+    
+    if (user.isAdmin) {
+        return 'Administrator';
+    } else if (user.isPrimaryDelegate) {
+        return 'Primary Delegate';
+    } else {
+        return 'Delegate';
     }
 }
 

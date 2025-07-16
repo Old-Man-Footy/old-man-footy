@@ -12,7 +12,6 @@ import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach,
 import { sequelize } from '../config/database.mjs';
 import User from '../models/User.mjs';
 import Club from '../models/Club.mjs';
-import { USER_ROLES } from '../config/constants.mjs';
 
 // Create mock functions using Vitest
 const mockBcrypt = {
@@ -727,8 +726,8 @@ describe('User Model', () => {
           firstName: 'Admin',
           lastName: 'User',
           email: 'admin@example.com',
-          password: 'password123',
-          role: USER_ROLES.ADMIN,
+          passwordHash: 'password123',
+          isAdmin: true,
           isActive: true
         });
 
@@ -741,8 +740,8 @@ describe('User Model', () => {
           firstName: 'Delegate',
           lastName: 'User',
           email: 'delegate@example.com',
-          password: 'password123',
-          role: USER_ROLES.PRIMARY_DELEGATE,
+          passwordHash: 'password123',
+          isPrimaryDelegate: true,
           isActive: true
         });
 
@@ -755,8 +754,9 @@ describe('User Model', () => {
           firstName: 'Regular',
           lastName: 'User',
           email: 'regular@example.com',
-          password: 'password123',
-          role: USER_ROLES.USER,
+          passwordHash: 'password123',
+          isAdmin: false,
+          isPrimaryDelegate: false,
           isActive: true
         });
 

@@ -245,12 +245,12 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 
 ### In Progress 🚧
 - [x] Service layer migration (3/5 complete)
-- [ ] Remaining service tests: MySideline scraper integration
-- [ ] Controller layer migration
-- [ ] Middleware layer migration
+- [x] Remaining service tests: MySideline scraper integration
+- [x] Controller layer migration
+- [x] Middleware layer migration
 
 ### Pending ⏳
-- [ ] Remove Jest dependencies
+- [x] Remove Jest dependencies
 - [ ] Update CI/CD configurations
 - [ ] Update documentation
 - [ ] Performance optimization

@@ -1,5 +1,3 @@
-import { USER_ROLES } from '../config/constants.mjs';
-
 /**
  * Session Authentication Middleware
  * 
@@ -115,7 +113,7 @@ function ensureAdmin(req, res, next) {
  * @param {Function} next - Express next function
  */
 export const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== USER_ROLES.ADMIN) {
+  if (!req.user || !req.user.isAdmin) {
     req.flash('error_msg', 'Access denied. Administrator privileges required.');
     return res.redirect('/');
   }
@@ -129,7 +127,7 @@ export const requireAdmin = (req, res, next) => {
  * @param {Function} next - Express next function
  */
 export const requireAdminOrPrimaryDelegate = (req, res, next) => {
-  if (!req.user || (req.user.role !== USER_ROLES.ADMIN && req.user.role !== USER_ROLES.PRIMARY_DELEGATE)) {
+  if (!req.user || (!req.user.isAdmin && !req.user.isPrimaryDelegate)) {
     req.flash('error_msg', 'Access denied. Administrator or primary delegate privileges required.');
     return res.redirect('/');
   }
@@ -138,16 +136,16 @@ export const requireAdminOrPrimaryDelegate = (req, res, next) => {
 
 /**
  * Middleware to ensure user has delegate role or higher
+ * Since DELEGATE and USER are the same (logged in users with both flags false),
+ * this middleware ensures user is authenticated (any logged in user can access)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
 export const requireDelegate = (req, res, next) => {
-  const allowedRoles = [USER_ROLES.ADMIN, USER_ROLES.PRIMARY_DELEGATE, USER_ROLES.DELEGATE];
-  
-  if (!req.user || !allowedRoles.includes(req.user.role)) {
-    req.flash('error_msg', 'Access denied. Delegate privileges required.');
-    return res.redirect('/');
+  if (!req.user) {
+    req.flash('error_msg', 'Access denied. Please log in to access this page.');
+    return res.redirect('/auth/login');
   }
   next();
 };

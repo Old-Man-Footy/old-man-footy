@@ -158,16 +158,6 @@ export const UPLOAD_DIRECTORIES = {
 export const UPLOAD_DIRECTORIES_ARRAY = Object.values(UPLOAD_DIRECTORIES);
 
 /**
- * User roles for authorization and access control
- */
-export const USER_ROLES = {
-    ADMIN: 'admin',
-    PRIMARY_DELEGATE: 'primary_delegate',
-    DELEGATE: 'delegate',
-    USER: 'user'
-};
-
-/**
  * Contact inquiry types
  */
 export const CONTACT_INQUIRY_TYPES = {
