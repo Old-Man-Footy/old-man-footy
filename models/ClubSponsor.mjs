@@ -115,7 +115,7 @@ class ClubSponsor extends Model {
       include: [
         {
           model: Club,
-          as: 'club'
+          as: 'sponsoredClub'
         }
       ],
       order: [['startDate', 'DESC']]

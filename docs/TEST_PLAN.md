@@ -230,7 +230,7 @@ cl## Migration Status: ✅ PHASE 2 COMPLETE, STARTING PHASE 3
 
 #### **Step 1: Critical Business Logic (Week 1)**
 1. [x] Fix User model primary delegate validation
-2. [ ] Implement Main controller tests
+2. [x] Implement Main controller tests
 3. [ ] Implement Club controller tests
 4. [ ] Implement Carnival controller tests
 
@@ -308,3 +308,674 @@ cl## Migration Status: ✅ PHASE 2 COMPLETE, STARTING PHASE 3
 **Last Updated**: July 17, 2025  
 **Current Phase**: Phase 3 - Writing Missing Tests  
 **Next Priority**: User model validation + Main controller tests
+
+---
+
+## 🛠️ **PHASE 3 DETAILED IMPLEMENTATION GUIDE**
+
+### **Priority Queue for Test Implementation**
+
+#### **Immediate (This Week) - Critical Path**
+1. **Fix User Model Validation** ⚠️ BLOCKING
+   ```javascript
+   // Required: Add to models/User.mjs
+   User.addHook('beforeCreate', async (user) => {
+     if (user.isPrimaryDelegate && user.clubId) {
+       const existingDelegate = await User.findOne({
+         where: { clubId: user.clubId, isPrimaryDelegate: true }
+       });
+       if (existingDelegate) {
+         throw new Error('Club already has a primary delegate');
+       }
+     }
+   });
+   ```
+
+2. **Main Controller Tests** 📋 HIGH PRIORITY
+   - File: `tests/main.controller.test.mjs`
+   - Test Coverage:
+     ```javascript
+     describe('Main Controller', () => {
+       describe('Homepage (getIndex)', () => {
+         // Homepage rendering
+         // Carousel functionality 
+         // Statistics display
+         // User context handling
+       });
+       describe('Dashboard (getDashboard)', () => {
+         // User dashboard
+         // Club information
+         // Recent activity
+       });
+       describe('About Page (getAbout)', () => {
+         // Static page rendering
+       });
+       describe('Email Subscription (postSubscribe)', () => {
+         // Bot protection
+         // Email validation
+         // State selection
+         // Rate limiting
+       });
+       describe('Contact Form (postContact)', () => {
+         // Form validation
+         // Email sending
+         // Newsletter subscription
+       });
+       describe('Unsubscribe (getUnsubscribe/postUnsubscribe)', () => {
+         // Token validation
+         // Unsubscribe processing
+       });
+     });
+     ```
+
+#### **Week 1 Continuation - Core Controllers**
+
+3. **Club Controller Tests** 🏈
+   - File: `tests/club.controller.test.mjs`
+   - Focus Areas:
+     - CRUD operations (Create, Read, Update, Delete)
+     - Authorization checks (primary delegate permissions)
+     - Validation rules (club name uniqueness, location requirements)
+     - Player management integration
+     - Search and filtering functionality
+
+4. **Carnival Controller Tests** 🎪
+   - File: `tests/carnival.controller.test.mjs`
+   - Focus Areas:
+     - Event creation and management
+     - Date validation and conflict checking
+     - Location and venue management
+     - Registration workflow
+     - MySideline integration
+     - File upload handling (promotional images, draws)
+
+### **Test Template Standards**
+
+#### **Controller Test Template**
+```javascript
+/**
+ * [Controller Name] Controller Unit Tests
+ * 
+ * Comprehensive test suite following security-first principles
+ * and strict MVC architecture compliance.
+ */
+
+import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
+import { sequelize } from '../config/database.mjs';
+
+// Mock external dependencies
+vi.mock('../services/email/[ServiceName].mjs', () => ({
+  default: {
+    methodName: vi.fn()
+  }
+}));
+
+// Import controller functions
+import { 
+  controllerMethod1,
+  controllerMethod2 
+} from '../controllers/[controller].controller.mjs';
+
+// Import models
+import { Model1, Model2 } from '../models/index.mjs';
+
+describe('[Controller Name] Controller', () => {
+  let mockReq, mockRes, mockNext;
+  let testData;
+
+  beforeAll(async () => {
+    await sequelize.authenticate();
+  });
+
+  beforeEach(async () => {
+    // Clear database
+    await Model1.destroy({ where: {}, force: true });
+    
+    // Reset mocks
+    vi.clearAllMocks();
+    
+    // Setup mock objects
+    mockReq = {
+      user: null,
+      body: {},
+      params: {},
+      query: {},
+      files: null,
+      ip: '127.0.0.1'
+    };
+
+    mockRes = {
+      render: vi.fn(),
+      json: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      redirect: vi.fn()
+    };
+
+    mockNext = vi.fn();
+    
+    // Create test data
+    testData = await createTestData();
+  });
+
+  describe('HTTP GET Methods', () => {
+    // Test rendering views, data fetching
+  });
+
+  describe('HTTP POST Methods', () => {
+    // Test form submissions, data creation
+  });
+
+  describe('HTTP PUT/PATCH Methods', () => {
+    // Test data updates
+  });
+
+  describe('HTTP DELETE Methods', () => {
+    // Test data deletion
+  });
+
+  describe('Authorization & Security', () => {
+    // Test access controls, input validation
+  });
+
+  describe('Error Handling', () => {
+    // Test error scenarios, edge cases
+  });
+
+  afterAll(async () => {
+    await sequelize.close();
+  });
+});
+```
+
+#### **Service Test Template**
+```javascript
+/**
+ * [Service Name] Service Unit Tests
+ * 
+ * Business logic layer testing with comprehensive mocking
+ * of external dependencies.
+ */
+
+import { describe, test, it, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
+
+// Mock external APIs, email services, etc.
+vi.mock('nodemailer', () => ({
+  createTransporter: vi.fn()
+}));
+
+import ServiceClass from '../services/[service].service.mjs';
+
+describe('[Service Name] Service', () => {
+  let service;
+  let mockDependencies;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    mockDependencies = {
+      emailTransporter: { sendMail: vi.fn() },
+      apiClient: { request: vi.fn() }
+    };
+    
+    service = new ServiceClass(mockDependencies);
+  });
+
+  describe('Core Functionality', () => {
+    // Test main service methods
+  });
+
+  describe('Error Handling', () => {
+    // Test failure scenarios
+  });
+
+  describe('Integration Points', () => {
+    // Test external service interactions
+  });
+});
+```
+
+---
+
+## 📋 **COMPREHENSIVE MISSING TESTS BREAKDOWN**
+
+### **Controllers (Detailed Implementation Plan)**
+
+#### **1. Main Controller (`main.controller.test.mjs`)** 🌟 PRIORITY 1
+```markdown
+**Status**: 🚧 IN PROGRESS (recently fixed carousel service mock)
+**Tests Needed**: ~20-25 tests
+**Complexity**: Medium (multiple endpoints, email integration)
+
+Test Categories:
+├── Homepage Rendering (4 tests)
+│   ├── Anonymous user homepage
+│   ├── Authenticated user homepage
+│   ├── Carousel image loading
+│   └── Statistics display
+├── Dashboard Functionality (5 tests)
+│   ├── User dashboard with club info
+│   ├── Recent carnival activity
+│   ├── Player management links
+│   ├── Club registration status
+│   └── Administrative controls
+├── Email Subscription (8 tests)
+│   ├── Valid subscription creation
+│   ├── Bot protection (honeypot, timing)
+│   ├── Rate limiting enforcement
+│   ├── Email format validation
+│   ├── State selection handling
+│   ├── Duplicate subscription prevention
+│   ├── Welcome email sending
+│   └── Error handling
+├── Contact Form (4 tests)
+│   ├── Form submission processing
+│   ├── Email notification sending
+│   ├── Optional newsletter signup
+│   └── Validation error handling
+└── Unsubscribe Flow (4 tests)
+    ├── Token validation
+    ├── Unsubscribe processing
+    ├── Confirmation page
+    └── Invalid token handling
+
+**Implementation Priority**: Week 1 - Days 1-2
+```
+
+#### **2. Club Controller (`club.controller.test.mjs`)** 🏈 PRIORITY 2
+```markdown
+**Status**: ❌ NOT STARTED
+**Tests Needed**: ~30-35 tests
+**Complexity**: High (complex CRUD, authorization, file uploads)
+
+Test Categories:
+├── Club Listing & Search (6 tests)
+│   ├── Public club directory
+│   ├── State-based filtering
+│   ├── Search functionality
+│   ├── Pagination handling
+│   ├── Active club filtering
+│   └── Club profile viewing
+├── Club Registration (8 tests)
+│   ├── New club creation
+│   ├── Delegate assignment
+│   ├── Club information validation
+│   ├── Logo upload handling
+│   ├── Location geocoding
+│   ├── Duplicate prevention
+│   ├── Email notifications
+│   └── Approval workflow
+├── Club Management (10 tests)
+│   ├── Club profile updates
+│   ├── Logo management
+│   ├── Contact information updates
+│   ├── Public visibility controls
+│   ├── Club status management
+│   ├── Delegate transfer
+│   ├── Player roster access
+│   ├── Carnival registrations
+│   ├── Sponsorship management
+│   └── Activity history
+├── Authorization & Security (6 tests)
+│   ├── Primary delegate permissions
+│   ├── Club member access
+│   ├── Admin override capabilities
+│   ├── Data sanitization
+│   ├── Rate limiting
+│   └── Input validation
+└── Integration Features (5 tests)
+    ├── MySideline sync
+    ├── Email notifications
+    ├── Audit logging
+    ├── File management
+    └── Database transactions
+
+**Implementation Priority**: Week 1 - Days 3-5
+```
+
+#### **3. Carnival Controller (`carnival.controller.test.mjs`)** 🎪 PRIORITY 3
+```markdown
+**Status**: ❌ NOT STARTED
+**Tests Needed**: ~35-40 tests
+**Complexity**: Very High (event management, file uploads, complex workflows)
+
+Test Categories:
+├── Carnival Listing & Discovery (7 tests)
+│   ├── Public carnival directory
+│   ├── Date-based filtering
+│   ├── State/location filtering
+│   ├── Search functionality
+│   ├── Upcoming events display
+│   ├── Registration status
+│   └── Calendar integration
+├── Carnival Creation (10 tests)
+│   ├── Basic carnival setup
+│   ├── Date validation
+│   ├── Location management
+│   ├── Registration settings
+│   ├── Fee structure setup
+│   ├── Draw/schedule uploads
+│   ├── Promotional content
+│   ├── Contact information
+│   ├── Approval workflow
+│   └── Notification system
+├── Carnival Management (12 tests)
+│   ├── Event details updates
+│   ├── Registration management
+│   ├── Participant tracking
+│   ├── Payment processing
+│   ├── Communication tools
+│   ├── Draw management
+│   ├── Results recording
+│   ├── Photo/video uploads
+│   ├── Sponsor management
+│   ├── Volunteer coordination
+│   ├── Report generation
+│   └── Event archival
+├── Registration Workflow (8 tests)
+│   ├── Club registration
+│   ├── Player list submission
+│   ├── Payment processing
+│   ├── Confirmation emails
+│   ├── Waitlist management
+│   ├── Cancellation handling
+│   ├── Transfer processing
+│   └── Emergency contacts
+└── Integration & Analytics (8 tests)
+    ├── MySideline integration
+    ├── Email automation
+    ├── SMS notifications
+    ├── Payment gateway
+    ├── File storage
+    ├── Analytics tracking
+    ├── Audit logging
+    └── Backup systems
+
+**Implementation Priority**: Week 2 - Days 1-4
+```
+
+#### **4. Admin Controller (`admin.controller.test.mjs`)** 👨‍💼 PRIORITY 4
+```markdown
+**Status**: ❌ NOT STARTED
+**Tests Needed**: ~25-30 tests
+**Complexity**: High (system administration, reporting, security)
+
+Test Categories:
+├── User Management (8 tests)
+│   ├── User listing and search
+│   ├── User role management
+│   ├── Account activation/deactivation
+│   ├── Password reset administration
+│   ├── Delegation management
+│   ├── Bulk operations
+│   ├── User activity monitoring
+│   └── Account merge/cleanup
+├── System Configuration (6 tests)
+│   ├── Site settings management
+│   ├── Feature flag controls
+│   ├── Maintenance mode
+│   ├── Email template management
+│   ├── System announcements
+│   └── Integration settings
+├── Content Management (5 tests)
+│   ├── Carnival approval workflow
+│   ├── Club verification
+│   ├── Content moderation
+│   ├── Image/file management
+│   └── Public content curation
+├── Reporting & Analytics (6 tests)
+│   ├── User statistics
+│   ├── Carnival analytics
+│   ├── Financial reporting
+│   ├── System performance
+│   ├── Error monitoring
+│   └── Audit report generation
+└── Security & Monitoring (5 tests)
+    ├── Security incident response
+    ├── Access log monitoring
+    ├── Rate limit management
+    ├── Data export/backup
+    └── Compliance reporting
+
+**Implementation Priority**: Week 2 - Days 5-7
+```
+
+### **Service Layer Tests (Detailed Breakdown)**
+
+#### **5. Email Services Test Suite** 📧 PRIORITY 5
+```markdown
+**Status**: ❌ NOT STARTED
+**Tests Needed**: ~60-70 tests total
+**Complexity**: Medium-High (email templating, delivery, tracking)
+
+Files to Create:
+├── BaseEmailService.test.mjs (10 tests)
+│   ├── Email template rendering
+│   ├── SMTP configuration
+│   ├── Delivery status tracking
+│   ├── Bounce handling
+│   └── Rate limiting
+├── AuthEmailService.test.mjs (12 tests)
+│   ├── Welcome emails
+│   ├── Password reset emails
+│   ├── Account verification
+│   ├── Login notifications
+│   └── Security alerts
+├── CarnivalEmailService.test.mjs (15 tests)
+│   ├── Registration confirmations
+│   ├── Event reminders
+│   ├── Schedule updates
+│   ├── Cancellation notices
+│   └── Results distribution
+├── ContactEmailService.test.mjs (8 tests)
+│   ├── Contact form processing
+│   ├── Auto-responders
+│   ├── Newsletter subscriptions
+│   └── Unsubscribe handling
+├── InvitationEmailService.test.mjs (10 tests)
+│   ├── Club invitations
+│   ├── Carnival invitations
+│   ├── Delegate invitations
+│   └── Reminder systems
+└── SecurityEmailService.test.mjs (8 tests)
+    ├── Security breach notifications
+    ├── Suspicious activity alerts
+    ├── Account lockout notices
+    └── Admin notifications
+
+**Implementation Priority**: Week 3 - Days 1-4
+```
+
+#### **6. Data Services** 🔄 PRIORITY 6
+```markdown
+**Status**: ❌ NOT STARTED
+**Tests Needed**: ~25-30 tests
+**Complexity**: High (external API integration, data transformation)
+
+Files to Create:
+├── mySidelineDataService.test.mjs (20 tests)
+│   ├── Data fetching and parsing
+│   ├── Data transformation
+│   ├── Conflict resolution
+│   ├── Sync status tracking
+│   └── Error handling
+└── dataValidationService.test.mjs (8 tests)
+    ├── Input sanitization
+    ├── Format validation
+    ├── Business rule enforcement
+    └── Data integrity checks
+
+**Implementation Priority**: Week 3 - Days 5-6
+```
+
+### **Supporting Infrastructure Tests**
+
+#### **7. Remaining Middleware** 🛡️ PRIORITY 7
+```markdown
+**Status**: ❌ NOT STARTED
+**Tests Needed**: ~25-30 tests
+**Complexity**: Medium (HTTP handling, validation)
+
+Files to Create:
+├── flash.middleware.test.mjs (8 tests)
+├── upload.middleware.test.mjs (10 tests)
+├── validation.middleware.test.mjs (8 tests)
+└── asyncHandler.middleware.test.mjs (6 tests)
+
+**Implementation Priority**: Week 4 - Days 1-2
+```
+
+#### **8. Utility Functions** 🛠️ PRIORITY 8
+```markdown
+**Status**: ❌ NOT STARTED
+**Tests Needed**: ~20-25 tests
+**Complexity**: Low-Medium (helper functions)
+
+Files to Create:
+├── viewHelpers.test.mjs (12 tests)
+├── validation.utils.test.mjs (8 tests)
+└── sanitization.utils.test.mjs (6 tests)
+
+**Implementation Priority**: Week 4 - Days 3-4
+```
+
+---
+
+## 🎯 **WEEKLY IMPLEMENTATION SCHEDULE**
+
+### **Week 1: Critical Controllers (Days 1-7)**
+- **Day 1-2**: Complete Main Controller tests (✅ recently fixed carousel mock)
+- **Day 3-5**: Implement Club Controller tests  
+- **Day 6-7**: Begin Carnival Controller tests
+
+### **Week 2: Advanced Controllers (Days 8-14)**
+- **Day 8-11**: Complete Carnival Controller tests
+- **Day 12-14**: Implement Admin Controller tests
+
+### **Week 3: Service Layer (Days 15-21)**
+- **Day 15-18**: Email Services test suite
+- **Day 19-20**: Data Services tests
+- **Day 21**: Service integration testing
+
+### **Week 4: Infrastructure & Polish (Days 22-28)**
+- **Day 22-23**: Remaining middleware tests
+- **Day 24-25**: Utility function tests
+- **Day 26-27**: Performance optimization
+- **Day 28**: Final verification and documentation
+
+---
+
+## 📊 **PHASE 3 SUCCESS METRICS**
+
+### **Quantitative Goals**
+- **Test Count**: Add 250-300 new tests (current: 456)
+- **Code Coverage**: Increase by 15-20%
+- **Controller Coverage**: 100% of controller methods tested
+- **Service Coverage**: 90%+ of service methods tested
+- **Error Scenario Coverage**: 80%+ of error paths tested
+
+### **Qualitative Goals**
+- **Security**: All input validation and authorization paths tested
+- **Performance**: Test execution under 30 seconds for full suite
+- **Maintainability**: Clear test organization and documentation
+- **Reliability**: 99%+ test success rate across environments
+
+### **Completion Criteria**
+- [ ] All critical controllers have comprehensive test coverage
+- [ ] Service layer tests cover business logic and integrations
+- [ ] Error handling paths are validated
+- [ ] Security scenarios are tested
+- [ ] Performance benchmarks are met
+- [ ] Documentation is updated
+
+---
+
+## 🔧 **TESTING BEST PRACTICES & GUIDELINES**
+
+### **Test Organization**
+```javascript
+describe('Component Name', () => {
+  describe('Method/Feature Group', () => {
+    describe('Specific Scenario', () => {
+      test('should perform specific action under specific conditions', () => {
+        // Arrange
+        // Act  
+        // Assert
+      });
+    });
+  });
+});
+```
+
+### **Mocking Strategy**
+- **External APIs**: Always mock (prevent network calls)
+- **Database**: Use test database with real Sequelize operations
+- **Email Services**: Mock SMTP transport, test template generation
+- **File System**: Mock file operations unless testing file handling
+- **Time/Dates**: Mock when testing time-dependent logic
+
+### **Data Management**
+- **Test Isolation**: Clean database between tests
+- **Test Data**: Create minimal, focused test data
+- **Factories**: Use factory functions for consistent test data
+- **Transactions**: Use database transactions for cleanup when possible
+
+### **Assertion Patterns**
+```javascript
+// Good: Specific assertions
+expect(result.status).toBe(200);
+expect(result.data.user.email).toBe('test@example.com');
+expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(
+  'test@example.com', 
+  expect.objectContaining({ clubId: 1 })
+);
+
+// Avoid: Overly broad assertions
+expect(result).toBeTruthy();
+expect(mockEmailService).toHaveBeenCalled();
+```
+
+### **Error Testing**
+```javascript
+// Test both the error and the response
+test('should handle invalid input gracefully', async () => {
+  mockReq.body = { invalid: 'data' };
+  
+  await controllerMethod(mockReq, mockRes);
+  
+  expect(mockRes.status).toHaveBeenCalledWith(400);
+  expect(mockRes.json).toHaveBeenCalledWith({
+    error: {
+      status: 400,
+      message: expect.stringContaining('validation')
+    }
+  });
+});
+```
+
+---
+
+## 📈 **CONTINUOUS IMPROVEMENT PLAN**
+
+### **Phase 3 Monitoring**
+- **Daily**: Test execution time tracking
+- **Weekly**: Code coverage reports
+- **Bi-weekly**: Performance benchmarking
+- **Monthly**: Test maintenance and refactoring
+
+### **Quality Gates**
+- All new tests must pass on first implementation
+- No reduction in existing test coverage
+- Test execution time must remain under performance budget
+- All security test scenarios must be covered
+
+### **Documentation Updates**
+- Update README.md with new testing procedures
+- Document test data patterns and factories  
+- Create troubleshooting guide for common test failures
+- Maintain test coverage reports
+
+---
+
+**Current Status**: Phase 3 Implementation - Week 1 🚧  
+**Next Milestone**: Complete Main and Club Controller tests  
+**Overall Progress**: 456/700+ tests (Phase 2 complete, Phase 3 in progress)

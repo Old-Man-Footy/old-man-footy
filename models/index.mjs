@@ -47,7 +47,7 @@ Club.hasMany(ClubAlternateName, {
 // ClubAlternateName belongs to Club (many-to-one)
 ClubAlternateName.belongsTo(Club, {
   foreignKey: 'clubId',
-  as: 'club'
+  as: 'parentClub'
 });
 
 // Carnival belongs to User (creator) (many-to-one)
@@ -115,12 +115,12 @@ CarnivalClub.belongsTo(Carnival, {
 
 CarnivalClub.belongsTo(Club, {
   foreignKey: 'clubId',
-  as: 'club'
+  as: 'participatingClub'
 });
 
 ClubSponsor.belongsTo(Club, {
   foreignKey: 'clubId',
-  as: 'club'
+  as: 'sponsoredClub'
 });
 
 ClubSponsor.belongsTo(Sponsor, {
@@ -177,7 +177,7 @@ Club.hasMany(ClubPlayer, {
 // ClubPlayer belongs to Club (many-to-one)
 ClubPlayer.belongsTo(Club, {
   foreignKey: 'clubId',
-  as: 'club'
+  as: 'playerClub'
 });
 
 // CarnivalClubPlayer associations

@@ -54,7 +54,7 @@ class CarnivalClub extends Model {
       include: [
         {
           model: Club,
-          as: 'club'
+          as: 'participatingClub'
         }
       ],
       order: [['registrationDate', 'ASC']]
