@@ -10,15 +10,14 @@ import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach,
 import { sequelize } from '../config/database.mjs';
 
 // Mock carousel service before importing controller
-const mockCarouselImageService = {
-  getCarouselImages: vi.fn().mockResolvedValue([
-    { id: 1, url: '/images/carousel1.jpg', alt: 'Test Image 1' },
-    { id: 2, url: '/images/carousel2.jpg', alt: 'Test Image 2' }
-  ])
-};
-
-// Make carousel service available globally for the controller
-global.carouselImageService = mockCarouselImageService;
+vi.mock('../services/carouselImageService.mjs', () => ({
+  default: {
+    getCarouselImages: vi.fn().mockResolvedValue([
+      { id: 1, url: '/images/carousel1.jpg', alt: 'Test Image 1' },
+      { id: 2, url: '/images/carousel2.jpg', alt: 'Test Image 2' }
+    ])
+  }
+}));
 
 // Mock external services before importing controller
 vi.mock('../services/email/ContactEmailService.mjs', () => ({
@@ -80,6 +79,7 @@ import {
 } from '../models/index.mjs';
 import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
+import carouselImageService from '../services/carouselImageService.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 describe('Main Controller', () => {
@@ -101,6 +101,12 @@ describe('Main Controller', () => {
     await CarnivalClub.destroy({ where: {}, force: true });
     
     vi.clearAllMocks();
+    
+    // Reset carousel service mock
+    carouselImageService.getCarouselImages.mockResolvedValue([
+      { id: 1, url: '/images/carousel1.jpg', alt: 'Test Image 1' },
+      { id: 2, url: '/images/carousel2.jpg', alt: 'Test Image 2' }
+    ]);
     
     // Reset global subscription attempts
     global.subscriptionAttempts = new Map();
@@ -171,6 +177,10 @@ describe('Main Controller', () => {
     test('should render homepage with upcoming carnivals and stats', async () => {
       // Arrange
       mockReq.user = null; // Anonymous user
+      
+      // Debug: Verify the mock is set up correctly
+      console.log('Mock function:', vi.mocked(carouselImageService.getCarouselImages));
+      console.log('Mock implementation:', carouselImageService.getCarouselImages.toString());
 
       // Act
       await getIndex(mockReq, mockRes);
@@ -191,7 +201,7 @@ describe('Main Controller', () => {
         additionalCSS: expect.any(Array)
       }));
       
-      expect(mockCarouselImageService.getCarouselImages).toHaveBeenCalledWith(8);
+      expect(vi.mocked(carouselImageService.getCarouselImages)).toHaveBeenCalledWith(8);
     });
 
     test('should render homepage with user context for authenticated users', async () => {

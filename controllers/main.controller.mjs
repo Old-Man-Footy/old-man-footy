@@ -17,6 +17,7 @@ import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
+import carouselImageService from '../services/carouselImageService.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 import crypto from 'crypto';
 import asyncHandler from '../middleware/asyncHandler.mjs';
