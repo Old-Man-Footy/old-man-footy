@@ -11,11 +11,11 @@ export class LoginPage extends BasePage {
   constructor(page) {
     super(page);
     
-    // Selectors
+    // Selectors - Fixed to target specific login form elements
     this.selectors = {
       emailInput: 'input[name="email"]',
       passwordInput: 'input[name="password"]',
-      loginButton: 'button[type="submit"]',
+      loginButton: 'form[action="/auth/login"] button[type="submit"]', // More specific selector
       errorMessage: '.alert-danger',
       successMessage: '.alert-success',
       registerLink: 'a[href="/auth/register"]',
@@ -40,6 +40,23 @@ export class LoginPage extends BasePage {
     await this.fillField(this.selectors.emailInput, email);
     await this.fillField(this.selectors.passwordInput, password);
     await this.clickElement(this.selectors.loginButton);
+    
+    // Wait for navigation to complete - either success or failure
+    try {
+      // Wait for successful navigation to dashboard
+      await this.page.waitForURL(/.*\/dashboard/, { timeout: 10000 });
+    } catch (error) {
+      // If dashboard navigation fails, check if we're still on login page
+      const currentUrl = this.page.url();
+      if (currentUrl.includes('/auth/login')) {
+        // We're back on login page - check for error message
+        await this.page.waitForSelector('.alert-danger', { timeout: 2000 }).catch(() => {
+          // No error message found - this is unexpected
+        });
+      }
+      // Let verifyLoginSuccess handle the specific error checking
+    }
+    
     await this.waitForPageLoad();
   }
 
@@ -61,7 +78,31 @@ export class LoginPage extends BasePage {
    * Verify login success (redirected to dashboard)
    */
   async verifyLoginSuccess() {
-    await this.verifyURL('/dashboard');
+    // Give the authentication system time to complete
+    await this.page.waitForTimeout(500);
+    
+    const currentUrl = this.page.url();
+    
+    // Check if we successfully reached dashboard
+    if (currentUrl.includes('/dashboard')) {
+      return; // Success!
+    }
+    
+    // If not on dashboard, check if we're back on login with error
+    if (currentUrl.includes('/auth/login')) {
+      // Login failed - check for error message and throw descriptive error
+      const errorElement = this.page.locator(this.selectors.errorMessage);
+      const errorVisible = await errorElement.isVisible({ timeout: 2000 });
+      if (errorVisible) {
+        const errorText = await errorElement.textContent();
+        throw new Error(`Login failed with error: ${errorText}`);
+      } else {
+        throw new Error('Login failed - redirected to login page without error message');
+      }
+    }
+    
+    // If we're on some other page, that's unexpected
+    throw new Error(`Unexpected page after login: ${currentUrl}`);
   }
 
   /**
