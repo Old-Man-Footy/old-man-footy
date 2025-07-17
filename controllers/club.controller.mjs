@@ -470,57 +470,56 @@ const deleteClubImageHandler = async (req, res) => {
  * Show club's sponsors management page
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
-const showClubSponsorsHandler = async (req, res) => {
-  const user = req.user;
-
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to manage sponsors.');
-    return res.redirect('/dashboard');
-  }
-
-  // Security check: If a club ID is provided in params, verify user has access to that club
-  const requestedClubId = req.params.clubId || req.params.id;
-  if (requestedClubId && parseInt(requestedClubId) !== user.clubId && !user.isAdmin) {
-    req.flash('error_msg', 'You can only manage sponsors for your own club.');
-    return res.redirect('/clubs/manage');
-  }
-
-  const club = await Club.findByPk(user.clubId, {
-    include: [
-      {
-        model: Sponsor,
-        as: 'sponsors',
-        where: { isActive: true },
-        required: false,
-        through: {
-          attributes: ['displayOrder'],
-          as: 'clubSponsor',
+const showClubSponsorsHandler = async (req, res, next) => {
+  try {
+    const user = req.user;
+    // Security: Only allow managing sponsors for your own club (unless admin)
+    const requestedClubId = req.params.clubId || req.params.id || user.clubId;
+    if (!user.clubId) {
+      req.flash('error_msg', 'You must be associated with a club to manage sponsors.');
+      return res.redirect('/dashboard');
+    }
+    if (parseInt(requestedClubId) !== user.clubId && !user.isAdmin) {
+      req.flash('error_msg', 'You can only manage sponsors for your own club.');
+      return res.redirect('/clubs/manage');
+    }
+    const club = await Club.findByPk(user.clubId, {
+      include: [
+        {
+          model: Sponsor,
+          as: 'sponsors',
+          where: { isActive: true },
+          required: false,
+          through: {
+            attributes: ['displayOrder'],
+            as: 'clubSponsor',
+          },
         },
-      },
-    ],
-  });
-
-  if (!club) {
-    req.flash('error_msg', 'Club not found.');
-    return res.redirect('/dashboard');
+      ],
+    });
+    if (!club) {
+      req.flash('error_msg', 'Club not found.');
+      return res.redirect('/dashboard');
+    }
+    // Sort sponsors by priority
+    const sponsors = club.sponsors
+      ? club.sponsors.sort((a, b) => {
+          const priorityA = a.clubSponsor?.displayOrder || 999;
+          const priorityB = b.clubSponsor?.displayOrder || 999;
+          return priorityA - priorityB;
+        })
+      : [];
+    return res.render('clubs/sponsors', {
+      title: 'Manage Club Sponsors',
+      club,
+      sponsors,
+      additionalCSS: ['/styles/club.styles.css'],
+    });
+  } catch (err) {
+    next(err);
   }
-
-  // Sort sponsors by priority
-  const sponsors = club.sponsors
-    ? club.sponsors.sort((a, b) => {
-        const priorityA = a.clubSponsor?.displayOrder || 999;
-        const priorityB = b.clubSponsor?.displayOrder || 999;
-        return priorityA - priorityB;
-      })
-    : [];
-
-  return res.render('clubs/sponsors', {
-    title: 'Manage Club Sponsors',
-    club,
-    sponsors,
-    additionalCSS: ['/styles/club.styles.css'],
-  });
 };
 
 /**
@@ -1603,3 +1602,5 @@ export const {
   leaveClubHandler: leaveClub,
   searchClubsHandler: searchClubs,
 } = wrapControllers(rawControllers);
+
+rawControllers.showClubSponsorsHandler = showClubSponsorsHandler;

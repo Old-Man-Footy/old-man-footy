@@ -51,22 +51,27 @@ vi.mock('../models/index.mjs', () => {
     delegates: [],
     sponsors: [],
     alternateNames: [],
-    toJSON: vi.fn().mockReturnValue({
-      id: 1,
-      clubName: 'Test Club',
-      state: 'NSW',
-      location: 'Sydney',
-      ...overrides
+    toJSON: vi.fn().mockImplementation(function () {
+      // Return all properties except methods
+      const { toJSON, update, addSponsor, removeSponsor, getCarnivalCount, getSponsors, isUnclaimed, canUserClaim, getProxyCreator, ...rest } = this;
+      return { ...rest, ...overrides };
     }),
     update: vi.fn().mockResolvedValue(true),
     addSponsor: vi.fn().mockResolvedValue(true),
     removeSponsor: vi.fn().mockResolvedValue(true),
     getCarnivalCount: vi.fn().mockResolvedValue(5),
     getSponsors: vi.fn().mockResolvedValue([]),
-    // Add missing methods that controller uses
     isUnclaimed: vi.fn().mockReturnValue(false),
     canUserClaim: vi.fn().mockReturnValue(true),
     getProxyCreator: vi.fn().mockResolvedValue({ firstName: 'Proxy', lastName: 'Creator' }),
+    // Add missing properties for test compatibility
+    website: '',
+    facebookUrl: '',
+    instagramUrl: '',
+    twitterUrl: '',
+    logoUrl: '',
+    establishedYear: 2020,
+    updatedAt: new Date(),
     ...overrides
   });
 
@@ -290,6 +295,16 @@ describe('Club Controller', () => {
       isEmpty: () => true,
       array: () => []
     });
+
+    // Always assign req.user to a fresh clone of mockUser and copy all methods
+    req.user = { ...mockUser };
+    req.user.getFullName = mockUser.getFullName;
+    req.user.update = mockUser.update;
+
+    // Always assign res.render, res.json, res.status to new mocks for each test
+    res.render = vi.fn();
+    res.json = vi.fn();
+    res.status = vi.fn().mockReturnThis();
   });
 
   afterEach(() => {
