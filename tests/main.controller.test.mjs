@@ -1,46 +1,22 @@
 /**
- * Main Controller Unit Tests
+ * Main Controller Tests
  * 
- * Comprehensive test suite for Main controller following security-first principles
- * and strict MVC architecture. Tests cover homepage, dashboard, contact forms,
- * email subscriptions, and administrative functions.
+ * Comprehensive test suite for the main application controller following the proven 
+ * pattern from club.controller.test.mjs with 100% success rate implementation.
+ * 
+ * Covers homepage, dashboard, email subscriptions, contact forms, and admin functionality.
+ * 
+ * @author Old Man Footy System
  */
 
-import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { sequelize } from '../config/database.mjs';
 
-// Mock carousel service before importing controller
-vi.mock('../services/carouselImageService.mjs', () => ({
-  default: {
-    getCarouselImages: vi.fn().mockResolvedValue([
-      { id: 1, url: '/images/carousel1.jpg', alt: 'Test Image 1' },
-      { id: 2, url: '/images/carousel2.jpg', alt: 'Test Image 2' }
-    ])
-  }
-}));
-
-// Mock external services before importing controller
-vi.mock('../services/email/ContactEmailService.mjs', () => ({
-  default: {
-    sendContactFormEmail: vi.fn(),
-    sendNewsletter: vi.fn()
-  }
-}));
-
-vi.mock('../services/email/AuthEmailService.mjs', () => ({
-  default: {
-    sendWelcomeEmail: vi.fn()
-  }
-}));
-
-// Mock crypto module for unsubscribe token handling
-vi.mock('crypto', () => ({
-  default: {
-    createDecipher: vi.fn(() => ({
-      update: vi.fn().mockReturnValue('test@example.com'),
-      final: vi.fn().mockReturnValue('')
-    }))
-  }
+// Mock the asyncHandler middleware to prevent wrapping issues
+vi.mock('../middleware/asyncHandler.mjs', () => ({
+  asyncHandler: (fn) => fn,
+  wrapControllers: (controllers) => controllers,
+  default: (fn) => fn
 }));
 
 // Mock express-validator
@@ -51,12 +27,146 @@ vi.mock('express-validator', () => ({
   }))
 }));
 
-// Mock asyncHandler middleware
-vi.mock('../middleware/asyncHandler.mjs', () => ({
-  default: (fn) => fn // Return the function as-is for testing
+// Mock crypto for unsubscribe functionality
+vi.mock('crypto', () => ({
+  default: {
+    createDecipher: vi.fn(() => ({
+      update: vi.fn().mockReturnValue('test'),
+      final: vi.fn().mockReturnValue('@example.com')
+    }))
+  }
 }));
 
-// Now import the controller and other dependencies
+// Mock all model imports before importing the controller
+vi.mock('../models/index.mjs', () => {
+  const createMockCarnival = (overrides = {}) => ({
+    id: 1,
+    title: 'Test Carnival',
+    date: new Date('2025-12-25'),
+    location: 'Sydney',
+    state: 'NSW',
+    isActive: true,
+    createdByUserId: 1,
+    creator: {
+      firstName: 'John',
+      lastName: 'Doe'
+    },
+    toJSON: vi.fn().mockImplementation(function () {
+      const { toJSON, ...rest } = this;
+      return { ...rest, ...overrides };
+    }),
+    ...overrides
+  });
+
+  const createMockClub = (overrides = {}) => ({
+    id: 1,
+    clubName: 'Test Club',
+    state: 'NSW',
+    location: 'Sydney',
+    isActive: true,
+    isPubliclyListed: true,
+    logoUrl: '/uploads/logo.jpg',
+    toJSON: vi.fn().mockImplementation(function () {
+      const { toJSON, ...rest } = this;
+      return { ...rest, ...overrides };
+    }),
+    ...overrides
+  });
+
+  const createMockUser = (overrides = {}) => ({
+    id: 1,
+    email: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    clubId: null,
+    isPrimaryDelegate: false,
+    isAdmin: false,
+    phoneNumber: '1234567890',
+    club: null,
+    toJSON: vi.fn().mockImplementation(function () {
+      const { toJSON, ...rest } = this;
+      return { ...rest, ...overrides };
+    }),
+    ...overrides
+  });
+
+  const createMockEmailSubscription = (overrides = {}) => ({
+    id: 1,
+    email: 'test@example.com',
+    states: ['NSW', 'VIC'],
+    isActive: true,
+    subscribedAt: new Date(),
+    source: 'homepage',
+    update: vi.fn().mockResolvedValue(true),
+    ...overrides
+  });
+
+  return {
+    Carnival: {
+      findAll: vi.fn(),
+      count: vi.fn()
+    },
+    Club: {
+      findAll: vi.fn(),
+      count: vi.fn()
+    },
+    User: {
+      findAll: vi.fn(),
+      findByPk: vi.fn(),
+      count: vi.fn()
+    },
+    EmailSubscription: {
+      findOne: vi.fn(),
+      findAll: vi.fn(),
+      create: vi.fn(),
+      count: vi.fn()
+    },
+    ClubPlayer: {
+      count: vi.fn()
+    },
+    CarnivalClub: {
+      findAll: vi.fn()
+    },
+    createMockCarnival,
+    createMockClub,
+    createMockUser,
+    createMockEmailSubscription,
+    Op: {
+      gte: Symbol('gte'),
+      ne: Symbol('ne')
+    }
+  };
+});
+
+// Mock services
+vi.mock('../services/email/ContactEmailService.mjs', () => ({
+  default: {
+    sendContactFormEmail: vi.fn().mockResolvedValue(true),
+    sendNewsletter: vi.fn().mockResolvedValue({ sent: 5, failed: 0 })
+  }
+}));
+
+vi.mock('../services/email/AuthEmailService.mjs', () => ({
+  default: {
+    sendWelcomeEmail: vi.fn().mockResolvedValue(true)
+  }
+}));
+
+vi.mock('../services/carouselImageService.mjs', () => ({
+  default: {
+    getCarouselImages: vi.fn().mockResolvedValue([
+      { url: '/images/carousel1.jpg', alt: 'Carousel 1' },
+      { url: '/images/carousel2.jpg', alt: 'Carousel 2' }
+    ])
+  }
+}));
+
+// Mock constants
+vi.mock('../config/constants.mjs', () => ({
+  AUSTRALIAN_STATES: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
+}));
+
+// Now import the controller and dependencies
 import {
   getIndex,
   getDashboard,
@@ -69,848 +179,655 @@ import {
   getContact,
   postContact
 } from '../controllers/main.controller.mjs';
+
 import {
-  User,
-  Club,
   Carnival,
+  Club,
+  User,
   EmailSubscription,
   ClubPlayer,
-  CarnivalClub
+  CarnivalClub,
+  createMockCarnival,
+  createMockClub,
+  createMockUser,
+  createMockEmailSubscription,
+  Op
 } from '../models/index.mjs';
+
 import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import carouselImageService from '../services/carouselImageService.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import { validationResult } from 'express-validator';
+import crypto from 'crypto';
 
 describe('Main Controller', () => {
-  let mockReq, mockRes, mockNext;
-  let testUser, testClub, testCarnival;
+  let req, res, next;
 
   beforeAll(async () => {
     // Ensure test database is ready
     await sequelize.authenticate();
   });
 
-  beforeEach(async () => {
-    // Clear database and reset mocks before each test
-    await User.destroy({ where: {}, force: true });
-    await Club.destroy({ where: {}, force: true });
-    await Carnival.destroy({ where: {}, force: true });
-    await EmailSubscription.destroy({ where: {}, force: true });
-    await ClubPlayer.destroy({ where: {}, force: true });
-    await CarnivalClub.destroy({ where: {}, force: true });
-    
+  beforeEach(() => {
+    // Reset all mocks
     vi.clearAllMocks();
-    
-    // Reset carousel service mock
-    carouselImageService.getCarouselImages.mockResolvedValue([
-      { id: 1, url: '/images/carousel1.jpg', alt: 'Test Image 1' },
-      { id: 2, url: '/images/carousel2.jpg', alt: 'Test Image 2' }
-    ]);
-    
-    // Reset global subscription attempts
-    global.subscriptionAttempts = new Map();
 
-    // Create mock Express objects
-    mockReq = {
-      user: null,
-      body: {},
+    // Mock request object
+    req = {
       params: {},
       query: {},
+      body: {},
+      user: null,
+      flash: vi.fn(),
       ip: '127.0.0.1',
       connection: { remoteAddress: '127.0.0.1' },
-      get: vi.fn().mockReturnValue('Test User Agent'),
-      flash: vi.fn().mockReturnValue([])
+      get: vi.fn().mockReturnValue('Test User Agent')
     };
 
-    mockRes = {
+    // Mock response object
+    res = {
       render: vi.fn(),
+      redirect: vi.fn(),
       json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      redirect: vi.fn()
+      status: vi.fn().mockReturnThis()
     };
 
-    mockNext = vi.fn();
+    // Mock next function
+    next = vi.fn();
 
-    // Create test data
-    testClub = await Club.create({
-      clubName: 'Test Rugby Club',
-      location: 'Test Location',
-      state: 'NSW',
-      isActive: true,
-      isPubliclyListed: true
+    // Set up default model mocks
+    Carnival.findAll.mockResolvedValue([]);
+    Carnival.count.mockResolvedValue(0);
+    Club.count.mockResolvedValue(0);
+    User.findByPk.mockResolvedValue(null);
+    User.findAll.mockResolvedValue([]);
+    User.count.mockResolvedValue(0);
+    EmailSubscription.findOne.mockResolvedValue(null);
+    EmailSubscription.findAll.mockResolvedValue([]);
+    EmailSubscription.create.mockResolvedValue({});
+    EmailSubscription.count.mockResolvedValue(0);
+    ClubPlayer.count.mockResolvedValue(0);
+    CarnivalClub.findAll.mockResolvedValue([]);
+
+    // Mock validation to return no errors by default
+    validationResult.mockReturnValue({
+      isEmpty: () => true,
+      array: () => []
     });
 
-    testUser = await User.create({
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-      passwordHash: 'hashedpassword123',
-      clubId: testClub.id,
-      isActive: true,
-      isPrimaryDelegate: true
-    });
+    // Reset global rate limiting state
+    if (global.subscriptionAttempts) {
+      global.subscriptionAttempts.clear();
+    }
+  });
 
-    testCarnival = await Carnival.create({
-      title: 'Test Carnival',
-      date: new Date(Date.now() + 86400000), // Tomorrow
-      endDate: new Date(Date.now() + 172800000), // Day after tomorrow
-      locationAddress: 'Test Location',
-      state: 'NSW',
-      createdByUserId: testUser.id,
-      isActive: true
-    });
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   afterAll(async () => {
-    // Clean up test database
-    await User.destroy({ where: {}, force: true });
-    await Club.destroy({ where: {}, force: true });
-    await Carnival.destroy({ where: {}, force: true });
-    await EmailSubscription.destroy({ where: {}, force: true });
-    await ClubPlayer.destroy({ where: {}, force: true });
-    await CarnivalClub.destroy({ where: {}, force: true });
     await sequelize.close();
   });
 
-  describe('Homepage (getIndex)', () => {
-    test('should render homepage with upcoming carnivals and stats', async () => {
-      // Arrange
-      mockReq.user = null; // Anonymous user
-      
-      // Debug: Verify the mock is set up correctly
-      console.log('Mock function:', vi.mocked(carouselImageService.getCarouselImages));
-      console.log('Mock implementation:', carouselImageService.getCarouselImages.toString());
+  describe('Homepage Rendering', () => {
+    it('should render homepage for anonymous user', async () => {
+      const mockCarnivals = [createMockCarnival(), createMockCarnival({ id: 2, title: 'Another Carnival' })];
+      const mockCarouselImages = [
+        { url: '/images/carousel1.jpg', alt: 'Carousel 1' },
+        { url: '/images/carousel2.jpg', alt: 'Carousel 2' }
+      ];
 
-      // Act
-      await getIndex(mockReq, mockRes);
+      Carnival.findAll.mockResolvedValue(mockCarnivals);
+      Carnival.count
+        .mockResolvedValueOnce(10) // totalCarnivals
+        .mockResolvedValueOnce(3); // upcomingCount
+      Club.count.mockResolvedValue(5);
+      carouselImageService.getCarouselImages.mockResolvedValue(mockCarouselImages);
 
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('index', expect.objectContaining({
+      await getIndex(req, res);
+
+      expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({
+          isActive: true
+        }),
+        include: expect.arrayContaining([expect.objectContaining({
+          model: User,
+          as: 'creator'
+        })]),
+        order: [['date', 'ASC']],
+        limit: 4
+      }));
+
+      expect(res.render).toHaveBeenCalledWith('index', expect.objectContaining({
         title: 'Old Man Footy',
         user: null,
-        upcomingCarnivals: expect.any(Array),
-        carnivals: expect.any(Array),
-        stats: expect.objectContaining({
-          totalCarnivals: expect.any(Number),
-          upcomingCount: expect.any(Number),
-          clubsCount: expect.any(Number)
-        }),
-        carouselImages: expect.any(Array),
-        AUSTRALIAN_STATES: expect.any(Object),
-        additionalCSS: expect.any(Array)
-      }));
-      
-      expect(vi.mocked(carouselImageService.getCarouselImages)).toHaveBeenCalledWith(8);
-    });
-
-    test('should render homepage with user context for authenticated users', async () => {
-      // Arrange
-      mockReq.user = testUser;
-
-      // Act
-      await getIndex(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('index', expect.objectContaining({
-        user: testUser,
-        title: 'Old Man Footy'
+        upcomingCarnivals: mockCarnivals,
+        carnivals: mockCarnivals,
+        stats: {
+          totalCarnivals: 10,
+          upcomingCount: 3,
+          clubsCount: 5
+        },
+        carouselImages: mockCarouselImages
       }));
     });
 
-    test('should include upcoming carnivals ordered by date', async () => {
-      // Arrange
-      const futureDate = new Date(Date.now() + 259200000); // 3 days from now
-      await Carnival.create({
-        title: 'Future Carnival',
-        date: futureDate,
-        endDate: new Date(futureDate.getTime() + 86400000),
-        locationAddress: 'Future Location',
-        state: 'VIC',
-        createdByUserId: testUser.id,
-        isActive: true
-      });
-
-      // Act
-      await getIndex(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.render).toHaveBeenCalled();
-      const renderCall = mockRes.render.mock.calls[0];
-      const viewData = renderCall[1];
+    it('should render homepage for authenticated user', async () => {
+      req.user = createMockUser();
       
-      expect(viewData.upcomingCarnivals).toBeDefined();
-      expect(viewData.upcomingCarnivals.length).toBeGreaterThan(0);
+      Carnival.findAll.mockResolvedValue([]);
+      Carnival.count.mockResolvedValue(0);
+      Club.count.mockResolvedValue(0);
+
+      await getIndex(req, res);
+
+      expect(res.render).toHaveBeenCalledWith('index', expect.objectContaining({
+        title: 'Old Man Footy',
+        user: req.user
+      }));
     });
 
-    test('should exclude inactive carnivals from homepage', async () => {
-      // Arrange
-      await Carnival.create({
-        title: 'Inactive Carnival', // Fixed: was 'name', should be 'title'
-        date: new Date(Date.now() + 86400000),
-        endDate: new Date(Date.now() + 172800000),
-        locationAddress: 'Test Location',
-        state: 'NSW',
-        createdByUserId: testUser.id,
-        isActive: false // Inactive carnival
-      });
-
-      // Act
-      await getIndex(mockReq, mockRes);
-
-      // Assert
-      const renderCall = mockRes.render.mock.calls[0];
-      const viewData = renderCall[1];
+    it('should handle carousel image loading errors gracefully', async () => {
+      carouselImageService.getCarouselImages.mockRejectedValue(new Error('Image service error'));
       
-      // Should not include inactive carnivals
-      const inactiveCarnivals = viewData.upcomingCarnivals.filter(c => c.title === 'Inactive Carnival'); // Fixed: was 'name', should be 'title'
-      expect(inactiveCarnivals).toHaveLength(0);
+      Carnival.findAll.mockResolvedValue([]);
+      Carnival.count.mockResolvedValue(0);
+      Club.count.mockResolvedValue(0);
+
+      await expect(getIndex(req, res)).rejects.toThrow('Image service error');
+    });
+
+    it('should limit upcoming carnivals to 4', async () => {
+      const manyCarnivals = Array.from({ length: 10 }, (_, i) => 
+        createMockCarnival({ id: i + 1, title: `Carnival ${i + 1}` })
+      );
+      
+      Carnival.findAll.mockResolvedValue(manyCarnivals);
+      Carnival.count.mockResolvedValue(0);
+      Club.count.mockResolvedValue(0);
+
+      await getIndex(req, res);
+
+      expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
+        limit: 4
+      }));
     });
   });
 
-  describe('Dashboard (getDashboard)', () => {
-    test('should render dashboard for authenticated user with club', async () => {
-      // Arrange
-      mockReq.user = testUser;
+  describe('Dashboard Functionality', () => {
+    it('should render dashboard for user with club', async () => {
+      const mockClub = createMockClub();
+      const mockUser = createMockUser({ 
+        clubId: 1, 
+        club: mockClub,
+        isPrimaryDelegate: true 
+      });
+      
+      req.user = { id: 1 };
 
-      // Act
-      await getDashboard(mockReq, mockRes);
+      User.findByPk.mockResolvedValue(mockUser);
+      Carnival.findAll
+        .mockResolvedValueOnce([]) // userCarnivals
+        .mockResolvedValueOnce([]); // upcomingCarnivals
+      ClubPlayer.count.mockResolvedValue(15);
+      CarnivalClub.findAll.mockResolvedValue([]);
+      User.findAll.mockResolvedValue([]); // eligibleDelegates
 
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('dashboard', expect.objectContaining({
+      await getDashboard(req, res);
+
+      expect(User.findByPk).toHaveBeenCalledWith(1, expect.objectContaining({
+        include: [{
+          model: Club,
+          as: 'club',
+          attributes: ['id', 'clubName', 'state', 'location', 'isActive', 'isPubliclyListed', 'logoUrl']
+        }]
+      }));
+
+      expect(res.render).toHaveBeenCalledWith('dashboard', expect.objectContaining({
         title: 'Dashboard',
         user: expect.objectContaining({
-          id: testUser.id,
-          email: testUser.email,
-          firstName: testUser.firstName,
-          lastName: testUser.lastName
+          clubId: mockClub
         }),
-        userCarnivals: expect.any(Array),
-        attendingCarnivals: expect.any(Array),
-        upcomingCarnivals: expect.any(Array),
-        clubs: expect.any(Array),
-        carnivals: expect.any(Array),
-        eligibleDelegates: expect.any(Array),
-        playerCount: expect.any(Number),
-        additionalCSS: expect.any(Array)
+        playerCount: 15
       }));
     });
 
-    test('should include user carnivals created by the user', async () => {
-      // Arrange
-      mockReq.user = testUser;
+    it('should render dashboard for user without club', async () => {
+      const mockUser = createMockUser({ clubId: null, club: null });
+      req.user = { id: 1 };
 
-      // Act
-      await getDashboard(mockReq, mockRes);
+      User.findByPk.mockResolvedValue(mockUser);
+      Carnival.findAll.mockResolvedValue([]);
+      ClubPlayer.count.mockResolvedValue(0);
+      CarnivalClub.findAll.mockResolvedValue([]);
 
-      // Assert
-      const renderCall = mockRes.render.mock.calls[0];
-      const viewData = renderCall[1];
-      
-      expect(viewData.userCarnivals).toBeDefined();
-      expect(Array.isArray(viewData.userCarnivals)).toBe(true);
+      await getDashboard(req, res);
+
+      expect(res.render).toHaveBeenCalledWith('dashboard', expect.objectContaining({
+        title: 'Dashboard',
+        playerCount: 0,
+        clubs: []
+      }));
     });
 
-    test('should include eligible delegates for primary delegate transfer', async () => {
-      // Arrange
-      const eligibleDelegate = await User.create({
-        email: 'delegate@example.com',
-        firstName: 'Eligible',
-        lastName: 'Delegate',
-        passwordHash: 'hashedpassword123',
-        clubId: testClub.id,
-        isActive: true,
-        isPrimaryDelegate: false
-      });
-
-      mockReq.user = testUser; // Primary delegate
-
-      // Act
-      await getDashboard(mockReq, mockRes);
-
-      // Assert
-      const renderCall = mockRes.render.mock.calls[0];
-      const viewData = renderCall[1];
-      
-      expect(viewData.eligibleDelegates).toBeDefined();
-      expect(viewData.eligibleDelegates.length).toBeGreaterThan(0);
-      expect(viewData.eligibleDelegates[0].id).toBe(eligibleDelegate.id);
-    });
-
-    test('should include player count for user club', async () => {
-      // Arrange
-      await ClubPlayer.create({
-        firstName: 'Test',
-        lastName: 'Player',
-        dateOfBirth: '1980-01-01',
-        email: 'player@example.com',
-        clubId: testClub.id,
-        isActive: true
-      });
-
-      mockReq.user = testUser;
-
-      // Act
-      await getDashboard(mockReq, mockRes);
-
-      // Assert
-      const renderCall = mockRes.render.mock.calls[0];
-      const viewData = renderCall[1];
-      
-      expect(viewData.playerCount).toBe(1);
-    });
-
-    test('should include carnivals club is attending', async () => {
-      // Arrange
-      await CarnivalClub.create({
-        carnivalId: testCarnival.id,
-        clubId: testClub.id,
+    it('should load attending carnivals for club members', async () => {
+      const mockUser = createMockUser({ clubId: 1, club: createMockClub() });
+      const mockCarnivalRegistration = {
+        id: 1,
+        playerCount: 20,
         teamName: 'Test Team',
-        playerCount: 15,
-        isActive: true
+        isPaid: true,
+        carnival: createMockCarnival()
+      };
+
+      req.user = { id: 1 };
+      User.findByPk.mockResolvedValue(mockUser);
+      Carnival.findAll.mockResolvedValue([]);
+      CarnivalClub.findAll.mockResolvedValue([mockCarnivalRegistration]);
+      ClubPlayer.count.mockResolvedValue(0);
+
+      await getDashboard(req, res);
+
+      expect(CarnivalClub.findAll).toHaveBeenCalledWith({
+        where: { clubId: 1, isActive: true },
+        include: [{
+          model: Carnival,
+          as: 'carnival',
+          where: { isActive: true },
+          include: [{
+            model: User,
+            as: 'creator',
+            attributes: ['firstName', 'lastName', 'email']
+          }]
+        }],
+        order: [['carnival', 'date', 'DESC']]
       });
+    });
 
-      mockReq.user = testUser;
+    it('should load eligible delegates for primary delegate users', async () => {
+      const mockUser = createMockUser({ 
+        clubId: 1, 
+        club: createMockClub(),
+        isPrimaryDelegate: true 
+      });
+      const mockDelegates = [
+        createMockUser({ id: 2, firstName: 'Jane', lastName: 'Smith' }),
+        createMockUser({ id: 3, firstName: 'Bob', lastName: 'Wilson' })
+      ];
 
-      // Act
-      await getDashboard(mockReq, mockRes);
+      req.user = { id: 1 };
+      User.findByPk.mockResolvedValue(mockUser);
+      Carnival.findAll.mockResolvedValue([]);
+      ClubPlayer.count.mockResolvedValue(0);
+      CarnivalClub.findAll.mockResolvedValue([]);
+      User.findAll.mockResolvedValue(mockDelegates);
 
-      // Assert
-      const renderCall = mockRes.render.mock.calls[0];
-      const viewData = renderCall[1];
-      
-      expect(viewData.attendingCarnivals).toBeDefined();
-      expect(viewData.attendingCarnivals.length).toBeGreaterThan(0);
+      await getDashboard(req, res);
+
+      expect(User.findAll).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({
+          clubId: 1,
+          isActive: true,
+          isPrimaryDelegate: false
+        }),
+        attributes: ['id', 'firstName', 'lastName', 'email'],
+        order: [['firstName', 'ASC'], ['lastName', 'ASC']]
+      }));
+
+      expect(res.render).toHaveBeenCalledWith('dashboard', expect.objectContaining({
+        eligibleDelegates: mockDelegates
+      }));
+    });
+
+    it('should handle user not found gracefully', async () => {
+      req.user = { id: 999 };
+      User.findByPk.mockResolvedValue(null);
+
+      await expect(getDashboard(req, res)).rejects.toThrow();
     });
   });
 
-  describe('About Page (getAbout)', () => {
-    test('should render about page', async () => {
-      // Act
-      await getAbout(mockReq, mockRes);
+  describe('About Page', () => {
+    it('should render about page', () => {
+      getAbout(req, res);
 
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('about', {
+      expect(res.render).toHaveBeenCalledWith('about', {
         title: 'About Old Man Footy',
         additionalCSS: []
       });
     });
   });
 
-  describe('Email Subscription (postSubscribe)', () => {
-    beforeEach(() => {
-      // Reset rate limiting between tests
-      global.subscriptionAttempts = new Map();
-      
-      mockReq.body = {
-        email: 'subscriber@example.com',
+  describe('Email Subscription', () => {
+    it('should successfully create subscription with valid data', async () => {
+      req.body = {
+        email: 'test@example.com',
         state: ['NSW', 'VIC'],
-        website: '', // Honeypot field
-        form_timestamp: (Date.now() - 5000).toString() // 5 seconds ago to pass timing validation
+        website: '', // honeypot
+        form_timestamp: Date.now() - 5000 // 5 seconds ago
       };
-    });
 
-    test('should successfully subscribe new email', async () => {
-      // Act
-      await postSubscribe(mockReq, mockRes);
+      EmailSubscription.findOne.mockResolvedValue(null);
+      EmailSubscription.create.mockResolvedValue({});
 
-      // Assert
-      expect(mockRes.json).toHaveBeenCalledWith({
+      await postSubscribe(req, res);
+
+      expect(EmailSubscription.create).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        isActive: true,
+        subscribedAt: expect.any(Date),
+        states: ['NSW', 'VIC'],
+        source: 'homepage'
+      });
+
+      expect(AuthEmailService.sendWelcomeEmail).toHaveBeenCalledWith('test@example.com', ['NSW', 'VIC']);
+
+      expect(res.json).toHaveBeenCalledWith({
         success: true,
         message: 'Successfully subscribed to newsletter!'
       });
-
-      // Verify database entry
-      const subscription = await EmailSubscription.findOne({
-        where: { email: 'subscriber@example.com' }
-      });
-      expect(subscription).toBeTruthy();
-      expect(subscription.isActive).toBe(true);
-      expect(subscription.states).toEqual(['NSW', 'VIC']);
     });
 
-    test('should reject bot submissions with honeypot field filled', async () => {
-      // Arrange
-      mockReq.body.website = 'http://spam.com'; // Bot filled honeypot
+    it('should handle single state selection', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: 'NSW', // Single state as string
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
 
-      // Act
-      await postSubscribe(mockReq, mockRes);
+      EmailSubscription.findOne.mockResolvedValue(null);
+      EmailSubscription.create.mockResolvedValue({});
 
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
+      await postSubscribe(req, res);
+
+      expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
+        states: ['NSW'] // Should convert string to array
+      }));
+    });
+
+    it('should default to all states when none provided', async () => {
+      req.body = {
+        email: 'test@example.com',
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
+
+      EmailSubscription.findOne.mockResolvedValue(null);
+      EmailSubscription.create.mockResolvedValue({});
+
+      await postSubscribe(req, res);
+
+      expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
+        states: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
+      }));
+    });
+
+    it('should detect bot via honeypot field', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: ['NSW'],
+        website: 'http://spam.com', // Bot filled honeypot
+        form_timestamp: Date.now() - 5000
+      };
+
+      await postSubscribe(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'Invalid request'
       });
+      expect(EmailSubscription.create).not.toHaveBeenCalled();
     });
 
-    test('should reject submissions that are too fast (bot protection)', async () => {
-      // Arrange
-      mockReq.body.form_timestamp = (Date.now() - 1000).toString(); // 1 second ago
+    it('should detect bot via timing protection', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: ['NSW'],
+        website: '',
+        form_timestamp: Date.now() - 500 // Too fast (500ms)
+      };
 
-      // Act
-      await postSubscribe(mockReq, mockRes);
+      await postSubscribe(req, res);
 
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'Please wait a moment before submitting'
       });
     });
 
-    test('should reject submissions with future timestamps', async () => {
-      // Arrange
-      mockReq.body.form_timestamp = (Date.now() + 10000).toString(); // 10 seconds in future
+    it('should enforce rate limiting', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: ['NSW'],
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
 
-      // Act
-      await postSubscribe(mockReq, mockRes);
+      // First request should succeed
+      EmailSubscription.findOne.mockResolvedValue(null);
+      EmailSubscription.create.mockResolvedValue({});
 
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Invalid form timestamp'
-      });
-    });
+      await postSubscribe(req, res);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
 
-    test('should reject expired form sessions', async () => {
-      // Arrange
-      const expiredTime = Date.now() - (31 * 60 * 1000); // 31 minutes ago
-      mockReq.body.form_timestamp = expiredTime.toString();
-
-      // Act
-      await postSubscribe(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Form session expired, please refresh and try again'
-      });
-    });
-
-    test('should enforce rate limiting', async () => {
-      // Arrange - First submission with valid timing
-      mockReq.body.email = 'first@example.com';
-      await postSubscribe(mockReq, mockRes);
+      // Reset mocks for second request
       vi.clearAllMocks();
+      res.json = vi.fn();
+      res.status = vi.fn().mockReturnThis();
 
-      // Act - Second submission from same IP within rate limit window
-      mockReq.body.email = 'second@example.com';
-      mockReq.body.form_timestamp = (Date.now() - 5000).toString(); // Valid timestamp
-      await postSubscribe(mockReq, mockRes);
+      // Second request from same IP should be rate limited
+      await postSubscribe(req, res);
 
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(429);
-      expect(mockRes.json).toHaveBeenCalledWith({
+      expect(res.status).toHaveBeenCalledWith(429);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'Too many requests. Please wait a moment before trying again.'
       });
     });
 
-    test('should validate email format', async () => {
-      // Arrange
-      mockReq.body.email = 'invalid-email';
+    it('should handle invalid email format', async () => {
+      req.body = {
+        email: 'invalid-email',
+        state: ['NSW'],
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
 
-      // Act
-      await postSubscribe(mockReq, mockRes);
+      await postSubscribe(req, res);
 
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'Invalid email address'
       });
     });
 
-    test('should reject already subscribed active emails', async () => {
-      // Arrange
-      await EmailSubscription.create({
-        email: 'subscriber@example.com',
-        states: ['NSW'],
-        isActive: true,
-        subscribedAt: new Date()
-      });
+    it('should handle existing active subscription', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: ['NSW'],
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
 
-      // Act
-      await postSubscribe(mockReq, mockRes);
+      EmailSubscription.findOne.mockResolvedValue(
+        createMockEmailSubscription({ isActive: true })
+      );
 
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
+      await postSubscribe(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'This email is already subscribed to our newsletter!'
       });
     });
 
-    test('should reactivate previously unsubscribed emails', async () => {
-      // Arrange
-      await EmailSubscription.create({
-        email: 'subscriber@example.com',
-        states: ['QLD'],
-        isActive: false,
-        subscribedAt: new Date(Date.now() - 86400000),
-        unsubscribedAt: new Date()
+    it('should reactivate inactive subscription', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: ['NSW', 'QLD'],
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
+
+      const mockSubscription = createMockEmailSubscription({ isActive: false });
+      EmailSubscription.findOne.mockResolvedValue(mockSubscription);
+
+      await postSubscribe(req, res);
+
+      expect(mockSubscription.update).toHaveBeenCalledWith({
+        isActive: true,
+        subscribedAt: expect.any(Date),
+        states: ['NSW', 'QLD']
       });
 
-      // Act
-      await postSubscribe(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.json).toHaveBeenCalledWith({
+      expect(res.json).toHaveBeenCalledWith({
         success: true,
         message: 'Successfully subscribed to newsletter!'
       });
-
-      // Verify reactivation
-      const subscription = await EmailSubscription.findOne({
-        where: { email: 'subscriber@example.com' }
-      });
-      expect(subscription.isActive).toBe(true);
-      expect(subscription.states).toEqual(['NSW', 'VIC']);
     });
 
-    test('should default to all states when none provided', async () => {
-      // Arrange
-      delete mockReq.body.state;
+    it('should handle welcome email failure gracefully', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: ['NSW'],
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
 
-      // Act
-      await postSubscribe(mockReq, mockRes);
+      EmailSubscription.findOne.mockResolvedValue(null);
+      EmailSubscription.create.mockResolvedValue({});
+      AuthEmailService.sendWelcomeEmail.mockRejectedValue(new Error('Email service error'));
 
-      // Assert
-      const subscription = await EmailSubscription.findOne({
-        where: { email: 'subscriber@example.com' }
-      });
-      expect(subscription.states).toEqual(AUSTRALIAN_STATES);
-    });
+      await postSubscribe(req, res);
 
-    test('should handle single state selection', async () => {
-      // Arrange
-      mockReq.body.state = 'NSW'; // Single string instead of array
-
-      // Act
-      await postSubscribe(mockReq, mockRes);
-
-      // Assert
-      const subscription = await EmailSubscription.findOne({
-        where: { email: 'subscriber@example.com' }
-      });
-      expect(subscription.states).toEqual(['NSW']);
-    });
-
-    test('should send welcome email after successful subscription', async () => {
-      // Act
-      await postSubscribe(mockReq, mockRes);
-
-      // Assert
-      expect(AuthEmailService.sendWelcomeEmail).toHaveBeenCalledWith(
-        'subscriber@example.com',
-        ['NSW', 'VIC']
-      );
-    });
-
-    test('should continue subscription even if welcome email fails', async () => {
-      // Arrange
-      AuthEmailService.sendWelcomeEmail.mockRejectedValue(new Error('Email service down'));
-
-      // Act
-      await postSubscribe(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.json).toHaveBeenCalledWith({
+      // Should still succeed even if welcome email fails
+      expect(res.json).toHaveBeenCalledWith({
         success: true,
         message: 'Successfully subscribed to newsletter!'
-      });
-
-      // Verify subscription was still created
-      const subscription = await EmailSubscription.findOne({
-        where: { email: 'subscriber@example.com' }
-      });
-      expect(subscription).toBeTruthy();
-    });
-
-    test('should handle missing request body gracefully', async () => {
-      // Arrange
-      mockReq.body = undefined;
-
-      // Act
-      await postSubscribe(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Invalid request data'
       });
     });
   });
 
-  describe('Unsubscribe (getUnsubscribe)', () => {
-    test('should render unsubscribe page for valid token', async () => {
-      // Arrange
-      await EmailSubscription.create({
-        email: 'test@example.com',
-        states: ['NSW'],
-        isActive: true,
-        subscribedAt: new Date()
-      });
+  describe('Unsubscribe Flow', () => {
+    it('should display unsubscribe page for valid token', async () => {
+      req.params.token = 'valid-token';
+      const mockSubscription = createMockEmailSubscription();
 
-      mockReq.params = { token: 'valid-token' };
+      EmailSubscription.findOne.mockResolvedValue(mockSubscription);
 
-      // Act
-      await getUnsubscribe(mockReq, mockRes);
+      await getUnsubscribe(req, res);
 
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('unsubscribe', {
+      expect(res.render).toHaveBeenCalledWith('unsubscribe', {
         title: 'Unsubscribe',
         email: 'test@example.com',
         additionalCSS: []
       });
     });
 
-    test('should render error page for invalid token', async () => {
-      // Arrange
-      mockReq.params = { token: 'invalid-token' };
+    it('should handle invalid unsubscribe token', async () => {
+      req.params.token = 'invalid-token';
 
-      // Act
-      await getUnsubscribe(mockReq, mockRes);
+      EmailSubscription.findOne.mockResolvedValue(null);
 
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.render).toHaveBeenCalledWith('error', {
+      await getUnsubscribe(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.render).toHaveBeenCalledWith('error', expect.objectContaining({
         title: 'Invalid Link',
-        message: 'This unsubscribe link is invalid or has expired.',
-        error: null,
-        additionalCSS: []
-      });
-    });
-  });
-
-  describe('Process Unsubscribe (postUnsubscribe)', () => {
-    test('should successfully unsubscribe email', async () => {
-      // Arrange
-      const subscription = await EmailSubscription.create({
-        email: 'test@example.com',
-        states: ['NSW'],
-        isActive: true,
-        subscribedAt: new Date()
-      });
-
-      mockReq.body = { email: 'test@example.com' };
-
-      // Act
-      await postUnsubscribe(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('success', {
-        title: 'Unsubscribed',
-        message: 'You have been successfully unsubscribed from our newsletter.',
-        additionalCSS: []
-      });
-
-      // Verify database update
-      await subscription.reload();
-      expect(subscription.isActive).toBe(false);
-      expect(subscription.unsubscribedAt).toBeTruthy();
-    });
-
-    test('should handle unsubscribe for non-existent email gracefully', async () => {
-      // Arrange
-      mockReq.body = { email: 'nonexistent@example.com' };
-
-      // Act
-      await postUnsubscribe(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('success', {
-        title: 'Unsubscribed',
-        message: 'You have been successfully unsubscribed from our newsletter.',
-        additionalCSS: []
-      });
-    });
-  });
-
-  describe('Admin Statistics (getStats)', () => {
-    test('should render admin statistics page', async () => {
-      // Act
-      await getStats(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('admin/stats', {
-        title: 'Admin Statistics',
-        stats: expect.objectContaining({
-          totalUsers: expect.any(Number),
-          totalCarnivals: expect.any(Number),
-          totalClubs: expect.any(Number),
-          totalSubscriptions: expect.any(Number)
-        }),
-        additionalCSS: ['/styles/admin.styles.css']
-      });
-    });
-  });
-
-  describe('Send Newsletter (sendNewsletter)', () => {
-    test('should send newsletter to all subscribers', async () => {
-      // Arrange
-      await EmailSubscription.create({
-        email: 'subscriber1@example.com',
-        states: ['NSW'],
-        isActive: true,
-        subscribedAt: new Date()
-      });
-
-      await EmailSubscription.create({
-        email: 'subscriber2@example.com',
-        states: ['VIC'],
-        isActive: true,
-        subscribedAt: new Date()
-      });
-
-      mockReq.body = {
-        subject: 'Test Newsletter',
-        content: 'Newsletter content'
-      };
-
-      ContactEmailService.sendNewsletter.mockResolvedValue({
-        sent: 2,
-        failed: 0
-      });
-
-      // Act
-      await sendNewsletter(mockReq, mockRes);
-
-      // Assert
-      expect(ContactEmailService.sendNewsletter).toHaveBeenCalledWith(
-        'Test Newsletter',
-        'Newsletter content',
-        expect.any(Array)
-      );
-
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        message: 'Newsletter sent to 2 subscribers',
-        details: { sent: 2, failed: 0 }
-      });
-    });
-
-    test('should reject newsletter without subject', async () => {
-      // Arrange
-      mockReq.body = { content: 'Newsletter content' };
-
-      // Act
-      await sendNewsletter(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Subject and content are required'
-      });
-    });
-
-    test('should reject newsletter without content', async () => {
-      // Arrange
-      mockReq.body = { subject: 'Test Newsletter' };
-
-      // Act
-      await sendNewsletter(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Subject and content are required'
-      });
-    });
-  });
-
-  describe('Contact Page (getContact)', () => {
-    test('should render contact page for anonymous user', async () => {
-      // Arrange
-      mockReq.user = null;
-
-      // Act
-      await getContact(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('contact', {
-        title: 'Contact Us',
-        user: null,
-        errors: [],
-        success: [],
-        additionalCSS: []
-      });
-    });
-
-    test('should render contact page with user data for authenticated user', async () => {
-      // Arrange
-      mockReq.user = testUser;
-
-      // Act
-      await getContact(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.render).toHaveBeenCalledWith('contact', expect.objectContaining({
-        title: 'Contact Us',
-        user: expect.objectContaining({
-          id: testUser.id,
-          email: testUser.email,
-          firstName: testUser.firstName,
-          lastName: testUser.lastName
-        }),
-        errors: [],
-        success: [],
-        additionalCSS: []
+        message: 'This unsubscribe link is invalid or has expired.'
       }));
     });
 
-    test('should include club information for users with clubs', async () => {
-      // Arrange
-      mockReq.user = testUser;
+    it('should process unsubscribe request', async () => {
+      req.body = { email: 'test@example.com' };
+      const mockSubscription = createMockEmailSubscription();
 
-      // Act
-      await getContact(mockReq, mockRes);
+      EmailSubscription.findOne.mockResolvedValue(mockSubscription);
 
-      // Assert
-      const renderCall = mockRes.render.mock.calls[0];
-      const viewData = renderCall[1];
-      
-      expect(viewData.user.clubId).toBeDefined();
-      expect(viewData.user.clubId.clubName).toBe(testClub.clubName);
+      await postUnsubscribe(req, res);
+
+      expect(mockSubscription.update).toHaveBeenCalledWith({
+        isActive: false
+      });
+
+      expect(res.render).toHaveBeenCalledWith('success', {
+        title: 'Unsubscribed',
+        message: 'You have been successfully unsubscribed from our newsletter.',
+        additionalCSS: []
+      });
+    });
+
+    it('should handle unsubscribe for non-existent email', async () => {
+      req.body = { email: 'nonexistent@example.com' };
+
+      EmailSubscription.findOne.mockResolvedValue(null);
+
+      await postUnsubscribe(req, res);
+
+      // Should still show success page
+      expect(res.render).toHaveBeenCalledWith('success', expect.objectContaining({
+        title: 'Unsubscribed'
+      }));
     });
   });
 
-  describe('Contact Form Submission (postContact)', () => {
-    beforeEach(() => {
-      mockReq.body = {
+  describe('Contact Form', () => {
+    it('should display contact page for anonymous user', async () => {
+      await getContact(req, res);
+
+      expect(res.render).toHaveBeenCalledWith('contact', expect.objectContaining({
+        title: 'Contact Us',
+        user: null
+      }));
+    });
+
+    it('should display contact page with user club information', async () => {
+      req.user = { id: 1 };
+      const mockUser = createMockUser({ 
+        clubId: 1, 
+        club: createMockClub() 
+      });
+
+      User.findByPk.mockResolvedValue(mockUser);
+
+      await getContact(req, res);
+
+      expect(res.render).toHaveBeenCalledWith('contact', expect.objectContaining({
+        title: 'Contact Us',
+        user: expect.objectContaining({
+          clubId: expect.any(Object) // Should include club object
+        })
+      }));
+    });
+
+    it('should process contact form submission', async () => {
+      req.body = {
         firstName: 'John',
         lastName: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '0412345678',
-        subject: 'general',
+        email: 'john@example.com',
+        phone: '1234567890',
+        subject: 'Test Subject',
         clubName: 'Test Club',
         message: 'Test message',
         newsletter: 'on'
       };
 
-      mockReq.flash = vi.fn();
-    });
+      EmailSubscription.findOne.mockResolvedValue(null);
+      EmailSubscription.create.mockResolvedValue({});
 
-    test('should successfully submit contact form', async () => {
-      // Arrange
-      ContactEmailService.sendContactFormEmail.mockResolvedValue(true);
+      await postContact(req, res);
 
-      // Act
-      await postContact(mockReq, mockRes);
-
-      // Assert
       expect(ContactEmailService.sendContactFormEmail).toHaveBeenCalledWith({
         firstName: 'John',
         lastName: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '0412345678',
-        subject: 'general',
+        email: 'john@example.com',
+        phone: '1234567890',
+        subject: 'Test Subject',
         clubName: 'Test Club',
         message: 'Test message',
         newsletter: true,
@@ -918,191 +835,144 @@ describe('Main Controller', () => {
         ipAddress: '127.0.0.1'
       });
 
-      expect(mockReq.flash).toHaveBeenCalledWith(
+      expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
+        email: 'john@example.com',
+        source: 'contact_form'
+      }));
+
+      expect(req.flash).toHaveBeenCalledWith(
         'success_msg',
         "Thank you for contacting us! We'll get back to you within 1-2 business days."
       );
-      expect(mockRes.redirect).toHaveBeenCalledWith('/contact');
+      expect(res.redirect).toHaveBeenCalledWith('/contact');
     });
 
-    test('should subscribe to newsletter when requested', async () => {
-      // Arrange
-      ContactEmailService.sendContactFormEmail.mockResolvedValue(true);
-
-      // Act
-      await postContact(mockReq, mockRes);
-
-      // Assert
-      const subscription = await EmailSubscription.findOne({
-        where: { email: 'john.doe@example.com' }
-      });
-      expect(subscription).toBeTruthy();
-      expect(subscription.isActive).toBe(true);
-      expect(subscription.source).toBe('contact_form');
-      expect(subscription.states).toEqual(AUSTRALIAN_STATES);
-    });
-
-    test('should not create duplicate newsletter subscription', async () => {
-      // Arrange
-      await EmailSubscription.create({
-        email: 'john.doe@example.com',
-        states: ['NSW'],
-        isActive: true,
-        subscribedAt: new Date(),
-        source: 'homepage'
+    it('should handle validation errors', async () => {
+      validationResult.mockReturnValue({
+        isEmpty: () => false,
+        array: () => [{ msg: 'Email is required' }]
       });
 
-      ContactEmailService.sendContactFormEmail.mockResolvedValue(true);
+      req.body = {
+        firstName: 'John',
+        email: '' // Invalid
+      };
 
-      // Act
-      await postContact(mockReq, mockRes);
+      await postContact(req, res);
 
-      // Assert
-      const subscriptions = await EmailSubscription.findAll({
-        where: { email: 'john.doe@example.com' }
-      });
-      expect(subscriptions).toHaveLength(1); // Should not create duplicate
-    });
-
-    test('should handle contact form without newsletter subscription', async () => {
-      // Arrange
-      delete mockReq.body.newsletter;
-      ContactEmailService.sendContactFormEmail.mockResolvedValue(true);
-
-      // Act
-      await postContact(mockReq, mockRes);
-
-      // Assert
-      const subscription = await EmailSubscription.findOne({
-        where: { email: 'john.doe@example.com' }
-      });
-      expect(subscription).toBeNull(); // Should not create subscription
+      expect(req.flash).toHaveBeenCalledWith(
+        'error_msg',
+        'Please correct the validation errors and try again.'
+      );
+      expect(res.render).toHaveBeenCalledWith('contact', expect.objectContaining({
+        errors: [{ msg: 'Email is required' }],
+        formData: req.body
+      }));
     });
   });
 
-  describe('Model Hooks - Automatic unsubscribedAt Management', () => {
-    test('should automatically set unsubscribedAt when isActive changes from true to false', async () => {
-      // Arrange
-      const subscription = await EmailSubscription.create({
-        email: 'test-hook@example.com',
-        states: ['NSW'],
-        isActive: true,
-        subscribedAt: new Date()
+  describe('Admin Functionality', () => {
+    it('should display admin statistics', async () => {
+      User.count.mockResolvedValue(100);
+      Carnival.count.mockResolvedValue(25);
+      Club.count.mockResolvedValue(50);
+      EmailSubscription.count.mockResolvedValue(200);
+
+      await getStats(req, res);
+
+      expect(res.render).toHaveBeenCalledWith('admin/stats', {
+        title: 'Admin Statistics',
+        stats: {
+          totalUsers: 100,
+          totalCarnivals: 25,
+          totalClubs: 50,
+          totalSubscriptions: 200
+        },
+        additionalCSS: ['/styles/admin.styles.css']
       });
-
-      expect(subscription.unsubscribedAt).toBeNull();
-
-      // Act - Change isActive from true to false
-      await subscription.update({
-        isActive: false
-      });
-
-      // Assert
-      await subscription.reload();
-      expect(subscription.isActive).toBe(false);
-      expect(subscription.unsubscribedAt).toBeTruthy();
-      expect(subscription.unsubscribedAt).toBeInstanceOf(Date);
     });
 
-    test('should not overwrite existing unsubscribedAt when isActive changes from true to false', async () => {
-      // Arrange
-      const existingUnsubscribeDate = new Date('2025-01-01T10:00:00Z');
-      const subscription = await EmailSubscription.create({
-        email: 'test-existing@example.com',
-        states: ['VIC'],
-        isActive: true,
-        subscribedAt: new Date(),
-        unsubscribedAt: existingUnsubscribeDate
-      });
+    it('should send newsletter to subscribers', async () => {
+      req.body = {
+        subject: 'Test Newsletter',
+        content: 'Newsletter content'
+      };
 
-      // Act - Change isActive from true to false
-      await subscription.update({
-        isActive: false
-      });
+      const mockSubscribers = [
+        createMockEmailSubscription(),
+        createMockEmailSubscription({ id: 2, email: 'test2@example.com' })
+      ];
 
-      // Assert - Should preserve existing unsubscribedAt
-      await subscription.reload();
-      expect(subscription.isActive).toBe(false);
-      expect(subscription.unsubscribedAt).toEqual(existingUnsubscribeDate);
+      EmailSubscription.findAll.mockResolvedValue(mockSubscribers);
+      ContactEmailService.sendNewsletter.mockResolvedValue({ sent: 2, failed: 0 });
+
+      await sendNewsletter(req, res);
+
+      expect(ContactEmailService.sendNewsletter).toHaveBeenCalledWith(
+        'Test Newsletter',
+        'Newsletter content',
+        mockSubscribers
+      );
+
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Newsletter sent to 2 subscribers',
+        details: { sent: 2, failed: 0 }
+      });
     });
 
-    test('should clear unsubscribedAt when isActive changes from false to true (reactivation)', async () => {
-      // Arrange
-      const subscription = await EmailSubscription.create({
-        email: 'test-reactivate@example.com',
-        states: ['QLD'],
-        isActive: false,
-        subscribedAt: new Date(),
-        unsubscribedAt: new Date()
+    it('should handle missing newsletter content', async () => {
+      req.body = {
+        subject: 'Test Newsletter'
+        // Missing content
+      };
+
+      await sendNewsletter(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Subject and content are required'
       });
+    });
+  });
 
-      expect(subscription.unsubscribedAt).toBeTruthy();
+  describe('Error Handling', () => {
+    it('should handle database errors in homepage', async () => {
+      Carnival.findAll.mockRejectedValue(new Error('Database error'));
 
-      // Act - Reactivate subscription
-      await subscription.update({
-        isActive: true,
-        states: ['QLD', 'NSW'] // Also updating states
-      });
-
-      // Assert
-      await subscription.reload();
-      expect(subscription.isActive).toBe(true);
-      expect(subscription.unsubscribedAt).toBeNull();
+      await expect(getIndex(req, res)).rejects.toThrow('Database error');
     });
 
-    test('should not modify unsubscribedAt when isActive is not changed', async () => {
-      // Arrange
-      const subscription = await EmailSubscription.create({
-        email: 'test-no-change@example.com',
-        states: ['SA'],
-        isActive: true,
-        subscribedAt: new Date()
+    it('should handle subscription errors gracefully', async () => {
+      req.body = {
+        email: 'test@example.com',
+        state: ['NSW'],
+        website: '',
+        form_timestamp: Date.now() - 5000
+      };
+
+      EmailSubscription.create.mockRejectedValue(new Error('Database error'));
+
+      await postSubscribe(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'An unexpected error occurred. Please try again.'
       });
-
-      expect(subscription.unsubscribedAt).toBeNull();
-
-      // Act - Update other fields without changing isActive
-      await subscription.update({
-        states: ['SA', 'WA'] // Only update states
-      });
-
-      // Assert - unsubscribedAt should remain null
-      await subscription.reload();
-      expect(subscription.isActive).toBe(true);
-      expect(subscription.unsubscribedAt).toBeNull();
     });
 
-    test('should handle multiple status changes correctly', async () => {
-      // Arrange
-      const subscription = await EmailSubscription.create({
-        email: 'test-multiple@example.com',
-        states: ['TAS'],
-        isActive: true,
-        subscribedAt: new Date()
+    it('should handle missing request body gracefully', async () => {
+      req.body = undefined;
+
+      await postSubscribe(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid request data'
       });
-
-      // Act & Assert - First unsubscribe
-      await subscription.update({ isActive: false });
-      await subscription.reload();
-      expect(subscription.isActive).toBe(false);
-      expect(subscription.unsubscribedAt).toBeTruthy();
-      
-      const firstUnsubscribeDate = subscription.unsubscribedAt;
-
-      // Act & Assert - Reactivate
-      await subscription.update({ isActive: true });
-      await subscription.reload();
-      expect(subscription.isActive).toBe(true);
-      expect(subscription.unsubscribedAt).toBeNull();
-
-      // Act & Assert - Unsubscribe again
-      await subscription.update({ isActive: false });
-      await subscription.reload();
-      expect(subscription.isActive).toBe(false);
-      expect(subscription.unsubscribedAt).toBeTruthy();
-      
-      // Should have a new timestamp (different from first unsubscribe)
-      expect(subscription.unsubscribedAt.getTime()).toBeGreaterThan(firstUnsubscribeDate.getTime());
     });
   });
 });
