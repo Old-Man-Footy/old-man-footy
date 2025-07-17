@@ -479,6 +479,13 @@ const showClubSponsorsHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
+  // Security check: If a club ID is provided in params, verify user has access to that club
+  const requestedClubId = req.params.clubId || req.params.id;
+  if (requestedClubId && parseInt(requestedClubId) !== user.clubId && !user.isAdmin) {
+    req.flash('error_msg', 'You can only manage sponsors for your own club.');
+    return res.redirect('/clubs/manage');
+  }
+
   const club = await Club.findByPk(user.clubId, {
     include: [
       {
