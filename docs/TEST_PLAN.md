@@ -42,7 +42,6 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [x] **🎉 FOURTH MAJOR SUCCESS: Admin Controller Tests Complete! (34/34 tests passing)**
 - [x] **🎉 FIFTH MAJOR SUCCESS: Sponsor Controller Tests Complete! (17/17 tests passing)**
 - [ ] **🎯 NEXT: Club Player Controller Tests** (roster management - scheduled for next session)
-- [ ] Club Player Controller Tests (roster management)
 - [x] Fix User model primary delegate validation
 - [x] Add comprehensive controller test coverage
 - [ ] Add missing service layer tests
