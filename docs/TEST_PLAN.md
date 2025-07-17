@@ -47,7 +47,17 @@ This comprehensive test plan covers the migration from Jest to Vitest for all un
 - [ ] Add missing service layer tests
 - [ ] Complete remaining controller tests
 
-### Phase 4: Cleanup & Optimization ⏳ PENDING
+### Phase 4: **Service Layer Gaps**
+- [ ] Identify and document missing service layer tests HERE
+- [ ] Implement tests for service layer functionality
+- [ ] Ensure all service layer tests pass
+
+### Phase 5 **Middleware & Utility Gaps**
+- [ ] Identify and document missing middleware tests HERE
+- [ ] Implement tests for middleware functionality
+- [ ] Ensure all middleware tests pass
+
+### Phase 6: Cleanup & Optimization ⏳ PENDING
 - [x] Remove Jest dependencies
 - [ ] Update Docker configurations
 - [ ] Update documentation
