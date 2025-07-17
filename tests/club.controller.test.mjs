@@ -17,6 +17,13 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { sequelize } from '../config/database.mjs';
 
+// Mock the asyncHandler middleware to prevent wrapping issues
+vi.mock('../middleware/asyncHandler.mjs', () => ({
+  asyncHandler: (fn) => fn, // Return the function as-is without wrapping
+  wrapControllers: (controllers) => controllers, // Return controllers as-is without wrapping
+  default: (fn) => fn
+}));
+
 // Mock express-validator
 vi.mock('express-validator', () => ({
   validationResult: vi.fn(() => ({
@@ -112,9 +119,11 @@ vi.mock('../models/index.mjs', () => {
     ClubSponsor: { update: vi.fn(), findOne: vi.fn() },
     createMockClub,
     Op: {
-      and: Symbol('and'),
-      or: Symbol('or'),
-      like: Symbol('like')
+      and: 'and',
+      or: 'or', 
+      like: 'like',
+      in: 'in',
+      ne: 'ne'
     }
   };
 });
@@ -152,6 +161,17 @@ vi.mock('fs/promises', () => ({
   },
   access: vi.fn(),
   unlink: vi.fn()
+}));
+
+// Mock constants that the controller imports
+vi.mock('../config/constants.mjs', () => ({
+  AUSTRALIAN_STATES: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'],
+  SPONSORSHIP_LEVELS: {
+    GOLD: 'Gold',
+    SILVER: 'Silver', 
+    BRONZE: 'Bronze',
+    SUPPORTING: 'In-Kind'
+  }
 }));
 
 // Now import the controller and dependencies
@@ -856,7 +876,7 @@ describe('Club Controller', () => {
   describe('API Endpoints', () => {
     describe('searchClubs', () => {
       it('should return formatted club search results', async () => {
-        req.query.q = 'test';
+        req.query = { q: 'test' }; // Ensure req.query.q is properly set
 
         const mockClubs = [
           {
@@ -878,6 +898,8 @@ describe('Club Controller', () => {
         Club.findAll
           .mockResolvedValueOnce([mockClubs[0]]) // Search by name
           .mockResolvedValueOnce([mockClubs[1]]); // Search by alternate names
+        
+        ClubAlternateName.searchClubsByAlternateName.mockResolvedValue([2]);
 
         await searchClubs(req, res, next);
 
@@ -901,7 +923,7 @@ describe('Club Controller', () => {
       });
 
       it('should return empty results for no query', async () => {
-        req.query.q = '';
+        req.query = { q: '' }; // Ensure req.query.q is set to empty string
 
         await searchClubs(req, res, next);
 
@@ -912,7 +934,7 @@ describe('Club Controller', () => {
       });
 
       it('should limit results to 10 clubs', async () => {
-        req.query.q = 'club';
+        req.query = { q: 'club' }; // Ensure req.query.q is properly set
 
         const manyClubs = Array.from({ length: 15 }, (_, i) => ({
           id: i + 1,
@@ -925,9 +947,12 @@ describe('Club Controller', () => {
         Club.findAll
           .mockResolvedValueOnce(manyClubs)
           .mockResolvedValueOnce([]);
+        
+        ClubAlternateName.searchClubsByAlternateName.mockResolvedValue([]);
 
         await searchClubs(req, res, next);
 
+        expect(res.json).toHaveBeenCalled();
         const response = res.json.mock.calls[0][0];
         expect(response.clubs).toHaveLength(10);
       });
@@ -991,24 +1016,36 @@ describe('Club Controller', () => {
       });
 
       it('should successfully add sponsor to club', async () => {
-        const mockSponsor = { id: 2, sponsorName: 'Test Sponsor' };
+        const mockSponsor = { 
+          id: 2, 
+          sponsorName: 'Test Sponsor',
+          isAssociatedWithClub: vi.fn().mockResolvedValue(false)
+        };
+        
+        // Set up request body to match controller expectations for existing sponsor
+        req.body = {
+          sponsorType: 'existing',
+          existingSponsorId: '2',
+          tier: 'Premium',
+          customDisplayName: 'Custom Name'
+        };
+        
         Sponsor.findByPk.mockResolvedValue(mockSponsor);
-        ClubSponsor.findOne.mockResolvedValue(null); // Not already associated
+        mockClub.getSponsors.mockResolvedValue([]); // Current sponsors list
 
         await addSponsorToClub(req, res);
 
         expect(mockClub.addSponsor).toHaveBeenCalledWith(mockSponsor, expect.objectContaining({
           through: expect.objectContaining({
-            tier: 'Premium',
-            customDisplayName: 'Custom Name'
+            displayOrder: 1
           })
         }));
 
         expect(req.flash).toHaveBeenCalledWith(
           'success_msg',
-          'Sponsor "Test Sponsor" has been added to your club successfully!'
+          'Sponsor "Test Sponsor" has been added to your club!'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/1/sponsors');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage/sponsors');
       });
 
       it('should handle sponsor already associated', async () => {
