@@ -38,8 +38,14 @@ const comingSoonMode = (req, res, next) => {
     return next();
   }
 
-  // Allow access to login route so users can still log in
-  if (req.path === '/auth/login') {
+  // Block register route during coming soon mode - must come BEFORE general auth check
+  if (req.path === '/auth/register') {
+    req.flash('error_msg', 'Registration is currently disabled. Please check back when we launch!');
+    return res.redirect('/coming-soon');
+  }
+
+  // Allow other authentication-related routes (login, logout, etc.)
+  if (req.path.startsWith('/auth/')) {
     return next();
   }
 
@@ -53,25 +59,31 @@ const comingSoonMode = (req, res, next) => {
     return next();
   }
 
-  // Allow other admin routes for login functionality
+  // Allow ALL admin routes (including dashboard)
   if (req.path.startsWith('/admin')) {
     return next();
+  }
+
+  // Allow authenticated users to access the main dashboard and other protected routes
+  // This check must be comprehensive to handle post-login redirects
+  if (req.user && (req.isAuthenticated ? req.isAuthenticated() : true)) {
+    // Allow access to dashboard for authenticated users
+    if (req.path === '/dashboard' || req.path === '/') {
+      return next();
+    }
+    
+    // Allow access to other authenticated user routes
+    if (req.path.startsWith('/clubs') || 
+        req.path.startsWith('/carnivals') || 
+        req.path.startsWith('/sponsors') ||
+        req.path.startsWith('/carnival-sponsors')) {
+      return next();
+    }
   }
 
   // Allow admin access (check if user is authenticated and is admin)
   if (req.user && req.user.isAdmin) {
     return next();
-  }
-
-  // Allow logged-in users to access regular screens
-  if (req.user && req.isAuthenticated()) {
-    return next();
-  }
-
-  // Block register route during coming soon mode
-  if (req.path === '/auth/register') {
-    req.flash('error_msg', 'Registration is currently disabled. Please check back when we launch!');
-    return res.redirect('/coming-soon');
   }
 
   // Redirect all other users to coming soon page
