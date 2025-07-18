@@ -11,7 +11,7 @@
 - [x] Services tested
 - [x] Controllers tested
 - [x] Middleware tested
-- [x] Integration tests migrated -- Needs review
+- [x] Integration tests migrated
 
 ### Phase 3: Missing/Additional Tests 🚧
 - [x] Club Controller
@@ -37,7 +37,7 @@
 ## Failing Tests, Need review
 - [x] CarnivalEmailService.test.mjs
 - [x] auth.middleware.test.mjs
-- [ ] capture-mysideline-data.test.mjs
+- [x] capture-mysideline-data.test.mjs
 
 ### Phase 4: **Service Layer Gaps**
 - [ ] Identify and document missing service layer tests HERE
