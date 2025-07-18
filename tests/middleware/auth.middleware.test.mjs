@@ -260,6 +260,7 @@ describe('Authentication Middleware', () => {
   describe('ensureAdmin', () => {
     it('should allow admin users to proceed', () => {
       // Arrange
+      mockReq.isAuthenticated.mockReturnValue(true);
       mockReq.user = { id: 1, isAdmin: true };
 
       // Act
