@@ -18,7 +18,7 @@ const mockClub = {
 };
 
 // Mock the models
-vi.mock('../models/index.mjs', () => ({
+vi.mock('/models/index.mjs', () => ({
   User: mockUser,
   Club: mockClub,
 }));
@@ -34,7 +34,7 @@ const {
   requireAdmin,
   requireAdminOrPrimaryDelegate,
   requireDelegate
-} = await import('../../middleware/auth.mjs');
+} = await import('/middleware/auth.mjs');
 
 describe('Authentication Middleware', () => {
   let mockReq, mockRes, mockNext;

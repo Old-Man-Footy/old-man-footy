@@ -97,7 +97,8 @@ export class CarnivalEmailService extends BaseEmailService {
                 const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
                 if (!recipientEmail) {
                     console.warn(`No email found for club: ${club.clubName}`);
-                    return Promise.resolve({ status: 'rejected', reason: 'No email address' });
+                    // Return a rejected promise for Promise.allSettled to correctly handle failures
+                    return Promise.reject({ status: 'rejected', reason: 'No email address' });
                 }
 
                 const mailOptions = {
@@ -245,10 +246,11 @@ export class CarnivalEmailService extends BaseEmailService {
      */
     _extractFirstName(club) {
         let contactFirstName = 'there'; // Default fallback
-        if (club.contactPerson) {
-            contactFirstName = club.contactPerson.split(' ')[0];
-        } else if (club.primaryDelegateName) {
+        // Prioritise delegate name to align with recipient logic
+        if (club.primaryDelegateName) {
             contactFirstName = club.primaryDelegateName.split(' ')[0];
+        } else if (club.contactPerson) {
+            contactFirstName = club.contactPerson.split(' ')[0];
         }
         return contactFirstName;
     }

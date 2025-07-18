@@ -1,8 +1,8 @@
 // Vitest unit tests for ClubAlternateName model
 import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import ClubAlternateName from '../../models/ClubAlternateName.mjs';
-import Club from '../../models/Club.mjs';
-import { sequelize } from '../../models/index.mjs';
+import ClubAlternateName from '/models/ClubAlternateName.mjs';
+import Club from '/models/Club.mjs';
+import { sequelize } from '/models/index.mjs';
 
 /**
  * Unit tests for ClubAlternateName model

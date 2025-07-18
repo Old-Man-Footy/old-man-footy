@@ -1,11 +1,10 @@
 // Vitest unit tests for CarnivalClubPlayer model
-import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import CarnivalClubPlayer from '../../models/CarnivalClubPlayer.mjs';
-import CarnivalClub from '../../models/CarnivalClub.mjs';
-import ClubPlayer from '../../models/ClubPlayer.mjs';
-import Carnival from '../../models/Carnival.mjs';
-import Club from '../../models/Club.mjs';
-import { sequelize } from '../../models/index.mjs';
+import { describe, it, expect, beforeEach } from 'vitest';
+import CarnivalClubPlayer from '/models/CarnivalClubPlayer.mjs';
+import CarnivalClub from '/models/CarnivalClub.mjs';
+import ClubPlayer from '/models/ClubPlayer.mjs';
+import Carnival from '/models/Carnival.mjs';
+import Club from '/models/Club.mjs';
 
 describe('CarnivalClubPlayer Model', () => {
   let carnival, club, carnivalClub, clubPlayer, assignment;

@@ -15,10 +15,10 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn, // Return the function as-is without wrapping
   wrapControllers: (controllers) => controllers, // Return controllers as-is without wrapping
   default: (fn) => fn
@@ -33,7 +33,7 @@ vi.mock('express-validator', () => ({
 }));
 
 // Mock all model imports before importing the controller
-vi.mock('../models/index.mjs', () => {
+vi.mock('/models/index.mjs', () => {
   const mockSequelize = {
     transaction: vi.fn().mockResolvedValue({
       commit: vi.fn(),
@@ -129,7 +129,7 @@ vi.mock('../models/index.mjs', () => {
 });
 
 // Mock other services
-vi.mock('../services/imageNamingService.mjs', () => ({
+vi.mock('/services/imageNamingService.mjs', () => ({
   default: {
     getClubImages: vi.fn().mockResolvedValue([]),
     getEntityImages: vi.fn().mockResolvedValue([]),
@@ -144,11 +144,11 @@ vi.mock('../services/imageNamingService.mjs', () => ({
   }
 }));
 
-vi.mock('../services/sponsorSortingService.mjs', () => ({
+vi.mock('/services/sponsorSortingService.mjs', () => ({
   sortSponsorsHierarchically: vi.fn().mockReturnValue([])
 }));
 
-vi.mock('../services/email/InvitationEmailService.mjs', () => ({
+vi.mock('/services/email/InvitationEmailService.mjs', () => ({
   default: {
     sendClubInvitation: vi.fn().mockResolvedValue(true)
   }
@@ -164,7 +164,7 @@ vi.mock('fs/promises', () => ({
 }));
 
 // Mock constants that the controller imports
-vi.mock('../config/constants.mjs', () => ({
+vi.mock('/config/constants.mjs', () => ({
   AUSTRALIAN_STATES: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'],
   SPONSORSHIP_LEVELS: {
     GOLD: 'Gold',
@@ -199,7 +199,7 @@ import {
   getClubImages,
   deleteClubImage,
   searchClubs
-} from '../../controllers/club.controller.mjs';
+} from '/controllers/club.controller.mjs';
 
 import {
   Club,
@@ -212,11 +212,11 @@ import {
   sequelize as mockSequelize,
   createMockClub,
   Op
-} from '../../models/index.mjs';
+} from '/models/index.mjs';
 
-import ImageNamingService from '../../services/imageNamingService.mjs';
-import { sortSponsorsHierarchically } from '../../services/sponsorSortingService.mjs';
-import InvitationEmailService from '../../services/email/InvitationEmailService.mjs';
+import ImageNamingService from '/services/imageNamingService.mjs';
+import { sortSponsorsHierarchically } from '/services/sponsorSortingService.mjs';
+import InvitationEmailService from '/services/email/InvitationEmailService.mjs';
 import { validationResult } from 'express-validator';
 
 describe('Club Controller', () => {
@@ -1197,7 +1197,7 @@ describe('Club Controller', () => {
       });
 
       it('should handle invalid filename', async () => {
-        req.params.filename = '../../../malicious.txt';
+        req.params.filename = '/malicious.txt';
         
         // Mock parseImageName to return null for invalid files
         ImageNamingService.parseImageName = vi.fn().mockReturnValue(null);

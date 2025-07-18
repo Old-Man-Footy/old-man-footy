@@ -1,8 +1,8 @@
 // Vitest unit tests for ClubPlayer model
 import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import ClubPlayer from '../../models/ClubPlayer.mjs';
-import Club from '../../models/Club.mjs';
-import { sequelize } from '../../models/index.mjs';
+import ClubPlayer from '/models/ClubPlayer.mjs';
+import Club from '/models/Club.mjs';
+import { sequelize } from '/models/index.mjs';
 
 describe('ClubPlayer Model', () => {
   let baseData;

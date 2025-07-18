@@ -11,11 +11,11 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 import { Op } from 'sequelize';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
   wrapControllers: (controllers) => controllers,
   default: (fn) => fn
@@ -30,7 +30,7 @@ vi.mock('express-validator', () => ({
 }));
 
 // Mock all model imports before importing the controller
-vi.mock('../models/index.mjs', () => {
+vi.mock('/models/index.mjs', () => {
   const mockSequelize = {
     transaction: vi.fn().mockResolvedValue({
       commit: vi.fn(),
@@ -196,13 +196,13 @@ vi.mock('../models/index.mjs', () => {
 });
 
 // Mock services
-vi.mock('../services/email/AuthEmailService.mjs', () => ({
+vi.mock('/services/email/AuthEmailService.mjs', () => ({
   default: {
     sendPasswordResetEmail: vi.fn().mockResolvedValue(true)
   }
 }));
 
-vi.mock('../services/auditService.mjs', () => ({
+vi.mock('/services/auditService.mjs', () => ({
   default: {
     logAdminAction: vi.fn().mockResolvedValue(true),
     sanitizeData: vi.fn((data) => data),
@@ -233,7 +233,7 @@ vi.mock('../services/auditService.mjs', () => ({
   }
 }));
 
-vi.mock('../services/mySidelineIntegrationService.mjs', () => ({
+vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   default: {
     syncMySidelineEvents: vi.fn().mockResolvedValue({
       success: true,
@@ -283,7 +283,7 @@ import {
   getAuditStatistics,
   exportAuditLogs,
   syncMySideline
-} from '../../controllers/admin.controller.mjs';
+} from '/controllers/admin.controller.mjs';
 
 import {
   User,
@@ -303,11 +303,11 @@ import {
   createMockAuditLog,
   Op,
   fn
-} from '../../models/index.mjs';
+} from '/models/index.mjs';
 
-import AuditService from '../../services/auditService.mjs';
-import AuthEmailService from '../../services/email/AuthEmailService.mjs';
-import mySidelineService from '../../services/mySidelineIntegrationService.mjs';
+import AuditService from '/services/auditService.mjs';
+import AuthEmailService from '/services/email/AuthEmailService.mjs';
+import mySidelineService from '/services/mySidelineIntegrationService.mjs';
 import crypto from 'crypto';
 import { validationResult } from 'express-validator';
 

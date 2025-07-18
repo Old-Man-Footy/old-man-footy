@@ -168,7 +168,7 @@ describe('MySideline Capture Script', () => {
             });
 
             // Mock the MySidelineScraperService import
-            vi.doMock('../services/mySidelineScraperService.mjs', () => ({
+            vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
                     async scrapeEvents() {
                         return mockScraperService.scrapeEvents();
@@ -177,7 +177,7 @@ describe('MySideline Capture Script', () => {
             }));
 
             // Import the capture module after mocking
-            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
+            captureModule = await import('/scripts/capture-mysideline-data.mjs');
         });
 
         test('should capture MySideline data successfully', async () => {
@@ -262,7 +262,7 @@ describe('MySideline Capture Script', () => {
             });
 
             // Mock the MySidelineScraperService import
-            vi.doMock('../services/mySidelineScraperService.mjs', () => ({
+            vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
                     async scrapeEvents() {
                         return mockScraperService.scrapeEvents();
@@ -270,7 +270,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
+            captureModule = await import('/scripts/capture-mysideline-data.mjs');
         });
 
         test('should handle empty events gracefully', async () => {
@@ -305,7 +305,7 @@ describe('MySideline Capture Script', () => {
             mockFetch.mockRejectedValue(new Error('Network error'));
 
             // Mock the MySidelineScraperService import
-            vi.doMock('../services/mySidelineScraperService.mjs', () => ({
+            vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
                     async scrapeEvents() {
                         return mockScraperService.scrapeEvents();
@@ -313,7 +313,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
+            captureModule = await import('/scripts/capture-mysideline-data.mjs');
         });
 
         test('should handle scraper service errors', async () => {
@@ -355,7 +355,7 @@ describe('MySideline Capture Script', () => {
                 text: () => Promise.resolve('<html></html>')
             });
 
-            vi.doMock('../services/mySidelineScraperService.mjs', () => ({
+            vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
                     async scrapeEvents() {
                         return mockScraperService.scrapeEvents();
@@ -363,7 +363,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            const freshCaptureModule = await import('../scripts/capture-mysideline-data.mjs?t=' + Date.now());
+            const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
             await freshCaptureModule.captureMySidelineData();
@@ -382,7 +382,7 @@ describe('MySideline Capture Script', () => {
                 text: () => Promise.resolve('<html></html>')
             });
 
-            vi.doMock('../services/mySidelineScraperService.mjs', () => ({
+            vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
                     async scrapeEvents() {
                         return mockScraperService.scrapeEvents();
@@ -390,7 +390,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            const freshCaptureModule = await import('../scripts/capture-mysideline-data.mjs?t=' + Date.now());
+            const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
             await freshCaptureModule.captureMySidelineData();
@@ -410,7 +410,7 @@ describe('MySideline Capture Script', () => {
                 text: () => Promise.resolve(SAMPLE_HTML_RESPONSE)
             });
 
-            vi.doMock('../services/mySidelineScraperService.mjs', () => ({
+            vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
                     async scrapeEvents() {
                         return mockScraperService.scrapeEvents();
@@ -418,7 +418,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
+            captureModule = await import('/scripts/capture-mysideline-data.mjs');
         });
 
         test('should generate valid JavaScript module', async () => {

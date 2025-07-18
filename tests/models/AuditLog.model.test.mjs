@@ -5,7 +5,7 @@
  * Follows AAA (Arrange, Act, Assert) pattern and project security/MVC/testing guidelines.
  */
 import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
-import { sequelize, User, AuditLog } from '../../models/index.mjs';
+import { sequelize, User, AuditLog } from '/models/index.mjs';
 
 // Use the test database
 beforeAll(async () => {

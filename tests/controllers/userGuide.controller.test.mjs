@@ -6,14 +6,14 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getUserGuide } from '../../controllers/userGuide.controller.mjs';
+import { getUserGuide } from '/controllers/userGuide.controller.mjs';
 import fs from 'fs/promises';
 
 // Mock the fs/promises module to avoid actual file system access
 vi.mock('fs/promises');
 
 // Mock the asyncHandler to test the raw controller function
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
 }));
 

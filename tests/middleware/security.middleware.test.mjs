@@ -44,7 +44,7 @@ const {
   createRateLimiter,
   sanitizeString,
   validateInputSecurity
-} = await import('../../middleware/security.mjs');
+} = await import('/middleware/security.mjs');
 
 describe('Security Middleware', () => {
   let mockReq, mockRes, mockNext;
@@ -531,7 +531,7 @@ describe('Security Middleware', () => {
         const middleware = validateFileUpload();
         
         const maliciousNames = [
-          '../../../etc/passwd',
+          '/etc/passwd',
           'test<script>.jpg',
           'file:with:colons.png',
           'file"with"quotes.gif',

@@ -10,10 +10,10 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
   wrapControllers: (controllers) => controllers,
   default: (fn) => fn
@@ -38,7 +38,7 @@ vi.mock('crypto', () => ({
 }));
 
 // Mock all model imports before importing the controller
-vi.mock('../models/index.mjs', () => {
+vi.mock('/models/index.mjs', () => {
   const createMockCarnival = (overrides = {}) => ({
     id: 1,
     title: 'Test Carnival',
@@ -139,20 +139,20 @@ vi.mock('../models/index.mjs', () => {
 });
 
 // Mock services
-vi.mock('../services/email/ContactEmailService.mjs', () => ({
+vi.mock('/services/email/ContactEmailService.mjs', () => ({
   default: {
     sendContactFormEmail: vi.fn().mockResolvedValue(true),
     sendNewsletter: vi.fn().mockResolvedValue({ sent: 5, failed: 0 })
   }
 }));
 
-vi.mock('../services/email/AuthEmailService.mjs', () => ({
+vi.mock('/services/email/AuthEmailService.mjs', () => ({
   default: {
     sendWelcomeEmail: vi.fn().mockResolvedValue(true)
   }
 }));
 
-vi.mock('../services/carouselImageService.mjs', () => ({
+vi.mock('/services/carouselImageService.mjs', () => ({
   default: {
     getCarouselImages: vi.fn().mockResolvedValue([
       { url: '/images/carousel1.jpg', alt: 'Carousel 1' },
@@ -162,7 +162,7 @@ vi.mock('../services/carouselImageService.mjs', () => ({
 }));
 
 // Mock constants
-vi.mock('../config/constants.mjs', () => ({
+vi.mock('/config/constants.mjs', () => ({
   AUSTRALIAN_STATES: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
 }));
 
@@ -178,7 +178,7 @@ import {
   sendNewsletter,
   getContact,
   postContact
-} from '../../controllers/main.controller.mjs';
+} from '/controllers/main.controller.mjs';
 
 import {
   Carnival,
@@ -192,11 +192,11 @@ import {
   createMockUser,
   createMockEmailSubscription,
   Op
-} from '../../models/index.mjs';
+} from '/models/index.mjs';
 
-import ContactEmailService from '../../services/email/ContactEmailService.mjs';
-import AuthEmailService from '../../services/email/AuthEmailService.mjs';
-import carouselImageService from '../../services/carouselImageService.mjs';
+import ContactEmailService from '/services/email/ContactEmailService.mjs';
+import AuthEmailService from '/services/email/AuthEmailService.mjs';
+import carouselImageService from '/services/carouselImageService.mjs';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 

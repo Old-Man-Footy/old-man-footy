@@ -5,7 +5,7 @@
  * Initializes test database and models before running tests.
  */
 
-import { sequelize } from '../models/index.mjs';
+import { sequelize } from '/models/index.mjs';
 import path from 'path';
 
 /**

@@ -54,48 +54,48 @@ const mockCrypto = {
 };
 
 // Mock modules using Vitest
-vi.mock('../models/index.mjs', () => ({
+vi.mock('/models/index.mjs', () => ({
   User: mockUser
 }));
 
-vi.mock('../services/email/InvitationEmailService.mjs', () => ({
+vi.mock('/services/email/InvitationEmailService.mjs', () => ({
   default: {
     sendDelegateInvitation: vi.fn().mockResolvedValue({ success: true }),
     sendDelegateRoleTransfer: vi.fn().mockResolvedValue({ success: true }),
   }
 }));
 
-vi.mock('../services/email/AuthEmailService.mjs', () => ({
+vi.mock('/services/email/AuthEmailService.mjs', () => ({
   default: {
     sendPasswordResetEmail: vi.fn().mockResolvedValue({ success: true }),
   }
 }));
 
-vi.mock('../services/auditService.mjs', () => ({
+vi.mock('/services/auditService.mjs', () => ({
   default: mockAuditService
 }));
 
 vi.mock('bcrypt', () => mockBcrypt);
 vi.mock('crypto', () => mockCrypto);
 
-vi.mock('../services/email/InvitationEmailService.mjs', () => ({
+vi.mock('/services/email/InvitationEmailService.mjs', () => ({
   default: {
     sendDelegateInvitation: vi.fn().mockResolvedValue({ success: true }),
     sendDelegateRoleTransfer: vi.fn().mockResolvedValue({ success: true }),
   }
 }));
 
-vi.mock('../services/email/AuthEmailService.mjs', () => ({
+vi.mock('/services/email/AuthEmailService.mjs', () => ({
   default: {
     sendPasswordResetEmail: vi.fn().mockResolvedValue({ success: true }),
   }
 }));
 
 // Import the authentication service functionality
-const { User } = await import('../../models/index.mjs');
-const InvitationEmailService = (await import('../../services/email/InvitationEmailService.mjs')).default;
-const AuthEmailService = (await import('../../services/email/AuthEmailService.mjs')).default;
-const AuditService = (await import('../../services/auditService.mjs')).default;
+const { User } = await import('/models/index.mjs');
+const InvitationEmailService = (await import('/services/email/InvitationEmailService.mjs')).default;
+const AuthEmailService = (await import('/services/email/AuthEmailService.mjs')).default;
+const AuditService = (await import('/services/auditService.mjs')).default;
 const bcrypt = await import('bcrypt');
 const crypto = await import('crypto');
 

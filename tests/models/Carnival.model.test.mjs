@@ -4,7 +4,7 @@
  *
  * Follows AAA (Arrange, Act, Assert) pattern and project security/MVC/testing guidelines.
  */
-import { sequelize, Carnival } from '../../models/index.mjs';
+import { sequelize, Carnival } from '/models/index.mjs';
 import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
 
 describe('Carnival Model', () => {

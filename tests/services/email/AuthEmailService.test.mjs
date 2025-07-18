@@ -6,11 +6,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AuthEmailService } from '../../../services/email/AuthEmailService.mjs';
-import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
+import { AuthEmailService } from '/services/email/AuthEmailService.mjs';
+import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
 
 // Mock the BaseEmailService to prevent actual email sending
-vi.mock('../../../services/email/BaseEmailService.mjs');
+vi.mock('/services/email/BaseEmailService.mjs');
 
 describe('AuthEmailService', () => {
   let authEmailService;

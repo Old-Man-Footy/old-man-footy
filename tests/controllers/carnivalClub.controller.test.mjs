@@ -11,10 +11,10 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
   wrapControllers: (controllers) => controllers,
   default: (fn) => fn
@@ -48,7 +48,7 @@ vi.mock('express-validator', () => {
 });
 
 // Mock constants
-vi.mock('../config/constants.mjs', () => ({
+vi.mock('/config/constants.mjs', () => ({
   APPROVAL_STATUS: {
     PENDING: 'pending',
     APPROVED: 'approved',
@@ -57,7 +57,7 @@ vi.mock('../config/constants.mjs', () => ({
 }));
 
 // Mock email service
-vi.mock('../services/email/CarnivalEmailService.mjs', () => ({
+vi.mock('/services/email/CarnivalEmailService.mjs', () => ({
   default: {
     sendRegistrationApprovalEmail: vi.fn().mockResolvedValue(true),
     sendRegistrationRejectionEmail: vi.fn().mockResolvedValue(true)
@@ -65,7 +65,7 @@ vi.mock('../services/email/CarnivalEmailService.mjs', () => ({
 }));
 
 // Mock all model imports before importing the controller
-vi.mock('../models/index.mjs', () => {
+vi.mock('/models/index.mjs', () => {
   const createMockCarnivalClub = (overrides = {}) => ({
     id: 1,
     carnivalId: 1,
@@ -243,7 +243,7 @@ import {
   approveClubRegistration,
   rejectClubRegistration,
   updateApprovalStatus
-} from '../../controllers/carnivalClub.controller.mjs';
+} from '/controllers/carnivalClub.controller.mjs';
 
 import {
   CarnivalClub,
@@ -258,10 +258,10 @@ import {
   createMockCarnivalClubPlayer,
   createMockUser,
   Op
-} from '../../models/index.mjs';
+} from '/models/index.mjs';
 
 import { validationResult } from 'express-validator';
-import CarnivalEmailService from '../../services/email/CarnivalEmailService.mjs';
+import CarnivalEmailService from '/services/email/CarnivalEmailService.mjs';
 
 describe('Carnival Club Controller', () => {
   let req, res, next;

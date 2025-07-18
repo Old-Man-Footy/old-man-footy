@@ -5,29 +5,29 @@
 
 import request from 'supertest';
 import express from 'express';
-import { EmailSubscription } from '../../models/index.mjs';
-import { sequelize } from '../../config/database.mjs';
-import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
+import { EmailSubscription } from '/models/index.mjs';
+import { sequelize } from '/config/database.mjs';
+import { describe, test, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
 
 // Mock asyncHandler first
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   default: (fn) => fn // Simple passthrough for tests
 }));
 
 // Mock all services that might cause module conflicts
-vi.mock('../services/imageNamingService.mjs');
-vi.mock('../services/mySidelineIntegrationService.mjs');
-vi.mock('../services/mySidelineDataService.mjs');
-vi.mock('../services/mySidelineLogoDownloadService.mjs');
-vi.mock('../services/mySidelineScraperService.mjs');
-vi.mock('../services/email/AuthEmailService.mjs', () => ({
+vi.mock('/services/imageNamingService.mjs');
+vi.mock('/services/mySidelineIntegrationService.mjs');
+vi.mock('/services/mySidelineDataService.mjs');
+vi.mock('/services/mySidelineLogoDownloadService.mjs');
+vi.mock('/services/mySidelineScraperService.mjs');
+vi.mock('/services/email/AuthEmailService.mjs', () => ({
   default: {
     sendWelcomeEmail: vi.fn().mockResolvedValue(true)
   }
 }));
 
 // Import controller directly instead of full app
-import { postSubscribe } from '../../controllers/main.controller.mjs';
+import { postSubscribe } from '/controllers/main.controller.mjs';
 
 // Create minimal test app
 const createTestApp = () => {

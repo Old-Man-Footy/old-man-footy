@@ -6,11 +6,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ContactEmailService } from '../../../services/email/ContactEmailService.mjs';
-import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
+import { ContactEmailService } from '/services/email/ContactEmailService.mjs';
+import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
 
 // Mock dependencies
-vi.mock('../../../services/email/BaseEmailService.mjs');
+vi.mock('/services/email/BaseEmailService.mjs');
 
 describe('ContactEmailService', () => {
   let contactEmailService;

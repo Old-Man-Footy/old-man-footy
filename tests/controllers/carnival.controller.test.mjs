@@ -10,10 +10,10 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
   wrapControllers: (controllers) => controllers,
   default: (fn) => fn
@@ -28,7 +28,7 @@ vi.mock('express-validator', () => ({
 }));
 
 // Mock all model imports before importing the controller
-vi.mock('../models/index.mjs', () => {
+vi.mock('/models/index.mjs', () => {
   const mockSequelize = {
     transaction: vi.fn().mockResolvedValue({
       commit: vi.fn(),
@@ -178,24 +178,24 @@ vi.mock('../models/index.mjs', () => {
 });
 
 // Mock services
-vi.mock('../services/mySidelineIntegrationService.mjs', () => ({
+vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   default: {
     syncEvents: vi.fn().mockResolvedValue({ newEvents: 5 })
   }
 }));
 
-vi.mock('../services/emailService.mjs', () => ({
+vi.mock('/services/emailService.mjs', () => ({
   default: {
     notifyNewCarnival: vi.fn().mockResolvedValue(true)
   }
 }));
 
-vi.mock('../services/sponsorSortingService.mjs', () => ({
+vi.mock('/services/sponsorSortingService.mjs', () => ({
   sortSponsorsHierarchically: vi.fn().mockReturnValue([])
 }));
 
 // Mock constants
-vi.mock('../config/constants.mjs', () => ({
+vi.mock('/config/constants.mjs', () => ({
   AUSTRALIAN_STATES: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
 }));
 
@@ -218,7 +218,7 @@ import {
   sendEmailToAttendees,
   showAllPlayers,
   createOrMergeEvent
-} from '../../controllers/carnival.controller.mjs';
+} from '/controllers/carnival.controller.mjs';
 
 import {
   Carnival,
@@ -234,11 +234,11 @@ import {
   createMockUser,
   createMockCarnivalClub,
   Op
-} from '../../models/index.mjs';
+} from '/models/index.mjs';
 
-import mySidelineService from '../../services/mySidelineIntegrationService.mjs';
-import emailService from '../services/emailService.mjs';
-import { sortSponsorsHierarchically } from '../../services/sponsorSortingService.mjs';
+import mySidelineService from '/services/mySidelineIntegrationService.mjs';
+import emailService from '/services/emailService.mjs';
+import { sortSponsorsHierarchically } from '/services/sponsorSortingService.mjs';
 import { validationResult } from 'express-validator';
 
 describe('Carnival Controller', () => {

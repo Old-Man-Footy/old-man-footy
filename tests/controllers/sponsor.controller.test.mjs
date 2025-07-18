@@ -11,11 +11,11 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../../config/constants.mjs';
+import { sequelize } from '/config/database.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
   wrapControllers: (controllers) => controllers,
   default: (fn) => fn
@@ -31,7 +31,7 @@ vi.mock('express-validator', () => ({
 
 
 // Mock all model imports before importing the controller
-vi.mock('../models/index.mjs', () => {
+vi.mock('/models/index.mjs', () => {
   const createMockSponsor = (overrides = {}) => ({
     id: 1,
     sponsorName: 'Test Sponsor',
@@ -127,7 +127,7 @@ import {
   deleteSponsor,
   toggleSponsorStatus,
   checkDuplicateSponsor
-} from '../../controllers/sponsor.controller.mjs';
+} from '/controllers/sponsor.controller.mjs';
 
 import {
   Sponsor,
@@ -137,10 +137,10 @@ import {
   createMockClub,
   createMockUser,
   Op
-} from '../../models/index.mjs';
+} from '/models/index.mjs';
 
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
 
 describe('Sponsor Controller', () => {
   let req, res, next;

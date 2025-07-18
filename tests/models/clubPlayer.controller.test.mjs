@@ -11,10 +11,10 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
-vi.mock('../middleware/asyncHandler.mjs', () => ({
+vi.mock('/middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
   wrapControllers: (controllers) => controllers,
   default: (fn) => fn
@@ -48,12 +48,12 @@ vi.mock('express-validator', () => {
 });
 
 // Mock constants
-vi.mock('../config/constants.mjs', () => ({
+vi.mock('/config/constants.mjs', () => ({
   PLAYER_SHORTS_COLORS_ARRAY: ['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green']
 }));
 
 // Mock all model imports before importing the controller
-vi.mock('../models/index.mjs', () => {
+vi.mock('/models/index.mjs', () => {
   const createMockClubPlayer = (overrides = {}) => ({
     id: 1,
     clubId: 1,
@@ -143,7 +143,7 @@ import {
   validatePlayer,
   validatePlayerId,
   validateCsvImport
-} from '../../controllers/clubPlayer.controller.mjs';
+} from '/controllers/clubPlayer.controller.mjs';
 
 import {
   ClubPlayer,
@@ -152,7 +152,7 @@ import {
   createMockClub,
   createMockUser,
   Op
-} from '../../models/index.mjs';
+} from '/models/index.mjs';
 
 import { validationResult } from 'express-validator';
 

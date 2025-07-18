@@ -1,9 +1,8 @@
 // Vitest unit tests for CarnivalClub model
-import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import CarnivalClub, { updateCarnivalRegistrationCount } from '../../models/CarnivalClub.mjs';
-import Carnival from '../../models/Carnival.mjs';
-import Club from '../../models/Club.mjs';
-import { sequelize } from '../../models/index.mjs';
+import { describe, it, expect, beforeEach } from 'vitest';
+import CarnivalClub from '/models/CarnivalClub.mjs';
+import Carnival from '/models/Carnival.mjs';
+import Club from '/models/Club.mjs';
 
 describe('CarnivalClub Model', () => {
   describe('Instance methods', () => {

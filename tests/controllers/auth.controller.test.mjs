@@ -8,7 +8,7 @@
  * Test execution order: Model -> Service -> Controller (as per Unit Test Plan)
  */
 
-import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { Op } from 'sequelize';
 
 // Mock bcrypt with Vitest
@@ -81,7 +81,7 @@ vi.mock('crypto', () => ({
   ...mockCrypto
 }));
 
-vi.mock('../models/index.mjs', () => ({
+vi.mock('/models/index.mjs', () => ({
   User: mockUser,
   Club: mockClub,
 }));
@@ -90,22 +90,22 @@ vi.mock('express-validator', () => ({
   validationResult: mockValidationResult,
 }));
 
-vi.mock('../services/email/InvitationEmailService.mjs', () => ({
+vi.mock('/services/email/InvitationEmailService.mjs', () => ({
   default: {
     sendDelegateInvitation: vi.fn().mockResolvedValue({ success: true }),
     sendDelegateRoleTransfer: vi.fn().mockResolvedValue({ success: true }),
   },
 }));
 
-vi.mock('../services/auditService.mjs', () => ({
+vi.mock('/services/auditService.mjs', () => ({
   default: mockAuditService,
 }));
 
-vi.mock('../config/database.mjs', () => ({
+vi.mock('/config/database.mjs', () => ({
   sequelize: mockSequelize,
 }));
 
-vi.mock('../middleware/asyncHandler.mjs', () => ({ 
+vi.mock('/middleware/asyncHandler.mjs', () => ({ 
   wrapControllers: mockWrapControllers 
 }));
 
@@ -123,10 +123,10 @@ const {
   updatePhoneNumber,
   updateName,
   updateEmail,
-} = await import('../../controllers/auth.controller.mjs');
+} = await import('/controllers/auth.controller.mjs');
 
 // Import the email service to access the mocked methods
-const InvitationEmailService = (await import('../../services/email/InvitationEmailService.mjs')).default;
+const InvitationEmailService = (await import('/services/email/InvitationEmailService.mjs')).default;
 
 // Create authController object for test compatibility
 const authController = {

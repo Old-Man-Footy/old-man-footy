@@ -1,10 +1,10 @@
 // Vitest unit tests for ClubSponsor model
 import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import ClubSponsor from '../../models/ClubSponsor.mjs';
-import Club from '../../models/Club.mjs';
-import Sponsor from '../../models/Sponsor.mjs';
-import { sequelize } from '../../models/index.mjs';
-import { SPONSORSHIP_LEVELS } from '../../config/constants.mjs';
+import ClubSponsor from '/models/ClubSponsor.mjs';
+import Club from '/models/Club.mjs';
+import Sponsor from '/models/Sponsor.mjs';
+import { sequelize } from '/models/index.mjs';
+import { SPONSORSHIP_LEVELS } from '/config/constants.mjs';
 
 describe('ClubSponsor Model', () => {
   let club, sponsor, baseData;

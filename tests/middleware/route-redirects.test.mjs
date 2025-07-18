@@ -8,14 +8,14 @@ import express from 'express';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock services that cause ImageNamingService conflicts
-vi.mock('../services/imageNamingService.mjs');
-vi.mock('../services/mySidelineIntegrationService.mjs');
-vi.mock('../services/mySidelineDataService.mjs');
-vi.mock('../services/mySidelineLogoDownloadService.mjs');
-vi.mock('../services/mySidelineScraperService.mjs');
+vi.mock('/services/imageNamingService.mjs');
+vi.mock('/services/mySidelineIntegrationService.mjs');
+vi.mock('/services/mySidelineDataService.mjs');
+vi.mock('/services/mySidelineLogoDownloadService.mjs');
+vi.mock('/services/mySidelineScraperService.mjs');
 
 // Import routes directly instead of full app
-import mainRoutes from '../../routes/index.mjs';
+import mainRoutes from '/routes/index.mjs';
 
 // Create minimal test app
 const createTestApp = () => {

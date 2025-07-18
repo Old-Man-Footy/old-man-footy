@@ -6,7 +6,7 @@
  */
 
 import { afterEach } from 'vitest';
-import { sequelize } from '../models/index.mjs';
+import { sequelize } from '/models/index.mjs';
 
 // Set NODE_ENV to test to ensure tests use the test database
 process.env.NODE_ENV = 'test';

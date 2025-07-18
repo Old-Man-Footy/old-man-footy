@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as maintenanceController from '../../controllers/maintenance.controller.mjs';
+import * as maintenanceController from '/controllers/maintenance.controller.mjs';
 
 describe('Maintenance Controller', () => {
     let req, res;

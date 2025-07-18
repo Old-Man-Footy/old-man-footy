@@ -9,9 +9,9 @@
  */
 
 import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
-import { sequelize } from '../../config/database.mjs';
-import User from '../../models/User.mjs';
-import Club from '../../models/Club.mjs';
+import { sequelize } from '/config/database.mjs';
+import User from '/models/User.mjs';
+import Club from '/models/Club.mjs';
 
 // Create mock functions using Vitest
 const mockBcrypt = {
@@ -781,7 +781,7 @@ describe('User Model', () => {
 
       test('should enforce only one primary delegate per club', async () => {
         // Arrange - Create a club first (using correct field names)
-        const Club = (await import('../../models/index.mjs')).Club;
+        const Club = (await import('/models/index.mjs')).Club;
         const club = await Club.create({
           clubName: 'Test Club',
           location: 'Test Location',
@@ -1009,7 +1009,7 @@ describe('User Model', () => {
 
     test('should maintain referential integrity with clubs', async () => {
       // Arrange - Create a club first
-      const Club = (await import('../../models/index.mjs')).Club;
+      const Club = (await import('/models/index.mjs')).Club;
       const club = await Club.create({
         clubName: 'Test Club',
         location: 'Test Location',

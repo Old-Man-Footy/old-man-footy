@@ -6,9 +6,9 @@
  */
 
 import { describe, test, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AUDIT_RESULTS } from '../../config/constants.mjs';
-import AuditService from '../../services/auditService.mjs';
-import { AuditLog, User } from '../../models/index.mjs';
+import { AUDIT_RESULTS } from '/config/constants.mjs';
+import AuditService from '/services/auditService.mjs';
+import { AuditLog, User } from '/models/index.mjs';
 
 describe('Audit Service', () => {
     let testUser;

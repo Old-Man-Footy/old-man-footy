@@ -7,13 +7,14 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CarnivalEmailService } from '../../../services/email/CarnivalEmailService.mjs';
-import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
-import { EmailSubscription } from '../../../models/index.mjs';
+import { CarnivalEmailService } from '/services/email/CarnivalEmailService.mjs';
+import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
+import { EmailSubscription } from '/models/index.mjs';
+import { Op } from 'sequelize';
 
 // Mock dependencies
-vi.mock('../../../services/email/BaseEmailService.mjs');
-vi.mock('../../../models/index.mjs', () => ({
+vi.mock('/services/email/BaseEmailService.mjs');
+vi.mock('/models/index.mjs', () => ({
   EmailSubscription: {
     findAll: vi.fn()
   }
@@ -82,7 +83,7 @@ describe('CarnivalEmailService', () => {
       const result = await carnivalEmailService.sendCarnivalNotification(mockCarnival, 'new');
 
       expect(EmailSubscription.findAll).toHaveBeenCalledWith({
-        where: { states: { [Symbol.for('Op.contains')]: ['NSW'] }, isActive: true }
+        where: { states: { [Op.contains]: ['NSW'] }, isActive: true }
       });
       expect(sendMailMock).toHaveBeenCalledTimes(2);
       expect(sendMailMock.mock.calls[0][0].to).toBe('sub1@test.com');
