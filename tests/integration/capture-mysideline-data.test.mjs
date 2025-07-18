@@ -182,7 +182,7 @@ describe('MySideline Capture Script', () => {
 
         test('should capture MySideline data successfully', async () => {
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert - Check that fixture file was created
             const fixtureExists = await fs.access(MOCK_CAPTURE_OUTPUT)
@@ -194,7 +194,7 @@ describe('MySideline Capture Script', () => {
 
         test('should generate correct fixture file content', async () => {
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert - Read and validate fixture file content
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');
@@ -209,7 +209,7 @@ describe('MySideline Capture Script', () => {
 
         test('should use correct MySideline URL', async () => {
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert - Check that fetch was called with correct URL
             expect(mockFetch).toHaveBeenCalledWith(
@@ -222,7 +222,7 @@ describe('MySideline Capture Script', () => {
             mockFetch.mockRejectedValue(new Error('Network error'));
 
             // Act & Assert - Should not throw
-            await expect(captureModule.captureMySidelineData()).resolves.not.toThrow();
+            await expect(captureModule.captureMySidelineData(MOCK_FIXTURES_DIR)).resolves.not.toThrow();
             
             // Check that fixture was still created (without HTML)
             const fixtureExists = await fs.access(MOCK_CAPTURE_OUTPUT)
@@ -241,7 +241,7 @@ describe('MySideline Capture Script', () => {
             });
 
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert - Check that dangerous characters are escaped
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');
@@ -275,12 +275,12 @@ describe('MySideline Capture Script', () => {
 
         test('should handle empty events gracefully', async () => {
             // Act & Assert - Should not throw
-            await expect(captureModule.captureMySidelineData()).resolves.not.toThrow();
+            await expect(captureModule.captureMySidelineData(MOCK_FIXTURES_DIR)).resolves.not.toThrow();
         });
 
         test('should create empty fixture file when no events found', async () => {
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert - Check fixture file was created
             const fixtureExists = await fs.access(MOCK_CAPTURE_OUTPUT)
@@ -318,13 +318,13 @@ describe('MySideline Capture Script', () => {
 
         test('should handle scraper service errors', async () => {
             // Act & Assert - Should throw the error
-            await expect(captureModule.captureMySidelineData()).rejects.toThrow('MySideline scraping failed');
+            await expect(captureModule.captureMySidelineData(MOCK_FIXTURES_DIR)).rejects.toThrow('MySideline scraping failed');
         });
 
         test('should create fallback fixture on error', async () => {
             // Act - Try to capture, expect it to fail
             try {
-                await captureModule.captureMySidelineData();
+                await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
             } catch (error) {
                 // Expected to fail
             }
@@ -366,7 +366,7 @@ describe('MySideline Capture Script', () => {
             const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
-            await freshCaptureModule.captureMySidelineData();
+            await freshCaptureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert
             expect(mockFetch).toHaveBeenCalledWith(customUrl);
@@ -393,7 +393,7 @@ describe('MySideline Capture Script', () => {
             const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
-            await freshCaptureModule.captureMySidelineData();
+            await freshCaptureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert - Should use fallback URL
             expect(mockFetch).toHaveBeenCalledWith(
@@ -423,7 +423,7 @@ describe('MySideline Capture Script', () => {
 
         test('should generate valid JavaScript module', async () => {
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert - Try to import the generated fixture
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');
@@ -439,7 +439,7 @@ describe('MySideline Capture Script', () => {
 
         test('should include proper metadata in fixture', async () => {
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');
@@ -452,7 +452,7 @@ describe('MySideline Capture Script', () => {
 
         test('should include helper functions for testing', async () => {
             // Act
-            await captureModule.captureMySidelineData();
+            await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
             // Assert
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');

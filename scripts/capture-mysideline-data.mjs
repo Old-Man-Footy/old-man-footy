@@ -16,10 +16,14 @@ const __dirname = path.dirname(__filename);
 
 /**
  * Captures live MySideline data and saves to test fixtures
+ * @param {string} [outputDir] - Optional directory to save the fixture file.
  */
-async function captureMySidelineData() {
+async function captureMySidelineData(outputDir) {
     console.log('🌐 Capturing MySideline data...');
     
+    const fixturesDir = outputDir || path.join(__dirname, '/tests/fixtures');
+    const fixturesPath = path.join(fixturesDir, 'mysideline-captured-data.mjs');
+
     try {
         // Import the scraper service
         const { default: MySidelineScraperService } = await import('/services/mySidelineScraperService.mjs');
@@ -51,11 +55,9 @@ async function captureMySidelineData() {
             const fixtureContent = generateFixtureFile(liveEvents, rawHTML);
             
             // Ensure fixtures directory exists
-            const fixturesDir = path.join(__dirname, '/tests/fixtures');
             await fs.mkdir(fixturesDir, { recursive: true });
             
             // Save to fixtures file
-            const fixturesPath = path.join(fixturesDir, 'mysideline-captured-data.mjs');
             await fs.writeFile(fixturesPath, fixtureContent, 'utf8');
             
             console.log(`💾 Saved captured data to: ${fixturesPath}`);
@@ -74,9 +76,7 @@ async function captureMySidelineData() {
             
             // Still create a fixture file with empty data for testing
             const fixtureContent = generateEmptyFixtureFile();
-            const fixturesDir = path.join(__dirname, '/tests/fixtures');
             await fs.mkdir(fixturesDir, { recursive: true });
-            const fixturesPath = path.join(fixturesDir, 'mysideline-captured-data.mjs');
             await fs.writeFile(fixturesPath, fixtureContent, 'utf8');
             
             console.log('📝 Created empty fixture file for testing');
@@ -89,9 +89,7 @@ async function captureMySidelineData() {
         // Create fallback fixture for testing
         console.log('📝 Creating fallback fixture file...');
         const fallbackContent = generateFallbackFixtureFile(error);
-        const fixturesDir = path.join(__dirname, '/tests/fixtures');
         await fs.mkdir(fixturesDir, { recursive: true });
-        const fixturesPath = path.join(fixturesDir, 'mysideline-captured-data.mjs');
         await fs.writeFile(fixturesPath, fallbackContent, 'utf8');
         
         throw error;
