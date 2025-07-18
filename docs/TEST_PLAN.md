@@ -32,16 +32,20 @@
 - [x] Invitation Email Services
 - [x] Security Email Services
 - [x] Data Processing Services
-- [ ] Middleware/Utility Gaps
-- [ ] Service Layer Gaps
 
 ### Phase 4: **Service Layer Gaps**
-- [ ] Identify and document missing service layer tests HERE
+- [x] Identify and document missing service layer tests
+  - [ ] `imageService.mjs`
+  - [ ] `userService.mjs`
 - [ ] Implement tests for service layer functionality
 - [ ] Ensure all service layer tests pass
 
 ### Phase 5 **Middleware & Utility Gaps**
-- [ ] Identify and document missing middleware tests HERE
+- [x] Identify and document missing middleware tests
+  - [ ] `maintenance.mjs`
+  - [ ] `notFound.mjs`
+  - [ ] `rateLimiter.mjs`
+  - [ ] `requestLogger.mjs`
 - [ ] Implement tests for middleware functionality
 - [ ] Ensure all middleware tests pass
 
@@ -58,4 +62,4 @@
 - Perform Phase 6 cleanup and optimization
   
 
-*Last updated: after mySideline data service tests*
+*Last updated: after identifying service layer test gaps*
