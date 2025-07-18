@@ -29,15 +29,11 @@
 - [x] Auth Email Services
 - [x] Contact Email Services
 - [x] Carnival Email Services
-- [ ] Invitation Email Services
+- [x] Invitation Email Services
 - [ ] Security Email Services
 - [ ] Data Processing Services
 - [ ] Middleware/Utility Gaps
-
-## Failing Tests, Need review
-- [x] CarnivalEmailService.test.mjs
-- [x] auth.middleware.test.mjs
-- [x] capture-mysideline-data.test.mjs
+- [ ] Service Layer Gaps
 
 ### Phase 4: **Service Layer Gaps**
 - [ ] Identify and document missing service layer tests HERE
