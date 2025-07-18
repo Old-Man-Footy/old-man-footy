@@ -35,21 +35,35 @@
 
 ### Phase 4: **Service Layer Gaps**
 - [x] Identify and document missing service layer tests
-  - [ ] `imageService.mjs`
-  - [ ] `userService.mjs`
+  - [ ] `imageNamingService.mjs`
+  - [ ] `carouselImageService.mjs`
+  - [ ] `mySidelineEventParserService.mjs`
+  - [ ] `mySidelineIntegrationService.mjs`
+  - [ ] `mySidelineLogoDownloadService.mjs`
+  - [ ] `sponsorSortingService.mjs`
 - [ ] Implement tests for service layer functionality
 - [ ] Ensure all service layer tests pass
 
 ### Phase 5 **Middleware & Utility Gaps**
 - [x] Identify and document missing middleware tests
-  - [ ] `maintenance.mjs`
-  - [ ] `notFound.mjs`
-  - [ ] `rateLimiter.mjs`
-  - [ ] `requestLogger.mjs`
-- [ ] Implement tests for middleware functionality
+  - [ ] `asyncHandler.mjs`
+  - [ ] `flash.mjs`
+  - [ ] `upload.mjs`
+  - [ ] `validation.mjs`
+  - [ ] `comingSoon.mjs`
+- [ ] Implement tests for missing middleware functionality
 - [ ] Ensure all middleware tests pass
 
-### Phase 6: Cleanup & Optimization ⏳ PENDING
+### Phase 6: **Models**
+- [x] Identify and document missing model tests
+  - [ ] `AuditLog.mjs`
+  - [ ] `EmailSubscription.mjs`
+  - [ ] `Index.mjs`
+  - [ ] `Sponsor.mjs`
+- [ ] Implement tests for missing models
+- [ ] Ensure all model tests pass
+
+### Phase 7: Cleanup & Optimization ⏳ PENDING
 - [x] Remove Jest dependencies
 - [ ] Update Docker configurations
 - [ ] Update documentation
@@ -62,4 +76,4 @@
 - Perform Phase 6 cleanup and optimization
   
 
-*Last updated: after identifying service layer test gaps*
+*Last updated: after adding imageService tests*
