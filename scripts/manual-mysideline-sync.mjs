@@ -75,7 +75,7 @@ async function main() {
     try {
         // Import the MySideline integration service
         console.log('📦 Importing MySideline integration service...');
-        const { default: mySidelineService } = await import('../services/mySidelineIntegrationService.mjs');
+        const { default: mySidelineService } = await import('/services/mySidelineIntegrationService.mjs');
         
         console.log('✅ Service imported successfully');
         

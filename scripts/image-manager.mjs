@@ -16,10 +16,10 @@
 
 import path from 'path';
 import { promises as fs } from 'fs';
-import ImageNamingService from '../services/imageNamingService.mjs';
+import ImageNamingService from '/services/imageNamingService.mjs';
 import ImageMigrationScript from './migrate-image-names.mjs';
-import { Club, Carnival, User } from '../models/index.mjs';
-import { UPLOAD_DIRECTORIES_ARRAY, UPLOAD_DIRECTORIES } from '../config/constants.mjs';
+import { Club, Carnival, User } from '/models/index.mjs';
+import { UPLOAD_DIRECTORIES_ARRAY, UPLOAD_DIRECTORIES } from '/config/constants.mjs';
 
 /**
  * Image Management CLI for structured image handling

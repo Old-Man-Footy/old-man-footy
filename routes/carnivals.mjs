@@ -1,11 +1,11 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
-import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
-import { organiserEmail } from '../middleware/validation.mjs';
-import * as carnivalController from '../controllers/carnival.controller.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import { ensureAuthenticated } from '/middleware/auth.mjs';
+import { carnivalUpload, handleUploadError } from '/middleware/upload.mjs';
+import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
+import { organiserEmail } from '/middleware/validation.mjs';
+import * as carnivalController from '/controllers/carnival.controller.mjs';
+import { AUSTRALIAN_STATES } from '/config/constants.mjs';
 // Import carnival club routes as a sub-router
 import carnivalClubRoutes from './carnivalClubs.mjs';
 

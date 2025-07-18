@@ -1,10 +1,10 @@
 import express from 'express';
 import { body } from 'express-validator';
-import * as sponsorController from '../controllers/sponsor.controller.mjs';
-import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import { sponsorUpload, handleUploadError } from '../middleware/upload.mjs';
-import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import * as sponsorController from '/controllers/sponsor.controller.mjs';
+import { ensureAuthenticated, ensureAdmin } from '/middleware/auth.mjs';
+import { sponsorUpload, handleUploadError } from '/middleware/upload.mjs';
+import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
+import { AUSTRALIAN_STATES } from '/config/constants.mjs';
 
 const router = express.Router();
 

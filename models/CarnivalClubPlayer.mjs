@@ -6,8 +6,8 @@
  */
 
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
-import { ATTENDANCE_STATUS_ARRAY } from '../config/constants.mjs';
+import { sequelize } from '/config/database.mjs';
+import { ATTENDANCE_STATUS_ARRAY } from '/config/constants.mjs';
 import CarnivalClub from './CarnivalClub.mjs';
 import ClubPlayer from './ClubPlayer.mjs';
 import Carnival from './Carnival.mjs';

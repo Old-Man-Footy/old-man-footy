@@ -22,7 +22,7 @@ async function captureMySidelineData() {
     
     try {
         // Import the scraper service
-        const { default: MySidelineScraperService } = await import('../services/mySidelineScraperService.mjs');
+        const { default: MySidelineScraperService } = await import('/services/mySidelineScraperService.mjs');
         
         const scraperService = new MySidelineScraperService();
         
@@ -51,7 +51,7 @@ async function captureMySidelineData() {
             const fixtureContent = generateFixtureFile(liveEvents, rawHTML);
             
             // Ensure fixtures directory exists
-            const fixturesDir = path.join(__dirname, '../tests/fixtures');
+            const fixturesDir = path.join(__dirname, '/tests/fixtures');
             await fs.mkdir(fixturesDir, { recursive: true });
             
             // Save to fixtures file
@@ -74,7 +74,7 @@ async function captureMySidelineData() {
             
             // Still create a fixture file with empty data for testing
             const fixtureContent = generateEmptyFixtureFile();
-            const fixturesDir = path.join(__dirname, '../tests/fixtures');
+            const fixturesDir = path.join(__dirname, '/tests/fixtures');
             await fs.mkdir(fixturesDir, { recursive: true });
             const fixturesPath = path.join(fixturesDir, 'mysideline-captured-data.mjs');
             await fs.writeFile(fixturesPath, fixtureContent, 'utf8');
@@ -89,7 +89,7 @@ async function captureMySidelineData() {
         // Create fallback fixture for testing
         console.log('📝 Creating fallback fixture file...');
         const fallbackContent = generateFallbackFixtureFile(error);
-        const fixturesDir = path.join(__dirname, '../tests/fixtures');
+        const fixturesDir = path.join(__dirname, '/tests/fixtures');
         await fs.mkdir(fixturesDir, { recursive: true });
         const fixturesPath = path.join(fixturesDir, 'mysideline-captured-data.mjs');
         await fs.writeFile(fixturesPath, fallbackContent, 'utf8');

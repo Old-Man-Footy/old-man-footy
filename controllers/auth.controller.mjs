@@ -5,15 +5,15 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-import { User, Club } from '../models/index.mjs';
+import { User, Club } from '/models/index.mjs';
 import { validationResult } from 'express-validator';
 import { Op } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 import bcrypt from 'bcrypt'; // Fixed: Use bcrypt to match User model
 import crypto from 'crypto';
-import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
-import AuditService from '../services/auditService.mjs';
-import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import InvitationEmailService from '/services/email/InvitationEmailService.mjs';
+import AuditService from '/services/auditService.mjs';
+import { wrapControllers } from '/middleware/asyncHandler.mjs';
 
 /**
  * Display login form

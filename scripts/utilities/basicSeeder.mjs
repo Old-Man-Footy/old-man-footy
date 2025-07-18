@@ -5,13 +5,13 @@
  * and their basic relationships
  */
 
-import { Club, User, Carnival, Sponsor, EmailSubscription, ClubSponsor, CarnivalSponsor, CarnivalClub } from '../../models/index.mjs';
-import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
-import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
-import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
-import MySidelineService from '../../services/mySidelineIntegrationService.mjs';
-import { initializeDatabase } from '../../config/database.mjs';
-import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
+import { Club, User, Carnival, Sponsor, EmailSubscription, ClubSponsor, CarnivalSponsor, CarnivalClub } from '/models/index.mjs';
+import { SAMPLE_CLUBS } from '/fixtures/clubFixtures.mjs';
+import { SAMPLE_CARNIVALS } from '/fixtures/carnivalFixtures.mjs';
+import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '/fixtures/sponsorFixtures.mjs';
+import MySidelineService from '/services/mySidelineIntegrationService.mjs';
+import { initializeDatabase } from '/config/database.mjs';
+import { AUSTRALIAN_STATES } from '/config/constants.mjs';
 
 class BasicSeeder {
     constructor() {

@@ -14,16 +14,16 @@ import {
   CarnivalClub,
   ClubSponsor,
   sequelize,
-} from '../models/index.mjs';
+} from '/models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import ImageNamingService from '../services/imageNamingService.mjs';
-import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
+import ImageNamingService from '/services/imageNamingService.mjs';
+import { sortSponsorsHierarchically } from '/services/sponsorSortingService.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
 import path from 'path';
 import fs from 'fs/promises';
-import { wrapControllers } from '../middleware/asyncHandler.mjs';
-import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
+import { wrapControllers } from '/middleware/asyncHandler.mjs';
+import InvitationEmailService from '/services/email/InvitationEmailService.mjs';
 
 /**
  * Display public club listings with search and filter options

@@ -6,8 +6,8 @@
  * with the current model definitions to fix any schema mismatches.
  */
 
-import { sequelize } from '../config/database.mjs';
-import '../models/index.mjs'; // Import all models
+import { sequelize } from '/config/database.mjs';
+import '/models/index.mjs'; // Import all models
 
 async function syncDatabase() {
     try {
@@ -22,7 +22,7 @@ async function syncDatabase() {
         console.log('✅ Database schema synchronized successfully');
         
         // Test a simple query to verify everything works
-        const { Carnival } = await import('../models/index.mjs');
+        const { Carnival } = await import('/models/index.mjs');
         const carnivalCount = await Carnival.count();
         console.log(`✅ Database test query successful - Found ${carnivalCount} carnivals`);
         

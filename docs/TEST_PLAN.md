@@ -10,8 +10,8 @@
 - [x] Models tested
 - [x] Services tested
 - [x] Controllers tested
-- [x] Middleware tested
-- [x] Integration tests migrated
+- [x] Middleware tested -- Needs review
+- [x] Integration tests migrated -- Needs review
 
 ### Phase 3: Missing/Additional Tests 🚧
 - [x] Club Controller
@@ -26,9 +26,18 @@
 - [x] Coming Soon Controller
 - [x] Maintenance Controller
 - [x] User Guide Controller
-- [ ] Email Services
+- [x] Auth Email Services
+- [x] Contact Email Services
+- [ ] Carnival Email Services -- Needs review
+- [ ] Invitation Email Services
+- [ ] Security Email Services
 - [ ] Data Processing Services
 - [ ] Middleware/Utility Gaps
+
+## Failing Tests, Need review
+- [ ] CarnivalEmailService.test.mjs
+- [ ] auth.middleware.test.mjs
+- [ ] capture-mysideline-data.test.mjs
 
 ### Phase 4: **Service Layer Gaps**
 - [ ] Identify and document missing service layer tests HERE

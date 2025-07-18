@@ -16,7 +16,7 @@
 import { extname, join, parse, dirname, relative, basename } from 'path';
 import { promises as fs } from 'fs';
 import { createHash } from 'crypto';
-import { Club, Carnival, Sponsor, User } from '../models/index.mjs';
+import { Club, Carnival, Sponsor, User } from '/models/index.mjs';
 
 class ImageNamingService {
     /**

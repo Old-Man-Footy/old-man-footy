@@ -16,7 +16,7 @@ try {
     
     // Test 2: Models import
     console.log('🔄 Step 3: Attempting to import models...');
-    const modelsModule = await import('../models/index.mjs');
+    const modelsModule = await import('/models/index.mjs');
     console.log('✅ Step 3: Models import successful');
     
     const { sequelize, SyncLog } = modelsModule;

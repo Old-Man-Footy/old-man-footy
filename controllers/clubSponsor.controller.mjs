@@ -5,10 +5,10 @@
  * for the Old Man Footy platform.
  */
 
-import { ClubSponsor, Club, Sponsor } from '../models/index.mjs';
+import { ClubSponsor, Club, Sponsor } from '/models/index.mjs';
 import { Op } from 'sequelize';
-import { wrapControllers } from '../middleware/asyncHandler.mjs';
-import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
+import { wrapControllers } from '/middleware/asyncHandler.mjs';
+import { SPONSORSHIP_LEVELS } from '/config/constants.mjs';
 
 /**
  * Create a new club-sponsor relationship

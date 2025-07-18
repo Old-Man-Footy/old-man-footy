@@ -7,8 +7,8 @@
 
 import { DataTypes, Op, QueryTypes } from 'sequelize';
 import { sequelize } from './database.mjs';
-import { User } from '../models/index.mjs';
-import { Carnival } from '../models/index.mjs';
+import { User } from '/models/index.mjs';
+import { Carnival } from '/models/index.mjs';
 
 class DatabaseOptimizer {
     static async configureProduction() {
@@ -226,7 +226,7 @@ class DatabaseOptimizer {
             // Cleanup expired tokens
             const now = new Date();
             
-            const { User } = await import('../models/index.mjs');
+            const { User } = await import('/models/index.mjs');
             const expiredInvitations = await User.update(
                 { 
                     invitationToken: null,
@@ -246,7 +246,7 @@ class DatabaseOptimizer {
             const archiveDate = new Date();
             archiveDate.setFullYear(archiveDate.getFullYear() - 2);
 
-            const { Carnival } = await import('../models/index.mjs');
+            const { Carnival } = await import('/models/index.mjs');
             const oldCarnivals = await Carnival.update(
                 { 
                     isActive: false,

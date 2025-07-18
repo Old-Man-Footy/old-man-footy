@@ -13,7 +13,7 @@
  * - utilities/ - Contains business logic for seeding operations
  */
 
-import { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } from '../models/index.mjs';
+import { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } from '/models/index.mjs';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';

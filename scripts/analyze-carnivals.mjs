@@ -5,8 +5,8 @@
  * Analyze all carnivals in the database to understand the current state
  */
 
-import { sequelize } from '../config/database.mjs';
-import { Carnival, User } from '../models/index.mjs';
+import { sequelize } from '/config/database.mjs';
+import { Carnival, User } from '/models/index.mjs';
 
 async function analyzeCarnivalsDatabase() {
     try {

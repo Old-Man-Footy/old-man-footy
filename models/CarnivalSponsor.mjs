@@ -6,8 +6,8 @@
  */
 
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
-import { SPONSORSHIP_LEVELS_ARRAY, LOGO_DISPLAY_SIZES_ARRAY } from '../config/constants.mjs';
+import { sequelize } from '/config/database.mjs';
+import { SPONSORSHIP_LEVELS_ARRAY, LOGO_DISPLAY_SIZES_ARRAY } from '/config/constants.mjs';
 import Sponsor from './Sponsor.mjs';
 import Carnival from './Carnival.mjs';
 

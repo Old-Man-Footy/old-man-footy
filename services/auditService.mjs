@@ -6,8 +6,8 @@
  * context extraction and standardized action naming.
  */
 
-import AuditLog from '../models/AuditLog.mjs';
-import { AUDIT_RESULTS } from '../config/constants.mjs';
+import AuditLog from '/models/AuditLog.mjs';
+import { AUDIT_RESULTS } from '/config/constants.mjs';
 
 /**
  * Audit Service Class

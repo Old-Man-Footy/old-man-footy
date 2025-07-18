@@ -6,8 +6,8 @@
  */
 
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
-import { PLAYER_SHORTS_COLORS_ARRAY } from '../config/constants.mjs';
+import { sequelize } from '/config/database.mjs';
+import { PLAYER_SHORTS_COLORS_ARRAY } from '/config/constants.mjs';
 
 /**
  * ClubPlayer model class extending Sequelize Model

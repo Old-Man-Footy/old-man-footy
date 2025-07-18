@@ -5,11 +5,11 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-import { Sponsor, Club } from '../models/index.mjs';
+import { Sponsor, Club } from '/models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
-import { asyncHandler } from '../middleware/asyncHandler.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
+import { asyncHandler } from '/middleware/asyncHandler.mjs';
 
 /**
  * Display public sponsor listings with search and filter options

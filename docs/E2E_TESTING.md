@@ -70,7 +70,7 @@ E2E tests use the Page Object Model pattern for maintainability:
 
 ```javascript
 // Example usage
-import { HomePage } from '../pages/HomePage.js';
+import { HomePage } from '/pages/HomePage.js';
 
 test('should subscribe to newsletter', async ({ page }) => {
   const homePage = new HomePage(page);

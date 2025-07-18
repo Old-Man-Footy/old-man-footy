@@ -27,7 +27,7 @@ vi.mock('/models/index.mjs', () => {
     id: 1,
     carnivalId: 1,
     sponsorId: 1,
-    sponsorshipLevel: SPONSORSHIP_LEVELS.CarnivalSponsor.Bronze,
+    sponsorshipLevel: SPONSORSHIP_LEVELS.BRONZE,
     sponsorshipValue: 1000.00,
     packageDetails: 'Standard sponsorship package',
     displayOrder: 0,
@@ -146,8 +146,6 @@ import {
   Op
 } from '/models/index.mjs';
 
-import { SPONSORSHIP_LEVELS } from '/config/constants.mjs';
-
 describe('Carnival Sponsor Controller', () => {
   let req, res, next;
 
@@ -211,13 +209,13 @@ describe('Carnival Sponsor Controller', () => {
         id: 1,
         carnivalId: 1,
         sponsorId: 1,
-        sponsorshipLevel: 'gold'
+        sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD
       });
 
       req.body = {
         carnivalId: '1',
         sponsorId: '1',
-        sponsorshipLevel: 'gold',
+        sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD,
         sponsorshipValue: 5000,
         packageDetails: 'Premium sponsorship package',
         displayOrder: 1,
@@ -235,7 +233,7 @@ describe('Carnival Sponsor Controller', () => {
       expect(CarnivalSponsor.create).toHaveBeenCalledWith(expect.objectContaining({
         carnivalId: '1',
         sponsorId: '1',
-        sponsorshipLevel: 'gold',
+        sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD,
         sponsorshipValue: 5000,
         packageDetails: 'Premium sponsorship package',
         displayOrder: 1,
@@ -268,7 +266,7 @@ describe('Carnival Sponsor Controller', () => {
       await createCarnivalSponsor(req, res);
 
       expect(CarnivalSponsor.create).toHaveBeenCalledWith(expect.objectContaining({
-        sponsorshipLevel: 'bronze'
+        sponsorshipLevel: SPONSORSHIP_LEVELS.BRONZE
       }));
     });
 
@@ -317,7 +315,7 @@ describe('Carnival Sponsor Controller', () => {
 
     it('should return 400 when required fields are missing', async () => {
       req.body = {
-        sponsorshipLevel: 'gold'
+        sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD
       };
 
       await createCarnivalSponsor(req, res);
@@ -372,7 +370,7 @@ describe('Carnival Sponsor Controller', () => {
       req.body = {
         carnivalId: '1',
         sponsorId: '1',
-        sponsorshipLevel: 'silver'
+        sponsorshipLevel: SPONSORSHIP_LEVELS.SILVER
       };
 
       Carnival.findByPk.mockResolvedValue(mockCarnival);
@@ -463,7 +461,7 @@ describe('Carnival Sponsor Controller', () => {
 
     it('should filter relationships by sponsorship level', async () => {
       req.query = {
-        sponsorshipLevel: 'gold',
+        sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD,
         isActive: 'true'
       };
 
@@ -476,7 +474,7 @@ describe('Carnival Sponsor Controller', () => {
 
       expect(CarnivalSponsor.findAndCountAll).toHaveBeenCalledWith(expect.objectContaining({
         where: {
-          sponsorshipLevel: 'gold',
+          sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD,
           isActive: true
         }
       }));
@@ -574,7 +572,7 @@ describe('Carnival Sponsor Controller', () => {
 
     it('should return 404 when relationship not found for update', async () => {
       req.params.id = '999';
-      req.body = { sponsorshipLevel: 'gold' };
+      req.body = { sponsorshipLevel: SPONSORSHIP_LEVELS.GOLD };
 
       CarnivalSponsor.findByPk.mockResolvedValue(null);
 
@@ -827,7 +825,7 @@ describe('Carnival Sponsor Controller', () => {
       req.body = {
         carnivalId: '1',
         sponsorId: '1',
-        sponsorshipLevel: 'bronze'
+        sponsorshipLevel: SPONSORSHIP_LEVELS.BRONZE
       };
 
       Carnival.findByPk.mockResolvedValue(createMockCarnival());

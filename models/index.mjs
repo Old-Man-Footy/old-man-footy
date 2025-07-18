@@ -5,7 +5,7 @@
  * This file is responsible for importing all models and defining their relationships.
  */
 
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 // Import all models
 import User from './User.mjs';

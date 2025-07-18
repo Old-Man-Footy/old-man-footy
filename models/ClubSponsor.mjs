@@ -6,7 +6,7 @@
  */
 
 import { DataTypes, Model, Op } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 import Sponsor from './Sponsor.mjs';
 import Club from './Club.mjs';
 

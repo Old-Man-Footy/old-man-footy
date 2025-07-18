@@ -8,7 +8,7 @@
 import { promises as fs } from 'fs';
 import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { IMAGE_DIRECTORIES_ARRAY, SUPPORTED_IMAGE_EXTENSIONS } from '../config/constants.mjs';
+import { IMAGE_DIRECTORIES_ARRAY, SUPPORTED_IMAGE_EXTENSIONS } from '/config/constants.mjs';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
