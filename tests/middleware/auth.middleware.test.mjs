@@ -260,7 +260,6 @@ describe('Authentication Middleware', () => {
   describe('ensureAdmin', () => {
     it('should allow admin users to proceed', () => {
       // Arrange
-      mockReq.isAuthenticated.mockReturnValue(true);
       mockReq.user = { id: 1, isAdmin: true };
 
       // Act
@@ -342,7 +341,7 @@ describe('Authentication Middleware', () => {
   describe('requireAdmin', () => {
     it('should allow admin users to proceed', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'admin' };
+      mockReq.user = { id: 1, isAdmin: true };
 
       // Act
       requireAdmin(mockReq, mockRes, mockNext);
@@ -354,7 +353,7 @@ describe('Authentication Middleware', () => {
 
     it('should redirect non-admin users to root', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'delegate' };
+      mockReq.user = { id:1, isAdmin: false };
 
       // Act
       requireAdmin(mockReq, mockRes, mockNext);
@@ -381,7 +380,7 @@ describe('Authentication Middleware', () => {
   describe('requireAdminOrPrimaryDelegate', () => {
     it('should allow admin users to proceed', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'admin' };
+      mockReq.user = { id: 1, isAdmin: true, isPrimaryDelegate: false };
 
       // Act
       requireAdminOrPrimaryDelegate(mockReq, mockRes, mockNext);
@@ -393,7 +392,7 @@ describe('Authentication Middleware', () => {
 
     it('should allow primary delegate users to proceed', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'primary_delegate' };
+      mockReq.user = { id: 1, isAdmin: false, isPrimaryDelegate: true };
 
       // Act
       requireAdminOrPrimaryDelegate(mockReq, mockRes, mockNext);
@@ -405,7 +404,7 @@ describe('Authentication Middleware', () => {
 
     it('should redirect regular delegate users', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'delegate' };
+      mockReq.user = { id: 1, isAdmin: false, isPrimaryDelegate: false };
 
       // Act
       requireAdminOrPrimaryDelegate(mockReq, mockRes, mockNext);
@@ -420,7 +419,7 @@ describe('Authentication Middleware', () => {
   describe('requireDelegate', () => {
     it('should allow admin users to proceed', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'admin' };
+      mockReq.user = { id: 1, isAdmin: true };
 
       // Act
       requireDelegate(mockReq, mockRes, mockNext);
@@ -432,7 +431,7 @@ describe('Authentication Middleware', () => {
 
     it('should allow primary delegate users to proceed', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'primary_delegate' };
+      mockReq.user = { id: 1, isPrimaryDelegate: true };
 
       // Act
       requireDelegate(mockReq, mockRes, mockNext);
@@ -444,7 +443,7 @@ describe('Authentication Middleware', () => {
 
     it('should allow delegate users to proceed', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'delegate' };
+      mockReq.user = { id: 1, isAdmin: false, isPrimaryDelegate: false };
 
       // Act
       requireDelegate(mockReq, mockRes, mockNext);
@@ -454,16 +453,16 @@ describe('Authentication Middleware', () => {
       expect(mockRes.redirect).not.toHaveBeenCalled();
     });
 
-    it('should redirect users with insufficient privileges', () => {
+    it('should redirect unauthenticated users', () => {
       // Arrange
-      mockReq.user = { id: 1, role: 'user' };
+      mockReq.user = null;
 
       // Act
       requireDelegate(mockReq, mockRes, mockNext);
 
       // Assert
-      expect(mockRes.redirect).toHaveBeenCalledWith('/');
-      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Delegate privileges required.');
+      expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Access denied. Please log in to access this page.');
       expect(mockNext).not.toHaveBeenCalled();
     });
   });
