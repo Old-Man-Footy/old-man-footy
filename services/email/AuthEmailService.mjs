@@ -20,9 +20,18 @@ export class AuthEmailService extends BaseEmailService {
         
         // Handle both single state (string) and multiple states (array) for backward compatibility
         const stateArray = Array.isArray(states) ? states : [states];
-        const stateText = stateArray.length === 1 
-            ? `in ${stateArray[0]}` 
-            : `in ${stateArray.slice(0, -1).join(', ')} and ${stateArray[stateArray.length - 1]}`;
+        
+        let stateText;
+        switch (stateArray.length) {
+            case 0:
+                stateText = 'in your subscribed regions';
+                break;
+            case 1:
+                stateText = `in ${stateArray[0]}`;
+                break;
+            default:
+                stateText = `in ${stateArray.slice(0, -1).join(', ')} and ${stateArray[stateArray.length - 1]}`;
+        }
         
         const mailOptions = {
             from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
