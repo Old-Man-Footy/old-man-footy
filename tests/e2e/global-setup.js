@@ -11,8 +11,8 @@ async function globalSetup() {
   
   try {
     // Import ES modules
-    const { sequelize } = await import('../../config/database.mjs');
-    const { initializeDatabase } = await import('../../config/database.mjs');
+    const { sequelize } = await import('/config/database.mjs');
+    const { initializeDatabase } = await import('/config/database.mjs');
     
     // Initialize test database
     await initializeDatabase();
@@ -47,7 +47,7 @@ async function globalSetup() {
  * Create essential test data using the same approach as production
  */
 async function createTestData() {
-  const { User, Club, Carnival, Sponsor } = await import('../../models/index.mjs');
+  const { User, Club, Carnival, Sponsor } = await import('/models/index.mjs');
   
   // Create test admin user - using plain password that will be hashed by User model
   const adminUser = await User.create({

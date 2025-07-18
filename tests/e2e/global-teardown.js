@@ -9,7 +9,7 @@ async function globalTeardown() {
   
   try {
     // Import ES modules
-    const { sequelize } = await import('../../config/database.mjs');
+    const { sequelize } = await import('/config/database.mjs');
     
     // Clean up test database
     await sequelize.close();
