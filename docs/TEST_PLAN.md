@@ -30,7 +30,7 @@
 - [x] Contact Email Services
 - [x] Carnival Email Services
 - [x] Invitation Email Services
-- [ ] Security Email Services
+- [x] Security Email Services
 - [ ] Data Processing Services
 - [ ] Middleware/Utility Gaps
 - [ ] Service Layer Gaps
