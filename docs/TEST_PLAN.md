@@ -24,7 +24,7 @@
 - [x] Club Sponsor Controller
 - [x] Carnival Sponsor Controller
 - [x] Coming Soon Controller
-- [ ] Maintenance Controller
+- [x] Maintenance Controller
 - [ ] User Guide Controller
 - [ ] Email Services
 - [ ] Data Processing Services

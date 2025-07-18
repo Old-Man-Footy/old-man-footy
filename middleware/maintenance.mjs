@@ -64,13 +64,15 @@ const maintenanceMode = (req, res, next) => {
   }
 
   // Allow logged-in users to access regular screens
-  if (req.user && req.isAuthenticated()) {
+  if (req.user && typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
     return next();
   }
 
   // Block register route during maintenance mode
   if (req.path === '/auth/register') {
-    req.flash('error_msg', 'Registration is currently disabled during maintenance. Please try again later.');
+    if (typeof req.flash === 'function') {
+      req.flash('error_msg', 'Registration is currently disabled during maintenance. Please try again later.');
+    }
     return res.redirect('/maintenance');
   }
 

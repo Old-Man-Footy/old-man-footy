@@ -139,7 +139,33 @@ describe('Maintenance Middleware', () => {
             expect(res.redirect).not.toHaveBeenCalled();
         });
 
-        it('should allow access to maintenance status API endpoint', () => {
+        it('should allow access to /subscribe endpoint', () => {
+            // Arrange
+            req.path = '/subscribe';
+
+            // Act
+            maintenanceMode(req, res, next);
+
+            // Assert
+            expect(next).toHaveBeenCalled();
+            expect(res.redirect).not.toHaveBeenCalled();
+        });
+
+        it('should block registration route and redirect to maintenance page with flash message', () => {
+            // Arrange
+            req.path = '/auth/register';
+            req.flash = vi.fn();
+
+            // Act
+            maintenanceMode(req, res, next);
+
+            // Assert
+            expect(req.flash).toHaveBeenCalledWith('error_msg', 'Registration is currently disabled during maintenance. Please try again later.');
+            expect(res.redirect).toHaveBeenCalledWith('/maintenance');
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        it('should allow access to /api/maintenance/status endpoint', () => {
             // Arrange
             req.path = '/api/maintenance/status';
 
@@ -187,6 +213,41 @@ describe('Maintenance Middleware', () => {
             // Assert
             expect(res.redirect).toHaveBeenCalledWith('/maintenance');
             expect(next).not.toHaveBeenCalled();
+        });
+
+        it('should handle missing isAuthenticated method gracefully', () => {
+            // Arrange
+            req.path = '/dashboard';
+            delete req.isAuthenticated;
+            req.user = { id: 2, isAdmin: false };
+
+            // Act
+            maintenanceMode(req, res, next);
+
+            // Assert
+            expect(res.redirect).toHaveBeenCalledWith('/maintenance');
+        });
+
+        it('should handle missing flash method gracefully', () => {
+            // Arrange
+            req.path = '/auth/register';
+            delete req.flash;
+
+            // Act
+            expect(() => maintenanceMode(req, res, next)).not.toThrow();
+
+            // Assert
+            expect(res.redirect).toHaveBeenCalledWith('/maintenance');
+        });
+
+        it('should not throw if req or res are missing expected methods', () => {
+            // Arrange
+            const minimalReq = { path: '/dashboard' };
+            const minimalRes = { redirect: vi.fn() };
+            const minimalNext = vi.fn();
+
+            // Act & Assert
+            expect(() => maintenanceMode(minimalReq, minimalRes, minimalNext)).not.toThrow();
         });
     });
 });
