@@ -94,8 +94,8 @@ export class CarnivalEmailService extends BaseEmailService {
             const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
             
             const promises = attendeeClubs.map(club => {
-                const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
-                if (!recipientEmail) {
+                const recipient = this._getRecipientDetails(club);
+                if (!recipient.email) {
                     console.warn(`No email found for club: ${club.clubName}`);
                     // Return a rejected promise for Promise.allSettled to correctly handle failures
                     return Promise.reject({ status: 'rejected', reason: 'No email address' });
@@ -103,9 +103,9 @@ export class CarnivalEmailService extends BaseEmailService {
 
                 const mailOptions = {
                     from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
-                    to: recipientEmail,
+                    to: recipient.email,
                     subject: `Important Update: ${carnival.title}`,
-                    html: this._buildCarnivalInfoToAttendeesHtml(carnival, club, senderName, customMessage, carnivalUrl)
+                    html: this._buildCarnivalInfoToAttendeesHtml(carnival, club, senderName, customMessage, carnivalUrl, recipient.name)
                 };
 
                 return this.transporter.sendMail(mailOptions);
@@ -142,25 +142,23 @@ export class CarnivalEmailService extends BaseEmailService {
         try {
             const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
             const loginUrl = `${this._getBaseUrl()}/auth/login`;
-            const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
-            
-            const contactFirstName = this._extractFirstName(club);
+            const recipient = this._getRecipientDetails(club);
 
-            if (!recipientEmail) {
+            if (!recipient.email) {
                 console.warn(`No email found for club: ${club.clubName}`);
                 return { success: false, message: 'No email address available' };
             }
 
             const mailOptions = {
                 from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
-                to: recipientEmail,
+                to: recipient.email,
                 subject: `🎉 Registration Approved: ${carnival.title}`,
-                html: this._buildRegistrationApprovalHtml(carnival, club, approverName, contactFirstName, carnivalUrl, loginUrl)
+                html: this._buildRegistrationApprovalHtml(carnival, club, approverName, recipient.name, carnivalUrl, loginUrl)
             };
 
             const result = await this.sendEmail(mailOptions, 'Registration Approval');
             if (result.success) {
-                console.log(`Registration approval email sent to: ${recipientEmail}`);
+                console.log(`Registration approval email sent to: ${recipient.email}`);
             }
             return result;
 
@@ -181,24 +179,23 @@ export class CarnivalEmailService extends BaseEmailService {
     async sendRegistrationRejection(carnival, club, rejectorName, rejectionReason) {
         try {
             const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
-            const recipientEmail = club.primaryDelegateEmail || club.contactEmail;
-            const contactFirstName = this._extractFirstName(club);
+            const recipient = this._getRecipientDetails(club);
 
-            if (!recipientEmail) {
+            if (!recipient.email) {
                 console.warn(`No email found for club: ${club.clubName}`);
                 return { success: false, message: 'No email address available' };
             }
 
             const mailOptions = {
                 from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
-                to: recipientEmail,
+                to: recipient.email,
                 subject: `Registration Update: ${carnival.title}`,
-                html: this._buildRegistrationRejectionHtml(carnival, club, rejectorName, rejectionReason, contactFirstName, carnivalUrl)
+                html: this._buildRegistrationRejectionHtml(carnival, club, rejectorName, rejectionReason, recipient.name, carnivalUrl)
             };
 
             const result = await this.sendEmail(mailOptions, 'Registration Rejection');
             if (result.success) {
-                console.log(`Registration rejection email sent to: ${recipientEmail}`);
+                console.log(`Registration rejection email sent to: ${recipient.email}`);
             }
             return result;
 
@@ -240,19 +237,37 @@ export class CarnivalEmailService extends BaseEmailService {
     }
 
     /**
-     * Extract first name from club contact information
+     * Get recipient details (email and name) for a club
      * @param {Object} club - Club instance
-     * @returns {string} First name or default
+     * @returns {{email: string|null, name: string}}
      */
-    _extractFirstName(club) {
-        let contactFirstName = 'there'; // Default fallback
-        // Prioritise delegate name to align with recipient logic
-        if (club.primaryDelegateName) {
-            contactFirstName = club.primaryDelegateName.split(' ')[0];
-        } else if (club.contactPerson) {
-            contactFirstName = club.contactPerson.split(' ')[0];
+    _getRecipientDetails(club) {
+        if (club.primaryDelegateEmail && club.primaryDelegateName) {
+            return {
+                email: club.primaryDelegateEmail,
+                name: club.primaryDelegateName.split(' ')[0]
+            };
         }
-        return contactFirstName;
+        if (club.contactEmail && club.contactPerson) {
+            return {
+                email: club.contactEmail,
+                name: club.contactPerson.split(' ')[0]
+            };
+        }
+        // Fallback cases
+        if (club.primaryDelegateEmail) {
+            return {
+                email: club.primaryDelegateEmail,
+                name: club.clubName // Default to club name if specific name is missing
+            };
+        }
+        if (club.contactEmail) {
+            return {
+                email: club.contactEmail,
+                name: club.clubName
+            };
+        }
+        return { email: null, name: club.clubName };
     }
 
     /**
@@ -329,9 +344,10 @@ export class CarnivalEmailService extends BaseEmailService {
      * @param {string} senderName - Name of sender
      * @param {string} customMessage - Custom message
      * @param {string} carnivalUrl - URL to carnival page
+     * @param {string} contactFirstName - First name of the contact person
      * @returns {string} HTML content
      */
-    _buildCarnivalInfoToAttendeesHtml(carnival, club, senderName, customMessage, carnivalUrl) {
+    _buildCarnivalInfoToAttendeesHtml(carnival, club, senderName, customMessage, carnivalUrl, contactFirstName) {
         return `
             <div style="${this._getEmailContainerStyles()}">
                 ${this._getEmailHeader()}
@@ -339,7 +355,7 @@ export class CarnivalEmailService extends BaseEmailService {
                 <div style="${this._getEmailContentStyles()}">
                     <h2 style="color: #006837;">📢 Carnival Information Update</h2>
                     
-                    <p>Hello <strong>${club.clubName}</strong>,</p>
+                    <p>Hello <strong>${contactFirstName || club.clubName}</strong>,</p>
                     
                     <p><strong>${senderName}</strong> from the hosting club has sent you important information about the carnival you're attending:</p>
                     

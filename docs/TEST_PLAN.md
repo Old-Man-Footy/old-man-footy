@@ -28,14 +28,14 @@
 - [x] User Guide Controller
 - [x] Auth Email Services
 - [x] Contact Email Services
-- [ ] Carnival Email Services -- Needs review
+- [x] Carnival Email Services
 - [ ] Invitation Email Services
 - [ ] Security Email Services
 - [ ] Data Processing Services
 - [ ] Middleware/Utility Gaps
 
 ## Failing Tests, Need review
-- [ ] CarnivalEmailService.test.mjs
+- [x] CarnivalEmailService.test.mjs
 - [ ] auth.middleware.test.mjs
 - [ ] capture-mysideline-data.test.mjs
 
