@@ -25,7 +25,7 @@
 - [x] Carnival Sponsor Controller
 - [x] Coming Soon Controller
 - [x] Maintenance Controller
-- [ ] User Guide Controller
+- [x] User Guide Controller
 - [ ] Email Services
 - [ ] Data Processing Services
 - [ ] Middleware/Utility Gaps
