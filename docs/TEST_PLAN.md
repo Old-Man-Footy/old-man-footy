@@ -35,7 +35,7 @@
 
 ### Phase 4: **Service Layer Gaps**
 - [x] Identify and document missing service layer tests
-  - [ ] `imageNamingService.mjs`
+  - [x] `imageNamingService.mjs`
   - [ ] `carouselImageService.mjs`
   - [ ] `mySidelineEventParserService.mjs`
   - [ ] `mySidelineIntegrationService.mjs`

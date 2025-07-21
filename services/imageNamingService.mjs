@@ -189,7 +189,8 @@ class ImageNamingService {
         const basePath = join('public', this.getRelativePath(entityType, imageType || 'logo'));
         
         try {
-            const files = await fs.readdir(dirname(basePath));
+            await fs.mkdir(basePath, { recursive: true });
+            const files = await fs.readdir(basePath);
             const matchingFiles = files.filter(file => {
                 const parsed = this.parseImageName(file);
                 return parsed && 
@@ -225,7 +226,7 @@ class ImageNamingService {
         for (let i = 0; i < existingImages.length; i++) {
             try {
                 const imageUrl = existingImages[i];
-                const oldPath = join('public/uploads', imageUrl.replace(/^\/uploads\//, ''));
+                const oldPath = join('public', 'uploads', imageUrl.replace(/^\/uploads\//, ''));
                 
                 // Determine image type from old path
                 let imageType = this.IMAGE_TYPES.GALLERY;
@@ -243,7 +244,7 @@ class ImageNamingService {
                     customSuffix: 'migrated'
                 });
                 
-                const newPath = join('public/uploads', namingResult.relativePath, namingResult.filename);
+                const newPath = join('public', 'uploads', namingResult.relativePath, namingResult.filename);
                 
                 // Ensure directory exists
                 await fs.mkdir(dirname(newPath), { recursive: true });
@@ -303,7 +304,11 @@ class ImageNamingService {
             };
 
             // Scan upload directories using constants
-            const uploadDirs = ['public/uploads/logos', 'public/uploads/images', 'public/uploads/documents'];
+            const uploadDirs = [
+                join('public', 'uploads', 'logos'),
+                join('public', 'uploads', 'images'),
+                join('public', 'uploads', 'documents')
+            ];
             
             for (const dir of uploadDirs) {
                 try {
