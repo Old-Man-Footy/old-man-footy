@@ -48,7 +48,7 @@
 - [x] Identify and document missing middleware tests
   - [x] `asyncHandler.mjs`
   - [x] `flash.mjs`
-  - [ ] `upload.mjs`
+  - [x] `upload.mjs`
   - [ ] `validation.mjs`
   - [ ] `comingSoon.mjs`
 - [ ] Implement tests for missing middleware functionality

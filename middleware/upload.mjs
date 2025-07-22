@@ -410,3 +410,5 @@ export const handleUploadError = (error, req, res, next) => {
     }
     next();
 };
+
+export { extractUploadContext, fileFilter };
