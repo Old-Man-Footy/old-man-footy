@@ -5,12 +5,16 @@
 
 /**
  * Toggle custom date fields based on period selection
+ * Shows or hides custom date fields depending on the selected period.
+ * Handles missing elements gracefully.
+ * @returns {void}
  */
-function toggleCustomDates() {
-    const period = document.getElementById('period').value;
+export function toggleCustomDates() {
+    const periodElement = document.getElementById('period');
     const startDateGroup = document.getElementById('startDateGroup');
     const endDateGroup = document.getElementById('endDateGroup');
-    
+    if (!periodElement || !startDateGroup || !endDateGroup) return;
+    const period = periodElement.value;
     if (period === 'custom') {
         startDateGroup.style.display = 'block';
         endDateGroup.style.display = 'block';
@@ -23,7 +27,7 @@ function toggleCustomDates() {
 /**
  * Export report functionality
  */
-async function exportReport() {
+export async function exportReport() {
     try {
         const params = new URLSearchParams(window.location.search);
         const response = await fetch('/admin/reports/export?' + params.toString());
