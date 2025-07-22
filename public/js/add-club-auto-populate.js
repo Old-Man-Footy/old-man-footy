@@ -62,7 +62,7 @@ export function initializeClubAutoPopulation() {
  * Clear all auto-populated fields
  * @private
  */
-function clearAutoPopulatedFields() {
+export function clearAutoPopulatedFields() {
     const fields = [
         document.getElementById('teamName'),
         document.getElementById('contactPerson'),

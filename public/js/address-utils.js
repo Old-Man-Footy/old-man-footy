@@ -112,11 +112,8 @@ if (typeof window !== 'undefined') {
     global.hasLocationData = hasLocationData;
 }
 
-// Export for Node.js modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        formatCarnivalAddress,
-        getGoogleMapsUrl,
-        hasLocationData
-    };
-}
+export {
+    formatCarnivalAddress,
+    getGoogleMapsUrl,
+    hasLocationData
+};

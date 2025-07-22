@@ -9,7 +9,7 @@
  * Handles missing elements gracefully.
  * @returns {void}
  */
-export function toggleCustomDates() {
+function toggleCustomDates() {
     const periodElement = document.getElementById('period');
     const startDateGroup = document.getElementById('startDateGroup');
     const endDateGroup = document.getElementById('endDateGroup');
@@ -27,7 +27,7 @@ export function toggleCustomDates() {
 /**
  * Export report functionality
  */
-export async function exportReport() {
+async function exportReport() {
     try {
         const params = new URLSearchParams(window.location.search);
         const response = await fetch('/admin/reports/export?' + params.toString());
@@ -95,3 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+export {
+    toggleCustomDates,
+    exportReport
+};

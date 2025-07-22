@@ -63,3 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Admin reports functionality initialized successfully');
 });
+
+export {
+    generateDetailedReport
+};

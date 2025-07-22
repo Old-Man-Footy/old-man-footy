@@ -10,7 +10,7 @@ let toastFn = defaultShowToast;
  * Allows test code to inject a custom toast function for mocking
  * @param {Function} fn - The toast function to use
  */
-export function setShowToast(fn) {
+function setShowToast(fn) {
     toastFn = fn;
 }
 
@@ -18,7 +18,7 @@ export function setShowToast(fn) {
  * Handle club status toggle (activate/deactivate)
  * @param {HTMLElement} button - The toggle button clicked
  */
-export async function handleClubStatusToggle(button) {
+async function handleClubStatusToggle(button) {
     const clubId = button.dataset.clubId;
     const clubName = button.dataset.clubName;
     const currentStatus = button.dataset.currentStatus === 'true';
@@ -63,7 +63,7 @@ export async function handleClubStatusToggle(button) {
  * Handle club visibility toggle (publicly listed/hidden)
  * @param {HTMLElement} button - The toggle button clicked
  */
-export async function handleClubVisibilityToggle(button) {
+async function handleClubVisibilityToggle(button) {
     const clubId = button.dataset.clubId;
     const clubName = button.dataset.clubName;
     const currentVisibility = button.dataset.currentVisibility === 'true';
@@ -181,7 +181,7 @@ function defaultShowToast(type, message) {
     }, 5000);
 }
 
-export { defaultShowToast as showToast };
+
 
 // Auto-focus search input if present
 const searchInput = document.getElementById('search');
@@ -215,3 +215,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+export {
+    setShowToast,
+    handleClubStatusToggle,
+    handleClubVisibilityToggle,
+    defaultShowToast as showToast
+};
