@@ -2,7 +2,7 @@
 
 - [x] `/public/js/add-club-auto-populate.js`
 - [x] `/public/js/address-utils.js`
-- [ ] `/public/js/admin-carnivals.js`
+- [x] `/public/js/admin-carnivals.js`
 - [ ] `/public/js/admin-claim-carnival.js`
 - [ ] `/public/js/admin-clubs.js`
 - [ ] `/public/js/admin-edit-club.js`

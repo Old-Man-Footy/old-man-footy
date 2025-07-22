@@ -1,6 +1,8 @@
 /**
  * Admin Carnival Management JavaScript
  * Handles carnival management functionality including status toggle confirmation
+ *
+ * @module admin-carnivals
  */
 
 let currentCarnivalId = null;
@@ -13,7 +15,7 @@ let currentStatus = null;
  * @param {string} carnivalTitle - The title of the carnival for display
  * @param {boolean} isActive - Current status of the carnival
  */
-function showStatusToggleModal(carnivalId, carnivalTitle, isActive) {
+export function showStatusToggleModal(carnivalId, carnivalTitle, isActive) {
     currentCarnivalId = carnivalId;
     currentCarnivalTitle = carnivalTitle;
     currentStatus = isActive;
@@ -57,7 +59,7 @@ function showStatusToggleModal(carnivalId, carnivalTitle, isActive) {
 /**
  * Confirm and execute status toggle
  */
-function confirmStatusToggle() {
+export function confirmStatusToggle() {
     if (!currentCarnivalId) {
         console.error('No carnival ID set for status toggle');
         return;
@@ -121,7 +123,7 @@ function confirmStatusToggle() {
  * @param {string} type - Type of toast (success, error, warning, info)
  * @param {string} message - Message to display
  */
-function showToast(type, message) {
+export function showToast(type, message) {
     // Create toast element if it doesn't exist
     let toastContainer = document.getElementById('toast-container');
     if (!toastContainer) {
