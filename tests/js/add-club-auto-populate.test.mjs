@@ -1,8 +1,7 @@
 import { describe, it, beforeEach, vi, expect } from 'vitest';
-import '/public/js/add-club-auto-populate.js';
+import { initializeClubAutoPopulation } from '/public/js/add-club-auto-populate.js';
 
-// Import the module under test
-
+// Set up DOM and attach listeners after each test setup
 describe('add-club-auto-populate.js', () => {
   let clubSelect, teamNameInput, contactPersonInput, contactEmailInput, contactPhoneInput;
 
@@ -24,6 +23,9 @@ describe('add-club-auto-populate.js', () => {
       <input id="contactPhone" />
     `;
 
+    // Attach listeners after DOM setup
+    initializeClubAutoPopulation();
+    // Re-query the select/input elements after possible replacement
     clubSelect = document.getElementById('clubId');
     teamNameInput = document.getElementById('teamName');
     contactPersonInput = document.getElementById('contactPerson');
@@ -56,7 +58,7 @@ describe('add-club-auto-populate.js', () => {
     expect(contactPhoneInput.value).toBe('1234567890');
   });
 
-  it('should add and remove auto-populated class for visual feedback', async () => {
+  it('should add and remove auto-populated class for visual feedback', () => {
     vi.useFakeTimers();
 
     clubSelect.value = '1';
