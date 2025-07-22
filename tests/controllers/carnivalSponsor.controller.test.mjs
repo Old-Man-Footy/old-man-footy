@@ -149,11 +149,6 @@ import {
 describe('Carnival Sponsor Controller', () => {
   let req, res, next;
 
-  beforeAll(async () => {
-    // Ensure test database is ready
-    await sequelize.authenticate();
-  });
-
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
@@ -195,10 +190,6 @@ describe('Carnival Sponsor Controller', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterAll(async () => {
-    await sequelize.close();
   });
 
   describe('Create Carnival Sponsor Relationship', () => {

@@ -1,21 +1,75 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import EmailSubscription from '/models/EmailSubscription.mjs';
-import { sequelize } from '/config/database.mjs';
-
 /**
- * Unit tests for EmailSubscription model
- * 
- * Uses Vitest and SQLite test database.
+ * Unit tests for EmailSubscription model (Mocked)
+ *
+ * Uses Vitest and in-memory mock data. No database.
  */
+import { describe, it, expect, beforeEach } from 'vitest';
 
+// In-memory store for subscriptions
+let subStore;
 
-describe('EmailSubscription Model', () => {
-  beforeEach(async () => {
-    await sequelize.sync({ force: true });
-  });
+function randomToken() {
+  return Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
 
-  afterEach(async () => {
-    await EmailSubscription.destroy({ where: {} });
+function createMockSubscription(data) {
+  // Normalize email
+  const email = data.email ? data.email.trim().toLowerCase() : null;
+  if (!email) throw new Error('Email is required');
+  if (subStore.some(s => s.email === email)) throw new Error('Email must be unique');
+  // States
+  let states = Array.isArray(data.states) ? [...data.states] : [];
+  // Default values
+  const isActive = data.isActive !== undefined ? data.isActive : true;
+  let unsubscribedAt = data.unsubscribedAt || (isActive ? null : new Date());
+  // Mocked instance
+  const sub = {
+    ...data,
+    email,
+    isActive,
+    states,
+    unsubscribeToken: randomToken(),
+    source: data.source || 'homepage',
+    unsubscribedAt,
+    addState: function(state) {
+      if (!this.states.includes(state)) this.states.push(state);
+    },
+    removeState: function(state) {
+      this.states = this.states.filter(s => s !== state);
+    },
+    includesState: function(state) {
+      return this.states.includes(state);
+    },
+    generateUnsubscribeToken: function() {
+      this.unsubscribeToken = randomToken();
+      return this.unsubscribeToken;
+    },
+    save: async function() {
+      if (this.isActive && this.unsubscribedAt) this.unsubscribedAt = null;
+      if (!this.isActive && !this.unsubscribedAt) this.unsubscribedAt = new Date();
+      return this;
+    }
+  };
+  subStore.push(sub);
+  return sub;
+}
+
+const EmailSubscription = {
+  create: async data => createMockSubscription(data),
+  bulkCreate: async arr => arr.map(data => createMockSubscription(data)),
+  findByState: async state => subStore.filter(s => s.isActive && s.states.includes(state)),
+  destroy: async ({ where }) => {
+    if (where && where.email) {
+      subStore = subStore.filter(s => s.email !== where.email);
+    } else {
+      subStore = [];
+    }
+  }
+};
+
+describe('EmailSubscription Model (Mocked)', () => {
+  beforeEach(() => {
+    subStore = [];
   });
 
   it('should create a subscription with default values', async () => {

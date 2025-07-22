@@ -12,7 +12,6 @@ import User from '/models/User.mjs';
 import Club from '/models/Club.mjs';
 import ClubAlternateName from '/models/ClubAlternateName.mjs';
 import ClubPlayer from '/models/ClubPlayer.mjs';
-import ClubSponsor from '/models/ClubSponsor.mjs';
 import Carnival from '/models/Carnival.mjs';
 import CarnivalClub from '/models/CarnivalClub.mjs';
 import CarnivalClubPlayer from '/models/CarnivalClubPlayer.mjs';
@@ -77,19 +76,16 @@ Club.belongsToMany(Carnival, {
   as: 'attendingCarnivals'
 });
 
-// Club and Sponsor many-to-many relationship through ClubSponsor
-Club.belongsToMany(Sponsor, {
-  through: ClubSponsor,
+// Club has many Sponsors (one-to-many)
+Club.hasMany(Sponsor, {
   foreignKey: 'clubId',
-  otherKey: 'sponsorId',
-  as: 'sponsors'
+  as: 'clubSponsors'
 });
 
-Sponsor.belongsToMany(Club, {
-  through: ClubSponsor,
-  foreignKey: 'sponsorId',
-  otherKey: 'clubId',
-  as: 'clubs'
+// Sponsor belongs to Club (many-to-one)
+Sponsor.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'club'
 });
 
 // Carnival and Sponsor many-to-many relationship through CarnivalSponsor
@@ -118,16 +114,6 @@ CarnivalClub.belongsTo(Club, {
   as: 'participatingClub'
 });
 
-ClubSponsor.belongsTo(Club, {
-  foreignKey: 'clubId',
-  as: 'sponsoredClub'
-});
-
-ClubSponsor.belongsTo(Sponsor, {
-  foreignKey: 'sponsorId',
-  as: 'sponsor'
-});
-
 CarnivalSponsor.belongsTo(Carnival, {
   foreignKey: 'carnivalId',
   as: 'carnival'
@@ -146,16 +132,6 @@ Carnival.hasMany(CarnivalClub, {
 Club.hasMany(CarnivalClub, {
   foreignKey: 'clubId',
   as: 'carnivalClubs'
-});
-
-Club.hasMany(ClubSponsor, {
-  foreignKey: 'clubId',
-  as: 'clubSponsors'
-});
-
-Sponsor.hasMany(ClubSponsor, {
-  foreignKey: 'sponsorId',
-  as: 'clubSponsors'
 });
 
 Carnival.hasMany(CarnivalSponsor, {
@@ -226,7 +202,6 @@ export {
   Club,
   ClubAlternateName,
   ClubPlayer,
-  ClubSponsor,
   Carnival,
   CarnivalClub,
   CarnivalClubPlayer,

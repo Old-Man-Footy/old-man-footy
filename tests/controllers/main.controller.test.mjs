@@ -203,11 +203,6 @@ import crypto from 'crypto';
 describe('Main Controller', () => {
   let req, res, next;
 
-  beforeAll(async () => {
-    // Ensure test database is ready
-    await sequelize.authenticate();
-  });
-
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
@@ -263,10 +258,6 @@ describe('Main Controller', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterAll(async () => {
-    await sequelize.close();
   });
 
   describe('Homepage Rendering', () => {

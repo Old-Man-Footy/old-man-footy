@@ -492,10 +492,6 @@ const showClubSponsorsHandler = async (req, res, next) => {
           as: 'sponsors',
           where: { isActive: true },
           required: false,
-          through: {
-            attributes: ['displayOrder'],
-            as: 'clubSponsor',
-          },
         },
       ],
     });
@@ -503,11 +499,11 @@ const showClubSponsorsHandler = async (req, res, next) => {
       req.flash('error_msg', 'Club not found.');
       return res.redirect('/dashboard');
     }
-    // Sort sponsors by priority
+    // Sort sponsors by displayOrder
     const sponsors = club.sponsors
       ? club.sponsors.sort((a, b) => {
-          const priorityA = a.clubSponsor?.displayOrder || 999;
-          const priorityB = b.clubSponsor?.displayOrder || 999;
+          const priorityA = a.displayOrder || 999;
+          const priorityB = b.displayOrder || 999;
           return priorityA - priorityB;
         })
       : [];

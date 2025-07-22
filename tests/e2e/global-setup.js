@@ -11,21 +11,11 @@ async function globalSetup() {
   
   try {
     // Import ES modules
-    const { sequelize } = await import('/config/database.mjs');
     const { initializeDatabase } = await import('/config/database.mjs');
     
     // Initialize test database
     await initializeDatabase();
-    
-    // Disable foreign key constraints for SQLite during sync
-    await sequelize.query('PRAGMA foreign_keys = OFF;');
-    
-    // Sync database schema with force to ensure clean state
-    await sequelize.sync({ force: true });
-    
-    // Re-enable foreign key constraints
-    await sequelize.query('PRAGMA foreign_keys = ON;');
-    
+        
     console.log('✅ Test database initialized and schema synced');
     
     // Create test data using consistent authentication approach

@@ -1,8 +1,8 @@
 /**
  * Vitest Global Setup
- * 
+ *
  * Runs once before all test files.
- * Initializes test database and models before running tests.
+ * Ensures test database schema is up to date by running all migrations.
  */
 
 import { sequelize } from '/models/index.mjs';
@@ -29,24 +29,10 @@ export default async function setup() {
     await sequelize.authenticate();
     console.log('✅ Test database connection established successfully.');
     
-    // Disable foreign key constraints for SQLite during setup
-    await sequelize.query('PRAGMA foreign_keys = OFF;');
-    
-    // Drop all tables first to avoid constraint issues
-    await sequelize.drop();
-    
-    // Force sync will recreate all tables based on model definitions
-    // This ensures we have all the latest schema changes including audit logs
-    await sequelize.sync({ force: true });
-    
-    // Re-enable foreign key constraints
-    await sequelize.query('PRAGMA foreign_keys = ON;');
-    
-    console.log('✅ Test database tables created successfully.');
-    console.log('');
+    // Removed migration logic from setup. Migrations should be run outside Vitest, e.g. via pretest script
     
   } catch (error) {
-    console.error('❌ Unable to connect to test database:', error);
+    console.error('❌ Unable to setup test database:', error);
     throw error;
   }
 }

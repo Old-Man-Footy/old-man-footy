@@ -222,11 +222,6 @@ import { validationResult } from 'express-validator';
 describe('Club Controller', () => {
   let req, res, next, mockUser, mockClub, mockTransaction;
 
-  beforeAll(async () => {
-    // Ensure test database is ready
-    await sequelize.authenticate();
-  });
-
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
@@ -329,10 +324,6 @@ describe('Club Controller', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterAll(async () => {
-    await sequelize.close();
   });
 
   describe('Model Mocking Verification', () => {

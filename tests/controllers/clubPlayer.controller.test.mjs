@@ -159,11 +159,6 @@ import { validationResult } from 'express-validator';
 describe('Club Player Controller', () => {
   let req, res, next;
 
-  beforeAll(async () => {
-    // Ensure test database is ready
-    await sequelize.authenticate();
-  });
-
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
@@ -212,10 +207,6 @@ describe('Club Player Controller', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterAll(async () => {
-    await sequelize.close();
   });
 
   describe('Player Roster Management', () => {

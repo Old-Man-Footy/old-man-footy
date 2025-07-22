@@ -7,6 +7,7 @@
 
 import { DataTypes, Model, Op } from 'sequelize';
 import { sequelize } from '/config/database.mjs';
+import Sponsor from './Sponsor.mjs';
 
 /**
  * Club model class extending Sequelize Model
@@ -275,5 +276,7 @@ Club.init({
     }
   ]
 });
+
+Club.hasMany(Sponsor, { foreignKey: 'clubId', as: 'sponsors' });
 
 export default Club;

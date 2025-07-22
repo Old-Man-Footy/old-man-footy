@@ -96,41 +96,32 @@
                             <p class="text-muted mb-3">
                                 This carnival doesn't have any sponsors linked yet.
                             </p>
-                            <% if (clubSponsors && clubSponsors.length > 0) { %>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSponsorModal">
-                                    <i class="fas fa-plus me-2"></i>Add First Sponsor
-                                </button>
-                            <% } else { %>
-                                <p class="text-muted">
-                                    You need to add sponsors to your club first before you can link them to carnivals.
-                                </p>
-                                <a href="/clubs/manage/sponsors" class="btn btn-outline-primary">
-                                    <i class="fas fa-external-link-alt me-1"></i>Manage Club Sponsors
-                                </a>
-                            <% } %>
+                            <a href="/carnivals/<%= carnival.id %>/sponsors/add" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add First Sponsor
+                            </a>
                         </div>
                     <% } %>
                 </div>
             </div>
 
-            <!-- Available Club Sponsors -->
-            <% if (clubSponsors && clubSponsors.length > 0) { %>
+            <!-- Available Sponsors -->
+            <% if (sponsors && sponsors.length > 0) { %>
                 <div class="card">
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="fas fa-link text-info me-2"></i>
-                            Available Club Sponsors
+                            Available Sponsors
                         </h6>
                     </div>
                     <div class="card-body">
                         <p class="text-muted mb-3">
-                            These sponsors are linked to your club and can be added to this carnival:
+                            These sponsors are available to be added to this carnival:
                         </p>
                         <div class="row g-3">
                             <% 
                             // Filter out sponsors already linked to this carnival
-                            const availableSponsors = clubSponsors.filter(clubSponsor => 
-                                !carnivalSponsors.some(carnivalSponsor => carnivalSponsor.id === clubSponsor.id)
+                            const availableSponsors = sponsors.filter(sponsor => 
+                                !carnivalSponsors.some(carnivalSponsor => carnivalSponsor.id === sponsor.id)
                             );
                             %>
                             <% if (availableSponsors.length > 0) { %>
@@ -183,7 +174,7 @@
                                     <div class="text-center py-3">
                                         <p class="text-muted mb-0">
                                             <i class="fas fa-check-circle text-success me-1"></i>
-                                            All your club sponsors are already linked to this carnival!
+                                            All available sponsors are already linked to this carnival!
                                         </p>
                                     </div>
                                 </div>
@@ -196,102 +187,9 @@
     </div>
 </div>
 
-<!-- Add Sponsor Modal (Alternative UI) -->
-<% if (clubSponsors && clubSponsors.length > 0) { %>
-    <div class="modal fade" id="addSponsorModal" tabindex="-1" aria-labelledby="addSponsorModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addSponsorModalLabel">
-                        <i class="fas fa-plus me-2"></i>Add Sponsor to Carnival
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted mb-4">
-                        Select sponsors from your club to link to this carnival:
-                    </p>
-                    <form method="POST" action="/carnivals/<%= carnival.id %>/sponsors/add" id="bulkAddForm">
-                        <div class="row g-3">
-                            <% 
-                            const availableSponsors = clubSponsors.filter(clubSponsor => 
-                                !carnivalSponsors.some(carnivalSponsor => carnivalSponsor.id === clubSponsor.id)
-                            );
-                            %>
-                            <% if (availableSponsors.length > 0) { %>
-                                <% availableSponsors.forEach(sponsor => { %>
-                                    <div class="col-md-6">
-                                        <div class="form-check card-check">
-                                            <input class="form-check-input" type="radio" name="sponsorId" 
-                                                   id="sponsor<%= sponsor.id %>" value="<%= sponsor.id %>">
-                                            <label class="form-check-label w-100" for="sponsor<%= sponsor.id %>">
-                                                <div class="card h-100">
-                                                    <div class="card-body d-flex align-items-center">
-                                                        <% if (sponsor.logoUrl) { %>
-                                                            <img src="/<%= sponsor.logoUrl %>" 
-                                                                 alt="<%= sponsor.sponsorName %>" 
-                                                                 class="me-3 rounded" 
-                                                                 style="width: 50px; height: 50px; object-fit: contain;">
-                                                        <% } else { %>
-                                                            <div class="me-3 bg-light rounded d-flex align-items-center justify-content-center" 
-                                                                 style="width: 50px; height: 50px;">
-                                                                <i class="fas fa-building text-muted"></i>
-                                                            </div>
-                                                        <% } %>
-                                                        <div>
-                                                            <h6 class="mb-1"><%= sponsor.sponsorName %></h6>
-                                                            <% if (sponsor.location) { %>
-                                                                <small class="text-muted">
-                                                                    <%= sponsor.location %><% if (sponsor.state) { %>, <%= sponsor.state %><% } %>
-                                                                </small>
-                                                            <% } %>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                <% }); %>
-                            <% } else { %>
-                                <div class="col-12">
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-0">
-                                            All your club sponsors are already linked to this carnival!
-                                        </p>
-                                    </div>
-                                </div>
-                            <% } %>
-                        </div>
-                    </form>
-                </div>
-                <% if (availableSponsors && availableSponsors.length > 0) { %>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" form="bulkAddForm" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Add Selected Sponsor
-                        </button>
-                    </div>
-                <% } %>
-            </div>
-        </div>
-    </div>
-<% } %>
-
 <style>
 .border-dashed {
     border: 2px dashed #dee2e6 !important;
-}
-
-.card-check .form-check-input {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 2;
-}
-
-.card-check .form-check-input:checked + label .card {
-    border-color: #0d6efd;
-    background-color: rgba(13, 110, 253, 0.1);
 }
 </style>
 

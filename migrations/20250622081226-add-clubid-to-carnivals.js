@@ -7,7 +7,7 @@ export default {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'Clubs',
+        model: 'clubs', // fixed case
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -20,7 +20,7 @@ export default {
     await queryInterface.sequelize.query(`
       UPDATE carnivals
       SET clubId = (
-        SELECT clubId FROM Users WHERE Users.id = carnivals.createdByUserId
+        SELECT clubId FROM users WHERE users.id = carnivals.createdByUserId
       )
       WHERE createdByUserId IS NOT NULL;
     `);

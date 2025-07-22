@@ -10,42 +10,15 @@ import { sequelize } from '/config/database.mjs';
 
 /**
  * Sponsor model class extending Sequelize Model
+ * @extends Model
  */
 class Sponsor extends Model {
   /**
-   * Get all clubs associated with this sponsor
-   * @returns {Promise<Array>} Array of associated clubs
+   * Get the club associated with this sponsor
+   * @returns {Promise<Club>} The owning club
    */
-  async getAssociatedClubs() {
-    return await this.getClubs({
-      where: { isActive: true },
-      order: [['clubName', 'ASC']]
-    });
-  }
-
-  /**
-   * Get count of associated clubs
-   * @returns {Promise<number>} Number of associated clubs
-   */
-  async getClubCount() {
-    return await this.countClubs({
-      where: { isActive: true }
-    });
-  }
-
-  /**
-   * Check if sponsor is associated with a specific club
-   * @param {number} clubId - The club ID to check
-   * @returns {Promise<boolean>} True if associated, false otherwise
-   */
-  async isAssociatedWithClub(clubId) {
-    const count = await this.countClubs({
-      where: { 
-        id: clubId,
-        isActive: true 
-      }
-    });
-    return count > 0;
+  async getClub() {
+    return await Club.findByPk(this.clubId);
   }
 }
 
@@ -163,6 +136,20 @@ Sponsor.init({
     defaultValue: true,
     allowNull: false
   },
+  clubId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'clubs',
+      key: 'id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+    comment: 'The club that owns this sponsor',
+    validate: {
+      notNull: { msg: 'Sponsor must be linked to a club.' }
+    }
+  },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false
@@ -186,6 +173,9 @@ Sponsor.init({
     },
     {
       fields: ['isActive']
+    },
+    {
+      fields: ['clubId']
     }
   ]
 });

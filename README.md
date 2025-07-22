@@ -215,7 +215,6 @@ The project maintains high test coverage standards:
 │   ├── Club.mjs                                # Club information model
 │   ├── ClubAlternateName.mjs                   # Club alternate names model
 │   ├── ClubPlayer.mjs                          # Club player model
-│   ├── ClubSponsor.mjs                         # Club sponsorship model
 │   ├── EmailSubscription.mjs                   # Email subscription model
 │   ├── index.mjs                               # Model index and associations
 │   ├── Sponsor.mjs                             # Sponsor information model

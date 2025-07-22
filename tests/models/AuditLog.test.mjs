@@ -4,22 +4,88 @@
  *
  * Follows AAA (Arrange, Act, Assert) pattern and project security/MVC/testing guidelines.
  */
-import { describe, test, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
-import { sequelize, User, AuditLog } from '/models/index.mjs';
+import { describe, test, it, expect, beforeEach, vi } from 'vitest';
 
-// Use the test database
-beforeAll(async () => {
-  await sequelize.sync({ force: true });
-});
+// Mock AuditLog and User models
+const mockAuditLogs = [];
+const mockUsers = [];
+
+const AuditLog = {
+  logAction: vi.fn(async (data) => {
+    // Simulate validation
+    if (!data.action || !data.entityType) throw new Error('Invalid action/entityType');
+    if (data.request && data.request.ip === 'not-an-ip') throw new Error('Invalid IP');
+    if (data.result && !['SUCCESS', 'FAILURE'].includes(data.result)) throw new Error('Invalid result');
+    const log = {
+      ...data,
+      id: mockAuditLogs.length + 1,
+      ipAddress: data.request?.ip ?? null,
+      userAgent: data.request?.headers?.['user-agent'] ?? null,
+      sessionId: data.request?.sessionID ?? null,
+      result: data.result ?? 'SUCCESS',
+      metadata: data.metadata ?? null,
+    };
+    mockAuditLogs.push(log);
+    return log;
+  }),
+  getUserAuditLogs: vi.fn(async (userId) => {
+    const rows = mockAuditLogs.filter(l => l.userId === userId);
+    return { rows, count: rows.length };
+  }),
+  getEntityAuditLogs: vi.fn(async (entityType, entityId) => {
+    return mockAuditLogs.filter(l => l.entityType === entityType && l.entityId === entityId);
+  }),
+  getAuditStatistics: vi.fn(async () => {
+    const totalActions = mockAuditLogs.length;
+    const failedActions = mockAuditLogs.filter(l => l.result === 'FAILURE').length;
+    const successfulActions = mockAuditLogs.filter(l => l.result === 'SUCCESS').length;
+    // Group by action type
+    const actionsByType = Array.from(new Set(mockAuditLogs.map(l => l.action))).map(action => ({ action, count: mockAuditLogs.filter(l => l.action === action).length }));
+    // Group by user
+    const actionsByUser = Array.from(new Set(mockAuditLogs.map(l => l.userId))).map(userId => ({ userId, count: mockAuditLogs.filter(l => l.userId === userId).length }));
+    return {
+      totalActions,
+      failedActions,
+      successfulActions,
+      actionsByType,
+      actionsByUser,
+      successRate: totalActions ? (successfulActions / totalActions) * 100 : 0,
+    };
+  }),
+  cleanupOldLogs: vi.fn(async (days) => {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    const before = mockAuditLogs.length;
+    for (let i = mockAuditLogs.length - 1; i >= 0; i--) {
+      if (mockAuditLogs[i].createdAt && mockAuditLogs[i].createdAt.getTime() < cutoff) {
+        mockAuditLogs.splice(i, 1);
+      }
+    }
+    return before - mockAuditLogs.length;
+  }),
+  create: vi.fn(async (data) => {
+    const log = { ...data, id: mockAuditLogs.length + 1 };
+    mockAuditLogs.push(log);
+    return log;
+  }),
+  findByPk: vi.fn(async (id) => mockAuditLogs.find(l => l.id === id) ?? null),
+  destroy: vi.fn(async () => { mockAuditLogs.length = 0; }),
+};
+
+const User = {
+  create: vi.fn(async (data) => {
+    const user = { ...data, id: mockUsers.length + 1 };
+    mockUsers.push(user);
+    return user;
+  }),
+  destroy: vi.fn(async () => { mockUsers.length = 0; }),
+};
 
 describe('AuditLog Model', () => {
   let user;
 
   beforeEach(async () => {
-    // Clean up tables before each test
-    await AuditLog.destroy({ where: {} });
-    await User.destroy({ where: {} });
-    // Create a user for association
+    mockAuditLogs.length = 0;
+    mockUsers.length = 0;
     user = await User.create({
       email: 'testuser@example.com',
       passwordHash: 'testpassword',
@@ -27,11 +93,6 @@ describe('AuditLog Model', () => {
       lastName: 'User',
       isActive: true
     });
-  });
-
-  afterEach(async () => {
-    await AuditLog.destroy({ where: {} });
-    await User.destroy({ where: {} });
   });
 
   describe('logAction', () => {

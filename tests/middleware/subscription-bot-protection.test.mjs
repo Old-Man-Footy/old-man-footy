@@ -61,9 +61,6 @@ describe('POST /subscribe - Bot Protection', () => {
         process.env.FEATURE_COMING_SOON_MODE = 'false';
         process.env.FEATURE_MAINTENANCE_MODE = 'false';
         process.env.FEATURE_MYSIDELINE_SYNC = 'false';
-        
-        // Ensure test database is set up
-        await sequelize.sync({ force: true });
     });
 
     beforeEach(async () => {

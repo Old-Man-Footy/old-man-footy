@@ -314,12 +314,7 @@ import { validationResult } from 'express-validator';
 describe('Admin Controller', () => {
   let req, res, next;
 
-  beforeAll(async () => {
-    // Ensure test database is ready
-    await sequelize.authenticate();
-  });
-
-  beforeEach(() => {
+    beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
 
@@ -402,10 +397,6 @@ describe('Admin Controller', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterAll(async () => {
-    await sequelize.close();
   });
 
   describe('Admin Dashboard', () => {

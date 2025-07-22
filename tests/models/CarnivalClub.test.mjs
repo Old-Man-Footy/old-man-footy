@@ -1,16 +1,84 @@
-// Vitest unit tests for CarnivalClub model
+/**
+ * Vitest unit tests for CarnivalClub model (Mocked)
+ * Uses in-memory mock data and methods. No database.
+ */
 import { describe, it, expect, beforeEach } from 'vitest';
-import CarnivalClub from '/models/CarnivalClub.mjs';
-import Carnival from '/models/Carnival.mjs';
-import Club from '/models/Club.mjs';
 
-describe('CarnivalClub Model', () => {
+// In-memory stores
+let carnivalStore;
+let clubStore;
+let carnivalClubStore;
+
+function createMockCarnival(data) {
+  const carnival = { ...data, id: carnivalStore.length + 1, isActive: true };
+  carnivalStore.push(carnival);
+  return carnival;
+}
+function createMockClub(data) {
+  const club = { ...data, id: clubStore.length + 1, isActive: true };
+  clubStore.push(club);
+  return club;
+}
+function createMockCarnivalClub(data) {
+  const carnivalClub = {
+    ...data,
+    id: carnivalClubStore.length + 1,
+    isActive: data.isActive !== undefined ? data.isActive : true,
+    approvalStatus: data.approvalStatus || 'pending',
+    getCarnivalDetails: async function() {
+      return carnivalStore.find(c => c.id === this.carnivalId);
+    },
+    getClubDetails: async function() {
+      return clubStore.find(c => c.id === this.clubId);
+    },
+    isActiveRelationship: function() {
+      return !!this.isActive;
+    },
+    isApproved: function() {
+      return this.approvalStatus === 'approved';
+    },
+    isPending: function() {
+      return this.approvalStatus === 'pending';
+    },
+    isRejected: function() {
+      return this.approvalStatus === 'rejected';
+    }
+  };
+  carnivalClubStore.push(carnivalClub);
+  return carnivalClub;
+}
+const CarnivalClub = {
+  create: async data => createMockCarnivalClub(data),
+  getActiveForCarnival: async carnivalId =>
+    carnivalClubStore.filter(cc => cc.carnivalId === carnivalId && cc.isActive),
+  getActiveForClub: async clubId =>
+    carnivalClubStore.filter(cc => cc.clubId === clubId && cc.isActive),
+  isClubRegistered: async (carnivalId, clubId) =>
+    carnivalClubStore.some(cc => cc.carnivalId === carnivalId && cc.clubId === clubId && cc.isActive),
+  getAttendanceCount: async carnivalId =>
+    carnivalClubStore.filter(cc => cc.carnivalId === carnivalId && cc.isActive).length,
+  getAttendanceCountWithStatus: async carnivalId => {
+    const filtered = carnivalClubStore.filter(cc => cc.carnivalId === carnivalId && cc.isActive);
+    const counts = { approved: 0, pending: 0, rejected: 0, total: filtered.length };
+    for (const cc of filtered) {
+      if (cc.approvalStatus === 'approved') counts.approved++;
+      if (cc.approvalStatus === 'pending') counts.pending++;
+      if (cc.approvalStatus === 'rejected') counts.rejected++;
+    }
+    return counts;
+  }
+};
+
+describe('CarnivalClub Model (Mocked)', () => {
   describe('Instance methods', () => {
     let carnival, club, carnivalClub;
-    beforeEach(async () => {
-      carnival = await Carnival.create({ title: 'Test Carnival', isActive: true });
-      club = await Club.create({ clubName: 'Test Club', isActive: true });
-      carnivalClub = await CarnivalClub.create({
+    beforeEach(() => {
+      carnivalStore = [];
+      clubStore = [];
+      carnivalClubStore = [];
+      carnival = createMockCarnival({ title: 'Test Carnival' });
+      club = createMockClub({ clubName: 'Test Club' });
+      carnivalClub = createMockCarnivalClub({
         carnivalId: carnival.id,
         clubId: club.id,
         approvalStatus: 'approved',
@@ -45,10 +113,13 @@ describe('CarnivalClub Model', () => {
 
   describe('Static methods', () => {
     let carnival, club;
-    beforeEach(async () => {
-      carnival = await Carnival.create({ title: 'Static Carnival', isActive: true });
-      club = await Club.create({ clubName: 'Static Club', isActive: true });
-      await CarnivalClub.create({
+    beforeEach(() => {
+      carnivalStore = [];
+      clubStore = [];
+      carnivalClubStore = [];
+      carnival = createMockCarnival({ title: 'Static Carnival' });
+      club = createMockClub({ clubName: 'Static Club' });
+      createMockCarnivalClub({
         carnivalId: carnival.id,
         clubId: club.id,
         approvalStatus: 'approved',

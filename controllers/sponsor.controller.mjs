@@ -44,29 +44,17 @@ export const showSponsorListings = asyncHandler(async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'clubs',
+        as: 'club',
         where: { isActive: true },
         required: false,
         attributes: ['id', 'clubName', 'state'],
-        through: { attributes: [] },
       },
     ],
   });
 
-  // Get sponsor statistics for each sponsor
-  const sponsorsWithStats = await Promise.all(
-    sponsors.map(async (sponsor) => {
-      const clubCount = await sponsor.getClubCount();
-      return {
-        ...sponsor.toJSON(),
-        clubCount,
-      };
-    })
-  );
-
   return res.render('sponsors/list', {
     title: 'Find Masters Rugby League Sponsors',
-    sponsors: sponsorsWithStats,
+    sponsors,
     filters: { search, state, businessType },
     states: AUSTRALIAN_STATES,
     additionalCSS: ['/styles/sponsor.styles.css'],
@@ -80,8 +68,6 @@ export const showSponsorListings = asyncHandler(async (req, res) => {
  */
 export const showSponsorProfile = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  console.log(`showSponsorProfile called with ID: ${id}`);
-
   const sponsor = await Sponsor.findOne({
     where: {
       id,
@@ -91,32 +77,23 @@ export const showSponsorProfile = asyncHandler(async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'clubs',
+        as: 'club',
         where: { isActive: true, isPubliclyListed: true },
         required: false,
         attributes: ['id', 'clubName', 'state', 'location', 'logoUrl'],
-        through: { attributes: [] },
       },
     ],
   });
 
-  console.log(`Sponsor found:`, sponsor ? 'YES' : 'NO');
-  if (sponsor) {
-    console.log(`Sponsor name: ${sponsor.sponsorName}`);
-    console.log(`Associated clubs count: ${sponsor.clubs ? sponsor.clubs.length : 0}`);
-  }
-
   if (!sponsor) {
-    console.log('Sponsor not found, redirecting to /sponsors');
     req.flash('error_msg', 'Sponsor not found.');
     return res.redirect('/sponsors');
   }
 
-  console.log('Rendering sponsors/show template');
   return res.render('sponsors/show', {
     title: `${sponsor.sponsorName} - Sponsor Profile`,
     sponsor,
-    associatedClubs: sponsor.clubs || [],
+    club: sponsor.club || null,
     user: req.user || null,
     additionalCSS: ['/styles/sponsor.styles.css'],
   });
@@ -147,11 +124,12 @@ export const showCreateSponsor = asyncHandler(async (req, res) => {
     additionalCSS: ['/styles/sponsor.styles.css'],
     errors: [],
     formData: {},
+    clubs,
   });
 });
 
 /**
- * Create a new sponsor
+ * Create a new sponsor (club-specific)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -164,6 +142,7 @@ export const createSponsor = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     req.flash('error_msg', 'Please correct the validation errors.');
+    const clubs = await Club.findAll({ where: { isActive: true }, order: [['clubName', 'ASC']], attributes: ['id', 'clubName', 'state'] });
     return res.render('sponsors/create', {
       title: 'Add New Sponsor',
       user: req.user,
@@ -172,6 +151,7 @@ export const createSponsor = asyncHandler(async (req, res) => {
       errors: errors.array(),
       formData: req.body,
       additionalCSS: ['/styles/sponsor.styles.css'],
+      clubs,
     });
   }
 
@@ -191,8 +171,15 @@ export const createSponsor = asyncHandler(async (req, res) => {
     linkedinUrl,
     sponsorshipLevel,
     isPubliclyVisible,
-    associatedClubs,
+    clubId,
   } = req.body;
+
+  // Validate clubId
+  const club = await Club.findOne({ where: { id: clubId, isActive: true } });
+  if (!club) {
+    req.flash('error_msg', 'Invalid club selected.');
+    return res.redirect('/sponsors/create');
+  }
 
   // Prepare sponsor data
   const sponsorData = {
@@ -211,6 +198,7 @@ export const createSponsor = asyncHandler(async (req, res) => {
     linkedinUrl: linkedinUrl?.trim(),
     sponsorshipLevel,
     isPubliclyVisible: isPubliclyVisible === 'on',
+    clubId: club.id,
   };
 
   // Handle logo upload
@@ -222,15 +210,6 @@ export const createSponsor = asyncHandler(async (req, res) => {
   }
 
   const sponsor = await Sponsor.create(sponsorData);
-
-  // Associate with selected clubs
-  if (associatedClubs && Array.isArray(associatedClubs)) {
-    const clubIds = associatedClubs.map((id) => parseInt(id)).filter((id) => !isNaN(id));
-    const clubs = await Club.findAll({
-      where: { id: clubIds, isActive: true },
-    });
-    await sponsor.setClubs(clubs);
-  }
 
   req.flash('success_msg', 'Sponsor created successfully!');
   return res.redirect(`/sponsors/${sponsor.id}`);
@@ -254,11 +233,10 @@ export const showEditSponsor = asyncHandler(async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'clubs',
+        as: 'club',
         where: { isActive: true },
         required: false,
         attributes: ['id', 'clubName', 'state'],
-        through: { attributes: [] },
       },
     ],
   });
@@ -268,17 +246,20 @@ export const showEditSponsor = asyncHandler(async (req, res) => {
     return res.redirect('/sponsors');
   }
 
+  const clubs = await Club.findAll({ where: { isActive: true }, order: [['clubName', 'ASC']], attributes: ['id', 'clubName', 'state'] });
+
   return res.render('sponsors/edit', {
     title: 'Edit Sponsor',
     sponsor,
     states: AUSTRALIAN_STATES,
     sponsorshipLevels: SPONSORSHIP_LEVELS,
     additionalCSS: ['/styles/sponsor.styles.css'],
+    clubs,
   });
 });
 
 /**
- * Update sponsor information
+ * Update sponsor information (club-specific)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -320,8 +301,15 @@ export const updateSponsor = asyncHandler(async (req, res) => {
     linkedinUrl,
     sponsorshipLevel,
     isPubliclyVisible,
-    associatedClubs,
+    clubId,
   } = req.body;
+
+  // Validate clubId
+  const club = await Club.findOne({ where: { id: clubId, isActive: true } });
+  if (!club) {
+    req.flash('error_msg', 'Invalid club selected.');
+    return res.redirect(`/sponsors/${id}/edit`);
+  }
 
   // Prepare update data
   const updateData = {
@@ -340,6 +328,7 @@ export const updateSponsor = asyncHandler(async (req, res) => {
     linkedinUrl: linkedinUrl?.trim(),
     sponsorshipLevel,
     isPubliclyVisible: isPubliclyVisible === 'on',
+    clubId: club.id,
   };
 
   // Handle logo upload
@@ -351,21 +340,6 @@ export const updateSponsor = asyncHandler(async (req, res) => {
   }
 
   await sponsor.update(updateData);
-
-  // Update club associations
-  if (associatedClubs) {
-    const clubIds = Array.isArray(associatedClubs)
-      ? associatedClubs.map((id) => parseInt(id)).filter((id) => !isNaN(id))
-      : [parseInt(associatedClubs)].filter((id) => !isNaN(id));
-
-    const clubs = await Club.findAll({
-      where: { id: clubIds, isActive: true },
-    });
-    await sponsor.setClubs(clubs);
-  } else {
-    // Clear all associations if none selected
-    await sponsor.setClubs([]);
-  }
 
   req.flash('success_msg', 'Sponsor updated successfully!');
   return res.redirect(`/sponsors/${sponsor.id}`);

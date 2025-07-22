@@ -11,7 +11,6 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
 import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
@@ -46,10 +45,9 @@ vi.mock('/models/index.mjs', () => {
     isPubliclyVisible: true,
     logoUrl: '/uploads/sponsor-logo.jpg',
     description: 'Test sponsor description',
-    clubs: [],
+    clubId: 1,
+    club: null,
     update: vi.fn().mockResolvedValue(true),
-    setClubs: vi.fn().mockResolvedValue(true),
-    getClubCount: vi.fn().mockResolvedValue(2),
     toJSON: vi.fn().mockImplementation(function () {
       const { toJSON, update, setClubs, getClubCount, ...rest } = this;
       return { ...rest, ...overrides };
@@ -145,11 +143,6 @@ import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
 describe('Sponsor Controller', () => {
   let req, res, next;
 
-  beforeAll(async () => {
-    // Ensure test database is ready
-    await sequelize.authenticate();
-  });
-
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
@@ -199,10 +192,6 @@ describe('Sponsor Controller', () => {
     vi.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await sequelize.close();
-  });
-
   describe('Sponsor Listing and Display', () => {
     it('should display public sponsor listings with search and filters', async () => {
       const mockSponsors = [
@@ -236,7 +225,7 @@ describe('Sponsor Controller', () => {
         include: expect.arrayContaining([
           expect.objectContaining({
             model: Club,
-            as: 'clubs'
+            as: 'club'
           })
         ]),
         order: [['sponsorName', 'ASC']]
@@ -257,10 +246,7 @@ describe('Sponsor Controller', () => {
       const mockSponsor = createMockSponsor({
         id: 1,
         sponsorName: 'Test Sponsor',
-        clubs: [
-          createMockClub({ id: 1, clubName: 'Club A' }),
-          createMockClub({ id: 2, clubName: 'Club B' })
-        ]
+        club: createMockClub({ id: 1, clubName: 'Club A' })
       });
 
       req.params.id = '1';
@@ -277,7 +263,7 @@ describe('Sponsor Controller', () => {
         include: expect.arrayContaining([
           expect.objectContaining({
             model: Club,
-            as: 'clubs'
+            as: 'club'
           })
         ])
       }));
@@ -285,7 +271,7 @@ describe('Sponsor Controller', () => {
       expect(res.render).toHaveBeenCalledWith('sponsors/show', expect.objectContaining({
         title: 'Test Sponsor - Sponsor Profile',
         sponsor: mockSponsor,
-        associatedClubs: mockSponsor.clubs
+        club: mockSponsor.club
       }));
     });
 
@@ -345,7 +331,7 @@ describe('Sponsor Controller', () => {
         state: 'NSW',
         location: 'Sydney',
         description: 'New sponsor description',
-        associatedClubs: ['1', '2'],
+        clubId: '1', // Corrected from associatedClub
         isPubliclyVisible: 'on'
       };
 
@@ -357,11 +343,20 @@ describe('Sponsor Controller', () => {
         }
       ];
 
-      Sponsor.create.mockResolvedValue(mockSponsor);
+      // Ensure Sponsor.create is a spy and can be tracked
+      Sponsor.create = vi.fn().mockResolvedValue(mockSponsor);
+      Club.findOne.mockResolvedValue(createMockClub({ id: 1 })); // Add mock for club validation
       Club.findAll.mockResolvedValue([
         createMockClub({ id: 1 }),
         createMockClub({ id: 2 })
       ]);
+
+      // Ensure validation passes and user is admin
+      validationResult.mockReturnValue({
+        isEmpty: () => true,
+        array: () => []
+      });
+      req.user = createMockUser({ id: 1, isAdmin: true });
 
       await createSponsor(req, res);
 
@@ -384,7 +379,7 @@ describe('Sponsor Controller', () => {
       const mockSponsor = createMockSponsor({
         id: 1,
         sponsorName: 'Test Sponsor',
-        clubs: [createMockClub()]
+        club: createMockClub()
       });
 
       req.params.id = '1';
@@ -403,7 +398,8 @@ describe('Sponsor Controller', () => {
     it('should update sponsor with file upload handling', async () => {
       const mockSponsor = createMockSponsor({
         id: 1,
-        sponsorName: 'Test Sponsor'
+        sponsorName: 'Test Sponsor',
+        update: vi.fn().mockResolvedValue(true)
       });
 
       req.params.id = '1';
@@ -414,7 +410,7 @@ describe('Sponsor Controller', () => {
         state: 'VIC',
         location: 'Melbourne',
         isPubliclyVisible: 'on',
-        associatedClubs: ['2', '3']
+        clubId: '2' // Corrected from associatedClub
       };
 
       req.structuredUploads = [
@@ -426,10 +422,18 @@ describe('Sponsor Controller', () => {
       ];
 
       Sponsor.findOne.mockResolvedValue(mockSponsor);
+      Club.findOne.mockResolvedValue(createMockClub({ id: 2 })); // Add mock for club validation
       Club.findAll.mockResolvedValue([
         createMockClub({ id: 2 }),
         createMockClub({ id: 3 })
       ]);
+
+      // Ensure validation passes and user is admin
+      validationResult.mockReturnValue({
+        isEmpty: () => true,
+        array: () => []
+      });
+      req.user = createMockUser({ id: 1, isAdmin: true });
 
       await updateSponsor(req, res);
 
