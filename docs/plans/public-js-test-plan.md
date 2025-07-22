@@ -10,7 +10,7 @@
 - [x] `/public/js/admin-stats.js`
 - [x] `/public/js/admin-user-management.js`
 - [x] `/public/js/alternate-names.js`
-- [ ] `/public/js/app.js`
+- [x] `/public/js/app.js`
 - [ ] `/public/js/auth-register.js`
 - [ ] `/public/js/auth.js`
 - [ ] `/public/js/carnival-add-players.js`

@@ -9,7 +9,11 @@
  * @since 1.0.0
  */
 
-(function() {
+/**
+ * Initializes the theme immediately to prevent flash of unstyled content.
+ * @returns {void}
+ */
+export function initTheme() {
     'use strict';
 
     /**
@@ -72,4 +76,9 @@
         // Document is already loaded
         setTimeout(showContent, 50);
     }
-})();
+}
+
+// Optionally, auto-run if this script is loaded directly in the browser
+if (typeof window !== 'undefined') {
+    initTheme();
+}
