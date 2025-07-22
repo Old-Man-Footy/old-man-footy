@@ -58,7 +58,7 @@
 - [x] Identify and document missing model tests
   - [x] `AuditLog.mjs`
   - [x] `EmailSubscription.mjs`
-  - [ ] `Index.mjs`
+  - [x] `Index.mjs`
   - [ ] `Sponsor.mjs`
 - [ ] Implement tests for missing models
 - [ ] Ensure all model tests pass

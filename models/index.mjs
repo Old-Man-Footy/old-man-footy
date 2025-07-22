@@ -8,19 +8,19 @@
 import { sequelize } from '/config/database.mjs';
 
 // Import all models
-import User from './User.mjs';
-import Club from './Club.mjs';
-import ClubAlternateName from './ClubAlternateName.mjs';
-import ClubPlayer from './ClubPlayer.mjs';
-import ClubSponsor from './ClubSponsor.mjs';
-import Carnival from './Carnival.mjs';
-import CarnivalClub from './CarnivalClub.mjs';
-import CarnivalClubPlayer from './CarnivalClubPlayer.mjs';
-import CarnivalSponsor from './CarnivalSponsor.mjs';
-import Sponsor from './Sponsor.mjs';
-import EmailSubscription from './EmailSubscription.mjs';
-import AuditLog from './AuditLog.mjs';
-import SyncLog from './SyncLog.mjs';
+import User from '/models/User.mjs';
+import Club from '/models/Club.mjs';
+import ClubAlternateName from '/models/ClubAlternateName.mjs';
+import ClubPlayer from '/models/ClubPlayer.mjs';
+import ClubSponsor from '/models/ClubSponsor.mjs';
+import Carnival from '/models/Carnival.mjs';
+import CarnivalClub from '/models/CarnivalClub.mjs';
+import CarnivalClubPlayer from '/models/CarnivalClubPlayer.mjs';
+import CarnivalSponsor from '/models/CarnivalSponsor.mjs';
+import Sponsor from '/models/Sponsor.mjs';
+import EmailSubscription from '/models/EmailSubscription.mjs';
+import AuditLog from '/models/AuditLog.mjs';
+import SyncLog from '/models/SyncLog.mjs';
 
 /**
  * Define model associations/relationships
