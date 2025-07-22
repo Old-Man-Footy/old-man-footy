@@ -49,7 +49,7 @@
   - [x] `asyncHandler.mjs`
   - [x] `flash.mjs`
   - [x] `upload.mjs`
-  - [ ] `validation.mjs`
+  - [x] `validation.mjs`
   - [ ] `comingSoon.mjs`
 - [ ] Implement tests for missing middleware functionality
 - [ ] Ensure all middleware tests pass
