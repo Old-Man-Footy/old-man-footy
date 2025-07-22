@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
-import { initializeAdminClaimCarnival } from '../../public/js/admin-claim-carnival.js';
+import { initializeAdminClaimCarnival } from '/public/js/admin-claim-carnival.js';
 
 // Mock DOM API
 function setupDOM() {

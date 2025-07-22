@@ -47,7 +47,7 @@ describe('admin-carnivals.js', () => {
       domElements.statusToggleModal = {};
 
       // Import the function from the source file
-      const { showStatusToggleModal } = await import('../../public/js/admin-carnivals.js');
+      const { showStatusToggleModal } = await import('/public/js/admin-carnivals.js');
       showStatusToggleModal('123', 'Test Carnival', true);
 
       expect(domElements.toggleCarnivalTitle.textContent).toBe('Test Carnival');
@@ -67,7 +67,7 @@ describe('admin-carnivals.js', () => {
       domElements.confirmStatusToggle = { className: '', innerHTML: '' };
       domElements.statusToggleModal = {};
 
-      const { showStatusToggleModal } = await import('../../public/js/admin-carnivals.js');
+      const { showStatusToggleModal } = await import('/public/js/admin-carnivals.js');
       showStatusToggleModal('456', 'Inactive Carnival', false);
 
       expect(domElements.toggleCarnivalTitle.textContent).toBe('Inactive Carnival');
@@ -86,7 +86,7 @@ describe('admin-carnivals.js', () => {
       const appendChild = vi.fn();
       global.document.body.appendChild = appendChild;
 
-      const { showToast } = await import('../../public/js/admin-carnivals.js');
+      const { showToast } = await import('/public/js/admin-carnivals.js');
       domElements['toast-container'] = null;
       domElements['toast-' + Date.now()] = {
         addEventListener: vi.fn()

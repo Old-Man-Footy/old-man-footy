@@ -4,7 +4,7 @@
 - [x] `/public/js/address-utils.js`
 - [x] `/public/js/admin-carnivals.js`
 - [x] `/public/js/admin-claim-carnival.js`
-- [ ] `/public/js/admin-clubs.js`
+- [x] `/public/js/admin-clubs.js`
 - [ ] `/public/js/admin-edit-club.js`
 - [ ] `/public/js/admin-reports.js`
 - [ ] `/public/js/admin-stats.js`
