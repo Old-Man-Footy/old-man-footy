@@ -82,7 +82,7 @@ This project enforces a strict separation of concerns.
 ## **5. Unit Testing (/tests)**
 
   * **Framework:** Use **Vitest** for all tests.
-  * **Location:** Test files MUST be located in the `/tests` directory and be named `[file-name].test.js` or `[file-name].spec.js`.
+  * **Location:** Test files MUST be located in the `/tests` directory in subdirectory of the type (e.g. `/middleware` or `/services`) and be named `[file-name].test.js` or `[file-name].spec.js`.
   * **Best Practices:**
       * **AAA Pattern:** Structure tests using Arrange, Act, Assert.
       * **Isolation:** Tests MUST be independent. Use `beforeEach` and `afterEach` to reset state and mocks.
