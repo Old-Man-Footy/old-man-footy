@@ -324,11 +324,11 @@ class MySidelineDataService {
     }
 
     /**
-     * A robust function to parse various date string formats into a 'YYYY-MM-DD' string (local time).
+     * A robust function to parse various date string formats into a Date object (local time).
      * This is designed to work with the output from the date extraction regex patterns.
      *
      * @param {string} dateString The date string to parse (e.g., "27th July 2024", "19/07/2025").
-     * @returns {string|null} A valid 'YYYY-MM-DD' string or null if parsing fails.
+     * @returns {Date|null} A valid Date object or null if parsing fails.
      */
     parseDate(dateString) {
         if (!dateString) {
@@ -353,8 +353,7 @@ class MySidelineDataService {
             const year = parseInt(match[3], 10);
             const date = new Date(year, month - 1, day);
             if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
-                // Format as 'YYYY-MM-DD' in local time
-                return `${year.toString().padStart(4, '0')}-${(month).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                return date;
             }
         }
 
@@ -370,18 +369,14 @@ class MySidelineDataService {
             if (monthIndex >= 0) {
                 const date = new Date(year, monthIndex, day);
                 if (date.getFullYear() === year && date.getMonth() === monthIndex && date.getDate() === day) {
-                    return `${year.toString().padStart(4, '0')}-${(monthIndex + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                    return date;
                 }
             }
         }
         // --- 3. Fallback for any other valid formats ---
         const fallbackDate = new Date(cleanString);
         if (!isNaN(fallbackDate.getTime())) {
-            // Use local time for fallback
-            const year = fallbackDate.getFullYear();
-            const month = fallbackDate.getMonth() + 1;
-            const day = fallbackDate.getDate();
-            return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            return fallbackDate;
         }
         // Return null if no patterns matched or date was invalid
         return null;
