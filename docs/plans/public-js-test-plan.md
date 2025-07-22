@@ -12,7 +12,7 @@
 - [x] `/public/js/alternate-names.js`
 - [x] `/public/js/app.js`
 - [x] `/public/js/auth-register.js`
-- [ ] `/public/js/auth.js`
+- [x] `/public/js/auth.js`
 - [ ] `/public/js/carnival-add-players.js`
 - [ ] `/public/js/carnival-all-players.js`
 - [ ] `/public/js/carnival-attendees.js`

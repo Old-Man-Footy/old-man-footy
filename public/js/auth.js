@@ -79,3 +79,5 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Authentication functionality initialized successfully');
 });
+
+export { togglePassword };
