@@ -1,15 +1,20 @@
 /**
  * Admin Claim Carnival JavaScript
  * Handles the carnival claiming functionality in the admin interface
+ * @module admin-claim-carnival
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+/**
+ * Initialize the admin claim carnival functionality
+ * Attaches the change event handler to the club select element
+ * @public
+ */
+export function initializeAdminClaimCarnival() {
     const claimForm = document.getElementById('claim-carnival-form');
     if (!claimForm) return;
 
     // Get carnival state from data attribute
     const carnivalState = claimForm.dataset.carnivalState;
-    
     // Get DOM elements
     const clubSelect = document.getElementById('targetClubId');
     const selectedClubInfo = document.getElementById('selectedClubInfo');
@@ -63,6 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+}
 
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAdminClaimCarnival();
     console.log('Admin claim carnival functionality initialized');
 });
