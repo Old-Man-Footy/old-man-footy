@@ -23,10 +23,9 @@ export default defineConfig({
     // Exclude patterns
     exclude: [
       '**/node_modules/**',
+      '**/js/**',
       '**/e2e/**',
-      '**/test-results/**',
-      '**/tests/jest.env.mjs', // Exclude old Jest config
-      '**/scripts/fix-jest-globals.mjs' // Exclude Jest migration scripts
+      '**/test-results/**'
     ],
     
     // Coverage configuration

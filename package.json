@@ -21,7 +21,8 @@
     "test:e2e:report": "playwright show-report",
     "test:e2e:single": "playwright test --headed --project=chromium-debug",
     "test:e2e:homepage": "playwright test --headed --project=chromium-debug homepage-simple.spec.js",
-    "test:all": "npm run test && npm run test:e2e",
+    "test:js": "vitest run --config vitest.config.js.mjs",
+    "test:all": "npm run test && npm run test:e2e && npm run test:js",
     "seed": "node scripts/seed-database.mjs",
     "playwright:install": "playwright install"
   },
@@ -58,6 +59,7 @@
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "cross-env": "^7.0.3",
+    "jsdom": "^26.1.0",
     "nodemon": "^3.0.1",
     "sequelize-cli": "^6.6.2",
     "supertest": "^7.0.0",
