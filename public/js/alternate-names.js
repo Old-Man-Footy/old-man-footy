@@ -145,3 +145,12 @@ async function deleteAlternateName(id) {
         alert('Error deleting alternate name');
     }
 }
+
+export {
+    initializeAlternateNamesManagement,
+    setupAddAlternateNameForm,
+    setupEditAlternateNameButtons,
+    setupEditAlternateNameForm,
+    setupDeleteAlternateNameButtons,
+    deleteAlternateName    
+};

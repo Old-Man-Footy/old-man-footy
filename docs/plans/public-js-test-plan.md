@@ -9,7 +9,7 @@
 - [x] `/public/js/admin-reports.js`
 - [x] `/public/js/admin-stats.js`
 - [x] `/public/js/admin-user-management.js`
-- [ ] `/public/js/alternate-names.js`
+- [x] `/public/js/alternate-names.js`
 - [ ] `/public/js/app.js`
 - [ ] `/public/js/auth-register.js`
 - [ ] `/public/js/auth.js`
