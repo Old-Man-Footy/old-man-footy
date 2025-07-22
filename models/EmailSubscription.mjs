@@ -58,14 +58,9 @@ class EmailSubscription extends Model {
    * @returns {Promise<Array>} Array of active subscriptions
    */
   static async findByState(state) {
-    return await this.findAll({
-      where: {
-        isActive: true,
-        states: {
-          [Op.like]: `%"${state}"%`
-        }
-      }
-    });
+    // Fetch all active subscriptions, then filter in JS for SQLite compatibility
+    const allActive = await this.findAll({ where: { isActive: true } });
+    return allActive.filter(sub => Array.isArray(sub.states) && sub.states.includes(state));
   }
 }
 

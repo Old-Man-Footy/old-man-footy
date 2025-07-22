@@ -52,12 +52,12 @@
   - [x] `validation.mjs`
   - [x] `comingSoon.mjs`
 - [x] Implement tests for missing middleware functionality
-- [ ] Ensure all middleware tests pass
+- [x] Ensure all middleware tests pass
 
 ### Phase 6: **Models**
 - [x] Identify and document missing model tests
-  - [ ] `AuditLog.mjs`
-  - [ ] `EmailSubscription.mjs`
+  - [x] `AuditLog.mjs`
+  - [x] `EmailSubscription.mjs`
   - [ ] `Index.mjs`
   - [ ] `Sponsor.mjs`
 - [ ] Implement tests for missing models

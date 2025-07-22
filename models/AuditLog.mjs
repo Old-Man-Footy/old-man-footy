@@ -42,6 +42,11 @@ class AuditLog extends Model {
       metadata
     } = actionData;
 
+    // Validate result
+    if (result !== 'SUCCESS' && result !== 'FAILURE') {
+      throw new Error('AuditLog result must be either "SUCCESS" or "FAILURE"');
+    }
+
     // Extract request information if available
     let ipAddress = null;
     let userAgent = null;

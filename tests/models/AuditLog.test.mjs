@@ -206,5 +206,108 @@ describe('AuditLog Model', () => {
       const found = await AuditLog.findByPk(oldLog.id);
       expect(found).toBeNull();
     });
+
+    it('should not create an audit log entry with invalid action or entityType', async () => {
+      // Arrange: action and entityType are empty strings (invalid)
+      const invalidActionData = {
+      userId: user.id,
+      action: '',
+      entityType: '',
+      entityId: user.id,
+      oldValues: null,
+      newValues: null,
+      request: null,
+      result: 'SUCCESS',
+      errorMessage: null,
+      metadata: null
+      };
+      // Act & Assert
+      await expect(AuditLog.logAction(invalidActionData)).rejects.toThrow();
+    });
+
+    it('should validate ipAddress format', async () => {
+      // Arrange: invalid IP address
+      const invalidIpData = {
+      userId: user.id,
+      action: 'LOGIN',
+      entityType: 'User',
+      entityId: user.id,
+      oldValues: null,
+      newValues: null,
+      request: {
+        ip: 'not-an-ip',
+        headers: { 'user-agent': 'vitest-test' },
+        sessionID: 'sess123'
+      },
+      result: 'SUCCESS',
+      errorMessage: null,
+      metadata: null
+      };
+      // Act & Assert
+      await expect(AuditLog.logAction(invalidIpData)).rejects.toThrow();
+    });
+
+    it('should default result to SUCCESS if not provided', async () => {
+      // Arrange
+      const actionData = {
+      userId: user.id,
+      action: 'CREATE_USER',
+      entityType: 'User',
+      entityId: user.id,
+      oldValues: null,
+      newValues: { email: user.email },
+      request: null,
+      errorMessage: null,
+      metadata: null
+      };
+      // Act
+      const log = await AuditLog.logAction(actionData);
+      // Assert
+      expect(log.result).toBe('SUCCESS');
+    });
+
+    it('should allow metadata to be null or an object', async () => {
+      // Arrange
+      const actionDataNull = {
+      userId: user.id,
+      action: 'CREATE_USER',
+      entityType: 'User',
+      entityId: user.id,
+      oldValues: null,
+      newValues: { email: user.email },
+      request: null,
+      result: 'SUCCESS',
+      errorMessage: null,
+      metadata: null
+      };
+      const actionDataObj = {
+      ...actionDataNull,
+      metadata: { foo: 'bar', baz: 123 }
+      };
+      // Act
+      const logNull = await AuditLog.logAction(actionDataNull);
+      const logObj = await AuditLog.logAction(actionDataObj);
+      // Assert
+      expect(logNull.metadata).toBeNull();
+      expect(logObj.metadata).toEqual({ foo: 'bar', baz: 123 });
+    });
+
+    it('should not allow result to be other than SUCCESS or FAILURE', async () => {
+      // Arrange
+      const actionData = {
+      userId: user.id,
+      action: 'CREATE_USER',
+      entityType: 'User',
+      entityId: user.id,
+      oldValues: null,
+      newValues: { email: user.email },
+      request: null,
+      result: 'INVALID_RESULT',
+      errorMessage: null,
+      metadata: null
+      };
+      // Act & Assert
+      await expect(AuditLog.logAction(actionData)).rejects.toThrow();
+    });
   });
 });
