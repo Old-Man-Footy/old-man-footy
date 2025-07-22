@@ -38,10 +38,10 @@
   - [x] `imageNamingService.mjs`
   - [x] `carouselImageService.mjs`
   - [x] `mySidelineEventParserService.mjs`
-  - [ ] `mySidelineIntegrationService.mjs`
-  - [ ] `mySidelineLogoDownloadService.mjs`
-  - [ ] `sponsorSortingService.mjs`
-- [ ] Implement tests for service layer functionality
+  - [x] `mySidelineIntegrationService.mjs`
+  - [x] `mySidelineLogoDownloadService.mjs`
+  - [x] `sponsorSortingService.mjs`
+- [x] Implement tests for service layer functionality
 - [ ] Ensure all service layer tests pass
 
 ### Phase 5 **Middleware & Utility Gaps**
