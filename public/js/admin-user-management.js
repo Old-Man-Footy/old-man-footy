@@ -125,6 +125,36 @@ async function deleteUser(userId, userName, isEditPage = false) {
 }
 
 /**
+ * Determines if the primary delegate checkbox should be checked when the club changes.
+ * @param {HTMLSelectElement} clubSelect - The club select dropdown element.
+ * @param {HTMLInputElement} primaryDelegateCheckbox - The primary delegate checkbox element.
+ * @param {function} confirmFn - The confirmation function to use.
+ * @returns {boolean|undefined} Returns true if the checkbox should be checked, otherwise undefined.
+ */
+export function shouldCheckPrimaryOnClubChange(clubSelect, primaryDelegateCheckbox, confirmFn) {
+    if (clubSelect && primaryDelegateCheckbox && clubSelect.value && !primaryDelegateCheckbox.checked) {
+        if (confirmFn('Would you like to make this user the primary delegate for the selected club?')) {
+            return true;
+        }
+    }
+}
+
+/**
+ * Determines if the primary delegate checkbox state should be reverted upon change.
+ * @param {HTMLSelectElement} clubSelect - The club select dropdown element.
+ * @param {HTMLInputElement} primaryDelegateCheckbox - The primary delegate checkbox element.
+ * @param {function} confirmFn - The confirmation function to use.
+ * @returns {boolean|undefined} Returns true if the checkbox should be reverted, otherwise undefined.
+ */
+export function shouldRevertPrimaryDelegateChange(clubSelect, primaryDelegateCheckbox, confirmFn) {
+    if (clubSelect && primaryDelegateCheckbox && !primaryDelegateCheckbox.checked && clubSelect.value) {
+        if (!confirmFn('Are you sure you want to remove primary delegate status? This may affect club management capabilities.')) {
+            return true;
+        }
+    }
+}
+
+/**
  * Initialize form validation for edit user page
  */
 function initializeEditUserForm() {
@@ -133,23 +163,16 @@ function initializeEditUserForm() {
     
     // Auto-check primary delegate when club is selected
     if (clubSelect && primaryDelegateCheckbox) {
-        clubSelect.addEventListener('change', function() {
-            if (this.value && !primaryDelegateCheckbox.checked) {
-                // Suggest making them primary delegate if they're assigned to a club
-                const shouldBePrimary = confirm('Would you like to make this user the primary delegate for the selected club?');
-                if (shouldBePrimary) {
-                    primaryDelegateCheckbox.checked = true;
-                }
+        clubSelect.addEventListener('change', () => {
+            if (shouldCheckPrimaryOnClubChange(clubSelect, primaryDelegateCheckbox, window.confirm)) {
+                primaryDelegateCheckbox.checked = true;
             }
         });
         
         // Warn if removing primary delegate status
-        primaryDelegateCheckbox.addEventListener('change', function() {
-            if (!this.checked && clubSelect.value) {
-                const confirmRemoval = confirm('Are you sure you want to remove primary delegate status? This may affect club management capabilities.');
-                if (!confirmRemoval) {
-                    this.checked = true;
-                }
+        primaryDelegateCheckbox.addEventListener('change', () => {
+            if (shouldRevertPrimaryDelegateChange(clubSelect, primaryDelegateCheckbox, window.confirm)) {
+                primaryDelegateCheckbox.checked = true;
             }
         });
     }
@@ -296,3 +319,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('❌ No action buttons found on this page');
     }
 });
+
+export {
+    resetPassword,
+    toggleUserStatus,
+    deleteUser,
+    initializeEditUserForm,
+    initializeUserListPage,
+    initializeEditUserPage
+};
+// Export functions for testing purposes

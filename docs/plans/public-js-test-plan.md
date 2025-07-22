@@ -8,7 +8,7 @@
 - [x] `/public/js/admin-edit-club.js`
 - [x] `/public/js/admin-reports.js`
 - [x] `/public/js/admin-stats.js`
-- [ ] `/public/js/admin-user-management.js`
+- [x] `/public/js/admin-user-management.js`
 - [ ] `/public/js/alternate-names.js`
 - [ ] `/public/js/app.js`
 - [ ] `/public/js/auth-register.js`
