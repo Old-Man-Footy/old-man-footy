@@ -5,8 +5,8 @@
 - [x] `/public/js/admin-carnivals.js`
 - [x] `/public/js/admin-claim-carnival.js`
 - [x] `/public/js/admin-clubs.js`
-- [ ] `/public/js/admin-edit-club.js`
-- [ ] `/public/js/admin-reports.js`
+- [x] `/public/js/admin-edit-club.js`
+- [x] `/public/js/admin-reports.js`
 - [ ] `/public/js/admin-stats.js`
 - [ ] `/public/js/admin-user-management.js`
 - [ ] `/public/js/alternate-names.js`
