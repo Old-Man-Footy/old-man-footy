@@ -1,9 +1,8 @@
 /**
- * Carnival Add Players JavaScript
- * Handles player selection, form validation, and interactions for adding players to carnival registrations
+ * Sets up event listeners and UI logic for the add players form.
+ * @function
  */
-
-document.addEventListener('DOMContentLoaded', function() {
+export function setupCarnivalAddPlayers() {
     const checkboxes = document.querySelectorAll('.player-checkbox');
     const submitBtn = document.getElementById('submitBtn');
     const form = document.getElementById('addPlayersForm');
@@ -11,10 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update submit button state based on selections
     function updateSubmitButton() {
         const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
-        submitBtn.disabled = selectedCount === 0;
-        submitBtn.innerHTML = selectedCount > 0 
-            ? `<i class="bi bi-plus-circle"></i> Add ${selectedCount} Selected Player${selectedCount > 1 ? 's' : ''}`
-            : '<i class="bi bi-plus-circle"></i> Add Selected Players';
+        if (submitBtn) {
+            submitBtn.disabled = selectedCount === 0;
+            submitBtn.innerHTML = selectedCount > 0 
+                ? `<i class="bi bi-plus-circle"></i> Add ${selectedCount} Selected Player${selectedCount > 1 ? 's' : ''}`
+                : '<i class="bi bi-plus-circle"></i> Add Selected Players';
+        }
     }
 
     // Add event listeners to checkboxes
@@ -52,4 +53,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial state
     updateSubmitButton();
-});
+}
+
+// Attach on DOMContentLoaded or immediately if DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupCarnivalAddPlayers);
+} else {
+    setupCarnivalAddPlayers();
+}

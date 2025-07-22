@@ -13,7 +13,7 @@
 - [x] `/public/js/app.js`
 - [x] `/public/js/auth-register.js`
 - [x] `/public/js/auth.js`
-- [ ] `/public/js/carnival-add-players.js`
+- [x] `/public/js/carnival-add-players.js`
 - [ ] `/public/js/carnival-all-players.js`
 - [ ] `/public/js/carnival-attendees.js`
 - [ ] `/public/js/carnival-club-players.js`
