@@ -43,9 +43,9 @@ A comprehensive web application for managing Rugby League Masters carnivals acro
 - **Frontend:** EJS templating engine with express-ejs-layouts
 - **Styling:** Bootstrap 5 with custom CSS and dark/light mode support
 - **JavaScript:** Modern ES2020+ with vanilla browser APIs
-- **Testing:** Jest with comprehensive coverage reporting
+- **Testing:** Vitest with comprehensive coverage reporting
 - **Security:** Helmet.js, express-validator, bcrypt password hashing
-- **Web Scraping:** Puppeteer and Playwright for MySideline integration
+- **Web Scraping:** Playwright for MySideline integration
 - **Task Scheduling:** node-cron for automated data synchronization
 
 ## 📋 Prerequisites
@@ -125,43 +125,18 @@ Note: SQLite database is included and requires no separate installation.
 |---------|-------------|
 | `npm start` | Start production server |
 | `npm run dev` | Start development server with nodemon |
-| `npm test` | Run all tests |
+| `npm test` | Run all tests with Vitest |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:coverage` | Run tests with coverage report |
 | `npm run seed` | Seed database with test data |
 
-### Debugging in VS Code
-
-To debug in VS Code, change the following line in `package.json`:
-
-- from: `"test": "jest --detectOpenHandles --forceExit",`
-- to: `"test": "node --inspect-brk=9229 node_modules/jest/bin/jest.js --runInBand",`
-
-Then use an "attach to Jest" `launch.json` file:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Attach to Jest",
-      "type": "node",
-      "request": "attach",
-      "port": 9229,
-      "restart": true
-    }
-  ]
-}
-```
-
 ### Test Coverage
 
-The project maintains high test coverage standards:
+The project maintains high test coverage standards. To generate a report, run:
 
-- **Branches:** 70% minimum
-- **Functions:** 70% minimum
-- **Lines:** 70% minimum
-- **Statements:** 70% minimum
+```bash
+npm run test:coverage
+```
 
 ## 🗂️ Project Structure
 
