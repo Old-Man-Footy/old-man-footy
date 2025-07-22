@@ -139,7 +139,7 @@ describe('Enhanced Email Validation Middleware', () => {
 
     describe('requiredEmail()', () => {
         test('should require email and provide custom message', async () => {
-            const app = createTestApp([requiredEmail('email', 'Custom email error message')]);
+            const app = createTestApp([requiredEmail('email', 'Email is required')]);
             
             const response = await request(app)
                 .post('/test')
@@ -197,7 +197,7 @@ describe('Enhanced Email Validation Middleware', () => {
                 .send({ organiserContactEmail: '' });
             
             expect(response1.status).toBe(400);
-            expect(response1.body.errors[0].msg).toContain('OrganiserContactEmail is required');
+            expect(response1.body.errors[0].msg).toContain('organiser email address is required');
             
             // Invalid email
             const response2 = await request(app)

@@ -123,7 +123,7 @@ const contactEmail = (fieldName = 'contactEmail') => {
  */
 const organiserEmail = (fieldName = 'organiserContactEmail') => {
     return validateEmail(fieldName, true, {
-        customMessage: 'organiser email address is required',
+        customMessage: 'organiser email address is required for carnival communications',
         requiredMessage: 'organiser email address is required'
     });
 };

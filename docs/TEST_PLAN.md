@@ -50,8 +50,8 @@
   - [x] `flash.mjs`
   - [x] `upload.mjs`
   - [x] `validation.mjs`
-  - [ ] `comingSoon.mjs`
-- [ ] Implement tests for missing middleware functionality
+  - [x] `comingSoon.mjs`
+- [x] Implement tests for missing middleware functionality
 - [ ] Ensure all middleware tests pass
 
 ### Phase 6: **Models**
