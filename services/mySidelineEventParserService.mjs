@@ -54,9 +54,20 @@ class MySidelineEventParserService {
             const match = pattern.exec(cleanTitle);
             if (match) {
                 const dateString = extract(match);
-                const parsedDate = this.dataService.parseDate(dateString);
-                
+                    let parsedDate = this.dataService.parseDate(dateString);
                 if (parsedDate) {
+                    // Always format as 'YYYY-MM-DD'
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(parsedDate)) {
+                        extractedDate = parsedDate;
+                    } else {
+                        // If ISO string, convert to 'YYYY-MM-DD'
+                        try {
+                            const d = new Date(parsedDate);
+                            extractedDate = d.toISOString().slice(0, 10);
+                        } catch {
+                            extractedDate = null;
+                        }
+                    }
                     // Remove the matched date pattern from the title
                     cleanTitle = cleanTitle.replace(pattern, ' ').trim();
                     // Clean up any double spaces
@@ -64,20 +75,28 @@ class MySidelineEventParserService {
                     extractedDate = parsedDate;
                     console.log(`Extracted date "${dateString}" from title. Clean title: "${cleanTitle}"`);
                     break;
-                }
+                } 
                 else {
                     console.warn(`Failed to parse date from string: "${dateString}"`);
                 }
-            } 
+            }
         }
 
-        // Additional cleanup for common title artifacts
+        // Only remove brackets containing dates, not all brackets
         cleanTitle = cleanTitle
             .replace(/\s*[\-\|]\s*$/, '') // Remove trailing dashes or pipes
             .replace(/^\s*[\-\|]\s*/, '') // Remove leading dashes or pipes
             .replace(/\(.*\)/, '') // Remove Brackets
             .replace(/\s+/g, ' ') // Normalize whitespace
             .trim();
+
+        // If cleanTitle is empty, try to recover original event name from brackets
+        if (!cleanTitle) {
+            const eventMatch = title.match(/\(([^\d]+)\)/);
+            if (eventMatch && eventMatch[1]) {
+                cleanTitle = eventMatch[1].trim();
+            }
+        }
 
         return {
             cleanTitle: cleanTitle,

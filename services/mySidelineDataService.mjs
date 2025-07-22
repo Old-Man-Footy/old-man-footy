@@ -324,11 +324,11 @@ class MySidelineDataService {
     }
 
     /**
-     * A robust function to parse various date string formats into a JavaScript Date object.
+     * A robust function to parse various date string formats into a 'YYYY-MM-DD' string (local time).
      * This is designed to work with the output from the date extraction regex patterns.
      *
      * @param {string} dateString The date string to parse (e.g., "27th July 2024", "19/07/2025").
-     * @returns {Date|null} A valid Date object or null if parsing fails.
+     * @returns {string|null} A valid 'YYYY-MM-DD' string or null if parsing fails.
      */
     parseDate(dateString) {
         if (!dateString) {
@@ -349,13 +349,12 @@ class MySidelineDataService {
         match = cleanString.match(patternNumeric);
         if (match) {
             const day = parseInt(match[1], 10);
-            const month = parseInt(match[2], 10); // month is 1-based
+            const month = parseInt(match[2], 10);
             const year = parseInt(match[3], 10);
-            // Create date, ensuring month is 0-indexed for the Date constructor
             const date = new Date(year, month - 1, day);
-            // Validate the date to catch invalid inputs like month > 12
             if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
-                return date;
+                // Format as 'YYYY-MM-DD' in local time
+                return `${year.toString().padStart(4, '0')}-${(month).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
             }
         }
 
@@ -364,29 +363,26 @@ class MySidelineDataService {
         const patternMonthName = /^(?:(\d{1,2})\s+([a-zA-Z]{3,})\s+(\d{4}))|(?:([a-zA-Z]{3,})\s+(\d{1,2}),?\s+(\d{4}))$/i;
         match = cleanString.match(patternMonthName);
         if (match) {
-            // match[1] is day, match[2] is month, match[3] is year OR
-            // match[4] is month, match[5] is day, match[6] is year
             const day = parseInt(match[1] || match[5], 10);
             const monthStr = match[2] || match[4];
             const year = parseInt(match[3] || match[6], 10);
-
-            const monthIndex = new Date(Date.parse(monthStr +" 1, 2000")).getMonth();
-            
+            const monthIndex = new Date(Date.parse(monthStr + " 1, 2000")).getMonth();
             if (monthIndex >= 0) {
                 const date = new Date(year, monthIndex, day);
-                // Validate the date
                 if (date.getFullYear() === year && date.getMonth() === monthIndex && date.getDate() === day) {
-                    return date;
+                    return `${year.toString().padStart(4, '0')}-${(monthIndex + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                 }
             }
         }
-        
         // --- 3. Fallback for any other valid formats ---
         const fallbackDate = new Date(cleanString);
         if (!isNaN(fallbackDate.getTime())) {
-            return fallbackDate;
+            // Use local time for fallback
+            const year = fallbackDate.getFullYear();
+            const month = fallbackDate.getMonth() + 1;
+            const day = fallbackDate.getDate();
+            return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         }
-
         // Return null if no patterns matched or date was invalid
         return null;
     }

@@ -37,7 +37,7 @@
 - [x] Identify and document missing service layer tests
   - [x] `imageNamingService.mjs`
   - [x] `carouselImageService.mjs`
-  - [ ] `mySidelineEventParserService.mjs`
+  - [x] `mySidelineEventParserService.mjs`
   - [ ] `mySidelineIntegrationService.mjs`
   - [ ] `mySidelineLogoDownloadService.mjs`
   - [ ] `sponsorSortingService.mjs`
