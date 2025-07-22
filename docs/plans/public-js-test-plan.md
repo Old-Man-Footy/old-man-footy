@@ -11,7 +11,7 @@
 - [x] `/public/js/admin-user-management.js`
 - [x] `/public/js/alternate-names.js`
 - [x] `/public/js/app.js`
-- [ ] `/public/js/auth-register.js`
+- [x] `/public/js/auth-register.js`
 - [ ] `/public/js/auth.js`
 - [ ] `/public/js/carnival-add-players.js`
 - [ ] `/public/js/carnival-all-players.js`

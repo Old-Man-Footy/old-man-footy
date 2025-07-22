@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses Playwright for end-to-end testing alongside Jest for unit testing. Playwright provides cross-browser testing capabilities with Chrome, Firefox, Safari, and mobile browsers.
+This project uses Playwright for end-to-end testing alongside Vitest for unit testing. Playwright provides cross-browser testing capabilities with Chrome, Firefox, Safari, and mobile browsers.
 
 ## Quick Start
 
