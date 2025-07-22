@@ -47,7 +47,7 @@
 ### Phase 5 **Middleware & Utility Gaps**
 - [x] Identify and document missing middleware tests
   - [x] `asyncHandler.mjs`
-  - [ ] `flash.mjs`
+  - [x] `flash.mjs`
   - [ ] `upload.mjs`
   - [ ] `validation.mjs`
   - [ ] `comingSoon.mjs`
