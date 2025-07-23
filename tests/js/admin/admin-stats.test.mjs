@@ -1,74 +1,130 @@
-import { describe, it, beforeEach, afterEach, expect } from 'vitest';
-import { toggleCustomDates } from '/public/js/admin-stats.js';
+import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
+// Import the manager object directly
+import { adminStatsManager } from '/public/js/admin-stats.js';
 
-describe('toggleCustomDates', () => {
-  let period, startDateGroup, endDateGroup;
+/**
+ * @file admin-stats.test.js
+ * @description Unit tests for adminStatsManager.
+ */
 
-  beforeEach(() => {
-    // Arrange: Set up DOM elements
-    period = document.createElement('select');
-    period.id = 'period';
-    // Add options to match real usage
-    const customOption = document.createElement('option');
-    customOption.value = 'custom';
-    customOption.textContent = 'Custom';
-    period.appendChild(customOption);
-    const weekOption = document.createElement('option');
-    weekOption.value = 'week';
-    weekOption.textContent = 'Week';
-    period.appendChild(weekOption);
-    startDateGroup = document.createElement('div');
-    startDateGroup.id = 'startDateGroup';
-    endDateGroup = document.createElement('div');
-    endDateGroup.id = 'endDateGroup';
+// Helper function to set up the DOM for each test
+function setupDOM() {
+    document.body.innerHTML = `
+        <select id="period">
+            <option value="week">This Week</option>
+            <option value="custom">Custom</option>
+        </select>
+        <div id="startDateGroup" style="display: none;"></div>
+        <div id="endDateGroup" style="display: none;"></div>
+        <button data-action="export-report">Export</button>
+        <canvas id="myChart"></canvas>
+    `;
+}
 
-    document.body.appendChild(period);
-    document.body.appendChild(startDateGroup);
-    document.body.appendChild(endDateGroup);
-  });
+describe('adminStatsManager', () => {
+    beforeEach(() => {
+        // Set up the DOM
+        setupDOM();
+        
+        // Mock global objects
+        vi.stubGlobal('alert', vi.fn());
+        vi.stubGlobal('fetch', vi.fn());
+        vi.stubGlobal('URL', {
+            createObjectURL: vi.fn(() => 'blob:mock-url'),
+            revokeObjectURL: vi.fn(),
+        });
+        
+        // Mock the Chart.js constructor
+        vi.stubGlobal('Chart', vi.fn(() => ({
+            // Mock chart instance methods if needed
+        })));
+    });
 
-  afterEach(() => {
-    // Clean up DOM
-    period.remove();
-    startDateGroup.remove();
-    endDateGroup.remove();
-  });
+    afterEach(() => {
+        // Clean up mocks and the DOM
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        document.body.innerHTML = '';
+    });
 
-  it('should show custom date fields when period is "custom"', () => {
-    // Arrange
-    period.value = 'custom';
-    startDateGroup.style.display = 'none';
-    endDateGroup.style.display = 'none';
-    // All elements are already appended in beforeEach
+    describe('Date Filtering', () => {
+        it('should show custom date fields when period is "custom"', () => {
+            const periodSelect = document.getElementById('period');
+            const startDateGroup = document.getElementById('startDateGroup');
+            
+            // Initialize the manager to set up listeners
+            adminStatsManager.initialize();
+            
+            // Simulate selecting 'Custom'
+            periodSelect.value = 'custom';
+            periodSelect.dispatchEvent(new Event('change'));
 
-    // Act
-    toggleCustomDates();
+            expect(startDateGroup.style.display).toBe('block');
+        });
 
-    // Assert
-    expect(startDateGroup.style.display).toBe('block');
-    expect(endDateGroup.style.display).toBe('block');
-  });
+        it('should hide custom date fields when period is not "custom"', () => {
+            const periodSelect = document.getElementById('period');
+            const startDateGroup = document.getElementById('startDateGroup');
+            
+            // Start with them visible
+            startDateGroup.style.display = 'block';
+            
+            adminStatsManager.initialize();
+            
+            // Simulate selecting 'This Week'
+            periodSelect.value = 'week';
+            periodSelect.dispatchEvent(new Event('change'));
 
-  it('should hide custom date fields when period is not "custom"', () => {
-    // Arrange
-    period.value = 'week';
-    startDateGroup.style.display = 'block';
-    endDateGroup.style.display = 'block';
+            expect(startDateGroup.style.display).toBe('none');
+        });
+    });
 
-    // Act
-    toggleCustomDates();
+    describe('Report Exporting', () => {
+        it('should trigger a download on successful export', async () => {
+            // Mock a successful fetch response
+            fetch.mockResolvedValue({
+                ok: true,
+                blob: () => Promise.resolve(new Blob(['csv,content'])),
+            });
+            
+            adminStatsManager.initialize();
+            const exportButton = document.querySelector('[data-action="export-report"]');
+            
+            // Simulate a click
+            exportButton.click();
 
-    // Assert
-    expect(startDateGroup.style.display).toBe('none');
-    expect(endDateGroup.style.display).toBe('none');
-  });
+            // Wait for the async operations to complete
+            await new Promise(resolve => setTimeout(resolve, 0));
 
-  it('should handle missing elements gracefully', () => {
-    // Remove startDateGroup and endDateGroup
-    startDateGroup.remove();
-    endDateGroup.remove();
+            expect(fetch).toHaveBeenCalled();
+            expect(URL.createObjectURL).toHaveBeenCalled();
+        });
 
-    // Act & Assert
-    expect(() => toggleCustomDates()).not.toThrow();
-  });
+        it('should show an alert on a failed export', async () => {
+            // Mock a failed fetch response
+            fetch.mockResolvedValue({ ok: false });
+            
+            adminStatsManager.initialize();
+            const exportButton = document.querySelector('[data-action="export-report"]');
+            
+            exportButton.click();
+            
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(alert).toHaveBeenCalledWith('Error exporting report. Please try again.');
+        });
+    });
+
+    describe('Chart Initialization', () => {
+        it('should create a new Chart if the element and library exist', () => {
+            adminStatsManager.initialize();
+            expect(Chart).toHaveBeenCalled();
+        });
+
+        it('should not throw an error if Chart.js is not available', () => {
+            // Undefine Chart for this test
+            vi.stubGlobal('Chart', undefined);
+            expect(() => adminStatsManager.initialize()).not.toThrow();
+        });
+    });
 });
