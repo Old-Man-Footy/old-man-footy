@@ -1,25 +1,25 @@
 ## Public JavaScript Test Plan
 
-- [x] `/public/js/add-club-auto-populate.js`
-- [x] `/public/js/address-utils.js`
-- [x] `/public/js/admin-carnivals.js`
-- [x] `/public/js/admin-claim-carnival.js`
-- [x] `/public/js/admin-clubs.js`
-- [x] `/public/js/admin-edit-club.js`
-- [x] `/public/js/admin-reports.js`
-- [x] `/public/js/admin-stats.js`
-- [x] `/public/js/admin-user-management.js`
-- [x] `/public/js/alternate-names.js`
-- [x] `/public/js/app.js`
-- [x] `/public/js/auth-register.js`
-- [x] `/public/js/auth.js`
-- [x] `/public/js/carnival-add-players.js`
-- [x] `/public/js/carnival-all-players.js`
+- [x] `/public/js/add-club-auto-populate.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/address-utils.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-carnivals.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-claim-carnival.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-clubs.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-edit-club.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-reports.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-stats.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-user-management.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/alternate-names.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/app.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/auth-register.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/auth.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/carnival-add-players.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/carnival-all-players.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
 - [x] `/public/js/carnival-attendees.js`
 - [x] `/public/js/carnival-club-players.js`
 - [x] `/public/js/carnival-edit-registration.js`
 - [x] `/public/js/carnival-edit.js`
-- [ ] `/public/js/carnival-list.js`
+- [x] `/public/js/carnival-list.js`
 - [ ] `/public/js/carnival-management.js`
 - [ ] `/public/js/carnival-my-club-players.js`
 - [ ] `/public/js/carnival-new.js`
