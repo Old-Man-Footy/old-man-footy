@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Ensure this path is correct for your project structure
-import { setupCarnivalAllPlayers } from '../../public/js/carnival-all-players.js';
+import { setupCarnivalAllPlayers } from '/public/js/carnival-all-players.js';
 
 /**
  * @file carnival-all-players.test.js

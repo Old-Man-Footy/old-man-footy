@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, vi, expect } from 'vitest';
-import { themeManager, oldmanfooty, initializeImageCarousel } from '../../public/js/app.js';
+import { themeManager, oldmanfooty, initializeImageCarousel } from '../../../public/js/app.js';
 
 // Mocks for DOM APIs
 function setupDOM() {

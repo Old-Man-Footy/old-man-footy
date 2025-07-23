@@ -1,39 +1,67 @@
 /**
  * Carnival Edit Registration JavaScript
- * Handles registration removal functionality for carnival edit registration page
+ * Handles registration removal functionality for the carnival edit registration page.
+ * Refactored into a testable object pattern.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get carnival ID from the current URL
-    const pathParts = window.location.pathname.split('/');
-    const carnivalId = pathParts[2]; // /carnivals/{id}/attendees/{regId}/edit
+export const editRegistrationManager = {
+    carnivalId: null,
 
-    // Remove registration functionality
-    document.querySelector('.remove-registration')?.addEventListener('click', function() {
-        const registrationId = this.dataset.registrationId;
-        const clubName = this.dataset.clubName;
-        
-        if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {
-            removeRegistration(registrationId);
-        }
-    });
-
-    async function removeRegistration(registrationId) {
-        try {
-            const response = await fetch(`/carnivals/${carnivalId}/attendees/${registrationId}`, {
-                method: 'DELETE'
+    // Initializes the manager with the carnival ID and sets up the event listener.
+    initialize(carnivalId) {
+        this.carnivalId = carnivalId;
+        const removeButton = document.querySelector('.remove-registration');
+        if (removeButton) {
+            removeButton.addEventListener('click', (e) => {
+                this.handleRemoveClick(e.currentTarget);
             });
-            
-            const result = await response.json();
+        }
+    },
+
+    // Handles the click event on the remove button.
+    handleRemoveClick(button) {
+        const { registrationId, clubName } = button.dataset;
+        if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {
+            this.removeRegistration(registrationId);
+        }
+    },
+
+    // Performs the API call to remove the registration.
+    async removeRegistration(registrationId) {
+        try {
+            const result = await this.sendRequest(`/carnivals/${this.carnivalId}/attendees/${registrationId}`, 'DELETE');
             
             if (result.success) {
-                window.location.href = `/carnivals/${carnivalId}/attendees`;
+                // On success, redirect to the attendees page.
+                window.location.href = `/carnivals/${this.carnivalId}/attendees`;
             } else {
                 alert(result.message || 'Error removing registration');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error removing registration');
+            alert('An error occurred while removing the registration.');
         }
+    },
+
+    // A generic helper function for making API requests.
+    async sendRequest(url, method, body = null) {
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+        };
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+        const response = await fetch(url, options);
+        return response.json();
     }
-});
+};
+
+// This part runs in the browser to initialize the application.
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const pathParts = window.location.pathname.split('/');
+        const carnivalId = pathParts[2]; // Assumes URL structure: /carnivals/{id}/...
+        editRegistrationManager.initialize(carnivalId);
+    });
+}

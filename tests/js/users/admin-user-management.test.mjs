@@ -5,7 +5,7 @@ import {
   deleteUser,
   shouldCheckPrimaryOnClubChange,
   shouldRevertPrimaryDelegateChange,
-} from '../../public/js/admin-user-management.js';
+} from '/public/js/admin-user-management.js';
 
 // Mock global functions and objects
 global.fetch = vi.fn();
