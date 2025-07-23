@@ -1,5 +1,6 @@
 /**
- * Address utility functions for carnival location handling
+ * Utility functions for formatting and handling carnival address/location data.
+ * Provides helpers to structure address parts, generate Google Maps URLs, and check for location presence.
  */
 
 /**

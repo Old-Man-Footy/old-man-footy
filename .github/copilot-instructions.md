@@ -90,6 +90,11 @@ This project enforces a strict separation of concerns.
       * **Test Order:** When generating a full test suite for a feature, create tests in this order: Model -\> Service (if any) -\> Controller.
       * **Running Tests:** The command to test a single component is `npm test -- "<file-name>.test.js"`.
       * **Test Coverage:** Aim for 100% coverage on all models and controllers. Use `vitest --coverage` to check coverage reports.
+  * **Important:** 
+    * Do not generate tests that are not directly related to the business logic of the model or controller. Tests should not be generated for trivial getters/setters or simple data structures unless they contain significant logic.
+    * Whenever changes are made to a test file, always execute after without asking for confirmation.
+    * On test failures, if you have recommendations in Agent mode, always apply them without asking for confirmation.
+    * Do not ask for confirmation of anything when in Agent mode where possible.
   
 -----
 
