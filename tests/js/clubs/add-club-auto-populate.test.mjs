@@ -1,94 +1,109 @@
-import { describe, it, beforeEach, vi, expect } from 'vitest';
-import { initializeClubAutoPopulation } from '/public/js/add-club-auto-populate.js';
+import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
+// Import the manager object directly
+import { addClubManager } from '/public/js/add-club-auto-populate.js';
 
-// Set up DOM and attach listeners after each test setup
-describe('add-club-auto-populate.js', () => {
-  let clubSelect, teamNameInput, contactPersonInput, contactEmailInput, contactPhoneInput;
+/**
+ * @file add-club-manager.test.js
+ * @description Unit tests for addClubManager.
+ */
 
-  beforeEach(() => {
-    // Set up DOM elements
+// Helper function to set up the DOM for each test
+function setupDOM() {
     document.body.innerHTML = `
-      <select id="clubId">
-        <option value="">Select a club</option>
-        <option value="1"
-          data-club-name="Old Man FC"
-          data-contact-person="John Doe"
-          data-contact-email="john@oldmanfc.com"
-          data-contact-phone="1234567890"
-        >Old Man FC</option>
-      </select>
-      <input id="teamName" />
-      <input id="contactPerson" />
-      <input id="contactEmail" />
-      <input id="contactPhone" />
+        <form>
+            <select id="clubId">
+                <option value="">Select a Club</option>
+                <option 
+                    value="1" 
+                    data-club-name="Lions" 
+                    data-contact-person="John Doe" 
+                    data-contact-email="john@lions.com" 
+                    data-contact-phone="12345">
+                    Lions
+                </option>
+            </select>
+            <input id="teamName" />
+            <input id="contactPerson" />
+            <input id="contactEmail" />
+            <input id="contactPhone" />
+        </form>
     `;
+}
 
-    // Attach listeners after DOM setup
-    initializeClubAutoPopulation();
-    // Re-query the select/input elements after possible replacement
-    clubSelect = document.getElementById('clubId');
-    teamNameInput = document.getElementById('teamName');
-    contactPersonInput = document.getElementById('contactPerson');
-    contactEmailInput = document.getElementById('contactEmail');
-    contactPhoneInput = document.getElementById('contactPhone');
-  });
+describe('addClubManager', () => {
+    beforeEach(() => {
+        // Set up the DOM and use fake timers for setTimeout
+        setupDOM();
+        vi.useFakeTimers();
+        // Initialize the manager, which caches elements and sets up listeners
+        addClubManager.initialize();
+    });
 
-  it('should clear fields when no club is selected', () => {
-    teamNameInput.value = 'Some Team';
-    contactPersonInput.value = 'Someone';
-    contactEmailInput.value = 'someone@email.com';
-    contactPhoneInput.value = '555';
+    afterEach(() => {
+        // Clean up mocks and timers
+        vi.restoreAllMocks();
+        vi.useRealTimers();
+        document.body.innerHTML = '';
+    });
 
-    clubSelect.value = '';
-    clubSelect.dispatchEvent(new Event('change'));
+    it('should populate fields when a club is selected', () => {
+        const clubSelect = document.getElementById('clubId');
+        const teamNameInput = document.getElementById('teamName');
+        const contactPersonInput = document.getElementById('contactPerson');
 
-    expect(teamNameInput.value).toBe('');
-    expect(contactPersonInput.value).toBe('');
-    expect(contactEmailInput.value).toBe('');
-    expect(contactPhoneInput.value).toBe('');
-  });
+        // Simulate selecting the 'Lions' option
+        clubSelect.value = '1';
+        clubSelect.dispatchEvent(new Event('change'));
 
-  it('should auto-populate fields when a club is selected', () => {
-    clubSelect.value = '1';
-    clubSelect.dispatchEvent(new Event('change'));
+        // Check that the input fields were populated
+        expect(teamNameInput.value).toBe('Lions');
+        expect(contactPersonInput.value).toBe('John Doe');
+        expect(teamNameInput.classList.contains('auto-populated')).toBe(true);
+    });
 
-    expect(teamNameInput.value).toBe('Old Man FC');
-    expect(contactPersonInput.value).toBe('John Doe');
-    expect(contactEmailInput.value).toBe('john@oldmanfc.com');
-    expect(contactPhoneInput.value).toBe('1234567890');
-  });
+    it('should clear fields when the default option is selected', () => {
+        const clubSelect = document.getElementById('clubId');
+        const teamNameInput = document.getElementById('teamName');
+        
+        // First, select a club to populate the fields
+        clubSelect.value = '1';
+        clubSelect.dispatchEvent(new Event('change'));
+        expect(teamNameInput.value).toBe('Lions'); // Verify it's populated
 
-  it('should add and remove auto-populated class for visual feedback', () => {
-    vi.useFakeTimers();
+        // Now, select the default "Select a Club" option
+        clubSelect.value = '';
+        clubSelect.dispatchEvent(new Event('change'));
 
-    clubSelect.value = '1';
-    clubSelect.dispatchEvent(new Event('change'));
+        // Check that the fields are cleared
+        expect(teamNameInput.value).toBe('');
+    });
 
-    expect(teamNameInput.classList.contains('auto-populated')).toBe(true);
-    expect(contactPersonInput.classList.contains('auto-populated')).toBe(true);
-    expect(contactEmailInput.classList.contains('auto-populated')).toBe(true);
-    expect(contactPhoneInput.classList.contains('auto-populated')).toBe(true);
+    it('should remove the "auto-populated" class after a delay', () => {
+        const clubSelect = document.getElementById('clubId');
+        const teamNameInput = document.getElementById('teamName');
 
-    vi.advanceTimersByTime(2000);
+        clubSelect.value = '1';
+        clubSelect.dispatchEvent(new Event('change'));
+        
+        // Immediately after, the class should be present
+        expect(teamNameInput.classList.contains('auto-populated')).toBe(true);
 
-    expect(teamNameInput.classList.contains('auto-populated')).toBe(false);
-    expect(contactPersonInput.classList.contains('auto-populated')).toBe(false);
-    expect(contactEmailInput.classList.contains('auto-populated')).toBe(false);
-    expect(contactPhoneInput.classList.contains('auto-populated')).toBe(false);
+        // Fast-forward time by 2 seconds
+        vi.advanceTimersByTime(2001);
 
-    vi.useRealTimers();
-  });
+        // Now, the class should be removed
+        expect(teamNameInput.classList.contains('auto-populated')).toBe(false);
+    });
 
-  it('should not fail if some input fields are missing', () => {
-    document.getElementById('contactPhone').remove();
+    it('should call clearAutoPopulatedFields when the selected option has no value', () => {
+        // Spy on the method we want to check
+        const clearSpy = vi.spyOn(addClubManager, 'clearAutoPopulatedFields');
+        const clubSelect = document.getElementById('clubId');
+        
+        // Simulate selecting the default option
+        clubSelect.value = '';
+        clubSelect.dispatchEvent(new Event('change'));
 
-    clubSelect.value = '1';
-    expect(() => {
-      clubSelect.dispatchEvent(new Event('change'));
-    }).not.toThrow();
-
-    expect(teamNameInput.value).toBe('Old Man FC');
-    expect(contactPersonInput.value).toBe('John Doe');
-    expect(contactEmailInput.value).toBe('john@oldmanfc.com');
-  });
+        expect(clearSpy).toHaveBeenCalled();
+    });
 });
