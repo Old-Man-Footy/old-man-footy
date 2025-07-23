@@ -9,7 +9,7 @@
 - [x] `/public/js/admin-reports.js`
 - [x] `/public/js/admin-stats.js`
 - [x] `/public/js/admin-user-management.js`
-- [x] `/public/js/alternate-names.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/alternate-names.js`
 - [x] `/public/js/app.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
 - [x] `/public/js/auth-register.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
 - [x] `/public/js/auth.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
