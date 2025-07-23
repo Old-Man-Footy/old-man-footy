@@ -2,7 +2,7 @@
 
 - [x] `/public/js/add-club-auto-populate.js`
 - [x] `/public/js/address-utils.js`
-- [x] `/public/js/admin-carnivals.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/admin-carnivals.js`
 - [x] `/public/js/admin-claim-carnival.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
 - [x] `/public/js/admin-clubs.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
 - [x] `/public/js/admin-edit-club.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
