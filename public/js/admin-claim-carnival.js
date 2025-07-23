@@ -1,76 +1,98 @@
 /**
  * Admin Claim Carnival JavaScript
- * Handles the carnival claiming functionality in the admin interface
+ * Handles the carnival claiming functionality in the admin interface.
+ * Refactored into a testable object pattern.
  * @module admin-claim-carnival
  */
 
-/**
- * Initialize the admin claim carnival functionality
- * Attaches the change event handler to the club select element
- * @public
- */
-export function initializeAdminClaimCarnival() {
-    const claimForm = document.getElementById('claim-carnival-form');
-    if (!claimForm) return;
-
-    // Get carnival state from data attribute
-    const carnivalState = claimForm.dataset.carnivalState;
-    // Get DOM elements
-    const clubSelect = document.getElementById('targetClubId');
-    const selectedClubInfo = document.getElementById('selectedClubInfo');
-    const delegateName = document.getElementById('delegateName');
-    const delegateEmail = document.getElementById('delegateEmail');
-    const clubState = document.getElementById('clubState');
-    const stateWarning = document.getElementById('stateWarning');
-    const claimButton = document.getElementById('claimButton');
-
-    if (!clubSelect || !selectedClubInfo || !claimButton) {
-        console.warn('Admin claim carnival: Required DOM elements not found');
-        return;
-    }
+export const adminClaimCarnivalManager = {
+    // To hold references to DOM elements
+    elements: {},
+    // To store the state of the carnival being viewed
+    carnivalState: null,
 
     /**
-     * Handle club selection change
+     * Initializes the manager by caching DOM elements and setting up event listeners.
      */
-    clubSelect.addEventListener('change', function() {
-        const selectedOption = clubSelect.options[clubSelect.selectedIndex];
+    initialize() {
+        this.cacheElements();
         
-        if (selectedOption.value) {
-            // Populate club information from data attributes
-            if (delegateName) {
-                delegateName.textContent = selectedOption.dataset.delegateName || '';
-            }
-            if (delegateEmail) {
-                delegateEmail.textContent = selectedOption.dataset.delegateEmail || '';
-            }
-            if (clubState) {
-                clubState.textContent = selectedOption.dataset.clubState || '';
-            }
-            
-            // Show state warning if states don't match
-            if (stateWarning && carnivalState && selectedOption.dataset.clubState !== carnivalState) {
-                stateWarning.classList.remove('d-none');
-            } else if (stateWarning) {
-                stateWarning.classList.add('d-none');
-            }
-            
-            // Show selected club info and enable claim button
-            selectedClubInfo.classList.remove('d-none');
-            claimButton.disabled = false;
-        } else {
-            // Hide info and disable button when no club selected
-            selectedClubInfo.classList.add('d-none');
-            claimButton.disabled = true;
-            
-            // Hide state warning
-            if (stateWarning) {
-                stateWarning.classList.add('d-none');
-            }
+        if (!this.elements.claimForm || !this.elements.clubSelect) {
+            console.warn('Admin claim carnival: Required DOM elements not found for initialization.');
+            return;
         }
+
+        this.carnivalState = this.elements.claimForm.dataset.carnivalState;
+        this.elements.clubSelect.addEventListener('change', () => this.handleClubChange());
+    },
+
+    /**
+     * Finds and stores all necessary DOM elements for easy access.
+     */
+    cacheElements() {
+        this.elements = {
+            claimForm: document.getElementById('claim-carnival-form'),
+            clubSelect: document.getElementById('targetClubId'),
+            selectedClubInfo: document.getElementById('selectedClubInfo'),
+            delegateName: document.getElementById('delegateName'),
+            delegateEmail: document.getElementById('delegateEmail'),
+            clubState: document.getElementById('clubState'),
+            stateWarning: document.getElementById('stateWarning'),
+            claimButton: document.getElementById('claimButton'),
+        };
+    },
+
+    /**
+     * Handles the 'change' event on the club select dropdown.
+     */
+    handleClubChange() {
+        const { clubSelect } = this.elements;
+        const selectedOption = clubSelect.options[clubSelect.selectedIndex];
+
+        if (selectedOption && selectedOption.value) {
+            this.updateClubInfo(selectedOption);
+        } else {
+            this.resetClubInfo();
+        }
+    },
+
+    /**
+     * Populates the club info section based on the selected club's data.
+     * @param {HTMLOptionElement} selectedOption - The option element that was selected.
+     */
+    updateClubInfo(selectedOption) {
+        const { delegateName, delegateEmail, clubState, stateWarning, selectedClubInfo, claimButton } = this.elements;
+        const clubData = selectedOption.dataset;
+
+        if (delegateName) delegateName.textContent = clubData.delegateName || '';
+        if (delegateEmail) delegateEmail.textContent = clubData.delegateEmail || '';
+        if (clubState) clubState.textContent = clubData.clubState || '';
+
+        // Show state warning if the club's state does not match the carnival's state.
+        if (stateWarning) {
+            const showWarning = this.carnivalState && clubData.clubState !== this.carnivalState;
+            stateWarning.classList.toggle('d-none', !showWarning);
+        }
+
+        if (selectedClubInfo) selectedClubInfo.classList.remove('d-none');
+        if (claimButton) claimButton.disabled = false;
+    },
+
+    /**
+     * Hides the club info section and disables the claim button.
+     */
+    resetClubInfo() {
+        const { selectedClubInfo, claimButton, stateWarning } = this.elements;
+        if (selectedClubInfo) selectedClubInfo.classList.add('d-none');
+        if (claimButton) claimButton.disabled = true;
+        if (stateWarning) stateWarning.classList.add('d-none');
+    }
+};
+
+// This part runs in the browser to initialize the application.
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        adminClaimCarnivalManager.initialize();
+        console.log('Admin claim carnival functionality initialized');
     });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAdminClaimCarnival();
-    console.log('Admin claim carnival functionality initialized');
-});
