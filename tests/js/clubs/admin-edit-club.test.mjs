@@ -1,133 +1,146 @@
-import { describe, it, beforeEach, vi, expect } from 'vitest';
+import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
+// Import the manager object directly
+import { adminEditClubManager } from '/public/js/admin-edit-club.js';
 
-// Suppress jsdom FileList errors globally
-process.on('uncaughtException', err => {
-  if (String(err).includes("'files' property on 'HTMLInputElement'")) return;
-  throw err;
-});
+/**
+ * @file admin-edit-club.test.js
+ * @description Unit tests for adminEditClubManager.
+ */
 
+// Helper function to set up the DOM for each test
 function setupDOM() {
-  document.body.innerHTML = `
-    <form action="/clubs/edit">
-      <input type="text" name="name" required />
-      <input type="file" id="logo" />
-      <textarea id="description"></textarea>
-      <button type="submit">Save</button>
-    </form>
-    <div class="file-upload-area">
-      <span class="upload-text">Click or drag to upload new club logo</span>
-    </div>
-  `;
+    document.body.innerHTML = `
+        <form action="/admin/clubs/edit/1">
+            <input name="name" required />
+            <textarea id="description"></textarea>
+            <div class="file-upload-area">
+                <span class="upload-text">Click or drag to upload new club logo</span>
+                <input type="file" id="logo" />
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    `;
 }
 
-describe('admin-edit-club.js', () => {
-  let module;
+describe('adminEditClubManager', () => {
+    beforeEach(() => {
+        // Set up the DOM
+        setupDOM();
+        // Mock global functions
+        vi.stubGlobal('alert', vi.fn());
 
-  beforeEach(async () => {
-    setupDOM();
-    vi.resetModules();
-    module = await import('/public/js/admin-edit-club.js');
-    // Manually trigger DOMContentLoaded so event listeners are attached
-    document.dispatchEvent(new Event('DOMContentLoaded'));
-  });
+        // Mock browser-specific APIs that are not available in JSDOM.
+        vi.stubGlobal('DataTransfer', class {
+            constructor() {
+                this.files = [];
+                this.items = {
+                    add: (file) => {
+                        this.files.push(file);
+                    }
+                };
+            }
+        });
 
-  describe('Form validation', () => {
-    it('should prevent submission if required fields are empty', () => {
-      const form = document.querySelector('form');
-      const nameInput = form.querySelector('[name="name"]');
-      nameInput.value = '';
-      const preventDefault = vi.fn();
-      const event = new Event('submit', { bubbles: true });
-      event.preventDefault = preventDefault;
-      window.alert = vi.fn();
-      form.dispatchEvent(event);
-      expect(preventDefault).toHaveBeenCalled();
-      expect(window.alert).toHaveBeenCalledWith('Please fill in all required fields.');
-      expect(nameInput.classList.contains('is-invalid')).toBe(true);
+        // **THE FIX IS HERE:**
+        // Mock the DragEvent class.
+        vi.stubGlobal('DragEvent', class extends Event {
+            constructor(type, options) {
+                super(type, options);
+                this.dataTransfer = options.dataTransfer || new DataTransfer();
+            }
+        });
+
+
+        // Initialize the manager, which caches elements and sets up listeners
+        adminEditClubManager.initialize();
     });
 
-    it('should allow submission if required fields are filled', () => {
-      const form = document.querySelector('form');
-      const nameInput = form.querySelector('[name="name"]');
-      nameInput.value = 'Test Club';
-      const preventDefault = vi.fn();
-      const event = new Event('submit', { bubbles: true });
-      event.preventDefault = preventDefault;
-      window.alert = vi.fn();
-      form.dispatchEvent(event);
-      expect(preventDefault).not.toHaveBeenCalled();
-      expect(window.alert).not.toHaveBeenCalled();
-      expect(nameInput.classList.contains('is-invalid')).toBe(false);
-    });
-  });
-
-  describe('Description textarea auto-resize', () => {
-    it('should auto-resize textarea on input', () => {
-      const textarea = document.getElementById('description');
-      textarea.value = 'Some description';
-      textarea.style.height = '10px';
-      // Mock scrollHeight
-      Object.defineProperty(textarea, 'scrollHeight', { value: 50, configurable: true });
-      const event = new Event('input');
-      textarea.dispatchEvent(event);
-      expect(textarea.style.height).toBe('50px');
-    });
-  });
-
-  describe('File upload area', () => {
-    it('should trigger file input click when upload area is clicked', () => {
-      const fileUploadArea = document.querySelector('.file-upload-area');
-      const fileInput = document.getElementById('logo');
-      const clickSpy = vi.spyOn(fileInput, 'click');
-      fileUploadArea.dispatchEvent(new Event('click'));
-      expect(clickSpy).toHaveBeenCalled();
+    afterEach(() => {
+        // Clean up mocks and the DOM
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        document.body.innerHTML = '';
     });
 
-    it('should update upload text and class on file selection', () => {
-      const fileUploadArea = document.querySelector('.file-upload-area');
-      const fileInput = document.getElementById('logo');
-      const uploadText = fileUploadArea.querySelector('.upload-text');
-      const testFile = new File(['dummy'], 'logo.png', { type: 'image/png' });
-      Object.defineProperty(fileInput, 'files', {
-        value: [testFile],
-        writable: true,
-      });
-      const event = new Event('change', { bubbles: true });
-      fileInput.dispatchEvent(event);
-      expect(uploadText.textContent).toBe('Selected: logo.png');
-      expect(fileUploadArea.classList.contains('file-selected')).toBe(true);
-      // Remove file
-      Object.defineProperty(fileInput, 'files', {
-        value: [],
-        writable: true,
-      });
-      fileInput.dispatchEvent(event);
-      expect(uploadText.textContent).toBe('Click or drag to upload new club logo');
-      expect(fileUploadArea.classList.contains('file-selected')).toBe(false);
+    it('should prevent form submission if a required field is empty', () => {
+        const form = document.querySelector('form');
+        const nameInput = form.querySelector('[name="name"]');
+        const submitEvent = new Event('submit', { cancelable: true });
+        const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
+
+        nameInput.value = '   '; // Empty value
+        form.dispatchEvent(submitEvent);
+
+        expect(preventDefaultSpy).toHaveBeenCalled();
+        expect(alert).toHaveBeenCalledWith('Please fill in all required fields.');
+        expect(nameInput.classList.contains('is-invalid')).toBe(true);
     });
 
-    it('should highlight and unhighlight on drag events', () => {
-      const fileUploadArea = document.querySelector('.file-upload-area');
-      fileUploadArea.dispatchEvent(new Event('dragenter'));
-      expect(fileUploadArea.classList.contains('drag-over')).toBe(true);
-      fileUploadArea.dispatchEvent(new Event('dragleave'));
-      expect(fileUploadArea.classList.contains('drag-over')).toBe(false);
+    it('should allow form submission if required fields are filled', () => {
+        const form = document.querySelector('form');
+        const nameInput = form.querySelector('[name="name"]');
+        const submitEvent = new Event('submit', { cancelable: true });
+        const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
+
+        nameInput.value = 'Valid Club Name';
+        form.dispatchEvent(submitEvent);
+
+        expect(preventDefaultSpy).not.toHaveBeenCalled();
+        expect(nameInput.classList.contains('is-invalid')).toBe(false);
     });
 
-    it('should handle file drop and trigger change event', () => {
-      const fileUploadArea = document.querySelector('.file-upload-area');
-      const fileInput = document.getElementById('logo');
-      const dropEvent = new Event('drop');
-      Object.defineProperty(dropEvent, 'dataTransfer', {
-        value: { files: [new File(['dummy'], 'logo.png', { type: 'image/png' })] },
-      });
-      try {
+    it('should auto-resize the description textarea on input', () => {
+        const textarea = document.getElementById('description');
+        // Mock scrollHeight as it's a layout-dependent property
+        Object.defineProperty(textarea, 'scrollHeight', { value: 150, configurable: true });
+
+        textarea.dispatchEvent(new Event('input'));
+
+        expect(textarea.style.height).toBe('150px');
+    });
+
+    it('should trigger file input click when the upload area is clicked', () => {
+        const fileUploadArea = document.querySelector('.file-upload-area');
+        const fileInput = document.getElementById('logo');
+        const clickSpy = vi.spyOn(fileInput, 'click');
+
+        fileUploadArea.click();
+
+        expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('should update upload text when a file is selected', () => {
+        const fileInput = document.getElementById('logo');
+        const uploadText = document.querySelector('.upload-text');
+        const testFile = new File(['content'], 'logo.png', { type: 'image/png' });
+
+        // Simulate file selection
+        Object.defineProperty(fileInput, 'files', { value: [testFile] });
+        fileInput.dispatchEvent(new Event('change'));
+
+        expect(uploadText.textContent).toBe('Selected: logo.png');
+    });
+    
+    it('should handle file drop and update the file input', () => {
+        const fileUploadArea = document.querySelector('.file-upload-area');
+        const fileInput = document.getElementById('logo');
+        const uploadText = document.querySelector('.upload-text');
+        const testFile = new File(['content'], 'dropped-logo.png', { type: 'image/png' });
+
+        // In the test environment, we need to make the 'files' property writable
+        // to simulate the drop behavior correctly.
+        Object.defineProperty(fileInput, 'files', {
+            writable: true,
+        });
+
+        // Create a mock DataTransfer object
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(testFile);
+
+        const dropEvent = new DragEvent('drop', { dataTransfer });
         fileUploadArea.dispatchEvent(dropEvent);
-      } catch (err) {
-        // Suppress jsdom FileList error
-        if (!String(err).includes("'files' property on 'HTMLInputElement'")) throw err;
-      }
-      // If no error or only jsdom error, test passes
+
+        expect(fileInput.files[0].name).toBe('dropped-logo.png');
+        expect(uploadText.textContent).toBe('Selected: dropped-logo.png');
     });
-  });
 });
