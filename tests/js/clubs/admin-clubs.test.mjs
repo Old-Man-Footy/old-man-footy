@@ -1,134 +1,155 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
+// Import the manager object directly
+import { adminClubsManager } from '/public/js/admin-clubs.js';
 
-// We will dynamically import the module in our tests after setting up the DOM
-let adminClubs;
-let searchInput;
+/**
+ * @file admin-clubs.test.js
+ * @description Unit tests for adminClubsManager.
+ */
 
-afterEach(() => {
-  // Clean up spies and the DOM
-  vi.restoreAllMocks();
-  document.body.innerHTML = '';
-});
-
-describe('Admin Clubs JS', () => {
-  let showToastMock;
-  let buttonMock;
-  let fetchMock;
-  let confirmMock;
-
-  // This runs before each test inside this describe block
-  beforeEach(async () => {
-    // Reset modules to ensure the top-level script in admin-clubs.js runs fresh
-    vi.resetModules();
-
-    // Set up the DOM. Using innerHTML is a quick way to create the element.
+// Helper function to set up the DOM for each test
+function setupDOM() {
     document.body.innerHTML = `
-      <input id="search" value="test" />
-      <table>
-        <tbody>
-          <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td><span class="badge"></span></td>
-            <td><span class="badge"></span></td>
-          </tr>
-        </tbody>
-      </table>
+        <input id="search" value="test" />
+        <table>
+            <tbody>
+                <tr>
+                    <td>Club Name</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td>...</td>
+                    <td><span class="badge bg-success status-badge">Active</span></td>
+                    <td><span class="badge bg-info visibility-badge">Listed</span></td>
+                    <td>
+                        <button 
+                            data-action="toggle-club-status"
+                            data-club-id="1"
+                            data-club-name="Test Club"
+                            data-current-status="true">
+                        </button>
+                        <button 
+                            data-action="toggle-club-visibility"
+                            data-club-id="1"
+                            data-club-name="Test Club"
+                            data-current-visibility="true">
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     `;
-    searchInput = document.getElementById('search');
+}
 
-    // Spy on the methods of the *actual* DOM element
-    vi.spyOn(searchInput, 'focus');
-    vi.spyOn(searchInput, 'setSelectionRange');
+describe('adminClubsManager', () => {
+    beforeEach(() => {
+        // Set up the DOM
+        setupDOM();
+        // Mock global functions
+        vi.stubGlobal('fetch', vi.fn());
+        vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
+    });
 
-    // Now that the DOM is ready, import the module.
-    // This will execute the script, including the auto-focus logic.
-    adminClubs = await import('/public/js/admin-clubs.js');
+    afterEach(() => {
+        // Clean up mocks and the DOM
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+        document.body.innerHTML = '';
+    });
 
-    // The module is already imported and toast function is available.
-    // We can set our mock for it.
-    showToastMock = vi.fn();
-    adminClubs.setShowToast(showToastMock);
+    it('should auto-focus the search input if it has a value', () => {
+        const searchInput = document.getElementById('search');
+        const focusSpy = vi.spyOn(searchInput, 'focus');
+        const selectionSpy = vi.spyOn(searchInput, 'setSelectionRange');
 
-    // Button mock
-    buttonMock = {
-      dataset: {
-        clubId: '1',
-        clubName: 'Test Club',
-        currentStatus: 'true',
-        currentVisibility: 'false'
-      },
-      className: '',
-      title: '',
-      innerHTML: '',
-      disabled: false,
-      closest: vi.fn(() => document.querySelector('tr'))
-    };
+        // Initialize the manager, which should trigger the auto-focus
+        adminClubsManager.initialize();
 
-    // Mock global fetch
-    fetchMock = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ success: true, message: 'Success' })
-      })
-    );
-    global.fetch = fetchMock;
+        expect(focusSpy).toHaveBeenCalled();
+        expect(selectionSpy).toHaveBeenCalledWith(4, 4); // length of "test"
+    });
 
-    // Mock confirm
-    confirmMock = vi.fn(() => true);
-    global.confirm = confirmMock;
-  });
+    it('should handle club status toggle successfully and update the UI', async () => {
+        // Mock a successful fetch response
+        fetch.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: true, message: 'Success!' }),
+        });
+        
+        // Spy on the methods we want to check
+        const showToastSpy = vi.spyOn(adminClubsManager, 'showToast');
+        const updateUISpy = vi.spyOn(adminClubsManager, 'updateStatusUI');
 
-  it('should focus search input if present on module load', () => {
-    // The top-level beforeEach has already run, so the focus should have happened.
-    expect(searchInput.focus).toHaveBeenCalled();
-    expect(searchInput.setSelectionRange).toHaveBeenCalledWith(searchInput.value.length, searchInput.value.length);
-  });
+        // Initialize the manager to set up event listeners
+        adminClubsManager.initialize();
+        
+        const statusButton = document.querySelector('[data-action="toggle-club-status"]');
+        
+        // Simulate a click
+        statusButton.click();
 
-  it('should handle club status toggle and update UI', async () => {
-    await adminClubs.handleClubStatusToggle(buttonMock);
+        // Wait for the async operations to complete
+        await new Promise(resolve => setTimeout(resolve, 0));
 
-    expect(fetchMock).toHaveBeenCalledWith('/admin/clubs/1/toggle-status', expect.objectContaining({
-      method: 'POST'
-    }));
-    expect(buttonMock.dataset.currentStatus).toBe('false');
-    expect(buttonMock.className).toContain('btn-outline-success');
-    expect(buttonMock.title).toBe('Reactivate Club');
-    expect(showToastMock).toHaveBeenCalledWith('success', 'Success');
-  });
+        expect(confirm).toHaveBeenCalled();
+        expect(fetch).toHaveBeenCalledWith('/admin/clubs/1/toggle-status', expect.any(Object));
+        expect(updateUISpy).toHaveBeenCalledWith(statusButton, false); // newStatus is false
+        expect(showToastSpy).toHaveBeenCalledWith('success', 'Success!');
+    });
 
-  it('should handle club visibility toggle and update UI', async () => {
-    await adminClubs.handleClubVisibilityToggle(buttonMock);
+    it('should handle club visibility toggle successfully and update the UI', async () => {
+        // Mock a successful fetch response
+        fetch.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: true, message: 'Visibility updated!' }),
+        });
+        
+        const showToastSpy = vi.spyOn(adminClubsManager, 'showToast');
+        const updateUISpy = vi.spyOn(adminClubsManager, 'updateVisibilityUI');
 
-    expect(fetchMock).toHaveBeenCalledWith('/admin/clubs/1/toggle-visibility', expect.objectContaining({
-      method: 'POST'
-    }));
-    expect(buttonMock.dataset.currentVisibility).toBe('true');
-    expect(buttonMock.className).toContain('btn-outline-secondary');
-    expect(buttonMock.title).toBe('Hide from Public Listing');
-    expect(showToastMock).toHaveBeenCalledWith('success', 'Success');
-  });
+        adminClubsManager.initialize();
+        
+        const visibilityButton = document.querySelector('[data-action="toggle-club-visibility"]');
+        
+        // Simulate a click
+        visibilityButton.click();
+        
+        await new Promise(resolve => setTimeout(resolve, 0));
 
-  it('should not proceed if confirmation is cancelled', async () => {
-    confirmMock.mockReturnValueOnce(false);
+        expect(confirm).toHaveBeenCalled();
+        expect(fetch).toHaveBeenCalledWith('/admin/clubs/1/toggle-visibility', expect.any(Object));
+        expect(updateUISpy).toHaveBeenCalledWith(visibilityButton, false); // newVisibility is false
+        expect(showToastSpy).toHaveBeenCalledWith('success', 'Visibility updated!');
+    });
 
-    await adminClubs.handleClubStatusToggle(buttonMock);
+    it('should not proceed with toggle if confirmation is cancelled', () => {
+        // Make confirm() return false for this test
+        confirm.mockReturnValue(false);
+        
+        adminClubsManager.initialize();
+        const statusButton = document.querySelector('[data-action="toggle-club-status"]');
+        
+        statusButton.click();
 
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
+        expect(confirm).toHaveBeenCalled();
+        expect(fetch).not.toHaveBeenCalled();
+    });
 
-  it('should show error toast on failed request', async () => {
-    fetchMock.mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ success: false, message: 'Failed' })
-      })
-    );
+    it('should show an error toast on a failed API request', async () => {
+        // Mock a failed fetch response
+        fetch.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: false, message: 'API Error' }),
+        });
+        
+        const showToastSpy = vi.spyOn(adminClubsManager, 'showToast');
 
-    await adminClubs.handleClubStatusToggle(buttonMock);
+        adminClubsManager.initialize();
+        const statusButton = document.querySelector('[data-action="toggle-club-status"]');
+        
+        statusButton.click();
+        
+        await new Promise(resolve => setTimeout(resolve, 0));
 
-    expect(showToastMock).toHaveBeenCalledWith('error', expect.stringContaining('Failed'));
-  });
+        expect(showToastSpy).toHaveBeenCalledWith('error', 'Error: API Error');
+    });
 });
