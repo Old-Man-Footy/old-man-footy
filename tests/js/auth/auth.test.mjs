@@ -1,59 +1,121 @@
-import { describe, it, beforeEach, afterEach, expect } from 'vitest';
-import { togglePassword } from '/public/js/auth.js';
+import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
+import { AuthFormManager } from '/public/js/auth.js';
 
-describe('togglePassword', () => {
-  let passwordField, icon;
+describe('AuthFormManager', () => {
+    let container, manager;
 
-  beforeEach(() => {
-    // Set up DOM elements
-    passwordField = document.createElement('input');
-    passwordField.type = 'password';
-    passwordField.id = 'test-password';
+    /**
+     * Sets up the DOM structure needed for the tests.
+     */
+    function setupDOM() {
+        document.body.innerHTML = `
+            <div id="auth-container">
+                <!-- Invitation Form for password confirmation and toggle tests -->
+                <form data-form-type="accept-invitation">
+                    <input type="password" id="password" value="password123">
+                    <input type="password" id="confirmPassword" value="password123">
+                    <button type="button" data-toggle-password="password">Toggle</button>
+                    <i id="password-toggle-icon" class="bi bi-eye"></i>
+                </form>
 
-    icon = document.createElement('i');
-    icon.id = 'test-password-toggle-icon';
-    icon.className = 'bi bi-eye';
+                <!-- Login Form for basic validation test -->
+                <form data-form-type="login">
+                    <input name="email" value="">
+                    <input name="password" value="">
+                    <button type="submit">Login</button>
+                </form>
+            </div>
+        `;
+        container = document.getElementById('auth-container');
+    }
 
-    document.body.appendChild(passwordField);
-    document.body.appendChild(icon);
-  });
+    beforeEach(() => {
+        setupDOM();
+        manager = new AuthFormManager(container);
+        manager.init();
+    });
 
-  afterEach(() => {
-    // Clean up DOM
-    passwordField.remove();
-    icon.remove();
-  });
+    afterEach(() => {
+        document.body.innerHTML = '';
+        vi.restoreAllMocks();
+    });
 
-  it('should toggle password field to text and update icon class', () => {
-    togglePassword('test-password');
-    expect(passwordField.type).toBe('text');
-    expect(icon.className).toBe('bi bi-eye-slash');
-  });
+    describe('Password Visibility Toggle', () => {
+        it('should toggle password field to text and update icon on click', () => {
+            const passwordField = container.querySelector('#password');
+            const icon = container.querySelector('#password-toggle-icon');
+            const toggleButton = container.querySelector('[data-toggle-password="password"]');
 
-  it('should toggle password field back to password and update icon class', () => {
-    // First toggle to text
-    togglePassword('test-password');
-    // Second toggle back to password
-    togglePassword('test-password');
-    expect(passwordField.type).toBe('password');
-    expect(icon.className).toBe('bi bi-eye');
-  });
+            toggleButton.click();
 
-  it('should do nothing if field does not exist', () => {
-    // Remove field
-    passwordField.remove();
-    // Should not throw
-    expect(() => togglePassword('test-password')).not.toThrow();
-    // Icon class should remain unchanged
-    expect(icon.className).toBe('bi bi-eye');
-  });
+            expect(passwordField.type).toBe('text');
+            expect(icon.className).toBe('bi bi-eye-slash');
+        });
 
-  it('should do nothing if icon does not exist', () => {
-    // Remove icon
-    icon.remove();
-    // Should not throw
-    expect(() => togglePassword('test-password')).not.toThrow();
-    // Field type should remain unchanged
-    expect(passwordField.type).toBe('password');
-  });
+        it('should toggle password field back to password and update icon on second click', () => {
+            const passwordField = container.querySelector('#password');
+            const icon = container.querySelector('#password-toggle-icon');
+            const toggleButton = container.querySelector('[data-toggle-password="password"]');
+
+            // First click
+            toggleButton.click();
+            // Second click
+            toggleButton.click();
+
+            expect(passwordField.type).toBe('password');
+            expect(icon.className).toBe('bi bi-eye');
+        });
+    });
+
+    describe('Invitation Form Validation', () => {
+        it('should set custom validity if passwords do not match', () => {
+            const passwordField = container.querySelector('#password');
+            const confirmPasswordField = container.querySelector('#confirmPassword');
+            confirmPasswordField.setCustomValidity = vi.fn();
+
+            passwordField.value = 'password123';
+            confirmPasswordField.value = 'password456';
+
+            // Simulate input event on the form
+            const form = container.querySelector('form[data-form-type="accept-invitation"]');
+            form.dispatchEvent(new Event('input', { bubbles: true }));
+
+            expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
+        });
+
+        it('should clear custom validity if passwords match', () => {
+            const passwordField = container.querySelector('#password');
+            const confirmPasswordField = container.querySelector('#confirmPassword');
+            confirmPasswordField.setCustomValidity = vi.fn();
+            
+            // Set to a non-matching state first
+            passwordField.value = 'password123';
+            confirmPasswordField.value = 'password456';
+            
+            // Correct the value
+            confirmPasswordField.value = 'password123';
+
+            // Simulate input event on the form
+            const form = container.querySelector('form[data-form-type="accept-invitation"]');
+            form.dispatchEvent(new Event('input', { bubbles: true }));
+
+            expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');
+        });
+    });
+
+    describe('Login Form Validation', () => {
+        it('should prevent form submission and alert if email is empty', () => {
+            const loginForm = container.querySelector('form[data-form-type="login"]');
+            const passwordInput = loginForm.querySelector('input[name="password"]');
+            passwordInput.value = 'has-password';
+
+            const submitEvent = new Event('submit', { cancelable: true });
+            global.alert = vi.fn();
+
+            loginForm.dispatchEvent(submitEvent);
+
+            expect(submitEvent.defaultPrevented).toBe(true);
+            expect(global.alert).toHaveBeenCalledWith('Please enter both email and password.');
+        });
+    });
 });
