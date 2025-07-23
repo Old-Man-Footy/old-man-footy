@@ -23,6 +23,20 @@ This document provides guiding principles and strict rules for GitHub Copilot. Y
   * **Architecture:** Model-View-Controller (MVC)
   * **Database:** SQLite3 with Sequelize ORM
   * **Testing:** Vitest
+    * **Writing Vitest Unit Tests:**
+      * Use `describe`, `it`, `beforeEach`, and `afterEach` for structuring tests.
+      * Use `expect` for assertions.
+      * Use `vi.fn()` to create mock functions.
+      * Use `vi.mock()` to mock modules or dependencies.
+    * **Vitest Unit Tests for Client-Side JavaScript:**
+      * All client-side JavaScript tests MUST be written in the `/tests/js/` directory.
+      * Use the same structure as server-side tests, with `describe`, `it`, and `expect`.
+      * **Import the Manager:** Import the single manager object at the top of your test file: `import { exampleManager } from '...'.`
+      * **Use a setupDOM Function:** Do not manually mock the document object. Instead, create a helper function setupDOM() that sets document.body.innerHTML to the exact HTML structure the script requires. This is the most robust and reliable way to test DOM interactions.
+      * **Standard beforeEach / afterEach:** Use a beforeEach block to run setupDOM() and call exampleManager.initialize(). This ensures each test runs with a fresh, clean environment. Use afterEach to clean up mocks and the DOM.
+      * **Test Methods Directly:** Your it blocks should call methods directly on the imported manager object (e.g., `exampleManager.handleAction()`).
+      * **Spy on Methods for Interaction:** To test that one method correctly calls another, use `vi.spyOn(exampleManager, 'methodToSpyOn')`.
+      * **Simulate User Events:** Use `element.dispatchEvent(new Event('click'))` to trigger event listeners that were set up in the initialize method.      
   * **Code Style:** Prettier (rules are defined in `.prettierrc`)
 
 -----
