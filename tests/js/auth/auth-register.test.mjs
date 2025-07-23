@@ -1,64 +1,80 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
-import { setupPasswordConfirmationValidation } from '/public/js/auth-register.js';
+import { RegistrationFormValidator } from '/public/js/auth-register.js';
 
-/**
- * Mocks DOM elements and simulates user input for password confirmation validation.
- */
-describe('auth-register.js', () => {
-  let passwordField;
-  let confirmPasswordField;
-  let originalAddEventListener;
+describe('RegistrationFormValidator', () => {
+    let form, passwordField, confirmPasswordField, validator;
 
-  beforeEach(() => {
-    // Set up DOM elements
-    passwordField = document.createElement('input');
-    passwordField.type = 'password';
-    passwordField.id = 'password';
+    /**
+     * Sets up the DOM structure needed for the tests.
+     */
+    function setupDOM() {
+        document.body.innerHTML = `
+            <form id="registerForm">
+                <input type="password" id="password" />
+                <input type="password" id="confirmPassword" />
+            </form>
+        `;
+        form = document.getElementById('registerForm');
+        passwordField = document.getElementById('password');
+        confirmPasswordField = document.getElementById('confirmPassword');
+    }
 
-    confirmPasswordField = document.createElement('input');
-    confirmPasswordField.type = 'password';
-    confirmPasswordField.id = 'confirmPassword';
+    beforeEach(() => {
+        setupDOM();
+        // Mock the setCustomValidity method on the input element
+        confirmPasswordField.setCustomValidity = vi.fn();
 
-    document.body.appendChild(passwordField);
-    document.body.appendChild(confirmPasswordField);
+        // Initialize the validator class
+        validator = new RegistrationFormValidator(form);
+        validator.init();
+    });
 
-    // Mock setCustomValidity
-    confirmPasswordField.setCustomValidity = vi.fn();
+    afterEach(() => {
+        document.body.innerHTML = '';
+        vi.restoreAllMocks();
+    });
 
-    // Attach the event listener directly
-    setupPasswordConfirmationValidation();
-  });
+    it('should set custom validity message if passwords do not match', () => {
+        passwordField.value = 'password123';
+        confirmPasswordField.value = 'password321';
 
-  afterEach(() => {
-    document.body.innerHTML = '';
-    vi.restoreAllMocks();
-  });
+        // Simulate an input event on the confirmation field
+        confirmPasswordField.dispatchEvent(new Event('input'));
 
-  it('should set custom validity if passwords do not match', () => {
-    passwordField.value = 'password123';
-    confirmPasswordField.value = 'password321';
+        expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
+    });
 
-    // Simulate input event
-    const event = new Event('input');
-    confirmPasswordField.dispatchEvent(event);
+    it('should clear custom validity message if passwords match', () => {
+        passwordField.value = 'password123';
+        confirmPasswordField.value = 'password123';
 
-    expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
-  });
+        // Simulate an input event on the confirmation field
+        confirmPasswordField.dispatchEvent(new Event('input'));
 
-  it('should clear custom validity if passwords match', () => {
-    passwordField.value = 'password123';
-    confirmPasswordField.value = 'password123';
+        expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');
+    });
 
-    // Simulate input event
-    const event = new Event('input');
-    confirmPasswordField.dispatchEvent(event);
+    it('should clear custom validity when a non-matching password is corrected to match', () => {
+        // Initial non-matching state
+        passwordField.value = 'password123';
+        confirmPasswordField.value = 'password321';
+        confirmPasswordField.dispatchEvent(new Event('input'));
+        expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
 
-    expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');
-  });
+        // User corrects the password
+        confirmPasswordField.value = 'password123';
+        confirmPasswordField.dispatchEvent(new Event('input'));
+        expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');
+    });
 
-  it('should not throw if fields are missing', async () => {
-    document.body.innerHTML = '';
-    await import('/public/js/auth-register.js');
-    // No error should be thrown
-  });
+    it('should not throw an error if password fields are not found in the form', () => {
+        document.body.innerHTML = '<form id="emptyForm"></form>';
+        const emptyForm = document.getElementById('emptyForm');
+        
+        // Expecting the constructor and init not to throw when elements are missing
+        expect(() => {
+            const emptyValidator = new RegistrationFormValidator(emptyForm);
+            emptyValidator.init();
+        }).not.toThrow();
+    });
 });

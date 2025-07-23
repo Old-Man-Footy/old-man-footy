@@ -1,5 +1,4 @@
 ## Public JavaScript Test Plan
-
 - [x] `/public/js/add-club-auto-populate.js`
 - [x] `/public/js/address-utils.js`
 - [x] `/public/js/admin-carnivals.js`
@@ -10,8 +9,8 @@
 - [x] `/public/js/admin-stats.js`
 - [x] `/public/js/admin-user-management.js`
 - [x] `/public/js/alternate-names.js`
-- [x] `/public/js/app.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
-- [x] `/public/js/auth-register.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/app.js`
+- [x] `/public/js/auth-register.js`
 - [x] `/public/js/auth.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
 - [x] `/public/js/carnival-add-players.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
 - [x] `/public/js/carnival-all-players.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }

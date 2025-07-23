@@ -1,35 +1,46 @@
 /**
- * @file Auth Register JavaScript
- * @description Handles password confirmation validation for the registration form.
- * Attaches event listeners robustly for both runtime and test environments.
+ * @file Auth Register JavaScript (Refactored)
+ * @description Provides a reusable class to handle password confirmation validation on a form.
  */
 
 /**
- * Attach password confirmation validation to the registration form.
+ * Manages password confirmation validation for a registration form.
  */
-function setupPasswordConfirmationValidation() {
-  const confirmPasswordField = document.getElementById('confirmPassword');
-  const passwordField = document.getElementById('password');
+export class RegistrationFormValidator {
+  /**
+   * @param {HTMLFormElement} form - The form element containing the password fields.
+   */
+  constructor(form) {
+      if (!form) {
+          throw new Error('A form element must be provided.');
+      }
+      this.form = form;
+      this.passwordField = this.form.querySelector('#password');
+      this.confirmPasswordField = this.form.querySelector('#confirmPassword');
+  }
 
-  if (confirmPasswordField && passwordField) {
-    confirmPasswordField.addEventListener('input', function () {
-      const password = passwordField.value;
-      const confirmPassword = this.value;
+  /**
+   * Initializes the validation by attaching an event listener.
+   * Does nothing if the required password fields are not found.
+   */
+  init() {
+      if (this.passwordField && this.confirmPasswordField) {
+          this.confirmPasswordField.addEventListener('input', this.validate.bind(this));
+      }
+  }
+
+  /**
+   * Performs the validation check and sets the custom validity message
+   * on the confirm password field.
+   */
+  validate() {
+      const password = this.passwordField.value;
+      const confirmPassword = this.confirmPasswordField.value;
 
       if (password !== confirmPassword) {
-        this.setCustomValidity('Passwords do not match');
+          this.confirmPasswordField.setCustomValidity('Passwords do not match');
       } else {
-        this.setCustomValidity('');
+          this.confirmPasswordField.setCustomValidity('');
       }
-    });
   }
 }
-
-// Attach immediately if DOM is ready, otherwise on DOMContentLoaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupPasswordConfirmationValidation);
-} else {
-  setupPasswordConfirmationValidation();
-}
-
-export { setupPasswordConfirmationValidation };
