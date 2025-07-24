@@ -31,7 +31,7 @@
                     <form method="GET" action="/admin/reports" class="row g-3">
                         <div class="col-md-3">
                             <label for="period" class="form-label">Time Period</label>
-                            <select class="form-select" id="period" name="period" onchange="toggleCustomDates()">
+                            <select class="form-select" id="period" name="period" data-period="<%= filters.period %>">
                                 <option value="7" <%= filters.period === '7' ? 'selected' : '' %>>Last 7 days</option>
                                 <option value="30" <%= filters.period === '30' ? 'selected' : '' %>>Last 30 days</option>
                                 <option value="90" <%= filters.period === '90' ? 'selected' : '' %>>Last 3 months</option>
@@ -39,12 +39,12 @@
                                 <option value="custom" <%= filters.period === 'custom' ? 'selected' : '' %>>Custom range</option>
                             </select>
                         </div>
-                        <div class="col-md-3" id="startDateGroup" style="display: <%= filters.period === 'custom' ? 'block' : 'none' %>">
+                        <div class="col-md-3 custom-date-group <%= filters.period === 'custom' ? 'd-block' : 'd-none' %>">
                             <label for="startDate" class="form-label">Start Date</label>
                             <input type="date" class="form-control" id="startDate" name="startDate" 
                                    value="<%= filters.startDate || '' %>">
                         </div>
-                        <div class="col-md-3" id="endDateGroup" style="display: <%= filters.period === 'custom' ? 'block' : 'none' %>">
+                        <div class="col-md-3 custom-date-group <%= filters.period === 'custom' ? 'd-block' : 'd-none' %>">
                             <label for="endDate" class="form-label">End Date</label>
                             <input type="date" class="form-control" id="endDate" name="endDate" 
                                    value="<%= filters.endDate || '' %>">
@@ -167,8 +167,8 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span><%= state.state %></span>
                                 <div class="d-flex align-items-center">
-                                    <div class="progress me-2" style="width: 100px; height: 8px;">
-                                        <div class="progress-bar" style="width: <%= (state.count / stats.totalClubs * 100) %>%"></div>
+                                    <div class="progress me-2 state-progress-bar" data-percent="<%= (state.count / stats.totalClubs * 100) %>">
+                                        <div class="progress-bar"></div>
                                     </div>
                                     <small><%= state.count %> clubs</small>
                                 </div>
@@ -411,4 +411,4 @@
     </div>
 </div>
 
-<script src="/js/admin-stats.js"></script>
+<script type="module" src="/js/admin-stats.js"></script>

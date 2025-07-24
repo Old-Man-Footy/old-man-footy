@@ -5,36 +5,77 @@
  */
 
 /**
- * Sets up all event listeners and interactive functionality for the player list.
- * @param {Document} document - The document object to operate on.
- * @returns {Object} An object containing the export and print functions for testing.
+ * Carnival All Players Manager
+ * Manages the behavior of the comprehensive player list view.
+ * @namespace carnivalAllPlayersManager
  */
-export function setupCarnivalAllPlayers(document) {
-    const searchInput = document.getElementById('searchInput');
-    const clubFilter = document.getElementById('clubFilter');
-    const ageFilters = document.querySelectorAll('input[name="ageFilter"]');
-    const playersTable = document.getElementById('playersTable');
-    const playerCountBadge = document.getElementById('playerCount');
-    const playerRows = Array.from(document.querySelectorAll('.player-row'));
+export const carnivalAllPlayersManager = {
+    elements: {},
+    currentSort: { column: null, direction: 'asc' },
 
-    let currentSort = { column: null, direction: 'asc' };
+    /**
+     * Initializes the manager, setting up event listeners and UI state.
+     * @function
+     */
+    initialize() {
+        this.cacheElements();
+        this.bindEvents();
+        this.filterPlayers();
+    },
 
-    function filterPlayers() {
-        if (!searchInput || !clubFilter || !playerCountBadge) return;
+    /**
+     * Caches DOM elements for later use.
+     * @function
+     */
+    cacheElements() {
+        this.elements.searchInput = document.getElementById('searchInput');
+        this.elements.clubFilter = document.getElementById('clubFilter');
+        this.elements.ageFilters = document.querySelectorAll('input[name="ageFilter"]');
+        this.elements.playersTable = document.getElementById('playersTable');
+        this.elements.playerCountBadge = document.getElementById('playerCount');
+        this.elements.playerRows = Array.from(document.querySelectorAll('.player-row'));
+    },
 
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const selectedClub = clubFilter.value.toLowerCase();
+    /**
+     * Binds event listeners to cached elements.
+     * @function
+     */
+    bindEvents() {
+        if (this.elements.searchInput) {
+            this.elements.searchInput.addEventListener('input', this.filterPlayers.bind(this));
+        }
+        if (this.elements.clubFilter) {
+            this.elements.clubFilter.addEventListener('change', this.filterPlayers.bind(this));
+        }
+        this.elements.ageFilters.forEach(filter => {
+            filter.addEventListener('change', this.filterPlayers.bind(this));
+        });
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', () => this.sortTable(header.dataset.sort));
+            header.style.cursor = 'pointer';
+        });
+
+        window.exportToCSV = this.exportToCSV.bind(this);
+        window.printPlayerList = this.printPlayerList.bind(this);
+    },
+
+    /**
+     * Filters the player rows based on search, club, and age filters.
+     * @function
+     */
+    filterPlayers() {
+        const searchTerm = this.elements.searchInput?.value.toLowerCase().trim() || '';
+        const selectedClub = this.elements.clubFilter?.value.toLowerCase() || '';
         const selectedAgeRadio = document.querySelector('input[name="ageFilter"]:checked');
         const selectedAge = selectedAgeRadio ? selectedAgeRadio.value : 'all';
 
         let visibleCount = 0;
 
-        playerRows.forEach(row => {
+        this.elements.playerRows.forEach(row => {
             const playerName = (row.dataset.name || '').toLowerCase();
             const clubName = (row.dataset.club || '').toLowerCase();
             const isMasters = row.dataset.masters === 'true';
 
-            // **THE BUG FIX IS HERE:** This logic is now explicit and correct.
             const matchesSearch = searchTerm === '' || playerName.includes(searchTerm) || clubName.includes(searchTerm);
             const matchesClub = selectedClub === '' || clubName === selectedClub;
             let matchesAge = true;
@@ -52,22 +93,28 @@ export function setupCarnivalAllPlayers(document) {
             }
         });
 
-        playerCountBadge.textContent = visibleCount;
-    }
+        if (this.elements.playerCountBadge) {
+            this.elements.playerCountBadge.textContent = visibleCount;
+        }
+    },
 
-    function sortTable(column) {
-        if (!playersTable) return;
-        const tbody = playersTable.querySelector('tbody');
+    /**
+     * Sorts the player table by the specified column.
+     * @function
+     * @param {string} column - The column to sort by.
+     */
+    sortTable(column) {
+        const tbody = this.elements.playersTable?.querySelector('tbody');
         if (!tbody) return;
 
-        if (currentSort.column === column) {
-            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        if (this.currentSort.column === column) {
+            this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
         } else {
-            currentSort.column = column;
-            currentSort.direction = 'asc';
+            this.currentSort.column = column;
+            this.currentSort.direction = 'asc';
         }
 
-        playerRows.sort((a, b) => {
+        this.elements.playerRows.sort((a, b) => {
             let aValue, bValue;
             switch (column) {
                 case 'club': aValue = a.dataset.club || ''; bValue = b.dataset.club || ''; break;
@@ -79,27 +126,36 @@ export function setupCarnivalAllPlayers(document) {
             let comparison = 0;
             if (aValue > bValue) comparison = 1;
             if (aValue < bValue) comparison = -1;
-            return currentSort.direction === 'desc' ? comparison * -1 : comparison;
+            return this.currentSort.direction === 'desc' ? comparison * -1 : comparison;
         });
 
         tbody.innerHTML = '';
-        playerRows.forEach(row => tbody.appendChild(row));
-        updateSortIndicators(column);
-        filterPlayers();
-    }
+        this.elements.playerRows.forEach(row => tbody.appendChild(row));
+        this.updateSortIndicators(column);
+        this.filterPlayers();
+    },
 
-    function updateSortIndicators(activeColumn) {
+    /**
+     * Updates the sort indicators for the active column.
+     * @function
+     * @param {string} activeColumn - The active column being sorted.
+     */
+    updateSortIndicators(activeColumn) {
         document.querySelectorAll('.sortable i').forEach(icon => {
             icon.className = 'bi bi-chevron-expand';
         });
         const activeHeader = document.querySelector(`[data-sort="${activeColumn}"] i`);
         if (activeHeader) {
-            activeHeader.className = currentSort.direction === 'asc' ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+            activeHeader.className = this.currentSort.direction === 'asc' ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
         }
-    }
+    },
 
-    const exportToCSV = function() {
-        const visibleRows = Array.from(document.querySelectorAll('.player-row')).filter(row => row.style.display !== 'none');
+    /**
+     * Exports the visible player list to a CSV file.
+     * @function
+     */
+    exportToCSV() {
+        const visibleRows = this.elements.playerRows.filter(row => row.style.display !== 'none');
         if (visibleRows.length === 0) {
             alert('No players to export. Please adjust your filters.');
             return;
@@ -108,7 +164,7 @@ export function setupCarnivalAllPlayers(document) {
         const csvContent = [headers.join(',')];
         visibleRows.forEach(row => {
             const cells = row.cells;
-            csvContent.push([`"${cells[0] ? cells[0].querySelector('strong').textContent : ''}"`, `"${row.dataset.state || 'N/A'}"`, `"${cells[1] ? cells[1].querySelector('strong').textContent : ''}"`, cells[2] ? cells[2].textContent.trim() : 'N/A', `"${cells[3] ? cells[3].textContent.trim() : ''}"`, `"${cells[4] ? cells[4].textContent.trim() : ''}"`, `"${cells[5] ? cells[5].textContent.trim() : ''}"`, `"${cells[6] ? cells[6].textContent.trim() : ''}"`].join(','));
+            csvContent.push([`"${cells[0]?.querySelector('strong')?.textContent || ''}"`, `"${row.dataset.state || 'N/A'}"`, `"${cells[1]?.querySelector('strong')?.textContent || ''}"`, cells[2]?.textContent.trim() || 'N/A', `"${cells[3]?.textContent.trim() || ''}"`, `"${cells[4]?.textContent.trim() || ''}"`, `"${cells[5]?.textContent.trim() || ''}"`, `"${cells[6]?.textContent.trim() || ''}"`].join(','));
         });
         const blob = new Blob([csvContent.join('\n')], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -119,10 +175,14 @@ export function setupCarnivalAllPlayers(document) {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-    };
+    },
 
-    const printPlayerList = function() {
-        const visibleRows = Array.from(document.querySelectorAll('.player-row')).filter(row => row.style.display !== 'none');
+    /**
+     * Prints the visible player list.
+     * @function
+     */
+    printPlayerList() {
+        const visibleRows = this.elements.playerRows.filter(row => row.style.display !== 'none');
         if (visibleRows.length === 0) {
             alert('No players to print. Please adjust your filters.');
             return;
@@ -132,7 +192,7 @@ export function setupCarnivalAllPlayers(document) {
             alert('Please allow pop-ups to print the player list.');
             return;
         }
-        
+
         const titleElement = document.querySelector('h2');
         const carnivalTitle = titleElement ? titleElement.textContent : 'Player List';
         const clubCountElement = document.querySelector('.bg-primary .display-6');
@@ -142,30 +202,10 @@ export function setupCarnivalAllPlayers(document) {
         printWindow.document.write(printContent);
         printWindow.document.close();
         printWindow.onload = function() { printWindow.print(); };
-    };
-
-    // Attach to window for browser execution
-    window.exportToCSV = exportToCSV;
-    window.printPlayerList = printPlayerList;
-
-    if (searchInput) searchInput.addEventListener('input', filterPlayers);
-    if (clubFilter) clubFilter.addEventListener('change', filterPlayers);
-    ageFilters.forEach(filter => filter.addEventListener('change', filterPlayers));
-    document.querySelectorAll('.sortable').forEach(header => {
-        header.addEventListener('click', function() { sortTable(this.dataset.sort); });
-        header.style.cursor = 'pointer';
-    });
-
-    filterPlayers();
-
-    return { exportToCSV, printPlayerList };
-}
-
-// This part is for the actual browser environment.
-if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setupCarnivalAllPlayers(document));
-    } else {
-        setupCarnivalAllPlayers(document);
     }
-}
+};
+
+// At the bottom of the file
+document.addEventListener('DOMContentLoaded', () => {
+    carnivalAllPlayersManager.initialize();
+});

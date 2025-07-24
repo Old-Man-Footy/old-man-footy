@@ -1,6 +1,6 @@
 ## Public JavaScript Test Plan
 - [x] `/public/js/add-club-auto-populate.js`
-- [x] `/public/js/address-utils.js`
+- [x] `/public/js/address-utils.js` -- May not be used in the app, but is a utility for address formatting.
 - [x] `/public/js/admin-carnivals.js`
 - [x] `/public/js/admin-claim-carnival.js`
 - [x] `/public/js/admin-clubs.js`
@@ -12,8 +12,8 @@
 - [x] `/public/js/app.js`
 - [x] `/public/js/auth-register.js`
 - [x] `/public/js/auth.js`
-- [x] `/public/js/carnival-add-players.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
-- [x] `/public/js/carnival-all-players.js` - TO BE UPDATED TO USE export const decriptiveManager = { ... }
+- [x] `/public/js/carnival-add-players.js`
+- [x] `/public/js/carnival-all-players.js`
 - [x] `/public/js/carnival-attendees.js`
 - [x] `/public/js/carnival-club-players.js`
 - [x] `/public/js/carnival-edit-registration.js`

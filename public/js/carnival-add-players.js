@@ -1,63 +1,99 @@
 /**
- * Sets up event listeners and UI logic for the add players form.
- * @function
+ * Carnival Add Players Manager
+ * Manages the behavior of the add players form in the carnival application.
+ * @namespace carnivalAddPlayersManager
  */
-export function setupCarnivalAddPlayers() {
-    const checkboxes = document.querySelectorAll('.player-checkbox');
-    const submitBtn = document.getElementById('submitBtn');
-    const form = document.getElementById('addPlayersForm');
+export const carnivalAddPlayersManager = {
+    elements: {},
 
-    // Update submit button state based on selections
-    function updateSubmitButton() {
+    /**
+     * Initializes the manager, setting up event listeners and UI state.
+     * @function
+     */
+    initialize() {
+        this.cacheElements();
+        this.bindEvents();
+        this.updateSubmitButton();
+    },
+
+    /**
+     * Caches DOM elements for later use.
+     * @function
+     */
+    cacheElements() {
+        this.elements.checkboxes = document.querySelectorAll('.player-checkbox');
+        this.elements.submitBtn = document.getElementById('submitBtn');
+        this.elements.form = document.getElementById('addPlayersForm');
+    },
+
+    /**
+     * Binds event listeners to cached elements.
+     * @function
+     */
+    bindEvents() {
+        this.elements.checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', this.updateSubmitButton.bind(this));
+        });
+
+        if (this.elements.form) {
+            this.elements.form.addEventListener('submit', this.handleFormSubmit.bind(this));
+        }
+
+        window.selectAll = this.selectAll.bind(this);
+        window.selectNone = this.selectNone.bind(this);
+    },
+
+    /**
+     * Updates the submit button text and state based on selected players.
+     * @function
+     */
+    updateSubmitButton() {
         const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
-        if (submitBtn) {
-            submitBtn.disabled = selectedCount === 0;
-            submitBtn.innerHTML = selectedCount > 0 
+        if (this.elements.submitBtn) {
+            this.elements.submitBtn.disabled = selectedCount === 0;
+            this.elements.submitBtn.innerHTML = selectedCount > 0
                 ? `<i class="bi bi-plus-circle"></i> Add ${selectedCount} Selected Player${selectedCount > 1 ? 's' : ''}`
                 : '<i class="bi bi-plus-circle"></i> Add Selected Players';
         }
-    }
+    },
 
-    // Add event listeners to checkboxes
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSubmitButton);
-    });
-
-    // Select all functionality
-    window.selectAll = function() {
-        checkboxes.forEach(checkbox => {
+    /**
+     * Selects all player checkboxes.
+     * @function
+     */
+    selectAll() {
+        this.elements.checkboxes.forEach(checkbox => {
             checkbox.checked = true;
         });
-        updateSubmitButton();
-    };
+        this.updateSubmitButton();
+    },
 
-    // Select none functionality
-    window.selectNone = function() {
-        checkboxes.forEach(checkbox => {
+    /**
+     * Deselects all player checkboxes.
+     * @function
+     */
+    selectNone() {
+        this.elements.checkboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
-        updateSubmitButton();
-    };
+        this.updateSubmitButton();
+    },
 
-    // Form submission validation
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
-            if (selectedCount === 0) {
-                e.preventDefault();
-                alert('Please select at least one player to add.');
-                return false;
-            }
-        });
+    /**
+     * Handles form submission, ensuring at least one player is selected.
+     * @function
+     * @param {Event} event - The submit event.
+     */
+    handleFormSubmit(event) {
+        const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
+        if (selectedCount === 0) {
+            event.preventDefault();
+            alert('Please select at least one player to add.');
+        }
     }
+};
 
-    // Initial state
-    updateSubmitButton();
-}
-
-// Attach on DOMContentLoaded or immediately if DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupCarnivalAddPlayers);
-} else {
-    setupCarnivalAddPlayers();
-}
+// At the bottom of the file
+document.addEventListener('DOMContentLoaded', () => {
+    carnivalAddPlayersManager.initialize();
+});

@@ -1,14 +1,12 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
-// Ensure this path is correct for your project structure
-import { setupCarnivalAllPlayers } from '/public/js/carnival-all-players.js';
+import { carnivalAllPlayersManager } from '/public/js/carnival-all-players.js';
 
 /**
  * @file carnival-all-players.test.js
- * @description Unit tests for the Carnival All Players interactive script.
+ * @description Unit tests for the Carnival All Players Manager.
  */
 
 function setupDOM() {
-    // This HTML provides all the elements the script interacts with.
     document.body.innerHTML = `
         <h2>Carnival 2024</h2>
         <div class="card bg-primary"><div class="card-body"><span class="display-6">3</span></div></div>
@@ -37,11 +35,10 @@ function setupDOM() {
     `;
 }
 
-describe('Carnival All Players Script', () => {
-    let carnivalApp;
-
+describe('carnivalAllPlayersManager', () => {
     beforeEach(() => {
         setupDOM();
+        carnivalAllPlayersManager.initialize();
 
         // Mock browser functions
         window.alert = vi.fn();
@@ -55,9 +52,6 @@ describe('Carnival All Players Script', () => {
             if (tag === 'a') element.click = vi.fn();
             return element;
         });
-
-        // Initialize the script and capture the returned functions
-        carnivalApp = setupCarnivalAllPlayers(document);
     });
 
     afterEach(() => {
@@ -69,14 +63,14 @@ describe('Carnival All Players Script', () => {
         expect(document.getElementById('playerCount').textContent).toBe('3');
     });
 
-    it('should filter by search input', () => {
+    it('should filter players by search input', () => {
         const searchInput = document.getElementById('searchInput');
         searchInput.value = 'bob';
         searchInput.dispatchEvent(new Event('input'));
         expect(document.getElementById('playerCount').textContent).toBe('1');
     });
-    
-    it('should sort by name', () => {
+
+    it('should sort players by name', () => {
         const nameHeader = document.querySelector('[data-sort="name"]');
         nameHeader.dispatchEvent(new Event('click')); // asc
         let rows = document.querySelectorAll('.player-row');
@@ -90,28 +84,34 @@ describe('Carnival All Players Script', () => {
         const searchInput = document.getElementById('searchInput');
         searchInput.value = 'nonexistent';
         searchInput.dispatchEvent(new Event('input'));
-        carnivalApp.exportToCSV();
+        carnivalAllPlayersManager.exportToCSV();
         expect(window.alert).toHaveBeenCalledWith('No players to export. Please adjust your filters.');
     });
 
     it('should alert if no players are visible for printing', () => {
-        // **THE FIX IS HERE:**
-        // This test now uses a valid combination of filters to produce zero results.
-        
-        // 1. Filter by a club that has no masters players
         const clubFilter = document.getElementById('clubFilter');
-        clubFilter.value = 'Tigers'; // Only Bob Jones (non-master) remains
+        clubFilter.value = 'Tigers';
         clubFilter.dispatchEvent(new Event('change'));
-        
-        // 2. Now filter by masters, which will hide Bob Jones
+
         const mastersRadio = document.querySelector('input[name="ageFilter"][value="masters"]');
         mastersRadio.checked = true;
         mastersRadio.dispatchEvent(new Event('change'));
 
-        // At this point, no players should be visible
-        carnivalApp.printPlayerList();
-        
-        // The alert should now be called correctly
+        carnivalAllPlayersManager.printPlayerList();
         expect(window.alert).toHaveBeenCalledWith('No players to print. Please adjust your filters.');
+    });
+
+    it('should update player count when filtering by club', () => {
+        const clubFilter = document.getElementById('clubFilter');
+        clubFilter.value = 'Lions';
+        clubFilter.dispatchEvent(new Event('change'));
+        expect(document.getElementById('playerCount').textContent).toBe('2');
+    });
+
+    it('should update player count when filtering by age group', () => {
+        const mastersRadio = document.querySelector('input[name="ageFilter"][value="masters"]');
+        mastersRadio.checked = true;
+        mastersRadio.dispatchEvent(new Event('change'));
+        expect(document.getElementById('playerCount').textContent).toBe('1');
     });
 });

@@ -16,6 +16,7 @@ export const adminStatsManager = {
         this.bindEvents();
         this.toggleCustomDates(); // Run on init to set initial state
         this.initializeChart();
+        this.updateStateProgressBars();
     },
 
     /**
@@ -24,10 +25,11 @@ export const adminStatsManager = {
     cacheElements() {
         this.elements = {
             periodSelect: document.getElementById('period'),
-            startDateGroup: document.getElementById('startDateGroup'),
-            endDateGroup: document.getElementById('endDateGroup'),
+            startDateGroup: document.querySelector('.custom-date-group:nth-of-type(1)'),
+            endDateGroup: document.querySelector('.custom-date-group:nth-of-type(2)'),
             exportButton: document.querySelector('[data-action="export-report"]'),
             chartElement: document.getElementById('myChart'),
+            stateProgressBars: document.querySelectorAll('.state-progress-bar'),
         };
     },
 
@@ -112,6 +114,19 @@ export const adminStatsManager = {
                 options: { scales: { y: { beginAtZero: true } } }
             });
         }
+    },
+
+    /**
+     * Set the width of each state progress bar based on its data-percent attribute.
+     */
+    updateStateProgressBars() {
+        this.elements.stateProgressBars.forEach(bar => {
+            const percent = parseFloat(bar.getAttribute('data-percent')) || 0;
+            const progressBar = bar.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${percent}%`;
+            }
+        });
     }
 };
 
