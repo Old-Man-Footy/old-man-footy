@@ -1,13 +1,13 @@
 ## **5. Unit Testing (/tests)**
 
   * **Framework:** Use **Vitest** for all tests.
-  * **Location:** Test files MUST be located in the `/tests` directory in subdirectory of the type (e.g. `/middleware` or `/services`) and be named `[file-name].test.js` or `[file-name].spec.js`.
+  * **Location:** Test files MUST be located in the `/tests` directory in subdirectory of the type (e.g. `/middleware` or `/services`) and be named `[file-name].test.mjs` **IMPORTANT**.
   * **Best Practices For Server Side:**
       * **AAA Pattern:** Structure tests using Arrange, Act, Assert.
       * **Isolation:** Tests MUST be independent. Use `beforeEach` and `afterEach` to reset state and mocks.
       * **Mocking:** External dependencies MUST be mocked using `vi.mock()` in Unit tests. End to End tests will utilise the test database `test-old-man-footy.db`.
       * **Test Order:** When generating a full test suite for a feature, create tests in this order: Model -> Service (if any) -> Controller.
-      * **Running Tests:** The command to test a single component is `npm test -- "<file-name>.test.js"`.
+      * **Running Tests:** The command to test a single component is `npm test -- "<file-name>.test.mjs"`.
       * **Test Coverage:** Aim for 100% coverage on all models and controllers. Use `vitest --coverage` to check coverage reports.
   * **Best Practices For Client Side:**
       * **Import the Manager:** Import the single manager object at the top of your test file: `import { exampleManager } from '...'`.

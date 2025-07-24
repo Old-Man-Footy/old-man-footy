@@ -226,7 +226,7 @@ npm run test:coverage
 │   ├── mySidelineScraperService.mjs            # Web scraping service
 │   └── sponsorSortingService.mjs               # Sponsor sorting logic
 ├── tests/                                   # Test files and utilities
-│   └── *.test.js                               # Vitest unit and integration tests
+│   └── *.test.mjs                              # Vitest unit and integration tests
 └── views/                                   # EJS templates - MVC Views
     ├── about.ejs                               # About page template
     ├── contact.ejs                             # Contact page template

@@ -19,7 +19,7 @@
 - [x] `/public/js/carnival-edit-registration.js`
 - [x] `/public/js/carnival-edit.js`
 - [x] `/public/js/carnival-list.js`
-- [ ] `/public/js/carnival-management.js`
+- [x] `/public/js/carnival-management.js`
 - [ ] `/public/js/carnival-my-club-players.js`
 - [ ] `/public/js/carnival-new.js`
 - [ ] `/public/js/carnival-players.js`
