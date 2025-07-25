@@ -3,14 +3,14 @@
 /** @type {import('sequelize-cli').Migration} */
 export const up = async (queryInterface, Sequelize) => {
   // --- User Table ---
-  await queryInterface.createTable('users', {
+  await queryInterface.createTable('Users', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     email: { type: Sequelize.STRING, allowNull: false, unique: true },
     passwordHash: { type: Sequelize.STRING, allowNull: true },
     firstName: { type: Sequelize.STRING, allowNull: false },
     lastName: { type: Sequelize.STRING, allowNull: false },
     phoneNumber: { type: Sequelize.STRING(20), allowNull: true },
-    clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'clubs', key: 'id' } },
+    clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'Clubs', key: 'id' } },
     isPrimaryDelegate: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
     isAdmin: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
     invitationToken: { type: Sequelize.STRING, allowNull: true, unique: true },
@@ -25,7 +25,7 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- Club Table ---
-  await queryInterface.createTable('clubs', {
+  await queryInterface.createTable('Clubs', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     clubName: { type: Sequelize.STRING, allowNull: false, unique: true },
     state: { type: Sequelize.STRING(3), allowNull: true },
@@ -38,15 +38,15 @@ export const up = async (queryInterface, Sequelize) => {
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     createdByProxy: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
     inviteEmail: { type: Sequelize.STRING, allowNull: true },
-    createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
+    createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'Users', key: 'id' } },
     createdAt: { type: Sequelize.DATE, allowNull: false },
     updatedAt: { type: Sequelize.DATE, allowNull: false }
   });
 
   // --- ClubAlternateName Table ---
-  await queryInterface.createTable('club_alternate_names', {
+  await queryInterface.createTable('ClubAlternateNames', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'clubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Clubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
     alternateName: { type: Sequelize.STRING, allowNull: false },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     createdAt: { type: Sequelize.DATE, allowNull: false },
@@ -54,9 +54,9 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- ClubPlayer Table ---
-  await queryInterface.createTable('club_players', {
+  await queryInterface.createTable('ClubPlayers', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'clubs', key: 'id' } },
+    clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Clubs', key: 'id' } },
     firstName: { type: Sequelize.STRING(50), allowNull: false },
     lastName: { type: Sequelize.STRING(50), allowNull: false },
     dateOfBirth: { type: Sequelize.DATEONLY, allowNull: true },
@@ -70,12 +70,12 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- Carnival Table ---
-  await queryInterface.createTable('carnivals', {
+  await queryInterface.createTable('Carnivals', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     title: { type: Sequelize.STRING, allowNull: false },
     mySidelineTitle: { type: Sequelize.STRING, allowNull: true },
     mySidelineId: { type: Sequelize.INTEGER, allowNull: true },
-    clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'clubs', key: 'id' } },
+    clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'Clubs', key: 'id' } },
     isManuallyEntered: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     lastMySidelineSync: { type: Sequelize.DATE, allowNull: true },
     state: { type: Sequelize.STRING(3), allowNull: true },
@@ -99,13 +99,13 @@ export const up = async (queryInterface, Sequelize) => {
     isRegistrationOpen: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     registrationDeadline: { type: Sequelize.DATE, allowNull: true },
     adminNotes: { type: Sequelize.TEXT, allowNull: true },
-    createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
+    createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'Users', key: 'id' } },
     createdAt: { type: Sequelize.DATE, allowNull: false },
     updatedAt: { type: Sequelize.DATE, allowNull: false }
   });
 
   // --- Sponsor Table ---
-  await queryInterface.createTable('sponsors', {
+  await queryInterface.createTable('Sponsors', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     sponsorName: { type: Sequelize.STRING, allowNull: false, unique: true },
     businessType: { type: Sequelize.STRING, allowNull: true },
@@ -119,17 +119,17 @@ export const up = async (queryInterface, Sequelize) => {
     facebookUrl: { type: Sequelize.STRING, allowNull: true },
     instagramUrl: { type: Sequelize.STRING, allowNull: true },
     twitterUrl: { type: Sequelize.STRING, allowNull: true },
-    clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'clubs', key: 'id' } },
+    clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'Clubs', key: 'id' } },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     createdAt: { type: Sequelize.DATE, allowNull: false },
     updatedAt: { type: Sequelize.DATE, allowNull: false }
   });
 
   // --- CarnivalClub Table ---
-  await queryInterface.createTable('carnival_clubs', {
+  await queryInterface.createTable('CarnivalClubs', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    carnivalId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'carnivals', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
-    clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'clubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    carnivalId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Carnivals', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Clubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
     registrationDate: { type: Sequelize.DATEONLY, allowNull: false, defaultValue: Sequelize.NOW },
     playerCount: { type: Sequelize.INTEGER, allowNull: true },
     teamName: { type: Sequelize.STRING, allowNull: true },
@@ -146,10 +146,10 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- CarnivalClubPlayer Table ---
-  await queryInterface.createTable('carnival_club_players', {
+  await queryInterface.createTable('CarnivalClubPlayers', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    carnivalClubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'carnival_clubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
-    clubPlayerId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'club_players', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    carnivalClubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'CarnivalClubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    clubPlayerId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'ClubPlayers', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     attendanceStatus: { type: Sequelize.STRING, allowNull: false, defaultValue: 'confirmed' },
     notes: { type: Sequelize.TEXT, allowNull: true },
@@ -159,10 +159,10 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- CarnivalSponsor Table ---
-  await queryInterface.createTable('carnival_sponsors', {
+  await queryInterface.createTable('CarnivalSponsors', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    carnivalId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'carnivals', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
-    sponsorId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'sponsors', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    carnivalId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Carnivals', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    sponsorId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Sponsors', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
     sponsorshipLevel: { type: Sequelize.STRING, allowNull: false, defaultValue: 'Supporting' },
     sponsorshipValue: { type: Sequelize.DECIMAL(10, 2), allowNull: true },
     packageDetails: { type: Sequelize.TEXT, allowNull: true },
@@ -177,7 +177,7 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- EmailSubscription Table ---
-  await queryInterface.createTable('email_subscriptions', {
+  await queryInterface.createTable('EmailSubscriptions', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     email: { type: Sequelize.STRING, allowNull: false, unique: true },
     states: { type: Sequelize.JSON, allowNull: true, defaultValue: [] },
@@ -190,9 +190,9 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- AuditLog Table ---
-  await queryInterface.createTable('audit_logs', {
+  await queryInterface.createTable('AuditLogs', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    userId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'SET NULL' },
+    userId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'Users', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'SET NULL' },
     action: { type: Sequelize.STRING(100), allowNull: false },
     entityType: { type: Sequelize.STRING(50), allowNull: false },
     entityId: { type: Sequelize.INTEGER, allowNull: true },
@@ -209,7 +209,7 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- SyncLog Table ---
-  await queryInterface.createTable('sync_logs', {
+  await queryInterface.createTable('SyncLogs', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     syncType: { type: Sequelize.STRING, allowNull: false },
     status: { type: Sequelize.STRING, allowNull: false, defaultValue: 'started' },
@@ -226,16 +226,16 @@ export const up = async (queryInterface, Sequelize) => {
 };
 
 export const down = async (queryInterface, Sequelize) => {
-  await queryInterface.dropTable('sync_logs');
-  await queryInterface.dropTable('audit_logs');
-  await queryInterface.dropTable('email_subscriptions');
-  await queryInterface.dropTable('carnival_sponsors');
-  await queryInterface.dropTable('carnival_club_players');
-  await queryInterface.dropTable('carnival_clubs');
-  await queryInterface.dropTable('carnivals');
-  await queryInterface.dropTable('sponsors');
-  await queryInterface.dropTable('club_players');
-  await queryInterface.dropTable('club_alternate_names');
-  await queryInterface.dropTable('clubs');
-  await queryInterface.dropTable('users');
+  await queryInterface.dropTable('SyncLogs');
+  await queryInterface.dropTable('AuditLogs');
+  await queryInterface.dropTable('EmailSubscriptions');
+  await queryInterface.dropTable('CarnivalSponsors');
+  await queryInterface.dropTable('CarnivalClubPlayers');
+  await queryInterface.dropTable('CarnivalClubs');
+  await queryInterface.dropTable('Carnivals');
+  await queryInterface.dropTable('Sponsors');
+  await queryInterface.dropTable('ClubPlayers');
+  await queryInterface.dropTable('ClubAlternateNames');
+  await queryInterface.dropTable('Clubs');
+  await queryInterface.dropTable('Users');
 };
