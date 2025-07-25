@@ -1,302 +1,158 @@
 /**
  * Admin Carnival Management JavaScript
  * Handles carnival management functionality including status toggle confirmation
+ *
+ * @module admin-carnivals
  */
 
-let currentCarnivalId = null;
-let currentCarnivalTitle = null;
-let currentStatus = null;
-
-/**
- * Show status toggle confirmation modal
- * @param {string} carnivalId - The ID of the carnival to toggle
- * @param {string} carnivalTitle - The title of the carnival for display
- * @param {boolean} isActive - Current status of the carnival
- */
-function showStatusToggleModal(carnivalId, carnivalTitle, isActive) {
-    currentCarnivalId = carnivalId;
-    currentCarnivalTitle = carnivalTitle;
-    currentStatus = isActive;
+export const adminCarnivalsManager = {
+      elements: {},
     
-    // Set the carnival title in the modal
-    const titleElement = document.getElementById('toggleCarnivalTitle');
-    if (titleElement) {
-        titleElement.textContent = carnivalTitle;
-    }
+      initialize() {
+        this.cacheElements();
+        this.bindEvents();
+        console.log('Admin carnival management functionality initialized successfully');
+      },
     
-    // Update modal content based on current status
-    const messageElement = document.getElementById('statusToggleMessage');
-    const warningElement = document.getElementById('statusWarningText');
-    const actionTextElement = document.getElementById('toggleActionText');
-    const confirmButton = document.getElementById('confirmStatusToggle');
+      cacheElements() {
+        this.elements.statusToggleModal = document.getElementById('statusToggleModal');
+        this.elements.confirmStatusToggle = document.getElementById('confirmStatusToggle');
+        this.elements.toastContainer = document.getElementById('toast-container');
+        // Cache other elements as needed
+      },
     
-    if (isActive) {
-        // Currently active, will deactivate
-        messageElement.textContent = 'Are you sure you want to deactivate this carnival?';
-        warningElement.textContent = 'Deactivated carnivals will no longer be visible on the site';
-        actionTextElement.textContent = 'Deactivate';
-        confirmButton.className = 'btn btn-danger';
-        confirmButton.innerHTML = '<i class="bi bi-eye-slash"></i> <span id="toggleActionText">Deactivate</span> Carnival';
-    } else {
-        // Currently inactive, will reactivate
-        messageElement.textContent = 'Are you sure you want to reactivate this carnival?';
-        warningElement.textContent = 'Reactivated carnivals will become visible on the site again';
-        actionTextElement.textContent = 'Reactivate';
-        confirmButton.className = 'btn btn-success';
-        confirmButton.innerHTML = '<i class="bi bi-eye"></i> <span id="toggleActionText">Reactivate</span> Carnival';
-    }
+      bindEvents() {
+        // Setup status toggle buttons
+        const statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
+        statusToggleButtons.forEach(button => {
+          button.addEventListener('click', (event) => {
+            const carnivalId = button.getAttribute('data-toggle-carnival-status');
+            const carnivalTitle = button.getAttribute('data-carnival-title');
+            const currentStatus = button.getAttribute('data-current-status') === 'true';
+            this.showStatusToggleModal(carnivalId, carnivalTitle, currentStatus);
+          });
+        });
     
-    // Show the modal
-    const statusToggleModal = document.getElementById('statusToggleModal');
-    if (statusToggleModal && typeof bootstrap !== 'undefined') {
-        const modal = new bootstrap.Modal(statusToggleModal);
-        modal.show();
-    }
-}
-
-/**
- * Confirm and execute status toggle
- */
-function confirmStatusToggle() {
-    if (!currentCarnivalId) {
-        console.error('No carnival ID set for status toggle');
-        return;
-    }
+        // Setup confirm button in modal
+        if (this.elements.confirmStatusToggle) {
+          this.elements.confirmStatusToggle.addEventListener('click', this.confirmStatusToggle.bind(this));
+        }
+      },
     
-    const newStatus = !currentStatus;
+      showStatusToggleModal(carnivalId, carnivalTitle, isActive) {
+        this.currentCarnivalId = carnivalId;
+        this.currentCarnivalTitle = carnivalTitle;
+        this.currentStatus = isActive;
     
-    // Show loading state
-    const confirmButton = document.getElementById('confirmStatusToggle');
-    const originalContent = confirmButton.innerHTML;
-    confirmButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
-    confirmButton.disabled = true;
+        // Update modal content based on current status
+        const titleElement = document.getElementById('toggleCarnivalTitle');
+        const messageElement = document.getElementById('statusToggleMessage');
+        const warningElement = document.getElementById('statusWarningText');
+        const actionTextElement = document.getElementById('toggleActionText');
+        const confirmButton = this.elements.confirmStatusToggle;
     
-    // Send AJAX request to toggle status
-    fetch(`/admin/carnivals/${currentCarnivalId}/toggle-status`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            isActive: newStatus
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Show success message
-            showToast('success', data.message);
-            
-            // Reload the page to reflect changes
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+        if (titleElement) titleElement.textContent = carnivalTitle;
+    
+        if (isActive) {
+          messageElement.textContent = 'Are you sure you want to deactivate this carnival?';
+          warningElement.textContent = 'Deactivated carnivals will no longer be visible on the site';
+          actionTextElement.textContent = 'Deactivate';
+          confirmButton.className = 'btn btn-danger';
+          confirmButton.innerHTML = '<i class="bi bi-eye-slash"></i> Deactivate Carnival';
         } else {
-            showToast('error', data.message || 'Error updating carnival status');
+          messageElement.textContent = 'Are you sure you want to reactivate this carnival?';
+          warningElement.textContent = 'Reactivated carnivals will become visible on the site again';
+          actionTextElement.textContent = 'Reactivate';
+          confirmButton.className = 'btn btn-success';
+          confirmButton.innerHTML = '<i class="bi bi-eye"></i> Reactivate Carnival';
         }
-    })
-    .catch(error => {
-        console.error('Error toggling carnival status:', error);
-        showToast('error', 'Error updating carnival status');
-    })
-    .finally(() => {
-        // Restore button state
-        confirmButton.innerHTML = originalContent;
-        confirmButton.disabled = false;
-        
-        // Close modal
-        const statusToggleModal = document.getElementById('statusToggleModal');
-        if (statusToggleModal && typeof bootstrap !== 'undefined') {
-            const modal = bootstrap.Modal.getInstance(statusToggleModal);
-            if (modal) {
-                modal.hide();
-            }
-        }
-    });
-}
-
-/**
- * Show toast notification
- * @param {string} type - Type of toast (success, error, warning, info)
- * @param {string} message - Message to display
- */
-function showToast(type, message) {
-    // Create toast element if it doesn't exist
-    let toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.className = 'position-fixed top-0 end-0 p-3';
-        toastContainer.style.zIndex = '9999';
-        document.body.appendChild(toastContainer);
-    }
     
-    const toastId = 'toast-' + Date.now();
-    const toastHtml = `
-        <div id="${toastId}" class="toast align-items-center bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        // Show the modal
+        if (this.elements.statusToggleModal && typeof bootstrap !== 'undefined') {
+          const modal = new bootstrap.Modal(this.elements.statusToggleModal);
+          modal.show();
+        }
+      },
+    
+      // **THE FIX IS HERE:** Converted to async/await to make it fully awaitable in tests.
+      async confirmStatusToggle() {
+        if (!this.currentCarnivalId) {
+          console.error('No carnival ID set for status toggle');
+          return;
+        }
+    
+        const confirmButton = this.elements.confirmStatusToggle;
+        const originalContent = confirmButton.innerHTML;
+        confirmButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+        confirmButton.disabled = true;
+    
+        try {
+          const response = await fetch(`/admin/carnivals/${this.currentCarnivalId}/toggle-status`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ isActive: !this.currentStatus })
+          });
+          const data = await response.json();
+    
+          if (data.success) {
+            this.showToast('success', data.message);
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            this.showToast('error', data.message || 'Error updating carnival status');
+          }
+        } catch (error) {
+          console.error('Error toggling carnival status:', error);
+          this.showToast('error', 'Error updating carnival status');
+        } finally {
+          confirmButton.innerHTML = originalContent;
+          confirmButton.disabled = false;
+    
+          if (this.elements.statusToggleModal && typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getInstance(this.elements.statusToggleModal);
+            if (modal) modal.hide();
+          }
+        }
+      },
+    
+      showToast(type, message) {
+        if (!this.elements.toastContainer) {
+          this.elements.toastContainer = document.createElement('div');
+          this.elements.toastContainer.id = 'toast-container';
+          this.elements.toastContainer.className = 'position-fixed top-0 end-0 p-3';
+          this.elements.toastContainer.style.zIndex = '9999';
+          document.body.appendChild(this.elements.toastContainer);
+        }
+    
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+          <div id="${toastId}" class="toast align-items-center bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              <div class="toast-body">
+                <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-        </div>
-    `;
+          </div>
+        `;
     
-    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        this.elements.toastContainer.insertAdjacentHTML('beforeend', toastHtml);
     
-    const toastElement = document.getElementById(toastId);
-    if (toastElement && typeof bootstrap !== 'undefined') {
-        const toast = new bootstrap.Toast(toastElement, {
-            autohide: true,
-            delay: 5000
-        });
-        toast.show();
-        
-        // Remove toast element after it's hidden
-        toastElement.addEventListener('hidden.bs.toast', () => {
+        const toastElement = document.getElementById(toastId);
+        if (toastElement && typeof bootstrap !== 'undefined') {
+          const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 5000 });
+          toast.show();
+    
+          toastElement.addEventListener('hidden.bs.toast', () => {
             toastElement.remove();
-        });
-    }
-}
-
-/**
- * Initialize admin carnival functionality
- */
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Admin carnival management functionality loaded...');
+          });
+        }
+      }
+    };
     
-    // Multi-day event functionality
-    initializeMultiDayEventFunctionality();
-    
-    // Setup status toggle buttons
-    const statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
-    statusToggleButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const carnivalId = this.getAttribute('data-toggle-carnival-status');
-            const carnivalTitle = this.getAttribute('data-carnival-title');
-            const currentStatus = this.getAttribute('data-current-status') === 'true';
-            
-            showStatusToggleModal(carnivalId, carnivalTitle, currentStatus);
-        });
+    document.addEventListener('DOMContentLoaded', () => {
+      adminCarnivalsManager.initialize();
     });
     
-    // Setup confirm button in modal
-    const confirmButton = document.getElementById('confirmStatusToggle');
-    if (confirmButton) {
-        confirmButton.addEventListener('click', confirmStatusToggle);
-    }
-    
-    // Form validation for edit carnival page
-    const editForm = document.querySelector('form[action*="/edit"]');
-    if (editForm) {
-        editForm.addEventListener('submit', function(e) {
-            const requiredFields = this.querySelectorAll('[required]');
-            let isValid = true;
-            
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
-            
-            if (!isValid) {
-                e.preventDefault();
-                showToast('error', 'Please fill in all required fields.');
-            }
-        });
-    }
-    
-    // Auto-resize textareas
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-    });
-    
-    console.log('Admin carnival management functionality initialized successfully');
-});
-
-/**
- * Initialize multi-day event functionality for admin forms
- */
-function initializeMultiDayEventFunctionality() {
-    const isMultiDayCheckbox = document.getElementById('isMultiDay');
-    const endDateContainer = document.getElementById('endDateContainer');
-    const endDateInput = document.getElementById('endDate');
-    const dateLabel = document.getElementById('dateLabel');
-    const startDateInput = document.getElementById('date');
-
-    if (isMultiDayCheckbox && endDateContainer && endDateInput && dateLabel) {
-        // Toggle end date field visibility
-        isMultiDayCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                endDateContainer.style.display = 'block';
-                dateLabel.textContent = 'Event Start Date *';
-                endDateInput.required = true;
-                updateEndDateMin();
-            } else {
-                endDateContainer.style.display = 'none';
-                dateLabel.textContent = 'Event Date *';
-                endDateInput.required = false;
-                endDateInput.value = '';
-            }
-        });
-
-        // Update end date minimum when start date changes
-        startDateInput.addEventListener('change', function() {
-            if (isMultiDayCheckbox.checked) {
-                updateEndDateMin();
-            }
-        });
-
-        // Validate end date is after start date
-        endDateInput.addEventListener('change', function() {
-            validateEndDate();
-        });
-
-        /**
-         * Update minimum end date based on start date
-         */
-        function updateEndDateMin() {
-            if (startDateInput.value) {
-                const startDate = new Date(startDateInput.value);
-                startDate.setDate(startDate.getDate() + 1);
-                const minEndDate = startDate.toISOString().split('T')[0];
-                endDateInput.min = minEndDate;
-                
-                if (endDateInput.value && endDateInput.value <= startDateInput.value) {
-                    endDateInput.value = minEndDate;
-                }
-            }
-        }
-
-        /**
-         * Validate that end date is after start date
-         */
-        function validateEndDate() {
-            if (endDateInput.value && startDateInput.value) {
-                if (endDateInput.value <= startDateInput.value) {
-                    endDateInput.setCustomValidity('End date must be after the start date');
-                    endDateInput.classList.add('is-invalid');
-                } else {
-                    endDateInput.setCustomValidity('');
-                    endDateInput.classList.remove('is-invalid');
-                }
-            }
-        }
-
-        // Initialize on page load
-        if (isMultiDayCheckbox.checked) {
-            dateLabel.textContent = 'Event Start Date *';
-            endDateInput.required = true;
-            updateEndDateMin();
-        }
-    }
-}

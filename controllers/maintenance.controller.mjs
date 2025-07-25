@@ -11,11 +11,11 @@
 export const showMaintenancePage = (_req, res) => {
   const maintenanceData = {
     title: 'Site Maintenance - Old Man Footy',
-    message: 'We\'re currently performing scheduled maintenance to improve your experience.',
+    message: "We're currently performing scheduled maintenance to improve your experience.",
     estimatedReturn: 'We expect to be back online soon. Please check back later.',
     contactEmail: process.env.EMAIL_FROM || 'support@oldmanfooty.au',
     appName: process.env.APP_NAME || 'Old Man Footy',
-    appUrl: process.env.APP_URL || 'https://oldmanfooty.au'
+    appUrl: process.env.APP_URL || 'https://oldmanfooty.au',
   };
 
   res.status(503).render('maintenance', maintenanceData);
@@ -28,9 +28,9 @@ export const showMaintenancePage = (_req, res) => {
  */
 export const getMaintenanceStatus = (_req, res) => {
   const isMaintenanceMode = process.env.FEATURE_MAINTENANCE_MODE === 'true';
-  
-  res.json({
+
+  return res.json({
     maintenanceMode: isMaintenanceMode,
-    message: isMaintenanceMode ? 'Site is currently in maintenance mode' : 'Site is operational'
+    message: isMaintenanceMode ? 'Site is currently in maintenance mode' : 'Site is operational',
   });
 };

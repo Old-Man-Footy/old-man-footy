@@ -18,7 +18,8 @@ const validateEmail = (fieldName = 'email', required = true, options = {}) => {
     const {
         maxLength = 254, // RFC 5321 standard
         customMessage = null,
-        normalizeEmail = true
+        normalizeEmail = true,
+        requiredMessage = null
     } = options;
 
     let validationChain;
@@ -26,7 +27,7 @@ const validateEmail = (fieldName = 'email', required = true, options = {}) => {
     if (required) {
         validationChain = body(fieldName)
             .notEmpty()
-            .withMessage(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`);
+            .withMessage(requiredMessage || customMessage || `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`);
     } else {
         validationChain = body(fieldName)
             .optional({ nullable: true, checkFalsy: true });
@@ -122,7 +123,8 @@ const contactEmail = (fieldName = 'contactEmail') => {
  */
 const organiserEmail = (fieldName = 'organiserContactEmail') => {
     return validateEmail(fieldName, true, {
-        customMessage: 'A valid organiser email address is required for carnival communications'
+        customMessage: 'organiser email address is required for carnival communications',
+        requiredMessage: 'organiser email address is required'
     });
 };
 

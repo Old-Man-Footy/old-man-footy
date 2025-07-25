@@ -1,11 +1,6 @@
-import { Carnival, SyncLog } from '../models/index.mjs';
+import { Carnival, SyncLog } from '/models/index.mjs';
 import { Op } from 'sequelize';
-import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
-import { ENTITY_TYPES, IMAGE_TYPES, parseImageName, generateImageName } from './imageNamingService.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
-
+import { AUSTRALIAN_STATES } from '/config/constants.mjs';
 
 /**
  * MySideline Data Processing Service
@@ -14,26 +9,44 @@ import { join, dirname } from 'path';
 class MySidelineDataService {
     constructor() {
         this.australianStates = AUSTRALIAN_STATES;
-        this.logoDownloadService = new MySidelineLogoDownloadService();
     }
 
     /**
-     * Find existing MySideline event using robust matching with immutable fields
+     * Find existing MySideline event using robust matching with mySidelineId priority
      * @param {Object} eventData - Event data to match against
      * @returns {Promise<Carnival|null>} Existing carnival or null
      */
     async findExistingMySidelineEvent(eventData) {
-        // Strategy 1: Use MySideline-specific matching fields (most reliable)
-        // This uses the immutable fields that never change after import
+        // Strategy 1: Use mySidelineId for most reliable matching (if available)
+        if (eventData.mySidelineId) {
+            const match = await Carnival.findOne({ 
+                where: { 
+                    mySidelineId: eventData.mySidelineId
+                } 
+            });
+            
+            if (match) {
+                console.log(`Found existing MySideline event by ID: ${eventData.mySidelineId} - "${eventData.title}"`);
+                return match;
+            }
+        }
+
+        // Strategy 2: Fall back to MySideline-specific matching fields (for legacy events)
         if (eventData.mySidelineTitle) {
             const whereConditions = {
                 mySidelineTitle: eventData.mySidelineTitle,
                 isManuallyEntered: false
             };
 
-            // Add mySidelineDate if available (null matches null, value matches value)
+            // Add mySidelineDate if available and valid (null matches null, valid date matches date)
             if (eventData.mySidelineDate !== undefined) {
-                whereConditions.mySidelineDate = eventData.mySidelineDate;
+                // Validate that mySidelineDate is a valid date or null
+                if (eventData.mySidelineDate === null || 
+                    (eventData.mySidelineDate instanceof Date && !isNaN(eventData.mySidelineDate.getTime()))) {
+                    whereConditions.mySidelineDate = eventData.mySidelineDate;
+                } else {
+                    console.warn(`Invalid mySidelineDate for event "${eventData.mySidelineTitle}": ${eventData.mySidelineDate}`);
+                }
             }
 
             // Add mySidelineAddress if available (null matches null, value matches value)
@@ -44,8 +57,31 @@ class MySidelineDataService {
             const match = await Carnival.findOne({ where: whereConditions });
             
             if (match) {
-                console.log(`Found existing MySideline event by immutable fields: "${eventData.mySidelineTitle}"`);
+                console.log(`Found existing MySideline event by legacy fields: "${eventData.mySidelineTitle}"`);
                 return match;
+            }
+        }
+
+        // Strategy 3: Fall back to date and title matching (when mySidelineId is empty)
+        if (eventData.date && eventData.title) {
+            // Validate that the date is actually a valid Date object
+            const isValidDate = eventData.date instanceof Date && !isNaN(eventData.date.getTime());
+            
+            if (isValidDate) {
+                const match = await Carnival.findOne({
+                    where: {
+                        date: eventData.date,
+                        title: eventData.title,
+                        isManuallyEntered: false
+                    }
+                });
+
+                if (match) {
+                    console.log(`Found existing MySideline event by date and title: "${eventData.title}" on ${eventData.date}`);
+                    return match;
+                }
+            } else {
+                console.warn(`Invalid date for event "${eventData.title}": ${eventData.date}. Skipping date-based matching.`);
             }
         }
         
@@ -66,23 +102,15 @@ class MySidelineDataService {
         const processedEvents = [];        
         for (const eventData of scrapedEvents) {
             try {
-                // Process club logo if available - download and store locally
-                let localLogoUrl = null;
-                if (eventData.clubLogoURL) {
-                    // Add temporary ID for logo processing
-                    eventData.temporaryId = Date.now() + Math.random();
-                    localLogoUrl = await this.processClubLogo(eventData.clubLogoURL, eventData);
-                }
-
                 // Check if event already exists
                 const existingEvent = await this.findExistingMySidelineEvent(eventData);
                 
                 if (existingEvent) {
-                    if (eventData.date < new Date() || existingEvent.isActive === false) {
-                        // If the event date is in the past or already marked as inactive, skip it
-                        console.log(`Skipping update of past event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
-                        continue; // Skip to next event
-                    }
+                    // if (eventData.date < new Date() || existingEvent.isActive === false) {
+                    //     // If the event date is in the past or already marked as inactive, skip it
+                    //     console.log(`Skipping update of past event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
+                    //     continue; // Skip to next event
+                    // }
 
                     console.log(`Event already exists: ${eventData.mySidelineTitle} on ${eventData.date}`);
                     // Update existing event with any new information, but only for empty fields
@@ -90,16 +118,65 @@ class MySidelineDataService {
                         id: existingEvent.id
                     };
                     
-                    // Only update fields that are currently empty
-                    if (!existingEvent.clubLogoURL && localLogoUrl) {
-                        updateData.clubLogoURL = localLogoUrl; // Use downloaded logo URL
+                    // Update MySideline ID if we didn't have one before
+                    if (!existingEvent.mySidelineId && eventData.mySidelineId) {
+                        updateData.mySidelineId = eventData.mySidelineId;
+                        if (eventData.registrationLink) {
+                            // If we have a registration link, update it when updating MySidelineID
+                            updateData.registrationLink = eventData.registrationLink;
+                        }
+                    } else if (!existingEvent.mySidelineTitle && eventData.mySidelineTitle) {
+                        updateData.mySidelineTitle = eventData.mySidelineTitle;
+                    }
+
+                    // Update Potentially Modified Fields
+                    if (!existingEvent.clubLogoURL && eventData.clubLogoURL) {
+                        updateData.clubLogoURL = eventData.clubLogoURL;
+                    }
+                    if (!existingEvent.date && eventData.date) {
+                        updateData.date = eventData.date;
+                    }
+                    if (!existingEvent.googleMapsUrl && eventData.googleMapsUrl) {
+                        updateData.googleMapsUrl = eventData.googleMapsUrl;
+                    }
+                    if (!existingEvent.isActive && eventData.isActive !== undefined) {
+                        updateData.isActive = eventData.isActive;
+                    }
+                    if (!existingEvent.isManuallyEntered && eventData.isManuallyEntered !== undefined) {
+                        updateData.isManuallyEntered = false;
                     }
                     if (!existingEvent.locationAddress && eventData.locationAddress) {
                         updateData.locationAddress = eventData.locationAddress;
-                        updateData.locationAddressPart1 = eventData.locationAddressPart1 || null;
-                        updateData.locationAddressPart2 = eventData.locationAddressPart2 || null;
-                        updateData.locationAddressPart3 = eventData.locationAddressPart3 || null;
-                        updateData.locationAddressPart4 = eventData.locationAddressPart4 || null;
+                    }
+                    if (!existingEvent.locationAddressLine1 && eventData.locationAddressLine1) {
+                        updateData.locationAddressLine1 = eventData.locationAddressLine1;
+                    }
+                    if (!existingEvent.locationAddressLine2 && eventData.locationAddressLine2) {
+                        updateData.locationAddressLine2 = eventData.locationAddressLine2;
+                    }
+                    if (!existingEvent.locationCountry && eventData.locationCountry) {
+                        updateData.locationCountry = eventData.locationCountry;
+                    }
+                    if (!existingEvent.locationLatitude && eventData.locationLatitude) {
+                        updateData.locationLatitude = eventData.locationLatitude;
+                    }
+                    if (!existingEvent.locationLongitude && eventData.locationLongitude) {
+                        updateData.locationLongitude = eventData.locationLongitude;
+                    }
+                    if (!existingEvent.locationPostcode && eventData.locationPostcode) {
+                        updateData.locationPostcode = eventData.locationPostcode;
+                    }
+                    if (!existingEvent.locationSuburb && eventData.locationSuburb) {
+                        updateData.locationSuburb = eventData.locationSuburb;
+                    }
+                    if (!existingEvent.mySidelineAddress && eventData.mySidelineAddress) {  
+                        updateData.mySidelineAddress = eventData.mySidelineAddress;
+                    } 
+                    if (!existingEvent.mySidelineDate && eventData.mySidelineDate) {
+                        updateData.mySidelineDate = eventData.mySidelineDate;
+                    }
+                    if (!existingEvent.mySidelineTitle && eventData.mySidelineTitle) {
+                        updateData.mySidelineTitle = eventData.mySidelineTitle;
                     }
                     if (!existingEvent.organiserContactEmail && eventData.organiserContactEmail) {
                         updateData.organiserContactEmail = eventData.organiserContactEmail;
@@ -125,6 +202,18 @@ class MySidelineDataService {
                     if (!existingEvent.state && eventData.state) {
                         updateData.state = eventData.state;
                     }
+                    if (!existingEvent.title && eventData.title) {
+                        updateData.title = eventData.title;
+                    }
+                    if (!existingEvent.endDate && eventData.endDate) {
+                        updateData.endDate = eventData.endDate;
+                    }   
+                    if (!existingEvent.venueName && eventData.venueName) {
+                        updateData.feesDescription = eventData.feesDescription;
+                    }
+                    if (!existingEvent.feesDescription && eventData.feesDescription) {
+                        updateData.feesDescription = eventData.feesDescription;
+                    }
                     
                     // Always update the sync timestamp
                     updateData.lastMySidelineSync = lastMySidelineSync;
@@ -141,39 +230,51 @@ class MySidelineDataService {
                 } else {
                     // Create new event
                     const newEvent = await Carnival.create({
-                        clubLogoURL: localLogoUrl, // Use downloaded logo URL instead of original URL
-                        date: eventData.date,
-                        googleMapsUrl: eventData.googleMapsUrl,
-                        isMySidelineCard: eventData.isMySidelineCard,
-                        isManuallyEntered: false,
-                        lastMySidelineSync: lastMySidelineSync,
-                        locationAddress: eventData.locationAddress,
-                        locationAddressPart1: eventData.locationAddressPart1,
-                        locationAddressPart2: eventData.locationAddressPart2,
-                        locationAddressPart3: eventData.locationAddressPart3,
-                        locationAddressPart4: eventData.locationAddressPart4,
+                        // Core event fields
+                        title: eventData.title,
+                        date: eventData.date,                    
+                        endDate: null,
+                        state: eventData.state,
+                        clubLogoURL: eventData.clubLogoURL,
+                        
+                        // MySideline-specific tracking fields
+                        mySidelineId: eventData.mySidelineId,
                         mySidelineTitle: eventData.mySidelineTitle,
                         mySidelineAddress: eventData.mySidelineAddress,
                         mySidelineDate: eventData.mySidelineDate,
-                        organiserContactEmail: eventData.organiserContactEmail,
+                        
+                        // Location fields - structured address
+                        venueName: eventData.venueName,
+                        locationAddress: eventData.locationAddress,
+                        locationAddressLine1: eventData.locationAddressLine1,
+                        locationAddressLine2: eventData.locationAddressLine2,
+                        locationSuburb: eventData.locationSuburb,
+                        locationPostcode: eventData.locationPostcode,
+                        locationCountry: eventData.locationCountry || 'Australia',
+                        locationLatitude: eventData.locationLatitude,
+                        locationLongitude: eventData.locationLongitude,
+                        
+                        // Contact fields
                         organiserContactName: eventData.organiserContactName,
+                        organiserContactEmail: eventData.organiserContactEmail,
                         organiserContactPhone: eventData.organiserContactPhone,
-                        registrationLink: eventData.registrationLink,
+                        
+                        // Event details
                         scheduleDetails: eventData.scheduleDetails,
+                        registrationLink: eventData.registrationLink,
+                        
+                        // Social media fields
                         socialMediaFacebook: eventData.socialMediaFacebook,
                         socialMediaWebsite: eventData.socialMediaWebsite,
-                        source: eventData.source,
-                        state: eventData.state,
-                        title: eventData.title,
+                        
+                        // MySideline metadata
+                        isManuallyEntered: false,
+                        lastMySidelineSync: lastMySidelineSync,
+                        googleMapsUrl: eventData.googleMapsUrl,
+                        
+                        // Status
+                        isActive: eventData.isActive !== undefined ? eventData.isActive : true,
                     });
-
-                    // Update logo with actual carnival ID if we downloaded one
-                    if (localLogoUrl && newEvent.id) {
-                        const updatedLogoUrl = await this.updateLogoWithCarnivalId(localLogoUrl, newEvent.id);
-                        if (updatedLogoUrl !== localLogoUrl) {
-                            await newEvent.update({ clubLogoURL: updatedLogoUrl });
-                        }
-                    }
 
                     // If the event is more than 7 days in the future, set registration open
                     if (eventData.date > new Date() + (7 * 24 * 60 * 60 * 1000)) {
@@ -223,36 +324,7 @@ class MySidelineDataService {
     }
 
     /**
-     * Extract location from MySideline text
-     * @param {string} text - Text to extract location from
-     * @returns {string} - Extracted location
-     */
-    extractLocationFromMySidelineText(text) {
-        if (!text) return 'TBA - Check MySideline for details';
-        
-        const lowercaseText = text.toLowerCase();
-        
-        // Look for venue keywords
-        const venuePatterns = [
-            /at\s+([^,\n]+(?:park|ground|stadium|field|centre|center|oval|club))/i,
-            /venue[:\s]+([^,\n]+)/i,
-            /location[:\s]+([^,\n]+)/i,
-            /held at\s+([^,\n]+)/i,
-            /([^,\n]+(?:park|ground|stadium|field|centre|center|oval|club))/i
-        ];
-        
-        for (const pattern of venuePatterns) {
-            const match = text.match(pattern);
-            if (match && match[1] && match[1].trim().length > 5) {
-                return match[1].trim();
-            }
-        }
-        
-        return 'TBA - Check MySideline for details';
-    }
-
-    /**
-     * A robust function to parse various date string formats into a JavaScript Date object.
+     * A robust function to parse various date string formats into a Date object (local time).
      * This is designed to work with the output from the date extraction regex patterns.
      *
      * @param {string} dateString The date string to parse (e.g., "27th July 2024", "19/07/2025").
@@ -277,11 +349,9 @@ class MySidelineDataService {
         match = cleanString.match(patternNumeric);
         if (match) {
             const day = parseInt(match[1], 10);
-            const month = parseInt(match[2], 10); // month is 1-based
+            const month = parseInt(match[2], 10);
             const year = parseInt(match[3], 10);
-            // Create date, ensuring month is 0-indexed for the Date constructor
             const date = new Date(year, month - 1, day);
-            // Validate the date to catch invalid inputs like month > 12
             if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
                 return date;
             }
@@ -292,29 +362,22 @@ class MySidelineDataService {
         const patternMonthName = /^(?:(\d{1,2})\s+([a-zA-Z]{3,})\s+(\d{4}))|(?:([a-zA-Z]{3,})\s+(\d{1,2}),?\s+(\d{4}))$/i;
         match = cleanString.match(patternMonthName);
         if (match) {
-            // match[1] is day, match[2] is month, match[3] is year OR
-            // match[4] is month, match[5] is day, match[6] is year
             const day = parseInt(match[1] || match[5], 10);
             const monthStr = match[2] || match[4];
             const year = parseInt(match[3] || match[6], 10);
-
-            const monthIndex = new Date(Date.parse(monthStr +" 1, 2000")).getMonth();
-            
+            const monthIndex = new Date(Date.parse(monthStr + " 1, 2000")).getMonth();
             if (monthIndex >= 0) {
                 const date = new Date(year, monthIndex, day);
-                // Validate the date
                 if (date.getFullYear() === year && date.getMonth() === monthIndex && date.getDate() === day) {
                     return date;
                 }
             }
         }
-        
         // --- 3. Fallback for any other valid formats ---
         const fallbackDate = new Date(cleanString);
         if (!isNaN(fallbackDate.getTime())) {
             return fallbackDate;
         }
-
         // Return null if no patterns matched or date was invalid
         return null;
     }
@@ -395,98 +458,6 @@ class MySidelineDataService {
                 error: error.message,
                 deactivatedCount: 0
             };
-        }
-    }
-
-    /**
-     * Process club logo URL - download and store locally instead of saving URL
-     * 
-     * @param {string} logoUrl - MySideline logo URL
-     * @param {Object} eventData - Event data containing carnival info
-     * @returns {Promise<string|null>} Local logo URL or null if download failed
-     */
-    async processClubLogo(logoUrl, eventData) {
-        if (!logoUrl || typeof logoUrl !== 'string') {
-            return null;
-        }
-
-        try {
-            console.log(`🖼️  Processing club logo for "${eventData.title}": ${logoUrl}`);
-
-            // For MySideline events, we'll use the carnival as the entity
-            // since clubs may not exist in our system yet
-            const downloadResult = await this.logoDownloadService.downloadLogo(
-                logoUrl,
-                ENTITY_TYPES.CARNIVAL,
-                eventData.temporaryId || Date.now(), // Use temporary ID until carnival is created
-                IMAGE_TYPES.LOGO
-            );
-
-            if (downloadResult.success) {
-                console.log(`✅ Club logo downloaded successfully: ${downloadResult.publicUrl}`);
-                return downloadResult.publicUrl;
-            } else {
-                console.warn(`⚠️  Failed to download club logo: ${downloadResult.error}`);
-                // Don't crash - just proceed without the logo
-                return null;
-            }
-
-        } catch (error) {
-            console.error(`❌ Error processing club logo for "${eventData.title}":`, error.message);
-            // Don't crash - just proceed without the logo
-            return null;
-        }
-    }
-
-    /**
-     * Update downloaded logo to use actual carnival ID after creation
-     * 
-     * @param {string} tempLogoUrl - Temporary logo URL
-     * @param {number} carnivalId - Actual carnival ID
-     * @returns {Promise<string|null>} Updated logo URL or original if update failed
-     */
-    async updateLogoWithCarnivalId(tempLogoUrl, carnivalId) {
-        if (!tempLogoUrl || !carnivalId) {
-            return tempLogoUrl;
-        }
-
-        try {
-            // Parse the temporary logo URL to get the filename
-            const urlParts = tempLogoUrl.split('/');
-            const filename = urlParts[urlParts.length - 1];
-            
-            // Parse the filename to get components
-            const parsed = parseImageName(filename);
-            if (!parsed) {
-                return tempLogoUrl; // Keep original if parsing fails
-            }
-
-            // Generate new filename with actual carnival ID
-            const newNamingResult = await generateImageName({
-                entityType: ENTITY_TYPES.CARNIVAL,
-                entityId: carnivalId,
-                imageType: IMAGE_TYPES.LOGO,
-                customSuffix: 'mysideline'
-            });
-
-            // Move the file to the new location
-            const oldPath = join('uploads', tempLogoUrl.replace('/uploads/', ''));
-            const newPath = join('uploads', newNamingResult.fullPath);
-            
-            // Ensure new directory exists
-            await fs.mkdir(dirname(newPath), { recursive: true });
-            
-            // Move the file
-            await fs.rename(oldPath, newPath);
-            
-            const newPublicUrl = `/uploads/${newNamingResult.fullPath.replace(/\\/g, '/')}`;
-            console.log(`📁 Updated logo location: ${tempLogoUrl} → ${newPublicUrl}`);
-            
-            return newPublicUrl;
-
-        } catch (error) {
-            console.error('Error updating logo with carnival ID:', error.message);
-            return tempLogoUrl; // Return original URL if update fails
         }
     }
 }

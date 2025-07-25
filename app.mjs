@@ -2,20 +2,23 @@
 import { setEnvironmentVariables, getCurrentConfig } from './config/config.mjs';
 
 // Initialize configuration for current environment
-setEnvironmentVariables();
+await setEnvironmentVariables();
 
 import express from 'express';
 import session from 'express-session';
 import connectSessionSequelize from 'connect-session-sequelize';
-import passport from './config/passport.mjs';
-import flash from 'connect-flash';
+// Remove the old flash import and add our enhanced flash
+// import flash from 'connect-flash';
+import { enhancedFlash, flashTemplateVariables } from './middleware/flash.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import helmet from 'helmet';
 import expressLayouts from 'express-ejs-layouts';
 import methodOverride from 'method-override';
+// Import centralized security middleware
+import { applySecurity } from './middleware/security.mjs';
 // MySideline service will be imported dynamically after configuration is loaded
 import { sequelize } from './models/index.mjs';
+import { setupSessionAuth, loadSessionUser } from './middleware/auth.mjs';
 
 // ES Module equivalents of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -25,18 +28,6 @@ const app = express();
 
 // Configure session store with proper ES Module import
 const SequelizeStore = connectSessionSequelize(session.Store);
-
-// Security middleware
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
-            imgSrc: ["'self'", "data:", "https:"],
-        },
-    },
-}));
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -72,7 +63,7 @@ const sessionStore = new SequelizeStore({
     db: sequelize,
 });
 
-// Session configuration
+// Session configuration - MUST come before any middleware that uses flash messages
 app.use(session({
     secret: getCurrentConfig().security.sessionSecret,
     store: sessionStore,
@@ -85,12 +76,15 @@ app.use(session({
     }
 }));
 
-// Passport initialization
-app.use(passport.initialize());
-app.use(passport.session());
+// Session-based authentication middleware (replaces Passport)
+app.use(setupSessionAuth);
+app.use(loadSessionUser);
 
-// Flash messages
-app.use(flash());
+// Flash messages - MUST come after session setup
+app.use(enhancedFlash);
+
+// Apply centralized security middleware - MUST come after session and flash setup
+app.use(applySecurity);
 
 // Maintenance mode middleware (must be after session but before routes)
 const { maintenanceMode } = await import('./middleware/maintenance.mjs');
@@ -100,14 +94,8 @@ app.use(maintenanceMode);
 const { comingSoonMode } = await import('./middleware/comingSoon.mjs');
 app.use(comingSoonMode);
 
-// Global variables for templates
-app.use((req, res, next) => {
-    res.locals.success_msg = req.flash('success_msg');
-    res.locals.error_msg = req.flash('error_msg');
-    res.locals.error = req.flash('error');
-    res.locals.user = req.user || null;
-    next();
-});
+// Global variables for templates using enhanced flash
+app.use(flashTemplateVariables);
 
 /**
  * Initialize database connection and setup

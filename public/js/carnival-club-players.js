@@ -1,94 +1,120 @@
 /**
  * Carnival Club Players JavaScript
- * Handles player status updates and removal functionality for carnival club players page
+ * Handles player status updates and removal functionality for carnival club players page.
+ * Refactored into a testable object pattern.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get carnival and registration IDs from the current URL
-    const pathParts = window.location.pathname.split('/');
-    const carnivalId = pathParts[2]; // /carnivals/{id}/attendees/{regId}/players
-    const registrationId = pathParts[4];
-    
-    let currentAssignmentId = null;
+export const clubPlayersManager = {
+    carnivalId: null,
+    registrationId: null,
+    currentAssignmentId: null,
 
-    // Update status functionality
-    document.querySelectorAll('.update-status-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            currentAssignmentId = this.dataset.assignmentId;
-            const currentStatus = this.dataset.currentStatus;
-            const playerName = this.dataset.playerName;
-            
-            document.getElementById('attendanceStatus').value = currentStatus;
-            document.querySelector('#updateStatusModal .modal-title').textContent = `Update Status - ${playerName}`;
-            
-            const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
-            modal.show();
-        });
-    });
+    // Initializes the manager with necessary IDs and sets up event listeners.
+    initialize(carnivalId, registrationId) {
+        this.carnivalId = carnivalId;
+        this.registrationId = registrationId;
+        this.initializeStatusUpdateListeners();
+        this.initializeRemovePlayerListeners();
+    },
 
-    // Handle status update form submission
-    const updateStatusForm = document.getElementById('updateStatusForm');
-    if (updateStatusForm) {
-        updateStatusForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = {
-                attendanceStatus: formData.get('attendanceStatus'),
-                notes: formData.get('notes')
-            };
-
-            try {
-                const response = await fetch(`/carnivals/${carnivalId}/attendees/${registrationId}/players/${currentAssignmentId}/status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    location.reload(); // Refresh to show updated status
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while updating the status.');
-            }
-        });
-    }
-
-    // Remove player functionality
-    document.querySelectorAll('.remove-player-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const assignmentId = this.dataset.assignmentId;
-            const playerName = this.dataset.playerName;
-            
-            if (confirm(`Are you sure you want to remove "${playerName}" from this carnival registration?`)) {
-                removePlayer(assignmentId);
-            }
-        });
-    });
-
-    async function removePlayer(assignmentId) {
-        try {
-            const response = await fetch(`/carnivals/${carnivalId}/attendees/${registrationId}/players/${assignmentId}`, {
-                method: 'DELETE'
+    // Sets up event listeners for all 'Update Status' buttons.
+    initializeStatusUpdateListeners() {
+        document.querySelectorAll('.update-status-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const { assignmentId, currentStatus, playerName } = e.currentTarget.dataset;
+                this.openUpdateStatusModal(assignmentId, currentStatus, playerName);
             });
-            
-            const result = await response.json();
-            
+        });
+
+        const updateStatusForm = document.getElementById('updateStatusForm');
+        if (updateStatusForm) {
+            updateStatusForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleStatusUpdateSubmit(new FormData(updateStatusForm));
+            });
+        }
+    },
+
+    // Opens the modal and populates it with the correct player's data.
+    openUpdateStatusModal(assignmentId, currentStatus, playerName) {
+        this.currentAssignmentId = assignmentId;
+        document.getElementById('attendanceStatus').value = currentStatus;
+        document.querySelector('#updateStatusModal .modal-title').textContent = `Update Status - ${playerName}`;
+        
+        const modalElement = document.getElementById('updateStatusModal');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+    },
+
+    // **THE FIX IS HERE:** Reverted to async/await for clearer, more testable code.
+    async handleStatusUpdateSubmit(formData) {
+        const data = {
+            attendanceStatus: formData.get('attendanceStatus'),
+            notes: formData.get('notes')
+        };
+        const url = `/carnivals/${this.carnivalId}/attendees/${this.registrationId}/players/${this.currentAssignmentId}/status`;
+
+        try {
+            const result = await this.sendRequest(url, 'POST', data);
             if (result.success) {
-                location.reload(); // Refresh to show updated list
+                window.location.reload();
             } else {
-                alert('Error: ' + result.message);
+                window.alert(`Error: ${result.message}`);
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while removing the player.');
+            window.alert('An error occurred while updating the status.');
         }
+    },
+
+    // Sets up event listeners for all 'Remove Player' buttons.
+    initializeRemovePlayerListeners() {
+        document.querySelectorAll('.remove-player-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const { assignmentId, playerName } = e.currentTarget.dataset;
+                if (confirm(`Are you sure you want to remove "${playerName}" from this carnival registration?`)) {
+                    this.removePlayer(assignmentId);
+                }
+            });
+        });
+    },
+
+    // **THE FIX IS HERE:** Reverted to async/await for clearer, more testable code.
+    async removePlayer(assignmentId) {
+        const url = `/carnivals/${this.carnivalId}/attendees/${this.registrationId}/players/${assignmentId}`;
+        try {
+            const result = await this.sendRequest(url, 'DELETE');
+            if (result.success) {
+                window.location.reload();
+            } else {
+                window.alert(`Error: ${result.message}`);
+            }
+        } catch (error) {
+            window.alert('An error occurred while removing the player.');
+        }
+    },
+    
+    // A generic helper function for making API requests.
+    async sendRequest(url, method, body = null) {
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+        };
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+        const response = await fetch(url, options);
+        return response.json();
     }
-});
+};
+
+// This part runs in the browser to initialize the application.
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const pathParts = window.location.pathname.split('/');
+        const carnivalId = pathParts[2];
+        const registrationId = pathParts[4];
+        clubPlayersManager.initialize(carnivalId, registrationId);
+    });
+}

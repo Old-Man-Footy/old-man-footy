@@ -5,8 +5,9 @@
  * for enhanced search functionality on the Old Man Footy platform.
  */
 
-import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
+import { DataTypes, Model, Op } from 'sequelize';
+import { sequelize } from '/config/database.mjs';
+import Club from './Club.mjs';
 
 /**
  * ClubAlternateName model class extending Sequelize Model
@@ -17,7 +18,6 @@ class ClubAlternateName extends Model {
    * @returns {Promise<Club>} Associated club
    */
   async getClub() {
-    const Club = require('./Club');
     return await Club.findByPk(this.clubId);
   }
 
@@ -29,16 +29,21 @@ class ClubAlternateName extends Model {
    * @returns {Promise<boolean>} True if unique, false otherwise
    */
   static async isUniqueForClub(alternateName, clubId, excludeId = null) {
+    // Normalize input for comparison
+    const normalizedName = alternateName.trim().toLowerCase();
     const whereClause = {
-      alternateName: alternateName.trim().toLowerCase(),
+      alternateName: normalizedName,
       clubId
     };
 
     if (excludeId) {
-      whereClause.id = { [require('sequelize').Op.ne]: excludeId };
+      whereClause.id = { [Op.ne]: excludeId };
     }
 
-    const existing = await this.findOne({ where: whereClause });
+    // Ensure alternateName is normalized in DB query
+    const existing = await this.findOne({
+      where: whereClause
+    });
     return !existing;
   }
 
@@ -60,7 +65,6 @@ class ClubAlternateName extends Model {
    * @returns {Promise<Array>} Array of club IDs that match
    */
   static async searchClubsByAlternateName(searchTerm) {
-    const { Op } = require('sequelize');
     const results = await this.findAll({
       where: {
         alternateName: {
@@ -102,7 +106,7 @@ ClubAlternateName.init({
       len: [2, 100]
     },
     set(value) {
-      this.setDataValue('alternateName', value.trim());
+      this.setDataValue('alternateName', value.trim().toLowerCase());
     }
   },
   isActive: {

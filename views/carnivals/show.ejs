@@ -2,44 +2,44 @@
     <div class="row">
         <div class="col-lg-8">
             <!-- Hosting Club Banner -->
-            <% if (carnival.creator && carnival.creator.club) { %>
+            <% if (hostClub) { %>
                 <div class="card shadow mb-4 border-primary">
                     <div class="card-body bg-light">
                         <div class="d-flex align-items-center">
                             <% 
-                            // Show hosting club logo first, then fall back to carnival logo, then to missing.svg
-                            const hostingLogoUrl = (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || carnival.clubLogoURL || '/icons/missing.svg';
+                            // Show host club logo first, then fall back to carnival logo, then to missing.svg
+                            const hostingLogoUrl = hostClub.logoUrl || carnival.clubLogoURL || '/icons/missing.svg';
                             %>
-                            <img src="<%= hostingLogoUrl %>" alt="<%= carnival.creator.club.clubName %> Logo" 
+                            <img src="<%= hostingLogoUrl %>" alt="<%= hostClub.clubName %> Logo" 
                                  class="me-3" style="height: 60px; width: auto;">
                             <div class="flex-grow-1">
                                 <h5 class="mb-1 text-primary">Hosted by</h5>
                                 <h4 class="mb-2">
-                                    <% if (carnival.creator.club.isPubliclyListed && carnival.creator.club.isActive) { %>
-                                        <a href="/clubs/<%= carnival.creator.club.id %>" class="text-decoration-none text-primary">
-                                            <%= carnival.creator.club.clubName %>
+                                    <% if (hostClub.isPubliclyListed && hostClub.isActive) { %>
+                                        <a href="/clubs/<%= hostClub.id %>" class="text-decoration-none text-primary">
+                                            <%= hostClub.clubName %>
                                         </a>
                                     <% } else { %>
-                                        <span class="<%= carnival.creator.club.isActive ? '' : 'club-inactive-label' %>">
-                                            <%= carnival.creator.club.clubName %>
-                                            <% if (!carnival.creator.club.isActive) { %>
+                                        <span class="<%= hostClub.isActive ? '' : 'club-inactive-label' %>">
+                                            <%= hostClub.clubName %>
+                                            <% if (hostClub.isActive === false) { %>
                                                 <span class="club-inactive-badge">Inactive</span>
                                             <% } %>
                                         </span>
                                     <% } %>
                                 </h4>
-                                <% if (carnival.creator.club.location) { %>
+                                <% if (hostClub.location) { %>
                                     <p class="mb-0 text-muted">
-                                        <i class="bi bi-geo-alt me-1"></i><%= carnival.creator.club.location %>
-                                        <% if (carnival.creator.club.state) { %>
-                                            <span class="badge state-<%= carnival.creator.club.state.toLowerCase() %> ms-2"><%= carnival.creator.club.state %></span>
+                                        <i class="bi bi-geo-alt me-1"></i><%= hostClub.location %>
+                                        <% if (hostClub.state) { %>
+                                            <span class="badge state-<%= hostClub.state.toLowerCase() %> ms-2"><%= hostClub.state %></span>
                                         <% } %>
                                     </p>
                                 <% } %>
                             </div>
-                            <% if (carnival.creator.club.isPubliclyListed && carnival.creator.club.isActive) { %>
+                            <% if (hostClub.isPubliclyListed && hostClub.isActive) { %>
                                 <div>
-                                    <a href="/clubs/<%= carnival.creator.club.id %>" class="btn btn-outline-primary btn-sm">
+                                    <a href="/clubs/<%= hostClub.id %>" class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-eye me-1"></i>View Club Profile
                                     </a>
                                 </div>
@@ -237,7 +237,7 @@
                         <div class="col-md-6">
                             <h5><i class="bi bi-calendar3 text-primary"></i> Date & Time</h5>
                             <p class="mb-3">
-                                <%- include('../partials/carnival-date', { 
+                                <%- include('/partials/carnival-date', { 
                                     carnival: carnival, 
                                     format: 'full',
                                     showIcon: false,
@@ -247,7 +247,7 @@
                         </div>
                         <div class="col-md-6">
                             <h5><i class="bi bi-geo-alt text-primary"></i> Location</h5>
-                            <%- include('../partials/carnival-address', { 
+                            <%- include('/partials/carnival-address', { 
                                 carnival: carnival, 
                                 addressClass: 'text-primary fw-semibold',
                                 showIcon: false
@@ -269,33 +269,30 @@
                         <% if (carnival.registrationLink) { %>
                             <div class="mb-4">
                                 <h5><i class="bi bi-person-plus text-success"></i> Registration</h5>
-                                <% if (!carnival.isActive) { %>
-                                    <!-- Disabled registration for inactive carnivals (regardless of user permissions) -->
+                                <% 
+                                // Check if carnival is inactive OR if the event date is in the past
+                                const isPastEvent = carnival.date && carnival.date instanceof Date && !isNaN(carnival.date) && carnival.date < new Date();
+                                const shouldDisableRegistration = !carnival.isActive || isPastEvent;
+                                %>
+                                <% if (shouldDisableRegistration) { %>
+                                    <!-- Disabled registration for inactive carnivals or past events -->
                                     <button class="btn btn-secondary" disabled>
                                         <i class="bi bi-x-circle"></i> Registration Closed
                                     </button>
                                     <div class="mt-2">
                                         <small class="text-muted">
                                             <i class="bi bi-info-circle me-1"></i>
-                                            Registration is no longer available for this carnival.
+                                            <% if (!carnival.isActive) { %>
+                                                Registration is no longer available for this carnival.
+                                            <% } else if (isPastEvent) { %>
+                                                Registration is closed - this event has already taken place.
+                                            <% } %>
                                         </small>
                                     </div>
                                 <% } else { %>
-                                    <% 
-                                    // Check if this is a MySideline link - show warning tooltip
-                                    const isMySidelineEvent = carnival.registrationLink && 
-                                        carnival.registrationLink.toLowerCase().includes('mysideline');
-                                    const tooltipText = isMySidelineEvent ? 
-                                        'MySideline links are not direct - you will need to follow the link and identify the exact carnival by name and date' : 
-                                        'Click to register as a player for this carnival';
-                                    %>
                                     <a href="<%= carnival.registrationLink %>" 
                                        class="btn btn-success" 
-                                       target="_blank"
-                                       data-bs-toggle="tooltip" 
-                                       data-bs-placement="top" 
-                                       data-bs-title="<%= tooltipText %>"
-                                       <% if (isMySidelineEvent) { %>data-bs-custom-class="carnival-mysideline-warning-tooltip"<% } %>>
+                                       target="_blank">
                                         <i class="bi bi-box-arrow-up-right"></i> Register Now
                                         <% if (isMySidelineEvent) { %>
                                             <i class="bi bi-info-circle ms-1" style="font-size: 0.875rem;"></i>
@@ -305,7 +302,7 @@
                                         <div class="mt-2">
                                             <small class="text-warning">
                                                 <i class="bi bi-exclamation-triangle me-1"></i>
-                                                Registration via MySideline - manual navigation required
+                                                Registration via MySideline
                                             </small>
                                         </div>
                                     <% } %>
@@ -795,7 +792,7 @@
                 </div>
                 <div class="d-flex align-items-center">
                     <i class="bi bi-building text-primary me-2"></i>
-                    <span>Hosted by <%= carnival.creator && carnival.creator.club ? carnival.creator.club.clubName : 'Unknown' %></span>
+                    <span>Hosted by <%= hostClub ? hostClub.clubName : 'Unknown' %></span>
                 </div>
             </div>
             <div class="col-md-6">

@@ -1,10 +1,13 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { requiredEmail, adminEmail } from '../middleware/validation.mjs';
-import * as authController from '../controllers/auth.controller.mjs';
-import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { ensureAuthenticated } from '/middleware/auth.mjs';
+import { applyAuthSecurity, validatePassword, validateSecureEmail } from '/middleware/security.mjs';
+import * as authController from '/controllers/auth.controller.mjs';
 
 const router = express.Router();
+
+// Apply centralized auth security to all routes
+router.use(applyAuthSecurity);
 
 // Login routes
 router.get('/login', authController.showLoginForm);
@@ -15,7 +18,13 @@ router.get('/register', authController.showRegisterForm);
 router.post('/register', [
     body('firstName').trim().notEmpty().withMessage('First name is required'),
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
-    requiredEmail('email', 'A valid email address is required for account registration'),
+    body('email').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    }),
     body('phoneNumber').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
         .custom((value) => {
             if (value && value.trim()) {
@@ -27,7 +36,13 @@ router.post('/register', [
             }
             return true;
         }),
-    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    body('password').custom((password) => {
+        const result = validatePassword(password);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    })
 ], authController.registerUser);
 
 // Invitation routes
@@ -35,12 +50,24 @@ router.get('/invite/:token', authController.showInvitationForm);
 router.post('/invite/:token', [
     body('firstName').trim().notEmpty().withMessage('First name is required'),
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    body('password').custom((password) => {
+        const result = validatePassword(password);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    })
 ], authController.acceptInvitation);
 
 // Send invitation (for primary delegates) - requires authentication
 router.post('/send-invitation', ensureAuthenticated, [
-    requiredEmail('email', 'A valid email address is required to send the invitation')
+    body('email').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    })
 ], authController.sendInvitation);
 
 // Transfer delegate role (for primary delegates) - requires authentication
@@ -73,7 +100,13 @@ router.post('/update-name', ensureAuthenticated, [
 
 // Update email (for logged-in users) - requires authentication
 router.post('/update-email', ensureAuthenticated, [
-    requiredEmail('email', 'A valid email address is required for your account'),
+    body('email').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    }),
     body('currentPassword').notEmpty().withMessage('Current password is required for security')
 ], authController.updateEmail);
 

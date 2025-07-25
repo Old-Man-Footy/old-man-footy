@@ -6,12 +6,12 @@
  */
 
 import { validationResult } from 'express-validator';
-import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
+import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '/models/index.mjs';
 import { Op, fn } from 'sequelize';
 import crypto from 'crypto';
-import EmailService from '../services/emailService.mjs';
-import AuditService from '../services/auditService.mjs';
-import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import AuthEmailService from '/services/email/AuthEmailService.mjs';
+import AuditService from '/services/auditService.mjs';
+import { wrapControllers } from '/middleware/asyncHandler.mjs';
 
 /**
  * Get Admin Dashboard with system statistics
@@ -90,7 +90,7 @@ const getAdminDashboardHandler = async (req, res) => {
         upcomingCarnivals
     };
 
-    res.render('admin/dashboard', {
+    return res.render('admin/dashboard', {
         title: 'Administrator Dashboard - Old Man Footy',
         stats,
         recentActivity,
@@ -153,7 +153,7 @@ const getUserManagementHandler = async (req, res) => {
         hasPrev: page > 1
     };
 
-    res.render('admin/users', {
+    return res.render('admin/users', {
         title: 'User Management - Admin Dashboard',
         users,
         filters,
@@ -183,7 +183,7 @@ const showEditUserHandler = async (req, res) => {
         return res.redirect('/admin/users');
     }
 
-    res.render('admin/edit-user', {
+    return res.render('admin/edit-user', {
         title: `Edit ${editUser.firstName} ${editUser.lastName} - Admin Dashboard`,
         editUser,
         clubs,
@@ -297,7 +297,7 @@ const updateUserHandler = async (req, res) => {
     );
 
     req.flash('success_msg', `User ${firstName} ${lastName} has been updated successfully`);
-    res.redirect('/admin/users');
+    return res.redirect('/admin/users');
 };
 
 /**
@@ -334,7 +334,7 @@ const issuePasswordResetHandler = async (req, res) => {
 
     // Send password reset email
     const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
-    await EmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
+    await AuthEmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
     // Log successful password reset initiation
     await AuditService.logAdminAction(
@@ -353,7 +353,7 @@ const issuePasswordResetHandler = async (req, res) => {
 
     console.log(`✅ Admin ${req.user.email} initiated password reset for user ${user.email}`);
     
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: `Password reset email sent to ${user.email}` 
     });
@@ -400,7 +400,7 @@ const toggleUserStatusHandler = async (req, res) => {
     
     console.log(`✅ Admin ${req.user.email} ${statusText} user: ${user.email} (ID: ${user.id})`);
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newStatus: newStatus
@@ -472,7 +472,7 @@ const getClubManagementHandler = async (req, res) => {
         hasPrev: page > 1
     };
 
-    res.render('admin/clubs', {
+    return res.render('admin/clubs', {
         title: 'Club Management - Admin Dashboard',
         clubs: clubsWithPrimaryDelegate,
         filters,
@@ -508,7 +508,7 @@ const showEditClubHandler = async (req, res) => {
         ? clubData.delegates.find(delegate => delegate.isPrimaryDelegate) 
         : null;
 
-    res.render('admin/edit-club', {
+    return res.render('admin/edit-club', {
         title: `Edit ${club.clubName} - Admin Dashboard`,
         club: clubData,
         additionalCSS: ['/styles/admin.styles.css']
@@ -580,7 +580,110 @@ const updateClubHandler = async (req, res) => {
         : `Club ${clubName} has been updated successfully`;
 
     req.flash('success_msg', successMessage);
-    res.redirect('/admin/clubs');
+    return res.redirect('/admin/clubs');
+};
+
+/**
+ * Deactivate Club (formerly deleteClub)
+ * Clubs should never be deleted, only deactivated to preserve historical data
+ */
+const deactivateClubHandler = async (req, res) => {
+    const clubId = req.params.id;
+    
+    const club = await Club.findByPk(clubId, {
+        include: [
+            { 
+                model: User, 
+                as: 'delegates',
+                attributes: ['id', 'firstName', 'lastName', 'email', 'isActive']
+            }
+        ]
+    });
+
+    if (!club) {
+        return res.json({ success: false, message: 'Club not found' });
+    }
+
+    // Check if club is already inactive
+    if (!club.isActive) {
+        return res.json({ 
+            success: false, 
+            message: 'Club is already deactivated' 
+        });
+    }
+
+    // Check if club has active delegates - warn but allow deactivation
+    const activeDelegates = club.delegates.filter(delegate => delegate.isActive);
+    let warningMessage = '';
+    if (activeDelegates.length > 0) {
+        warningMessage = ` Note: This club has ${activeDelegates.length} active delegate(s) who will need to be reassigned to other clubs.`;
+    }
+
+    // Check if club has active carnivals - warn but allow deactivation
+    const activeCarnivalCount = await Carnival.count({
+        where: { 
+            clubId: club.id, 
+            isActive: true 
+        }
+    });
+
+    if (activeCarnivalCount > 0) {
+        warningMessage += ` This club has ${activeCarnivalCount} active carnival(s) - ownership may need to be transferred.`;
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+        // Capture original data for audit
+        const originalClubData = {
+            clubName: club.clubName,
+            isActive: club.isActive,
+            isPubliclyListed: club.isPubliclyListed
+        };
+
+        // Deactivate the club (soft delete)
+        await club.update({
+            isActive: false,
+            isPubliclyListed: false, // Also hide from public listings
+            updatedAt: new Date()
+        }, { transaction });
+
+        await transaction.commit();
+
+        // Log club deactivation
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.CLUB_DEACTIVATE,
+            req,
+            AuditService.ENTITIES.CLUB,
+            clubId,
+            {
+                oldValues: originalClubData,
+                newValues: { 
+                    isActive: false, 
+                    isPubliclyListed: false 
+                },
+                targetClubId: clubId,
+                metadata: {
+                    adminAction: 'Club deactivation via admin delete action',
+                    targetClubName: club.clubName,
+                    activeDelegatesCount: activeDelegates.length,
+                    activeCarnivalsCount: activeCarnivalCount
+                }
+            }
+        );
+
+        console.log(`✅ Club ${club.clubName} has been deactivated by admin ${req.user.email}`);
+
+        return res.json({ 
+            success: true, 
+            message: `Club "${club.clubName}" has been deactivated successfully.${warningMessage}`,
+            action: 'deactivated' // Indicate this was a deactivation, not deletion
+        });
+
+    } catch (transactionError) {
+        await transaction.rollback();
+        throw transactionError;
+    }
 };
 
 /**
@@ -637,7 +740,7 @@ const getCarnivalManagementHandler = async (req, res) => {
         hasPrev: page > 1
     };
 
-    res.render('admin/carnivals', {
+    return res.render('admin/carnivals', {
         title: 'Carnival Management - Admin Dashboard',
         carnivals,
         filters,
@@ -661,7 +764,7 @@ const showEditCarnivalHandler = async (req, res) => {
         return res.redirect('/admin/carnivals');
     }
 
-    res.render('admin/edit-carnival', {
+    return res.render('admin/edit-carnival', {
         title: `Edit ${carnival.title} - Admin Dashboard`,
         carnival,
         additionalCSS: ['/styles/admin.styles.css']
@@ -717,6 +820,15 @@ const updateCarnivalHandler = async (req, res) => {
         date: new Date(date),
         endDate: endDate ? new Date(endDate) : null,
         locationAddress,
+        // MySideline-compatible address fields
+        venueName: req.body.venueName || null,
+        locationAddressLine1: req.body.locationAddressLine1 || null,
+        locationAddressLine2: req.body.locationAddressLine2 || null,
+        locationSuburb: req.body.locationSuburb || null,
+        locationPostcode: req.body.locationPostcode || null,
+        locationLatitude: req.body.locationLatitude ? parseFloat(req.body.locationLatitude) : null,
+        locationLongitude: req.body.locationLongitude ? parseFloat(req.body.locationLongitude) : null,
+        locationCountry: req.body.locationCountry || 'Australia',
         state,
         scheduleDetails,
         registrationLink: registrationLink || null,
@@ -783,7 +895,7 @@ const updateCarnivalHandler = async (req, res) => {
         : `Carnival ${title} has been updated successfully`;
 
     req.flash('success_msg', successMessage);
-    res.redirect('/admin/carnivals');
+    return res.redirect('/admin/carnivals');
 };
 
 /**
@@ -823,7 +935,7 @@ const toggleCarnivalStatusHandler = async (req, res) => {
         }
     );
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newStatus: newStatus
@@ -867,7 +979,7 @@ const toggleClubStatusHandler = async (req, res) => {
         }
     );
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newStatus: newStatus
@@ -911,7 +1023,7 @@ const toggleClubVisibilityHandler = async (req, res) => {
         }
     );
 
-    res.json({ 
+    return res.json({ 
         success: true, 
         message: message,
         newVisibility: newVisibility
@@ -995,7 +1107,7 @@ const generateReportHandler = async (req, res) => {
         }
     };
 
-    res.render('admin/reports', {
+    return res.render('admin/reports', {
         title: 'System Reports - Admin Dashboard',
         report,
         additionalCSS: ['/styles/admin.styles.css']
@@ -1107,7 +1219,7 @@ const deleteUserHandler = async (req, res) => {
 
         console.log(`✅ User ${user.firstName} ${user.lastName} (${user.email}) has been deleted by admin ${currentUser.email}`);
 
-        res.json({ 
+        return res.json({ 
             success: true, 
             message: `User ${user.firstName} ${user.lastName} has been deleted successfully` 
         });
@@ -1166,7 +1278,7 @@ const showClaimCarnivalFormHandler = async (req, res) => {
         order: [['clubName', 'ASC']]
     });
 
-    res.render('admin/claim-carnival', {
+    return res.render('admin/claim-carnival', {
         title: `Claim Carnival - ${carnival.title}`,
         carnival,
         clubs,
@@ -1195,7 +1307,7 @@ const adminClaimCarnivalHandler = async (req, res) => {
         req.flash('error_msg', result.message);
     }
     
-    res.redirect('/admin/carnivals');
+    return res.redirect('/admin/carnivals');
 
 };
 
@@ -1217,7 +1329,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
     }
 
     // Get all club registrations for this carnival with their players
-    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('../models/index.mjs');
+    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('/models/index.mjs');
     const clubRegistrations = await CarnivalClub.findAll({
         where: {
             carnivalId: carnival.id,
@@ -1300,7 +1412,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
         }
     });
 
-    res.render('admin/carnival-players', {
+    return res.render('admin/carnival-players', {
         title: `All Players - ${carnival.title} (Admin View)`,
         carnival,
         allPlayers,
@@ -1407,7 +1519,7 @@ const getAuditLogsHandler = async (req, res) => {
     // Format audit logs for display
     const formattedLogs = auditLogs.map(log => AuditService.formatAuditLog(log));
 
-    res.render('admin/audit-logs', {
+    return res.render('admin/audit-logs', {
         title: 'Audit Logs - Admin Dashboard',
         auditLogs: formattedLogs,
         filters,
@@ -1430,7 +1542,7 @@ const getAuditStatisticsHandler = async (req, res) => {
         endDate: new Date()
     });
 
-    res.json({
+    return res.json({
         success: true,
         stats
     });
@@ -1523,6 +1635,273 @@ const exportAuditLogsHandler = async (req, res) => {
 
 };
 
+/**
+ * Get Sponsor Management page
+ */
+const getSponsorManagementHandler = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const whereConditions = {};
+    const filters = {
+        search: req.query.search || '',
+        state: req.query.state || '',
+        status: req.query.status || '',
+        businessType: req.query.businessType || ''
+    };
+
+    if (filters.search) {
+        whereConditions[Op.or] = [
+            { sponsorName: { [Op.like]: `%${filters.search}%` } },
+            { businessType: { [Op.like]: `%${filters.search}%` } },
+            { location: { [Op.like]: `%${filters.search}%` } }
+        ];
+    }
+
+    if (filters.state) {
+        whereConditions.state = filters.state;
+    }
+
+    if (filters.businessType) {
+        whereConditions.businessType = { [Op.like]: `%${filters.businessType}%` };
+    }
+
+    if (filters.status === 'active') {
+        whereConditions.isActive = true;
+    } else if (filters.status === 'inactive') {
+        whereConditions.isActive = false;
+    }
+
+    const { count, rows: sponsors } = await Sponsor.findAndCountAll({
+        where: whereConditions,
+        include: [
+            {
+                model: Club,
+                as: 'clubs',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'clubName', 'state'],
+                through: { attributes: [] }
+            }
+        ],
+        order: [['sponsorName', 'ASC']],
+        limit,
+        offset
+    });
+
+    // Add club count to each sponsor
+    const sponsorsWithStats = sponsors.map(sponsor => {
+        const sponsorData = sponsor.toJSON();
+        sponsorData.clubCount = sponsorData.clubs ? sponsorData.clubs.length : 0;
+        return sponsorData;
+    });
+
+    const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        hasNext: page < Math.ceil(count / limit),
+        hasPrev: page > 1
+    };
+
+    return res.render('admin/sponsors', {
+        title: 'Sponsor Management - Admin Dashboard',
+        sponsors: sponsorsWithStats,
+        filters,
+        pagination,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Show Edit Sponsor form
+ */
+const showEditSponsorHandler = async (req, res) => {
+    const sponsorId = req.params.id;
+    
+    const sponsor = await Sponsor.findByPk(sponsorId, {
+        include: [
+            {
+                model: Club,
+                as: 'clubs',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'clubName', 'state'],
+                through: { attributes: [] }
+            }
+        ]
+    });
+
+    if (!sponsor) {
+        req.flash('error_msg', 'Sponsor not found');
+        return res.redirect('/admin/sponsors');
+    }
+
+    // Get all active clubs for association options
+    const allClubs = await Club.findAll({
+        where: { isActive: true },
+        order: [['clubName', 'ASC']],
+        attributes: ['id', 'clubName', 'state']
+    });
+
+    return res.render('admin/edit-sponsor', {
+        title: `Edit ${sponsor.sponsorName} - Admin Dashboard`,
+        sponsor,
+        allClubs,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Delete Sponsor (deactivate)
+ */
+const deleteSponsorHandler = async (req, res) => {
+    const sponsorId = req.params.id;
+    
+    const sponsor = await Sponsor.findByPk(sponsorId, {
+        include: [
+            {
+                model: Club,
+                as: 'clubs',
+                where: { isActive: true },
+                required: false,
+                attributes: ['id', 'clubName']
+            }
+        ]
+    });
+
+    if (!sponsor) {
+        return res.json({ success: false, message: 'Sponsor not found' });
+    }
+
+    // Check if sponsor is already inactive
+    if (!sponsor.isActive) {
+        return res.json({ 
+            success: false, 
+            message: 'Sponsor is already deactivated' 
+        });
+    }
+
+    // Check if sponsor has active club associations
+    const activeClubCount = sponsor.clubs ? sponsor.clubs.length : 0;
+    let warningMessage = '';
+    if (activeClubCount > 0) {
+        warningMessage = ` Note: This sponsor is currently associated with ${activeClubCount} club(s). These relationships will be maintained but the sponsor will be hidden from public listings.`;
+    }
+
+    // Deactivate the sponsor (soft delete)
+    await sponsor.update({
+        isActive: false,
+        isPubliclyVisible: false,
+        updatedAt: new Date()
+    });
+
+    // Log sponsor deactivation
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.SPONSOR_DEACTIVATE,
+        req,
+        AuditService.ENTITIES.SPONSOR,
+        sponsorId,
+        {
+            oldValues: { 
+                isActive: true, 
+                isPubliclyVisible: sponsor.isPubliclyVisible 
+            },
+            newValues: { 
+                isActive: false, 
+                isPubliclyVisible: false 
+            },
+            targetSponsorId: sponsorId,
+            metadata: {
+                adminAction: 'Sponsor deactivation via admin interface',
+                targetSponsorName: sponsor.sponsorName,
+                activeClubAssociations: activeClubCount
+            }
+        }
+    );
+
+    console.log(`✅ Sponsor ${sponsor.sponsorName} has been deactivated by admin ${req.user.email}`);
+
+    return res.json({ 
+        success: true, 
+        message: `Sponsor "${sponsor.sponsorName}" has been deactivated successfully.${warningMessage}`,
+        action: 'deactivated'
+    });
+};
+
+/**
+ * Trigger MySideline sync manually (admin only)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const syncMySidelineHandler = async (req, res) => {
+    try {
+        // Import MySideline service dynamically
+        const { default: mySidelineService } = await import('/services/mySidelineIntegrationService.mjs');
+        
+        console.log(`🔄 Admin ${req.user.email} initiated manual MySideline sync`);
+        
+        // Trigger the sync
+        const result = await mySidelineService.syncMySidelineEvents();
+        
+        // Log the admin action - using correct action constant
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.ADMIN_SYSTEM_SYNC,
+            req,
+            AuditService.ENTITIES.SYSTEM,
+            null,
+            {
+                metadata: {
+                    adminAction: 'Manual MySideline sync triggered',
+                    syncResult: result ? {
+                        success: result.success,
+                        eventsProcessed: result.eventsProcessed || 0,
+                        eventsCreated: result.eventsCreated || 0,
+                        eventsUpdated: result.eventsUpdated || 0
+                    } : { success: false, error: 'No result returned' }
+                }
+            }
+        );
+        
+        if (result && result.success) {
+            const message = `MySideline sync completed successfully! ` +
+                `Processed ${result.eventsProcessed || 0} events ` +
+                `(${result.eventsCreated || 0} new, ${result.eventsUpdated || 0} updated)`;
+            
+            req.flash('success_msg', message);
+            console.log(`✅ Manual MySideline sync completed: ${result.eventsProcessed || 0} events processed`);
+        } else {
+            const errorMessage = result?.error || 'Sync completed but no events were processed';
+            req.flash('warning_msg', `MySideline sync completed with issues: ${errorMessage}`);
+            console.log(`⚠️ MySideline sync completed with issues: ${errorMessage}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Manual MySideline sync failed:', error);
+        
+        // Log the failure - using correct action constant
+        await AuditService.logAdminAction(
+            AuditService.ACTIONS.ADMIN_SYSTEM_SYNC,
+            req,
+            AuditService.ENTITIES.SYSTEM,
+            null,
+            {
+                result: 'FAILURE',
+                errorMessage: error.message,
+                metadata: {
+                    adminAction: 'Manual MySideline sync triggered',
+                    error: error.message
+                }
+            }
+        );
+        
+        req.flash('error_msg', `MySideline sync failed: ${error.message}`);
+    }
+    
+    return res.redirect('/admin/dashboard');
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
     getAdminDashboardHandler,
@@ -1534,6 +1913,7 @@ const rawControllers = {
     getClubManagementHandler,
     showEditClubHandler,
     updateClubHandler,
+    deactivateClubHandler,
     getCarnivalManagementHandler,
     showEditCarnivalHandler,
     updateCarnivalHandler,
@@ -1545,9 +1925,13 @@ const rawControllers = {
     showClaimCarnivalFormHandler,
     adminClaimCarnivalHandler,
     showCarnivalPlayersHandler,
+    getSponsorManagementHandler,
+    showEditSponsorHandler,
+    deleteSponsorHandler,
     getAuditLogsHandler,
     getAuditStatisticsHandler,
-    exportAuditLogsHandler
+    exportAuditLogsHandler,
+    syncMySidelineHandler
 };
 
 // Export wrapped versions using the wrapControllers utility
@@ -1561,6 +1945,7 @@ export const {
     getClubManagementHandler: getClubManagement,
     showEditClubHandler: showEditClub,
     updateClubHandler: updateClub,
+    deactivateClubHandler: deactivateClub,
     getCarnivalManagementHandler: getCarnivalManagement,
     showEditCarnivalHandler: showEditCarnival,
     updateCarnivalHandler: updateCarnival,
@@ -1572,7 +1957,11 @@ export const {
     showClaimCarnivalFormHandler: showClaimCarnivalForm,
     adminClaimCarnivalHandler: adminClaimCarnival,
     showCarnivalPlayersHandler: showCarnivalPlayers,
+    getSponsorManagementHandler: getSponsorManagement,
+    showEditSponsorHandler: showEditSponsor,
+    deleteSponsorHandler: deleteSponsor,
     getAuditLogsHandler: getAuditLogs,
     getAuditStatisticsHandler: getAuditStatistics,
-    exportAuditLogsHandler: exportAuditLogs
+    exportAuditLogsHandler: exportAuditLogs,
+    syncMySidelineHandler: syncMySideline
 } = wrapControllers(rawControllers);

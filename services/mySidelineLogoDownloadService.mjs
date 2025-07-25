@@ -32,8 +32,9 @@ class MySidelineLogoDownloadService {
      */
     async downloadLogo(logoUrl, entityType, entityId, imageType = ImageNamingService.IMAGE_TYPES.LOGO) {
         try {
-            // Validate input parameters
-            if (!logoUrl || typeof logoUrl !== 'string') {
+            // Validate input parameters, and ignore default NRL Logo.
+            if (!logoUrl 
+                || typeof logoUrl !== 'string') {
                 return {
                     success: false,
                     error: 'Invalid logo URL provided',
@@ -118,7 +119,7 @@ class MySidelineLogoDownloadService {
                 fileSize: downloadResult.data.length,
                 contentType: downloadResult.contentType,
                 metadata: namingResult.metadata,
-                structuredPath: namingResult.fullPath // Same as upload middleware
+                structuredPath: namingResult.fullPath
             };
 
         } catch (error) {
@@ -312,35 +313,135 @@ class MySidelineLogoDownloadService {
      * @returns {Promise<Array>} Array of download results
      */
     async downloadLogos(logoRequests) {
+        // Input validation following security-first principles
+        if (!Array.isArray(logoRequests)) {
+            console.error('❌ Invalid input: logoRequests must be an array');
+            return [];
+        }
+
+        if (logoRequests.length === 0) {
+            console.log('📥 No logo download requests provided');
+            return [];
+        }
+
         const results = [];
         
-        console.log(`📥 Starting bulk logo download for ${logoRequests.length} logos...`);
+        console.log(`📥 Starting bulk logo download for ${logoRequests.length} logo${logoRequests.length === 1 ? '' : 's'}...`);
         
         for (let i = 0; i < logoRequests.length; i++) {
             const request = logoRequests[i];
-            console.log(`📥 Downloading logo ${i + 1}/${logoRequests.length}...`);
             
-            const result = await this.downloadLogo(
-                request.logoUrl,
-                request.entityType,
-                request.entityId,
-                request.imageType
-            );
+            try {
+                // Validate individual request structure
+                if (!request || typeof request !== 'object') {
+                    console.error(`❌ Invalid request ${i + 1}: Request must be an object`);
+                    results.push({
+                        success: false,
+                        error: 'Invalid request object',
+                        requestIndex: i,
+                        originalRequest: request
+                    });
+                    continue;
+                }
+
+                const { logoUrl, entityType, entityId, imageType } = request;
+
+                // Validate required parameters with detailed error messages
+                if (!logoUrl) {
+                    console.error(`❌ Request ${i + 1}: Missing logoUrl`);
+                    results.push({
+                        success: false,
+                        error: 'Missing logoUrl parameter',
+                        requestIndex: i,
+                        originalRequest: request
+                    });
+                    continue;
+                }
+
+                if (!entityType) {
+                    console.error(`❌ Request ${i + 1}: Missing entityType`);
+                    results.push({
+                        success: false,
+                        error: 'Missing entityType parameter',
+                        requestIndex: i,
+                        originalRequest: request
+                    });
+                    continue;
+                }
+
+                if (!entityId) {
+                    console.error(`❌ Request ${i + 1}: Missing entityId`);
+                    results.push({
+                        success: false,
+                        error: 'Missing entityId parameter',
+                        requestIndex: i,
+                        originalRequest: request
+                    });
+                    continue;
+                }
+
+                console.log(`📥 Downloading logo ${i + 1}/${logoRequests.length} for ${entityType} ${entityId}...`);
+                console.log(`🔗 URL: ${logoUrl}`);
+                
+                const result = await this.downloadLogo(
+                    logoUrl,
+                    entityType,
+                    entityId,
+                    imageType
+                );
+                
+                // Add request metadata to result for better tracing
+                results.push({
+                    ...result,
+                    requestIndex: i,
+                    originalRequest: request,
+                    entityType,
+                    entityId
+                });
+
+                // Log individual result
+                if (result.success) {
+                    console.log(`✅ Logo ${i + 1} downloaded successfully: ${result.publicUrl}`);
+                } else {
+                    console.error(`❌ Logo ${i + 1} download failed: ${result.error}`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ Unexpected error processing logo request ${i + 1}:`, error.message);
+                results.push({
+                    success: false,
+                    error: `Unexpected error: ${error.message}`,
+                    requestIndex: i,
+                    originalRequest: request
+                });
+            }
             
-            results.push({
-                ...result,
-                requestIndex: i,
-                originalRequest: request
-            });
-            
-            // Small delay between downloads to be respectful
+            // Small delay between downloads to be respectful to remote servers
             if (i < logoRequests.length - 1) {
                 await this.delay(500);
             }
         }
         
+        // Provide comprehensive summary following project logging standards
         const successCount = results.filter(r => r.success).length;
-        console.log(`✅ Bulk logo download completed: ${successCount}/${logoRequests.length} successful`);
+        const failureCount = results.length - successCount;
+        
+        if (successCount === results.length) {
+            console.log(`✅ Bulk logo download completed successfully: ${successCount}/${logoRequests.length} logos downloaded`);
+        } else if (successCount > 0) {
+            console.warn(`⚠️ Bulk logo download completed with issues: ${successCount}/${logoRequests.length} successful, ${failureCount} failed`);
+        } else {
+            console.error(`❌ Bulk logo download failed: 0/${logoRequests.length} successful`);
+        }
+        
+        // Log failure summary for debugging
+        if (failureCount > 0) {
+            const failureReasons = results
+                .filter(r => !r.success)
+                .map(r => `${r.entityType || 'unknown'} ${r.entityId || 'unknown'}: ${r.error}`)
+                .join('; ');
+            console.error(`📋 Failure summary: ${failureReasons}`);
+        }
         
         return results;
     }

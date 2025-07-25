@@ -16,7 +16,9 @@
                         </div>
                     <% } %>
 
-                    <form method="POST" action="/carnivals/<%= carnival.id %>/edit" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <form method="POST" action="/carnivals/<%= carnival.id %>/edit" 
+                          data-mysideline-event-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://www.mysideline.com/register/' %>"
+                          enctype="multipart/form-data" class="needs-validation" novalidate>
                         <!-- Basic Information -->
                         <div class="mb-4">
                             <h5 class="text-primary mb-3">Basic Information</h5>
@@ -38,7 +40,7 @@
                                     <div class="invalid-feedback">Please select a date.</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <div id="endDateContainer" style="<%= carnival.endDate ? '' : 'display: none;' %>">
+                                    <div id="endDateContainer" data-has-end-date="<%= carnival.endDate ? 'true' : 'false' %>">
                                         <label for="endDate" class="form-label">End Date</label>
                                         <input type="date" class="form-control" id="endDate" name="endDate" 
                                                value="<%= carnival.endDate ? carnival.endDate.toISOString().split('T')[0] : '' %>">
@@ -77,11 +79,91 @@
                                 <div class="invalid-feedback">Please provide the location address.</div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="scheduleDetails" class="form-label">Schedule Details *</label>
-                                <textarea class="form-control" id="scheduleDetails" name="scheduleDetails" rows="4" 
-                                          placeholder="Include game times, age groups, format details, etc." required><%= carnival.scheduleDetails %></textarea>
-                                <div class="invalid-feedback">Please provide schedule details.</div>
+                            <!-- MySideline-Compatible Address Fields -->
+                            <div class="mb-4">
+                                <h6 class="text-secondary mb-3">
+                                    <i class="bi bi-geo-alt"></i> Detailed Location Information
+                                    <small class="text-muted">(Optional - for better mapping and MySideline compatibility)</small>
+                                </h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="venueName" class="form-label">Venue Name</label>
+                                        <input type="text" class="form-control" id="venueName" name="venueName" 
+                                               value="<%= carnival.venueName || '' %>"
+                                               placeholder="e.g., ANZ Stadium, Parramatta Sports Complex">
+                                        <div class="form-text">Name of the venue or facility hosting the carnival</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationAddressLine1" class="form-label">Address Line 1</label>
+                                        <input type="text" class="form-control" id="locationAddressLine1" name="locationAddressLine1" 
+                                               value="<%= carnival.locationAddressLine1 || '' %>"
+                                               placeholder="e.g., 123 Main Street">
+                                        <div class="form-text">Street address or venue address</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationAddressLine2" class="form-label">Address Line 2</label>
+                                        <input type="text" class="form-control" id="locationAddressLine2" name="locationAddressLine2" 
+                                               value="<%= carnival.locationAddressLine2 || '' %>"
+                                               placeholder="e.g., Suite 456, Building B">
+                                        <div class="form-text">Additional address information (optional)</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationSuburb" class="form-label">Suburb/City</label>
+                                        <input type="text" class="form-control" id="locationSuburb" name="locationSuburb" 
+                                               value="<%= carnival.locationSuburb || '' %>"
+                                               placeholder="e.g., Parramatta">
+                                        <div class="form-text">The suburb or city where the event is held</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationPostcode" class="form-label">Postcode</label>
+                                        <input type="text" class="form-control" id="locationPostcode" name="locationPostcode" 
+                                               value="<%= carnival.locationPostcode || '' %>"
+                                               placeholder="e.g., 2150" maxlength="10">
+                                        <div class="form-text">Australian postcode</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationLatitude" class="form-label">Latitude</label>
+                                        <input type="number" class="form-control" id="locationLatitude" name="locationLatitude" 
+                                               value="<%= carnival.locationLatitude || '' %>"
+                                               step="0.000001" min="-90" max="90"
+                                               placeholder="e.g., -33.8568">
+                                        <div class="form-text">GPS latitude coordinate (decimal degrees)</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationLongitude" class="form-label">Longitude</label>
+                                        <input type="number" class="form-control" id="locationLongitude" name="locationLongitude" 
+                                               value="<%= carnival.locationLongitude || '' %>"
+                                               step="0.000001" min="-180" max="180"
+                                               placeholder="e.g., 151.2153">
+                                        <div class="form-text">GPS longitude coordinate (decimal degrees)</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationCountry" class="form-label">Country</label>
+                                        <input type="text" class="form-control" id="locationCountry" name="locationCountry" 
+                                               value="<%= carnival.locationCountry || 'Australia' %>"
+                                               placeholder="Australia">
+                                        <div class="form-text">Country where the event is held</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
+                                            <i class="bi bi-geo"></i> Get GPS from Address
+                                        </button>
+                                        <small class="text-muted ms-2">Auto-fill coordinates from the main address</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -127,6 +209,53 @@
                                 <textarea class="form-control" id="callForVolunteers" name="callForVolunteers" rows="2" 
                                           placeholder="Volunteer opportunities, requirements, contact details"><%= carnival.callForVolunteers || '' %></textarea>
                             </div>
+                        </div>
+
+                        <!-- MySideline Integration -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="bi bi-link-45deg"></i> MySideline Integration
+                            </h5>
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>MySideline Integration:</strong> Connect your carnival with MySideline for official player registrations.
+                                Enter the MySideline event ID to automatically generate the registration link.
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="mySidelineId" class="form-label">
+                                        <i class="bi bi-hash"></i> MySideline Event ID
+                                    </label>
+                                    <input type="text" class="form-control" id="mySidelineId" name="mySidelineId" 
+                                           value="<%= carnival.mySidelineId || '' %>"
+                                           placeholder="e.g., 12345">
+                                    <div class="form-text">
+                                        The 8+ digit numeric ID from your MySideline event registration page.
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="registrationLink" class="form-label">
+                                        <i class="bi bi-box-arrow-up-right"></i> Registration Link
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="url" class="form-control" id="registrationLink" name="registrationLink" 
+                                               value="<%= carnival.registrationLink || '' %>"
+                                               placeholder="https://mysideline.com/register">
+                                        <button type="button" class="btn btn-outline-secondary" id="testLinkBtn" 
+                                                style="display: none;" title="Test registration link">
+                                            <i class="bi bi-arrow-up-right-square"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        <span id="linkStatus" class="text-muted">
+                                            Player registration link - will auto-update when MySideline ID is entered
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
                         </div>
 
                         <!-- Registration Management -->
@@ -231,7 +360,7 @@
                                 <% if (carnival.clubLogoURL) { %>
                                     <div class="col-md-4 mb-3">
                                         <div class="card">
-                                            <img src="<%= carnival.clubLogoURL %>" class="card-img-top" alt="Current Carnival Logo" style="height: 150px; object-fit: contain;">
+                                            <img src="<%= carnival.clubLogoURL %>" class="card-img-top carnival-logo-preview" alt="Current Carnival Logo">
                                             <div class="card-body text-center">
                                                 <small class="text-muted">Current Carnival Logo</small>
                                             </div>
@@ -241,7 +370,7 @@
                                 <% if (carnival.promotionalImageURL) { %>
                                     <div class="col-md-4 mb-3">
                                         <div class="card">
-                                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" alt="Current Promotional Image" style="height: 150px; object-fit: cover;">
+                                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top carnival-promo-preview" alt="Current Promotional Image">
                                             <div class="card-body text-center">
                                                 <small class="text-muted">Current Promotional Image</small>
                                             </div>
@@ -275,8 +404,8 @@
                                 <div class="col-md-4 mb-3">
                                     <label for="clubLogo" class="form-label">New Club Logo</label>
                                     <div class="file-upload-area">
-                                        <input type="file" class="form-control" id="clubLogo" name="logo" 
-                                               accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp" style="display: none;">
+                                        <input type="file" class="form-control file-input-hidden" id="clubLogo" name="logo" 
+                                               accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
                                         <i class="bi bi-cloud-upload display-6 text-muted"></i>
                                         <p class="upload-text mt-2">Click or drag to upload new club logo</p>
                                         <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
@@ -285,8 +414,8 @@
                                 <div class="col-md-4 mb-3">
                                     <label for="promotionalImage" class="form-label">New Promotional Image</label>
                                     <div class="file-upload-area">
-                                        <input type="file" class="form-control" id="promotionalImage" name="promotionalImage" 
-                                               accept="image/*" style="display: none;">
+                                        <input type="file" class="form-control file-input-hidden" id="promotionalImage" name="promotionalImage" 
+                                               accept="image/*">
                                         <i class="bi bi-image display-6 text-muted"></i>
                                         <p class="upload-text mt-2">Click or drag to upload new promotional image</p>
                                         <small class="text-muted">Max 5MB, JPG/PNG only</small>
@@ -295,8 +424,8 @@
                                 <div class="col-md-4 mb-3">
                                     <label for="drawFile" class="form-label">New Draw Sheet</label>
                                     <div class="file-upload-area">
-                                        <input type="file" class="form-control" id="drawFile" name="drawFile" 
-                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
+                                        <input type="file" class="form-control file-input-hidden" id="drawFile" name="drawFile" 
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                                         <i class="bi bi-file-earmark-text display-6 text-muted"></i>
                                         <p class="upload-text mt-2">Click or drag to upload new draw sheet</p>
                                         <small class="text-muted">Max 10MB, PDF/DOC/Image files</small>
@@ -337,4 +466,4 @@
     </div>
 </div>
 
-<script src="/js/carnival-edit.js"></script>
+<script type="module" src="/js/carnival-edit.js"></script>

@@ -1,0 +1,43 @@
+## Public JavaScript Test Plan
+- [x] `/public/js/add-club-auto-populate.js`
+- [x] `/public/js/address-utils.js` -- May not be used in the app, but is a utility for address formatting.
+- [x] `/public/js/admin-carnivals.js`
+- [x] `/public/js/admin-claim-carnival.js`
+- [x] `/public/js/admin-clubs.js`
+- [x] `/public/js/admin-edit-club.js`
+- [x] `/public/js/admin-reports.js`
+- [x] `/public/js/admin-stats.js`
+- [x] `/public/js/admin-user-management.js`
+- [x] `/public/js/alternate-names.js`
+- [x] `/public/js/app.js`
+- [x] `/public/js/auth-register.js`
+- [x] `/public/js/auth.js`
+- [x] `/public/js/carnival-add-players.js`
+- [x] `/public/js/carnival-all-players.js`
+- [x] `/public/js/carnival-attendees.js`
+- [x] `/public/js/carnival-club-players.js`
+- [x] `/public/js/carnival-edit-registration.js`
+- [x] `/public/js/carnival-edit.js`
+- [x] `/public/js/carnival-list.js`
+- [x] `/public/js/carnival-management.js` -- may not be used, but is a utility for carnival management.
+- [x] `/public/js/carnival-my-club-players.js`
+- [ ] `/public/js/carnival-new.js`
+- [ ] `/public/js/carnival-players.js`
+- [ ] `/public/js/carnival-show.js`
+- [ ] `/public/js/club-add-sponsor.js`
+- [ ] `/public/js/club-autocomplete.js`
+- [ ] `/public/js/club-claim-ownership.js`
+- [ ] `/public/js/club-create-on-behalf.js`
+- [ ] `/public/js/club-manage.js`
+- [ ] `/public/js/club-options.js`
+- [ ] `/public/js/club-players-form.js`
+- [ ] `/public/js/club-players.js`
+- [ ] `/public/js/club-sponsors.js`
+- [ ] `/public/js/common-utils.js`
+- [ ] `/public/js/contact.js`
+- [ ] `/public/js/dashboard.js`
+- [ ] `/public/js/error.js`
+- [ ] `/public/js/index.js`
+- [ ] `/public/js/registration-form.js`
+- [ ] `/public/js/sponsor-management.js`
+- [ ] `/public/js/theme-init.js`

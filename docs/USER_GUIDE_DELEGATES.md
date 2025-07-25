@@ -58,6 +58,13 @@ For managing event information on this platform:
 3. Update any details as needed
 4. Save your changes
 
+### Claiming MySideline Events
+Events are automatically imported from the MySideline platform. If an event belongs to your club but is not yet assigned to you, you can claim it.
+1. Find the carnival on the main "Carnivals" page.
+2. Click "View Details".
+3. If the event is unclaimed, you will see a "Claim Ownership" button.
+4. Click the button to associate the event with your club and gain management rights.
+
 ### Managing Club Participation
 1. View which clubs are registered for your events
 2. Add or remove clubs from events
@@ -184,6 +191,7 @@ For managing event information on this platform:
 - **Create Event**: Dashboard → "Register Event with NRL" button
 - **Edit Event**: Dashboard → Event → Three dots → "Edit"
 - **View Details**: Click on any carnival card
+- **Claim Event**: Carnival Details → "Claim Ownership"
 - **Manage Clubs**: Carnival Details → "Manage Clubs"
 - **Add Sponsors**: Carnival Details → "Sponsors" tab
 

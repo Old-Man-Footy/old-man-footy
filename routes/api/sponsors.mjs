@@ -1,9 +1,13 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '../../middleware/auth.mjs';
-import * as sponsorController from '../../controllers/sponsor.controller.mjs';
+import { ensureAuthenticated } from '/middleware/auth.mjs';
+import { applyApiSecurity, validateSecureEmail } from '/middleware/security.mjs';
+import * as sponsorController from '/controllers/sponsor.controller.mjs';
 
 const router = express.Router();
+
+// Apply centralized API security to all routes
+router.use(applyApiSecurity);
 
 /**
  * API Routes for Sponsor Operations

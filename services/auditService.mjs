@@ -6,7 +6,8 @@
  * context extraction and standardized action naming.
  */
 
-import AuditLog from '../models/AuditLog.mjs';
+import AuditLog from '/models/AuditLog.mjs';
+import { AUDIT_RESULTS } from '/config/constants.mjs';
 
 /**
  * Audit Service Class
@@ -277,16 +278,29 @@ class AuditService {
 
     const sensitiveFields = [
       'password', 'passwordHash', 'token', 'secret', 'key',
-      'passwordResetToken', 'invitationToken', 'sessionId'
+      'passwordResetToken', 'invitationToken', 'sessionId', 'apiKey'
     ];
+
+    // Handle arrays
+    if (Array.isArray(data)) {
+      return data.map(item => this.sanitizeData(item));
+    }
 
     const sanitized = { ...data };
 
-    for (const field of sensitiveFields) {
-      if (sanitized[field]) {
-        sanitized[field] = '[REDACTED]';
+    // Recursively sanitize all properties
+    Object.keys(sanitized).forEach(key => {
+      const value = sanitized[key];
+      
+      // Check if this field is sensitive
+      if (sensitiveFields.includes(key)) {
+        sanitized[key] = '[REDACTED]';
       }
-    }
+      // Recursively sanitize nested objects and arrays
+      else if (value && typeof value === 'object') {
+        sanitized[key] = this.sanitizeData(value);
+      }
+    });
 
     return sanitized;
   }

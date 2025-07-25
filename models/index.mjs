@@ -5,22 +5,21 @@
  * This file is responsible for importing all models and defining their relationships.
  */
 
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 // Import all models
-import User from './User.mjs';
-import Club from './Club.mjs';
-import ClubAlternateName from './ClubAlternateName.mjs';
-import ClubPlayer from './ClubPlayer.mjs';
-import ClubSponsor from './ClubSponsor.mjs';
-import Carnival from './Carnival.mjs';
-import CarnivalClub from './CarnivalClub.mjs';
-import CarnivalClubPlayer from './CarnivalClubPlayer.mjs';
-import CarnivalSponsor from './CarnivalSponsor.mjs';
-import Sponsor from './Sponsor.mjs';
-import EmailSubscription from './EmailSubscription.mjs';
-import AuditLog from './AuditLog.mjs';
-import SyncLog from './SyncLog.mjs';
+import User from '/models/User.mjs';
+import Club from '/models/Club.mjs';
+import ClubAlternateName from '/models/ClubAlternateName.mjs';
+import ClubPlayer from '/models/ClubPlayer.mjs';
+import Carnival from '/models/Carnival.mjs';
+import CarnivalClub from '/models/CarnivalClub.mjs';
+import CarnivalClubPlayer from '/models/CarnivalClubPlayer.mjs';
+import CarnivalSponsor from '/models/CarnivalSponsor.mjs';
+import Sponsor from '/models/Sponsor.mjs';
+import EmailSubscription from '/models/EmailSubscription.mjs';
+import AuditLog from '/models/AuditLog.mjs';
+import SyncLog from '/models/SyncLog.mjs';
 
 /**
  * Define model associations/relationships
@@ -47,7 +46,7 @@ Club.hasMany(ClubAlternateName, {
 // ClubAlternateName belongs to Club (many-to-one)
 ClubAlternateName.belongsTo(Club, {
   foreignKey: 'clubId',
-  as: 'club'
+  as: 'parentClub'
 });
 
 // Carnival belongs to User (creator) (many-to-one)
@@ -77,19 +76,16 @@ Club.belongsToMany(Carnival, {
   as: 'attendingCarnivals'
 });
 
-// Club and Sponsor many-to-many relationship through ClubSponsor
-Club.belongsToMany(Sponsor, {
-  through: ClubSponsor,
+// Club has many Sponsors (one-to-many)
+Club.hasMany(Sponsor, {
   foreignKey: 'clubId',
-  otherKey: 'sponsorId',
-  as: 'sponsors'
+  as: 'clubSponsors'
 });
 
-Sponsor.belongsToMany(Club, {
-  through: ClubSponsor,
-  foreignKey: 'sponsorId',
-  otherKey: 'clubId',
-  as: 'clubs'
+// Sponsor belongs to Club (many-to-one)
+Sponsor.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'club'
 });
 
 // Carnival and Sponsor many-to-many relationship through CarnivalSponsor
@@ -115,17 +111,7 @@ CarnivalClub.belongsTo(Carnival, {
 
 CarnivalClub.belongsTo(Club, {
   foreignKey: 'clubId',
-  as: 'club'
-});
-
-ClubSponsor.belongsTo(Club, {
-  foreignKey: 'clubId',
-  as: 'club'
-});
-
-ClubSponsor.belongsTo(Sponsor, {
-  foreignKey: 'sponsorId',
-  as: 'sponsor'
+  as: 'participatingClub'
 });
 
 CarnivalSponsor.belongsTo(Carnival, {
@@ -148,16 +134,6 @@ Club.hasMany(CarnivalClub, {
   as: 'carnivalClubs'
 });
 
-Club.hasMany(ClubSponsor, {
-  foreignKey: 'clubId',
-  as: 'clubSponsors'
-});
-
-Sponsor.hasMany(ClubSponsor, {
-  foreignKey: 'sponsorId',
-  as: 'clubSponsors'
-});
-
 Carnival.hasMany(CarnivalSponsor, {
   foreignKey: 'carnivalId',
   as: 'carnivalSponsors'
@@ -177,7 +153,7 @@ Club.hasMany(ClubPlayer, {
 // ClubPlayer belongs to Club (many-to-one)
 ClubPlayer.belongsTo(Club, {
   foreignKey: 'clubId',
-  as: 'club'
+  as: 'playerClub'
 });
 
 // CarnivalClubPlayer associations
@@ -213,6 +189,12 @@ User.hasMany(AuditLog, {
   as: 'auditLogs'
 });
 
+// Register hostClub association for Carnival (hosting club, not attendees)
+Carnival.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'hostClub'
+});
+
 // Export all models and sequelize instance
 export {
   sequelize,
@@ -220,7 +202,6 @@ export {
   Club,
   ClubAlternateName,
   ClubPlayer,
-  ClubSponsor,
   Carnival,
   CarnivalClub,
   CarnivalClubPlayer,

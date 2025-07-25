@@ -4,7 +4,7 @@
  * Theme Management System
  * Handles dark/light mode toggle with localStorage persistence
  */
-window.themeManager = {
+const themeManager = {
     // Theme constants
     THEMES: {
         LIGHT: 'light',
@@ -201,7 +201,9 @@ window.themeManager = {
     }
 };
 
-window.oldmanfooty = {
+window.themeManager = themeManager;
+
+const oldmanfooty = {
     // Confirmation dialogs
     confirmDelete: function(message) {
         return confirm(message || 'Are you sure you want to delete this item?');
@@ -468,8 +470,7 @@ window.oldmanfooty = {
     }
 };
 
-// Auto-initialize
-oldmanfooty.init();
+window.oldmanfooty = oldmanfooty;
 
 /**
  * Initialize image carousel functionality
@@ -719,3 +720,17 @@ function showCompletionMessage() {
         checklist.appendChild(message);
     }
 }
+
+export {
+    themeManager,
+    oldmanfooty,
+    dismissChecklist,
+    showCompletionMessage,
+    handleCarouselResize,
+    initializeImageCarousel
+};
+
+// Initialize all app features when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  oldmanfooty.init();
+});

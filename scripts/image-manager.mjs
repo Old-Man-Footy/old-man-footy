@@ -16,15 +16,18 @@
 
 import path from 'path';
 import { promises as fs } from 'fs';
-import ImageNamingService from '../services/imageNamingService.mjs';
+import ImageNamingService from '/services/imageNamingService.mjs';
 import ImageMigrationScript from './migrate-image-names.mjs';
-import { Club, Carnival, User } from '../models/index.mjs';
+import { Club, Carnival, User } from '/models/index.mjs';
+import { UPLOAD_DIRECTORIES_ARRAY, UPLOAD_DIRECTORIES } from '/config/constants.mjs';
 
 /**
  * Image Management CLI for structured image handling
  */
 class ImageManagerCLI {
     constructor() {
+        this.uploadDirs = UPLOAD_DIRECTORIES_ARRAY;
+
         this.commands = {
             migrate: this.migrate.bind(this),
             cleanup: this.cleanup.bind(this),
@@ -178,37 +181,30 @@ class ImageManagerCLI {
             console.log(`   Active Carnivals: ${carnivalCount}`);
             console.log(`   Active Users: ${userCount}`);
 
-            // Count files by type
-            const uploadDirs = [
-                'public/uploads/logos/club',
-                'public/uploads/logos/carnival',
-                'public/uploads/images/club/promo',
-                'public/uploads/images/club/gallery',
-                'public/uploads/images/carnival/promo',
-                'public/uploads/images/carnival/gallery',
-                'public/uploads/documents/club',
-                'public/uploads/documents/carnival'
-            ];
-
-            let totalFiles = 0;
+            // Count files by type using constants
             const fileStats = {};
+            let totalFiles = 0;
 
-            for (const dir of uploadDirs) {
+            for (const dir of this.uploadDirs) {
                 try {
                     const files = await fs.readdir(dir);
-                    const structuredFiles = files.filter(file => {
-                        return ImageNamingService.parseImageName(file) !== null;
-                    });
-                    
-                    fileStats[dir] = {
-                        total: files.length,
-                        structured: structuredFiles.length,
-                        legacy: files.length - structuredFiles.length
-                    };
-                    
                     totalFiles += files.length;
+
+                    const dirName = dir.split('/').pop();
+                    fileStats[dirName] = { total: files.length, structured: 0, legacy: 0 };
+
+                    files.forEach(file => {
+                        const parsed = ImageNamingService.parseImageName(file);
+                        if (parsed) {
+                            fileStats[dirName].structured++;
+                        } else {
+                            fileStats[dirName].legacy++;
+                        }
+                    });
                 } catch (error) {
-                    fileStats[dir] = { total: 0, structured: 0, legacy: 0 };
+                    // Directory doesn't exist yet
+                    const dirName = dir.split('/').pop();
+                    fileStats[dirName] = { total: 0, structured: 0, legacy: 0 };
                 }
             }
 
@@ -229,17 +225,10 @@ class ImageManagerCLI {
             console.log(`\n📋 Migration Status:`);
             console.log(`   Structured Files: ${totalStructured}`);
             console.log(`   Legacy Files: ${totalLegacy}`);
-            
-            if (totalLegacy > 0) {
-                const migrationPercent = ((totalStructured / (totalStructured + totalLegacy)) * 100).toFixed(1);
-                console.log(`   Migration Progress: ${migrationPercent}%`);
-                console.log(`\n💡 Run 'node scripts/image-manager.js migrate --execute' to complete migration`);
-            } else {
-                console.log(`   Migration: Complete ✅`);
-            }
+            console.log(`   Migration Progress: ${totalFiles > 0 ? Math.round((totalStructured / totalFiles) * 100) : 0}%`);
 
         } catch (error) {
-            console.error('❌ Error generating statistics:', error.message);
+            console.error('❌ Error gathering statistics:', error.message);
         }
     }
 
@@ -250,9 +239,9 @@ class ImageManagerCLI {
      */
     async findInvalidImageNames(dryRun = true) {
         const uploadDirs = [
-            'public/uploads/logos',
-            'public/uploads/images',
-            'public/uploads/documents'
+            UPLOAD_DIRECTORIES.LOGOS,
+            UPLOAD_DIRECTORIES.IMAGES,
+            UPLOAD_DIRECTORIES.DOCUMENTS
         ];
 
         const invalidFiles = [];

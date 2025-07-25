@@ -8,25 +8,11 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import ImageNamingService from '../services/imageNamingService.mjs';
+import ImageNamingService from '/services/imageNamingService.mjs';
+import { UPLOAD_DIRECTORIES_ARRAY } from '/config/constants.mjs';
 
 // Ensure upload directories exist (with error handling for read-only filesystems)
-const uploadDirs = [
-    'public/uploads/logos/club',
-    'public/uploads/logos/carnival',
-    'public/uploads/logos/sponsor',
-    'public/uploads/logos/system',
-    'public/uploads/images/club/promo',
-    'public/uploads/images/club/gallery',
-    'public/uploads/images/carnival/promo',
-    'public/uploads/images/carnival/gallery',
-    'public/uploads/images/sponsor/promo',
-    'public/uploads/images/sponsor/gallery',
-    'public/uploads/documents/club',
-    'public/uploads/documents/carnival',
-    'public/uploads/documents/sponsor',
-    'public/uploads/temp'
-];
+const uploadDirs = UPLOAD_DIRECTORIES_ARRAY;
 
 uploadDirs.forEach(dir => {
     try {
@@ -424,3 +410,5 @@ export const handleUploadError = (error, req, res, next) => {
     }
     next();
 };
+
+export { extractUploadContext, fileFilter };

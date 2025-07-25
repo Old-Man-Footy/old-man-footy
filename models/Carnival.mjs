@@ -6,7 +6,7 @@
  */
 
 import { DataTypes, Model, Op } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 
 /**
  * Carnival model class extending Sequelize Model
@@ -234,21 +234,18 @@ class Carnival extends Model {
 
   /**
    * Obfuscate phone number for display
-   * @param {string} phone - Phone number to obfuscate
+   * @param {string} phone - Phone number to obfuscate (can include letters or digits)
    * @returns {string} Obfuscated phone or placeholder
    */
   obfuscatePhone(phone) {
     if (!phone) return 'Contact details not available';
-    
-    // Remove all non-digit characters for processing
-    const digitsOnly = phone.replace(/\D/g, '');
-    
-    if (digitsOnly.length < 6) {
+    // Keep only alphanumeric characters for obfuscation
+    const alnum = phone.replace(/[^a-zA-Z0-9]/g, '');
+    if (alnum.length < 6) {
       return 'Contact details not available';
     }
-    
-    // Show first 2 and last 2 digits
-    const visible = `${digitsOnly.substring(0, 2)}***${digitsOnly.slice(-2)}`;
+    // Show first 2 and last 2 alphanumeric characters
+    const visible = `${alnum.substring(0, 2)}***${alnum.slice(-2)}`;
     return visible;
   }
 
@@ -359,9 +356,9 @@ class Carnival extends Model {
         throw new Error('This carnival already has an owner');
       }
 
-      // All checks passed - update the carnival with user's contact details
+      // All checks passed - update the carnival with user's clubId and contact details (do NOT set createdByUserId)
       const updateData = {
-        createdByUserId: userId,
+        clubId: user.clubId, // Set clubId on claim
         claimedAt: new Date(),
         updatedAt: new Date(),
         // Auto-populate contact details with the claiming user's information
@@ -725,6 +722,11 @@ Carnival.init({
     allowNull: true,
     comment: 'Original MySideline title for matching purposes - never changes once set'
   },
+  mySidelineId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Unique MySideline event identifier (numeric) for reliable duplicate detection'
+  },
   mySidelineAddress: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -751,32 +753,65 @@ Carnival.init({
       this.setDataValue('locationAddress', value ? value.trim() : value);
     }
   },
-  locationAddressPart1: {
-    type: DataTypes.STRING,
+  // MySideline-compatible address fields
+  locationLatitude: {
+    type: DataTypes.DECIMAL(10, 8),
     allowNull: true,
+    comment: 'Latitude coordinate for the event location'
+  },
+  locationLongitude: {
+    type: DataTypes.DECIMAL(11, 8),
+    allowNull: true,
+    comment: 'Longitude coordinate for the event location'
+  },
+  locationSuburb: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    comment: 'Suburb/city name for the event location',
     set(value) {
-      this.setDataValue('locationAddressPart1', value ? value.trim() : value);
+      this.setDataValue('locationSuburb', value ? value.trim() : value);
     }
   },
-  locationAddressPart2: {
-    type: DataTypes.STRING,
+  locationPostcode: {
+    type: DataTypes.STRING(10),
     allowNull: true,
+    comment: 'Postcode for the event location',
     set(value) {
-      this.setDataValue('locationAddressPart2', value ? value.trim() : value);
+      this.setDataValue('locationPostcode', value ? value.trim() : value);
     }
   },
-  locationAddressPart3: {
-    type: DataTypes.STRING,
+  locationCountry: {
+    type: DataTypes.STRING(50),
     allowNull: true,
+    defaultValue: 'Australia',
+    comment: 'Country for the event location',
     set(value) {
-      this.setDataValue('locationAddressPart3', value ? value.trim() : value);
+      this.setDataValue('locationCountry', value ? value.trim() : value);
     }
   },
-  locationAddressPart4: {
-    type: DataTypes.STRING,
+  // MySideline structured address line fields
+  locationAddressLine1: {
+    type: DataTypes.STRING(200),
     allowNull: true,
+    comment: 'First line of structured address from MySideline (street address, venue name)',
     set(value) {
-      this.setDataValue('locationAddressPart4', value ? value.trim() : value);
+      this.setDataValue('locationAddressLine1', value ? value.trim() : value);
+    }
+  },
+  locationAddressLine2: {
+    type: DataTypes.STRING(200),
+    allowNull: true,
+    comment: 'Second line of structured address from MySideline (additional address info)',
+    set(value) {
+      this.setDataValue('locationAddressLine2', value ? value.trim() : value);
+    }
+  },
+  venueName: {
+    type: DataTypes.STRING(200),
+    allowNull: true,
+    comment: 'Name of the venue/facility hosting the carnival (from MySideline venue data)',
+    set(value) {
+      this.setDataValue('venueName', value ? value.trim() : value);
     }
   },
   organiserContactName: {
@@ -896,6 +931,15 @@ Carnival.init({
       model: 'Users',
       key: 'id'
     }
+  },
+  clubId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Clubs',
+      key: 'id'
+    },
+    comment: 'The club that is hosting or claimed this carnival'
   },
   isManuallyEntered: {
     type: DataTypes.BOOLEAN,

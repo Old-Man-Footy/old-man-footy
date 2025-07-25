@@ -1,147 +1,162 @@
 /**
- * Alternate Names Management
- * Handles adding, editing, and deleting alternate names for clubs
+ * Alternate Names Management (Refactored)
+ * Handles adding, editing, and deleting alternate names for clubs using a modular,
+ * event-driven approach.
  */
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAlternateNamesManagement();
-});
 
 /**
- * Initialize all alternate names management functionality
+ * A reusable wrapper for the Fetch API to provide consistent error handling.
+ * @param {string} url - The request URL.
+ * @param {object} options - The fetch options object.
+ * @returns {Promise<object>} A promise that resolves with the JSON response.
+ * @throws {Error} Throws an error for network issues or non-OK HTTP responses.
  */
-function initializeAlternateNamesManagement() {
-    setupAddAlternateNameForm();
-    setupEditAlternateNameButtons();
-    setupEditAlternateNameForm();
-    setupDeleteAlternateNameButtons();
+async function apiRequest(url, options) {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+    }
+    return response.json();
 }
 
 /**
- * Setup the add new alternate name form submission
+ * Manages all UI interactions for alternate club names.
  */
-function setupAddAlternateNameForm() {
-    const addForm = document.getElementById('addAlternateNameForm');
-    if (!addForm) return;
-    
-    addForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(addForm);
-        
-        try {
-            const response = await fetch('/clubs/manage/alternate-names', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    alternateName: formData.get('alternateName')
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                location.reload(); // Refresh the page to show the new alternate name
-            } else {
-                alert(result.message || 'Error adding alternate name');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error adding alternate name');
+export class AlternateNamesManager {
+    /**
+     * @param {HTMLElement} container - The main containing element for the UI.
+     * @param {object} provider - An object to handle interactions like modals and alerts.
+     * @param {function} provider.confirm - An async function that returns a boolean.
+     * @param {function} provider.alert - An async function to show a message.
+     * @param {function} provider.showEditModal - A function to display the edit modal.
+     */
+    constructor(container, provider) {
+        if (!container) throw new Error('A container element must be provided.');
+        if (!provider) throw new Error('A provider for UI interactions is required.');
+
+        this.container = container;
+        this.provider = provider;
+        this.addForm = this.container.querySelector('#addAlternateNameForm');
+        this.editForm = this.container.querySelector('#editAlternateNameForm');
+    }
+
+    /**
+     * Initializes the manager by attaching event listeners.
+     */
+    init() {
+        this.container.addEventListener('click', this.handleContainerClick.bind(this));
+
+        if (this.addForm) {
+            this.addForm.addEventListener('submit', this.handleAddSubmit.bind(this));
         }
-    });
-}
 
-/**
- * Setup edit buttons for alternate names
- */
-function setupEditAlternateNameButtons() {
-    document.querySelectorAll('.edit-alternate-name').forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const name = this.dataset.name;
-            
-            document.getElementById('editAlternateNameId').value = id;
-            document.getElementById('editAlternateName').value = name;
-            
-            const modal = new bootstrap.Modal(document.getElementById('editAlternateNameModal'));
-            modal.show();
-        });
-    });
-}
+        if (this.editForm) {
+            this.editForm.addEventListener('submit', this.handleEditSubmit.bind(this));
+        }
+    }
 
-/**
- * Setup the edit alternate name form submission
- */
-function setupEditAlternateNameForm() {
-    const editForm = document.getElementById('editAlternateNameForm');
-    if (!editForm) return;
-    
-    editForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const id = document.getElementById('editAlternateNameId').value;
-        const alternateName = document.getElementById('editAlternateName').value;
-        
+    /**
+     * Handles all clicks within the container using event delegation.
+     * @param {Event} e - The click event.
+     */
+    async handleContainerClick(e) {
+        const button = e.target.closest('button[data-action]');
+        if (!button || button.disabled) return;
+
+        const { action } = button.dataset;
+        button.disabled = true;
+
         try {
-            const response = await fetch(`/clubs/manage/alternate-names/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+            if (action === 'edit-alternate-name') {
+                this.handleEditClick(button);
+            } else if (action === 'delete-alternate-name') {
+                await this.handleDeleteClick(button);
+            }
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    /**
+     * Handles the submission of the "add new name" form.
+     * @param {Event} e - The submit event.
+     */
+    async handleAddSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(this.addForm);
+        const alternateName = formData.get('alternateName');
+
+        try {
+            const result = await apiRequest('/clubs/manage/alternate-names', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alternateName })
             });
-            
-            const result = await response.json();
-            
             if (result.success) {
-                location.reload(); // Refresh the page to show the updated name
+                location.reload();
             } else {
-                alert(result.message || 'Error updating alternate name');
+                await this.provider.alert(result.message || 'An unknown error occurred.');
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert('Error updating alternate name');
+            await this.provider.alert(`Error adding alternate name: ${error.message}`);
         }
-    });
-}
+    }
 
-/**
- * Setup delete buttons for alternate names
- */
-function setupDeleteAlternateNameButtons() {
-    document.querySelectorAll('.delete-alternate-name').forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const name = this.dataset.name;
-            
-            if (confirm(`Are you sure you want to delete the alternate name "${name}"?`)) {
-                deleteAlternateName(id);
+    /**
+     * Handles the click on an "edit" button, triggering the modal.
+     * @param {HTMLElement} button - The edit button that was clicked.
+     */
+    handleEditClick(button) {
+        const { id, name } = button.dataset;
+        this.provider.showEditModal(id, name);
+    }
+
+    /**
+     * Handles the submission of the "edit name" form from the modal.
+     * @param {Event} e - The submit event.
+     */
+    async handleEditSubmit(e) {
+        e.preventDefault();
+        const id = this.editForm.querySelector('#editAlternateNameId').value;
+        const alternateName = this.editForm.querySelector('#editAlternateName').value;
+
+        try {
+            const result = await apiRequest(`/clubs/manage/alternate-names/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alternateName })
+            });
+            if (result.success) {
+                location.reload();
+            } else {
+                await this.provider.alert(result.message || 'An unknown error occurred.');
             }
-        });
-    });
-}
-
-/**
- * Delete an alternate name
- * @param {string} id - The ID of the alternate name to delete
- */
-async function deleteAlternateName(id) {
-    try {
-        const response = await fetch(`/clubs/manage/alternate-names/${id}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            location.reload(); // Refresh the page to remove the deleted name
-        } else {
-            alert(result.message || 'Error deleting alternate name');
+        } catch (error) {
+            await this.provider.alert(`Error updating alternate name: ${error.message}`);
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting alternate name');
+    }
+
+    /**
+     * Handles the click on a "delete" button.
+     * @param {HTMLElement} button - The delete button that was clicked.
+     */
+    async handleDeleteClick(button) {
+        const { id, name } = button.dataset;
+        const confirmed = await this.provider.confirm(`Are you sure you want to delete the alternate name "${name}"?`);
+        if (!confirmed) return;
+
+        try {
+            const result = await apiRequest(`/clubs/manage/alternate-names/${id}`, {
+                method: 'DELETE'
+            });
+            if (result.success) {
+                location.reload();
+            } else {
+                await this.provider.alert(result.message || 'An unknown error occurred.');
+            }
+        } catch (error) {
+            await this.provider.alert(`Error deleting alternate name: ${error.message}`);
+        }
     }
 }

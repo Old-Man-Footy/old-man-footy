@@ -6,7 +6,7 @@
  */
 
 import { DataTypes, Model, Op, fn } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
 import User from './User.mjs';
 
 /**
@@ -41,6 +41,11 @@ class AuditLog extends Model {
       errorMessage,
       metadata
     } = actionData;
+
+    // Validate result
+    if (result !== 'SUCCESS' && result !== 'FAILURE') {
+      throw new Error('AuditLog result must be either "SUCCESS" or "FAILURE"');
+    }
 
     // Extract request information if available
     let ipAddress = null;

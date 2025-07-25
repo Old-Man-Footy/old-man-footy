@@ -14,24 +14,22 @@ const __dirname = path.dirname(__filename);
  * Load environment-specific .env file based on NODE_ENV
  * This replaces the manual .env file reading
  */
-export const setEnvironmentVariables = () => {
+export const setEnvironmentVariables = async () => {
   const env = process.env.NODE_ENV || 'development';
   
   try {
     // Use dynamic import to load dotenv only when needed
-    import('dotenv').then(({ config }) => {
-      // Load environment-specific .env file
-      const envFile = `.env.${env}`;
-      const result = config({ path: envFile });
-      
-      if (result.error) {
-        console.log(`📝 No ${envFile} file found - using system environment variables`);
-      } else {
-        console.log(`✅ Configuration loaded from ${envFile}`);
-      }
-    }).catch(() => {
-      console.log('📝 dotenv not available - using system environment variables only');
-    });
+    const { config } = await import('dotenv');
+    
+    // Load environment-specific .env file
+    const envFile = `.env.${env}`;
+    const result = config({ path: envFile });
+    
+    if (result.error) {
+      console.log(`📝 No ${envFile} file found - using system environment variables`);
+    } else {
+      console.log(`✅ Configuration loaded from ${envFile}`);
+    }
   } catch (error) {
     console.log('📝 Using system environment variables only');
   }
@@ -126,7 +124,7 @@ export const getCurrentConfig = () => {
     // Email Settings
     email: {
       serviceUser: getEnvVar('EMAIL_USER', null, false),
-      servicePassword: getEnvVar('EMAIL_PASS', null, false),
+      servicePassword: getEnvVar('EMAIL_PASSWORD', null, false),
       serviceFrom: getEnvVar('EMAIL_FROM', null, false),
       serviceApiKey: getEnvVar('EMAIL_API_KEY', null, false)
     },
@@ -134,9 +132,8 @@ export const getCurrentConfig = () => {
     // MySideline Integration
     mysideline: {
       url: getEnvVar('MYSIDELINE_URL', 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league'),
-      eventUrl: getEnvVar('MYSIDELINE_EVENT_URL', 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&criteria='),
+      eventUrl: getEnvVar('MYSIDELINE_EVENT_URL', 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria='),
       syncEnabled: getBooleanEnv('MYSIDELINE_SYNC_ENABLED', env !== 'test'),
-      useMock: getBooleanEnv('MYSIDELINE_USE_MOCK', env === 'test'),
       enableScraping: getBooleanEnv('MYSIDELINE_ENABLE_SCRAPING', env !== 'test'),
       requestTimeout: getIntEnv('MYSIDELINE_REQUEST_TIMEOUT', 10000),
       retryAttempts: getIntEnv('MYSIDELINE_RETRY_ATTEMPTS', 3)

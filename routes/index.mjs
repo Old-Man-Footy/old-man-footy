@@ -1,13 +1,17 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { requiredEmail } from '../middleware/validation.mjs';
-import * as mainController from '../controllers/main.controller.mjs';
-import * as userGuideController from '../controllers/userGuide.controller.mjs';
-import * as maintenanceController from '../controllers/maintenance.controller.mjs';
-import * as comingSoonController from '../controllers/comingSoon.controller.mjs';
+import { ensureAuthenticated } from '/middleware/auth.mjs';
+import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
+import { requiredEmail } from '/middleware/validation.mjs';
+import * as mainController from '/controllers/main.controller.mjs';
+import * as userGuideController from '/controllers/userGuide.controller.mjs';
+import * as maintenanceController from '/controllers/maintenance.controller.mjs';
+import * as comingSoonController from '/controllers/comingSoon.controller.mjs';
 
 const router = express.Router();
+
+// Apply centralized security to all routes
+router.use(applySecurity);
 
 // Maintenance routes (must be before other routes)
 router.get('/maintenance', (req, res, next) => {
@@ -57,7 +61,13 @@ router.post('/contact', [
         .trim()
         .isLength({ min: 1, max: 50 })
         .withMessage('Last name is required and must be less than 50 characters'),
-    requiredEmail('email', 'A valid email address is required to respond to your inquiry'),
+    body('email').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    }),
     body('phone')
         .optional()
         .trim()

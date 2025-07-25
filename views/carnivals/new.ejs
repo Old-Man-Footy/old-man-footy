@@ -91,7 +91,7 @@
                                     <div class="invalid-feedback">Please select a date.</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <div id="endDateContainer" style="<%= typeof formData !== 'undefined' && formData.endDate ? '' : 'display: none;' %>">
+                                    <div id="endDateContainer" data-has-end-date="<%= typeof formData !== 'undefined' && formData.endDate ? 'true' : 'false' %>">
                                         <label for="endDate" class="form-label">End Date *</label>
                                         <input type="date" class="form-control" id="endDate" name="endDate" 
                                                value="<%= typeof formData !== 'undefined' ? formData.endDate : '' %>">
@@ -146,15 +146,91 @@
                                 <div class="invalid-feedback">Please provide the location address.</div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="scheduleDetails" class="form-label">
-                                    Schedule Details *
-                                    <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
-                                       title="Include game times, age groups, format details, registration deadlines, and any special tournament rules."></i>
-                                </label>
-                                <textarea class="form-control" id="scheduleDetails" name="scheduleDetails" rows="4" 
-                                          placeholder="Include game times, age groups, format details, etc." required><%= typeof formData !== 'undefined' ? formData.scheduleDetails : '' %></textarea>
-                                <div class="invalid-feedback">Please provide schedule details.</div>
+                            <!-- MySideline-Compatible Address Fields -->
+                            <div class="mb-4">
+                                <h6 class="text-secondary mb-3">
+                                    <i class="bi bi-geo-alt"></i> Detailed Location Information
+                                    <small class="text-muted">(Optional - for better mapping and MySideline compatibility)</small>
+                                </h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="venueName" class="form-label">Venue Name</label>
+                                        <input type="text" class="form-control" id="venueName" name="venueName" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.venueName : '' %>"
+                                               placeholder="e.g., ANZ Stadium, Parramatta Sports Complex">
+                                        <div class="form-text">Name of the venue or facility hosting the carnival</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationAddressLine1" class="form-label">Address Line 1</label>
+                                        <input type="text" class="form-control" id="locationAddressLine1" name="locationAddressLine1" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationAddressLine1 : '' %>"
+                                               placeholder="e.g., 123 Main Street">
+                                        <div class="form-text">Street address or venue address</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationAddressLine2" class="form-label">Address Line 2</label>
+                                        <input type="text" class="form-control" id="locationAddressLine2" name="locationAddressLine2" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationAddressLine2 : '' %>"
+                                               placeholder="e.g., Suite 456, Building B">
+                                        <div class="form-text">Additional address information (optional)</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationSuburb" class="form-label">Suburb/City</label>
+                                        <input type="text" class="form-control" id="locationSuburb" name="locationSuburb" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationSuburb : '' %>"
+                                               placeholder="e.g., Parramatta">
+                                        <div class="form-text">The suburb or city where the event is held</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationPostcode" class="form-label">Postcode</label>
+                                        <input type="text" class="form-control" id="locationPostcode" name="locationPostcode" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationPostcode : '' %>"
+                                               placeholder="e.g., 2150" maxlength="10">
+                                        <div class="form-text">Australian postcode</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationLatitude" class="form-label">Latitude</label>
+                                        <input type="number" class="form-control" id="locationLatitude" name="locationLatitude" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationLatitude : '' %>"
+                                               step="0.000001" min="-90" max="90"
+                                               placeholder="e.g., -33.8568">
+                                        <div class="form-text">GPS latitude coordinate (decimal degrees)</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationLongitude" class="form-label">Longitude</label>
+                                        <input type="number" class="form-control" id="locationLongitude" name="locationLongitude" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationLongitude : '' %>"
+                                               step="0.000001" min="-180" max="180"
+                                               placeholder="e.g., 151.2153">
+                                        <div class="form-text">GPS longitude coordinate (decimal degrees)</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationCountry" class="form-label">Country</label>
+                                        <input type="text" class="form-control" id="locationCountry" name="locationCountry" 
+                                               value="<%= typeof formData !== 'undefined' ? formData.locationCountry : 'Australia' %>"
+                                               placeholder="Australia">
+                                        <div class="form-text">Country where the event is held</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
+                                            <i class="bi bi-geo"></i> Get GPS from Address
+                                        </button>
+                                        <small class="text-muted ms-2">Auto-fill coordinates from the main address</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -187,13 +263,13 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="contactEmail" class="form-label">
+                                <label for="organiserContactEmail" class="form-label">
                                     Contact Email *
                                     <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
                                        title="This email will be visible to clubs and used for carnival-related communications."></i>
                                 </label>
-                                <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
-                                       value="<%= typeof formData !== 'undefined' ? formData.contactEmail : 
+                                <input type="email" class="form-control" id="organiserContactEmail" name="organiserContactEmail" 
+                                       value="<%= typeof formData !== 'undefined' ? formData.organiserContactEmail : 
                                                 (user.email || (user.club && user.club.contactEmail ? user.club.contactEmail : '')) %>" required>
                                 <div class="invalid-feedback">Please provide a valid contact email.</div>
                                 <% if ((user.email || (user.club && user.club.contactEmail)) && typeof formData === 'undefined') { %>

@@ -5,13 +5,14 @@
  * Command-line utility to check if MySideline sync is properly configured
  * and view recent sync activity from the database.
  * 
- * Usage: node scripts/check-sync-status.js [--detailed]
+ * Usage: node scripts/check-sync-status.mjs [--detailed]
  */
 
-import { sequelize, SyncLog } from '../models/index.mjs';
 import { fileURLToPath } from 'url';
+import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Check MySideline sync configuration
@@ -20,50 +21,12 @@ const __filename = fileURLToPath(import.meta.url);
 function checkSyncConfiguration() {
     const config = {
         enabled: process.env.MYSIDELINE_SYNC_ENABLED !== 'false',
-        useMock: process.env.MYSIDELINE_USE_MOCK === 'true',
         enableScraping: process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false',
-        url: process.env.MYSIDELINE_URL || 'Not configured',
+        url: process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league',
         timeout: process.env.MYSIDELINE_REQUEST_TIMEOUT || '60000',
         retryAttempts: process.env.MYSIDELINE_RETRY_ATTEMPTS || '3'
     };
-
     return config;
-}
-
-/**
- * Get recent sync logs from database
- * @param {boolean} detailed - Whether to show detailed information
- * @returns {Promise<Array>} Recent sync logs
- */
-async function getRecentSyncLogs(detailed = false) {
-    try {
-        const logs = await SyncLog.findAll({
-            where: {
-                syncType: 'mysideline'
-            },
-            order: [['startedAt', 'DESC']],
-            limit: detailed ? 20 : 10
-        });
-
-        return logs;
-    } catch (error) {
-        console.error('❌ Error fetching sync logs:', error.message);
-        return [];
-    }
-}
-
-/**
- * Get sync statistics
- * @returns {Promise<Object>} Sync statistics
- */
-async function getSyncStatistics() {
-    try {
-        const stats = await SyncLog.getSyncStats('mysideline', 30);
-        return stats;
-    } catch (error) {
-        console.error('❌ Error fetching sync statistics:', error.message);
-        return null;
-    }
 }
 
 /**
@@ -85,28 +48,41 @@ function formatDate(date) {
 }
 
 /**
- * Display sync status information
+ * Main execution function
  */
-async function displaySyncStatus() {
-    const detailed = process.argv.includes('--detailed');
-    
+async function main() {
     console.log('='.repeat(60));
     console.log('🔄 MySideline Sync Status Check');
     console.log('='.repeat(60));
+    
+    const detailed = process.argv.includes('--detailed');
     
     // Check configuration
     console.log('\n📋 Configuration:');
     const config = checkSyncConfiguration();
     console.log(`   Sync Enabled: ${config.enabled ? '✅ Yes' : '❌ No'}`);
     console.log(`   Scraping Enabled: ${config.enableScraping ? '✅ Yes' : '❌ No'}`);
-    console.log(`   Using Mock Data: ${config.useMock ? '⚠️  Yes' : '✅ No'}`);
     console.log(`   MySideline URL: ${config.url}`);
     console.log(`   Request Timeout: ${config.timeout}ms`);
     console.log(`   Retry Attempts: ${config.retryAttempts}`);
     
     // Check database connection
     console.log('\n🗄️  Database:');
+    
+    let sequelize = null;
+    let SyncLog = null;
+    
     try {
+        console.log('   Importing models...');
+        const modelsModule = await import('/models/index.mjs');
+        sequelize = modelsModule.sequelize;
+        SyncLog = modelsModule.SyncLog;
+        
+        if (!sequelize || !SyncLog) {
+            throw new Error('Failed to import sequelize or SyncLog from models');
+        }
+        
+        console.log('   Testing database connection...');
         await sequelize.authenticate();
         console.log('   Connection: ✅ Connected');
         
@@ -121,7 +97,14 @@ async function displaySyncStatus() {
         if (hasSyncLogTable) {
             // Get recent logs
             console.log('\n📊 Recent Sync Activity:');
-            const logs = await getRecentSyncLogs(detailed);
+            
+            const logs = await SyncLog.findAll({
+                where: {
+                    syncType: 'mysideline'
+                },
+                order: [['startedAt', 'DESC']],
+                limit: detailed ? 20 : 10
+            });
             
             if (logs.length === 0) {
                 console.log('   ⚠️  No sync logs found - sync may never have run');
@@ -155,24 +138,35 @@ async function displaySyncStatus() {
                 });
             }
             
-            // Get statistics
-            console.log('📈 Statistics (Last 30 Days):');
-            const stats = await getSyncStatistics();
-            if (stats) {
-                console.log(`   Total Syncs: ${stats.totalSyncs}`);
-                console.log(`   Successful: ${stats.successfulSyncs}`);
-                console.log(`   Failed: ${stats.failedSyncs}`);
-                console.log(`   Success Rate: ${stats.totalSyncs > 0 ? Math.round((stats.successfulSyncs / stats.totalSyncs) * 100) : 0}%`);
-                console.log(`   Total Events Processed: ${stats.totalEventsProcessed}`);
-                console.log(`   Total Events Created: ${stats.totalEventsCreated}`);
-                console.log(`   Total Events Updated: ${stats.totalEventsUpdated}`);
-                console.log(`   Last Successful Sync: ${formatDate(stats.lastSuccessfulSync)}`);
-                console.log(`   Last Failed Sync: ${formatDate(stats.lastFailedSync)}`);
+            // Get statistics if method exists
+            if (typeof SyncLog.getSyncStats === 'function') {
+                console.log('📈 Statistics (Last 30 Days):');
+                try {
+                    const stats = await SyncLog.getSyncStats('mysideline', 30);
+                    if (stats) {
+                        console.log(`   Total Syncs: ${stats.totalSyncs}`);
+                        console.log(`   Successful: ${stats.successfulSyncs}`);
+                        console.log(`   Failed: ${stats.failedSyncs}`);
+                        console.log(`   Success Rate: ${stats.totalSyncs > 0 ? Math.round((stats.successfulSyncs / stats.totalSyncs) * 100) : 0}%`);
+                        console.log(`   Total Events Processed: ${stats.totalEventsProcessed}`);
+                        console.log(`   Total Events Created: ${stats.totalEventsCreated}`);
+                        console.log(`   Total Events Updated: ${stats.totalEventsUpdated}`);
+                        console.log(`   Last Successful Sync: ${formatDate(stats.lastSuccessfulSync)}`);
+                        console.log(`   Last Failed Sync: ${formatDate(stats.lastFailedSync)}`);
+                    }
+                } catch (statsError) {
+                    console.log('   ⚠️  Could not fetch statistics:', statsError.message);
+                }
+            } else {
+                console.log('   ⚠️  SyncLog.getSyncStats method not available');
             }
         }
         
     } catch (error) {
         console.log(`   Connection: ❌ Failed - ${error.message}`);
+        if (detailed) {
+            console.log(`   Stack: ${error.stack}`);
+        }
     }
     
     // Schedule information
@@ -186,9 +180,6 @@ async function displaySyncStatus() {
     if (!config.enabled) {
         console.log('   ⚠️  MySideline sync is DISABLED via MYSIDELINE_SYNC_ENABLED=false');
         console.log('   📝 To enable: Set MYSIDELINE_SYNC_ENABLED=true in environment');
-    } else if (config.useMock) {
-        console.log('   ⚠️  Using MOCK data instead of live MySideline scraping');
-        console.log('   📝 To use live data: Set MYSIDELINE_USE_MOCK=false');
     } else if (!config.enableScraping) {
         console.log('   ⚠️  MySideline scraping is DISABLED');
         console.log('   📝 To enable: Set MYSIDELINE_ENABLE_SCRAPING=true');
@@ -199,35 +190,29 @@ async function displaySyncStatus() {
     }
     
     console.log('\n🔧 Troubleshooting:');
-    console.log('   • Check Docker logs: docker logs old-man-footy-prod');
+    console.log('   • Check application logs for detailed error information');
     console.log('   • Manual trigger: Admin Panel > System > Sync MySideline');
-    console.log('   • Detailed view: node scripts/check-sync-status.js --detailed');
+    console.log('   • Detailed view: node scripts/check-sync-status.mjs --detailed');
+    console.log('   • Check environment variables in .env file');
     
     console.log('\n' + '='.repeat(60));
-}
-
-/**
- * Main execution
- */
-async function main() {
-    try {
-        await displaySyncStatus();
-        process.exit(0);
-    } catch (error) {
-        console.error('❌ Error checking sync status:', error.message);
-        process.exit(1);
+    
+    // Close database connection
+    if (sequelize) {
+        try {
+            await sequelize.close();
+            console.log('✅ Database connection closed');
+        } catch (closeError) {
+            console.error('Error closing database:', closeError.message);
+        }
     }
 }
 
-// Run if called directly
-const isMainModule = import.meta.url === `file://${process.argv[1]}`;
-if (isMainModule) {
-    main();
-}
-
-export {
-    checkSyncConfiguration,
-    getRecentSyncLogs,
-    getSyncStatistics,
-    displaySyncStatus
-};
+// Execute main function with error handling
+main().catch(error => {
+    console.error('❌ Error checking sync status:', error.message);
+    if (process.argv.includes('--detailed')) {
+        console.error('Stack:', error.stack);
+    }
+    process.exit(1);
+});

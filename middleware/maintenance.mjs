@@ -23,6 +23,12 @@ const maintenanceMode = (req, res, next) => {
     return next();
   }
 
+  // Allow access to subscription endpoint for BOTH coming soon and homepage
+  // This must come BEFORE other authentication checks
+  if (req.path === '/subscribe') {
+    return next();
+  }
+
   // Allow access to static assets (CSS, JS, images)
   if (req.path.startsWith('/styles') || 
       req.path.startsWith('/scripts') || 
@@ -32,29 +38,8 @@ const maintenanceMode = (req, res, next) => {
     return next();
   }
 
-  // Allow admin access (check if user is authenticated and is admin)
-  if (req.user && req.user.isAdmin) {
-    return next();
-  }
-
-  // Allow logged-in users to access regular screens
-  if (req.user && req.isAuthenticated()) {
-    return next();
-  }
-
   // Allow access to login route so users can still log in
   if (req.path === '/auth/login') {
-    return next();
-  }
-
-  // Block register route during maintenance mode
-  if (req.path === '/auth/register') {
-    req.flash('error_msg', 'Registration is currently disabled during maintenance. Please try again later.');
-    return res.redirect('/maintenance');
-  }
-
-  // Allow other admin routes for login functionality
-  if (req.path.startsWith('/admin')) {
     return next();
   }
 
@@ -66,6 +51,29 @@ const maintenanceMode = (req, res, next) => {
   // Allow API maintenance status endpoint
   if (req.path === '/api/maintenance/status') {
     return next();
+  }
+
+  // Allow other admin routes for login functionality
+  if (req.path.startsWith('/admin')) {
+    return next();
+  }
+
+  // Allow admin access (check if user is authenticated and is admin)
+  if (req.user && req.user.isAdmin) {
+    return next();
+  }
+
+  // Allow logged-in users to access regular screens
+  if (req.user && typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
+    return next();
+  }
+
+  // Block register route during maintenance mode
+  if (req.path === '/auth/register') {
+    if (typeof req.flash === 'function') {
+      req.flash('error_msg', 'Registration is currently disabled during maintenance. Please try again later.');
+    }
+    return res.redirect('/maintenance');
   }
 
   // Redirect all other users to maintenance page

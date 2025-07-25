@@ -128,6 +128,16 @@ function setupEmailSubscription() {
             })
             .then(response => {
                 console.log('Response received:', response.status, response.statusText);
+                console.log('Response headers:', response.headers);
+                console.log('Content-Type:', response.headers.get('content-type'));
+                
+                // Check if the response is actually JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('Expected JSON but received:', contentType);
+                    throw new Error(`Expected JSON response but received ${contentType}`);
+                }
+                
                 return response.json();
             })
             .then(data => {

@@ -1,43 +1,54 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
-import { organiserEmail } from '../middleware/validation.mjs';
-import * as carnivalController from '../controllers/carnival.controller.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import { ensureAuthenticated } from '/middleware/auth.mjs';
+import { carnivalUpload, handleUploadError } from '/middleware/upload.mjs';
+import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
+import { organiserEmail } from '/middleware/validation.mjs';
+import * as carnivalController from '/controllers/carnival.controller.mjs';
+import { AUSTRALIAN_STATES } from '/config/constants.mjs';
 // Import carnival club routes as a sub-router
 import carnivalClubRoutes from './carnivalClubs.mjs';
 
 const router = express.Router();
 
+// Apply centralized security to all routes
+router.use(applySecurity);
+
 // Validation middleware for carnival
 const validateCarnival = [
     body('title').trim().isLength({ min: 5, max: 200 }).withMessage('Title must be between 5 and 200 characters'),
     body('date').isISO8601().withMessage('Valid date is required'),
-    body('endDate').optional().isISO8601().withMessage('Valid end date is required')
+    body('endDate')
+        .optional({ nullable: true, checkFalsy: true })
         .custom((endDate, { req }) => {
             if (endDate && req.body.date) {
                 const startDate = new Date(req.body.date);
-                const endDateObj = new Date(endDate);
-                if (endDateObj <= startDate) {
-                    throw new Error('End date must be after the start date');
+                const end = new Date(endDate);
+                if (end <= startDate) {
+                    throw new Error('End date must be after start date');
                 }
             }
             return true;
-        }),
-    body('locationAddress').trim().isLength({ min: 5, max: 500 }).withMessage('Location address must be between 5 and 500 characters'),
-    body('organiserContactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
-    organiserEmail('organiserContactEmail'),
-    body('organiserContactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('scheduleDetails').optional().trim().isLength({ max: 5000 }).withMessage('Schedule details must be 5000 characters or less'),
-    body('registrationLink').optional().isURL().withMessage('Valid registration link URL required'),
+        })
+        .isISO8601().withMessage('Valid end date is required'),
+    body('locationAddress').trim().isLength({ min: 5, max: 500 }).withMessage('Location must be between 5 and 500 characters'),
+    body('contactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
+    body('contactEmail').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    }),
+    body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('registrationFee').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Registration fee must be a valid amount'),
     body('feesDescription').optional().trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
     body('callForVolunteers').optional().trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),
     body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state is required'),
-    body('socialMediaFacebook').optional().isURL().withMessage('Valid Facebook URL required'),
-    body('socialMediaInstagram').optional().isURL().withMessage('Valid Instagram URL required'),
-    body('socialMediaTwitter').optional().isURL().withMessage('Valid Twitter URL required'),
-    body('socialMediaWebsite').optional().isURL().withMessage('Valid website URL required')
+    body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
+    body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
+    body('socialMediaTwitter').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required'),
+    body('socialMediaWebsite').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required')
 ];
 
 // Mount carnival club routes as sub-router
@@ -75,9 +86,6 @@ router.post('/:id/release-ownership', ensureAuthenticated, carnivalController.re
 router.post('/:id/merge', ensureAuthenticated, [
     body('targetCarnivalId').notEmpty().withMessage('Target carnival is required').isInt().withMessage('Target carnival must be a valid ID')
 ], carnivalController.mergeCarnival);
-
-// Sync MySideline events (admin only)
-router.post('/sync-mysideline', ensureAuthenticated, carnivalController.syncMySideline);
 
 // Sponsor management routes for carnivals
 // Manage sponsors for a specific carnival

@@ -1,26 +1,20 @@
 import { chromium } from 'playwright';
-import MySidelineDataService from './mySidelineDataService.mjs';
 import MySidelineEventParserService from './mySidelineEventParserService.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 /**
  * MySideline Web Scraper Service
- * Handles all web scraping functionality for MySideline events
+ * Handles all web scraping functionality for MySideline events using API interception
  */
 class MySidelineScraperService {
     constructor() {
         this.timeout = parseInt(process.env.MYSIDELINE_REQUEST_TIMEOUT) || 60000;
-        this.retryCount = parseInt(process.env.MYSIDELINE_RETRY_ATTEMPTS) || 3;
-        this.requestDelay = 2000;
-        this.searchUrl = process.env.MYSIDELINE_URL;
-        this.eventUrl = process.env.MYSIDELINE_EVENT_URL;
-        this.useHeadlessBrowser = true; // process.env.NODE_ENV !== 'development'; // To show browser in development
+        this.searchUrl = process.env.MYSIDELINE_URL || 'https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league';
+        this.eventUrl = process.env.MYSIDELINE_EVENT_URL || 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=';
         this.enableScraping = process.env.MYSIDELINE_ENABLE_SCRAPING !== 'false';
-        this.useMockData = process.env.MYSIDELINE_USE_MOCK === 'true';
+        this.useHeadlessBrowser = process.env.NODE_ENV !== 'development';
         
         // Initialize the parser service
         this.parserService = new MySidelineEventParserService();
-        this.dataService = new MySidelineDataService();
     }
 
     /**
@@ -29,115 +23,91 @@ class MySidelineScraperService {
      */
     async scrapeEvents() {
         try {
-            // Check if we should use mock data instead of scraping
-            if (this.useMockData) {
-                console.log('Using mock MySideline data (development mode)...');
-                return this.generateMockEvents();
-            }
-
             // Check if scraping is disabled
             if (!this.enableScraping) {
                 console.log('MySideline scraping is disabled via configuration');
                 return [];
             }
 
-            console.log('Scraping MySideline Masters events from search page...');
+            console.log('Fetching MySideline Masters events via API interception...');
             
-            const events = await this.fetchEventsWithBrowser();
+            const events = await this.fetchEventsWithApiInterception();
             
             if (events && events.length > 0) {
-                console.log(`Found ${events.length} Masters events from MySideline`);
+                console.log(`Found ${events.length} Masters events from MySideline API`);
                 return events;
             } else {
-                console.log('No events found via browser automation');
+                console.log('No events found via API interception');
                 return [];
             }
         } catch (error) {
-            console.error('Failed to scrape MySideline events:', error.message);
+            console.error('Failed to fetch MySideline events:', error.message);
             return [];
         }
     }
 
     /**
-     * Fetch events using the browser automation
+     * Fetch events using browser automation with API interception
      * @returns {Promise<Array>} Array of fetched event objects
      */
-    async fetchEventsWithBrowser() {
+    async fetchEventsWithApiInterception() {
         let browser = null;
         let context = null;
         let page = null;
+        let jsonData = null;
 
         try {
-            // Launch browser
+            console.log('Launching browser for API interception...');
             browser = await chromium.launch({
-                executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium',
                 headless: this.useHeadlessBrowser,
                 timeout: this.timeout
             });
             
             context = await browser.newContext();
             page = await context.newPage();
-            
-            // Set a longer timeout for navigation and actions
-            page.setDefaultTimeout(this.timeout);
-            page.setDefaultNavigationTimeout(this.timeout);
-            
+           
+            // Set up API response interception
+            page.on('response', async response => {
+                if (response.url() === 'https://api.mysideline.xyz/nrl/api/v1/portal-public/registration/search') {
+                    if (response.ok()) {
+                        try {
+                            jsonData = await response.json();
+                            console.log(`✅ Successfully intercepted API response with ${jsonData?.data?.length || 0} events`);
+                        } catch (e) {
+                            console.error('Failed to parse JSON response:', e);
+                        }
+                    } else {
+                        console.error(`API request failed with status: ${response.status()}`);
+                    }
+                }
+            });
+
             console.log(`Navigating to MySideline search URL: ${this.searchUrl}`);
-            await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded' });
-            console.log('Page loaded, waiting for content...');
-            
-            // Wait for the essential page structure and content
-            await this.waitForMySidelineContent(page);
-            
-            // Extract events from the page
-            const events = await this.extractEvents(page);
-            return events;
-                
+            await page.goto(this.searchUrl, { waitUntil: 'domcontentloaded'});
+            console.log('✅ DOM loaded, waiting for content...');
+
+            // Extract image dictionary
+            var imgDictionary = await this.extractImageDictionary(page);
+
+            // Wait for the API call to complete
+            console.log('Waiting for API response...');
+            await page.waitForTimeout(10000); // Wait up to 10 seconds for the API call
+
+            if (jsonData && jsonData.data) {
+                const processedEvents = await this.processApiResponse(jsonData, imgDictionary);
+                console.log(`✅ Processed ${processedEvents.length} events from API response`);
+                return processedEvents;
+            } else {
+                console.log('⚠️ No JSON data captured from API. Using fallback mock data.');                
+            }
+
         } catch (error) {
-            console.error('Error during browser fetching:', error.message);
-            return [];
+            console.error('Error during API interception:', error.message);
         } finally {
             try {
-                console.log('🧹 Starting browser cleanup...');
-                
-                // Explicit page cleanup before closing
-                if (page) {
-                    console.log('Cleaning up page resources...');
-                    // Cancel any pending navigations or requests
-                    await page.evaluate(() => {
-                        // Clear any running timers or intervals
-                        const highestId = Math.max(
-                            setTimeout(() => {}, 0),
-                            setInterval(() => {}, 99999)
-                        );
-                        for (let i = 0; i <= highestId; i++) {
-                            clearTimeout(i);
-                            clearInterval(i);
-                        }
-                        
-                        // Remove all event listeners to prevent memory leaks
-                        document.querySelectorAll('*').forEach(el => {
-                            if (el.cloneNode) {
-                                const newEl = el.cloneNode(true);
-                                if (el.parentNode) {
-                                    el.parentNode.replaceChild(newEl, el);
-                                }
-                            }
-                        });
-                    }).catch(() => {}); // Ignore errors during cleanup
-                    
-                    // Short delay to allow cleanup to complete
-                    await page.waitForTimeout(500);
-                }
-                
-                if (context) {
-                    console.log('Closing browser context...');
-                    await context.close();
-                }
-                if (browser) {
-                    console.log('Closing browser...');
-                    await browser.close();
-                }
+                if (page) await page.close();
+                if (context) await context.close();
+                if (browser) await browser.close();
                 console.log('✅ Browser cleanup completed');
             } catch (closeError) {
                 console.log('Error closing browser resources:', closeError.message);
@@ -146,10 +116,275 @@ class MySidelineScraperService {
     }
 
     /**
+     * Process the API response and convert to our internal format
+     * @param {Object} apiResponse - The raw API response
+     * @returns {Array} Array of processed events
+     */
+    processApiResponse(apiResponse, imgDictionary) {
+        if (!apiResponse || !apiResponse.data || !Array.isArray(apiResponse.data)) {
+            console.log('Invalid API response structure');
+            return [];
+        }
+
+        const processedEvents = [];
+
+        for (const item of apiResponse.data) {
+            try {
+                // Add null/undefined check for the item itself
+                if (!item || typeof item !== 'object') {
+                    console.warn(`Skipping invalid API item: ${item}`);
+                    continue;
+                }
+
+                // Skip non-Masters events and Touch events
+                if (!this.isRelevantMastersEvent(item)) {
+                    continue;
+                }
+
+                const processedEvent = this.convertApiItemToEvent(item);
+                if (processedEvent) {
+
+                    const imageUrl = imgDictionary[processedEvent.mySidelineTitle];
+                    if (imageUrl) {
+                        processedEvent.clubLogoURL = imageUrl.split('?')[0]; // Remove any query parameters
+                    } else {
+                        console.log(`Image with alt "${processedEvent.mySidelineTitle}" not found or missing data-url attribute.`);
+                    }
+
+                    processedEvents.push(processedEvent);
+                }   
+            } catch (error) {
+                console.warn(`Failed to process API item ${item?._id || 'unknown'}:`, error.message);
+            }
+        }
+
+        return processedEvents;
+    }
+
+    /**
+     * Check if an API item represents a relevant Masters event
+     * @param {Object} item - API response item
+     * @returns {boolean} True if relevant
+     */
+    isRelevantMastersEvent(item) {
+        // Add comprehensive null/undefined checks
+        if (!item || typeof item !== 'object' || !item.name) {
+            return false;
+        }
+
+        const ageLvl = (item.ageLvl || '').toLowerCase();
+        const region = (item.orgtree?.region?.name || '').toLowerCase();
+        const association = (item.association?.name || '').toLowerCase();
+        const competition = (item.competition?.name || '').toLowerCase();
+        const club = (item.club?.name || '').toLowerCase(); 
+        
+        // Skip Touch events
+        if (association.includes('touch') || competition.includes('touch') || ageLvl.includes('all ages')) {
+            return false;
+        }
+
+        // Check for Masters keywords in age level, region, association, competition, or club
+        if (ageLvl.includes('masters')
+            || region.includes('nrl masters')
+            || association.includes('nrl masters')
+            || competition.includes('masters')
+            || club.includes('masters')) {
+            return true;
+        }
+        
+        // Assume Not Masters
+        return false;
+    }
+
+    /**
+     * Convert API item to our internal event format
+     * @param {Object} item - API response item
+     * @returns {Object} Converted event object
+     */
+    convertApiItemToEvent(item) {
+        // Add comprehensive null/undefined checks at the start
+        if (!item || typeof item !== 'object') {
+            throw new Error('Item is null, undefined, or not an object');
+        }
+
+        if (!item.name) {
+            throw new Error('Item missing required name property');
+        }
+
+        if (!item._id) {
+            throw new Error('Item missing required _id property');
+        }
+
+        // Build address from venue or contact address
+        let locationAddress = '';
+        let state = null;
+        let googleMapsUrl = null;
+        let latitude = null;
+        let longitude = null;
+        let suburb = null;
+        let postcode = null;
+        let country = 'Australia';
+        let addressLine1 = null;
+        let addressLine2 = null;
+        let venueName = null;
+        let eventData = null;
+        
+        // Extract venue name from MySideline data with null checks
+        venueName = item.venue?.name || item.orgtree?.venue?.name || null;
+
+        // Get address data (prefer venue address, fallback to contact address)
+        const addressData = item.venue?.address || item.contact?.address;
+        
+        if (addressData) {
+            // Extract all address fields
+            addressLine1 = addressData.addressLine1 || null;
+            addressLine2 = addressData.addressLine2 || null;
+            locationAddress = addressData.formatted || null;
+            state = addressData.state || null;
+            latitude = addressData.lat || null;
+            longitude = addressData.lng || null;
+            suburb = addressData.suburb || null;
+            postcode = addressData.postcode || null;
+            country = addressData.country || 'Australia';
+            
+            // Create Google Maps URL from coordinates or formatted address
+            if (addressData.lat && addressData.lng) {
+                googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${addressData.lat},${addressData.lng}`;
+            } else if (locationAddress) {
+                googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationAddress)}`;
+            }
+        }
+
+        // Generate registration link using the top-level _id
+        const registrationLink = `${this.eventUrl}${item._id}`;
+
+        // 
+        let { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(item.name);
+        if (!carnivalName || carnivalName.trim() === '') {
+            // If no title was extracted, use the full title.
+            carnivalName = item.name || 'Masters Rugby League Event';                
+        }
+
+        return {
+            // Core event data
+            title: carnivalName,
+            date: eventDate,
+            locationAddress: locationAddress || 'TBC',
+            state: state,
+            
+            // MySideline-specific fields
+            mySidelineTitle: item.name,
+            mySidelineAddress: locationAddress,
+            mySidelineDate: eventDate,
+            mySidelineId: item._id,
+            
+            // Contact information
+            organiserContactName: item.contact?.name || null,
+            organiserContactPhone: item.contact?.number || null,
+            organiserContactEmail: item.contact?.email || null,
+            
+            // URLs and links
+            registrationLink: registrationLink,
+            googleMapsUrl: googleMapsUrl,
+            socialMediaWebsite: item.meta?.website || null,
+            socialMediaFacebook: item.meta?.facebook || null,
+            
+            // Event details
+            scheduleDetails: item.finderDetails?.description || null,
+            
+            // System fields
+            source: 'MySideline',
+            isActive: item.regoOpen || false,
+            isManuallyEntered: false,
+            
+            // MySideline-compatible address fields
+            locationAddressLine1: addressLine1,
+            locationAddressLine2: addressLine2,
+            venueName: venueName,
+            locationLatitude: latitude,
+            locationLongitude: longitude,
+            locationSuburb: suburb,
+            locationPostcode: postcode,
+            locationCountry: country
+        };
+    }    
+   
+    /**
+     * Parse various date formats
+     * @param {string} dateString - Date string to parse
+     * @returns {Date|null} Parsed date or null
+     */
+    parseDate(dateString) {
+        if (!dateString) return null;
+        
+        try {
+            // Try standard date parsing first
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+            
+            // Handle DD/MM/YYYY format
+            const ddmmyyyy = dateString.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            if (ddmmyyyy) {
+                const [, day, month, year] = ddmmyyyy;
+                return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            }
+            
+            return null;
+        } catch (error) {
+            console.warn(`Failed to parse date: ${dateString}`);
+            return null;
+        }
+    }
+
+    /**
+     * Validate and clean extracted data to ensure it meets requirements
+     * @param {Object} rawData - Raw extracted data
+     * @returns {Object} Cleaned and validated data
+     */
+    validateAndCleanData(rawData) {
+        const cleanedData = { ...rawData };
+
+        // Ensure title is present (required field)
+        if (!cleanedData.title || cleanedData.title.trim() === '') {
+            console.warn('No title provided, using default');
+            cleanedData.title = 'Masters Rugby League Event';
+        }
+
+        // Clean string fields
+        const stringFields = ['title', 'locationAddress', 'organiserContactName'];
+        stringFields.forEach(field => {
+            const value = cleanedData[field];
+            if (value && typeof value === 'string') {
+                cleanedData[field] = value.trim();
+                // Convert empty strings to null
+                if (cleanedData[field] === '') {
+                    cleanedData[field] = null;
+                }
+            }
+        });
+
+        // Validate email format
+        if (cleanedData.organiserContactEmail) {
+            const email = cleanedData.organiserContactEmail.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                console.warn(`Invalid email format: ${email}`);
+                cleanedData.organiserContactEmail = null;
+            } else {
+                cleanedData.organiserContactEmail = email.toLowerCase();
+            }
+        }
+
+        return cleanedData;
+    }
+
+     /**
      * Wait for MySideline-specific content to load (replaces all other wait methods)
      * @param {Page} page - Playwright page object
      */
-    async waitForMySidelineContent(page) {
+     async waitForMySidelineContent(page) {
         console.log('Waiting for MySideline content to load...');
         
         try {
@@ -189,620 +424,237 @@ class MySidelineScraperService {
             console.log(`⚠️ MySideline content wait failed: ${error.message}`);
         }
     }
-    
+
     /**
-     * Extract events from the page using sequential processing
+     * Extract images with alt tags from MySideline page
      * @param {Page} page - Playwright page object
-     * @returns {Promise<Array>} Array of extracted events
+     * @returns {Promise<Object>} Dictionary with alt tags as keys and image sources as values
      */
-    async extractEvents(page) {
-        console.log('Extracting events from MySideline page using sequential processing...');
-        
+    async extractImageDictionary(page) {
         try {
-            const pageInfo = await page.evaluate(() => {
-                return {
-                    url: window.location.href,
-                    title: document.title,
-                    bodyTextLength: document.body ? document.body.textContent.length : 0,
-                    elementCount: document.querySelectorAll('*').length,
-                    cardCount: document.querySelectorAll('.el-card, [id^="clubsearch_"]').length,
-                    clickExpandCount: document.querySelectorAll('.click-expand').length
-                };
-            });
+            // Validate page parameter
+            if (!page || typeof page.evaluate !== 'function') {
+                console.error('❌ Invalid page object provided to extractImageDictionary');
+                return {};
+            }
+
+            console.log('🔄 Loading MySideline page for image extraction...');
+            await this.waitForMySidelineContent(page);
+
+            console.log('✅ Extracting images with alt tags...');
             
-            console.log('MySideline page info:', pageInfo);
-
-            // Locate all the card elements on the page once.
-            // This returns a single Locator object that points to all matching cards.
-            const cardLocator = page.locator('.el-card.is-always-shadow, [id^="clubsearch_"]');
-
-            // Get the number of cards found.
-            const cardCount = await cardLocator.count();
-            console.log(`Found ${cardCount} MySideline cards to process sequentially`);
-
-            const extractedEvents = [];
-
-            // Process each card sequentially: expand -> extract -> move to next
-            for (let cardIndex = 0; cardIndex < cardCount; cardIndex++) {
+            // Wait a bit more for images to load and lazy loading to complete
+            await page.waitForTimeout(3000);
+            
+            // Extract images and create dictionary with alt as key, src as value
+            const imageDictionary = await page.evaluate(() => {
                 try {
-                    console.log(`\n--- Processing card ${cardIndex + 1}/${cardCount} ---`);
+                    // Define generic/default images to skip
+                    const genericImagePatterns = [
+                        'nrl.svg',
+                        'default.png',
+                        'placeholder',
+                        'logo-placeholder',
+                        'no-image',
+                        '/18285.png',  // Known default MySideline image
+                        'generic-logo.png' // Added new generic image pattern
+                    ];
                     
-                    // Get the card elements as an array for sequential processing
-                    const currentCard = cardLocator.nth(cardIndex);
+                    // Target only the specific MySideline image structure
+                    // Look for images within the image__wrapper containers with data-url attributes
+                    const imageWrappers = document.querySelectorAll('.image__wrapper img[alt][data-url]');
+                    
+                    console.log(`DEBUG: Found ${imageWrappers.length} images in .image__wrapper containers with alt and data-url`);
+                    
+                    const allImages = Array.from(imageWrappers);
+                    console.log(`DEBUG: Total images found: ${allImages.length}`);
+                    
+                    const imageDict = {};
+                    let processedCount = 0;
+                    let skippedCount = 0;
+                    let genericCount = 0;
+                    
+                    allImages.forEach((img, index) => {
+                        try {
+                            console.log(`DEBUG: Processing image ${index + 1}:`);
+                            console.log(`  - Alt: "${img.alt}"`);
+                            console.log(`  - Src: "${img.src}"`);
+                            console.log(`  - Data-url: "${img.getAttribute('data-url')}"`);
+                            console.log(`  - Classes: "${img.className}"`);
+                            console.log(`  - Parent classes: "${img.parentElement?.className}"`);
+                            
+                            // Validate image element has alt text
+                            if (!img.alt) {
+                                console.log(`  - Skipped: No alt text`);
+                                skippedCount++;
+                                return;
+                            }
 
-                    // This scopes the search within the card, making it robust.
-                    const clickExpandElement = currentCard.locator('.click-expand');
+                            // Clean alt text - remove extra whitespace and normalize
+                            const altText = img.alt.trim();
+                            if (!altText) {
+                                console.log(`  - Skipped: Empty alt text after trim`);
+                                skippedCount++;
+                                return;
+                            }
 
-                   
-                    // Extract data from this specific card
-                    const cardData = await this.extractSingleCardData(clickExpandElement, currentCard, cardIndex);
+                            // Get image URL - prioritize data-url attribute for MySideline structure
+                            let srcUrl = img.getAttribute('data-url')?.trim() || img.src?.trim();
+                            if (!srcUrl) {
+                                console.log(`  - Skipped: No data-url or src attribute`);
+                                skippedCount++;
+                                return;
+                            }
 
-                    // If the card data is null, skip this card
-                    if (!cardData) {
-                        console.log(`Skipping card ${cardIndex + 1} due to wrong event type or missing data`);
-                        continue;
-                    }
+                            // Check if this is a generic/default image we should skip
+                            const isGeneric = genericImagePatterns.some(pattern => 
+                                srcUrl.toLowerCase().includes(pattern.toLowerCase())
+                            );
+                            
+                            if (isGeneric) {
+                                console.log(`  - Skipped: Generic/default image detected`);
+                                genericCount++;
+                                return;
+                            }
 
-                    // Add the extracted data to the results array
-                    extractedEvents.push(cardData);
-                } catch (cardError) {
-                    console.log(`Error processing card ${cardIndex + 1}: ${cardError.message}`);
-                }
-            }
+                            // Validate URL format
+                            if (!srcUrl.startsWith('http') && !srcUrl.startsWith('data:') && !srcUrl.startsWith('/')) {
+                                console.log(`  - Skipped: Invalid URL format`);
+                                skippedCount++;
+                                return;
+                            }
 
-            console.log(`\n🎯 Sequential processing completed: ${extractedEvents.length} events extracted from ${cardCount} cards`);
-            return extractedEvents;
-            
-        } catch (error) {
-            console.error('MySideline Playwright event extraction failed:', error.message);
-            return [];
-        }
-    }
+                            // Convert relative URLs to absolute URLs if needed
+                            if (srcUrl.startsWith('/')) {
+                                srcUrl = window.location.origin + srcUrl;
+                                console.log(`  - Converted relative URL to: ${srcUrl}`);
+                            }
 
-    /**
-     * Extracts structured data from a single card locator using Playwright's API.
-     * This is an async function and should be awaited.
-     * @param {import('playwright').Locator} clickExpandElement - The Playwright locator for the expand button within the card.
-     * @param {import('playwright').Locator} currentCard - The Playwright locator for the specific card element.
-     * @param {number} cardIndex - The index of the card, used for logging purposes.
-     * @returns {Promise<object|null>} A promise that resolves to an object with the extracted card data, or null if extraction fails or the card is skipped.
-     */
-    async extractSingleCardData(clickExpandElement, currentCard, cardIndex) {
-        try {
-            
-            // Check if this card has a click-expand element (skip non-event cards)
-            const expandElementCount = await clickExpandElement.count();
-            if (expandElementCount === 0) {
-                console.log(`⏭️  Skipping card ${cardIndex + 1} - no expandable content`);
-                return null;
-            }
+                            // For MySideline events, use the full alt text as the event key
+                            // Alt text format: "Team A vs Team B - Date" or just "Event Name"
+                            // We want to use this as the key to match against mySidelineTitle
+                            const eventKey = altText;
 
-            // log the start of extraction for this card
-            console.log(`Extracting data from card ${cardIndex + 1}...`);
-
-            // Expand the card.            
-            await clickExpandElement.click({ timeout: 5000 });
-
-            // Extract carnival logo/image.
-            // We find the locator first, then check if it exists before getting attributes.
-            const logoLocator = currentCard.locator('.image__wrapper img');
-            let clubLogoURL = '';
-            if (await logoLocator.count() > 0) {
-                // Prefer data-url, then src, then an empty string.
-                clubLogoURL = (await logoLocator.getAttribute('data-url')) || (await logoLocator.getAttribute('src')) || '';
-            }
-
-            // Extract title and category.
-            const titleLocator = currentCard.locator('h3.title');
-            const fullTitle = await titleLocator.count() > 0 ? (await titleLocator.textContent()).trim() : null;
-
-            const subtitleLocator = currentCard.locator('h4.subtitle, h4#subtitle');
-            const subtitle = await subtitleLocator.count() > 0 ? (await subtitleLocator.textContent()).trim() : null;
-
-            // Extract venue address from Google Maps link.
-            const addressLinkLocator = currentCard.locator('a[href*="maps.google.com"]');
-            let locationAddress = '';
-            let locationAddressPart1 = '';
-            let locationAddressPart2 = '';
-            let locationAddressPart3 = '';
-            let locationAddressPart4 = '';
-            let googleMapsUrl = '';
-            if (await addressLinkLocator.count() > 0) {
-                googleMapsUrl = await addressLinkLocator.getAttribute('href');
-                // Get all text from child <p> elements and join them.
-                const addressParts = await addressLinkLocator.locator('p.m-0').allTextContents();
-                // Join the address parts, ensuring to trim and filter out empty strings.
-                if (addressParts.length > 0) {
-                    locationAddress = addressParts.map(p => p.trim()).filter(Boolean).join(', ');
-                    for (let i = 0; i < addressParts.length; i++) {
-                        if (!addressParts[i] || addressParts[i] === '') continue; // Skip empty parts
-
-                        switch (i) {
-                            case 0:
-                                locationAddressPart1 = addressParts[i].trim();
-                                break;
-                            case 1:
-                                locationAddressPart2 = addressParts[i].trim();
-                                break;
-                            case 2:
-                                locationAddressPart3 = addressParts[i].trim();
-                                break;
-                            case 3:
-                                locationAddressPart4 = addressParts[i].trim();
-                                break;
-                            default:
-                                console.warn(`Unexpected address part index ${i}: ${addressParts[i]}`);
-                                break;
+                            // Store in dictionary (last one wins if duplicate alt text)
+                            imageDict[eventKey] = srcUrl;
+                            console.log(`  - ✅ Added to dictionary: "${eventKey}" -> ${srcUrl}`);
+                            processedCount++;
+                            
+                        } catch (imgError) {
+                            console.log(`  - Error processing image: ${imgError.message}`);
+                            skippedCount++;
                         }
-                    }
+                    });
+                    
+                    console.log(`DEBUG: Image extraction summary:`);
+                    console.log(`  - Total images: ${allImages.length}`);
+                    console.log(`  - Successfully processed: ${processedCount}`);
+                    console.log(`  - Skipped (missing data): ${skippedCount}`);
+                    console.log(`  - Skipped (generic): ${genericCount}`);
+                    
+                    // Return results with metadata
+                    return {
+                        images: imageDict,
+                        metadata: {
+                            totalElements: allImages.length,
+                            processed: processedCount,
+                            skipped: skippedCount,
+                            generic: genericCount
+                        }
+                    };
+                    
+                } catch (evaluationError) {
+                    console.error('Error in page.evaluate for image extraction:', evaluationError.message);
+                    return {
+                        images: {},
+                        metadata: {
+                            totalElements: 0,
+                            processed: 0,
+                            skipped: 0,
+                            generic: 0,
+                            error: evaluationError.message
+                        }
+                    };
                 }
-            }
-            
-            // Extract event description.
-            // We get all potential description paragraphs and find the first suitable one.
-            // const descriptionParagraphs = await currentCard.locator('p[data-v-06457438]').all();
-            const descriptionParagraphs = await currentCard.locator('p:not(a > p)').all();
-            let scheduleDetails = '';
-            for (const pLocator of descriptionParagraphs) {
-                const text = (await pLocator.textContent()).trim();
-                // Skip paragraphs that are empty, short, or contain contact info.
-                if (text && !text.includes('Club Contact') && text.length > 20) {
-                    scheduleDetails = text;
-                    break; // Stop after finding the first valid description.
-                }
-            }
-
-            // Extract contact information.
-            // We find the specific paragraph that contains the "Club Contact" text.
-            const contactParagraphLocator = currentCard.locator('p:has-text("Club Contact")');
-            let contactName = '';
-            let contactPhone = '';
-            let contactEmail = '';
-            let socialMediaFacebook = '';
-            let socialMediaWebsite = '';
-            if (await contactParagraphLocator.count() > 0) {
-                const contactText = await contactParagraphLocator.textContent();
-
-                // Extract name using regex on the paragraph's text.
-                const nameMatch = contactText.match(/Name:\s*([^]*?)(?:\s*Number:|$)/);
-                if (nameMatch && nameMatch[1]) contactName = nameMatch[1].trim();
-
-                // Extract phone from the nested tel: link.
-                const phoneLocator = contactParagraphLocator.locator('a[href^="tel:"]');
-                if (await phoneLocator.count() > 0) contactPhone = (await phoneLocator.textContent()).trim();
-
-                // Extract email from the nested mailto: link.
-                const emailLocator = contactParagraphLocator.locator('a[href^="mailto:"]');
-                if (await emailLocator.count() > 0) contactEmail = (await emailLocator.textContent()).trim();
-
-                // Extract Facebook from the contact paragraph if it exists.
-                const facebookLocator = contactParagraphLocator.locator('a[href^="https://facebook.com/"], a[href^="https://www.facebook.com/"]');
-                if (await facebookLocator.count() > 0) socialMediaFacebook = (await facebookLocator.getAttribute('href')).trim();
-
-                // Extract other URLs from the contact paragraph.
-                const websiteLocator = contactParagraphLocator.locator('a[href^="http"]:not([href*="facebook.com"])');
-                if (await websiteLocator.count() > 0) socialMediaWebsite = (await websiteLocator.getAttribute('href')).trim();
-            }
-
-            // Extract event type.
-            let eventType = '';
-            const typeItems = await currentCard.locator('.item').all();
-            for (const itemLocator of typeItems) {
-                const labelLocator = itemLocator.locator('.list-item');
-                const labelText = await labelLocator.count() > 0 ? (await labelLocator.textContent()).trim() : '';
-                if (labelText === 'Type') {
-                    const valueLocator = itemLocator.locator('.right');
-                    eventType = await valueLocator.count() > 0 ? (await valueLocator.textContent()).trim() : '';
-                    break; // Stop after finding the type.
-                }
-            }
-
-            // Check if registration button exists.
-            const registerButtonLocator = currentCard.locator('button#cardButton, button.el-button--primary');
-            const hasRegistration = await registerButtonLocator.count() > 0;
-            
-            // --- Post-Processing ---
-            if (eventType === 'Touch') {
-                console.log(`⏭️  Skipping Touch event: ${fullTitle}`);
-                return null;
-            }
-
-            if (!fullTitle) {
-                console.log('⚠️  No title found, skipping fullTitle');
-                return null;
-            }
-
-            let { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(fullTitle);
-            if (!carnivalName || carnivalName.trim() === '') {
-                // If no title was extracted, use the full title.
-                carnivalName = fullTitle || 'Unknown Carnival';                
-            }
-
-            // If no event type, or event type is not contact, and no date is found, skip.
-            if ((!eventType || !eventType.toLowerCase().includes('contact')) && !eventDate) {
-                console.log(`⏭️  Skipping non-contact event without date: ${fullTitle}`);
-                return null;
-            }
-
-            const state = this.extractStateFromAddress(locationAddress);
-
-            // Safely construct registration link with proper validation
-            let registrationLink = null;
-            if (this.eventUrl && carnivalName && carnivalName.trim() !== '') {
-                try {
-                    const safeCarnivalName = carnivalName.trim();
-                    registrationLink = `${this.eventUrl}${encodeURIComponent(safeCarnivalName)}`;
-                } catch (encodeError) {
-                    console.warn(`Failed to encode carnival name for registration link: ${carnivalName}`, encodeError.message);
-                    registrationLink = null;
-                }
-            }
-
-            const processedCardData = {
-                clubLogoURL: clubLogoURL ? clubLogoURL.split('?')[0] : null, // Remove query parameters if any
-                date: eventDate,
-                googleMapsUrl: googleMapsUrl,
-                isActive: hasRegistration,
-                isMySidelineCard: true,
-                locationAddress: locationAddress,
-                locationAddressPart1: locationAddressPart1,
-                locationAddressPart2: locationAddressPart2,
-                locationAddressPart3: locationAddressPart3,
-                locationAddressPart4: locationAddressPart4,
-                mySidelineTitle: fullTitle,
-                mySidelineAddress: locationAddress, // Immutable for matching
-                mySidelineDate: eventDate, // Immutable for matching
-                organiserContactEmail: contactEmail,
-                organiserContactName: contactName,
-                organiserContactPhone: contactPhone,
-                registrationLink: registrationLink,
-                scheduleDetails: [subtitle, scheduleDetails].filter(Boolean).join('\n'),
-                socialMediaFacebook: socialMediaFacebook,
-                socialMediaWebsite: socialMediaWebsite,
-                source: 'MySideline',
-                state: state,
-                title: carnivalName,
-            };
-
-            console.log(`✅ Extracted data from card ${cardIndex + 1}: ${carnivalName} (${eventDate}) ${clubLogoURL ? '[ICON]' : '[NO-ICON]'}`);
-            return processedCardData;
-
-        } catch (error) {
-            console.error(`❌ Error extracting data from card ${cardIndex + 1}:`, error.message);
-            return null;
-        }
-    }
-
-    /**
-     * Extracts an Australian state or territory from a given address string.
-     * It checks against a comprehensive list of names and abbreviations.
-     * @param {string} addressString - The address string to parse.
-     * @returns {string|null} The acronym of the state/territory (e.g., "NSW"), or null if no match is found.
-     */
-    extractStateFromAddress(addressString) {
-        if (!addressString || typeof addressString !== 'string') {
-            return null;
-        }
-
-        // A list of states and territories with their names and abbreviations.
-        // A list of states and territories with their names and abbreviations.
-        const states = [
-            { name: 'NSW', abbreviations: ['NSW', 'N.S.W.','New South Wales'] },
-            { name: 'VIC', abbreviations: ['VIC', 'Vic.','Victoria'] },
-            { name: 'QLD', abbreviations: ['QLD', 'Qld.','Queensland'] },
-            { name: 'WA', abbreviations: ['WA', 'W.A.','Western Australia'] },
-            { name: 'SA', abbreviations: ['SA', 'S.A.','South Australia'] },
-            { name: 'TAS', abbreviations: ['TAS', 'Tas.','Tasmania'] },
-            { name: 'ACT', abbreviations: ['ACT', 'A.C.T.','Australian Capital Territory'] },
-            { name: 'NT', abbreviations: ['NT', 'N.T.','Northern Territory'] }
-        ];
-
-        const lowerCaseAddress = addressString.toLowerCase();
-
-        for (const state of states) {
-            // Create a regex pattern to match the full name or any abbreviation as a whole word.
-            // Example for NSW: /\b(new south wales|nsw|n\.s\.w\.)\b/i
-            const patterns = [state.name.toLowerCase(), ...state.abbreviations.map(abbr => abbr.toLowerCase().replace(/\./g, '\\.'))];
-            const regex = new RegExp(`\\b(${patterns.join('|')})\\b`, 'i');
-
-            if (regex.test(lowerCaseAddress)) {
-                return state.name; // Return the full, properly cased name.
-            }
-        }
-
-        return null; // Return null if no state is found.
-    }
-
-    /**
-     * Safely extract text content from a locator
-     * @param {import('playwright').Locator} locator - Playwright locator
-     * @param {string} defaultValue - Default value if extraction fails
-     * @returns {Promise<string>} Extracted text or default
-     */
-    async safeTextContent(locator, defaultValue = '') {
-        try {
-            const count = await locator.count();
-            if (count > 0) {
-                const text = await locator.textContent();
-                return text?.trim() || defaultValue;
-            }
-            return defaultValue;
-        } catch (error) {
-            console.warn('Safe text extraction failed:', error.message);
-            return defaultValue;
-        }
-    }
-    
-    /**
-     * Generate mock events for development/testing
-     * @returns {Array} Array of mock events
-     */
-    generateMockEvents() {
-        const states = ['NSW', 'QLD', 'VIC'];
-        const mockEvents = [];
-        
-        states.forEach(state => {
-            const currentYear = new Date().getFullYear();
-            const eventTemplates = [
-                {
-                    title: `${state} Masters Rugby League Carnival`,
-                    locationSuffix: state === 'NSW' ? 'Sydney' : state === 'QLD' ? 'Brisbane' : 'Melbourne',
-                    monthOffset: 2
-                },
-                {
-                    title: `${state} Over 35s Championship`,
-                    locationSuffix: state === 'NSW' ? 'Newcastle' : state === 'QLD' ? 'Gold Coast' : 'Geelong',
-                    monthOffset: 4
-                }
-            ];
-
-            eventTemplates.forEach((template, index) => {
-                const eventDate = new Date();
-                eventDate.setMonth(eventDate.getMonth() + template.monthOffset);
-                eventDate.setDate(15);
-
-                mockEvents.push({
-                    title: template.title,
-                    date: eventDate,
-                    locationAddress: `${template.locationSuffix} Sports Complex, ${state}`,
-                    state: state,
-                    registrationLink: `https://profile.mysideline.com.au/register/mock-${state.toLowerCase()}-${index + 1}`,
-                    isManuallyEntered: false,
-                    maxTeams: 16,
-                    feesDescription: `$${300 + (index * 50)} per team (Early bird discount available)`,
-                    registrationDeadline: new Date(eventDate.getTime() - (14 * 24 * 60 * 60 * 1000)),
-                    scheduleDetails: `Day-long tournament starting at ${8 + index}:00 AM. Multiple age divisions available.`,
-                    isRegistrationOpen: true,
-                    isActive: true,
-                    organiserContactName: `${state} Rugby League Masters`,
-                    organiserContactEmail: `masters@${state.toLowerCase()}rl.com.au`,
-                    organiserContactPhone: `0${index + 2} ${Math.floor(Math.random() * 9000) + 1000} ${Math.floor(Math.random() * 9000) + 1000}`,
-                    sourceData: {
-                        isMockData: true,
-                        generatedAt: new Date(),
-                        state: state,
-                        templateIndex: index
-                    }
-                });
             });
-        });
-
-        return mockEvents;
-    }
-
-    /**
-     * Check if card data represents a relevant Masters event
-     * @param {Object} cardData - The extracted card data
-     * @returns {boolean} True if relevant
-     */
-    isRelevantMastersEvent(cardData) {
-        if (!cardData || !cardData.title || cardData.title.length < 5) {
-            return false;
-        }
-        
-        const socialMediaWebsite = cardData.socialMediaWebsite?.toLowerCase() || '';
-        const email = cardData.contactEmail?.toLowerCase() || '';
-        const socialMediaFacebook = cardData.socialMediaFacebook?.toLowerCase() || '';
-        const title = cardData.title.toLowerCase();
-        const subtitle = (cardData.subtitle || '').toLowerCase();
-        
-        // Filter out Touch events at the scraping stage
-        const containsTouch = socialMediaWebsite.includes('touch') || email.includes('touch') || socialMediaFacebook.includes('touch') || title.includes('touch') || subtitle.includes('touch');
-        if (containsTouch) {
-            console.log(`❌ Filtering out Touch event: ${cardData.title}`);
-            return false;
-        }
-        
-        return true;
-    }
-
-    /**
-     * Expand all click-expand elements on the page (fallback method)
-     * @param {Page} page - Playwright page object
-     * @returns {Promise<boolean>} True if any elements were expanded
-     */
-    async expandAllClickExpandElements(page) {
-        try {
-            console.log('Expanding all click-expand elements...');
             
-            const clickExpandElements = await page.locator('.click-expand').all();
+            // Extract the actual image dictionary and metadata
+            const { images: finalImageDict, metadata } = imageDictionary;
+            const imageCount = Object.keys(finalImageDict).length;
             
-            if (clickExpandElements.length === 0) {
-                console.log('No click-expand elements found on the page');
-                return false;
+            // Enhanced logging with detailed statistics
+            console.log(`📸 Image extraction results:`);
+            console.log(`  - Found ${metadata.totalElements} total img elements in .image__wrapper containers`);
+            console.log(`  - Successfully processed ${metadata.processed} images`);
+            console.log(`  - Skipped ${metadata.skipped} images (missing data or invalid URLs)`);
+            console.log(`  - Skipped ${metadata.generic} generic/default images (nrl.svg, etc.)`);
+            console.log(`  - Final unique images in dictionary: ${imageCount}`);
+            
+            // Log any extraction errors
+            if (metadata.error) {
+                console.error(`⚠️ Extraction error: ${metadata.error}`);
             }
             
-            console.log(`Found ${clickExpandElements.length} click-expand elements to expand`);
-            
-            let expandedCount = 0;
-            for (let i = 0; i < clickExpandElements.length; i++) {
-                try {
-                    const element = clickExpandElements[i];
-                    
-                    const isVisible = await element.isVisible();
-                    if (!isVisible) {
-                        console.log(`Click-expand element ${i + 1} is not visible, skipping`);
-                        continue;
-                    }
-                    
-                    console.log(`Expanding element ${i + 1}...`);
-                    
-                    await element.scrollIntoViewIfNeeded();
-                    await this.delay(500);
-                    await element.click();
-                    await this.delay(1000);
-                    
-                    expandedCount++;
-                    console.log(`✅ Expanded element ${i + 1}`);
-                    
-                } catch (clickError) {
-                    console.log(`Failed to expand element ${i + 1}: ${clickError.message}`);
-                }
-            }
-            
-            if (expandedCount > 0) {
-                console.log(`🔄 Waiting for all expanded content to load...`);
-                await this.delay(3000);
-            }
-            
-            console.log(`📊 Successfully expanded ${expandedCount}/${clickExpandElements.length} elements`);
-            return expandedCount > 0;
-            
-        } catch (error) {
-            console.log(`Error expanding click-expand elements: ${error.message}`);
-            return false;
-        }
-    }
-
-    /**
-     * Delay for a specified amount of time
-     * @param {number} ms - Delay time in milliseconds
-     */
-    async delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    /**
-     * Validate and clean extracted data to ensure it meets Carnival model requirements
-     * @param {Object} rawData - Raw extracted data from MySideline
-     * @returns {Object} Cleaned and validated data
-     */
-    validateAndCleanData(rawData) {
-        const cleanedData = { ...rawData };
-
-        // Clean string fields - just trim them, no length requirements
-        const stringFields = [
-            'title',
-            'locationAddress',
-            'locationAddressPart1',
-            'locationAddressPart2', 
-            'locationAddressPart3',
-            'locationAddressPart4',
-            'organiserContactName'
-        ];
-
-        stringFields.forEach(field => {
-            const value = cleanedData[field];
-            if (value && typeof value === 'string') {
-                cleanedData[field] = value.trim();
-            }
-            // Convert empty strings to null
-            if (cleanedData[field] === '') {
-                cleanedData[field] = null;
-            }
-        });
-
-        // Validate and clean email
-        if (cleanedData.organiserContactEmail) {
-            const email = cleanedData.organiserContactEmail.trim();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                console.warn(`Invalid email format: ${email}`);
-                cleanedData.organiserContactEmail = null;
+            // Always log the final dictionary contents for debugging
+            console.log('📋 Final image dictionary contents:');
+            if (imageCount === 0) {
+                console.log('  (empty - no valid non-generic images found)');
             } else {
-                cleanedData.organiserContactEmail = email.toLowerCase();
+                Object.entries(finalImageDict).forEach(([alt, src], index) => {
+                    console.log(`  ${index + 1}. "${alt}" -> ${src}`);
+                });
             }
-        }
-
-        // Validate and clean phone number
-        if (cleanedData.organiserContactPhone) {
-            const phone = cleanedData.organiserContactPhone.trim();
-            // Remove common phone formatting characters for length check
-            const cleanPhone = phone.replace(/[\s\-\(\)\.]/g, '');
-            if (cleanPhone.length < 10 || cleanPhone.length > 20) {
-                console.warn(`Invalid phone format: ${phone}`);
-                cleanedData.organiserContactPhone = null;
+            
+            // Additional debugging if no images found
+            if (imageCount === 0) {
+                console.warn('⚠️ No valid non-generic images found. Running additional diagnostics...');
+                
+                const debugInfo = await page.evaluate(() => {
+                    const allImages = document.querySelectorAll('img');
+                    const imageWrappers = document.querySelectorAll('.image__wrapper');
+                    const targetImages = document.querySelectorAll('.image__wrapper img[alt][data-url]');
+                    const imagesInfo = [];
+                    
+                    Array.from(allImages).slice(0, 10).forEach((img, index) => {
+                        imagesInfo.push({
+                            index: index + 1,
+                            alt: img.alt,
+                            src: img.src,
+                            dataUrl: img.getAttribute('data-url'),
+                            className: img.className,
+                            parentClass: img.parentElement?.className,
+                            hasImageWrapper: img.closest('.image__wrapper') !== null
+                        });
+                    });
+                    
+                    return {
+                        totalImages: allImages.length,
+                        totalImageWrappers: imageWrappers.length,
+                        targetImages: targetImages.length,
+                        imagesWithAlt: document.querySelectorAll('img[alt]').length,
+                        imagesWithSrc: document.querySelectorAll('img[src]').length,
+                        imagesWithDataUrl: document.querySelectorAll('img[data-url]').length,
+                        imagesWithBoth: document.querySelectorAll('img[alt][data-url]').length,
+                        imagesInWrappers: document.querySelectorAll('.image__wrapper img').length,
+                        sampleImages: imagesInfo
+                    };
+                });
+                
+                console.log('🔍 Debug info:', JSON.stringify(debugInfo, null, 2));
             }
-        }
-
-        // Validate and clean URLs
-        const urlFields = ['socialMediaFacebook', 'socialMediaWebsite', 'registrationLink'];
-        urlFields.forEach(field => {
-            const url = cleanedData[field];
-            if (url && typeof url === 'string') {
-                const trimmedUrl = url.trim();
-                const cleanedUrl = this.fixUrlFormat(trimmedUrl);
-                if (!cleanedUrl) {
-                    console.warn(`Invalid URL format for ${field}: ${trimmedUrl}`);
-                    cleanedData[field] = null;
-                } else {
-                    cleanedData[field] = cleanedUrl;
-                }
-            }
-        });
-
-        // Handle state - allow null, but validate if present
-        if (cleanedData.state) {
-            const validStates = AUSTRALIAN_STATES;
-            if (!validStates.includes(cleanedData.state)) {
-                console.warn(`Invalid state: ${cleanedData.state}, setting to null`);
-                cleanedData.state = null;
-            }
-        }
-
-        // Ensure title is present (required field)
-        if (!cleanedData.title || cleanedData.title.trim() === '') {
-            console.warn('No title provided, using default');
-            cleanedData.title = 'Masters Rugby League Carnival';
-        }
-
-        return cleanedData;
-    }
-
-    /**
-     * Validate if a string is a valid URL
-     * @param {string} url - URL to validate
-     * @returns {boolean} True if valid URL
-     */
-    isValidUrl(url) {
-        try {
-            const urlObj = new URL(url);
-            return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+            
+            return finalImageDict;
+            
         } catch (error) {
-            return false;
+            console.error('❌ Failed to extract image dictionary:', error.message);
+            console.error('Stack trace:', error.stack);
+            
+            // Return empty dictionary on error to prevent downstream failures
+            return {};
         }
     }
 
-    /**
-     * Fix URL format by adding protocol if missing and validate
-     * @param {string} url - URL to fix
-     * @returns {string|null} Fixed URL or null if invalid
-     */
-    fixUrlFormat(url) {
-        if (!url || typeof url !== 'string') return null;
-        
-        const trimmedUrl = url.trim();
-        if (!trimmedUrl) return null;
 
-        // If it already has a protocol, validate and return
-        if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
-            return this.isValidUrl(trimmedUrl) ? trimmedUrl : null;
-        }
-
-        // Try adding https://
-        const httpsUrl = `https://${trimmedUrl}`;
-        return this.isValidUrl(httpsUrl) ? httpsUrl : null;
-    }
 }
 
 export default MySidelineScraperService;

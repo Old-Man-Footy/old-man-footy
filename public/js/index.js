@@ -110,7 +110,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                if (!states || states.length === 0) {
+                // Get states directly from checkboxes to ensure we get the current state
+                const stateCheckboxes = document.querySelectorAll('.state-checkbox:checked');
+                const selectedStates = Array.from(stateCheckboxes).map(cb => cb.value);
+                
+                console.log('State checkboxes found:', stateCheckboxes.length);
+                console.log('Selected states from checkboxes:', selectedStates);
+                console.log('States from FormData.getAll():', states);
+                
+                if (!selectedStates || selectedStates.length === 0) {
                     showMessage('Please select at least one state.', 'error');
                     return;
                 }
@@ -121,12 +129,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.disabled = true;
                 
                 // Submit form
+                const formDataEntries = new FormData(form);
+                
+                // Create URLSearchParams manually to handle multiple state values correctly
+                const params = new URLSearchParams();
+                
+                // Add all form fields
+                for (const [key, value] of formDataEntries.entries()) {
+                    params.append(key, value);
+                }
+                
+                // Debug: Log what we're sending
+                console.log('Form data being sent:');
+                for (const [key, value] of params.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+                
                 fetch('/subscribe', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response received:', response.status, response.statusText);
+                    console.log('Content-Type:', response.headers.get('content-type'));
+                    
+                    // Check if the response is actually JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.error('Expected JSON but received:', contentType);
+                        throw new Error(`Expected JSON response but received ${contentType || 'unknown content type'}`);
+                    }
+                    
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Response data:', data);
                     if (data.success) {
                         showMessage('Thanks! You\'ll receive carnival notifications for the selected states.', 'success');
                         form.reset();
@@ -140,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Subscription error:', error);
-                    showMessage('Something went wrong. Please try again.', 'error');
+                    showMessage('An unexpected error occurred. Please try again.', 'error');
                 })
                 .finally(() => {
                     // Restore button

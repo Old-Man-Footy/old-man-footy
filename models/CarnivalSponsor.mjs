@@ -6,7 +6,10 @@
  */
 
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
+import { SPONSORSHIP_LEVELS_ARRAY, LOGO_DISPLAY_SIZES_ARRAY } from '/config/constants.mjs';
+import Sponsor from './Sponsor.mjs';
+import Carnival from './Carnival.mjs';
 
 /**
  * CarnivalSponsor junction model class extending Sequelize Model
@@ -17,7 +20,6 @@ class CarnivalSponsor extends Model {
    * @returns {Promise<Sponsor>} Sponsor instance
    */
   async getSponsorDetails() {
-    const Sponsor = require('./Sponsor');
     return await Sponsor.findByPk(this.sponsorId);
   }
 
@@ -26,7 +28,6 @@ class CarnivalSponsor extends Model {
    * @returns {Promise<Carnival>} Carnival instance
    */
   async getCarnivalDetails() {
-    const Carnival = require('./Carnival');
     return await Carnival.findByPk(this.carnivalId);
   }
 
@@ -51,7 +52,7 @@ class CarnivalSponsor extends Model {
       },
       include: [
         {
-          model: require('./Sponsor'),
+          model: Sponsor,
           as: 'sponsor'
         }
       ],
@@ -72,7 +73,7 @@ class CarnivalSponsor extends Model {
       },
       include: [
         {
-          model: require('./Carnival'),
+          model: Carnival,
           as: 'carnival'
         }
       ],
@@ -93,7 +94,7 @@ class CarnivalSponsor extends Model {
       },
       include: [
         {
-          model: require('./Sponsor'),
+          model: Sponsor,
           as: 'sponsor'
         }
       ]
@@ -152,7 +153,7 @@ CarnivalSponsor.init({
     onDelete: 'CASCADE'
   },
   sponsorshipLevel: {
-    type: DataTypes.ENUM('Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind'),
+    type: DataTypes.ENUM(...SPONSORSHIP_LEVELS_ARRAY),
     allowNull: false,
     defaultValue: 'Supporting'
   },
@@ -179,7 +180,7 @@ CarnivalSponsor.init({
     }
   },
   logoDisplaySize: {
-    type: DataTypes.ENUM('Large', 'Medium', 'Small'),
+    type: DataTypes.ENUM(...LOGO_DISPLAY_SIZES_ARRAY),
     allowNull: false,
     defaultValue: 'Medium'
   },

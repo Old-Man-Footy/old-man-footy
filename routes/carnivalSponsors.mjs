@@ -1,9 +1,13 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '../middleware/auth.mjs';
-import * as carnivalSponsorController from '../controllers/carnivalSponsor.controller.mjs';
+import { ensureAuthenticated } from '/middleware/auth.mjs';
+import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
+import * as carnivalSponsorController from '/controllers/carnivalSponsor.controller.mjs';
 
 const router = express.Router();
+
+// Apply centralized security to all routes
+router.use(applySecurity);
 
 // Get all carnival-sponsor relationships with filtering
 router.get('/', carnivalSponsorController.getCarnivalSponsors);
@@ -17,10 +21,19 @@ router.post('/', ensureAuthenticated, [
     body('sponsorId').isInt({ min: 1 }).withMessage('Valid sponsor ID is required'),
     body('sponsorshipLevel').optional().isIn(['Platinum', 'Gold', 'Silver', 'Bronze', 'Supporting']).withMessage('Invalid sponsorship level'),
     body('sponsorshipValue').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Sponsorship value must be a valid amount'),
-    body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a non-negative integer'),
-    body('logoDisplaySize').optional().isIn(['Small', 'Medium', 'Large']).withMessage('Invalid logo display size'),
-    body('includeInProgram').optional().isBoolean().withMessage('Include in program must be true or false'),
-    body('includeOnWebsite').optional().isBoolean().withMessage('Include on website must be true or false')
+    body('description').optional().trim().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
+    body('contactEmail').optional().custom((email) => {
+        if (email && email.trim()) {
+            const result = validateSecureEmail(email);
+            if (!result.isValid) {
+                throw new Error(result.errors[0]);
+            }
+        }
+        return true;
+    }),
+    body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('logoUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid logo URL required'),
+    body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a non-negative integer')
 ], carnivalSponsorController.createCarnivalSponsor);
 
 // Update a carnival-sponsor relationship

@@ -178,5 +178,8 @@ public/images/*.jpeg
 
 
 # Keep icon files - they should be committed to the repo
-
 .env.local
+
+# Test Results
+test-results
+tests\fixtures

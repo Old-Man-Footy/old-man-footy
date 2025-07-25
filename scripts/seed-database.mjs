@@ -1,7 +1,6 @@
 /**
  * Database Seeding Script for Development Environment - Modular Implementation
- * 
- * This script populates the local SQLite development database with:
+ * * This script populates the local SQLite development database with:
  * - Test clubs and users
  * - Sample carnival data (both manual and MySideline imported)
  * - Email subscriptions
@@ -14,7 +13,7 @@
  * - utilities/ - Contains business logic for seeding operations
  */
 
-import { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } from '../models/index.mjs';
+import { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } from '/models/index.mjs';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
@@ -36,6 +35,19 @@ import PlayerSeeder from './utilities/playerSeeder.mjs';
 // Load environment variables
 import dotenv from 'dotenv';
 dotenv.config();
+
+// Top-level logging
+console.log('Seed script started');
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+  process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
 
 /**
  * Database Seeder - Main Orchestrator Class
@@ -421,11 +433,13 @@ class DatabaseSeeder {
             const numAttendees = Math.floor(Math.random() * (maxClubs - minClubs + 1)) + minClubs;
             
             // Get potential attending clubs - prefer same state with some interstate
+            // Exclude the hosting club from attendees
+            const hostingClubId = carnival.clubId; // Get the host club ID from the carnival record
             const localClubs = this.createdEntities.clubs.filter(club => 
-                club.state === carnival.state && club.isPubliclyListed
+                club.state === carnival.state && club.isPubliclyListed && club.id !== hostingClubId
             );
             const interstateClubs = this.createdEntities.clubs.filter(club => 
-                club.state !== carnival.state && club.isPubliclyListed
+                club.state !== carnival.state && club.isPubliclyListed && club.id !== hostingClubId
             );
             
             const selectedClubs = [];
@@ -826,7 +840,7 @@ class DatabaseSeeder {
                 // Clean up old backups after successful seeding
                 await this.backupService.cleanupOldBackups();
                 
-                console.log('\n✅ Database seeding completed successfully!');
+                console.log('\n✅ Database seeding completed successfully');
                 
                 const backupPath = this.backupService.getBackupPath();
                 if (backupPath) {
@@ -859,11 +873,10 @@ class DatabaseSeeder {
     }
 }
 
-/**
- * Run seeder if called directly with proper safety checks
- */
-const isMainModule = import.meta.url === `file://${process.argv[1]}`;
-if (isMainModule) {
+// Use a robust check for direct script execution (works cross-platform and with npm run)
+const scriptName = path.basename(import.meta.url);
+const invokedName = process.argv[1] ? path.basename(process.argv[1]) : '';
+if (scriptName === invokedName) {
     // Display safety warning with updated information
     console.log('\n' + '⚠️ '.repeat(20));
     console.log('🚨 DATABASE SEEDING SCRIPT - MODULAR SELECTIVE OPERATION');
@@ -875,7 +888,6 @@ if (isMainModule) {
     console.log('Usage examples:');
     console.log('  npm run seed -- --confirm-seed                (selective clearing)');
     console.log('⚠️ '.repeat(20) + '\n');
-    
     const seeder = new DatabaseSeeder();
     seeder.seed()
         .then(() => {

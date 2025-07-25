@@ -76,7 +76,7 @@
                                     <!-- Priority Badge -->
                                     <div class="mb-3">
                                         <small class="text-muted">
-                                            Priority: #<%= sponsor.clubSponsor?.displayOrder || (index + 1) %>
+                                            Priority: #<%= sponsor.displayOrder || (index + 1) %>
                                         </small>
                                     </div>
 
@@ -131,7 +131,7 @@
                                         </div>
                                     </div>
                                     <small class="text-muted">
-                                        Priority: #<%= sponsor.clubSponsor?.displayOrder || '?' %>
+                                        Priority: #<%= sponsor.displayOrder || '?' %>
                                     </small>
                                 </div>
                             <% }); %>

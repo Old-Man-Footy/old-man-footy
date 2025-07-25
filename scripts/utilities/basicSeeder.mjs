@@ -5,12 +5,13 @@
  * and their basic relationships
  */
 
-import { Club, User, Carnival, Sponsor, EmailSubscription, ClubSponsor, CarnivalSponsor, CarnivalClub } from '../../models/index.mjs';
-import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
-import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
-import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
-import MySidelineService from '../../services/mySidelineIntegrationService.mjs';
-import { initializeDatabase } from '../../config/database.mjs';
+import { Club, User, Carnival, Sponsor, EmailSubscription, ClubSponsor, CarnivalSponsor, CarnivalClub } from '/models/index.mjs';
+import { SAMPLE_CLUBS } from '/fixtures/clubFixtures.mjs';
+import { SAMPLE_CARNIVALS } from '/fixtures/carnivalFixtures.mjs';
+import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '/fixtures/sponsorFixtures.mjs';
+import MySidelineService from '/services/mySidelineIntegrationService.mjs';
+import { initializeDatabase } from '/config/database.mjs';
+import { AUSTRALIAN_STATES } from '/config/constants.mjs';
 
 class BasicSeeder {
     constructor() {
@@ -132,10 +133,74 @@ class BasicSeeder {
             );
 
             const carnival = await Carnival.create({
-                ...carnivalData,
+                // Core carnival fields
+                title: carnivalData.title,
+                date: carnivalData.date,
+                endDate: carnivalData.endDate,
+                state: carnivalData.state,
+                
+                // Location fields - structured address
+                locationAddress: carnivalData.locationAddress,
+                locationSuburb: carnivalData.locationSuburb,
+                locationPostcode: carnivalData.locationPostcode,
+                locationCountry: carnivalData.locationCountry,
+                locationAddressLine1: carnivalData.locationAddressLine1,
+                locationAddressLine2: carnivalData.locationAddressLine2,
+                venueName: carnivalData.venueName,
+                locationLatitude: carnivalData.locationLatitude,
+                locationLongitude: carnivalData.locationLongitude,
+                
+                // Contact and organization fields
+                organiserContactName: carnivalData.organiserContactName,
+                organiserContactEmail: carnivalData.organiserContactEmail,
+                organiserContactPhone: carnivalData.organiserContactPhone,
+                
+                // Event details
+                scheduleDetails: carnivalData.scheduleDetails,
+                registrationLink: carnivalData.registrationLink,
+                feesDescription: carnivalData.feesDescription,
+                callForVolunteers: carnivalData.callForVolunteers,
+                
+                // Social media and branding
+                socialMediaFacebook: carnivalData.socialMediaFacebook,
+                socialMediaInstagram: carnivalData.socialMediaInstagram,
+                socialMediaTwitter: carnivalData.socialMediaTwitter,
+                socialMediaWebsite: carnivalData.socialMediaWebsite,
+                clubLogoURL: carnivalData.clubLogoURL,
+                promotionalImageURL: carnivalData.promotionalImageURL,
+                additionalImages: carnivalData.additionalImages || [],
+                
+                // Draw and documents
+                drawFiles: carnivalData.drawFiles || [],
+                drawFileURL: carnivalData.drawFileURL,
+                drawFileName: carnivalData.drawFileName,
+                drawTitle: carnivalData.drawTitle,
+                drawDescription: carnivalData.drawDescription,
+                
+                // Registration management
+                maxTeams: carnivalData.maxTeams,
+                currentRegistrations: carnivalData.currentRegistrations || 0,
+                isRegistrationOpen: carnivalData.isRegistrationOpen !== false, // Default true
+                registrationDeadline: carnivalData.registrationDeadline,
+                
+                // Admin and metadata
+                adminNotes: carnivalData.adminNotes,
+                createdByUserId: creator ? creator.id : null,
+                clubId: randomClub ? randomClub.id : null, // Always assign a valid host club
+                
+                // MySideline fields (for manual entries these are null/false)
+                mySidelineTitle: null,
+                mySidelineId: null,
+                mySidelineAddress: null,
+                mySidelineDate: null,
                 isManuallyEntered: true,
-                createdBy: creator ? creator.id : null,
-                isActive: true
+                lastMySidelineSync: null,
+                claimedAt: null,
+                
+                // Status
+                isActive: true,
+                createdAt: new Date(),
+                updatedAt: new Date()
             });
             
             this.createdCarnivals.push(carnival);
@@ -153,7 +218,7 @@ class BasicSeeder {
         console.log('🔄 Importing MySideline data...');
         
         try {
-            const states = ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
+            const states = AUSTRALIAN_STATES;
             let totalImported = 0;
             
             for (const state of states) {

@@ -6,7 +6,7 @@
  */
 
 import { body, validationResult, param } from 'express-validator';
-import { ClubPlayer, Club } from '../models/index.mjs';
+import { ClubPlayer, Club } from '/models/index.mjs';
 import { Op } from 'sequelize';
 
 /**
@@ -105,7 +105,7 @@ export async function showClubPlayers(req, res, next) {
 
     console.log('=== DEBUG: About to render view ===');
 
-    res.render('clubs/players/index', {
+    return res.render('clubs/players/index', {
       title: `${club.clubName} - Players`,
       players,
       inactivePlayers,
@@ -156,7 +156,7 @@ export async function showAddPlayerForm(req, res, next) {
       return res.redirect('/dashboard');
     }
 
-    res.render('clubs/players/add', {
+    return res.render('clubs/players/add', {
       title: `Add Player - ${club.clubName}`,
       club,
       formData: {}
@@ -213,7 +213,7 @@ export async function createPlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully added to your club.`);
-    res.redirect('/clubs/players');
+    return res.redirect('/clubs/players');
   } catch (error) {
     console.error('Error creating player:', error);
     
@@ -227,7 +227,7 @@ export async function createPlayer(req, res, next) {
     }
 
     // Redirect back to form
-    res.redirect('/clubs/players/add');
+    return res.redirect('/clubs/players/add');
   }
 }
 
@@ -266,7 +266,7 @@ export async function showEditPlayerForm(req, res, next) {
       return res.redirect('/clubs/players');
     }
 
-    res.render('clubs/players/edit', {
+    return res.render('clubs/players/edit', {
       title: `Edit Player - ${player.getFullName()}`,
       player,
       club: player.club,
@@ -352,7 +352,7 @@ export async function updatePlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully updated.`);
-    res.redirect('/clubs/players');
+    return res.redirect('/clubs/players');
   } catch (error) {
     console.error('Error updating player:', error);
     
@@ -366,7 +366,7 @@ export async function updatePlayer(req, res, next) {
     }
 
     // Redirect back to edit form
-    res.redirect(`/clubs/players/${req.params.id}/edit`);
+    return res.redirect(`/clubs/players/${req.params.id}/edit`);
   }
 }
 
@@ -407,11 +407,11 @@ export async function deactivatePlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been removed from your club.`);
-    res.redirect('/clubs/players');
+    return res.redirect('/clubs/players');
   } catch (error) {
     console.error('Error deactivating player:', error);
     req.flash('error', 'Failed to remove player. Please try again.');
-    res.redirect('/clubs/players');
+    return res.redirect('/clubs/players');
   }
 }
 
@@ -452,11 +452,11 @@ export async function reactivatePlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully reactivated.`);
-    res.redirect('/clubs/players');
+    return res.redirect('/clubs/players');
   } catch (error) {
     console.error('Error reactivating player:', error);
     req.flash('error', 'Failed to reactivate player. Please try again.');
-    res.redirect('/clubs/players');
+    return res.redirect('/clubs/players');
   }
 }
 
@@ -468,77 +468,72 @@ export async function reactivatePlayer(req, res, next) {
  * @param {Function} next - Express next middleware function
  */
 export async function downloadCsvTemplate(req, res, next) {
-  try {
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to download the template.');
-      return res.redirect('/dashboard');
-    }
-
-    // Get club information for filename
-    const club = await Club.findByPk(req.user.clubId, {
-      attributes: ['id', 'clubName']
-    });
-
-    if (!club) {
-      req.flash('error', 'Club not found.');
-      return res.redirect('/dashboard');
-    }
-
-    // Create CSV template with headers and sample data
-    const csvHeaders = [
-      'firstName',
-      'lastName', 
-      'email',
-      'dateOfBirth',
-      'notes',
-      'shorts'
-    ];
-
-    const sampleData = [
-      [
-        'John',
-        'Smith',
-        'john.smith@example.com',
-        '1985-06-15',
-        'Former professional player',
-        'Blue'
-      ],
-      [
-        'Sarah',
-        'Johnson', 
-        'sarah.johnson@example.com',
-        '1987-03-22',
-        'Available weekends only',
-        'Red'
-      ],
-      [
-        'Mike',
-        'Williams',
-        'mike.williams@example.com',
-        '1982-11-08',
-        '',
-        'Unrestricted'
-      ]
-    ];
-
-    // Build CSV content
-    const csvContent = [
-      csvHeaders.join(','),
-      ...sampleData.map(row => row.map(field => `"${field}"`).join(','))
-    ].join('\n');
-
-    // Set response headers for file download
-    const filename = `${club.clubName.replace(/[^a-zA-Z0-9]/g, '_')}_players_template.csv`;
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-    // Send the CSV content
-    res.send(csvContent);
-  } catch (error) {
-    console.error('Error generating CSV template:', error);
-    next(error);
+  // Ensure user is authenticated and has a club
+  if (!req.user || !req.user.clubId) {
+    req.flash('error', 'You must be a club delegate to download the template.');
+    return res.redirect('/dashboard');
   }
+
+  // Get club information for filename
+  const club = await Club.findByPk(req.user.clubId, {
+    attributes: ['id', 'clubName']
+  });
+
+  if (!club) {
+    req.flash('error', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Create CSV template with headers and sample data
+  const csvHeaders = [
+    'firstName',
+    'lastName', 
+    'email',
+    'dateOfBirth',
+    'notes',
+    'shorts'
+  ];
+
+  const sampleData = [
+    [
+      'John',
+      'Smith',
+      'john.smith@example.com',
+      '1985-06-15',
+      'Former professional player',
+      'Blue'
+    ],
+    [
+      'Sarah',
+      'Johnson', 
+      'sarah.johnson@example.com',
+      '1987-03-22',
+      'Available weekends only',
+      'Red'
+    ],
+    [
+      'Mike',
+      'Williams',
+      'mike.williams@example.com',
+      '1982-11-08',
+      '',
+      'Unrestricted'
+    ]
+  ];
+
+  // Build CSV content
+  const csvContent = [
+    csvHeaders.join(','),
+    ...sampleData.map(row => row.map(field => `"${field}"`).join(','))
+  ].join('\n');
+
+  // Set response headers for file download
+  const filename = `${club.clubName.replace(/[^a-zA-Z0-9]/g, '_')}_players_template.csv`;
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  // Send the CSV content
+  res.send(csvContent);
 }
 
 /**
@@ -549,159 +544,153 @@ export async function downloadCsvTemplate(req, res, next) {
  * @param {Function} next - Express next middleware function
  */
 export async function importPlayersFromCsv(req, res, next) {
-  try {
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to import players.');
-      return res.redirect('/dashboard');
-    }
+  // Ensure user is authenticated and has a club
+  if (!req.user || !req.user.clubId) {
+    req.flash('error', 'You must be a club delegate to import players.');
+    return res.redirect('/dashboard');
+  }
 
-    // Check if file was uploaded
-    if (!req.file) {
-      req.flash('error', 'Please select a CSV file to upload.');
-      return res.redirect('/clubs/players');
-    }
+  // Check if file was uploaded
+  if (!req.file) {
+    req.flash('error', 'Please select a CSV file to upload.');
+    return res.redirect('/clubs/players');
+  }
 
-    // Get club information
-    const club = await Club.findByPk(req.user.clubId, {
-      attributes: ['id', 'clubName']
-    });
+  // Get club information
+  const club = await Club.findByPk(req.user.clubId, {
+    attributes: ['id', 'clubName']
+  });
 
-    if (!club) {
-      req.flash('error', 'Club not found.');
-      return res.redirect('/dashboard');
-    }
+  if (!club) {
+    req.flash('error', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
 
-    const { shortsColor = 'Unrestricted', updateExisting = false, notes = '' } = req.body;
+  const { shortsColor = 'Unrestricted', updateExisting = false, notes = '' } = req.body;
 
-    // Parse CSV file
-    const csvContent = req.file.buffer.toString('utf8');
-    const lines = csvContent.split('\n').filter(line => line.trim());
-    
-    if (lines.length < 2) {
-      req.flash('error', 'CSV file must contain at least a header row and one data row.');
-      return res.redirect('/clubs/players');
-    }
+  // Parse CSV file
+  const csvContent = req.file.buffer.toString('utf8');
+  const lines = csvContent.split('\n').filter(line => line.trim());
+  
+  if (lines.length < 2) {
+    req.flash('error', 'CSV file must contain at least a header row and one data row.');
+    return res.redirect('/clubs/players');
+  }
 
-    // Parse headers
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
-    
-    // Validate required headers
-    const requiredHeaders = ['firstname', 'lastname', 'email', 'dateofbirth'];
-    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-    
-    if (missingHeaders.length > 0) {
-      req.flash('error', `Missing required columns: ${missingHeaders.join(', ')}. Please use the template.`);
-      return res.redirect('/clubs/players');
-    }
+  // Parse headers
+  const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+  
+  // Validate required headers
+  const requiredHeaders = ['firstname', 'lastname', 'email', 'dateofbirth'];
+  const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+  
+  if (missingHeaders.length > 0) {
+    req.flash('error', `Missing required columns: ${missingHeaders.join(', ')}. Please use the template.`);
+    return res.redirect('/clubs/players');
+  }
 
-    // Process data rows
-    const results = {
-      imported: 0,
-      updated: 0,
-      duplicates: 0,
-      errors: []
-    };
+  // Process data rows
+  const results = {
+    imported: 0,
+    updated: 0,
+    duplicates: 0,
+    errors: []
+  };
 
-    for (let i = 1; i < lines.length; i++) {
-      try {
-        const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
-        
-        if (values.length !== headers.length) {
-          results.errors.push(`Row ${i + 1}: Incorrect number of columns`);
-          continue;
+  for (let i = 1; i < lines.length; i++) {
+    try {
+      const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
+      
+      if (values.length !== headers.length) {
+        results.errors.push(`Row ${i + 1}: Incorrect number of columns`);
+        continue;
+      }
+
+      // Map values to object
+      const playerData = {};
+      headers.forEach((header, index) => {
+        playerData[header] = values[index];
+      });
+
+      // Validate required fields
+      if (!playerData.firstname || !playerData.lastname || !playerData.email || !playerData.dateofbirth) {
+        results.errors.push(`Row ${i + 1}: Missing required data`);
+        continue;
+      }
+
+      // Validate date format
+      const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dobRegex.test(playerData.dateofbirth)) {
+        results.errors.push(`Row ${i + 1}: Invalid date format. Use YYYY-MM-DD`);
+        continue;
+      }
+
+      // Check if player already exists - based on name and DOB within user's club
+      const existingPlayer = await ClubPlayer.findOne({
+        where: {
+          firstName: playerData.firstname,
+          lastName: playerData.lastname,
+          dateOfBirth: playerData.dateofbirth,
+          clubId: req.user.clubId, // SECURITY: Only check within user's club
+          isActive: true
         }
+      });
 
-        // Map values to object
-        const playerData = {};
-        headers.forEach((header, index) => {
-          playerData[header] = values[index];
-        });
-
-        // Validate required fields
-        if (!playerData.firstname || !playerData.lastname || !playerData.email || !playerData.dateofbirth) {
-          results.errors.push(`Row ${i + 1}: Missing required data`);
-          continue;
-        }
-
-        // Validate date format
-        const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dobRegex.test(playerData.dateofbirth)) {
-          results.errors.push(`Row ${i + 1}: Invalid date format. Use YYYY-MM-DD`);
-          continue;
-        }
-
-        // Check if player already exists - based on name and DOB within user's club
-        const existingPlayer = await ClubPlayer.findOne({
-          where: {
+      if (existingPlayer) {
+        // Player exists in current user's club
+        if (updateExisting) {
+          // Update existing player (already belongs to user's club)
+          await existingPlayer.update({
             firstName: playerData.firstname,
             lastName: playerData.lastname,
             dateOfBirth: playerData.dateofbirth,
-            clubId: req.user.clubId, // SECURITY: Only check within user's club
-            isActive: true
-          }
-        });
-
-        if (existingPlayer) {
-          // Player exists in current user's club
-          if (updateExisting) {
-            // Update existing player (already belongs to user's club)
-            await existingPlayer.update({
-              firstName: playerData.firstname,
-              lastName: playerData.lastname,
-              dateOfBirth: playerData.dateofbirth,
-              notes: playerData.notes || notes || null,
-              shorts: playerData.shorts || shortsColor
-            });
-            results.updated++;
-          } else {
-            results.duplicates++;
-          }
-          continue;
+            notes: playerData.notes || notes || null,
+            shorts: playerData.shorts || shortsColor
+          });
+          results.updated++;
+        } else {
+          results.duplicates++;
         }
-
-        // Create new player - ALWAYS use the authenticated user's club ID
-        await ClubPlayer.create({
-          clubId: req.user.clubId, // SECURITY: Force user's club ID
-          firstName: playerData.firstname,
-          lastName: playerData.lastname,
-          email: playerData.email.toLowerCase(),
-          dateOfBirth: playerData.dateofbirth,
-          notes: playerData.notes || notes || null,
-          shorts: playerData.shorts || shortsColor
-        });
-
-        results.imported++;
-      } catch (error) {
-        console.error(`Error processing row ${i + 1}:`, error);
-        results.errors.push(`Row ${i + 1}: ${error.message}`);
+        continue;
       }
+
+      // Create new player - ALWAYS use the authenticated user's club ID
+      await ClubPlayer.create({
+        clubId: req.user.clubId, // SECURITY: Force user's club ID
+        firstName: playerData.firstname,
+        lastName: playerData.lastname,
+        email: playerData.email.toLowerCase(),
+        dateOfBirth: playerData.dateofbirth,
+        notes: playerData.notes || notes || null,
+        shorts: playerData.shorts || shortsColor
+      });
+
+      results.imported++;
+    } catch (error) {
+      console.error(`Error processing row ${i + 1}:`, error);
+      results.errors.push(`Row ${i + 1}: ${error.message}`);
     }
-
-    // Generate success message
-    let message = `Import complete: ${results.imported} players imported`;
-    if (results.updated > 0) message += `, ${results.updated} updated`;
-    if (results.duplicates > 0) message += `, ${results.duplicates} duplicates skipped`;
-    if (results.errors.length > 0) message += `, ${results.errors.length} errors`;
-
-    if (results.imported > 0 || results.updated > 0) {
-      req.flash('success', message);
-    } else {
-      req.flash('warning', message);
-    }
-
-    // Log errors if any
-    if (results.errors.length > 0) {
-      console.log('CSV Import errors:', results.errors);
-      req.flash('error', `Errors encountered: ${results.errors.slice(0, 5).join('; ')}${results.errors.length > 5 ? '...' : ''}`);
-    }
-
-    res.redirect('/clubs/players');
-  } catch (error) {
-    console.error('Error importing CSV:', error);
-    req.flash('error', 'An error occurred while importing players. Please try again.');
-    res.redirect('/clubs/players');
   }
+
+  // Generate success message
+  let message = `Import complete: ${results.imported} players imported`;
+  if (results.updated > 0) message += `, ${results.updated} updated`;
+  if (results.duplicates > 0) message += `, ${results.duplicates} duplicates skipped`;
+  if (results.errors.length > 0) message += `, ${results.errors.length} errors`;
+
+  if (results.imported > 0 || results.updated > 0) {
+    req.flash('success', message);
+  } else {
+    req.flash('warning', message);
+  }
+
+  // Log errors if any
+  if (results.errors.length > 0) {
+    console.log('CSV Import errors:', results.errors);
+    req.flash('error', `Errors encountered: ${results.errors.slice(0, 5).join('; ')}${results.errors.length > 5 ? '...' : ''}`);
+  }
+
+  return res.redirect('/clubs/players');  
 }
 
 /**

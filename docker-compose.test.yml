@@ -3,6 +3,9 @@ version: '3.8'
 
 services:
   app:
+    build:
+      context: .
+      target: test
     image: ghcr.io/old-man-footy/old-man-footy:latest
     container_name: old-man-footy-test
     ports:
@@ -12,12 +15,18 @@ services:
       - NODE_ENV=test
       - SESSION_SECRET=${SESSION_SECRET}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
-      - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_FROM=noreply@oldmanfooty.au
       - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - EMAIL_FROM_NAME="Old Man Footy Test"
       - PORT=3055
+      - MYSIDELINE_ENABLE_SCRAPING=${MYSIDELINE_ENABLE_SCRAPING:-true}
+      - MYSIDELINE_REQUEST_TIMEOUT=${MYSIDELINE_REQUEST_TIMEOUT:-10000}
+      - MYSIDELINE_RETRY_ATTEMPTS=${MYSIDELINE_RETRY_ATTEMPTS:-3}
+      - MYSIDELINE_SYNC_ENABLED=${MYSIDELINE_SYNC_ENABLED:-true}
+      - MYSIDELINE_URL=${MYSIDELINE_URL:-https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league}
+      - MYSIDELINE_EVENT_URL=${MYSIDELINE_EVENT_URL:-https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=}
     volumes:
       # Only persist data and uploads
       - /volume2/docker/old-man-footy-test/data:/app/data

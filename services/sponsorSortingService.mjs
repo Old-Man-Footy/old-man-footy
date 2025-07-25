@@ -1,91 +1,105 @@
 /**
  * Sponsor Sorting Service
  * 
- * Provides utility functions for consistent sponsor sorting across the application.
- * Implements hierarchical sorting by sponsor level, display order, and creation date.
+ * Provides sorting functionality for sponsors based on sponsorship levels
+ * and other criteria.
  */
 
-/**
- * Define sponsor level hierarchy (lower number = higher priority)
- */
-const SPONSOR_LEVEL_PRIORITY = {
-    'Gold': 1,
-    'Silver': 2,
-    'Bronze': 3,
-    'Supporting': 4,
-    'In-Kind': 5
-};
+import { SPONSORSHIP_LEVEL_ORDER } from '/config/constants.mjs';
 
 /**
- * Sort sponsors hierarchically by:
- * 1. Sponsor Level (Gold, Silver, Bronze, Supporting, In-Kind)
- * 2. Display Order (ascending)
- * 3. Creation date (oldest first) if display orders are the same
- * 
+ * Sort sponsors hierarchically for display purposes
  * @param {Array} sponsors - Array of sponsor objects
- * @param {string} relationshipType - Type of relationship ('club' or 'carnival')
- * @returns {Array} Sorted array of sponsors
+ * @param {string} context - Context for sorting ('carnival', 'club', etc.)
+ * @returns {Array} Hierarchically sorted array of sponsors
  */
-const sortSponsorsHierarchically = (sponsors, relationshipType = 'club') => {
-    if (!Array.isArray(sponsors) || sponsors.length === 0) {
-        return sponsors;
-    }
+export function sortSponsorsHierarchically(sponsors, context = 'default') {
+  if (!sponsors || !Array.isArray(sponsors)) {
+    return [];
+  }
 
+  // For carnival context, use display order with level fallback
+  if (context === 'carnival') {
+    return SponsorSortingService.sortByDisplayOrder(sponsors);
+  }
+  
+  // For other contexts, use level-based sorting
+  return SponsorSortingService.sortByLevel(sponsors);
+}
+
+/**
+ * Sponsor sorting service class
+ */
+class SponsorSortingService {
+  /**
+   * Sort sponsors by sponsorship level and creation date
+   * @param {Array} sponsors - Array of sponsor objects
+   * @returns {Array} Sorted array of sponsors
+   */
+  static sortByLevel(sponsors) {
     return sponsors.sort((a, b) => {
-        // 1. Primary sort: Sponsor Level (Gold > Silver > Bronze > Supporting > In-Kind)
-        const levelA = SPONSOR_LEVEL_PRIORITY[a.sponsorshipLevel] || 999;
-        const levelB = SPONSOR_LEVEL_PRIORITY[b.sponsorshipLevel] || 999;
-        
-        if (levelA !== levelB) {
-            return levelA - levelB;
-        }
-
-        // 2. Secondary sort: Display Order (ascending)
-        let displayOrderA, displayOrderB;
-        
-        if (relationshipType === 'carnival') {
-            displayOrderA = a.CarnivalSponsor?.displayOrder || 999;
-            displayOrderB = b.CarnivalSponsor?.displayOrder || 999;
-        } else {
-            displayOrderA = a.ClubSponsor?.displayOrder || a.clubSponsor?.displayOrder || 999;
-            displayOrderB = b.ClubSponsor?.displayOrder || b.clubSponsor?.displayOrder || 999;
-        }
-        
-        if (displayOrderA !== displayOrderB) {
-            return displayOrderA - displayOrderB;
-        }
-
-        // 3. Tertiary sort: Creation date (oldest first)
-        const dateA = new Date(a.createdAt);
-        const dateB = new Date(b.createdAt);
-        
-        return dateA - dateB;
+      // Primary sort: sponsorship level (Gold first, then Silver, etc.)
+      const levelA = SPONSORSHIP_LEVEL_ORDER[a.sponsorshipLevel] || 999;
+      const levelB = SPONSORSHIP_LEVEL_ORDER[b.sponsorshipLevel] || 999;
+      
+      if (levelA !== levelB) {
+        return levelA - levelB;
+      }
+      
+      // Secondary sort: creation date (newest first within same level)
+      return new Date(b.createdAt) - new Date(a.createdAt);
     });
-};
+  }
 
-/**
- * Get sponsor level display name with priority indicator
- * @param {string} level - Sponsor level
- * @returns {string} Display name with priority
- */
-const getSponsorLevelDisplay = (level) => {
-    const priority = SPONSOR_LEVEL_PRIORITY[level];
-    return priority ? `${level} (Priority: ${priority})` : level || 'Unspecified';
-};
+  /**
+   * Sort sponsors by display order if available, fallback to level sorting
+   * @param {Array} sponsors - Array of sponsor objects
+   * @returns {Array} Sorted array of sponsors
+   */
+  static sortByDisplayOrder(sponsors) {
+    return sponsors.sort((a, b) => {
+      // Primary sort: displayOrder (if both have it)
+      if (a.displayOrder !== null && b.displayOrder !== null) {
+        if (a.displayOrder !== b.displayOrder) {
+          return a.displayOrder - b.displayOrder;
+        }
+      }
+      
+      // If one has displayOrder and other doesn't, prioritize the one with displayOrder
+      if (a.displayOrder !== null && b.displayOrder === null) return -1;
+      if (a.displayOrder === null && b.displayOrder !== null) return 1;
+      
+      // Fallback to level-based sorting
+      const levelA = SPONSORSHIP_LEVEL_ORDER[a.sponsorshipLevel] || 999;
+      const levelB = SPONSORSHIP_LEVEL_ORDER[b.sponsorshipLevel] || 999;
+      
+      if (levelA !== levelB) {
+        return levelA - levelB;
+      }
+      
+      // Final fallback: creation date
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  }
 
-/**
- * Get all sponsor levels in order of priority
- * @returns {Array} Array of sponsor levels ordered by priority
- */
-const getSponsorLevelsByPriority = () => {
-    return Object.keys(SPONSOR_LEVEL_PRIORITY).sort((a, b) => 
-        SPONSOR_LEVEL_PRIORITY[a] - SPONSOR_LEVEL_PRIORITY[b]
-    );
-};
+  /**
+   * Sort sponsors by value (highest first)
+   * @param {Array} sponsors - Array of sponsor objects
+   * @returns {Array} Sorted array of sponsors
+   */
+  static sortByValue(sponsors) {
+    return sponsors.sort((a, b) => {
+      const valueA = parseFloat(a.sponsorshipValue) || 0;
+      const valueB = parseFloat(b.sponsorshipValue) || 0;
+      
+      if (valueA !== valueB) {
+        return valueB - valueA; // Highest first
+      }
+      
+      // Fallback to level sorting
+      return this.sortByLevel([a, b])[0] === a ? -1 : 1;
+    });
+  }
+}
 
-export {
-    sortSponsorsHierarchically,
-    getSponsorLevelDisplay,
-    getSponsorLevelsByPriority,
-    SPONSOR_LEVEL_PRIORITY
-};
+export default SponsorSortingService;

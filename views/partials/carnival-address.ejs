@@ -2,7 +2,7 @@
 /**
  * Clickable Carnival Address Partial
  * Displays carnival location as a clickable link to Google Maps
- * Uses locationAddressPart1-4 fields when available, falls back to locationAddress
+ * Uses MySideline-compatible address fields when available, falls back to legacy structure
  * 
  * Required locals:
  * - carnival: Carnival object with location data
@@ -13,6 +13,7 @@
  * - target: Link target (default: '_blank')
  * - truncate: Maximum characters before truncation (default: null - no truncation)
  * - layout: 'multiline' for structured display or 'inline' for single line (default: 'multiline')
+ * - showCoordinates: Whether to show GPS coordinates (default: false)
  */
 
 // Set defaults
@@ -21,31 +22,73 @@ const showIcon = locals.showIcon !== false;
 const target = locals.target || '_blank';
 const truncate = locals.truncate || null;
 const layout = locals.layout || 'multiline';
+const showCoordinates = locals.showCoordinates || false;
 
-// Build address parts array from stored fields
-const addressParts = [
-    carnival.locationAddressPart1,
-    carnival.locationAddressPart2,
-    carnival.locationAddressPart3,
-    carnival.locationAddressPart4
-].filter(part => part && part.trim().length > 0);
-
-// Determine which address data to use
+// Build MySideline-compatible address structure when available
 let displayParts = [];
 let fullAddressForMaps = '';
 let hasStructuredParts = false;
+let hasCoordinates = false;
+let googleMapsUrl = '';
 
-if (addressParts.length > 0) {
-    // Use structured address parts
-    displayParts = addressParts;
-    fullAddressForMaps = addressParts.join(', ');
-    hasStructuredParts = true;
-} else if (carnival.locationAddress && carnival.locationAddress.trim().length > 0) {
-    // Fall back to main address field
+// Check if we have MySideline-compatible fields
+if (carnival.locationSuburb || carnival.locationPostcode || carnival.locationLatitude) {
+    // Use MySideline format: Street, Suburb State Postcode, Country
+    const addressComponents = [];
+    
+    // Add structured address lines from MySideline
+    if (carnival.locationAddressLine1) {
+        addressComponents.push(carnival.locationAddressLine1.trim());
+    }
+    if (carnival.locationAddressLine2) {
+        addressComponents.push(carnival.locationAddressLine2.trim());
+    }
+    
+    // Add suburb, state, postcode line
+    let locationLine = '';
+    if (carnival.locationSuburb) {
+        locationLine += carnival.locationSuburb;
+    }
+    if (carnival.state) {
+        locationLine += (locationLine ? ' ' : '') + carnival.state;
+    }
+    if (carnival.locationPostcode) {
+        locationLine += (locationLine ? ' ' : '') + carnival.locationPostcode;
+    }
+    if (locationLine) {
+        addressComponents.push(locationLine);
+    }
+    
+    // Add country if different from default
+    if (carnival.locationCountry && carnival.locationCountry !== 'Australia') {
+        addressComponents.push(carnival.locationCountry);
+    }
+    
+    displayParts = addressComponents.filter(part => part && part.trim().length > 0);
+    fullAddressForMaps = displayParts.join(', ');
+    hasStructuredParts = displayParts.length > 0;
+    
+    // Check for coordinates
+    if (carnival.locationLatitude && carnival.locationLongitude) {
+        hasCoordinates = true;
+        googleMapsUrl = `https://maps.google.com/?q=${carnival.locationLatitude},${carnival.locationLongitude}`;
+    }
+} else {
+    // Fall back to main locationAddress field only
+    if (carnival.locationAddress && carnival.locationAddress.trim().length > 0) {
+        displayParts = [carnival.locationAddress.trim()];
+        fullAddressForMaps = carnival.locationAddress.trim();
+    }
+}
+
+// If no structured address found, check for main locationAddress field
+if (!hasStructuredParts && carnival.locationAddress && carnival.locationAddress.trim().length > 0) {
     displayParts = [carnival.locationAddress.trim()];
     fullAddressForMaps = carnival.locationAddress.trim();
-} else {
-    // No address data available
+}
+
+// If still no address data available
+if (displayParts.length === 0) {
 %>
     <span class="text-muted <%= addressClass %>">
         <% if (showIcon) { %><i class="bi bi-geo-alt me-1"></i><% } %>
@@ -55,8 +98,10 @@ if (addressParts.length > 0) {
     return;
 }
 
-// Build Google Maps URL
-const googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(fullAddressForMaps)}`;
+// Generate Google Maps URL - prefer coordinates, fall back to address search
+if (!googleMapsUrl) {
+    googleMapsUrl = `https://maps.google.com/maps?q=${encodeURIComponent(fullAddressForMaps)}`;
+}
 
 // Handle truncation for inline display
 let displayAddress = fullAddressForMaps;
@@ -67,7 +112,7 @@ if (layout === 'inline' && truncate && fullAddressForMaps.length > truncate) {
     <a href="<%= googleMapsUrl %>" 
        target="<%= target %>" 
        class="text-decoration-none <%= addressClass %>"
-       title="View <%= fullAddressForMaps %> on Google Maps"
+       title="View <%= fullAddressForMaps %> on Google Maps<% if (hasCoordinates) { %> (GPS: <%= carnival.locationLatitude %>, <%= carnival.locationLongitude %>)<% } %>"
        rel="noopener noreferrer">
         <% if (showIcon) { %><i class="bi bi-geo-alt me-1"></i><% } %>
         
@@ -79,8 +124,18 @@ if (layout === 'inline' && truncate && fullAddressForMaps.length > truncate) {
                     <span class="d-block text-muted small"><%= part %></span>
                 <% }); %>
             <% } %>
+            <% if (showCoordinates && hasCoordinates) { %>
+                <span class="d-block text-muted small">
+                    <i class="bi bi-geo me-1"></i>GPS: <%= carnival.locationLatitude %>, <%= carnival.locationLongitude %>
+                </span>
+            <% } %>
         <% } else { %>
             <!-- Single line address display -->
             <%= layout === 'inline' ? displayAddress : fullAddressForMaps %>
+            <% if (showCoordinates && hasCoordinates && layout === 'inline') { %>
+                <small class="text-muted ms-2">
+                    <i class="bi bi-geo"></i>
+                </small>
+            <% } %>
         <% } %>
     </a>

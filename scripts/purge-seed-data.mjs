@@ -9,8 +9,8 @@
  * Safe to run in production environments during transition from UAT to live.
  */
 
-import { sequelize, User, Club, Carnival, EmailSubscription } from '../models/index.mjs';
-import { initializeDatabase } from '../config/database.mjs';
+import { sequelize, User, Club, Carnival, EmailSubscription } from '/models/index.mjs';
+import { initializeDatabase } from '/config/database.mjs';
 import dotenv from 'dotenv';
 
 

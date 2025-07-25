@@ -6,7 +6,11 @@
  */
 
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config/database.mjs';
+import { sequelize } from '/config/database.mjs';
+import { ATTENDANCE_STATUS_ARRAY } from '/config/constants.mjs';
+import CarnivalClub from './CarnivalClub.mjs';
+import ClubPlayer from './ClubPlayer.mjs';
+import Carnival from './Carnival.mjs';
 
 /**
  * CarnivalClubPlayer junction model class extending Sequelize Model
@@ -16,8 +20,7 @@ class CarnivalClubPlayer extends Model {
    * Get carnival club registration details for this player assignment
    * @returns {Promise<CarnivalClub>} CarnivalClub instance
    */
-  async getCarnivalClubDetails() {
-    const CarnivalClub = require('./CarnivalClub');
+  async getCarnivalClubDetails() {    
     return await CarnivalClub.findByPk(this.carnivalClubId);
   }
 
@@ -26,7 +29,6 @@ class CarnivalClubPlayer extends Model {
    * @returns {Promise<ClubPlayer>} ClubPlayer instance
    */
   async getClubPlayerDetails() {
-    const ClubPlayer = require('./ClubPlayer');
     return await ClubPlayer.findByPk(this.clubPlayerId);
   }
 
@@ -51,7 +53,7 @@ class CarnivalClubPlayer extends Model {
       },
       include: [
         {
-          model: require('./ClubPlayer'),
+          model: ClubPlayer,
           as: 'clubPlayer',
           where: { isActive: true },
           required: true
@@ -74,11 +76,11 @@ class CarnivalClubPlayer extends Model {
       },
       include: [
         {
-          model: require('./CarnivalClub'),
+          model: CarnivalClub,
           as: 'carnivalClub',
           include: [
             {
-              model: require('./Carnival'),
+              model: Carnival,
               as: 'carnival',
               where: { isActive: true }
             }
@@ -205,12 +207,12 @@ CarnivalClubPlayer.init({
     }
   },
   attendanceStatus: {
-    type: DataTypes.ENUM('confirmed', 'tentative', 'unavailable'),
+    type: DataTypes.ENUM(...ATTENDANCE_STATUS_ARRAY),
     defaultValue: 'confirmed',
     allowNull: false,
     validate: {
       isIn: {
-        args: [['confirmed', 'tentative', 'unavailable']],
+        args: [ATTENDANCE_STATUS_ARRAY],
         msg: 'Attendance status must be one of: confirmed, tentative, unavailable'
       }
     }
