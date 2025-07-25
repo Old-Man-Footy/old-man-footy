@@ -6,8 +6,8 @@
  * with the current model definitions to fix any schema mismatches.
  */
 
-import { sequelize } from '/config/database.mjs';
-import '/models/index.mjs'; // Import all models
+import { sequelize } from '../config/database.mjs';
+import '../models/index.mjs'; // Import all models
 
 async function syncDatabase() {
     try {

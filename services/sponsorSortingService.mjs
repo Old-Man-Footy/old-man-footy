@@ -5,7 +5,7 @@
  * and other criteria.
  */
 
-import { SPONSORSHIP_LEVEL_ORDER } from '/config/constants.mjs';
+import { SPONSORSHIP_LEVEL_ORDER } from '../config/constants.mjs';
 
 /**
  * Sort sponsors hierarchically for display purposes

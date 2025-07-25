@@ -136,7 +136,7 @@ export async function runMigrations() {
     console.log('📦 Running migrations using Sequelize sync...');
     
     // Import models to ensure they're loaded
-    const models = await import('/models/index.mjs');
+    const models = await import('../models/index.mjs');
     
     // Check if database has existing data
     const tables = await sequelize.getQueryInterface().showAllTables();

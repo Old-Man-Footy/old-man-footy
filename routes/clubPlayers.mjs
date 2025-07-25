@@ -8,10 +8,10 @@
 import express from 'express';
 import multer from 'multer';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '/middleware/auth.mjs';
-import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
-import { playerEmail } from '/middleware/validation.mjs';
-import * as clubPlayerController from '/controllers/clubPlayer.controller.mjs';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
+import { playerEmail } from '../middleware/validation.mjs';
+import * as clubPlayerController from '../controllers/clubPlayer.controller.mjs';
 
 const router = express.Router();
 

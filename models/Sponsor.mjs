@@ -6,7 +6,7 @@
  */
 
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * Sponsor model class extending Sequelize Model

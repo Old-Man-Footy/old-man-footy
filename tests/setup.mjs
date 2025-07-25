@@ -5,7 +5,7 @@
  * Ensures test database schema is up to date by running all migrations.
  */
 
-import { sequelize } from '/models/index.mjs';
+import { sequelize } from '../models/index.mjs';
 import path from 'path';
 
 /**

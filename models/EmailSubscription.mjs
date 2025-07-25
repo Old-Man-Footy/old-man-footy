@@ -7,7 +7,7 @@
 
 import { DataTypes, Model, Op } from 'sequelize';
 import crypto from 'crypto';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * EmailSubscription model class extending Sequelize Model

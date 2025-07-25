@@ -14,14 +14,13 @@ import {
   CarnivalClubPlayer,
   Sponsor,
   sequelize,
-} from '/models/index.mjs';
+} from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES } from '/config/constants.mjs';
-import mySidelineService from '/services/mySidelineIntegrationService.mjs';
-import emailService from '/services/emailService.mjs';
-import { sortSponsorsHierarchically } from '/services/sponsorSortingService.mjs';
-import { asyncHandler } from '/middleware/asyncHandler.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import mySidelineService from '../services/mySidelineIntegrationService.mjs';
+import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
+import { asyncHandler } from '../middleware/asyncHandler.mjs';
 
 /**
  * Display list of all carnivals with filtering options

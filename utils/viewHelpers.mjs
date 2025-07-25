@@ -16,7 +16,7 @@ import {
     UI_STATES,
     BOOTSTRAP_COLORS,
     AUDIT_RESULTS
-} from '/config/constants.mjs';
+} from '../config/constants.mjs';
 
 /**
  * Get constants for use in EJS templates

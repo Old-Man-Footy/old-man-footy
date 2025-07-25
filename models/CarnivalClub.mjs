@@ -6,8 +6,8 @@
  */
 
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '/config/database.mjs';
-import { APPROVAL_STATUS_ARRAY } from '/config/constants.mjs';
+import { sequelize } from '../config/database.mjs';
+import { APPROVAL_STATUS_ARRAY } from '../config/constants.mjs';
 import Carnival from './Carnival.mjs';
 import Club from './Club.mjs';
 

@@ -1,10 +1,10 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '/middleware/auth.mjs';
-import { clubUpload, handleUploadError } from '/middleware/upload.mjs';
-import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
-import * as clubController from '/controllers/club.controller.mjs';
-import { AUSTRALIAN_STATES } from '/config/constants.mjs';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { clubUpload, handleUploadError } from '../middleware/upload.mjs';
+import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
+import * as clubController from '../controllers/club.controller.mjs';
+import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
 

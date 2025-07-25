@@ -1,8 +1,8 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '/middleware/auth.mjs';
-import { applySecurity, validateSecureEmail } from '/middleware/security.mjs';
-import * as carnivalSponsorController from '/controllers/carnivalSponsor.controller.mjs';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
+import * as carnivalSponsorController from '../controllers/carnivalSponsor.controller.mjs';
 
 const router = express.Router();
 

@@ -4,7 +4,7 @@ import MySidelineEventParserService from './mySidelineEventParserService.mjs';
 import MySidelineDataService from './mySidelineDataService.mjs';
 import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
 import ImageNamingService from './imageNamingService.mjs';
-import { Carnival, SyncLog } from '/models/index.mjs';
+import { Carnival, SyncLog } from '../models/index.mjs';
 
 /**
  * MySideline Integration Service (Main Orchestrator)
