@@ -116,8 +116,8 @@ export const getCurrentConfig = () => {
     
     // Database Settings
     database: {
-      username: getEnvVar('DATABASE_USERNAME', null, false),
-      password: getEnvVar('DATABASE_PASSWORD', null, false),
+      // username: getEnvVar('DATABASE_USERNAME', null, false),
+      // password: getEnvVar('DATABASE_PASSWORD', null, false),
       url: getEnvVar('DATABASE_URL', `sqlite:./data/${env === 'test' ? 'test-' : env === 'development' ? 'dev-' : ''}old-man-footy.db`)
     },
     
