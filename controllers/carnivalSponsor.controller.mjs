@@ -5,8 +5,8 @@
  * for the Old Man Footy platform.
  */
 
-import { CarnivalSponsor, Carnival, Sponsor } from '/models/index.mjs';
-import { SPONSORSHIP_LEVELS } from '/config/constants.mjs';
+import { CarnivalSponsor, Carnival, Sponsor } from '../models/index.mjs';
+import { SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 
 /**
  * Create a new carnival-sponsor relationship

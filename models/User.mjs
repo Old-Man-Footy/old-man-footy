@@ -8,7 +8,7 @@
 import { DataTypes, Model, Op } from 'sequelize';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * User model class extending Sequelize Model

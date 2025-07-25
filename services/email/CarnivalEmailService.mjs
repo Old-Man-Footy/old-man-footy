@@ -1,5 +1,5 @@
 import { BaseEmailService } from './BaseEmailService.mjs';
-import { EmailSubscription } from '/models/index.mjs';
+import { EmailSubscription } from '../../models/index.mjs';
 import { Op } from 'sequelize';
 
 /**

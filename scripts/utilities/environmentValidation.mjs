@@ -5,7 +5,7 @@
  * Prevents accidental data modification in production
  */
 
-import { sequelize } from '/models/index.mjs';
+import { sequelize } from '../../models/index.mjs';
 
 /**
  * Validate that we're in a safe environment for database operations

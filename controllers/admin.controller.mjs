@@ -6,12 +6,12 @@
  */
 
 import { validationResult } from 'express-validator';
-import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '/models/index.mjs';
+import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
 import { Op, fn } from 'sequelize';
 import crypto from 'crypto';
-import AuthEmailService from '/services/email/AuthEmailService.mjs';
-import AuditService from '/services/auditService.mjs';
-import { wrapControllers } from '/middleware/asyncHandler.mjs';
+import AuthEmailService from '../services/email/AuthEmailService.mjs';
+import AuditService from '../services/auditService.mjs';
+import { wrapControllers } from '../middleware/asyncHandler.mjs';
 
 /**
  * Get Admin Dashboard with system statistics

@@ -5,10 +5,23 @@
  * Uses identification patterns to distinguish seed data from production data
  */
 
-import { sequelize, Club, User, ClubPlayer, CarnivalClubPlayer, Carnival, Sponsor, ClubSponsor, CarnivalSponsor, CarnivalClub, EmailSubscription, ClubAlternateName, SyncLog } from '/models/index.mjs';
-import { SAMPLE_CLUBS } from '/fixtures/clubFixtures.mjs';
-import { SAMPLE_CARNIVALS } from '/fixtures/carnivalFixtures.mjs';
-import { SAMPLE_SPONSORS } from '/fixtures/sponsorFixtures.mjs';
+import { 
+    sequelize, 
+    Club, 
+    User, 
+    ClubPlayer, 
+    CarnivalClubPlayer, 
+    Carnival, 
+    Sponsor, 
+    CarnivalSponsor, 
+    CarnivalClub, 
+    EmailSubscription, 
+    ClubAlternateName, 
+    SyncLog 
+} from '../models/index.mjs';
+import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
+import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
+import { SAMPLE_SPONSORS } from '../fixtures/sponsorFixtures.mjs';
 import { validateEnvironment } from './environmentValidation.mjs';
 import { Op } from 'sequelize';
 
@@ -37,7 +50,6 @@ class DataCleanup {
                 playerAssignments: 0,
                 carnivals: 0,
                 sponsors: 0,
-                clubSponsors: 0,
                 carnivalSponsors: 0,
                 carnivalClubs: 0,
                 emailSubscriptions: 0,
@@ -150,26 +162,11 @@ class DataCleanup {
                     { description: { [Op.like]: '%Supporting local rugby league communities%' } } // Seed description pattern
                 ]
             };
-
-            const seedSponsors = await Sponsor.findAll({ where: seedSponsorConditions });
-            const seedSponsorIds = seedSponsors.map(sponsor => sponsor.id);
             
-            // Remove club-sponsor relationships first
-            const removedClubSponsors = await ClubSponsor.destroy({
-                where: { 
-                    [Op.or]: [
-                        { sponsorId: { [Op.in]: seedSponsorIds } },
-                        { clubId: { [Op.in]: seedClubIds } },
-                        { notes: { [Op.like]: '%Seeded relationship%' } } // Seed marker
-                    ]
-                }
-            });
-            removalStats.clubSponsors = removedClubSponsors;
-            
-            // Remove the sponsors themselves
+            // Remove the sponsors
             const removedSponsors = await Sponsor.destroy({ where: seedSponsorConditions });
             removalStats.sponsors = removedSponsors;
-            console.log(`    Removed ${removedSponsors} seed sponsors and ${removedClubSponsors} relationships`);
+            console.log(`    Removed ${removedSponsors} seed sponsors`);
 
             // 7. Remove seed email subscriptions
             console.log('  📧 Removing seed email subscriptions...');

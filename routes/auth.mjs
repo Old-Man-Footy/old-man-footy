@@ -1,8 +1,8 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '/middleware/auth.mjs';
-import { applyAuthSecurity, validatePassword, validateSecureEmail } from '/middleware/security.mjs';
-import * as authController from '/controllers/auth.controller.mjs';
+import { ensureAuthenticated } from '../middleware/auth.mjs';
+import { applyAuthSecurity, validatePassword, validateSecureEmail } from '../middleware/security.mjs';
+import * as authController from '../controllers/auth.controller.mjs';
 
 const router = express.Router();
 

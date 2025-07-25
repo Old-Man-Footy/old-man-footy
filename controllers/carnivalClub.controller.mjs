@@ -6,12 +6,12 @@
  * Follows strict MVC separation of concerns as outlined in best practices.
  */
 
-import { CarnivalClub, Carnival, Club, ClubPlayer, CarnivalClubPlayer } from '/models/index.mjs';
+import { CarnivalClub, Carnival, Club, ClubPlayer, CarnivalClubPlayer } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import { wrapControllers } from '/middleware/asyncHandler.mjs';
-import CarnivalEmailService from '/services/email/CarnivalEmailService.mjs';
-import { APPROVAL_STATUS } from '/config/constants.mjs';
+import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import CarnivalEmailService from '../services/email/CarnivalEmailService.mjs';
+import { APPROVAL_STATUS } from '../config/constants.mjs';
 
 /**
  * Show carnival attendees management page (for carnival organizers)

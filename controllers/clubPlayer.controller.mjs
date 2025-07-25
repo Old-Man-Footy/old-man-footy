@@ -6,7 +6,7 @@
  */
 
 import { body, validationResult, param } from 'express-validator';
-import { ClubPlayer, Club } from '/models/index.mjs';
+import { ClubPlayer, Club } from '../models/index.mjs';
 import { Op } from 'sequelize';
 
 /**

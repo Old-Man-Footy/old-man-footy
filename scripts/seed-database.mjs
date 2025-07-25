@@ -13,7 +13,18 @@
  * - utilities/ - Contains business logic for seeding operations
  */
 
-import { sequelize, ClubSponsor, CarnivalSponsor, CarnivalClub, ClubPlayer, CarnivalClubPlayer, Club, User, Carnival, Sponsor, EmailSubscription } from '/models/index.mjs';
+import { 
+    sequelize,
+    CarnivalSponsor, 
+    CarnivalClub, 
+    ClubPlayer, 
+    CarnivalClubPlayer, 
+    Club, 
+    User, 
+    Carnival, 
+    Sponsor, 
+    EmailSubscription 
+} from '../models/index.mjs';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
@@ -171,110 +182,111 @@ class DatabaseSeeder {
         }
     }
 
-    /**
-     * Link sponsors to clubs with realistic relationships
-     * @returns {Promise<void>}
-     */
-    async linkSponsorsToClubs() {
-        console.log('🔗 Linking sponsors to clubs...');
+    // TODO: SPONSORS ARE NOW CREATED FOR EACH CLUB. THIS NEEDS TO BE REFACTORED
+    // /**
+    //  * Link sponsors to clubs with realistic relationships
+    //  * @returns {Promise<void>}
+    //  */
+    // async linkSponsorsToClubs() {
+    //     console.log('🔗 Linking sponsors to clubs...');
         
-        let totalLinks = 0;
+    //     let totalLinks = 0;
         
-        for (const club of this.createdEntities.clubs) {
-            // Each club gets 1-4 sponsors with varying levels
-            const numSponsors = Math.floor(Math.random() * 4) + 1;
-            const availableSponsors = [...this.createdEntities.sponsors];
+    //     for (const club of this.createdEntities.clubs) {
+    //         // Each club gets 1-4 sponsors with varying levels
+    //         const numSponsors = Math.floor(Math.random() * 4) + 1;
+    //         const availableSponsors = [...this.createdEntities.sponsors];
             
-            // Prefer local sponsors (same state) with 70% probability
-            const localSponsors = availableSponsors.filter(sponsor => sponsor.state === club.state);
-            const otherSponsors = availableSponsors.filter(sponsor => sponsor.state !== club.state);
+    //         // Prefer local sponsors (same state) with 70% probability
+    //         const localSponsors = availableSponsors.filter(sponsor => sponsor.state === club.state);
+    //         const otherSponsors = availableSponsors.filter(sponsor => sponsor.state !== club.state);
             
-            const selectedSponsors = [];
+    //         const selectedSponsors = [];
             
-            for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
-                let sponsorPool;
+    //         for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
+    //             let sponsorPool;
                 
-                // 70% chance to pick local sponsor, 30% for national/other state
-                if (Math.random() < 0.7 && localSponsors.length > 0) {
-                    sponsorPool = localSponsors;
-                } else {
-                    sponsorPool = otherSponsors.length > 0 ? otherSponsors : localSponsors;
-                }
+    //             // 70% chance to pick local sponsor, 30% for national/other state
+    //             if (Math.random() < 0.7 && localSponsors.length > 0) {
+    //                 sponsorPool = localSponsors;
+    //             } else {
+    //                 sponsorPool = otherSponsors.length > 0 ? otherSponsors : localSponsors;
+    //             }
                 
-                if (sponsorPool.length === 0) break;
+    //             if (sponsorPool.length === 0) break;
                 
-                const randomIndex = Math.floor(Math.random() * sponsorPool.length);
-                const selectedSponsor = sponsorPool[randomIndex];
+    //             const randomIndex = Math.floor(Math.random() * sponsorPool.length);
+    //             const selectedSponsor = sponsorPool[randomIndex];
                 
-                selectedSponsors.push(selectedSponsor);
+    //             selectedSponsors.push(selectedSponsor);
                 
-                // Remove from both pools to avoid duplicates
-                const globalIndex = availableSponsors.indexOf(selectedSponsor);
-                availableSponsors.splice(globalIndex, 1);
-                localSponsors.splice(localSponsors.indexOf(selectedSponsor), 1);
-                if (otherSponsors.includes(selectedSponsor)) {
-                    otherSponsors.splice(otherSponsors.indexOf(selectedSponsor), 1);
-                }
-            }
+    //             // Remove from both pools to avoid duplicates
+    //             const globalIndex = availableSponsors.indexOf(selectedSponsor);
+    //             availableSponsors.splice(globalIndex, 1);
+    //             localSponsors.splice(localSponsors.indexOf(selectedSponsor), 1);
+    //             if (otherSponsors.includes(selectedSponsor)) {
+    //                 otherSponsors.splice(otherSponsors.indexOf(selectedSponsor), 1);
+    //             }
+    //         }
             
-            // Create relationships with appropriate sponsorship levels
-            for (let i = 0; i < selectedSponsors.length; i++) {
-                const sponsor = selectedSponsors[i];
+    //         // Create relationships with appropriate sponsorship levels
+    //         for (let i = 0; i < selectedSponsors.length; i++) {
+    //             const sponsor = selectedSponsors[i];
                 
-                // Assign sponsorship levels
-                let sponsorshipLevel;
-                if (sponsor.sponsorshipLevel === 'Gold' && i === 0) {
-                    sponsorshipLevel = 'Gold';
-                } else if (sponsor.sponsorshipLevel === 'Gold' || sponsor.sponsorshipLevel === 'Silver') {
-                    sponsorshipLevel = i === 0 ? 'Silver' : (Math.random() < 0.5 ? 'Bronze' : 'Supporting');
-                } else {
-                    sponsorshipLevel = Math.random() < 0.3 ? 'Bronze' : 'Supporting';
-                }
+    //             // Assign sponsorship levels
+    //             let sponsorshipLevel;
+    //             if (sponsor.sponsorshipLevel === 'Gold' && i === 0) {
+    //                 sponsorshipLevel = 'Gold';
+    //             } else if (sponsor.sponsorshipLevel === 'Gold' || sponsor.sponsorshipLevel === 'Silver') {
+    //                 sponsorshipLevel = i === 0 ? 'Silver' : (Math.random() < 0.5 ? 'Bronze' : 'Supporting');
+    //             } else {
+    //                 sponsorshipLevel = Math.random() < 0.3 ? 'Bronze' : 'Supporting';
+    //             }
                 
-                // Generate realistic sponsorship values
-                const sponsorshipValues = {
-                    'Gold': { min: 5000, max: 15000 },
-                    'Silver': { min: 2000, max: 7000 },
-                    'Bronze': { min: 500, max: 2500 },
-                    'Supporting': { min: 100, max: 800 }
-                };
+    //             // Generate realistic sponsorship values
+    //             const sponsorshipValues = {
+    //                 'Gold': { min: 5000, max: 15000 },
+    //                 'Silver': { min: 2000, max: 7000 },
+    //                 'Bronze': { min: 500, max: 2500 },
+    //                 'Supporting': { min: 100, max: 800 }
+    //             };
                 
-                const valueRange = sponsorshipValues[sponsorshipLevel];
-                const sponsorshipValue = Math.floor(
-                    Math.random() * (valueRange.max - valueRange.min) + valueRange.min
-                );
+    //             const valueRange = sponsorshipValues[sponsorshipLevel];
+    //             const sponsorshipValue = Math.floor(
+    //                 Math.random() * (valueRange.max - valueRange.min) + valueRange.min
+    //             );
                 
-                // Generate start date (within last 2 years)
-                const startDate = new Date();
-                startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 730));
+    //             // Generate start date (within last 2 years)
+    //             const startDate = new Date();
+    //             startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 730));
                 
-                // 90% get ongoing sponsorship, 10% get end date
-                let endDate = null;
-                if (Math.random() < 0.1) {
-                    endDate = new Date(startDate);
-                    endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 365) + 365);
-                }
+    //             // 90% get ongoing sponsorship, 10% get end date
+    //             let endDate = null;
+    //             if (Math.random() < 0.1) {
+    //                 endDate = new Date(startDate);
+    //                 endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 365) + 365);
+    //             }
                 
-                const contractDetails = this.generateContractDetails(sponsorshipLevel, sponsor.businessType);
+    //             const contractDetails = this.generateContractDetails(sponsorshipLevel, sponsor.businessType);
                 
-                await ClubSponsor.create({
-                    clubId: club.id,
-                    sponsorId: sponsor.id,
-                    sponsorshipLevel: sponsorshipLevel,
-                    sponsorshipValue: sponsorshipValue,
-                    startDate: startDate,
-                    endDate: endDate,
-                    contractDetails: contractDetails,
-                    isActive: true,
-                    notes: `Seeded relationship - ${sponsorshipLevel} level sponsorship`
-                });
+    //             await ClubSponsor.create({
+    //                 clubId: club.id,
+    //                 sponsorId: sponsor.id,
+    //                 sponsorshipLevel: sponsorshipLevel,
+    //                 sponsorshipValue: sponsorshipValue,
+    //                 startDate: startDate,
+    //                 endDate: endDate,
+    //                 contractDetails: contractDetails,
+    //                 isActive: true,
+    //                 notes: `Seeded relationship - ${sponsorshipLevel} level sponsorship`
+    //             });
                 
-                totalLinks++;
-            }
-        }
+    //             totalLinks++;
+    //         }
+    //     }
         
-        console.log(`✅ Created ${totalLinks} club-sponsor relationships`);
-    }
+    //     console.log(`✅ Created ${totalLinks} club-sponsor relationships`);
+    // }
 
     /**
      * Link sponsors to carnivals with realistic relationships
@@ -576,7 +588,6 @@ class DatabaseSeeder {
             mySidelineCarnivals: await Carnival.count({ where: { isManuallyEntered: false, isActive: true } }),
             subscriptions: await EmailSubscription.count({ where: { isActive: true } }),
             sponsors: await Sponsor.count({ where: { isActive: true } }),
-            clubSponsors: await ClubSponsor.count({ where: { isActive: true } }),
             carnivalSponsors: await CarnivalSponsor.count({ where: { isActive: true } }),
             carnivalRegistrations: await CarnivalClub.count({ where: { isActive: true } }),
             paidRegistrations: await CarnivalClub.count({ where: { isPaid: true, isActive: true } }),

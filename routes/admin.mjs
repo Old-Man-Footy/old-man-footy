@@ -7,10 +7,10 @@
 
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated, ensureAdmin } from '/middleware/auth.mjs';
-import { clubUpload, carnivalUpload, handleUploadError } from '/middleware/upload.mjs';
-import { applyAdminSecurity, validateSecureEmail } from '/middleware/security.mjs';
-import * as adminController from '/controllers/admin.controller.mjs';
+import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
+import { clubUpload, carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
+import { applyAdminSecurity, validateSecureEmail } from '../middleware/security.mjs';
+import * as adminController from '../controllers/admin.controller.mjs';
 
 const router = express.Router();
 

@@ -7,8 +7,8 @@
 
 import path from 'path';
 import fs from 'fs';
-import { sequelize } from '/models/index.mjs';
-import { initializeDatabase } from '/config/database.mjs';
+import { sequelize } from '../models/index.mjs';
+import { initializeDatabase } from '../config/database.mjs';
 
 class DatabaseBackup {
     constructor() {
