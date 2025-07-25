@@ -105,7 +105,7 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- Sponsor Table ---
-  await queryInterface.createTable('Sponsors', {
+  await queryInterface.createTable('sponsors', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     sponsorName: { type: Sequelize.STRING, allowNull: false, unique: true },
     businessType: { type: Sequelize.STRING, allowNull: true },
@@ -159,10 +159,10 @@ export const up = async (queryInterface, Sequelize) => {
   });
 
   // --- CarnivalSponsor Table ---
-  await queryInterface.createTable('CarnivalSponsors', {
+  await queryInterface.createTable('Carnivalsponsors', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    carnivalId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Carnivals', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
-    sponsorId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Sponsors', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    carnivalId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'carnivals', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
+    sponsorId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'sponsors', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
     sponsorshipLevel: { type: Sequelize.STRING, allowNull: false, defaultValue: 'Supporting' },
     sponsorshipValue: { type: Sequelize.DECIMAL(10, 2), allowNull: true },
     packageDetails: { type: Sequelize.TEXT, allowNull: true },
@@ -226,16 +226,16 @@ export const up = async (queryInterface, Sequelize) => {
 };
 
 export const down = async (queryInterface, Sequelize) => {
-  await queryInterface.dropTable('SyncLogs');
-  await queryInterface.dropTable('AuditLogs');
-  await queryInterface.dropTable('EmailSubscriptions');
-  await queryInterface.dropTable('CarnivalSponsors');
-  await queryInterface.dropTable('CarnivalClubPlayers');
-  await queryInterface.dropTable('CarnivalClubs');
-  await queryInterface.dropTable('Carnivals');
-  await queryInterface.dropTable('Sponsors');
-  await queryInterface.dropTable('ClubPlayers');
-  await queryInterface.dropTable('ClubAlternateNames');
-  await queryInterface.dropTable('Clubs');
-  await queryInterface.dropTable('Users');
+  await queryInterface.dropTable('sync_logs');
+  await queryInterface.dropTable('audit_logs');
+  await queryInterface.dropTable('email_subscriptions');
+  await queryInterface.dropTable('carnival_sponsors');
+  await queryInterface.dropTable('carnival_club_players');
+  await queryInterface.dropTable('carnival_clubs');
+  await queryInterface.dropTable('carnivals');
+  await queryInterface.dropTable('sponsors');
+  await queryInterface.dropTable('club_players');
+  await queryInterface.dropTable('club_alternate_names');
+  await queryInterface.dropTable('clubs');
+  await queryInterface.dropTable('users');
 };
