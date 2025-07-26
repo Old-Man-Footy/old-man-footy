@@ -5,13 +5,38 @@
  * for compatibility with Sequelize CLI, which runs in CommonJS mode.
  */
 
-module.exports = (async () => {
-  try {
-    // Dynamically import the ES modules config
-    const configModule = await import('./config.mjs');
-    return configModule.default;
-  } catch (error) {
-    console.error('Error loading ES modules config:', error);
-    throw error;
+module.exports = {
+  development: {
+    dialect: 'sqlite',
+    storage: './data/dev-old-man-footy.db',
+    logging: false,
+    define: {
+      underscored: true, // snake_case columns
+      freezeTableName: true // disables pluralization; uses the table name defined in the model's 'tableName' property if set
+    },
+    migrationStorageTableName: 'SequelizeMeta',
+    seederStorageTableName: 'SequelizeData'
+  },
+  test: {
+    dialect: 'sqlite',
+    storage: './data/test-old-man-footy.db',
+    logging: false,
+    define: {
+      underscored: true,
+      freezeTableName: true // disables pluralization; uses the table name defined in the model's 'tableName' property if set
+    },
+    migrationStorageTableName: 'SequelizeMeta',
+    seederStorageTableName: 'SequelizeData'
+  },
+  production: {
+    dialect: 'sqlite',
+    storage: './data/old-man-footy.db',
+    logging: false,
+    define: {
+      underscored: true,
+      freezeTableName: true // disables pluralization; uses the table name defined in the model's 'tableName' property if set
+    },
+    migrationStorageTableName: 'SequelizeMeta',
+    seederStorageTableName: 'SequelizeData'
   }
-})();
+};

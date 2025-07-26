@@ -1,4 +1,6 @@
 import { UPLOAD_DIRECTORIES } from './constants.mjs';
+import { sequelize } from '../models/index.mjs';
+import { QueryTypes } from 'sequelize';
 
 /**
  * DatabaseOptimizer
@@ -65,61 +67,61 @@ class DatabaseOptimizer {
 
             // Carnival indexes
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_carnivals_date_active ON Carnivals(date, isActive) WHERE isActive = 1;',
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_date_active ON carnivals(date, isActive) WHERE isActive = 1;',
                 { type: QueryTypes.RAW }
             );
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_carnivals_state_date ON Carnivals(state, date);',
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_state_date ON carnivals(state, date);',
                 { type: QueryTypes.RAW }
             );
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_carnivals_user_active ON Carnivals(createdByUserId, isActive) WHERE isActive = 1;',
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_user_active ON carnivals(createdByUserId, isActive) WHERE isActive = 1;',
                 { type: QueryTypes.RAW }
             );
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_carnivals_created ON Carnivals(createdAt DESC);',
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_created ON carnivals(createdAt DESC);',
                 { type: QueryTypes.RAW }
             );
 
             // User indexes
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_users_club_active ON Users(clubId, isActive) WHERE isActive = 1;',
+                'CREATE INDEX IF NOT EXISTS idx_users_club_active ON users(clubId, isActive) WHERE isActive = 1;',
                 { type: QueryTypes.RAW }
             );
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_users_primary_active ON Users(isPrimaryDelegate, isActive) WHERE isActive = 1;',
+                'CREATE INDEX IF NOT EXISTS idx_users_primary_active ON users(isPrimaryDelegate, isActive) WHERE isActive = 1;',
                 { type: QueryTypes.RAW }
             );
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_users_invitation ON Users(invitationToken) WHERE invitationToken IS NOT NULL;',
+                'CREATE INDEX IF NOT EXISTS idx_users_invitation ON users(invitationToken) WHERE invitationToken IS NOT NULL;',
                 { type: QueryTypes.RAW }
             );
 
             // Club indexes
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_clubs_state_active ON Clubs(state, isActive) WHERE isActive = 1;',
+                'CREATE INDEX IF NOT EXISTS idx_clubs_state_active ON clubs(state, isActive) WHERE isActive = 1;',
                 { type: QueryTypes.RAW }
             );
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_clubs_name ON Clubs(name);',
+                'CREATE INDEX IF NOT EXISTS idx_clubs_name ON clubs(clubName);',
                 { type: QueryTypes.RAW }
             );
 
             // Email subscription indexes
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_subscriptions_state_active ON EmailSubscriptions(state, isActive) WHERE isActive = 1;',
+                'CREATE INDEX IF NOT EXISTS idx_subscriptions_state_active ON email_subscriptions(states, isActive) WHERE isActive = 1;',
                 { type: QueryTypes.RAW }
             );
 
             // Sponsor indexes
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_sponsors_name ON Sponsors(name);',
+                'CREATE INDEX IF NOT EXISTS idx_sponsors_name ON sponsors(sponsorName);',
                 { type: QueryTypes.RAW }
             );
 
             // ClubPlayer indexes
             await sequelize.query(
-                'CREATE INDEX IF NOT EXISTS idx_club_players_name ON ClubPlayers(lastName, firstName);',
+                'CREATE INDEX IF NOT EXISTS idx_club_players_name ON club_players(lastName, firstName);',
                 { type: QueryTypes.RAW }
             );
 

@@ -2,6 +2,25 @@
 
 /** @type {import('sequelize-cli').Migration} */
 export const up = async (queryInterface, Sequelize) => {
+  // --- Club Table --- (move this before users)
+  await queryInterface.createTable('clubs', {
+    id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+    clubName: { type: Sequelize.STRING, allowNull: false, unique: true },
+    state: { type: Sequelize.STRING(3), allowNull: true },
+    location: { type: Sequelize.STRING, allowNull: true },
+    contactEmail: { type: Sequelize.STRING, allowNull: true },
+    contactPhone: { type: Sequelize.STRING, allowNull: true },
+    contactPerson: { type: Sequelize.STRING, allowNull: true },
+    description: { type: Sequelize.TEXT, allowNull: true },
+    isPubliclyListed: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
+    isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
+    createdByProxy: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
+    inviteEmail: { type: Sequelize.STRING, allowNull: true },
+    createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
+    createdAt: { type: Sequelize.DATE, allowNull: false },
+    updatedAt: { type: Sequelize.DATE, allowNull: false }
+  });
+
   // --- User Table ---
   await queryInterface.createTable('users', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
@@ -20,25 +39,6 @@ export const up = async (queryInterface, Sequelize) => {
     passwordResetExpires: { type: Sequelize.DATE, allowNull: true },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     lastLoginAt: { type: Sequelize.DATE, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
-  });
-
-  // --- Club Table ---
-  await queryInterface.createTable('clubs', {
-    id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-    clubName: { type: Sequelize.STRING, allowNull: false, unique: true },
-    state: { type: Sequelize.STRING(3), allowNull: true },
-    location: { type: Sequelize.STRING, allowNull: true },
-    contactEmail: { type: Sequelize.STRING, allowNull: true },
-    contactPhone: { type: Sequelize.STRING, allowNull: true },
-    contactPerson: { type: Sequelize.STRING, allowNull: true },
-    description: { type: Sequelize.TEXT, allowNull: true },
-    isPubliclyListed: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
-    isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
-    createdByProxy: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
-    inviteEmail: { type: Sequelize.STRING, allowNull: true },
-    createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
     createdAt: { type: Sequelize.DATE, allowNull: false },
     updatedAt: { type: Sequelize.DATE, allowNull: false }
   });
