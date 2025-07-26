@@ -20,19 +20,19 @@
   - [x] Ensure all errors are handled consistently and logged securely.
   - [x] Refactor error messages to follow the project's error response format if exposed to controllers.
 
-- [ ] **Test-Driven Development:**
-  - [ ] Create unit tests for all business logic in DatabaseOptimizer (in /tests/services/database-optimizer.test.mjs).
-  - [ ] Mock Sequelize and file system operations in tests.
+- [x] **Test-Driven Development:**
+  - [x] Create unit tests for all business logic in DatabaseOptimizer (in /tests/services/database-optimizer.test.mjs).
+  - [x] Mock Sequelize and file system operations in tests.
 
-- [ ] **Code Quality:**
-  - [ ] Remove unused or obsolete methods.
-  - [ ] Refactor for ES2020+ syntax and clarity.
-  - [ ] Ensure all async methods use top-level await where appropriate.
-  - [ ] Remove hardcoded values; use config/constants where possible.
+- [x] **Code Quality:**
+  - [x] Remove unused or obsolete methods.
+  - [x] Refactor for ES2020+ syntax and clarity.
+  - [x] Ensure all async methods use top-level await where appropriate.
+  - [x] Remove hardcoded values; use config/constants where possible.
 
-- [ ] **Project Conventions:**
-  - [ ] Ensure all imports use ES Modules syntax.
-  - [ ] Ensure file naming and structure matches project standards.
+- [x] **Project Conventions:**
+  - [x] Ensure all imports use ES Modules syntax.
+  - [x] Ensure file naming and structure matches project standards.
 
 ## When & Where to Call DatabaseOptimizer
 

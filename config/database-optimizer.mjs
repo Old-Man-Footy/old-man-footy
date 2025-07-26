@@ -1,3 +1,5 @@
+import { UPLOAD_DIRECTORIES } from './constants.mjs';
+
 /**
  * DatabaseOptimizer
  *
@@ -333,9 +335,8 @@ class DatabaseOptimizer {
 
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const backupName = `rugby-masters-backup-${timestamp}.db`;
-            
-            // Ensure backup directory exists
-            const backupDir = './backups';
+            // Use constant for backup directory
+            const backupDir = UPLOAD_DIRECTORIES.UPLOADS_ROOT + '/backups';
             try {
                 await fs.mkdir(backupDir, { recursive: true });
             } catch (error) {
