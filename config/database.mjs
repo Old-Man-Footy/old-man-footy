@@ -11,6 +11,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import DatabaseOptimizer from './database-optimizer.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -78,7 +79,7 @@ function ensureDataDirectory() {
 /**
  * Sequelize instance configuration
  */
-export const sequelize = new Sequelize({
+let sequelizeOptions = {
   dialect: 'sqlite',
   storage: dbPath,
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
@@ -104,7 +105,19 @@ export const sequelize = new Sequelize({
     max: 3,
     timeout: 5000
   }
-});
+};
+
+if (process.env.NODE_ENV === 'production') {
+  // Use secure, validated production options
+  const prodOpts = await DatabaseOptimizer.configureProduction();
+  sequelizeOptions = {
+    ...sequelizeOptions,
+    ...prodOpts,
+    storage: dbPath // Always set correct storage path
+  };
+}
+
+export const sequelize = new Sequelize(sequelizeOptions);
 
 /**
  * Test database connection
@@ -147,6 +160,36 @@ export async function runMigrations() {
 }
 
 /**
+ * One-time database setup for application startup
+ * Runs migrations, creates indexes, sets up monitoring
+ * Should only be called once at startup
+ * @returns {Promise<void>}
+ */
+export async function setupDatabase() {
+  try {
+    ensureDataDirectory();
+    const connected = await testConnection();
+    if (!connected) throw new Error('Failed to establish database connection');
+    await runMigrations();
+    await checkDatabaseSchema();
+    await DatabaseOptimizer.createIndexes();
+    await DatabaseOptimizer.setupMonitoring();
+    console.log('✅ Database setup completed successfully');
+  } catch (error) {
+    console.error('❌ Database setup failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get a healthy database connection (for health checks, etc)
+ * @returns {Promise<boolean>} Connection success status
+ */
+export async function getDatabaseConnection() {
+  return await testConnection();
+}
+
+/**
  * Initialize database and run migrations
  * @returns {Promise<void>}
  */
@@ -166,7 +209,13 @@ export async function initializeDatabase() {
 
     // Check database schema
     await checkDatabaseSchema();
-        
+
+    // Create database indexes for optimization
+    await DatabaseOptimizer.createIndexes();
+
+    // Set up database connection and query monitoring hooks
+    await DatabaseOptimizer.setupMonitoring();
+    
     console.log('✅ Database initialization completed successfully');
     
   } catch (error) {

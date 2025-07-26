@@ -19,6 +19,8 @@ import { applySecurity } from './middleware/security.mjs';
 // MySideline service will be imported dynamically after configuration is loaded
 import { sequelize } from './models/index.mjs';
 import { setupSessionAuth, loadSessionUser } from './middleware/auth.mjs';
+import { setupDatabase } from './config/database.mjs';
+
 
 // ES Module equivalents of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -97,26 +99,6 @@ app.use(comingSoonMode);
 // Global variables for templates using enhanced flash
 app.use(flashTemplateVariables);
 
-/**
- * Initialize database connection and setup
- * @returns {Promise<boolean>} Success status
- */
-async function initializeDatabase() {
-    try {
-        const { initializeDatabase } = await import('./config/database.mjs');
-        await initializeDatabase();
-        
-        // Create session store table
-        await sessionStore.sync();
-        
-        console.log('✅ SQLite database initialized successfully');
-        
-        return true;
-    } catch (error) {
-        console.error('❌ Database initialization failed:', error);
-        process.exit(1);
-    }
-}
 
 /**
  * Initialize MySideline sync service
@@ -191,25 +173,23 @@ app.use((error, req, res, next) => {
  */
 async function startServer() {
     try {
-        // Step 1: Initialize database
-        await initializeDatabase();
-        
-        // Step 2: Start the server
+        // Step 1: One-time database setup
+        await setupDatabase();
+        // Step 2: Sync session store
+        await sessionStore.sync();
+        // Step 3: Start the server
         const PORT = process.env.PORT || 3050;
         const server = app.listen(PORT, () => {
             console.log(`🚀 Old Man Footy server running on port ${PORT}`);
             console.log('📊 Site is now accessible and ready to serve requests');
         });
-        
-        // Step 3: Initialize MySideline sync after server is running (skip in tests)
+        // Step 4: Initialize MySideline sync after server is running (skip in tests)
         if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
-            // Store timeout ID globally so it can be cleared during test cleanup
             global.mySidelineInitTimeout = setTimeout(async () => {
                 await initializeMySidelineSync();
-                global.mySidelineInitTimeout = null; // Clear reference after execution
+                global.mySidelineInitTimeout = null;
             }, 1000);
         }
-        
         return server;
     } catch (error) {
         console.error('❌ Server startup failed:', error);

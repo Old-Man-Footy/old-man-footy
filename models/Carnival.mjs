@@ -1040,27 +1040,6 @@ Carnival.init({
   }
 });
 
-/**
- * Archive old carnivals (older than 2 years)
- * @returns {Promise<number>} Number of carnivals archived
- */
-Carnival.archiveOldCarnivals = async function() {
-  const archiveDate = new Date();
-  archiveDate.setFullYear(archiveDate.getFullYear() - 2);
-  const [archivedCount] = await this.update(
-    {
-      isActive: false,
-      archivedAt: new Date()
-    },
-    {
-      where: {
-        date: { [sequelize.Op.lt]: archiveDate },
-        isActive: true
-      }
-    }
-  );
-  return archivedCount;
-};
 
 /**
  * Get carnival statistics for optimization decisions

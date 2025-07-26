@@ -11,12 +11,10 @@ async function globalSetup() {
   
   try {
     // Import ES modules
-    const { initializeDatabase } = await import('/config/database.mjs');
-    
-    // Initialize test database
-    await initializeDatabase();
-        
-    console.log('✅ Test database initialized and schema synced');
+    const { setupDatabase } = await import('/config/database.mjs');
+    // One-time setup for test database
+    await setupDatabase();
+    console.log('✅ Test database setup and schema synced');
     
     // Create test data using consistent authentication approach
     await createTestData();

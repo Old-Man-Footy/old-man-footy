@@ -33,7 +33,6 @@ vi.stubGlobal('path', mockPath);
 
 // Patch User and Carnival for performMaintenance
 vi.stubGlobal('User', { cleanupExpiredInvitations: vi.fn().mockResolvedValue(2) });
-vi.stubGlobal('Carnival', { archiveOldCarnivals: vi.fn().mockResolvedValue(3) });
 
 // Patch process.env
 beforeEach(() => {

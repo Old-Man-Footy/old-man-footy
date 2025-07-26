@@ -302,10 +302,6 @@ class DatabaseOptimizer {
             const expiredInvitations = await User.cleanupExpiredInvitations();
             console.log(`Cleaned up ${expiredInvitations} expired invitation tokens`);
 
-            // Archive old carnival data using Carnival model method
-            const oldCarnivals = await Carnival.archiveOldCarnivals();
-            console.log(`Archived ${oldCarnivals} old carnivals`);
-
             // Optimize database
             await this.optimizeDatabase();
 
