@@ -17,7 +17,8 @@ services:
       - APP_NAME="Old Man Footy - Test Environment"
       - APP_URL=https://test.oldmanfooty.au
       - APP_VERSION=1.0.6
-      - APPINSIGHTS_INSTRUMENTATIONKEY=${APPINSIGHTS_INSTRUMENTATIONKEY}
+      - APPINSIGHTS_INSTRUMENTATIONKEY=${APPINSIGHTS_INSTRUMENTATIONKEY}      
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
       - COMPRESSION_ENABLED=${COMPRESSION_ENABLED:-true} # Enable compression by default
       - CSRF_SECRET=${CSRF_SECRET}
       - EMAIL_FROM_NAME="Old Man Footy Test"

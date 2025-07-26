@@ -120,6 +120,45 @@ class User extends Model {
     await user.save();
     return user;
   }
+
+  /**
+   * Cleanup expired invitation tokens for users
+   * @returns {Promise<number>} Number of users updated
+   */
+  static async cleanupExpiredInvitations() {
+    const now = new Date();
+    const [updatedCount] = await this.update(
+      {
+        invitationToken: null,
+        tokenExpiry: null
+      },
+      {
+        where: {
+          tokenExpiry: { [sequelize.Op.lt]: now },
+          invitationToken: { [sequelize.Op.ne]: null }
+        }
+      }
+    );
+    return updatedCount;
+  }
+
+  /**
+   * Get user statistics for optimization decisions
+   * @returns {Promise<Object>} User statistics
+   */
+  static async getStatistics() {
+    const stats = await this.findAll({
+      attributes: [
+        [sequelize.fn('COUNT', sequelize.col('id')), 'totalUsers'],
+        [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isActive = 1 THEN 1 END')), 'activeUsers'],
+        [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isAdmin = 1 THEN 1 END')), 'adminUsers'],
+        [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isPrimaryDelegate = 1 THEN 1 END')), 'primaryDelegates'],
+        [sequelize.fn('COUNT', sequelize.literal('CASE WHEN clubId IS NOT NULL THEN 1 END')), 'usersWithClubs']
+      ],
+      raw: true
+    });
+    return stats[0] || {};
+  }
 }
 
 /**

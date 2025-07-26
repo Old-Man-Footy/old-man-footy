@@ -2,23 +2,23 @@
 
 ## Required Updates & Improvements
 
-- [ ] **Security:**
-  - [ ] Ensure all raw SQL queries use parameterized inputs or Sequelize query methods to prevent SQL injection.
-  - [ ] Remove any direct string interpolation in SQL queries.
-  - [ ] Validate and sanitize all environment variable usage.
+- [x] **Security:**
+  - [x] Ensure all raw SQL queries use parameterized inputs or Sequelize query methods to prevent SQL injection.
+  - [x] Remove any direct string interpolation in SQL queries.
+  - [x] Validate and sanitize all environment variable usage.
 
-- [ ] **Strict MVC Compliance:**
-  - [ ] Move any business logic that belongs in models out of DatabaseOptimizer.
-  - [ ] Ensure DatabaseOptimizer does not interact with Express req/res objects.
-  - [ ] Refactor any logic that mixes concerns.
+- [x] **Strict MVC Compliance:**
+  - [x] Move any business logic that belongs in models out of DatabaseOptimizer.
+  - [x] Ensure DatabaseOptimizer does not interact with Express req/res objects.
+  - [x] Refactor any logic that mixes concerns.
 
-- [ ] **Clarity & Documentation:**
-  - [ ] Add or update JSDoc comments for all public methods and the class itself.
-  - [ ] Improve inline comments for complex logic blocks.
+- [x] **Clarity & Documentation:**
+  - [x] Add or update JSDoc comments for all public methods and the class itself.
+  - [x] Improve inline comments for complex logic blocks.
 
-- [ ] **Error Handling:**
-  - [ ] Ensure all errors are handled consistently and logged securely.
-  - [ ] Refactor error messages to follow the project's error response format if exposed to controllers.
+- [x] **Error Handling:**
+  - [x] Ensure all errors are handled consistently and logged securely.
+  - [x] Refactor error messages to follow the project's error response format if exposed to controllers.
 
 - [ ] **Test-Driven Development:**
   - [ ] Create unit tests for all business logic in DatabaseOptimizer (in /tests/services/database-optimizer.test.mjs).
