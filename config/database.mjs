@@ -123,40 +123,22 @@ export async function testConnection() {
 }
 
 /**
- * Run database migrations using direct Sequelize instead of CLI in production
+ * Run database migrations using Sequelize CLI
  * @returns {Promise<void>}
  */
 export async function runMigrations() {
   try {
     console.log('🔄 Running database migrations...');
     
-    const env = process.env.NODE_ENV || 'development';
+    // Import models to ensure they're registered with Sequelize
+    await import('../models/index.mjs');
     
-    // Use Sequelize sync for all environments to avoid CLI config issues
-    console.log('📦 Running migrations using Sequelize sync...');
+    // Run migrations using Sequelize CLI
+    const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate');
+    if (stdout) console.log(stdout);
+    if (stderr) console.error(stderr);
     
-    // Import models to ensure they're loaded
-    const models = await import('../models/index.mjs');
-    
-    // Check if database has existing data
-    const tables = await sequelize.getQueryInterface().showAllTables();
-    
-    if (tables.length === 0) {
-      // New database - safe to use sync with force
-      console.log('🆕 New database detected - creating all tables');
-      await sequelize.sync({ force: false });
-    } else {
-      // Existing database - just validate without altering
-      console.log('🔍 Existing database detected - validating schema only');
-      try {
-        await sequelize.authenticate();
-        console.log('✅ Database schema is compatible');
-      } catch (error) {
-        console.warn('⚠️ Database schema validation failed, but continuing:', error.message);
-      }
-    }
-    
-    console.log('✅ Database schema synchronized successfully');
+    console.log('✅ Database migrations completed successfully');
     
   } catch (error) {
     console.error('❌ Database migration failed:', error.message);
@@ -181,7 +163,10 @@ export async function initializeDatabase() {
 
     // Run migrations
     await runMigrations();
-    
+
+    // Check database schema
+    await checkDatabaseSchema();
+        
     console.log('✅ Database initialization completed successfully');
     
   } catch (error) {
@@ -200,5 +185,46 @@ export async function closeConnection() {
     console.log('🔌 Database connection closed');
   } catch (error) {
     console.error('❌ Error closing database connection:', error);
+  }
+}
+
+/**
+ * Checks that all tables defined in Sequelize models exist in the SQLite database schema.
+ *
+ * @returns {Promise<{ missing: string[], present: string[] }>} 
+ * @throws {Error} If unable to query the database schema.
+ *
+ * Security: Only uses Sequelize's built-in methods, no raw string interpolation.
+ * Strict MVC: Does not interact with Express req/res.
+ */
+export async function checkDatabaseSchema() {
+  try {
+    // Ensure all models are loaded and registered
+    await import('../models/index.mjs');
+
+    // Collect expected table names from all registered models
+    const expectedTables = Object.values(sequelize.models)
+      .map(model => model.getTableName())
+      .filter(Boolean);
+
+    // Query for all user tables in the SQLite schema
+    const results = await sequelize.query(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';",
+      { type: sequelize.QueryTypes.SELECT }
+    );
+    const actualTables = Array.isArray(results)
+      ? results.map(row => row.name)
+      : [];
+    const present = expectedTables.filter(t => actualTables.includes(t));
+    const missing = expectedTables.filter(t => !actualTables.includes(t));
+    if (missing.length > 0) {
+      console.warn(`⚠️ Missing tables: ${missing.join(', ')}`);
+    } else {
+      console.log('✅ All expected tables are present.');
+    }
+    return { missing, present };
+  } catch (error) {
+    console.error('❌ Error checking database schema:', error.message);
+    throw new Error('Failed to check database schema');
   }
 }
