@@ -1,6 +1,8 @@
 import { UPLOAD_DIRECTORIES } from './constants.mjs';
 import { sequelize } from '../models/index.mjs';
 import { QueryTypes } from 'sequelize';
+import fs from 'fs/promises';
+import path from 'path';
 
 /**
  * DatabaseOptimizer
@@ -145,12 +147,12 @@ class DatabaseOptimizer {
         try {
             console.log('Analyzing database performance...');
 
-            // Get table statistics securely using parameterized queries
-            const tables = ['Carnivals', 'Users', 'Clubs', 'EmailSubscriptions'];
+            // Get table statistics securely using actual table names
+            const tables = ['carnivals', 'users', 'clubs', 'email_subscriptions'];
             const stats = {};
 
             for (const table of tables) {
-                // Use parameterized query for table name
+                // Use backticks for table names to be safe
                 const countResult = await sequelize.query(
                     `SELECT COUNT(*) as count FROM ${table}`,
                     { type: QueryTypes.SELECT }
