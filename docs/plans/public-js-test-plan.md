@@ -24,7 +24,7 @@
 - [x] `/public/js/carnival-new.js`
 - [x] `/public/js/carnival-players.js`
 - [x] `/public/js/carnival-show.js`
-- [ ] `/public/js/club-add-sponsor.js`
+- [x] `/public/js/club-add-sponsor.js`
 - [ ] `/public/js/club-autocomplete.js`
 - [ ] `/public/js/club-claim-ownership.js`
 - [ ] `/public/js/club-create-on-behalf.js`

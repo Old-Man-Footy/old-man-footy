@@ -19,29 +19,6 @@
 
             <!-- Flash Messages -->
             <%- include('/partials/flash-messages') %>
-
-            <!-- Duplicate Detection Alert (initially hidden) -->
-            <div id="duplicateAlert" class="alert alert-warning alert-dismissible fade" role="alert" style="display: none;">
-                <div class="d-flex align-items-start">
-                    <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
-                    <div class="flex-grow-1">
-                        <h6 class="alert-heading mb-2">Similar Sponsor Found</h6>
-                        <p class="mb-2">We found an existing sponsor with a similar name:</p>
-                        <div id="existingSponsorInfo" class="p-3 bg-light rounded mb-3">
-                            <!-- Existing sponsor details will be populated here -->
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-success" id="linkExistingBtn">
-                                <i class="bi bi-link me-1"></i>Link This Sponsor
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="createNewBtn">
-                                <i class="bi bi-plus me-1"></i>Create New Anyway
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
@@ -51,7 +28,6 @@
                 <div class="card-body">
                     <form method="POST" action="/clubs/manage/sponsors/add" enctype="multipart/form-data" id="sponsorForm">
                         <input type="hidden" name="sponsorType" id="sponsorTypeInput" value="new">
-                        <input type="hidden" name="existingSponsorId" id="existingSponsorIdInput" value="">
 
                         <!-- Basic Information -->
                         <div class="row">
@@ -60,8 +36,7 @@
                                     <label for="sponsorName" class="form-label">
                                         Sponsor Name <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control" name="sponsorName" id="sponsorName" required>
-                                    <div class="form-text">The name will be checked for duplicates automatically</div>
+                                    <input type="text" class="form-control" name="sponsorName" id="sponsorName" required>                                    
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -221,4 +196,4 @@
     </div>
 </div>
 
-<script src="/js/club-add-sponsor.js"></script>
+<script type="module" src="/js/club-add-sponsor.js"></script>

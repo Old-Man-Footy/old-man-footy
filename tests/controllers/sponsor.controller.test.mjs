@@ -123,8 +123,7 @@ import {
   showEditSponsor,
   updateSponsor,
   deleteSponsor,
-  toggleSponsorStatus,
-  checkDuplicateSponsor
+  toggleSponsorStatus
 } from '/controllers/sponsor.controller.mjs';
 
 import {
@@ -507,47 +506,6 @@ describe('Sponsor Controller', () => {
       expect(res.json).toHaveBeenCalledWith({
         success: false,
         message: 'Sponsor not found.'
-      });
-    });
-  });
-
-  describe('Duplicate Sponsor Check', () => {
-    it('should check for duplicate sponsor names', async () => {
-      const existingSponsor = createMockSponsor({
-        id: 2,
-        sponsorName: 'Existing Sponsor'
-      });
-
-      req.body = { sponsorName: 'Existing Sponsor' };
-
-      Sponsor.findOne.mockResolvedValue(existingSponsor);
-
-      await checkDuplicateSponsor(req, res);
-
-      expect(Sponsor.findOne).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          isActive: true,
-          [Op.or]: expect.any(Array)
-        })
-      }));
-
-      expect(res.json).toHaveBeenCalledWith({
-        isDuplicate: true,
-        existingSponsor: expect.objectContaining({
-          id: 2,
-          sponsorName: 'Existing Sponsor'
-        })
-      });
-    });
-
-    it('should return no duplicate for short sponsor names', async () => {
-      req.body = { sponsorName: 'AB' };
-
-      await checkDuplicateSponsor(req, res);
-
-      expect(res.json).toHaveBeenCalledWith({
-        isDuplicate: false,
-        existingSponsor: null
       });
     });
   });
