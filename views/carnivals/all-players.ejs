@@ -192,7 +192,7 @@
                                 </td>
                                 <td>
                                     <% if (player.shortsColour && player.shortsColour !== 'Not specified') { %>
-                                        <span class="badge shorts-colour-badge" style="background-color: <%= player.shortsColour.toLowerCase() %>; color: white;">
+                                        <span class="badge shorts-colour-badge" data-colour="<%= player.shortsColour.toLowerCase() %>">
                                             <%= player.shortsColour %>
                                         </span>
                                     <% } else { %>

@@ -142,4 +142,19 @@ describe('carnivalPlayersManager', () => {
     await new Promise(r => setTimeout(r, 60));
     expect(fn).toHaveBeenCalledTimes(1);
   });
+
+  it('should set shorts colour badge background and text color from data-colour', () => {
+    // Add a badge to the DOM
+    const badge = document.createElement('span');
+    badge.className = 'badge shorts-colour-badge';
+    badge.setAttribute('data-colour', 'red');
+    badge.textContent = 'Red';
+    document.body.appendChild(badge);
+
+    carnivalPlayersManager.setShortsColourBadges();
+
+    expect(badge.style.backgroundColor).toBe('red');
+    expect(badge.style.color).toBe('rgb(255, 255, 255)');
+    badge.remove();
+  });
 });

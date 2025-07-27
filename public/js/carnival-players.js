@@ -21,6 +21,7 @@ export const carnivalPlayersManager = {
         this.bindEvents();
         this.updateVisibleCount();
         this.initTooltips();
+        this.setShortsColourBadges();
     },
 
     /**
@@ -481,6 +482,24 @@ export const carnivalPlayersManager = {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         }
+    },
+
+    /**
+     * Set background color for shorts colour badges using their data-colour attribute.
+     * Ensures no inline styles in EJS; all styling is handled here.
+     */
+    setShortsColourBadges() {
+        const badges = document.querySelectorAll('.shorts-colour-badge[data-colour]');
+        badges.forEach(badge => {
+            const colour = badge.getAttribute('data-colour');
+            if (colour && colour !== 'not specified' && colour !== 'Unrestricted') {
+                badge.style.backgroundColor = colour;
+                badge.style.color = '#fff';
+            } else {
+                badge.style.backgroundColor = '';
+                badge.style.color = '';
+            }
+        });
     }
 };
 
