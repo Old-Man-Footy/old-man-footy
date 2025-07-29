@@ -26,7 +26,7 @@
 - [x] `/public/js/carnival-show.js`
 - [x] `/public/js/club-add-sponsor.js`
 - [x] `/public/js/club-autocomplete.js`
-- [ ] `/public/js/club-claim-ownership.js`
+- [x] `/public/js/club-claim-ownership.js`
 - [ ] `/public/js/club-create-on-behalf.js`
 - [ ] `/public/js/club-manage.js`
 - [ ] `/public/js/club-options.js`
