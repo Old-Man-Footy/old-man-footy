@@ -29,15 +29,18 @@
 - [x] `/public/js/club-claim-ownership.js`
 - [x] `/public/js/club-create-on-behalf.js`
 - [x] `/public/js/club-manage.js`
-- [ ] `/public/js/club-options.js`
+- [x] `/public/js/club-options.js`
 - [ ] `/public/js/club-players-form.js`
 - [ ] `/public/js/club-players.js`
 - [ ] `/public/js/club-sponsors.js`
+- [ ] `/public/js/coming-soon.js`
 - [ ] `/public/js/common-utils.js`
 - [ ] `/public/js/contact.js`
 - [ ] `/public/js/dashboard.js`
 - [ ] `/public/js/error.js`
 - [ ] `/public/js/index.js`
+- [ ] `/public/js/maintenance.js`
 - [ ] `/public/js/registration-form.js`
 - [ ] `/public/js/sponsor-management.js`
+- [ ] `/public/js/state-selector.js`
 - [ ] `/public/js/theme-init.js`
