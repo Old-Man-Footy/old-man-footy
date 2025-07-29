@@ -28,7 +28,7 @@
 - [x] `/public/js/club-autocomplete.js`
 - [x] `/public/js/club-claim-ownership.js`
 - [x] `/public/js/club-create-on-behalf.js`
-- [ ] `/public/js/club-manage.js`
+- [x] `/public/js/club-manage.js`
 - [ ] `/public/js/club-options.js`
 - [ ] `/public/js/club-players-form.js`
 - [ ] `/public/js/club-players.js`
