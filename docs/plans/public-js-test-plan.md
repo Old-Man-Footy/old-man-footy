@@ -30,7 +30,7 @@
 - [x] `/public/js/club-create-on-behalf.js`
 - [x] `/public/js/club-manage.js`
 - [x] `/public/js/club-options.js`
-- [ ] `/public/js/club-players-form.js`
+- [x] `/public/js/club-players-form.js`
 - [ ] `/public/js/club-players.js`
 - [ ] `/public/js/club-sponsors.js`
 - [ ] `/public/js/coming-soon.js`
