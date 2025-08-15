@@ -1126,34 +1126,10 @@
 </div>
 <% } %>
 
-<script>
-function confirmMerge() {
-    const targetSelect = document.getElementById('targetCarnivalId');
-    const targetCarnivalName = document.getElementById('targetCarnivalName');
-    
-    if (!targetSelect.value) {
-        alert('Please select a carnival to merge into.');
-        return;
-    }
-    
-    // Update confirmation modal with selected carnival name
-    const selectedOption = targetSelect.options[targetSelect.selectedIndex];
-    targetCarnivalName.textContent = selectedOption.text;
-    
-    // Hide first modal and show confirmation modal
-    const firstModal = bootstrap.Modal.getInstance(document.getElementById('mergeCarnivalModal'));
-    firstModal.hide();
-    
-    setTimeout(() => {
-        const confirmModal = new bootstrap.Modal(document.getElementById('mergeCarnivalConfirmModal'));
-        confirmModal.show();
-    }, 300);
-}
-</script>
 
 <!-- Include external JavaScript files -->
 <script src="/js/common-utils.js"></script>
-<script src="/js/carnival-show.js"></script>
+<script type="module" src="/js/carnival-show.js"></script>
 
 <!-- Post-Creation Important Notices Modal -->
 <% if (showPostCreationModal) { %>
