@@ -1,29 +1,49 @@
 /**
- * Club Claim Ownership JavaScript
+ * Club Claim Ownership (Manager Object Pattern)
  * Handles form validation and interaction for club ownership claiming
  */
+export const clubClaimOwnershipManager = {
+    elements: {},
 
-document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][required]');
-    const claimButton = document.getElementById('claimButton');
-    
-    function updateButtonState() {
-        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-        claimButton.disabled = !allChecked;
-        
+    initialize() {
+        this.cacheElements();
+        if (!this.elements.claimButton) return; // View may not include this feature
+        this.bindEvents();
+        this.updateButtonState();
+    },
+
+    cacheElements() {
+        this.elements.checkboxes = document.querySelectorAll('input[type="checkbox"][required]');
+        this.elements.claimButton = document.getElementById('claimButton');
+    },
+
+    bindEvents() {
+        this.elements.checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', this.handleCheckboxChange);
+        });
+    },
+
+    // Event handler (arrow function preserves lexical scope)
+    handleCheckboxChange: () => {
+        clubClaimOwnershipManager.updateButtonState();
+    },
+
+    updateButtonState() {
+        const el = this.elements;
+        const allChecked = Array.from(el.checkboxes || []).every((cb) => cb.checked);
+        if (!el.claimButton) return;
+        el.claimButton.disabled = !allChecked;
         if (allChecked) {
-            claimButton.classList.remove('btn-secondary');
-            claimButton.classList.add('btn-primary');
+            el.claimButton.classList.remove('btn-secondary');
+            el.claimButton.classList.add('btn-primary');
         } else {
-            claimButton.classList.remove('btn-primary');
-            claimButton.classList.add('btn-secondary');
+            el.claimButton.classList.remove('btn-primary');
+            el.claimButton.classList.add('btn-secondary');
         }
-    }
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateButtonState);
-    });
-    
-    // Initial state
-    updateButtonState();
+    },
+};
+
+// Bootstrap in the browser
+document.addEventListener('DOMContentLoaded', () => {
+    clubClaimOwnershipManager.initialize();
 });
