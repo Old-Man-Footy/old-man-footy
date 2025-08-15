@@ -1,77 +1,126 @@
 /**
- * Club Add Sponsor Form Handler
+ * Club Add Sponsor Form Handler (Manager Object Pattern)
  * Handles intelligent duplicate detection and form submission
  */
-document.addEventListener('DOMContentLoaded', function() {
-    const sponsorNameInput = document.getElementById('sponsorName');
-    const duplicateAlert = document.getElementById('duplicateAlert');
-    const existingSponsorInfo = document.getElementById('existingSponsorInfo');
-    const linkExistingBtn = document.getElementById('linkExistingBtn');
-    const createNewBtn = document.getElementById('createNewBtn');
-    const sponsorTypeInput = document.getElementById('sponsorTypeInput');
-    const existingSponsorIdInput = document.getElementById('existingSponsorIdInput');
-    const submitText = document.getElementById('submitText');
-    const submitBtn = document.getElementById('submitBtn');
-    const sponsorForm = document.getElementById('sponsorForm');
+export const clubAddSponsorManager = {
+    elements: {},
+    state: {
+        duplicateCheckTimeout: null,
+        existingSponsorData: null,
+    },
 
-    let duplicateCheckTimeout;
-    let existingSponsorData = null;
+    initialize() {
+        this.cacheElements();
+        this.bindEvents();
+    },
 
-    /**
-     * Check for duplicate sponsors as user types
-     */
-    sponsorNameInput.addEventListener('input', function() {
-        const sponsorName = this.value.trim();
-        
-        // Clear existing timeout
-        clearTimeout(duplicateCheckTimeout);
-        
-        // Hide duplicate alert if name is too short
+    cacheElements() {
+        this.elements.sponsorNameInput = document.getElementById('sponsorName');
+        this.elements.duplicateAlert = document.getElementById('duplicateAlert');
+        this.elements.existingSponsorInfo = document.getElementById('existingSponsorInfo');
+        this.elements.linkExistingBtn = document.getElementById('linkExistingBtn');
+        this.elements.createNewBtn = document.getElementById('createNewBtn');
+        this.elements.sponsorTypeInput = document.getElementById('sponsorTypeInput');
+        this.elements.existingSponsorIdInput = document.getElementById('existingSponsorIdInput');
+        this.elements.submitText = document.getElementById('submitText');
+        this.elements.submitBtn = document.getElementById('submitBtn');
+        this.elements.sponsorForm = document.getElementById('sponsorForm');
+    },
+
+    bindEvents() {
+        if (this.elements.sponsorNameInput) {
+            this.elements.sponsorNameInput.addEventListener('input', this.handleSponsorNameInput);
+            this.elements.sponsorNameInput.addEventListener('focus', this.handleNameFocus);
+            this.elements.sponsorNameInput.addEventListener('blur', this.handleNameBlur);
+        }
+        if (this.elements.linkExistingBtn) {
+            this.elements.linkExistingBtn.addEventListener('click', this.handleLinkExistingClick);
+        }
+        if (this.elements.createNewBtn) {
+            this.elements.createNewBtn.addEventListener('click', this.handleCreateNewClick);
+        }
+        if (this.elements.sponsorForm) {
+            this.elements.sponsorForm.addEventListener('submit', this.handleFormSubmit);
+        }
+    },
+
+    // Handlers
+    handleSponsorNameInput: (e) => {
+        const sponsorName = e.currentTarget.value.trim();
+        clearTimeout(clubAddSponsorManager.state.duplicateCheckTimeout);
         if (sponsorName.length < 3) {
-            hideDuplicateAlert();
+            clubAddSponsorManager.hideDuplicateAlert();
             return;
         }
-
-        // Debounce the API call
-        duplicateCheckTimeout = setTimeout(() => {
-            checkForDuplicates(sponsorName);
+        clubAddSponsorManager.state.duplicateCheckTimeout = setTimeout(() => {
+            clubAddSponsorManager.checkForDuplicates(sponsorName);
         }, 500);
-    });
+    },
 
-    /**
-     * Check for duplicate sponsors via API
-     */
-    async function checkForDuplicates(sponsorName) {
+    handleLinkExistingClick: () => {
+        const data = clubAddSponsorManager.state.existingSponsorData;
+        const el = clubAddSponsorManager.elements;
+        if (!data) return;
+        el.sponsorTypeInput.value = 'existing';
+        el.existingSponsorIdInput.value = data.id;
+        el.submitText.textContent = 'Link Existing Sponsor';
+        clubAddSponsorManager.disableFormFields(true);
+        el.submitBtn.className = 'btn btn-success';
+        el.submitBtn.innerHTML = '<i class="bi bi-link me-1"></i><span id="submitText">Link Existing Sponsor</span>';
+    // When linking, only hide the duplicate alert UI without resetting state or form mode
+    clubAddSponsorManager.hideDuplicateAlertUI();
+        clubAddSponsorManager.showLinkingFeedback();
+    },
+
+    handleCreateNewClick: () => {
+        clubAddSponsorManager.hideDuplicateAlert();
+        clubAddSponsorManager.resetToNewSponsorMode();
+    },
+
+    handleFormSubmit: (e) => {
+        const el = clubAddSponsorManager.elements;
+        const originalContent = el.submitBtn.innerHTML;
+        const isLinking = el.sponsorTypeInput.value === 'existing';
+        el.submitBtn.disabled = true;
+        el.submitBtn.innerHTML = `<i class="bi bi-arrow-clockwise spin me-1"></i>${isLinking ? 'Linking...' : 'Creating...'}`;
+        setTimeout(() => {
+            el.submitBtn.disabled = false;
+            el.submitBtn.innerHTML = originalContent;
+        }, 10000);
+    },
+
+    handleNameFocus: (e) => {
+        e.currentTarget.classList.add('border-primary');
+    },
+
+    handleNameBlur: (e) => {
+        e.currentTarget.classList.remove('border-primary');
+    },
+
+    // Core logic
+    async checkForDuplicates(sponsorName) {
         try {
             const response = await fetch('/api/sponsors/check-duplicate', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sponsorName })
             });
-
             const data = await response.json();
-
             if (data.isDuplicate && data.existingSponsor) {
-                showDuplicateAlert(data.existingSponsor);
+                this.showDuplicateAlert(data.existingSponsor);
             } else {
-                hideDuplicateAlert();
+                this.hideDuplicateAlert();
             }
         } catch (error) {
             console.error('Error checking for duplicates:', error);
-            hideDuplicateAlert();
+            this.hideDuplicateAlert();
         }
-    }
+    },
 
-    /**
-     * Show duplicate alert with existing sponsor info
-     */
-    function showDuplicateAlert(sponsor) {
-        existingSponsorData = sponsor;
-        
-        // Populate existing sponsor info
-        existingSponsorInfo.innerHTML = `
+    showDuplicateAlert(sponsor) {
+        const el = this.elements;
+        this.state.existingSponsorData = sponsor;
+        el.existingSponsorInfo.innerHTML = `
             <div class="d-flex align-items-center">
                 ${sponsor.logoUrl ? 
                     `<img src="/${sponsor.logoUrl}" alt="${sponsor.sponsorName}" class="me-3 rounded" style="width: 48px; height: 48px; object-fit: contain;">` :
@@ -90,149 +139,69 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         `;
+        el.duplicateAlert.style.display = 'block';
+        setTimeout(() => { el.duplicateAlert.classList.add('show'); }, 10);
+    },
 
-        // Show the alert with animation
-        duplicateAlert.style.display = 'block';
-        setTimeout(() => {
-            duplicateAlert.classList.add('show');
-        }, 10);
-    }
+    hideDuplicateAlert() {
+        const el = this.elements;
+        // Fully hide and reset state
+        this.hideDuplicateAlertUI();
+        this.state.existingSponsorData = null;
+        this.resetToNewSponsorMode();
+    },
 
-    /**
-     * Hide duplicate alert
-     */
-    function hideDuplicateAlert() {
-        existingSponsorData = null;
-        duplicateAlert.classList.remove('show');
-        setTimeout(() => {
-            duplicateAlert.style.display = 'none';
-        }, 150);
-        
-        // Reset form to create new sponsor mode
-        resetToNewSponsorMode();
-    }
+    // UI-only hide used when transitioning into link-existing flow
+    hideDuplicateAlertUI() {
+        const el = this.elements;
+        el.duplicateAlert.classList.remove('show');
+        setTimeout(() => { el.duplicateAlert.style.display = 'none'; }, 150);
+    },
 
-    /**
-     * Handle linking to existing sponsor
-     */
-    linkExistingBtn.addEventListener('click', function() {
-        if (!existingSponsorData) return;
+    resetToNewSponsorMode() {
+        const el = this.elements;
+        el.sponsorTypeInput.value = 'new';
+        el.existingSponsorIdInput.value = '';
+        el.submitText.textContent = 'Add Sponsor';
+        this.disableFormFields(false);
+        el.submitBtn.className = 'btn btn-primary';
+        el.submitBtn.innerHTML = '<i class="bi bi-save me-1"></i><span id="submitText">Add Sponsor</span>';
+        this.removeLinkingFeedback();
+    },
 
-        // Set form to link existing sponsor
-        sponsorTypeInput.value = 'existing';
-        existingSponsorIdInput.value = existingSponsorData.id;
-        submitText.textContent = 'Link Existing Sponsor';
-        
-        // Disable form fields since we're linking existing
-        disableFormFields(true);
-        
-        // Update submit button style
-        submitBtn.className = 'btn btn-success';
-        submitBtn.innerHTML = '<i class="bi bi-link me-1"></i><span id="submitText">Link Existing Sponsor</span>';
-        
-        // Hide duplicate alert
-        hideDuplicateAlert();
-        
-        // Show success feedback
-        showLinkingFeedback();
-    });
-
-    /**
-     * Handle creating new sponsor anyway
-     */
-    createNewBtn.addEventListener('click', function() {
-        hideDuplicateAlert();
-        resetToNewSponsorMode();
-    });
-
-    /**
-     * Reset form to new sponsor creation mode
-     */
-    function resetToNewSponsorMode() {
-        sponsorTypeInput.value = 'new';
-        existingSponsorIdInput.value = '';
-        submitText.textContent = 'Add Sponsor';
-        disableFormFields(false);
-        
-        // Reset submit button style
-        submitBtn.className = 'btn btn-primary';
-        submitBtn.innerHTML = '<i class="bi bi-save me-1"></i><span id="submitText">Add Sponsor</span>';
-        
-        // Remove any linking feedback
-        removeLinkingFeedback();
-    }
-
-    /**
-     * Enable/disable form fields
-     */
-    function disableFormFields(disable) {
-        const fields = sponsorForm.querySelectorAll('input:not([type="hidden"]), select, textarea');
-        fields.forEach(field => {
-            if (field.id !== 'sponsorName') { // Keep sponsor name enabled for editing
+    disableFormFields(disable) {
+        const el = this.elements;
+        const fields = el.sponsorForm.querySelectorAll('input:not([type="hidden"]), select, textarea');
+        fields.forEach((field) => {
+            if (field.id !== 'sponsorName') {
                 field.disabled = disable;
-                if (disable) {
-                    field.classList.add('bg-light');
-                } else {
-                    field.classList.remove('bg-light');
-                }
+                if (disable) field.classList.add('bg-light');
+                else field.classList.remove('bg-light');
             }
         });
-    }
+    },
 
-    /**
-     * Show linking feedback
-     */
-    function showLinkingFeedback() {
+    showLinkingFeedback() {
+        const el = this.elements;
         const feedbackDiv = document.createElement('div');
         feedbackDiv.id = 'linkingFeedback';
         feedbackDiv.className = 'alert alert-success mt-3';
         feedbackDiv.innerHTML = `
             <i class="bi bi-check-circle me-2"></i>
-            <strong>Ready to link!</strong> You're about to link to the existing sponsor "${existingSponsorData.sponsorName}". 
+            <strong>Ready to link!</strong> You're about to link to the existing sponsor "${this.state.existingSponsorData.sponsorName}". 
             The form fields below are disabled since you're linking to an existing sponsor.
         `;
-        
-        // Insert after sponsor name field
-        const sponsorNameGroup = sponsorNameInput.closest('.mb-3');
+        const sponsorNameGroup = el.sponsorNameInput.closest('.mb-3');
         sponsorNameGroup.parentNode.insertBefore(feedbackDiv, sponsorNameGroup.nextSibling);
-    }
+    },
 
-    /**
-     * Remove linking feedback
-     */
-    function removeLinkingFeedback() {
+    removeLinkingFeedback() {
         const feedback = document.getElementById('linkingFeedback');
-        if (feedback) {
-            feedback.remove();
-        }
+        if (feedback) feedback.remove();
     }
+};
 
-    /**
-     * Handle form submission
-     */
-    sponsorForm.addEventListener('submit', function(e) {
-        // Show loading state
-        const originalContent = submitBtn.innerHTML;
-        const isLinking = sponsorTypeInput.value === 'existing';
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="bi bi-arrow-clockwise spin me-1"></i>${isLinking ? 'Linking...' : 'Creating...'}`;
-        
-        // Re-enable button after delay in case of errors
-        setTimeout(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalContent;
-        }, 10000);
-    });
-
-    /**
-     * Handle sponsor name field focus/blur for better UX
-     */
-    sponsorNameInput.addEventListener('focus', function() {
-        this.classList.add('border-primary');
-    });
-
-    sponsorNameInput.addEventListener('blur', function() {
-        this.classList.remove('border-primary');
-    });
+// Bootstrap the manager
+document.addEventListener('DOMContentLoaded', () => {
+    clubAddSponsorManager.initialize();
 });
