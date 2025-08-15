@@ -449,6 +449,34 @@
     }
 }
 
+/* ================================
+   CARNIVAL PLAYERS (SHARED) STYLES
+   ================================ */
+
+/* 3rem icon utility for empty states */
+.icon-3rem {
+    font-size: 3rem;
+}
+
+/* Shorts colour badges */
+.shorts-colour-badge {
+    color: #fff;
+}
+
+/* Common shorts colour mappings (extend as needed) */
+.shorts-colour--red { background-color: #dc3545; }
+.shorts-colour--blue { background-color: #0d6efd; }
+.shorts-colour--green { background-color: #198754; }
+.shorts-colour--black { background-color: #000000; }
+.shorts-colour--white { background-color: #6c757d; color: #000; }
+.shorts-colour--yellow { background-color: #ffc107; color: #212529; }
+.shorts-colour--maroon { background-color: #800000; }
+.shorts-colour--navy { background-color: #001f3f; }
+.shorts-colour--orange { background-color: #fd7e14; }
+.shorts-colour--purple { background-color: #6f42c1; }
+.shorts-colour--pink { background-color: #d63384; }
+.shorts-colour--grey, .shorts-colour--gray { background-color: #6c757d; }
+
 @media (max-width: 576px) {
     .carnival-card .badge {
         font-size: 0.7rem;

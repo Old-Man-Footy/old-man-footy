@@ -1,3 +1,5 @@
+<!-- Uses shared carnival styles in /styles/carnival.styles.css -->
+
 <div class="container py-4">
     <!-- Header Section -->
     <div class="row mb-4">
@@ -191,8 +193,13 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <% if (player.shortsColour && player.shortsColour !== 'Not specified') { %>
-                                        <span class="badge shorts-colour-badge" style="background-color: <%= player.shortsColour.toLowerCase() %>; color: white;">
+                                    <% if (player.shortsColour && player.shortsColour !== 'Not specified') { 
+                                         const shortsSlug = (player.shortsColour || '')
+                                            .toString()
+                                            .toLowerCase()
+                                            .replace(/[^a-z0-9]+/g, '-');
+                                    %>
+                                        <span class="badge shorts-colour-badge shorts-colour--<%= shortsSlug %>">
                                             <%= player.shortsColour %>
                                         </span>
                                     <% } else { %>
@@ -225,7 +232,7 @@
     <!-- Empty State -->
     <div class="card shadow d-none" id="emptyState">
         <div class="card-body text-center py-5">
-            <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+            <i class="bi bi-search text-muted icon-3rem"></i>
             <h5 class="text-muted mt-3">No players found</h5>
             <p class="text-muted">Try adjusting your search criteria or filters.</p>
             <button type="button" class="btn btn-outline-primary" id="clearFiltersEmpty">
@@ -236,4 +243,4 @@
 </div>
 
 <!-- Include external JavaScript -->
-<script src="/js/carnival-players.js"></script>
+<script type="module" src="/js/carnival-players.js"></script>

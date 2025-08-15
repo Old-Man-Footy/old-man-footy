@@ -1,236 +1,209 @@
 /**
  * Carnival Players List Interactive Features
- * Handles search, filtering, sorting, and export functionality
+ * Refactored to Manager Object Pattern: search, filtering, sorting, export, print, and shortcuts
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM elements
-    const searchInput = document.getElementById('searchPlayers');
-    const filterClub = document.getElementById('filterClub');
-    const filterAge = document.getElementById('filterAge');
-    const filterAttendance = document.getElementById('filterAttendance');
-    const clearFiltersBtn = document.getElementById('clearFilters');
-    const clearFiltersEmptyBtn = document.getElementById('clearFiltersEmpty');
-    const exportCSVBtn = document.getElementById('exportToCSV');
-    const printListBtn = document.getElementById('printList');
-    const visibleCountElement = document.getElementById('visibleCount');
-    const playersTable = document.getElementById('playersTable');
-    const playersTableBody = document.getElementById('playersTableBody');
-    const emptyState = document.getElementById('emptyState');
-    const clubSummaryCards = document.querySelectorAll('.club-summary-card');
+export const carnivalPlayersManager = {
+    elements: {},
+    state: {
+        currentSort: { column: null, direction: 'asc' },
+        allPlayers: [],
+        filteredPlayers: []
+    },
 
-    // State management
-    let currentSort = { column: null, direction: 'asc' };
-    let allPlayers = [];
-    let filteredPlayers = [];
+    initialize() {
+        this.cacheElements();
+        this.captureInitialRows();
+        this.bindEvents();
+        this.updateVisibleCount();
+        this.initTooltipsIfAvailable();
+    },
 
-    // Initialize
-    init();
+    cacheElements() {
+        const d = document;
+        this.elements.searchInput = d.getElementById('searchPlayers');
+        this.elements.filterClub = d.getElementById('filterClub');
+        this.elements.filterAge = d.getElementById('filterAge');
+        this.elements.filterAttendance = d.getElementById('filterAttendance');
+        this.elements.clearFiltersBtn = d.getElementById('clearFilters');
+        this.elements.clearFiltersEmptyBtn = d.getElementById('clearFiltersEmpty');
+        this.elements.exportCSVBtn = d.getElementById('exportToCSV');
+        this.elements.printListBtn = d.getElementById('printList');
+        this.elements.visibleCountElement = d.getElementById('visibleCount');
+        this.elements.playersTable = d.getElementById('playersTable');
+        this.elements.playersTableBody = d.getElementById('playersTableBody');
+        this.elements.emptyState = d.getElementById('emptyState');
+        this.elements.clubSummaryCards = Array.from(d.querySelectorAll('.club-summary-card'));
+    },
 
-    function init() {
-        // Store all player rows for filtering/sorting
-        allPlayers = Array.from(document.querySelectorAll('.player-row'));
-        filteredPlayers = [...allPlayers];
-        
-        // Set up event listeners
-        setupEventListeners();
-        
-        // Initial count update
-        updateVisibleCount();
-        
-        // Initialize tooltips if Bootstrap is available
+    captureInitialRows() {
+        this.state.allPlayers = Array.from(document.querySelectorAll('.player-row'));
+        this.state.filteredPlayers = [...this.state.allPlayers];
+    },
+
+    bindEvents() {
+        const els = this.elements;
+
+        if (els.searchInput) {
+            const debouncedSearch = carnivalPlayersManager.debounce(carnivalPlayersManager.handleSearch, 300);
+            els.searchInput.addEventListener('input', debouncedSearch);
+        }
+
+        if (els.filterClub) els.filterClub.addEventListener('change', carnivalPlayersManager.handleFilters);
+        if (els.filterAge) els.filterAge.addEventListener('change', carnivalPlayersManager.handleFilters);
+        if (els.filterAttendance) els.filterAttendance.addEventListener('change', carnivalPlayersManager.handleFilters);
+
+        if (els.clearFiltersBtn) els.clearFiltersBtn.addEventListener('click', carnivalPlayersManager.clearAllFilters);
+        if (els.clearFiltersEmptyBtn) els.clearFiltersEmptyBtn.addEventListener('click', carnivalPlayersManager.clearAllFilters);
+
+        if (els.exportCSVBtn) els.exportCSVBtn.addEventListener('click', carnivalPlayersManager.exportToCSV);
+        if (els.printListBtn) els.printListBtn.addEventListener('click', carnivalPlayersManager.printPlayerList);
+
+        if (els.playersTable) {
+            const sortableHeaders = els.playersTable.querySelectorAll('.sortable');
+            sortableHeaders.forEach((header) =>
+                header.addEventListener('click', () => carnivalPlayersManager.handleSort(header.dataset.sort))
+            );
+        }
+
+        if (els.clubSummaryCards?.length) {
+            els.clubSummaryCards.forEach((card) => {
+                card.addEventListener('click', () => {
+                    const clubName = card.dataset.club;
+                    if (carnivalPlayersManager.elements.filterClub) {
+                        carnivalPlayersManager.elements.filterClub.value = clubName;
+                        carnivalPlayersManager.handleFilters();
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('keydown', carnivalPlayersManager.handleShortcuts);
+    },
+
+    initTooltipsIfAvailable() {
+        // eslint-disable-next-line no-undef
         if (typeof bootstrap !== 'undefined') {
+            // eslint-disable-next-line no-undef
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+            // eslint-disable-next-line no-undef
+            tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
         }
-    }
+    },
 
-    function setupEventListeners() {
-        // Search functionality
-        if (searchInput) {
-            searchInput.addEventListener('input', debounce(handleSearch, 300));
-        }
+    handleSearch: () => {
+        const input = carnivalPlayersManager.elements.searchInput;
+        if (!input) return;
+        const searchTerm = input.value.toLowerCase().trim();
 
-        // Filter functionality
-        if (filterClub) {
-            filterClub.addEventListener('change', handleFilters);
-        }
-        if (filterAge) {
-            filterAge.addEventListener('change', handleFilters);
-        }
-        if (filterAttendance) {
-            filterAttendance.addEventListener('change', handleFilters);
-        }
-
-        // Clear filters
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', clearAllFilters);
-        }
-        if (clearFiltersEmptyBtn) {
-            clearFiltersEmptyBtn.addEventListener('click', clearAllFilters);
-        }
-
-        // Export functionality
-        if (exportCSVBtn) {
-            exportCSVBtn.addEventListener('click', exportToCSV);
-        }
-
-        // Print functionality
-        if (printListBtn) {
-            printListBtn.addEventListener('click', printPlayerList);
-        }
-
-        // Sorting functionality
-        if (playersTable) {
-            const sortableHeaders = playersTable.querySelectorAll('.sortable');
-            sortableHeaders.forEach(header => {
-                header.addEventListener('click', () => handleSort(header.dataset.sort));
-            });
-        }
-
-        // Club summary card click filtering
-        clubSummaryCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const clubName = card.dataset.club;
-                if (filterClub) {
-                    filterClub.value = clubName;
-                    handleFilters();
-                }
-            });
-        });
-    }
-
-    function handleSearch() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        
-        allPlayers.forEach(row => {
-            const searchData = row.dataset.search;
+        carnivalPlayersManager.state.allPlayers.forEach((row) => {
+            const searchData = row.dataset.search || '';
             const matches = searchData.includes(searchTerm);
             row.style.display = matches ? '' : 'none';
         });
 
-        updateFilteredPlayers();
-        updateVisibleCount();
-        updateEmptyState();
-    }
+        carnivalPlayersManager.updateFilteredPlayers();
+        carnivalPlayersManager.updateVisibleCount();
+        carnivalPlayersManager.updateEmptyState();
+    },
 
-    function handleFilters() {
-        const clubFilter = filterClub ? filterClub.value : '';
-        const ageFilter = filterAge ? filterAge.value : '';
-        const attendanceFilter = filterAttendance ? filterAttendance.value : '';
-        const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    handleFilters: () => {
+        const els = carnivalPlayersManager.elements;
+        const clubFilter = els.filterClub ? els.filterClub.value : '';
+        const ageFilter = els.filterAge ? els.filterAge.value : '';
+        const attendanceFilter = els.filterAttendance ? els.filterAttendance.value : '';
+        const searchTerm = els.searchInput ? els.searchInput.value.toLowerCase().trim() : '';
 
-        allPlayers.forEach(row => {
+        carnivalPlayersManager.state.allPlayers.forEach((row) => {
             let visible = true;
 
-            // Search filter
-            if (searchTerm && !row.dataset.search.includes(searchTerm)) {
-                visible = false;
-            }
+            if (searchTerm && !(row.dataset.search || '').includes(searchTerm)) visible = false;
+            if (clubFilter && row.dataset.club !== clubFilter) visible = false;
 
-            // Club filter
-            if (clubFilter && row.dataset.club !== clubFilter) {
-                visible = false;
-            }
-
-            // Age filter
             if (ageFilter) {
                 const isMasters = row.dataset.masters === 'true';
-                if (ageFilter === 'masters' && !isMasters) {
-                    visible = false;
-                } else if (ageFilter === 'under35' && isMasters) {
-                    visible = false;
-                }
+                if (ageFilter === 'masters' && !isMasters) visible = false;
+                else if (ageFilter === 'under35' && isMasters) visible = false;
             }
 
-            // Attendance filter
-            if (attendanceFilter && row.dataset.status !== attendanceFilter) {
-                visible = false;
-            }
+            if (attendanceFilter && row.dataset.status !== attendanceFilter) visible = false;
 
             row.style.display = visible ? '' : 'none';
         });
 
-        updateFilteredPlayers();
-        updateVisibleCount();
-        updateEmptyState();
-        updateClubSummaryHighlight();
-    }
+        carnivalPlayersManager.updateFilteredPlayers();
+        carnivalPlayersManager.updateVisibleCount();
+        carnivalPlayersManager.updateEmptyState();
+        carnivalPlayersManager.updateClubSummaryHighlight();
+    },
 
-    function updateFilteredPlayers() {
-        filteredPlayers = allPlayers.filter(row => row.style.display !== 'none');
-    }
+    updateFilteredPlayers() {
+        this.state.filteredPlayers = this.state.allPlayers.filter((row) => row.style.display !== 'none');
+    },
 
-    function updateVisibleCount() {
-        const visibleCount = filteredPlayers.length;
-        const totalCount = allPlayers.length;
-        
-        if (visibleCountElement) {
-            visibleCountElement.textContent = `Showing ${visibleCount} of ${totalCount} players`;
+    updateVisibleCount() {
+        const visibleCount = this.state.filteredPlayers.length;
+        const totalCount = this.state.allPlayers.length;
+        if (this.elements.visibleCountElement) {
+            this.elements.visibleCountElement.textContent = `Showing ${visibleCount} of ${totalCount} players`;
         }
-    }
+    },
 
-    function updateEmptyState() {
-        const hasVisiblePlayers = filteredPlayers.length > 0;
-        const hasAnyPlayers = allPlayers.length > 0;
-        
-        if (playersTable) {
-            playersTable.closest('.card').style.display = hasVisiblePlayers ? '' : 'none';
+    updateEmptyState() {
+        const hasVisiblePlayers = this.state.filteredPlayers.length > 0;
+        const hasAnyPlayers = this.state.allPlayers.length > 0;
+        const table = this.elements.playersTable;
+        if (table) {
+            const card = table.closest('.card');
+            if (card) card.style.display = hasVisiblePlayers ? '' : 'none';
         }
-        
-        if (emptyState && hasAnyPlayers) {
-            emptyState.classList.toggle('d-none', hasVisiblePlayers);
+        if (this.elements.emptyState && hasAnyPlayers) {
+            this.elements.emptyState.classList.toggle('d-none', hasVisiblePlayers);
         }
-    }
+    },
 
-    function updateClubSummaryHighlight() {
-        const selectedClub = filterClub ? filterClub.value : '';
-        
-        clubSummaryCards.forEach(card => {
+    updateClubSummaryHighlight() {
+        const selectedClub = this.elements.filterClub ? this.elements.filterClub.value : '';
+        this.elements.clubSummaryCards.forEach((card) => {
             if (selectedClub && card.dataset.club === selectedClub) {
                 card.classList.add('border-primary', 'bg-light');
             } else {
                 card.classList.remove('border-primary', 'bg-light');
             }
         });
-    }
+    },
 
-    function handleSort(column) {
-        // Update sort state
-        if (currentSort.column === column) {
-            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    handleSort: (column) => {
+        const sort = carnivalPlayersManager.state.currentSort;
+        if (sort.column === column) {
+            sort.direction = sort.direction === 'asc' ? 'desc' : 'asc';
         } else {
-            currentSort.column = column;
-            currentSort.direction = 'asc';
+            sort.column = column;
+            sort.direction = 'asc';
         }
+        carnivalPlayersManager.updateSortIndicators();
+        carnivalPlayersManager.sortPlayers(column, sort.direction);
+    },
 
-        // Update sort indicators
-        updateSortIndicators();
-
-        // Sort the visible players
-        sortPlayers(column, currentSort.direction);
-    }
-
-    function updateSortIndicators() {
-        const headers = playersTable.querySelectorAll('.sortable');
-        headers.forEach(header => {
+    updateSortIndicators() {
+        const table = this.elements.playersTable;
+        if (!table) return;
+        const headers = table.querySelectorAll('.sortable');
+        headers.forEach((header) => {
             const icon = header.querySelector('i');
-            if (header.dataset.sort === currentSort.column) {
-                icon.className = currentSort.direction === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+            if (header.dataset.sort === this.state.currentSort.column) {
+                if (icon) icon.className = this.state.currentSort.direction === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
                 header.classList.add('text-primary');
             } else {
-                icon.className = 'bi bi-arrow-down-up text-muted';
+                if (icon) icon.className = 'bi bi-arrow-down-up text-muted';
                 header.classList.remove('text-primary');
             }
         });
-    }
+    },
 
-    function sortPlayers(column, direction) {
-        const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+    sortPlayers(column, direction) {
+        const sortedPlayers = [...this.state.filteredPlayers].sort((a, b) => {
             let aValue, bValue;
-
             switch (column) {
                 case 'club':
                     aValue = a.dataset.club;
@@ -259,78 +232,71 @@ document.addEventListener('DOMContentLoaded', function() {
                 default:
                     return 0;
             }
-
-            // Handle string comparison
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 aValue = aValue.toLowerCase();
                 bValue = bValue.toLowerCase();
             }
-
             if (aValue < bValue) return direction === 'asc' ? -1 : 1;
             if (aValue > bValue) return direction === 'asc' ? 1 : -1;
             return 0;
         });
+        const body = this.elements.playersTableBody;
+        if (!body) return;
+        sortedPlayers.forEach((row) => body.appendChild(row));
+    },
 
-        // Reorder the DOM elements
-        sortedPlayers.forEach(row => {
-            playersTableBody.appendChild(row);
-        });
-    }
+    clearAllFilters: () => {
+        const els = carnivalPlayersManager.elements;
+        if (els.searchInput) els.searchInput.value = '';
+        if (els.filterClub) els.filterClub.value = '';
+        if (els.filterAge) els.filterAge.value = '';
+        if (els.filterAttendance) els.filterAttendance.value = '';
 
-    function clearAllFilters() {
-        // Clear all filter inputs
-        if (searchInput) searchInput.value = '';
-        if (filterClub) filterClub.value = '';
-        if (filterAge) filterAge.value = '';
-        if (filterAttendance) filterAttendance.value = '';
-
-        // Show all players
-        allPlayers.forEach(row => {
+        carnivalPlayersManager.state.allPlayers.forEach((row) => {
             row.style.display = '';
         });
 
-        // Update state
-        filteredPlayers = [...allPlayers];
-        updateVisibleCount();
-        updateEmptyState();
-        updateClubSummaryHighlight();
-    }
+        carnivalPlayersManager.state.filteredPlayers = [...carnivalPlayersManager.state.allPlayers];
+        carnivalPlayersManager.updateVisibleCount();
+        carnivalPlayersManager.updateEmptyState();
+        carnivalPlayersManager.updateClubSummaryHighlight();
+    },
 
-    function exportToCSV() {
+    exportToCSV: () => {
         const csvData = [];
         const headers = ['Club', 'Player Name', 'Age', 'Date of Birth', 'Shorts Colour', 'Attendance Status', 'State'];
         csvData.push(headers);
 
-        filteredPlayers.forEach(row => {
+        carnivalPlayersManager.state.filteredPlayers.forEach((row) => {
             const cells = row.cells;
             const rowData = [
-                extractTextFromCell(cells[0]), // Club
-                extractTextFromCell(cells[1]), // Player Name
-                extractTextFromCell(cells[2]), // Age
-                extractTextFromCell(cells[3]), // DOB
-                extractTextFromCell(cells[4]), // Shorts
-                extractTextFromCell(cells[5]), // Status
-                row.querySelector('.badge[class*="state-"]')?.textContent.trim() || '' // State
+                carnivalPlayersManager.extractTextFromCell(cells[0]),
+                carnivalPlayersManager.extractTextFromCell(cells[1]),
+                carnivalPlayersManager.extractTextFromCell(cells[2]),
+                carnivalPlayersManager.extractTextFromCell(cells[3]),
+                carnivalPlayersManager.extractTextFromCell(cells[4]),
+                carnivalPlayersManager.extractTextFromCell(cells[5]),
+                row.querySelector('.badge[class*="state-"]')?.textContent.trim() || ''
             ];
             csvData.push(rowData);
         });
 
-        downloadCSV(csvData, `carnival-players-${new Date().toISOString().split('T')[0]}.csv`);
-    }
+        carnivalPlayersManager.downloadCSV(
+            csvData,
+            `carnival-players-${new Date().toISOString().split('T')[0]}.csv`
+        );
+    },
 
-    function extractTextFromCell(cell) {
-        // Extract clean text content, removing extra whitespace and icons
+    extractTextFromCell(cell) {
         return cell.textContent.replace(/\s+/g, ' ').trim();
-    }
+    },
 
-    function downloadCSV(data, filename) {
-        const csvContent = data.map(row => 
-            row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',')
-        ).join('\n');
-
+    downloadCSV(data, filename) {
+        const csvContent = data
+            .map((row) => row.map((cell) => `"${cell.toString().replace(/"/g, '""')}"`).join(','))
+            .join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        
         if (link.download !== undefined) {
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
@@ -340,13 +306,11 @@ document.addEventListener('DOMContentLoaded', function() {
             link.click();
             document.body.removeChild(link);
         }
-    }
+    },
 
-    function printPlayerList() {
-        // Create a new window with print-friendly content
+    printPlayerList: () => {
         const printWindow = window.open('', '_blank');
         const carnivalTitle = document.querySelector('h4.text-muted')?.textContent || 'Carnival Players';
-        
         let printContent = `
             <!DOCTYPE html>
             <html>
@@ -364,19 +328,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     .badge.bg-warning { background-color: #ffc107; color: black; }
                     .badge.bg-danger { background-color: #dc3545; color: white; }
                     .badge.bg-secondary { background-color: #6c757d; color: white; }
-                    @media print {
-                        .no-print { display: none; }
-                        body { margin: 0; }
-                    }
+                    @media print { .no-print { display: none; } body { margin: 0; } }
                 </style>
             </head>
             <body>
                 <div class="header">
                     <h1>Player List</h1>
                     <h2>${carnivalTitle}</h2>
-                    <p>Generated on ${new Date().toLocaleDateString('en-AU', { 
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-                    })} - ${filteredPlayers.length} players</p>
+                    <p>Generated on ${new Date().toLocaleDateString('en-AU', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    })} - ${carnivalPlayersManager.state.filteredPlayers.length} players</p>
                 </div>
                 <table>
                     <thead>
@@ -389,44 +350,47 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th>Attendance</th>
                         </tr>
                     </thead>
-                    <tbody>
-        `;
+                    <tbody>`;
 
-        filteredPlayers.forEach(row => {
+        carnivalPlayersManager.state.filteredPlayers.forEach((row) => {
             const cells = row.cells;
             printContent += `
                 <tr>
-                    <td>${extractTextFromCell(cells[0])}</td>
-                    <td>${extractTextFromCell(cells[1])}</td>
-                    <td>${extractTextFromCell(cells[2])}</td>
-                    <td>${extractTextFromCell(cells[3])}</td>
-                    <td>${extractTextFromCell(cells[4])}</td>
-                    <td>${extractTextFromCell(cells[5])}</td>
-                </tr>
-            `;
+                    <td>${carnivalPlayersManager.extractTextFromCell(cells[0])}</td>
+                    <td>${carnivalPlayersManager.extractTextFromCell(cells[1])}</td>
+                    <td>${carnivalPlayersManager.extractTextFromCell(cells[2])}</td>
+                    <td>${carnivalPlayersManager.extractTextFromCell(cells[3])}</td>
+                    <td>${carnivalPlayersManager.extractTextFromCell(cells[4])}</td>
+                    <td>${carnivalPlayersManager.extractTextFromCell(cells[5])}</td>
+                </tr>`;
         });
 
         printContent += `
                     </tbody>
                 </table>
             </body>
-            </html>
-        `;
+            </html>`;
 
         printWindow.document.write(printContent);
         printWindow.document.close();
-        
-        // Wait for content to load, then print
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 250);
-    }
+            // Call print synchronously for reliability in tests; delay only the close.
+            try {
+                if (typeof printWindow.print === 'function') {
+                    printWindow.print();
+                }
+            } catch (e) {
+                // no-op if blocked
+            }
+            setTimeout(() => {
+                try {
+                    if (typeof printWindow.close === 'function') printWindow.close();
+                } catch (e) {}
+            }, 250);
+    },
 
-    // Utility function for debouncing
-    function debounce(func, wait) {
+    debounce(func, wait) {
         let timeout;
-        return function executedFunction(...args) {
+        return (...args) => {
             const later = () => {
                 clearTimeout(timeout);
                 func(...args);
@@ -434,23 +398,25 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
-    }
+    },
 
-    // Add some additional keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        // Ctrl+F or Cmd+F to focus search (prevent default browser search)
+    handleShortcuts: (e) => {
+        const input = carnivalPlayersManager.elements.searchInput;
         if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
             e.preventDefault();
-            if (searchInput) {
-                searchInput.focus();
-                searchInput.select();
+            if (input) {
+                input.focus();
+                input.select();
             }
         }
-        
-        // Escape to clear search
-        if (e.key === 'Escape' && searchInput === document.activeElement) {
-            clearAllFilters();
-            searchInput.blur();
+        if (e.key === 'Escape' && input === document.activeElement) {
+            carnivalPlayersManager.clearAllFilters();
+            input.blur();
         }
-    });
+    }
+};
+
+// Bootstrap in the browser
+document.addEventListener('DOMContentLoaded', () => {
+    carnivalPlayersManager.initialize();
 });

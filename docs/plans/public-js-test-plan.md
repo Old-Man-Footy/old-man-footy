@@ -22,7 +22,7 @@
 - [x] `/public/js/carnival-management.js` -- may not be used, but is a utility for carnival management.
 - [x] `/public/js/carnival-my-club-players.js`
 - [x] `/public/js/carnival-new.js`
-- [ ] `/public/js/carnival-players.js`
+- [x] `/public/js/carnival-players.js`
 - [ ] `/public/js/carnival-show.js`
 - [ ] `/public/js/club-add-sponsor.js`
 - [ ] `/public/js/club-autocomplete.js`
