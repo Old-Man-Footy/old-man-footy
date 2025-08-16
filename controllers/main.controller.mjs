@@ -344,7 +344,7 @@ export const postSubscribe = async (req, res) => {
 
         // Rate limiting: Check IP address for recent submissions
         const userIP = req.ip || req.connection.remoteAddress;
-        const recentSubmissionTime = 60000; // 1 minute
+        const recentSubmissionTime = 10000; // 10 seconds (was 1 minute)
         
         // Simple in-memory rate limiting (for production, use Redis or database)
         if (!global.subscriptionAttempts) {

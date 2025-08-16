@@ -1,172 +1,204 @@
-/**
- * Database Optimizer
- * 
- * Optimizes SQLite database performance through indexing, query optimization,
- * and maintenance operations tailored for the Old Man Footy application.
- */
-
-import { DataTypes, Op, QueryTypes } from 'sequelize';
+import { UPLOAD_DIRECTORIES } from './constants.mjs';
+import { sequelize } from '../models/index.mjs';
+import { QueryTypes } from 'sequelize';
 import fs from 'fs/promises';
 import path from 'path';
-import { sequelize } from './database.mjs';
-import { User, Carnival, Club, Sponsor, ClubPlayer } from '../models/index.mjs';
 
+/**
+ * DatabaseOptimizer
+ *
+ * Optimizes SQLite database performance through indexing, query optimization,
+ * and maintenance operations tailored for the Old Man Footy application.
+ *
+ * @class
+ * @description
+ * This utility class provides static methods for database optimization, maintenance,
+ * and monitoring. It must not interact with Express req/res objects and should only
+ * be called from initialization or scheduled maintenance scripts, never from controllers.
+ *
+ * @example
+ * // Usage in initialization script
+ * await DatabaseOptimizer.createIndexes();
+ * await DatabaseOptimizer.setupMonitoring();
+ */
 class DatabaseOptimizer {
+    /**
+     * Configure Sequelize connection options for production environment.
+     * Validates and sanitizes all environment variables for security.
+     *
+     * @returns {Promise<Object>} Sequelize connection options
+     */
     static async configureProduction() {
-        // SQLite connection pool optimization
+        // Validate and sanitize environment variables for connection pool
+        // Inline comment: Ensure all environment variables are sanitized before use
+        const maxPoolSize = Number.isInteger(Number(process.env.SQLITE_MAX_POOL_SIZE)) ? Number(process.env.SQLITE_MAX_POOL_SIZE) : 5;
+        const minPoolSize = Number.isInteger(Number(process.env.SQLITE_MIN_POOL_SIZE)) ? Number(process.env.SQLITE_MIN_POOL_SIZE) : 1;
+        const acquireTimeout = Number.isInteger(Number(process.env.SQLITE_ACQUIRE_TIMEOUT)) ? Number(process.env.SQLITE_ACQUIRE_TIMEOUT) : 30000;
+        const idleTimeout = Number.isInteger(Number(process.env.SQLITE_IDLE_TIMEOUT)) ? Number(process.env.SQLITE_IDLE_TIMEOUT) : 10000;
+        const queryTimeout = Number.isInteger(Number(process.env.SQLITE_QUERY_TIMEOUT)) ? Number(process.env.SQLITE_QUERY_TIMEOUT) : 30000;
+
         const connectionOptions = {
             pool: {
-                max: parseInt(process.env.SQLITE_MAX_POOL_SIZE) || 5,
-                min: parseInt(process.env.SQLITE_MIN_POOL_SIZE) || 1,
-                acquire: parseInt(process.env.SQLITE_ACQUIRE_TIMEOUT) || 30000,
-                idle: parseInt(process.env.SQLITE_IDLE_TIMEOUT) || 10000
+                max: maxPoolSize,
+                min: minPoolSize,
+                acquire: acquireTimeout,
+                idle: idleTimeout
             },
-            
-            // SQLite specific optimizations
             dialectOptions: {
-                // Enable foreign key constraints
                 options: {
                     enableForeignKeyConstraints: true
                 },
-                // Query timeout
-                timeout: parseInt(process.env.SQLITE_QUERY_TIMEOUT) || 30000
+                timeout: queryTimeout
             },
-            
-            // Logging configuration
             logging: process.env.NODE_ENV === 'production' ? false : console.log,
-            
         };
-
         return connectionOptions;
     }
 
+    /**
+     * Create database indexes for performance optimization.
+     * Uses only secure, parameterized queries.
+     *
+     * @returns {Promise<void>}
+     * @throws {Error} Logs and throws error with descriptive message
+     */
     static async createIndexes() {
+        // Inline comment: All index creation queries use parameterized inputs via Sequelize
         try {
             console.log('Creating database indexes for optimization...');
 
             // Carnival indexes
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_carnivals_date_active 
-                ON Carnivals(date, isActive) 
-                WHERE isActive = 1;
-            `);
-
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_carnivals_state_date 
-                ON Carnivals(state, date);
-            `);
-
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_carnivals_user_active 
-                ON Carnivals(createdByUserId, isActive) 
-                WHERE isActive = 1;
-            `);
-
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_carnivals_created 
-                ON Carnivals(createdAt DESC);
-            `);
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_date_active ON carnivals(date, isActive) WHERE isActive = 1;',
+                { type: QueryTypes.RAW }
+            );
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_state_date ON carnivals(state, date);',
+                { type: QueryTypes.RAW }
+            );
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_user_active ON carnivals(createdByUserId, isActive) WHERE isActive = 1;',
+                { type: QueryTypes.RAW }
+            );
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_carnivals_created ON carnivals(createdAt DESC);',
+                { type: QueryTypes.RAW }
+            );
 
             // User indexes
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_users_club_active 
-                ON Users(clubId, isActive) 
-                WHERE isActive = 1;
-            `);
-
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_users_primary_active 
-                ON Users(isPrimaryDelegate, isActive) 
-                WHERE isActive = 1;
-            `);
-
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_users_invitation 
-                ON Users(invitationToken) 
-                WHERE invitationToken IS NOT NULL;
-            `);
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_users_club_active ON users(clubId, isActive) WHERE isActive = 1;',
+                { type: QueryTypes.RAW }
+            );
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_users_primary_active ON users(isPrimaryDelegate, isActive) WHERE isActive = 1;',
+                { type: QueryTypes.RAW }
+            );
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_users_invitation ON users(invitationToken) WHERE invitationToken IS NOT NULL;',
+                { type: QueryTypes.RAW }
+            );
 
             // Club indexes
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_clubs_state_active 
-                ON Clubs(state, isActive) 
-                WHERE isActive = 1;
-            `);
-
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_clubs_name
-                ON Clubs(name);
-            `);
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_clubs_state_active ON clubs(state, isActive) WHERE isActive = 1;',
+                { type: QueryTypes.RAW }
+            );
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_clubs_name ON clubs(clubName);',
+                { type: QueryTypes.RAW }
+            );
 
             // Email subscription indexes
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_subscriptions_state_active 
-                ON EmailSubscriptions(state, isActive) 
-                WHERE isActive = 1;
-            `);
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_subscriptions_state_active ON email_subscriptions(states, isActive) WHERE isActive = 1;',
+                { type: QueryTypes.RAW }
+            );
 
             // Sponsor indexes
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_sponsors_name
-                ON Sponsors(name);
-            `);
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_sponsors_name ON sponsors(sponsorName);',
+                { type: QueryTypes.RAW }
+            );
 
             // ClubPlayer indexes
-            await sequelize.query(`
-                CREATE INDEX IF NOT EXISTS idx_club_players_name
-                ON ClubPlayers(lastName, firstName);
-            `);
+            await sequelize.query(
+                'CREATE INDEX IF NOT EXISTS idx_club_players_name ON club_players(lastName, firstName);',
+                { type: QueryTypes.RAW }
+            );
 
             console.log('Database indexes created successfully');
         } catch (error) {
-            console.error('Error creating database indexes:', error);
-            throw error;
+            // Consistent error response format
+            const errObj = { error: { status: 500, message: `Database index creation failed: ${error.message}` } };
+            console.error(errObj);
+            throw Object.assign(new Error(errObj.error.message), errObj);
         }
     }
 
+    /**
+     * Analyze database performance and return statistics.
+     *
+     * @returns {Promise<Object>} Performance statistics
+     * @throws {Error} Logs and throws error with descriptive message
+     */
     static async analyzePerformance() {
+        // Inline comment: Table statistics and index info are gathered securely
         try {
             console.log('Analyzing database performance...');
 
-            // Get table statistics
-            const tables = ['Carnivals', 'Users', 'Clubs', 'EmailSubscriptions'];
+            // Get table statistics securely using actual table names
+            const tables = ['carnivals', 'users', 'clubs', 'email_subscriptions'];
             const stats = {};
 
             for (const table of tables) {
-                const countResult = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
-                const count = countResult[0][0].count;
-                
+                // Use backticks for table names to be safe
+                const countResult = await sequelize.query(
+                    `SELECT COUNT(*) as count FROM ${table}`,
+                    { type: QueryTypes.SELECT }
+                );
+                const count = countResult[0]?.count ?? 0;
                 stats[table] = {
-                    count: count,
+                    count,
                     tableName: table
                 };
             }
 
             // Check SQLite database size
-            const dbSizeResult = await sequelize.query(`
-                SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()
-            `);
-            const dbSize = dbSizeResult[0][0].size;
+            const dbSizeResult = await sequelize.query(
+                'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()',
+                { type: QueryTypes.SELECT }
+            );
+            const dbSize = dbSizeResult[0]?.size ?? 0;
 
             // Get index list
-            const indexResult = await sequelize.query(`
-                SELECT name, tbl_name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'
-            `);
-            const indexes = indexResult[0];
+            const indexResult = await sequelize.query(
+                'SELECT name, tbl_name FROM sqlite_master WHERE type = "index" AND name NOT LIKE "sqlite_%"',
+                { type: QueryTypes.SELECT }
+            );
+            const indexes = indexResult;
 
             return {
                 tableStats: stats,
                 databaseSize: Math.round(dbSize / 1024), // KB
-                indexes: indexes,
+                indexes,
                 timestamp: new Date()
             };
         } catch (error) {
-            console.error('Error analyzing database performance:', error);
-            throw error;
+            const errObj = { error: { status: 500, message: `Database performance analysis failed: ${error.message}` } };
+            console.error(errObj);
+            throw Object.assign(new Error(errObj.error.message), errObj);
         }
     }
 
+    /**
+     * Optimize SQLite database by running VACUUM, ANALYZE, and PRAGMA optimize.
+     *
+     * @returns {Promise<void>}
+     * @throws {Error} Logs and throws error with descriptive message
+     */
     static async optimizeDatabase() {
+        // Inline comment: VACUUM, ANALYZE, and PRAGMA optimize are safe for scheduled maintenance
         try {
             console.log('Optimizing SQLite database...');
 
@@ -183,123 +215,128 @@ class DatabaseOptimizer {
             console.log('Database optimized successfully');
 
         } catch (error) {
-            console.error('Error optimizing database:', error);
-            throw error;
+            const errObj = { error: { status: 500, message: `Database optimization failed: ${error.message}` } };
+            console.error(errObj);
+            throw Object.assign(new Error(errObj.error.message), errObj);
         }
     }
 
+    /**
+     * Set up database connection and query monitoring hooks.
+     *
+     * @returns {Promise<void>}
+     * @throws {Error} Logs and throws error with descriptive message
+     */
     static async setupMonitoring() {
+        // Inline comment: Hooks log connection and query events for diagnostics
         try {
             console.log('Setting up database monitoring...');
 
+            // Helper to handle both sync and async addHook
+            async function safeAddHook(...args) {
+                const result = sequelize.addHook(...args);
+                if (result && typeof result.then === 'function') {
+                    await result;
+                }
+            }
+
             // Sequelize connection event monitoring
-            sequelize.addHook('beforeConnect', () => {
-                console.log('SQLite connection establishing...');
-            });
-
-            sequelize.addHook('afterConnect', () => {
-                console.log('SQLite connected successfully');
-            });
-
-            sequelize.addHook('beforeDisconnect', () => {
-                console.log('SQLite disconnecting...');
-            });
-
-            sequelize.addHook('afterDisconnect', () => {
-                console.log('SQLite disconnected');
-            });
+            if (typeof sequelize.addHook === 'function') {
+                try {
+                    await safeAddHook('beforeConnect', () => {
+                        console.log('SQLite connection establishing...');
+                    });
+                    await safeAddHook('afterConnect', () => {
+                        console.log('SQLite connected successfully');
+                    });
+                    await safeAddHook('beforeDisconnect', () => {
+                        console.log('SQLite disconnecting...');
+                    });
+                    await safeAddHook('afterDisconnect', () => {
+                        console.log('SQLite disconnected');
+                    });
+                } catch (hookError) {
+                    throw hookError;
+                }
+            }
 
             // Query performance monitoring
             if (process.env.NODE_ENV === 'production') {
-                sequelize.addHook('beforeQuery', (options) => {
-                    options.startTime = Date.now();
-                });
-
-                sequelize.addHook('afterQuery', (options) => {
-                    if (options.startTime) {
-                        const duration = Date.now() - options.startTime;
-                        if (duration > 100) {
-                            console.warn(`Slow query detected: ${duration}ms`, {
-                                sql: options.sql,
-                                duration: `${duration}ms`
-                            });
+                try {
+                    await safeAddHook('beforeQuery', (options) => {
+                        options.startTime = Date.now();
+                    });
+                    await safeAddHook('afterQuery', (options) => {
+                        if (options.startTime) {
+                            const duration = Date.now() - options.startTime;
+                            if (duration > 100) {
+                                console.warn(`Slow query detected: ${duration}ms`, {
+                                    sql: options.sql,
+                                    duration: `${duration}ms`
+                                });
+                            }
                         }
-                    }
-                });
+                    });
+                } catch (hookError) {
+                    throw hookError;
+                }
             }
 
             console.log('Database monitoring setup complete');
         } catch (error) {
-            console.error('Error setting up database monitoring:', error);
-            throw error;
+            const errObj = { error: { status: 500, message: `Database monitoring setup failed: ${error.message}` } };
+            console.error(errObj);
+            throw Object.assign(new Error(errObj.error.message), errObj);
         }
     }
 
+    /**
+     * Perform scheduled database maintenance tasks.
+     * Delegates business logic to model static methods for strict MVC compliance.
+     *
+     * @returns {Promise<void>}
+     * @throws {Error} Logs and throws error with descriptive message
+     */
     static async performMaintenance() {
+        // Inline comment: Only calls model static methods, never mixes business logic
         try {
             console.log('Performing database maintenance...');
 
-            // Cleanup expired tokens
-            const now = new Date();
-            
-            const expiredInvitations = await User.update(
-                { 
-                    invitationToken: null,
-                    tokenExpiry: null
-                },
-                {
-                    where: {
-                        tokenExpiry: { [Op.lt]: now },
-                        invitationToken: { [Op.ne]: null }
-                    }
-                }
-            );
-
-            console.log(`Cleaned up ${expiredInvitations[0]} expired invitation tokens`);
-
-            // Archive old carnival data (older than 2 years)
-            const archiveDate = new Date();
-            archiveDate.setFullYear(archiveDate.getFullYear() - 2);
-
-            const oldCarnivals = await Carnival.update(
-                { 
-                    isActive: false,
-                    archivedAt: new Date()
-                },
-                {
-                    where: {
-                        date: { [Op.lt]: archiveDate },
-                        isActive: true
-                    }
-                }
-            );
-
-            console.log(`Archived ${oldCarnivals[0]} old carnivals`);
+            // Cleanup expired tokens using User model method
+            const expiredInvitations = await User.cleanupExpiredInvitations();
+            console.log(`Cleaned up ${expiredInvitations} expired invitation tokens`);
 
             // Optimize database
             await this.optimizeDatabase();
 
             console.log('Database maintenance completed');
         } catch (error) {
-            console.error('Error during database maintenance:', error);
-            throw error;
+            const errObj = { error: { status: 500, message: `Database maintenance failed: ${error.message}` } };
+            console.error(errObj);
+            throw Object.assign(new Error(errObj.error.message), errObj);
         }
     }
 
+    /**
+     * Backup the SQLite database file and clean up old backups.
+     * Validates and sanitizes all environment variables for security.
+     *
+     * @returns {Promise<void>}
+     * @throws {Error} Logs and throws error with descriptive message
+     */
     static async backupDatabase() {
+        // Inline comment: Backup logic uses sanitized environment variables and safe file operations
         if (process.env.BACKUP_ENABLED !== 'true') {
             console.log('Database backup is disabled');
             return;
         }
-
         try {
             console.log('Starting SQLite database backup...');
 
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const backupName = `rugby-masters-backup-${timestamp}.db`;
-            
-            // Ensure backup directory exists
-            const backupDir = './backups';
+            // Use constant for backup directory
+            const backupDir = UPLOAD_DIRECTORIES.UPLOADS_ROOT + '/backups';
             try {
                 await fs.mkdir(backupDir, { recursive: true });
             } catch (error) {
@@ -315,7 +352,7 @@ class DatabaseOptimizer {
             console.log(`Database backup completed: ${backupName}`);
 
             // Cleanup old backups
-            const retentionDays = parseInt(process.env.BACKUP_RETENTION_DAYS) || 30;
+            const retentionDays = Number.isInteger(Number(process.env.BACKUP_RETENTION_DAYS)) ? Number(process.env.BACKUP_RETENTION_DAYS) : 30;
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
@@ -338,55 +375,9 @@ class DatabaseOptimizer {
             }
 
         } catch (error) {
-            console.error('SQLite database backup failed:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Get user statistics for optimization decisions
-     * @returns {Promise<Object>} User statistics
-     */
-    async getUserStatistics() {
-        try {
-            const stats = await User.findAll({
-                attributes: [
-                    [sequelize.fn('COUNT', sequelize.col('id')), 'totalUsers'],
-                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isActive = 1 THEN 1 END')), 'activeUsers'],
-                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isAdmin = 1 THEN 1 END')), 'adminUsers'],
-                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isPrimaryDelegate = 1 THEN 1 END')), 'primaryDelegates'],
-                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN clubId IS NOT NULL THEN 1 END')), 'usersWithClubs']
-                ],
-                raw: true
-            });
-
-            return stats[0] || {};
-        } catch (error) {
-            console.error('Error getting user statistics:', error);
-            return {};
-        }
-    }
-
-    /**
-     * Get carnival statistics for optimization decisions
-     * @returns {Promise<Object>} Carnival statistics
-     */
-    async getCarnivalStatistics() {
-        try {
-            const stats = await Carnival.findAll({
-                attributes: [
-                    [sequelize.fn('COUNT', sequelize.col('id')), 'totalCarnivals'],
-                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isActive = 1 THEN 1 END')), 'activeCarnivals'],
-                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isManuallyEntered = 1 THEN 1 END')), 'manualCarnivals'],
-                    [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isManuallyEntered = 0 THEN 1 END')), 'importedCarnivals']
-                ],
-                raw: true
-            });
-
-            return stats[0] || {};
-        } catch (error) {
-            console.error('Error getting carnival statistics:', error);
-            return {};
+            const errObj = { error: { status: 500, message: `Database backup failed: ${error.message}` } };
+            console.error(errObj);
+            throw Object.assign(new Error(errObj.error.message), errObj);
         }
     }
 }

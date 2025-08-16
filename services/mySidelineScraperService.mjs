@@ -58,10 +58,20 @@ class MySidelineScraperService {
 
         try {
             console.log('Launching browser for API interception...');
-            browser = await chromium.launch({
+
+            // Set the browser launch options
+            const launchOptions = {
                 headless: this.useHeadlessBrowser,
                 timeout: this.timeout
-            });
+            };
+            
+            // Use custom executable path if specified
+            if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+                launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+            }
+            
+            // Launch the browser
+            browser = await chromium.launch(launchOptions);
             
             context = await browser.newContext();
             page = await context.newPage();

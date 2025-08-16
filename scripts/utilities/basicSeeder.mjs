@@ -10,7 +10,6 @@ import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
 import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
 import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
 import MySidelineService from '../services/mySidelineIntegrationService.mjs';
-import { initializeDatabase } from '../config/database.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 class BasicSeeder {
@@ -27,10 +26,13 @@ class BasicSeeder {
      */
     async connect() {
         try {
-            await initializeDatabase();
-            console.log('✅ SQLite database initialized successfully');
+            // Only check connection health, do not run full setup
+            const { getDatabaseConnection } = await import('../config/database.mjs');
+            const connected = await getDatabaseConnection();
+            if (!connected) throw new Error('Failed to establish database connection');
+            console.log('✅ SQLite database connection is healthy');
         } catch (error) {
-            console.error('❌ Database initialization failed:', error.message);
+            console.error('❌ Database connection failed:', error.message);
             process.exit(1);
         }
     }

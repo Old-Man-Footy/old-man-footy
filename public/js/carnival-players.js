@@ -101,7 +101,10 @@ export const carnivalPlayersManager = {
             const matches = searchData.includes(searchTerm);
             row.style.display = matches ? '' : 'none';
         });
-
+        this.updateFilteredPlayers();
+        this.updateVisibleCount();
+        this.updateEmptyState();
+    },
         carnivalPlayersManager.updateFilteredPlayers();
         carnivalPlayersManager.updateVisibleCount();
         carnivalPlayersManager.updateEmptyState();
@@ -255,6 +258,11 @@ export const carnivalPlayersManager = {
         carnivalPlayersManager.state.allPlayers.forEach((row) => {
             row.style.display = '';
         });
+        this.state.filteredPlayers = [...this.state.allPlayers];
+        this.updateVisibleCount();
+        this.updateEmptyState();
+        this.updateClubSummaryHighlight();
+    },
 
         carnivalPlayersManager.state.filteredPlayers = [...carnivalPlayersManager.state.allPlayers];
         carnivalPlayersManager.updateVisibleCount();
@@ -364,7 +372,6 @@ export const carnivalPlayersManager = {
                     <td>${carnivalPlayersManager.extractTextFromCell(cells[5])}</td>
                 </tr>`;
         });
-
         printContent += `
                     </tbody>
                 </table>

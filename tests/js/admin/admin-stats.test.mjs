@@ -14,8 +14,8 @@ function setupDOM() {
             <option value="week">This Week</option>
             <option value="custom">Custom</option>
         </select>
-        <div id="startDateGroup" style="display: none;"></div>
-        <div id="endDateGroup" style="display: none;"></div>
+        <div class="custom-date-group" id="startDateGroup" style="display: none;"></div>
+        <div class="custom-date-group" id="endDateGroup" style="display: none;"></div>
         <button data-action="export-report">Export</button>
         <canvas id="myChart"></canvas>
     `;
