@@ -66,7 +66,8 @@ export const carnivalEditManager = {
     },
 
     // Handle click on a file upload area using an arrow function for proper scoping.
-    handleFileAreaClick: (event) => {
+    // Handle click on a file upload area using a regular function for proper `this` binding.
+    handleFileAreaClick: function(event) {
         const area = event.currentTarget;
         const input = area?.querySelector('input[type="file"]');
         if (input) input.click();
