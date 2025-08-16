@@ -1,58 +1,67 @@
 /**
- * Club Sponsors JavaScript
- * Handles sponsor management functionality including reordering
+ * Club Sponsors Manager
  */
+export const clubSponsorsManager = {
+    elements: {},
 
-/**
- * Initialize sponsor reordering functionality
- */
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Club sponsors functionality loaded...');
-    
-    const sponsorList = document.getElementById('sponsor-order-list');
-    const saveButton = document.getElementById('save-sponsor-order');
-    
-    if (sponsorList && sponsorList.children.length > 1) {
-        // Initialize Sortable
-        Sortable.create(sponsorList, {
-            handle: '.fa-grip-vertical',
-            animation: 150,
-            onEnd: function() {
-                if (saveButton) {
-                    saveButton.style.display = 'block';
-                }
-            }
-        });
+    initialize() {
+        this.cacheElements();
+        this.bindEvents();
+        this.initSortable();
+        try { if (typeof process === 'undefined' || process.env.NODE_ENV !== 'test') console.log('Club sponsors functionality initialized'); } catch {}
+    },
 
-        // Save new order
+    cacheElements() {
+        this.elements.sponsorList = document.getElementById('sponsor-order-list');
+        this.elements.saveButton = document.getElementById('save-sponsor-order');
+    },
+
+    bindEvents() {
+        const { saveButton } = this.elements;
         if (saveButton) {
-            saveButton.addEventListener('click', function() {
-                const sponsorIds = Array.from(sponsorList.children).map(item => 
-                    item.getAttribute('data-sponsor-id')
-                );
-
-                fetch('/clubs/manage/sponsors/reorder', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ sponsorOrder: sponsorIds })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error updating sponsor order: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error updating sponsor order');
-                });
-            });
+            saveButton.addEventListener('click', () => this.saveNewOrder());
         }
+    },
+
+    initSortable() {
+        const { sponsorList, saveButton } = this.elements;
+        if (!sponsorList || sponsorList.children.length <= 1) return;
+        try {
+            if (typeof Sortable !== 'undefined' && sponsorList) {
+                Sortable.create(sponsorList, {
+                    handle: '.fa-grip-vertical',
+                    animation: 150,
+                    onEnd: function() {
+                        if (saveButton) saveButton.style.display = 'block';
+                    }
+                });
+            }
+        } catch {}
+    },
+
+    saveNewOrder() {
+        const { sponsorList } = this.elements;
+        if (!sponsorList) return;
+        const sponsorIds = Array.from(sponsorList.children).map(item => item.getAttribute('data-sponsor-id'));
+        try {
+            fetch('/clubs/manage/sponsors/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sponsorOrder: sponsorIds })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.success) {
+                    try { location.reload(); } catch {}
+                } else {
+                    alert('Error updating sponsor order' + (data && data.message ? (': ' + data.message) : ''));
+                }
+            })
+            .catch(() => alert('Error updating sponsor order'));
+        } catch {}
     }
-    
-    console.log('Club sponsors functionality initialized successfully');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    try { clubSponsorsManager.initialize(); } catch {}
 });

@@ -1,518 +1,396 @@
 /**
- * Club Options Page - Client-side functionality
- * 
- * Handles club search, filtering, delegate contact modal, and basic autocomplete
- * for the club options page where users can join or create clubs.
+ * Club Options Page Manager
+ * Handles search/filtering, delegate contact modal, basic autocomplete, and form validation
  */
+export const clubOptionsManager = {
+    elements: {},
+    state: {
+        selectedClubId: null,
+        searchTimeout: null,
+        availableClubsData: [],
+        contactModal: null
+    },
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all functionality
-    initializeClubSearch();
-    initializeContactDelegateModal();
-    initializeBasicAutocomplete();
-    initializeFormValidation();
-});
+    initialize() {
+        this.cacheElements();
+        this.bindEvents();
+        // Preload clubs from DOM for basic autocomplete
+        this.state.availableClubsData = this.getAvailableClubsFromDOM();
+    },
 
-/**
- * Initialize form validation to only trigger on actual form submission
- */
-function initializeFormValidation() {
-    const clubCreationForm = document.getElementById('clubCreationForm');
-    if (!clubCreationForm) return;
+    cacheElements() {
+        // Filters/search
+        this.elements.searchInput = document.getElementById('clubSearch');
+        this.elements.stateFilter = document.getElementById('stateFilter');
+        this.elements.clubItems = document.querySelectorAll('.club-item');
 
-    // Ensure novalidate stays on form to prevent browser validation
-    clubCreationForm.setAttribute('novalidate', 'novalidate');
-    
-    // Prevent any premature form submission
-    const formInputs = clubCreationForm.querySelectorAll('input, select, textarea');
-    formInputs.forEach(input => {
-        // Remove required attributes temporarily to prevent browser validation on change
-        if (input.hasAttribute('required')) {
-            input.setAttribute('data-required', 'true');
-            input.removeAttribute('required');
+        // Contact modal
+        this.elements.contactButtons = document.querySelectorAll('.contact-delegate-btn');
+        this.elements.contactModalElement = document.getElementById('contactDelegateModal');
+        this.elements.modalClubName = document.getElementById('modalClubName');
+        this.elements.modalDelegateName = document.getElementById('modalDelegateName');
+        this.elements.modalClubProfileLink = document.getElementById('modalClubProfileLink');
+
+        // Autocomplete
+        this.elements.clubNameInput = document.getElementById('clubName');
+        this.elements.clubSuggestions = document.getElementById('clubSuggestions');
+        this.elements.joinClubOption = document.getElementById('joinClubOption');
+        this.elements.foundClubDetails = document.getElementById('foundClubDetails');
+        this.elements.joinFoundClub = document.getElementById('joinFoundClub');
+
+        // Form
+        this.elements.clubCreationForm = document.getElementById('clubCreationForm');
+    },
+
+    bindEvents() {
+        // Search/filter
+        if (this.elements.searchInput && this.elements.stateFilter) {
+            this.elements.searchInput.addEventListener('input', this.filterClubs);
+            this.elements.stateFilter.addEventListener('change', this.filterClubs);
         }
-        
-        // Clear validation errors when user interacts with form
-        input.addEventListener('input', clearValidationErrors);
-        input.addEventListener('focus', clearValidationErrors);
-        input.addEventListener('change', clearValidationErrors);
-    });
-    
-    // Only validate when form is actually submitted (button clicked)
-    clubCreationForm.addEventListener('submit', function(event) {
-        // Prevent default form submission first
+
+        // Contact modal
+        if (this.elements.contactModalElement && this.elements.contactButtons.length > 0 && typeof window !== 'undefined' && window.bootstrap && window.bootstrap.Modal) {
+            try {
+                this.state.contactModal = new window.bootstrap.Modal(this.elements.contactModalElement);
+            } catch {
+                this.state.contactModal = null;
+            }
+            this.elements.contactButtons.forEach(btn => btn.addEventListener('click', this.handleContactClick));
+        }
+
+        // Autocomplete input
+        if (this.elements.clubNameInput && this.elements.clubSuggestions) {
+            this.elements.clubNameInput.addEventListener('input', this.handleClubNameInput);
+            document.addEventListener('click', this.handleDocumentClick);
+        }
+
+        // Join found club
+        if (this.elements.joinFoundClub) {
+            this.elements.joinFoundClub.addEventListener('click', this.handleJoinFoundClub);
+        }
+
+        // Form validation
+        if (this.elements.clubCreationForm) {
+            // prevent browser built-in validation UI
+            this.elements.clubCreationForm.setAttribute('novalidate', 'novalidate');
+            const inputs = this.elements.clubCreationForm.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (input.hasAttribute('required')) {
+                    input.setAttribute('data-required', 'true');
+                    input.removeAttribute('required');
+                }
+                input.addEventListener('input', this.clearValidationErrors);
+                input.addEventListener('change', this.clearValidationErrors);
+            });
+            this.elements.clubCreationForm.addEventListener('submit', this.handleClubCreationSubmit);
+        }
+    },
+
+    // Search/filter
+    filterClubs: () => {
+        const items = document.querySelectorAll('.club-item');
+        const searchInput = document.getElementById('clubSearch');
+        const stateFilter = document.getElementById('stateFilter');
+        if (!searchInput || !stateFilter) return;
+        const searchTerm = (searchInput.value || '').toLowerCase();
+        const selectedState = stateFilter.value || '';
+        items.forEach(item => {
+            const clubName = (item.dataset.clubName || '').toLowerCase();
+            const location = (item.dataset.location || '').toLowerCase();
+            const state = item.dataset.state || '';
+            const matchesSearch = !searchTerm || clubName.includes(searchTerm) || location.includes(searchTerm);
+            const matchesState = !selectedState || state === selectedState;
+            item.style.display = matchesSearch && matchesState ? 'block' : 'none';
+        });
+    },
+
+    // Contact modal
+    handleContactClick: (event) => {
+        const btn = event.currentTarget;
+        const clubName = btn.dataset.clubName || 'Unknown Club';
+        const delegateName = btn.dataset.delegateName || 'Unknown Delegate';
+        const clubId = clubOptionsManager.extractClubIdFromButton(btn);
+        if (clubOptionsManager.elements.modalClubName) clubOptionsManager.elements.modalClubName.textContent = clubName;
+        if (clubOptionsManager.elements.modalDelegateName) clubOptionsManager.elements.modalDelegateName.textContent = delegateName;
+        if (clubOptionsManager.elements.modalClubProfileLink && clubId) {
+            clubOptionsManager.elements.modalClubProfileLink.setAttribute('href', `/clubs/${clubId}`);
+        }
+        if (clubOptionsManager.state.contactModal && typeof clubOptionsManager.state.contactModal.show === 'function') {
+            clubOptionsManager.state.contactModal.show();
+        }
+    },
+
+    extractClubIdFromButton(button) {
+        const clubItem = button.closest('.club-item');
+        if (!clubItem) return null;
+        const clubLink = clubItem.querySelector('a[href*="/clubs/"]');
+        if (!clubLink) return null;
+        const href = clubLink.getAttribute('href');
+        return href.split('/').pop();
+    },
+
+    // Autocomplete
+    handleClubNameInput: (e) => {
+        const input = e.currentTarget;
+        const query = (input.value || '').toLowerCase().trim();
+        const suggestions = clubOptionsManager.elements.clubSuggestions;
+        // clear validation state when typing
+        input.classList.remove('is-invalid');
+        const err = document.getElementById('formErrors');
+        if (err) err.remove();
+
+        clearTimeout(clubOptionsManager.state.searchTimeout);
+        if (query.length < 3) {
+            clubOptionsManager.hideSuggestions();
+            clubOptionsManager.hideJoinOption();
+            return;
+        }
+        clubOptionsManager.state.searchTimeout = setTimeout(() => {
+            const filtered = clubOptionsManager.state.availableClubsData.filter(c =>
+                (c.clubName || '').toLowerCase().includes(query) || (c.location || '').toLowerCase().includes(query)
+            );
+            clubOptionsManager.displayBasicSuggestions(filtered, query);
+        }, 300);
+    },
+
+    handleDocumentClick: (event) => {
+        const input = clubOptionsManager.elements.clubNameInput;
+        const suggestions = clubOptionsManager.elements.clubSuggestions;
+        if (!input || !suggestions) return;
+        if (!input.contains(event.target) && !suggestions.contains(event.target)) {
+            clubOptionsManager.hideSuggestions();
+        }
+    },
+
+    displayBasicSuggestions(clubs, query) {
+        const suggestions = this.elements.clubSuggestions;
+        suggestions.innerHTML = '';
+        if (!clubs || clubs.length === 0) {
+            this.hideSuggestions();
+            this.hideJoinOption();
+            return;
+        }
+        clubs.slice(0, 5).forEach(club => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-start';
+            item.style.cursor = 'pointer';
+            item.dataset.clubId = club.id;
+
+            const safeName = this.escapeHtml(club.clubName || '');
+            const highlighted = this.highlightMatch(safeName, query);
+            item.innerHTML = `
+                <div class="flex-grow-1">
+                    <div class="fw-medium">${highlighted}</div>
+                    <small class="text-muted">
+                        <i class="bi bi-geo-alt"></i> ${this.escapeHtml(club.location || 'Location not specified')}, ${this.escapeHtml(club.state || '')}
+                    </small>
+                </div>
+                <div>
+                    <span class="badge bg-primary">Join</span>
+                </div>`;
+            item.addEventListener('click', () => this.selectClub(club));
+            suggestions.appendChild(item);
+        });
+        this.showSuggestions();
+    },
+
+    selectClub(club) {
+        this.state.selectedClubId = club.id;
+        if (this.elements.clubNameInput) this.elements.clubNameInput.value = club.clubName;
+        this.hideSuggestions();
+        this.showJoinOption(club);
+    },
+
+    showJoinOption(club) {
+        if (!this.elements.joinClubOption || !this.elements.foundClubDetails) return;
+        this.elements.foundClubDetails.innerHTML = `
+            <strong>${this.escapeHtml(club.clubName || '')}</strong><br>
+            <small class="text-muted">
+                <i class="bi bi-geo-alt"></i> ${this.escapeHtml(club.location || 'Location not specified')}, ${this.escapeHtml(club.state || '')}
+            </small>`;
+        this.elements.joinClubOption.style.display = 'block';
+        if (this.elements.joinFoundClub) this.elements.joinFoundClub.dataset.clubId = club.id;
+    },
+
+    hideJoinOption() {
+        if (this.elements.joinClubOption) this.elements.joinClubOption.style.display = 'none';
+        this.state.selectedClubId = null;
+    },
+
+    showSuggestions() {
+        if (this.elements.clubSuggestions) this.elements.clubSuggestions.style.display = 'block';
+    },
+
+    hideSuggestions() {
+        if (this.elements.clubSuggestions) this.elements.clubSuggestions.style.display = 'none';
+    },
+
+    handleJoinFoundClub: (e) => {
+        const btn = e.currentTarget;
+        const clubId = btn.dataset.clubId || clubOptionsManager.state.selectedClubId;
+        if (!clubId) return;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Joining...';
+        btn.disabled = true;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/clubs/join/${clubId}`;
+        form.style.display = 'none';
+        document.body.appendChild(form);
+        try {
+            form.submit();
+        } catch {
+            // ignore jsdom not implemented
+        }
+    },
+
+    // Form validation
+    handleClubCreationSubmit: (event) => {
         event.preventDefault();
         event.stopPropagation();
-        
-        // Clear any existing errors first
-        clearValidationErrors();
-        
+        clubOptionsManager.clearValidationErrors();
+        const form = clubOptionsManager.elements.clubCreationForm;
         const clubNameInput = document.getElementById('clubName');
         const stateSelect = document.getElementById('state');
         const locationInput = document.getElementById('location');
-        
         let isValid = true;
         const errors = [];
 
-        // Validate club name
         if (!clubNameInput || !clubNameInput.value.trim() || clubNameInput.value.trim().length < 2) {
             errors.push('Club name must be at least 2 characters long');
             if (clubNameInput) {
                 clubNameInput.classList.add('is-invalid');
-                showFieldError(clubNameInput, 'Club name must be at least 2 characters long');
+                clubOptionsManager.showFieldError(clubNameInput, 'Club name must be at least 2 characters long');
             }
             isValid = false;
         }
-
-        // Validate state
         if (!stateSelect || !stateSelect.value) {
             errors.push('Please select a state');
             if (stateSelect) {
                 stateSelect.classList.add('is-invalid');
-                showFieldError(stateSelect, 'Please select a state');
+                clubOptionsManager.showFieldError(stateSelect, 'Please select a state');
             }
             isValid = false;
         }
-
-        // Validate location
         if (!locationInput || !locationInput.value.trim() || locationInput.value.trim().length < 2) {
             errors.push('Location must be at least 2 characters long');
             if (locationInput) {
                 locationInput.classList.add('is-invalid');
-                showFieldError(locationInput, 'Location must be at least 2 characters long');
+                clubOptionsManager.showFieldError(locationInput, 'Location must be at least 2 characters long');
             }
             isValid = false;
         }
 
-        // If validation fails, show errors and don't submit
         if (!isValid) {
-            // Show consolidated error message at top of form
-            showFormErrors(errors);
-            
-            // Focus on first invalid field
-            const firstInvalid = clubCreationForm.querySelector('.is-invalid');
+            clubOptionsManager.showFormErrors(errors);
+            const firstInvalid = form.querySelector('.is-invalid');
             if (firstInvalid) {
-                firstInvalid.focus();
-                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                try { firstInvalid.focus(); } catch {}
+                try { firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
             }
-            
             return false;
         }
 
-        // If validation passes, show loading state and submit the form
-        const submitButton = clubCreationForm.querySelector('button[type="submit"]');
+        const submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Creating Club...';
             submitButton.disabled = true;
         }
-        
-        // Re-add required attributes for server-side validation
-        formInputs.forEach(input => {
-            if (input.getAttribute('data-required') === 'true') {
-                input.setAttribute('required', 'required');
-            }
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.getAttribute('data-required') === 'true') input.setAttribute('required', 'required');
         });
-        
-        // Manually submit the form
-        clubCreationForm.submit();
-    });
-    
-    /**
-     * Clear all validation errors from the form
-     */
-    function clearValidationErrors() {
-        // Remove server-side error messages that contain "undefined"
+        try {
+            form.submit();
+        } catch {
+            // ignore jsdom not implemented
+        }
+    },
+
+    clearValidationErrors: () => {
+        const form = document.getElementById('clubCreationForm');
+        if (!form) return;
         const errorAlerts = document.querySelectorAll('.alert-danger');
         errorAlerts.forEach(alert => {
-            if (alert.textContent.includes('undefined') || 
-                alert.textContent.includes('validation') ||
-                alert.textContent.includes('Validation errors') ||
-                alert.textContent.includes('Please check your form input')) {
+            const t = alert.textContent || '';
+            if (t.includes('undefined') || t.includes('validation') || t.includes('Validation errors') || t.includes('Please check your form input')) {
                 alert.remove();
             }
         });
-        
-        // Remove client-side validation styling and messages
-        const invalidInputs = clubCreationForm.querySelectorAll('.is-invalid');
-        invalidInputs.forEach(input => {
-            input.classList.remove('is-invalid');
-        });
-        
-        // Remove individual field error messages
-        const fieldErrors = clubCreationForm.querySelectorAll('.invalid-feedback');
-        fieldErrors.forEach(error => error.remove());
-        
-        // Remove consolidated error message
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
         const errorContainer = document.getElementById('formErrors');
-        if (errorContainer) {
-            errorContainer.remove();
-        }
-    }
-    
-    /**
-     * Show error message for a specific field
-     */
-    function showFieldError(field, message) {
-        // Remove any existing error message for this field
-        const existingError = field.parentNode.querySelector('.invalid-feedback');
-        if (existingError) {
-            existingError.remove();
-        }
-        
-        // Create and show new error message
+        if (errorContainer) errorContainer.remove();
+    },
+
+    showFieldError(field, message) {
+        const existingError = field.parentNode ? field.parentNode.querySelector('.invalid-feedback') : null;
+        if (existingError) existingError.remove();
         const errorDiv = document.createElement('div');
         errorDiv.className = 'invalid-feedback';
         errorDiv.textContent = message;
-        field.parentNode.appendChild(errorDiv);
-    }
-    
-    /**
-     * Show consolidated error messages at top of form
-     */
-    function showFormErrors(errors) {
-        // Remove any existing error container
+        if (field.parentNode) field.parentNode.appendChild(errorDiv);
+    },
+
+    showFormErrors(errors) {
         const existingContainer = document.getElementById('formErrors');
-        if (existingContainer) {
-            existingContainer.remove();
-        }
-        
-        // Create new error container
+        if (existingContainer) existingContainer.remove();
         const errorContainer = document.createElement('div');
         errorContainer.id = 'formErrors';
         errorContainer.className = 'alert alert-danger mt-3';
+        const list = errors.map(e => `<li>${this.escapeHtml(e)}</li>`).join('');
         errorContainer.innerHTML = `
             <div class="d-flex align-items-start">
                 <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
                 <div>
                     <strong>Please correct the following errors:</strong>
-                    <ul class="mb-0 mt-2">
-                        ${errors.map(error => `<li>${error}</li>`).join('')}
-                    </ul>
+                    <ul class="mb-0 mt-2">${list}</ul>
                 </div>
-            </div>
-        `;
-        
-        // Insert at the top of the form
-        clubCreationForm.insertBefore(errorContainer, clubCreationForm.firstChild);
-    }
-}
+            </div>`;
+        const form = document.getElementById('clubCreationForm');
+        if (form) form.insertBefore(errorContainer, form.firstChild);
+    },
 
-/**
- * Initialize club search and filtering functionality
- */
-function initializeClubSearch() {
-    const searchInput = document.getElementById('clubSearch');
-    const stateFilter = document.getElementById('stateFilter');
-    const clubItems = document.querySelectorAll('.club-item');
-    
-    if (!searchInput || !stateFilter) return;
-
-    /**
-     * Filter clubs based on search term and state selection
-     */
-    function filterClubs() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const selectedState = stateFilter.value;
-        
-        clubItems.forEach(item => {
-            const clubName = item.dataset.clubName || '';
-            const location = item.dataset.location || '';
+    // Utilities
+    getAvailableClubsFromDOM() {
+        const items = document.querySelectorAll('.club-item');
+        const clubs = [];
+        items.forEach(item => {
+            const clubLink = item.querySelector('a[href*="/clubs/"]');
+            if (!clubLink) return;
+            const clubId = clubLink.getAttribute('href').split('/').pop();
+            const clubName = (clubLink.textContent || '').trim().replace(/\s+/g, ' ');
+            const locationElement = item.querySelector('.text-muted');
+            const locationText = locationElement ? (locationElement.textContent || '').trim() : '';
+            const locationMatch = locationText.match(/(.+),\s*([A-Z]{2,3})/);
+            const location = locationMatch ? locationMatch[1].replace(/^\s*\S+\s*/, '').trim() : '';
             const state = item.dataset.state || '';
-            
-            const matchesSearch = !searchTerm || 
-                clubName.includes(searchTerm) || 
-                location.includes(searchTerm);
-            const matchesState = !selectedState || state === selectedState;
-            
-            if (matchesSearch && matchesState) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
-            }
+            clubs.push({ id: clubId, clubName, location, state });
         });
+        return clubs;
+    },
+
+    escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    highlightMatch(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    },
+
+    escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
-    
-    // Attach event listeners
-    searchInput.addEventListener('input', filterClubs);
-    stateFilter.addEventListener('change', filterClubs);
-}
+};
 
-/**
- * Initialize contact delegate modal functionality
- */
-function initializeContactDelegateModal() {
-    const contactButtons = document.querySelectorAll('.contact-delegate-btn');
-    const contactModalElement = document.getElementById('contactDelegateModal');
-    
-    if (!contactModalElement || contactButtons.length === 0) return;
-
-    const contactModal = new bootstrap.Modal(contactModalElement);
-    
-    contactButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const clubName = this.dataset.clubName || 'Unknown Club';
-            const delegateName = this.dataset.delegateName || 'Unknown Delegate';
-            const clubId = extractClubIdFromButton(this);
-            
-            // Update modal content
-            const modalClubName = document.getElementById('modalClubName');
-            const modalDelegateName = document.getElementById('modalDelegateName');
-            const modalClubProfileLink = document.getElementById('modalClubProfileLink');
-            
-            if (modalClubName) modalClubName.textContent = clubName;
-            if (modalDelegateName) modalDelegateName.textContent = delegateName;
-            if (modalClubProfileLink && clubId) {
-                modalClubProfileLink.setAttribute('href', `/clubs/${clubId}`);
-            }
-            
-            contactModal.show();
-        });
-    });
-}
-
-/**
- * Extract club ID from contact button's parent club item
- * @param {HTMLElement} button - The contact button element
- * @returns {string|null} Club ID or null if not found
- */
-function extractClubIdFromButton(button) {
-    const clubItem = button.closest('.club-item');
-    if (!clubItem) return null;
-    
-    const clubLink = clubItem.querySelector('a[href*="/clubs/"]');
-    if (!clubLink) return null;
-    
-    const href = clubLink.getAttribute('href');
-    const clubId = href.split('/').pop();
-    return clubId;
-}
-
-/**
- * Initialize basic autocomplete functionality for club name input
- * Note: This provides basic client-side filtering. For full autocomplete,
- * the club-autocomplete.js file should be included instead.
- */
-function initializeBasicAutocomplete() {
-    const clubNameInput = document.getElementById('clubName');
-    const clubSuggestions = document.getElementById('clubSuggestions');
-    const joinClubOption = document.getElementById('joinClubOption');
-    const foundClubDetails = document.getElementById('foundClubDetails');
-    const joinFoundClub = document.getElementById('joinFoundClub');
-    
-    if (!clubNameInput || !clubSuggestions) return;
-
-    // Get available clubs data from DOM
-    const availableClubsData = getAvailableClubsFromDOM();
-    let selectedClubId = null;
-
-    // Only trigger autocomplete search after user has typed at least 3 characters
-    // and add debouncing to prevent excessive API calls
-    let searchTimeout;
-    
-    clubNameInput.addEventListener('input', function() {
-        // Clear any existing validation errors when user starts typing
-        clubNameInput.classList.remove('is-invalid');
-        const errorContainer = document.getElementById('formErrors');
-        if (errorContainer) {
-            errorContainer.remove();
-        }
-        
-        const query = this.value.toLowerCase().trim();
-        
-        // Clear previous timeout
-        clearTimeout(searchTimeout);
-        
-        if (query.length < 3) {
-            hideSuggestions();
-            hideJoinOption();
-            return;
-        }
-        
-        // Debounce the search to avoid excessive filtering
-        searchTimeout = setTimeout(() => {
-            // Filter clubs that match the query
-            const filteredClubs = availableClubsData.filter(club => 
-                club.clubName.toLowerCase().includes(query) ||
-                (club.location && club.location.toLowerCase().includes(query))
-            );
-            
-            displayBasicSuggestions(filteredClubs, query);
-        }, 300); // 300ms debounce
-    });
-
-    /**
-     * Display basic suggestions (fallback when full autocomplete isn't available)
-     */
-    function displayBasicSuggestions(clubs, query) {
-        clubSuggestions.innerHTML = '';
-        
-        if (clubs.length === 0) {
-            hideSuggestions();
-            hideJoinOption();
-            return;
-        }
-
-        clubs.slice(0, 5).forEach(club => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-start';
-            suggestionItem.style.cursor = 'pointer';
-            suggestionItem.dataset.clubId = club.id;
-            
-            suggestionItem.innerHTML = `
-                <div class="flex-grow-1">
-                    <div class="fw-medium">${highlightMatch(club.clubName, query)}</div>
-                    <small class="text-muted">
-                        <i class="bi bi-geo-alt"></i> ${club.location || 'Location not specified'}, ${club.state}
-                    </small>
-                </div>
-                <div>
-                    <span class="badge bg-primary">Join</span>
-                </div>
-            `;
-            
-            suggestionItem.addEventListener('click', function() {
-                selectClub(club);
-            });
-            
-            clubSuggestions.appendChild(suggestionItem);
-        });
-        
-        showSuggestions();
-    }
-
-    /**
-     * Select a club from suggestions
-     */
-    function selectClub(club) {
-        selectedClubId = club.id;
-        clubNameInput.value = club.clubName;
-        hideSuggestions();
-        showJoinOption(club);
-    }
-
-    /**
-     * Show join club option
-     */
-    function showJoinOption(club) {
-        if (!joinClubOption || !foundClubDetails) return;
-        
-        foundClubDetails.innerHTML = `
-            <strong>${club.clubName}</strong><br>
-            <small class="text-muted">
-                <i class="bi bi-geo-alt"></i> ${club.location || 'Location not specified'}, ${club.state}
-            </small>
-        `;
-        joinClubOption.style.display = 'block';
-        
-        // Update join button with club ID
-        if (joinFoundClub) {
-            joinFoundClub.dataset.clubId = club.id;
-        }
-    }
-
-    /**
-     * Hide join club option
-     */
-    function hideJoinOption() {
-        if (joinClubOption) {
-            joinClubOption.style.display = 'none';
-        }
-        selectedClubId = null;
-    }
-
-    /**
-     * Show suggestions dropdown
-     */
-    function showSuggestions() {
-        clubSuggestions.style.display = 'block';
-    }
-
-    /**
-     * Hide suggestions dropdown
-     */
-    function hideSuggestions() {
-        clubSuggestions.style.display = 'none';
-    }
-
-    // Handle join found club button
-    if (joinFoundClub) {
-        joinFoundClub.addEventListener('click', function() {
-            const clubId = this.dataset.clubId || selectedClubId;
-            if (!clubId) return;
-            
-            // Show loading state
-            this.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Joining...';
-            this.disabled = true;
-            
-            // Submit join request via form submission (more reliable than fetch)
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/clubs/join/${clubId}`;
-            form.style.display = 'none';
-            
-            document.body.appendChild(form);
-            form.submit();
-        });
-    }
-
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!clubNameInput.contains(event.target) && !clubSuggestions.contains(event.target)) {
-            hideSuggestions();
-        }
-    });
-}
-
-/**
- * Extract available clubs data from DOM elements
- * @returns {Array} Array of club objects
- */
-function getAvailableClubsFromDOM() {
-    const clubItems = document.querySelectorAll('.club-item');
-    const clubs = [];
-    
-    clubItems.forEach(item => {
-        const clubLink = item.querySelector('a[href*="/clubs/"]');
-        if (!clubLink) return;
-        
-        const clubId = clubLink.getAttribute('href').split('/').pop();
-        const clubName = clubLink.textContent.trim().replace(/\s+/g, ' ');
-        const locationElement = item.querySelector('.text-muted');
-        const locationText = locationElement ? locationElement.textContent.trim() : '';
-        
-        // Extract location and state from text like "Location, STATE"
-        const locationMatch = locationText.match(/(.+),\s*([A-Z]{2,3})/);
-        const location = locationMatch ? locationMatch[1].replace(/^\s*\S+\s*/, '').trim() : '';
-        const state = item.dataset.state || '';
-        
-        clubs.push({
-            id: clubId,
-            clubName: clubName,
-            location: location,
-            state: state
-        });
-    });
-    
-    return clubs;
-}
-
-/**
- * Highlight matching text in search results
- * @param {string} text - Text to highlight
- * @param {string} query - Search query
- * @returns {string} Text with highlighted matches
- */
-function highlightMatch(text, query) {
-    if (!query) return text;
-    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
-}
-
-/**
- * Escape special regex characters
- * @param {string} string - String to escape
- * @returns {string} Escaped string
- */
-function escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+// Browser bootstrap
+document.addEventListener('DOMContentLoaded', () => {
+    try { clubOptionsManager.initialize(); } catch {}
+});
