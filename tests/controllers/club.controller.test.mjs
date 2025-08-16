@@ -192,7 +192,6 @@ import {
   leaveClub,
   getClaimOwnership,
   postClaimOwnership,
-  showClubSponsors,
   addSponsorToClub,
   addAlternateName,
   getClubImages,
@@ -207,7 +206,6 @@ import {
   Sponsor,
   ClubAlternateName,
   CarnivalClub,
-  ClubSponsor,
   sequelize as mockSequelize,
   createMockClub} from '../../models/index.mjs';
 
@@ -286,9 +284,6 @@ describe('Club Controller', () => {
     
     Sponsor.findAll.mockResolvedValue([]);
     Sponsor.findByPk.mockResolvedValue(null);
-    
-    ClubSponsor.update.mockResolvedValue([1]);
-    ClubSponsor.findOne.mockResolvedValue(null);
     
     ClubAlternateName.findAll.mockResolvedValue([]);
     ClubAlternateName.create.mockResolvedValue({});
@@ -1039,51 +1034,37 @@ describe('Club Controller', () => {
       });
 
       it('should successfully add sponsor to club', async () => {
-        const mockSponsor = { 
-          id: 2, 
-          sponsorName: 'Test Sponsor',
-          isAssociatedWithClub: vi.fn().mockResolvedValue(false)
-        };
-        
-        // Set up request body to match controller expectations for existing sponsor
+        // Arrange: Set up request body to match controller expectations
         req.body = {
           sponsorType: 'existing',
-          existingSponsorId: '2',
-          tier: 'Premium',
-          customDisplayName: 'Custom Name'
+          existingSponsorId: 2
         };
-        
+        const mockSponsor = {
+          id: 2,
+          sponsorName: 'Test Sponsor',
+          clubId: 1,
+          isAssociatedWithClub: vi.fn().mockResolvedValue(false)
+        };
         Sponsor.findByPk.mockResolvedValue(mockSponsor);
-        mockClub.getSponsors.mockResolvedValue([]); // Current sponsors list
+        mockClub.getSponsors = vi.fn().mockResolvedValue([]); // Ensure getSponsors is a spy
+        mockClub.addSponsor = vi.fn().mockResolvedValue(true); // Ensure addSponsor is a spy
+        Club.findByPk.mockResolvedValue(mockClub); // Ensure controller uses the correct club instance
 
+        // Act
         await addSponsorToClub(req, res);
 
+        // Assert
         expect(mockClub.addSponsor).toHaveBeenCalledWith(mockSponsor, expect.objectContaining({
           through: expect.objectContaining({
             displayOrder: 1
           })
         }));
-
         expect(req.flash).toHaveBeenCalledWith(
           'success_msg',
           'Sponsor "Test Sponsor" has been added to your club!'
         );
         expect(res.redirect).toHaveBeenCalledWith('/clubs/manage/sponsors');
       });
-
-      // it('should handle sponsor already associated', async () => {
-      //   const mockSponsor = { id: 2, sponsorName: 'Test Sponsor' };
-      //   Sponsor.findByPk.mockResolvedValue(mockSponsor);
-      //   ClubSponsor.findOne.mockResolvedValue({}); // Already associated
-
-      //   await addSponsorToClub(req, res);
-
-      //   expect(req.flash).toHaveBeenCalledWith(
-      //     'error_msg',
-      //     'Invalid sponsor type selected.'
-      //   );
-      //   expect(res.redirect).toHaveBeenCalledWith('/clubs/manage/sponsors/add');
-      // });
     });
   });
 

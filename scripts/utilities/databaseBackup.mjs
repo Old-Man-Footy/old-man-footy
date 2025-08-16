@@ -8,7 +8,7 @@
 import path from 'path';
 import fs from 'fs';
 import { sequelize } from '../models/index.mjs';
-import { initializeDatabase } from '../config/database.mjs';
+import { getDatabaseConnection } from '../config/database.mjs';
 
 class DatabaseBackup {
     constructor() {
@@ -91,7 +91,7 @@ class DatabaseBackup {
             
             // Try to reconnect to database
             try {
-                await initializeDatabase();
+                await getDatabaseConnection();
                 console.log('  🔌 Database connection restored after backup failure');
             } catch (reconnectError) {
                 console.error('💥 Could not restore database connection:', reconnectError.message);
@@ -125,7 +125,7 @@ class DatabaseBackup {
             fs.copyFileSync(restorePath, dbPath);
             
             // Reconnect to database
-            await initializeDatabase();
+            await getDatabaseConnection();
             
             console.log(`✅ Database restored from backup: ${path.basename(restorePath)}`);
             

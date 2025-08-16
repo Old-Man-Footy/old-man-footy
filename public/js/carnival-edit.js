@@ -61,13 +61,15 @@ export const carnivalEditManager = {
     // Makes file upload areas clickable.
     initializeFileUploads() {
         this.elements.fileUploadAreas.forEach(area => {
-            area.addEventListener('click', function() {
-                const input = this.querySelector('input[type="file"]');
-                if (input) {
-                    input.click();
-                }
-            });
+            area.addEventListener('click', this.handleFileAreaClick);
         });
+    },
+
+    // Handle click on a file upload area using an arrow function for proper scoping.
+    handleFileAreaClick: (event) => {
+        const area = event.currentTarget;
+        const input = area?.querySelector('input[type="file"]');
+        if (input) input.click();
     },
 
     // Sets up event listeners and logic for multi-day events.
@@ -224,8 +226,6 @@ export const carnivalEditManager = {
 };
 
 // This part runs in the browser to initialize the application.
-if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', () => {
-        carnivalEditManager.initialize();
-    });
-}
+document.addEventListener('DOMContentLoaded', () => {
+    carnivalEditManager.initialize();
+});

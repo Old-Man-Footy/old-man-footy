@@ -442,18 +442,6 @@
     background-color: #f0f4ff;
 }
 
-/* Duplicate Sponsor Alert */
-#duplicateAlert {
-    border-left: 4px solid #ffc107;
-    background-color: #fff8e1;
-    border-color: #ffe082;
-}
-
-#existingSponsorInfo {
-    background-color: #f8f9fa !important;
-    border: 1px solid #e9ecef;
-}
-
 /* ================================
    DARK MODE STYLES
    ================================ */
@@ -461,8 +449,6 @@
 [data-theme="dark"] .sponsor-info-card,
 [data-theme="dark"] .sponsor-club-card-hover,
 [data-theme="dark"] .sponsor-card,
-[data-theme="dark"] #duplicateAlert,
-[data-theme="dark"] #existingSponsorInfo,
 [data-theme="dark"] .card,
 [data-theme="dark"] .card-body,
 [data-theme="dark"] .card-header {

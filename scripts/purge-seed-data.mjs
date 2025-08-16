@@ -10,7 +10,7 @@
  */
 
 import { sequelize, User, Club, Carnival, EmailSubscription } from '../models/index.mjs';
-import { initializeDatabase } from '../config/database.mjs';
+import { getDatabaseConnection } from '../config/database.mjs';
 import dotenv from 'dotenv';
 
 
@@ -103,8 +103,11 @@ class SeedDataPurger {
      */
     async connect() {
         try {
-            await initializeDatabase();
-            console.log('✅ Database connection established');
+            // Only check connection health, do not run full setup
+            const { getDatabaseConnection } = await import('../config/database.mjs');
+            const connected = await getDatabaseConnection();
+            if (!connected) throw new Error('Failed to establish database connection');
+            console.log('✅ SQLite database connection is healthy');
         } catch (error) {
             console.error('❌ Database connection failed:', error.message);
             process.exit(1);
@@ -349,8 +352,8 @@ class SeedDataPurger {
         console.log('⚠️  This will remove all seed data while preserving UAT and production data');
         console.log(`🔐 Protected accounts: ${PROTECTED_ACCOUNTS.join(', ')}`);
         console.log('');
-        
         try {
+            // Check database connection health before purging
             await this.connect();
             
             // Remove in order to respect foreign key constraints

@@ -11,6 +11,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import DatabaseOptimizer from './database-optimizer.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -78,7 +79,7 @@ function ensureDataDirectory() {
 /**
  * Sequelize instance configuration
  */
-export const sequelize = new Sequelize({
+let sequelizeOptions = {
   dialect: 'sqlite',
   storage: dbPath,
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
@@ -104,7 +105,19 @@ export const sequelize = new Sequelize({
     max: 3,
     timeout: 5000
   }
-});
+};
+
+if (process.env.NODE_ENV === 'production') {
+  // Use secure, validated production options
+  const prodOpts = await DatabaseOptimizer.configureProduction();
+  sequelizeOptions = {
+    ...sequelizeOptions,
+    ...prodOpts,
+    storage: dbPath // Always set correct storage path
+  };
+}
+
+export const sequelize = new Sequelize(sequelizeOptions);
 
 /**
  * Test database connection
@@ -123,45 +136,57 @@ export async function testConnection() {
 }
 
 /**
- * Run database migrations using direct Sequelize instead of CLI in production
+ * Run database migrations using Sequelize CLI
  * @returns {Promise<void>}
  */
 export async function runMigrations() {
   try {
     console.log('🔄 Running database migrations...');
     
-    const env = process.env.NODE_ENV || 'development';
+    // Import models to ensure they're registered with Sequelize
+    await import('../models/index.mjs');
     
-    // Use Sequelize sync for all environments to avoid CLI config issues
-    console.log('📦 Running migrations using Sequelize sync...');
+    // Run migrations using Sequelize CLI
+    const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate');
+    if (stdout) console.log(stdout);
+    if (stderr) console.error(stderr);
     
-    // Import models to ensure they're loaded
-    const models = await import('../models/index.mjs');
-    
-    // Check if database has existing data
-    const tables = await sequelize.getQueryInterface().showAllTables();
-    
-    if (tables.length === 0) {
-      // New database - safe to use sync with force
-      console.log('🆕 New database detected - creating all tables');
-      await sequelize.sync({ force: false });
-    } else {
-      // Existing database - just validate without altering
-      console.log('🔍 Existing database detected - validating schema only');
-      try {
-        await sequelize.authenticate();
-        console.log('✅ Database schema is compatible');
-      } catch (error) {
-        console.warn('⚠️ Database schema validation failed, but continuing:', error.message);
-      }
-    }
-    
-    console.log('✅ Database schema synchronized successfully');
+    console.log('✅ Database migrations completed successfully');
     
   } catch (error) {
     console.error('❌ Database migration failed:', error.message);
     throw error;
   }
+}
+
+/**
+ * One-time database setup for application startup
+ * Runs migrations, creates indexes, sets up monitoring
+ * Should only be called once at startup
+ * @returns {Promise<void>}
+ */
+export async function setupDatabase() {
+  try {
+    ensureDataDirectory();
+    const connected = await testConnection();
+    if (!connected) throw new Error('Failed to establish database connection');
+    await runMigrations();
+    await checkDatabaseSchema();
+    await DatabaseOptimizer.createIndexes();
+    await DatabaseOptimizer.setupMonitoring();
+    console.log('✅ Database setup completed successfully');
+  } catch (error) {
+    console.error('❌ Database setup failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get a healthy database connection (for health checks, etc)
+ * @returns {Promise<boolean>} Connection success status
+ */
+export async function getDatabaseConnection() {
+  return await testConnection();
 }
 
 /**
@@ -181,6 +206,15 @@ export async function initializeDatabase() {
 
     // Run migrations
     await runMigrations();
+
+    // Check database schema
+    await checkDatabaseSchema();
+
+    // Create database indexes for optimization
+    await DatabaseOptimizer.createIndexes();
+
+    // Set up database connection and query monitoring hooks
+    await DatabaseOptimizer.setupMonitoring();
     
     console.log('✅ Database initialization completed successfully');
     
@@ -200,5 +234,46 @@ export async function closeConnection() {
     console.log('🔌 Database connection closed');
   } catch (error) {
     console.error('❌ Error closing database connection:', error);
+  }
+}
+
+/**
+ * Checks that all tables defined in Sequelize models exist in the SQLite database schema.
+ *
+ * @returns {Promise<{ missing: string[], present: string[] }>} 
+ * @throws {Error} If unable to query the database schema.
+ *
+ * Security: Only uses Sequelize's built-in methods, no raw string interpolation.
+ * Strict MVC: Does not interact with Express req/res.
+ */
+export async function checkDatabaseSchema() {
+  try {
+    // Ensure all models are loaded and registered
+    await import('../models/index.mjs');
+
+    // Collect expected table names from all registered models
+    const expectedTables = Object.values(sequelize.models)
+      .map(model => model.getTableName())
+      .filter(Boolean);
+
+    // Query for all user tables in the SQLite schema
+    const results = await sequelize.query(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';",
+      { type: sequelize.QueryTypes.SELECT }
+    );
+    const actualTables = Array.isArray(results)
+      ? results.map(row => row.name)
+      : [];
+    const present = expectedTables.filter(t => actualTables.includes(t));
+    const missing = expectedTables.filter(t => !actualTables.includes(t));
+    if (missing.length > 0) {
+      console.warn(`⚠️ Missing tables: ${missing.join(', ')}`);
+    } else {
+      console.log('✅ All expected tables are present.');
+    }
+    return { missing, present };
+  } catch (error) {
+    console.error('❌ Error checking database schema:', error.message);
+    throw new Error('Failed to check database schema');
   }
 }
