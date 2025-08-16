@@ -49,7 +49,7 @@ function setupSessionAuth(req, res, next) {
 async function loadSessionUser(req, res, next) {
   if (req.session.userId && !req.user) {
     try {
-      const { User, Club } = await import('/models/index.mjs');
+      const { User, Club } = await import('../models/index.mjs');
       const user = await User.findByPk(req.session.userId, {
         include: [{
           model: Club,
