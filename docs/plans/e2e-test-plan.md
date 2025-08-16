@@ -14,7 +14,9 @@
 ## New Tests To Add
 - [ ] E2E seed helper: create minimal sponsors to exercise filters
 - [ ] 404: unknown route renders error page
+	- [x] Implemented tests/e2e/404.spec.mjs and verified pass
 - [ ] Maintenance mode: when enabled, renders maintenance page
+	- [x] Implemented tests/e2e/maintenance.spec.mjs (route + API status) and verified pass
 - [ ] Coming soon mode: when enabled, renders coming soon page
 
 ### Sponsors
