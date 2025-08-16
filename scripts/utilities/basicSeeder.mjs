@@ -258,7 +258,7 @@ class BasicSeeder {
 
     /**
      * Create test sponsors using Sequelize
-     * @returns {Promise<Array} Created sponsors
+     * @returns {Promise<Array>} Created sponsors
      */
     async createSponsors() {
         console.log('🤝 Creating test sponsors...');
