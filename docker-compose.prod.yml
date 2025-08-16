@@ -66,8 +66,8 @@ services:
 
     networks:
       - old-man-footy-network-prod # 5. Use a distinct network name for production
-
     restart: unless-stopped
+    init: true
 
     deploy:
       resources:
