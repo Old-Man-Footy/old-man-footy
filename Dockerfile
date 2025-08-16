@@ -1,16 +1,12 @@
 # Multi-stage build for optimized production image
-FROM node:22-alpine AS base
-
-# Install essential system dependencies
-RUN apk add --no-cache dumb-init
+FROM node:22-alpine AS browser-deps
 
 WORKDIR /app
 
-# Browser dependencies stage - for Playwright scraping functionality
-FROM base AS browser-deps
-
 # Install minimal browser dependencies needed for Playwright
-RUN apk add --no-cache \
+RUN sed -i 's|https://dl-cdn.alpinelinux.org|https://dl-2.alpinelinux.org|g' /etc/apk/repositories \
+    && apk update \
+    && apk add --no-cache \
     chromium \
     nss \
     freetype \
@@ -33,13 +29,14 @@ RUN npm ci --only=production && \
 
 # Common runtime stage for test and production
 FROM node:22-alpine AS runtime
-# Install minimal runtime dependencies
-RUN apk add --no-cache \
-    dumb-init \
-    chromium \
-    nss \
-    freetype \
-    ca-certificates
+# Improve reliability of Alpine package fetches by switching mirror if dl-cdn is problematic
+RUN sed -i 's|https://dl-cdn.alpinelinux.org|https://dl-2.alpinelinux.org|g' /etc/apk/repositories \
+        && apk update \
+        && apk add --no-cache \
+            chromium \
+            nss \
+            freetype \
+            ca-certificates
 
 # Configure Playwright environment
 ENV PLAYWRIGHT_BROWSERS_PATH=0
@@ -89,7 +86,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD node -e "import('http').then(http => http.default.get('http://localhost:3055/health', res => process.exit(res.statusCode === 200 ? 0 : 1))).on('error', () => process.exit(1));"
 
 # Start application
-CMD ["dumb-init", "node", "app.mjs"]
+CMD ["node", "app.mjs"]
 
 # Production stage - inherits from the common runtime
 FROM runtime AS production
@@ -103,4 +100,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5 \
   CMD node -e "import('http').then(http => http.default.get('http://localhost:3060/health', res => process.exit(res.statusCode === 200 ? 0 : 1))).on('error', () => process.exit(1));"
 
 # Start application
-CMD ["dumb-init", "node", "app.mjs"]
+CMD ["node", "app.mjs"]

@@ -12,7 +12,7 @@ services:
       - "3055:3055"
       - "9230:9230" # Debug port for Node.js inspector (different from dev)
     environment:
-      - ALLOWED_FILE_TYPES=${ALLOWED_FILE_TYPES:-'image/jpeg,image/png,image/gif,image/svg+xml,image/webp,application/pdf"}
+      - ALLOWED_FILE_TYPES=${ALLOWED_FILE_TYPES:-image/jpeg,image/png,image/gif,image/svg+xml,image/webp,application/pdf}
       - APP_DESCRIPTION="A community platform for Rugby League Masters players and fans"
       - APP_NAME="Old Man Footy - Test Environment"
       - APP_URL=https://test.oldmanfooty.au
@@ -65,25 +65,22 @@ services:
       - /volume2/docker/old-man-footy-test/uploads:/app/public/uploads
     networks:
       - old-man-footy-network-test
-
     restart: unless-stopped
-
+    init: true
     healthcheck:
       test: ["CMD", "node", "-e", "import('http').then(http => { http.default.get('http://localhost:3055/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1)); })"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s    
+      start_period: 30s
     logging:
       # Logging: JSON file driver with rotation for test environment
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    
     security_opt:
       - no-new-privileges:true
-          
     tmpfs:
       - /tmp
       - /var/cache
