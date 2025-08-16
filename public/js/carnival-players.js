@@ -105,7 +105,6 @@ export const carnivalPlayersManager = {
         this.updateVisibleCount();
         this.updateEmptyState();
     },
-
         carnivalPlayersManager.updateFilteredPlayers();
         carnivalPlayersManager.updateVisibleCount();
         carnivalPlayersManager.updateEmptyState();
