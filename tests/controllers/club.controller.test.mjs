@@ -192,6 +192,7 @@ import {
   leaveClub,
   getClaimOwnership,
   postClaimOwnership,
+  showClubSponsors,
   addSponsorToClub,
   addAlternateName,
   getClubImages,
