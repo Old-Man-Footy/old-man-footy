@@ -1,35 +1,54 @@
 /**
- * Error Page JavaScript
- * Enhanced Go Back functionality with fallback behavior
- * Implements browser history navigation with proper error handling
+ * Error Page JavaScript (Manager Object Pattern)
+ * Enhanced Go Back functionality with fallback behavior and accessibility.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    const goBackBtn = document.getElementById('goBackBtn');
-    
-    if (goBackBtn) {
-        goBackBtn.addEventListener('click', function() {
-            try {
-                // Check if there's history to go back to
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    // Fallback: redirect to home page if no history
-                    window.location.href = '/';
-                }
-            } catch (error) {
-                // Fallback: redirect to home page on any error
-                console.warn('Error navigating back:', error);
-                window.location.href = '/';
-            }
-        });
-        
-        // Optional: Add keyboard support for better accessibility
-        goBackBtn.addEventListener('keydown', function(event) {
+export const errorPageManager = {
+    elements: {},
+
+    initialize() {
+        this.cacheElements();
+        this.bindEvents();
+    },
+
+    cacheElements() {
+        this.elements.goBackBtn = document.getElementById('goBackBtn');
+    },
+
+    bindEvents() {
+        const btn = this.elements.goBackBtn;
+        if (!btn) return;
+        btn.addEventListener('click', this.handleGoBack);
+        btn.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                goBackBtn.click();
+                btn.click();
             }
         });
+    },
+
+    handleGoBack: () => {
+        try {
+            if (window.history && window.history.length > 1) {
+                window.history.back();
+            } else {
+                errorPageManager.safeNavigate('/');
+            }
+        } catch (err) {
+            console.warn('Error navigating back:', err);
+            errorPageManager.safeNavigate('/');
+        }
+    },
+
+    safeNavigate(url) {
+        try {
+            window.location.href = url;
+        } catch {
+            /* noop for jsdom */
+        }
     }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    errorPageManager.initialize();
 });

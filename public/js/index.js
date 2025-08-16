@@ -1,242 +1,200 @@
 /**
- * Index Page JavaScript
- * Handles carousel functionality and other interactive features on the homepage
+ * Index Page JS (Manager Object Pattern)
+ * Carousel and subscription form functionality.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get carousel images from data attribute
-    const carouselContainer = document.querySelector('[data-carousel-images]');
-    const carouselImages = carouselContainer ? JSON.parse(carouselContainer.dataset.carouselImages) : [];
-    
-    // Make carousel images available globally for compatibility
-    window.carouselImages = carouselImages;
-    
-    // Initialize carousel if images exist
-    if (carouselImages.length > 0) {
-        initializeCarousel();
-    }
-    
-    // Initialize subscription form with bot protection
-    initializeSubscriptionForm();
-    
-    function initializeCarousel() {
-        const carousel = document.getElementById('imageCarousel');
-        const track = document.querySelector('.carousel-track');
-        const slides = Array.from(track.children);
-        const nextButton = document.getElementById('carouselNext');
-        const prevButton = document.getElementById('carouselPrev');
-        const dotsNav = document.querySelector('.carousel-nav');
-        const dots = Array.from(dotsNav.children);
-        
-        let currentSlide = 0;
-        const slideWidth = slides[0].getBoundingClientRect().width;
-        
-        // Arrange slides next to each other
-        const setSlidePosition = (slide, index) => {
-            slide.style.left = slideWidth * index + 'px';
-        };
-        slides.forEach(setSlidePosition);
-        
-        const moveToSlide = (targetIndex) => {
-            const targetSlide = slides[targetIndex];
-            track.style.transform = 'translateX(-' + targetSlide.style.left + ')';
-            
-            // Update current slide indicators
-            slides.forEach(slide => slide.classList.remove('current-slide'));
-            dots.forEach(dot => dot.classList.remove('current-slide'));
-            
-            targetSlide.classList.add('current-slide');
-            dots[targetIndex].classList.add('current-slide');
-            
-            currentSlide = targetIndex;
-        };
-        
-        // Next button
-        if (nextButton) {
-            nextButton.addEventListener('click', () => {
-                const nextIndex = currentSlide === slides.length - 1 ? 0 : currentSlide + 1;
-                moveToSlide(nextIndex);
+export const indexPageManager = {
+    elements: {},
+    autoAdvanceTimer: null,
+    currentSlide: 0,
+
+    initialize() {
+        this.cacheElements();
+        this.injectStyles();
+        this.bindEvents();
+        // Read carousel images and expose globally (legacy compatibility)
+        const container = document.querySelector('[data-carousel-images]');
+        try {
+            window.carouselImages = container ? JSON.parse(container.dataset.carouselImages || '[]') : [];
+        } catch {
+            window.carouselImages = [];
+        }
+        if (Array.isArray(window.carouselImages) && window.carouselImages.length > 0) {
+            this.initializeCarousel();
+        }
+        this.initializeSubscriptionForm();
+    },
+
+    cacheElements() {
+        this.elements.carousel = document.getElementById('imageCarousel');
+        this.elements.track = document.querySelector('.carousel-track');
+        this.elements.slides = this.elements.track ? Array.from(this.elements.track.children) : [];
+        this.elements.nextButton = document.getElementById('carouselNext');
+        this.elements.prevButton = document.getElementById('carouselPrev');
+        this.elements.dotsNav = document.querySelector('.carousel-nav');
+        this.elements.dots = this.elements.dotsNav ? Array.from(this.elements.dotsNav.children) : [];
+        this.elements.subscribeForm = document.getElementById('subscribeForm');
+        this.elements.timestampField = document.getElementById('main_form_timestamp');
+    },
+
+    bindEvents() {
+        // Carousel controls
+        if (this.elements.nextButton) {
+            this.elements.nextButton.addEventListener('click', () => this.moveToSlide(this.nextIndex()));
+        }
+        if (this.elements.prevButton) {
+            this.elements.prevButton.addEventListener('click', () => this.moveToSlide(this.prevIndex()));
+        }
+        if (this.elements.dotsNav) {
+            this.elements.dotsNav.addEventListener('click', (e) => {
+                const dot = e.target.closest('.carousel-indicator');
+                if (!dot) return;
+                const idx = parseInt(dot.dataset.slide);
+                this.moveToSlide(idx);
             });
         }
-        
-        // Previous button
-        if (prevButton) {
-            prevButton.addEventListener('click', () => {
-                const prevIndex = currentSlide === 0 ? slides.length - 1 : currentSlide - 1;
-                moveToSlide(prevIndex);
-            });
-        }
-        
-        // Dot navigation
-        dotsNav.addEventListener('click', (e) => {
-            const targetDot = e.target.closest('.carousel-indicator');
-            if (!targetDot) return;
-            
-            const targetIndex = parseInt(targetDot.dataset.slide);
-            moveToSlide(targetIndex);
+    },
+
+    injectStyles() {
+        if (document.getElementById('index-page-animations')) return;
+        const style = document.createElement('style');
+        style.id = 'index-page-animations';
+        style.textContent = `
+            @keyframes slideInFromTop { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            @keyframes slideOutToTop { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+    },
+
+    initializeCarousel() {
+        const slides = this.elements.slides;
+        if (!slides || slides.length === 0) return;
+        const slideWidth = slides[0].getBoundingClientRect().width || slides[0].offsetWidth || 0;
+        slides.forEach((slide, index) => {
+            slide.style.left = `${slideWidth * index}px`;
         });
-        
-        // Auto-advance carousel
-        setInterval(() => {
-            const nextIndex = currentSlide === slides.length - 1 ? 0 : currentSlide + 1;
-            moveToSlide(nextIndex);
-        }, 5000); // Change slide every 5 seconds
-    }
-    
-    /**
-     * Initialize subscription form with bot protection
-     */
-    function initializeSubscriptionForm() {
-        const form = document.getElementById('subscribeForm');
-        const timestampField = document.getElementById('main_form_timestamp');
-        
-        // Set timestamp when form loads (bot protection)
-        if (timestampField) {
-            timestampField.value = Date.now();
-        }
-        
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(form);
-                const email = formData.get('email');
-                const states = formData.getAll('state');
-                const submitButton = form.querySelector('button[type="submit"]');
-                
-                // Basic validation
-                if (!email) {
-                    showMessage('Please enter your email address.', 'error');
-                    return;
-                }
-                
-                // Get states directly from checkboxes to ensure we get the current state
-                const stateCheckboxes = document.querySelectorAll('.state-checkbox:checked');
-                const selectedStates = Array.from(stateCheckboxes).map(cb => cb.value);
-                
-                console.log('State checkboxes found:', stateCheckboxes.length);
-                console.log('Selected states from checkboxes:', selectedStates);
-                console.log('States from FormData.getAll():', states);
-                
-                if (!selectedStates || selectedStates.length === 0) {
-                    showMessage('Please select at least one state.', 'error');
-                    return;
-                }
-                
-                // Show loading state
-                const originalText = submitButton.innerHTML;
+        // Set initial classes
+        slides.forEach((s) => s.classList.remove('current-slide'));
+        this.elements.dots.forEach((d) => d.classList.remove('current-slide'));
+        slides[0]?.classList.add('current-slide');
+        this.elements.dots[0]?.classList.add('current-slide');
+        this.currentSlide = 0;
+        this.startAutoAdvance();
+    },
+
+    nextIndex() {
+        const total = this.elements.slides.length;
+        return this.currentSlide === total - 1 ? 0 : this.currentSlide + 1;
+    },
+
+    prevIndex() {
+        const total = this.elements.slides.length;
+        return this.currentSlide === 0 ? total - 1 : this.currentSlide - 1;
+    },
+
+    moveToSlide(targetIndex) {
+        const slides = this.elements.slides;
+        const track = this.elements.track;
+        if (!slides || !track || targetIndex < 0 || targetIndex >= slides.length) return;
+        const targetSlide = slides[targetIndex];
+        track.style.transform = `translateX(-${targetSlide.style.left})`;
+        slides.forEach((s) => s.classList.remove('current-slide'));
+        this.elements.dots.forEach((d) => d.classList.remove('current-slide'));
+        targetSlide.classList.add('current-slide');
+        this.elements.dots[targetIndex]?.classList.add('current-slide');
+        this.currentSlide = targetIndex;
+    },
+
+    startAutoAdvance() {
+        if (this.autoAdvanceTimer) clearInterval(this.autoAdvanceTimer);
+        this.autoAdvanceTimer = setInterval(() => this.moveToSlide(this.nextIndex()), 5000);
+    },
+
+    initializeSubscriptionForm() {
+        const form = this.elements.subscribeForm;
+        const timestampField = this.elements.timestampField;
+        if (timestampField) timestampField.value = Date.now();
+        if (!form) return;
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const email = formData.get('email');
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (!email) {
+                this.showMessage('Please enter your email address.', 'error');
+                return;
+            }
+            const selectedStates = Array.from(document.querySelectorAll('.state-checkbox:checked')).map((cb) => cb.value);
+            if (!selectedStates || selectedStates.length === 0) {
+                this.showMessage('Please select at least one state.', 'error');
+                return;
+            }
+            const originalText = submitButton?.innerHTML || '';
+            if (submitButton) {
                 submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Subscribing...';
                 submitButton.disabled = true;
-                
-                // Submit form
-                const formDataEntries = new FormData(form);
-                
-                // Create URLSearchParams manually to handle multiple state values correctly
-                const params = new URLSearchParams();
-                
-                // Add all form fields
-                for (const [key, value] of formDataEntries.entries()) {
-                    params.append(key, value);
-                }
-                
-                // Debug: Log what we're sending
-                console.log('Form data being sent:');
-                for (const [key, value] of params.entries()) {
-                    console.log(`${key}: ${value}`);
-                }
-                
-                fetch('/subscribe', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: params
-                })
-                .then(response => {
-                    console.log('Response received:', response.status, response.statusText);
-                    console.log('Content-Type:', response.headers.get('content-type'));
-                    
-                    // Check if the response is actually JSON
+            }
+            const params = new URLSearchParams();
+            for (const [key, value] of new FormData(form).entries()) params.append(key, value);
+            fetch('/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+            })
+                .then((response) => {
                     const contentType = response.headers.get('content-type');
                     if (!contentType || !contentType.includes('application/json')) {
-                        console.error('Expected JSON but received:', contentType);
                         throw new Error(`Expected JSON response but received ${contentType || 'unknown content type'}`);
                     }
-                    
                     return response.json();
                 })
-                .then(data => {
-                    console.log('Response data:', data);
-                    if (data.success) {
-                        showMessage('Thanks! You\'ll receive carnival notifications for the selected states.', 'success');
-                        form.reset();
-                        // Reset timestamp for potential retry
-                        if (timestampField) {
-                            timestampField.value = Date.now();
-                        }
-                    } else {
-                        showMessage(data.message || 'Something went wrong. Please try again.', 'error');
-                    }
+                .then((data) => {
+                    indexPageManager.handleSubscriptionResponse(data);
                 })
-                .catch(error => {
-                    console.error('Subscription error:', error);
-                    showMessage('An unexpected error occurred. Please try again.', 'error');
-                })
+                .catch(() => indexPageManager.showMessage('An unexpected error occurred. Please try again.', 'error'))
                 .finally(() => {
-                    // Restore button
-                    submitButton.innerHTML = originalText;
-                    submitButton.disabled = false;
+                    if (submitButton) {
+                        submitButton.innerHTML = originalText;
+                        submitButton.disabled = false;
+                    }
                 });
-            });
-        }
-    }
-    
+        });
+    },
+
     /**
-     * Show a temporary message to the user
+     * Handle the subscription API response in a testable way.
+     * @param {{ success?: boolean, message?: string }} data
      */
-    function showMessage(message, type = 'info') {
-        // Remove any existing messages
-        const existingMessage = document.querySelector('.subscription-message');
-        if (existingMessage) {
-            existingMessage.remove();
+    handleSubscriptionResponse(data) {
+        const form = this.elements.subscribeForm || document.getElementById('subscribeForm');
+        const timestampField = this.elements.timestampField || document.getElementById('main_form_timestamp');
+        if (data && data.success) {
+            indexPageManager.showMessage("Thanks! You'll receive carnival notifications for the selected states.", 'success');
+            form?.reset?.();
+            if (timestampField) timestampField.value = Date.now();
+        } else {
+            indexPageManager.showMessage((data && data.message) || 'Something went wrong. Please try again.', 'error');
         }
-        
-        // Create new message element
+    },
+
+    showMessage(message, type = 'info') {
+        document.querySelector('.subscription-message')?.remove();
         const messageEl = document.createElement('div');
-        messageEl.className = `subscription-message alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} mt-3`;
+        const cls = type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info';
+        messageEl.className = `subscription-message alert alert-${cls} mt-3`;
         messageEl.textContent = message;
         messageEl.style.cssText = 'animation: slideInFromTop 0.3s ease-out;';
-        
-        // Insert after the form
-        const form = document.getElementById('subscribeForm');
-        if (form) {
-            form.parentNode.insertBefore(messageEl, form.nextSibling);
-        }
-        
-        // Remove message after 5 seconds
+        const form = this.elements.subscribeForm || document.getElementById('subscribeForm');
+        form?.parentNode?.insertBefore(messageEl, form.nextSibling);
         setTimeout(() => {
-            if (messageEl.parentNode) {
-                messageEl.style.animation = 'slideOutToTop 0.3s ease-in';
-                setTimeout(() => {
-                    if (messageEl.parentNode) {
-                        messageEl.remove();
-                    }
-                }, 300);
-            }
+            if (!messageEl.parentNode) return;
+            messageEl.style.animation = 'slideOutToTop 0.3s ease-in';
+            setTimeout(() => messageEl.remove(), 300);
         }, 5000);
     }
-});
+};
 
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInFromTop {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes slideOutToTop {
-        from { transform: translateY(0); opacity: 1; }
-        to { transform: translateY(-20px); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
+// Auto-init
+document.addEventListener('DOMContentLoaded', () => {
+    indexPageManager.initialize();
+});

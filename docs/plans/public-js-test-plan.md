@@ -34,10 +34,10 @@
 - [x] `/public/js/club-players.js`
 - [x] `/public/js/club-sponsors.js`
 - [x] `/public/js/common-utils.js`
-- [ ] `/public/js/contact.js`
-- [ ] `/public/js/dashboard.js`
-- [ ] `/public/js/error.js`
-- [ ] `/public/js/index.js`
-- [ ] `/public/js/registration-form.js`
-- [ ] `/public/js/sponsor-management.js`
-- [ ] `/public/js/theme-init.js`
+- [x] `/public/js/contact.js`
+- [x] `/public/js/dashboard.js`
+- [x] `/public/js/error.js`
+- [x] `/public/js/index.js`
+- [x] `/public/js/registration-form.js`
+- [x] `/public/js/sponsor-management.js`
+- [x] `/public/js/theme-init.js`

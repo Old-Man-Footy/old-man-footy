@@ -1,104 +1,131 @@
 /**
- * Sponsor Management JavaScript
- * Handles sponsor-related functionality including status toggle and deletion confirmation
+ * Sponsor Management (Manager Object Pattern)
+ * Handles sponsor-related functionality including status toggle, deletion confirmation,
+ * and removal confirmations.
  */
+export const sponsorManagementManager = {
+    elements: {},
 
-/**
- * Toggle sponsor status (active/inactive)
- */
-function toggleStatus() {
-    const sponsorId = document.querySelector('[data-sponsor-id]')?.getAttribute('data-sponsor-id');
-    const currentStatus = document.querySelector('[data-current-status]')?.getAttribute('data-current-status') === 'true';
-    
-    if (!sponsorId) {
-        console.error('Sponsor ID not found');
-        return;
-    }
-    
-    const newStatus = !currentStatus;
-    
-    fetch(`/sponsors/${sponsorId}/status`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: newStatus })
-    })
-    .then(response => {
-        if (response.ok) {
-            location.reload();
-        } else {
-            alert('Error updating sponsor status. Please try again.');
+    initialize() {
+        this.cacheElements();
+        this.bindEvents();
+    },
+
+    cacheElements() {
+        this.elements.root = document;
+        this.elements.sponsorId = document.querySelector('[data-sponsor-id]')?.getAttribute('data-sponsor-id') || null;
+        const currentStatusAttr = document.querySelector('[data-current-status]')?.getAttribute('data-current-status');
+        this.elements.currentStatus = currentStatusAttr === 'true';
+        this.elements.toggleBtn = document.querySelector('[data-action="toggle-status-btn"]');
+        this.elements.deleteBtn = document.querySelector('[data-action="delete-sponsor-btn"]');
+        this.elements.removeForms = Array.from(document.querySelectorAll('[data-confirm-remove]'));
+    },
+
+    bindEvents() {
+        if (this.elements.toggleBtn) {
+            this.elements.toggleBtn.addEventListener('click', () => this.toggleStatus());
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating sponsor status. Please try again.');
-    });
-}
+        if (this.elements.deleteBtn) {
+            this.elements.deleteBtn.addEventListener('click', () => this.confirmDelete());
+        }
+        this.elements.removeForms.forEach((form) => {
+            form.addEventListener('submit', (e) => {
+                const sponsorName = form.getAttribute('data-sponsor-name') || '';
+                const message = form.getAttribute('data-confirm-remove') || '';
+                const fullMessage = message.replace('SPONSOR_NAME', sponsorName);
+                if (!this.safeConfirm(fullMessage)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    },
 
-/**
- * Confirm deletion of a sponsor
- */
-function confirmDelete() {
-    const sponsorId = document.querySelector('[data-sponsor-id]')?.getAttribute('data-sponsor-id');
-    
-    if (!sponsorId) {
-        console.error('Sponsor ID not found');
-        return;
-    }
-    
-    const confirmMessage = 'Are you sure you want to delete this sponsor? This action cannot be undone and will remove the sponsor from all associated clubs and carnivals.';
-    if (confirm(confirmMessage)) {
+    safeConfirm(message) {
+        try {
+            return typeof window !== 'undefined' && typeof window.confirm === 'function' ? window.confirm(message) : true;
+        } catch {
+            return true;
+        }
+    },
+
+    safeAlert(message) {
+        try {
+            if (typeof window !== 'undefined' && typeof window.alert === 'function') window.alert(message);
+        } catch {
+            /* no-op in non-browser */
+        }
+    },
+
+    reloadPage() {
+        try {
+            if (typeof window !== 'undefined' && window.location && typeof window.location.reload === 'function') {
+                window.location.reload();
+            }
+        } catch {
+            /* no-op in tests */
+        }
+    },
+
+    redirectToList() {
+        try {
+            if (typeof window !== 'undefined' && window.location) {
+                window.location.href = '/sponsors';
+            }
+        } catch {
+            /* no-op in tests */
+        }
+    },
+
+    toggleStatus() {
+        const sponsorId = this.elements.sponsorId;
+        if (!sponsorId) {
+            console.error('Sponsor ID not found');
+            return;
+        }
+        const newStatus = !this.elements.currentStatus;
+        fetch(`/sponsors/${sponsorId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: newStatus })
+        })
+            .then((response) => {
+                if (response.ok) {
+                    this.reloadPage();
+                } else {
+                    this.safeAlert('Error updating sponsor status. Please try again.');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                this.safeAlert('Error updating sponsor status. Please try again.');
+            });
+    },
+
+    confirmDelete() {
+        const sponsorId = this.elements.sponsorId;
+        if (!sponsorId) {
+            console.error('Sponsor ID not found');
+            return;
+        }
+        const confirmMessage = 'Are you sure you want to delete this sponsor? This action cannot be undone and will remove the sponsor from all associated clubs and carnivals.';
+        if (!this.safeConfirm(confirmMessage)) return;
         fetch(`/sponsors/${sponsorId}`, {
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+            headers: { 'Content-Type': 'application/json' }
         })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = '/sponsors';
-            } else {
-                alert('Error deleting sponsor. Please try again.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting sponsor. Please try again.');
-        });
+            .then((response) => {
+                if (response.ok) {
+                    this.redirectToList();
+                } else {
+                    this.safeAlert('Error deleting sponsor. Please try again.');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                this.safeAlert('Error deleting sponsor. Please try again.');
+            });
     }
-}
+};
 
-/**
- * Initialize sponsor management functionality
- */
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Sponsor management functionality loaded...');
-    
-    // Setup toggle status button
-    const toggleBtn = document.querySelector('[data-action="toggle-status-btn"]');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', toggleStatus);
-    }
-    
-    // Setup delete button
-    const deleteBtn = document.querySelector('[data-action="delete-sponsor-btn"]');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', confirmDelete);
-    }
-    
-    // Setup sponsor removal confirmations (for removing from clubs/carnivals)
-    document.querySelectorAll('[data-confirm-remove]').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const sponsorName = this.getAttribute('data-sponsor-name');
-            const message = this.getAttribute('data-confirm-remove');
-            const fullMessage = message.replace('SPONSOR_NAME', sponsorName);
-            if (!confirm(fullMessage)) {
-                e.preventDefault();
-            }
-        });
-    });
-    
-    console.log('Sponsor management functionality initialized successfully');
-});
+// Auto-init on DOM ready
+document.addEventListener('DOMContentLoaded', () => sponsorManagementManager.initialize());
