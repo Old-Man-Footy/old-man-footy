@@ -4,12 +4,15 @@ import { test, expect } from '@playwright/test';
 test.describe('Homepage', () => {
   test('loads and shows key sections', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('banner')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Find Carnivals' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Contact' })).toBeVisible();
+  // Expect hero title to be visible (no explicit banner role in markup)
+  await expect(page.getByRole('heading', { name: 'Discover Masters Rugby League' })).toBeVisible();
+  const navbar = page.getByRole('navigation');
+  await expect(navbar.getByRole('link', { name: 'Find Carnivals' })).toBeVisible();
+  await expect(navbar.getByRole('link', { name: 'Contact' })).toBeVisible();
 
-    // Upcoming carnivals heading
-    await expect(page.getByRole('heading', { name: 'Upcoming Carnivals' })).toBeVisible();
+  // Upcoming carnivals heading (scope to main content)
+  const main = page.locator('main');
+  await expect(main.getByRole('heading', { name: 'Upcoming Carnivals', exact: true })).toBeVisible();
 
     // Stats runner has numbers; tolerate 0 in empty DB
     await expect(page.locator('.stats-runner')).toBeVisible();

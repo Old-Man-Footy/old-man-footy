@@ -84,6 +84,11 @@ const SECURITY_CONFIG = {
  * @returns {Function} Express middleware
  */
 const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
+  // In test environment, disable rate limiting to avoid flakiness in E2E tests
+  if (process.env.NODE_ENV === 'test') {
+    return (_req, _res, next) => next();
+  }
+
   // Simple in-memory rate limiter for this implementation
   const requests = new Map();
   

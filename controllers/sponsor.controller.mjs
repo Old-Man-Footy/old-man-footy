@@ -8,7 +8,7 @@
 import { Sponsor, Club } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
 
 /**
@@ -17,7 +17,7 @@ import { asyncHandler } from '../middleware/asyncHandler.mjs';
  * @param {Object} res - Express response object
  */
 export const showSponsorListings = asyncHandler(async (req, res) => {
-  const { search, state, businessType } = req.query;
+  const { search, state, businessType, sponsorshipLevel } = req.query;
 
   // Build where clause for filters
   const whereClause = {
@@ -37,6 +37,9 @@ export const showSponsorListings = asyncHandler(async (req, res) => {
   if (state) {
     whereClause.state = state;
   }
+  if (sponsorshipLevel) {
+    whereClause.sponsorshipLevel = sponsorshipLevel;
+  }
 
   const sponsors = await Sponsor.findAll({
     where: whereClause,
@@ -55,8 +58,9 @@ export const showSponsorListings = asyncHandler(async (req, res) => {
   return res.render('sponsors/list', {
     title: 'Find Masters Rugby League Sponsors',
     sponsors,
-    filters: { search, state, businessType },
+  filters: { search, state, businessType, sponsorshipLevel },
     states: AUSTRALIAN_STATES,
+    sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
     additionalCSS: ['/styles/sponsor.styles.css'],
   });
 });
@@ -119,8 +123,8 @@ export const showCreateSponsor = asyncHandler(async (req, res) => {
   return res.render('sponsors/create', {
     title: 'Add New Sponsor',
     user: req.user,
-    states: AUSTRALIAN_STATES,
-    sponsorshipLevels: SPONSORSHIP_LEVELS,
+  states: AUSTRALIAN_STATES,
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
     additionalCSS: ['/styles/sponsor.styles.css'],
     errors: [],
     formData: {},
@@ -147,7 +151,7 @@ export const createSponsor = asyncHandler(async (req, res) => {
       title: 'Add New Sponsor',
       user: req.user,
       states: AUSTRALIAN_STATES,
-      sponsorshipLevels: SPONSORSHIP_LEVELS,
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
       errors: errors.array(),
       formData: req.body,
       additionalCSS: ['/styles/sponsor.styles.css'],
@@ -252,7 +256,7 @@ export const showEditSponsor = asyncHandler(async (req, res) => {
     title: 'Edit Sponsor',
     sponsor,
     states: AUSTRALIAN_STATES,
-    sponsorshipLevels: SPONSORSHIP_LEVELS,
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
     additionalCSS: ['/styles/sponsor.styles.css'],
     clubs,
   });

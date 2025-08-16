@@ -15,7 +15,7 @@ export default defineConfig({
     ['line']
   ],
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3055',
+    baseURL: process.env.BASE_URL || 'http://localhost:3056',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -37,12 +37,12 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm start',
-    url: 'http://localhost:3055',
-    reuseExistingServer: true,
+  url: 'http://localhost:3056',
+  reuseExistingServer: false,
     timeout: 120 * 1000,
     env: {
       NODE_ENV: 'test',
-      PORT: '3055',
+      PORT: '3056',
       SESSION_SECRET: 'test-session-secret-32-characters-min',
       FEATURE_COMING_SOON_MODE: 'false',
       FEATURE_MAINTENANCE_MODE: 'false',

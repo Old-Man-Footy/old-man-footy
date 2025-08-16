@@ -16,9 +16,9 @@ test.describe('Contact', () => {
 
     await page.getByRole('button', { name: 'Send Message' }).click();
 
-    await expect(page).toHaveURL('/contact');
+  await expect(page).toHaveURL(/\/contact$/);
 
-    // Expect success flash
-    await expect(page.locator('.alert-success')).toBeVisible();
+  // Expect success flash (matches layout flash partial)
+  await expect(page.locator('.alert.alert-success')).toBeVisible();
   });
 });
