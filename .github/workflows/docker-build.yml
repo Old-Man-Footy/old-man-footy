@@ -1,0 +1,68 @@
+name: Docker Build and Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build test image
+        run: |
+          docker build -t omf:test --target test .
+
+      - name: Run test container and smoke test health
+        run: |
+          docker run -d --rm \
+            -e NODE_ENV=test \
+            -e SESSION_SECRET=ci-session-secret-please-rotate \
+            -p 3055:3055 \
+            --name omf-test \
+            omf:test
+          # wait for boot
+          for i in {1..30}; do \
+            curl -fsS http://localhost:3055/health && ok=1 && break || sleep 1; \
+          done; \
+          if [ "$ok" != "1" ]; then echo "Health check failed"; docker logs omf-test; exit 1; fi
+          docker logs --tail 100 omf-test
+          docker stop omf-test
+
+  build-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build production image
+        run: |
+          docker build -t omf:prod --target production .
+
+      - name: Run prod container and smoke test health
+        run: |
+          docker run -d --rm \
+            -e NODE_ENV=production \
+            -e SESSION_SECRET=ci-session-secret-please-rotate \
+            -e PORT=3060 \
+            -p 3060:3060 \
+            --name omf-prod \
+            omf:prod
+          # wait for boot
+          for i in {1..30}; do \
+            curl -fsS http://localhost:3060/health && ok=1 && break || sleep 1; \
+          done; \
+          if [ "$ok" != "1" ]; then echo "Health check failed"; docker logs omf-prod; exit 1; fi
+          docker logs --tail 100 omf-prod
+          docker stop omf-prod
