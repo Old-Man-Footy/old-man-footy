@@ -107,6 +107,14 @@ vi.mock('../../models/index.mjs', () => {
     isUniqueForClub: vi.fn().mockResolvedValue(true)
   };
 
+  const mockClubSponsor = {
+    findAll: vi.fn(),
+    findOne: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    destroy: vi.fn()
+  };
+
   return {
     sequelize: mockSequelize,
     Club: mockClub,
@@ -115,6 +123,7 @@ vi.mock('../../models/index.mjs', () => {
     Sponsor: { findAll: vi.fn(), findByPk: vi.fn() },
     ClubAlternateName: mockClubAlternateName,
     CarnivalClub: { findAll: vi.fn() },
+  ClubSponsor: mockClubSponsor,
     createMockClub,
     Op: {
       and: 'and',
@@ -940,6 +949,41 @@ describe('Club Controller', () => {
 
   describe('Sponsor Management', () => {
     describe('showClubSponsors', () => {
+      it('should display club sponsors for authorized user (sorted by displayOrder)', async () => {
+        req.user = { ...mockUser, clubId: 1 };
+        req.params.id = '1';
+
+        const unsortedSponsors = [
+          { id: 2, sponsorName: 'B', displayOrder: 3 },
+          { id: 1, sponsorName: 'A', displayOrder: 1 },
+          { id: 3, sponsorName: 'C' } // no order -> treated as 999
+        ];
+        const clubWithSponsors = { ...mockClub, sponsors: [...unsortedSponsors] };
+        Club.findByPk.mockResolvedValue(clubWithSponsors);
+
+        await showClubSponsors(req, res, next);
+
+        expect(Club.findByPk).toHaveBeenCalledWith(1, expect.objectContaining({ include: expect.any(Array) }));
+        expect(res.render).toHaveBeenCalled();
+        const [view, ctx] = res.render.mock.calls[0];
+        expect(view).toBe('clubs/sponsors');
+        expect(ctx.title).toBe('Manage Club Sponsors');
+        // Sponsors should be sorted: displayOrder 1, then 3, then undefined
+        expect(ctx.sponsors.map(s => s.id)).toEqual([1, 2, 3]);
+      });
+
+      it('should redirect unauthorized user', async () => {
+        req.user = { ...mockUser, clubId: 2 };
+        req.params.id = '1';
+
+        await showClubSponsors(req, res, next);
+
+        expect(req.flash).toHaveBeenCalledWith(
+          'error_msg',
+          'You can only manage sponsors for your own club.'
+        );
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+      });
       // it('should display club sponsors for authorized user', async () => {
       //   req.user = { ...mockUser, clubId: 1 };
       //   req.params.id = '1';
