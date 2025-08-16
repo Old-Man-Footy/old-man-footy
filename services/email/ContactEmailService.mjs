@@ -41,8 +41,9 @@ export class ContactEmailService extends BaseEmailService {
         };
 
         try {
-            await this.transporter.sendMail(mailOptions);
-            console.log(`✅ Contact form email sent successfully from ${email}`);
+            // Route through BaseEmailService to honor environment/site-mode email rules
+            await this.sendEmail(mailOptions, 'Contact');
+            console.log(`✅ Contact form email processed for ${email}`);
             
             // Send auto-reply to the user
             await this.sendContactFormAutoReply(email, firstName, subject);
@@ -74,8 +75,8 @@ export class ContactEmailService extends BaseEmailService {
         };
 
         try {
-            await this.transporter.sendMail(mailOptions);
-            console.log(`✅ Contact form auto-reply sent to ${email}`);
+            await this.sendEmail(mailOptions, 'Contact Auto-Reply');
+            console.log(`✅ Contact form auto-reply processed for ${email}`);
         } catch (error) {
             console.error('❌ Error sending contact form auto-reply:', error);
             // Don't throw error here as it's not critical
