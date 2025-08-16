@@ -57,9 +57,16 @@ export function initTheme() {
      * Remove loading class and show content with proper theme applied
      */
     function showContent() {
-        document.documentElement.classList.remove('theme-loading');
-        if (document.body) {
-            document.body.classList.add('theme-applied');
+        try {
+            if (typeof document === 'undefined') return;
+            if (document.documentElement) {
+                document.documentElement.classList.remove('theme-loading');
+            }
+            if (document.body) {
+                document.body.classList.add('theme-applied');
+            }
+        } catch (_) {
+            // Ignore if environment (e.g., jsdom) has been torn down
         }
     }
 
@@ -70,11 +77,14 @@ export function initTheme() {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             // Small delay to ensure CSS is applied
-            setTimeout(showContent, 50);
+            const id = setTimeout(showContent, 50);
+            // Best-effort cleanup if needed
+            try { window.addEventListener && window.addEventListener('beforeunload', () => clearTimeout(id)); } catch {}
         });
     } else {
         // Document is already loaded
-        setTimeout(showContent, 50);
+        const id = setTimeout(showContent, 50);
+        try { window.addEventListener && window.addEventListener('beforeunload', () => clearTimeout(id)); } catch {}
     }
 }
 
