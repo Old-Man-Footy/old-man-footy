@@ -9,6 +9,7 @@ import { Sequelize } from 'sequelize';
 import * as SequelizeModule from 'sequelize';
 import { Umzug, SequelizeStorage } from 'umzug';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
@@ -150,7 +151,7 @@ export async function runMigrations() {
 
     const migrationsGlob = path.join(__dirname, '..', 'migrations', '*.js');
 
-    const umzug = new Umzug({
+  const umzug = new Umzug({
       migrations: {
         glob: migrationsGlob,
         // Adapt sequelize-cli style migration signatures (queryInterface, Sequelize)
@@ -158,12 +159,13 @@ export async function runMigrations() {
           return {
             name,
             up: async () => {
-              const mod = await import(migrationPath);
+        // Ensure ESM import works with absolute paths across platforms (Windows/Linux)
+        const mod = await import(pathToFileURL(migrationPath).href);
               if (typeof mod.up !== 'function') throw new Error(`Migration ${name} missing exported up()`);
               return mod.up(context, SequelizeModule);
             },
             down: async () => {
-              const mod = await import(migrationPath);
+        const mod = await import(pathToFileURL(migrationPath).href);
               if (typeof mod.down !== 'function') throw new Error(`Migration ${name} missing exported down()`);
               return mod.down(context, SequelizeModule);
             }
