@@ -44,7 +44,13 @@ export function initTheme() {
      * Apply theme immediately to prevent flash
      */
     if (theme === 'dark') {
+        // Apply both our custom theme attribute and Bootstrap's color mode attribute
         document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+    } else {
+        // Ensure Bootstrap is reset to light when not in dark mode
+        document.documentElement.removeAttribute('data-bs-theme');
+        document.documentElement.removeAttribute('data-theme');
     }
 
     /**

@@ -66,8 +66,10 @@ const themeManager = {
         
         if (theme === this.THEMES.DARK) {
             html.setAttribute('data-theme', 'dark');
+            html.setAttribute('data-bs-theme', 'dark');
         } else {
             html.removeAttribute('data-theme');
+            html.removeAttribute('data-bs-theme');
         }
         
         this.currentTheme = theme;
@@ -449,24 +451,30 @@ const oldmanfooty = {
 
     // Initialize all functionality
     init: function() {
-        document.addEventListener('DOMContentLoaded', () => {
+        const run = () => {
             this.initFormValidation();
             this.initFileUploads();
             this.initTextareas();
             this.initSearchFilters();
             this.initTooltips(); // Add tooltip initialization
             this.initFlashMessageAutoDismiss(); // Add auto-dismiss for flash messages
-            
+
             // Initialize theme manager
             if (window.themeManager) {
                 window.themeManager.init();
                 window.themeManager.setupSystemThemeListener();
             }
-            
+
             if (this.utils) {
                 console.log('Old Man Footy app initialized');
             }
-        });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', run, { once: true });
+        } else {
+            run();
+        }
     }
 };
 
