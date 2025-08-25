@@ -6,6 +6,8 @@
  */
 
 import { Sequelize } from 'sequelize';
+import * as SequelizeModule from 'sequelize';
+import { Umzug, SequelizeStorage } from 'umzug';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -141,20 +143,49 @@ export async function testConnection() {
  */
 export async function runMigrations() {
   try {
-    console.log('🔄 Running database migrations...');
-    
-    // Import models to ensure they're registered with Sequelize
+    console.log('🔄 Running database migrations (Umzug)...');
+
+    // Ensure models are loaded/registered (associations may be used by some migrations)
     await import('../models/index.mjs');
-    
-    // Run migrations using Sequelize CLI
-    const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate');
-    if (stdout) console.log(stdout);
-    if (stderr) console.error(stderr);
-    
+
+    const migrationsGlob = path.join(__dirname, '..', 'migrations', '*.js');
+
+    const umzug = new Umzug({
+      migrations: {
+        glob: migrationsGlob,
+        // Adapt sequelize-cli style migration signatures (queryInterface, Sequelize)
+        resolve: ({ name, path: migrationPath, context }) => {
+          return {
+            name,
+            up: async () => {
+              const mod = await import(migrationPath);
+              if (typeof mod.up !== 'function') throw new Error(`Migration ${name} missing exported up()`);
+              return mod.up(context, SequelizeModule);
+            },
+            down: async () => {
+              const mod = await import(migrationPath);
+              if (typeof mod.down !== 'function') throw new Error(`Migration ${name} missing exported down()`);
+              return mod.down(context, SequelizeModule);
+            }
+          };
+        }
+      },
+      context: sequelize.getQueryInterface(),
+      storage: new SequelizeStorage({ sequelize, tableName: 'SequelizeMeta' }),
+      logger: console
+    });
+
+    const pending = await umzug.pending();
+    if (pending.length === 0) {
+      console.log('✅ No pending migrations. Schema is up to date.');
+      return;
+    }
+    console.log(`📦 Pending migrations: ${pending.map(m => m.name).join(', ')}`);
+
+    await umzug.up();
     console.log('✅ Database migrations completed successfully');
-    
   } catch (error) {
-    console.error('❌ Database migration failed:', error.message);
+    console.error('❌ Database migration failed:', error?.stack || error?.message || error);
     throw error;
   }
 }
