@@ -149,23 +149,32 @@ export async function runMigrations() {
     // Ensure models are loaded/registered (associations may be used by some migrations)
     await import('../models/index.mjs');
 
-    const migrationsGlob = path.join(__dirname, '..', 'migrations', '*.js');
+  // Use a POSIX-friendly glob and an explicit cwd so Windows path separators don't break fast-glob.
+  const migrationsCwd = path.join(__dirname, '..');
+  const migrationsGlob = 'migrations/*.js';
 
   const umzug = new Umzug({
       migrations: {
         glob: migrationsGlob,
+        cwd: migrationsCwd,
         // Adapt sequelize-cli style migration signatures (queryInterface, Sequelize)
-        resolve: ({ name, path: migrationPath, context }) => {
+        resolve: ({ name, path: migrationPath, context, cwd }) => {
+          // Build absolute path for reliable ESM import
+          const absPath = migrationPath && path.isAbsolute(migrationPath)
+            ? migrationPath
+            : path.join(cwd || migrationsCwd, migrationPath);
+          // Use filename only for migration name to be compatible with existing SequelizeMeta rows
+          const baseName = path.basename(absPath);
           return {
-            name,
+            name: baseName,
             up: async () => {
-        // Ensure ESM import works with absolute paths across platforms (Windows/Linux)
-        const mod = await import(pathToFileURL(migrationPath).href);
+              // Ensure ESM import works with absolute paths across platforms (Windows/Linux)
+              const mod = await import(pathToFileURL(absPath).href);
               if (typeof mod.up !== 'function') throw new Error(`Migration ${name} missing exported up()`);
               return mod.up(context, SequelizeModule);
             },
             down: async () => {
-        const mod = await import(pathToFileURL(migrationPath).href);
+              const mod = await import(pathToFileURL(absPath).href);
               if (typeof mod.down !== 'function') throw new Error(`Migration ${name} missing exported down()`);
               return mod.down(context, SequelizeModule);
             }
