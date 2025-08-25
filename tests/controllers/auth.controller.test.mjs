@@ -28,6 +28,7 @@ const mockUser = {
   findOne: vi.fn(),
   findByPk: vi.fn(),
   create: vi.fn(),
+  count: vi.fn(),
 };
 
 const mockClub = {
@@ -413,6 +414,7 @@ describe('Authentication Controller', () => {
           lastName: 'Doe',
           email: 'john@example.com',
           phoneNumber: '0412345678',
+          isAdmin: false,
         };
 
         mockReq.body = {
@@ -423,6 +425,7 @@ describe('Authentication Controller', () => {
           phoneNumber: '0412345678',
         };
 
+        mockUser.count.mockResolvedValue(1); // One existing user
         mockUser.findOne.mockResolvedValue(null); // User doesn't exist
         mockUser.create.mockResolvedValue(newUser);
 
@@ -430,6 +433,7 @@ describe('Authentication Controller', () => {
         await authController.registerUser(mockReq, mockRes);
 
         // Assert
+        expect(mockUser.count).toHaveBeenCalled();
         expect(mockUser.findOne).toHaveBeenCalledWith({
           where: { email: 'john@example.com' },
         });
@@ -441,6 +445,7 @@ describe('Authentication Controller', () => {
           phoneNumber: '0412345678',
           clubId: null,
           isPrimaryDelegate: false,
+          isAdmin: false,
           isActive: true,
         });
         expect(mockAuditService.logUserAction).toHaveBeenCalledWith(
@@ -574,6 +579,130 @@ describe('Authentication Controller', () => {
             phoneNumber: null,
           })
         );
+      });
+
+      test('should automatically grant admin privileges to first registered user', async () => {
+        // Arrange
+        const newUser = {
+          id: 1,
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@example.com',
+          phoneNumber: '0412345678',
+          isAdmin: true,
+        };
+
+        mockReq.body = {
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@example.com',
+          password: 'password123',
+          phoneNumber: '0412345678',
+        };
+
+        mockUser.count.mockResolvedValue(0); // No existing users
+        mockUser.findOne.mockResolvedValue(null); // User doesn't exist
+        mockUser.create.mockResolvedValue(newUser);
+
+        // Act
+        await authController.registerUser(mockReq, mockRes);
+
+        // Assert
+        expect(mockUser.count).toHaveBeenCalled();
+        expect(mockUser.create).toHaveBeenCalledWith({
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@example.com',
+          passwordHash: 'password123',
+          phoneNumber: '0412345678',
+          clubId: null,
+          isPrimaryDelegate: false,
+          isAdmin: true, // Should be true for first user
+          isActive: true,
+        });
+        expect(mockAuditService.logUserAction).toHaveBeenCalledWith(
+          mockAuditService.ACTIONS.USER_REGISTER,
+          expect.objectContaining({
+            req: mockReq,
+            entityType: mockAuditService.ENTITIES.USER,
+            entityId: 1,
+            metadata: { adminBootstrap: true, reason: 'First user automatically promoted to admin' },
+          })
+        );
+        expect(mockAuditService.logUserAction).toHaveBeenCalledWith(
+          mockAuditService.ACTIONS.USER_UPDATE,
+          expect.objectContaining({
+            req: mockReq,
+            entityType: mockAuditService.ENTITIES.USER,
+            entityId: 1,
+            newValues: { isAdmin: true },
+            metadata: { 
+              adminBootstrap: true, 
+              reason: 'First registered user automatically promoted to admin',
+              userCount: 1
+            },
+          })
+        );
+        expect(mockReq.flash).toHaveBeenCalledWith(
+          'success_msg',
+          'Registration successful! As the first user, you have been granted administrator privileges. You can now log in and manage the system.'
+        );
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      });
+
+      test('should not grant admin privileges to subsequent users', async () => {
+        // Arrange
+        const newUser = {
+          id: 2,
+          firstName: 'Regular',
+          lastName: 'User',
+          email: 'user@example.com',
+          phoneNumber: '0412345678',
+          isAdmin: false,
+        };
+
+        mockReq.body = {
+          firstName: 'Regular',
+          lastName: 'User',
+          email: 'user@example.com',
+          password: 'password123',
+          phoneNumber: '0412345678',
+        };
+
+        mockUser.count.mockResolvedValue(1); // One existing user
+        mockUser.findOne.mockResolvedValue(null); // User doesn't exist
+        mockUser.create.mockResolvedValue(newUser);
+
+        // Act
+        await authController.registerUser(mockReq, mockRes);
+
+        // Assert
+        expect(mockUser.count).toHaveBeenCalled();
+        expect(mockUser.create).toHaveBeenCalledWith({
+          firstName: 'Regular',
+          lastName: 'User',
+          email: 'user@example.com',
+          passwordHash: 'password123',
+          phoneNumber: '0412345678',
+          clubId: null,
+          isPrimaryDelegate: false,
+          isAdmin: false, // Should be false for subsequent users
+          isActive: true,
+        });
+        expect(mockAuditService.logUserAction).toHaveBeenCalledWith(
+          mockAuditService.ACTIONS.USER_REGISTER,
+          expect.objectContaining({
+            req: mockReq,
+            entityType: mockAuditService.ENTITIES.USER,
+            entityId: 2,
+            metadata: {}, // No admin bootstrap metadata
+          })
+        );
+        expect(mockReq.flash).toHaveBeenCalledWith(
+          'success_msg',
+          'Registration successful! You can now log in and create or join a club from your dashboard.'
+        );
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
       });
     });
   });
