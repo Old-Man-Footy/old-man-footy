@@ -1175,7 +1175,7 @@ describe('Admin Controller', () => {
       const mockRegistrations = [
         {
           participatingClub: { id: 1, clubName: 'Club A', state: 'NSW' },
-          players: [
+          playerAssignments: [
             {
               attendanceStatus: 'confirmed',
               clubPlayer: {

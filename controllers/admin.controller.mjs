@@ -1344,7 +1344,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
             },
             {
                 model: CarnivalClubPlayer,
-                as: 'players',
+                as: 'playerAssignments',
                 where: { isActive: true },
                 required: false,
                 include: [{
@@ -1357,8 +1357,8 @@ const showCarnivalPlayersHandler = async (req, res) => {
         ],
         order: [
             ['participatingClub', 'clubName', 'ASC'],
-            ['players', 'clubPlayer', 'firstName', 'ASC'],
-            ['players', 'clubPlayer', 'lastName', 'ASC']
+            ['playerAssignments', 'clubPlayer', 'firstName', 'ASC'],
+            ['playerAssignments', 'clubPlayer', 'lastName', 'ASC']
         ]
     });
 
@@ -1368,8 +1368,8 @@ const showCarnivalPlayersHandler = async (req, res) => {
     let totalMastersEligible = 0;
 
     clubRegistrations.forEach(registration => {
-        if (registration.players && registration.players.length > 0) {
-            registration.players.forEach(playerAssignment => {
+        if (registration.playerAssignments && registration.playerAssignments.length > 0) {
+            registration.playerAssignments.forEach(playerAssignment => {
                 const player = playerAssignment.clubPlayer;
                 const isMastersEligible = player.dateOfBirth ? 
                     ClubPlayer.calculateAge(player.dateOfBirth) >= 35 : false;
