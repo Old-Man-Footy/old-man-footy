@@ -11,7 +11,7 @@ import request from 'supertest';
 import express from 'express';
 import session from 'express-session';
 import flash from 'connect-flash';
-import { applyAuthSecurity } from '../../../middleware/security.mjs';
+import { applyAuthSecurity } from '../../middleware/security.mjs';
 
 // Create a minimal Express app to test the rate limiting
 const app = express();
@@ -49,8 +49,8 @@ async function testRateLimiting() {
 
     console.log('📨 Sending multiple requests to trigger rate limiting...');
 
-    // Send requests up to the limit (5 for auth routes)
-    for (let i = 1; i <= 5; i++) {
+    // Send requests up to the limit (8 for auth routes)
+    for (let i = 1; i <= 8; i++) {
       const response = await agent
         .post('/auth/login')
         .set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8') // Browser-like Accept header
@@ -59,7 +59,7 @@ async function testRateLimiting() {
       console.log(`   Request ${i}: ${response.status} ${response.status === 302 ? '(Redirect)' : '(OK)'}`);
     }
 
-    // The 6th request should be rate limited
+    // The 9th request should be rate limited
     console.log('\n🚫 Sending request that should be rate limited...');
     const rateLimitedResponse = await agent
       .post('/auth/login')

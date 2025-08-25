@@ -24,11 +24,11 @@ import crypto from 'crypto';
 const SECURITY_CONFIG = {
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 150, // Increased from 100 to 150 for normal browsing
     message: {
       error: {
         status: 429,
-        message: 'Too many requests from this IP. Please try again later.'
+        message: 'You\'re browsing a bit too quickly! Please wait a few minutes before continuing.'
       }
     },
     standardHeaders: true,
@@ -38,15 +38,27 @@ const SECURITY_CONFIG = {
   },
   
   authRateLimit: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 auth attempts per windowMs
+    windowMs: 10 * 60 * 1000, // 10 minutes (reduced from 15)
+    max: 8, // Increased from 5 to 8 attempts - allows for legitimate typos
     message: {
       error: {
         status: 429,
-        message: 'Too many authentication attempts. Please try again later.'
+        message: 'Multiple login attempts detected. For your security, please wait 10 minutes before trying again.'
       }
     },
     skipSuccessfulRequests: true
+  },
+
+  formSubmissionRateLimit: {
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 10, // Allow 10 form submissions per 5 minutes (registration, contact forms, etc.)
+    message: {
+      error: {
+        status: 429,
+        message: 'You\'re submitting forms quite frequently. Please wait a few minutes before trying again.'
+      }
+    },
+    skipSuccessfulRequests: false
   },
 
   helmet: {
@@ -156,6 +168,11 @@ export const generalRateLimit = createRateLimiter();
  * Authentication-specific rate limiting
  */
 export const authRateLimit = createRateLimiter(SECURITY_CONFIG.authRateLimit);
+
+/**
+ * Form submission rate limiting (for registration, contact forms, etc.)
+ */
+export const formSubmissionRateLimit = createRateLimiter(SECURITY_CONFIG.formSubmissionRateLimit);
 
 /**
  * Helmet security headers middleware
@@ -527,11 +544,11 @@ export const applyAdminSecurity = [
   securityHeaders,
   createRateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200, // Increased from 50 to 200 for normal admin usage
+    max: 300, // Increased from 200 to 300 for active admin usage
     message: {
       error: {
         status: 429,
-        message: 'Too many admin requests. Please try again later.'
+        message: 'Admin activity rate limit reached. Please wait a few minutes before continuing.'
       }
     }
   }),

@@ -28,6 +28,8 @@ vi.mock('helmet', () => ({
 // Import the security middleware after mocking
 const {
   generalRateLimit,
+  authRateLimit,
+  formSubmissionRateLimit,
   sanitizeInput,
   csrfProtection,
   sessionSecurity,
@@ -79,11 +81,11 @@ describe('Security Middleware', () => {
       it('should be configured with correct default settings', () => {
         expect(SECURITY_CONFIG.rateLimit).toEqual({
           windowMs: 15 * 60 * 1000,
-          max: 100,
+          max: 150,
           message: {
             error: {
               status: 429,
-              message: 'Too many requests from this IP. Please try again later.'
+              message: 'You\'re browsing a bit too quickly! Please wait a few minutes before continuing.'
             }
           },
           standardHeaders: true,
@@ -96,7 +98,7 @@ describe('Security Middleware', () => {
       it('should create rate limiter with custom configuration', () => {
         const customConfig = {
           windowMs: 10000,
-          max: 50,
+          max: 25,
           message: { error: { status: 429, message: 'Custom message' } }
         };
         
@@ -148,8 +150,23 @@ describe('Security Middleware', () => {
 
     describe('authRateLimit', () => {
       it('should have stricter limits for authentication', () => {
-        expect(SECURITY_CONFIG.authRateLimit.max).toBe(5);
+        expect(SECURITY_CONFIG.authRateLimit.max).toBe(8);
+        expect(SECURITY_CONFIG.authRateLimit.windowMs).toBe(10 * 60 * 1000);
+        expect(SECURITY_CONFIG.authRateLimit.message.error.message).toBe('Multiple login attempts detected. For your security, please wait 10 minutes before trying again.');
         expect(SECURITY_CONFIG.authRateLimit.skipSuccessfulRequests).toBe(true);
+      });
+    });
+
+    describe('formSubmissionRateLimit', () => {
+      it('should have appropriate limits for form submissions', () => {
+        expect(SECURITY_CONFIG.formSubmissionRateLimit.max).toBe(10);
+        expect(SECURITY_CONFIG.formSubmissionRateLimit.windowMs).toBe(5 * 60 * 1000);
+        expect(SECURITY_CONFIG.formSubmissionRateLimit.message.error.message).toBe('You\'re submitting forms quite frequently. Please wait a few minutes before trying again.');
+        expect(SECURITY_CONFIG.formSubmissionRateLimit.skipSuccessfulRequests).toBe(false);
+      });
+
+      it('should exist as a rate limiter function', () => {
+        expect(typeof formSubmissionRateLimit).toBe('function');
       });
     });
   });
