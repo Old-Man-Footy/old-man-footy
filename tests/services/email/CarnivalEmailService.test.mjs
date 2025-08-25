@@ -7,9 +7,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CarnivalEmailService } from '/services/email/CarnivalEmailService.mjs';
-import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
-import { EmailSubscription } from '/models/index.mjs';
+import { CarnivalEmailService } from '../../../services/email/CarnivalEmailService.mjs';
+import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
+import { EmailSubscription } from '../../../models/index.mjs';
 import { Op } from 'sequelize';
 
 // Mock dependencies

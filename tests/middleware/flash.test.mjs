@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { enhancedFlash, flashTemplateVariables } from '/middleware/flash.mjs';
+import { enhancedFlash, flashTemplateVariables } from '../../middleware/flash.mjs';
 
 /**
  * Mocks for Express request and response objects

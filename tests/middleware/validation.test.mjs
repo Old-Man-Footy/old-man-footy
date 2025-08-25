@@ -11,7 +11,7 @@ contactEmail,
 organiserEmail,
 playerEmail,
 adminEmail,
-} from '/middleware/validation.mjs';
+} from '../../middleware/validation.mjs';
 
 /**
  * Helper to create an Express app for testing validation middleware.

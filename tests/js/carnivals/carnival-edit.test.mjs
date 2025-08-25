@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Import the manager object directly.
-import { carnivalEditManager } from '/public/js/carnival-edit.js';
+import { carnivalEditManager } from '../../../public/js/carnival-edit.js';
 
 /**
  * @file carnival-edit.test.js

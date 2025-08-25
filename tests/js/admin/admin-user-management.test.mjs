@@ -3,7 +3,7 @@ import {
     AdminUserManager,
     shouldCheckPrimaryOnClubChange,
     shouldRevertPrimaryDelegateChange,
-} from '/public/js/admin-user-management.js';
+} from '../../../public/js/admin-user-management.js';
 
 // Mock global fetch and location
 global.fetch = vi.fn();

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import MySidelineLogoDownloadService from '/services/mySidelineLogoDownloadService.mjs';
-import ImageNamingService from '/services/imageNamingService.mjs';
+import MySidelineLogoDownloadService from '../../services/mySidelineLogoDownloadService.mjs';
+import ImageNamingService from '../../services/imageNamingService.mjs';
 import path from 'path';
 
 // Mock dependencies

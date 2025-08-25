@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 // Import the manager object directly.
-import { clubPlayersManager } from '/public/js/carnival-club-players.js';
+import { clubPlayersManager } from '../../../public/js/carnival-club-players.js';
 
 /**
  * @file carnival-club-players.test.js

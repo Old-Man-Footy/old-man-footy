@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../../config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -178,7 +178,7 @@ import {
   sendNewsletter,
   getContact,
   postContact
-} from '/controllers/main.controller.mjs';
+} from '../../controllers/main.controller.mjs';
 
 import {
   Carnival,
@@ -192,11 +192,11 @@ import {
   createMockUser,
   createMockEmailSubscription,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
-import ContactEmailService from '/services/email/ContactEmailService.mjs';
-import AuthEmailService from '/services/email/AuthEmailService.mjs';
-import carouselImageService from '/services/carouselImageService.mjs';
+import ContactEmailService from '../../services/email/ContactEmailService.mjs';
+import AuthEmailService from '../../services/email/AuthEmailService.mjs';
+import carouselImageService from '../../services/carouselImageService.mjs';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 

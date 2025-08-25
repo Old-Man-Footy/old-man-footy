@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import MySidelineDataService from '/services/mySidelineDataService.mjs';
-import { Carnival, SyncLog } from '/models/index.mjs';
+import MySidelineDataService from '../../services/mySidelineDataService.mjs';
+import { Carnival, SyncLog } from '../../models/index.mjs';
 import { Op } from 'sequelize';
 
 // Mock the models and dependencies

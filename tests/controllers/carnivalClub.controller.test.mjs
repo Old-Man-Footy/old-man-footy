@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../../config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -243,7 +243,7 @@ import {
   approveClubRegistration,
   rejectClubRegistration,
   updateApprovalStatus
-} from '/controllers/carnivalClub.controller.mjs';
+} from '../../controllers/carnivalClub.controller.mjs';
 
 import {
   CarnivalClub,
@@ -258,10 +258,10 @@ import {
   createMockCarnivalClubPlayer,
   createMockUser,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
 import { validationResult } from 'express-validator';
-import CarnivalEmailService from '/services/email/CarnivalEmailService.mjs';
+import CarnivalEmailService from '../../services/email/CarnivalEmailService.mjs';
 
 describe('Carnival Club Controller', () => {
   let req, res, next;

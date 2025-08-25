@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import MySidelineIntegrationService from '/services/mySidelineIntegrationService.mjs';
-import { Carnival, SyncLog } from '/models/index.mjs';
+import MySidelineIntegrationService from '../../services/mySidelineIntegrationService.mjs';
+import { Carnival, SyncLog } from '../../models/index.mjs';
 
 // Mocks
 vi.mock('./mySidelineScraperService.mjs', () => ({

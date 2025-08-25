@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { editRegistrationManager } from '/public/js/carnival-edit-registration.js';
+import { editRegistrationManager } from '../../../public/js/carnival-edit-registration.js';
 
 describe('editRegistrationManager', () => {
   let originalConfirm;

@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../../config/constants.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -124,7 +124,7 @@ import {
   updateSponsor,
   deleteSponsor,
   toggleSponsorStatus
-} from '/controllers/sponsor.controller.mjs';
+} from '../../controllers/sponsor.controller.mjs';
 
 import {
   Sponsor,
@@ -134,10 +134,10 @@ import {
   createMockClub,
   createMockUser,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../../config/constants.mjs';
 
 describe('Sponsor Controller', () => {
   let req, res, next;

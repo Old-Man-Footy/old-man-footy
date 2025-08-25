@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
-import { RegistrationFormValidator } from '/public/js/auth-register.js';
+import { RegistrationFormValidator } from '../../../public/js/auth-register.js';
 
 describe('RegistrationFormValidator', () => {
     let form, passwordField, confirmPasswordField, validator;

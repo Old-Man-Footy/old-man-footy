@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import SponsorSortingService, { sortSponsorsHierarchically } from '/services/sponsorSortingService.mjs';
-import { SPONSORSHIP_LEVELS, SPONSORSHIP_LEVEL_ORDER } from '/config/constants.mjs';
+import SponsorSortingService, { sortSponsorsHierarchically } from '../../services/sponsorSortingService.mjs';
+import { SPONSORSHIP_LEVELS, SPONSORSHIP_LEVEL_ORDER } from '../../config/constants.mjs';
 
 const sponsorsFixture = [
   {

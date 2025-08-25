@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
-import { carnivalAddPlayersManager } from '/public/js/carnival-add-players.js';
+import { carnivalAddPlayersManager } from '../../../public/js/carnival-add-players.js';
 
 /**
  * @fileoverview Unit tests for carnivalAddPlayersManager in carnival-add-players.js

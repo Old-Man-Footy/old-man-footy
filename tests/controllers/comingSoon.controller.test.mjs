@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as comingSoonController from '/controllers/comingSoon.controller.mjs';
-import { comingSoonMode } from '/middleware/comingSoon.mjs';
+import * as comingSoonController from '../../controllers/comingSoon.controller.mjs';
+import { comingSoonMode } from '../../middleware/comingSoon.mjs';
 
 describe('Coming Soon Controller', () => {
     let req, res, next;

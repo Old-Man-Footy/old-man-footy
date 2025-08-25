@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
-import { AuthFormManager } from '/public/js/auth.js';
+import { AuthFormManager } from '../../../public/js/auth.js';
 
 describe('AuthFormManager', () => {
     let container, manager;

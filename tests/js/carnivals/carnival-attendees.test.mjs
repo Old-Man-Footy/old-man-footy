@@ -5,7 +5,7 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 // Import the manager object directly.
-import { attendeesManager } from '/public/js/carnival-attendees.js';
+import { attendeesManager } from '../../../public/js/carnival-attendees.js';
 
 describe('shouldShowCard', () => {
   it('returns true if both filters are "all"', () => {

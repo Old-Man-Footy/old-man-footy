@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../../config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -184,12 +184,6 @@ vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   }
 }));
 
-vi.mock('/services/emailService.mjs', () => ({
-  default: {
-    notifyNewCarnival: vi.fn().mockResolvedValue(true)
-  }
-}));
-
 vi.mock('/services/sponsorSortingService.mjs', () => ({
   sortSponsorsHierarchically: vi.fn().mockReturnValue([])
 }));
@@ -218,7 +212,7 @@ import {
   sendEmailToAttendees,
   showAllPlayers,
   createOrMergeEvent
-} from '/controllers/carnival.controller.mjs';
+} from '../../controllers/carnival.controller.mjs';
 
 import {
   Carnival,
@@ -234,11 +228,10 @@ import {
   createMockUser,
   createMockCarnivalClub,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
-import mySidelineService from '/services/mySidelineIntegrationService.mjs';
-import emailService from '/services/emailService.mjs';
-import { sortSponsorsHierarchically } from '/services/sponsorSortingService.mjs';
+import mySidelineService from '../../services/mySidelineIntegrationService.mjs';
+import { sortSponsorsHierarchically } from '../../services/sponsorSortingService.mjs';
 import { validationResult } from 'express-validator';
 
 describe('Carnival Controller', () => {
@@ -295,7 +288,6 @@ describe('Carnival Controller', () => {
     // Mock services
     sortSponsorsHierarchically.mockReturnValue([]);
     mySidelineService.syncEvents.mockResolvedValue({ newEvents: 5 });
-    emailService.notifyNewCarnival.mockResolvedValue(true);
   });
 
   afterEach(() => {

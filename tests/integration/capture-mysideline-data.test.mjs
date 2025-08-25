@@ -177,7 +177,7 @@ describe('MySideline Capture Script', () => {
             }));
 
             // Import the capture module after mocking
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
         test('should capture MySideline data successfully', async () => {
@@ -270,7 +270,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
         test('should handle empty events gracefully', async () => {
@@ -313,7 +313,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
         test('should handle scraper service errors', async () => {
@@ -363,7 +363,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
+            const freshCaptureModule = await import('../../scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
             await freshCaptureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
@@ -390,7 +390,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
+            const freshCaptureModule = await import('../../scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
             await freshCaptureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
@@ -418,7 +418,7 @@ describe('MySideline Capture Script', () => {
                 }
             }));
 
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
         test('should generate valid JavaScript module', async () => {

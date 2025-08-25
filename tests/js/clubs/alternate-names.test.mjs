@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
-import { AlternateNamesManager } from '/public/js/alternate-names.js';
+import { AlternateNamesManager } from '../../../public/js/alternate-names.js';
 
 // Mock global fetch and location
 global.fetch = vi.fn();

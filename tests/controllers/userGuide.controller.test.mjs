@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getUserGuide } from '/controllers/userGuide.controller.mjs';
+import { getUserGuide } from '../../controllers/userGuide.controller.mjs';
 import fs from 'fs/promises';
 
 // Mock the fs/promises module to avoid actual file system access

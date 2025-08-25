@@ -17,7 +17,7 @@ import {
     organiserEmail, 
     playerEmail, 
     adminEmail 
-} from '/middleware/validation.mjs';
+} from '../../../middleware/validation.mjs';
 
 // Create test app
 const createTestApp = (validationMiddleware) => {

@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Import the manager object directly
-import { addClubManager } from '/public/js/add-club-auto-populate.js';
+import { addClubManager } from '../../../public/js/add-club-auto-populate.js';
 
 /**
  * @file add-club-manager.test.js

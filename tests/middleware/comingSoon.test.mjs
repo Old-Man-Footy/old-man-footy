@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { comingSoonMode } from '/middleware/comingSoon.mjs';
+import { comingSoonMode } from '../../middleware/comingSoon.mjs';
 
 /**
  * Helper to create mock req/res/next objects

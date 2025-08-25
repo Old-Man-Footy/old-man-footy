@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../../config/database.mjs';
 import { Op } from 'sequelize';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
@@ -283,7 +283,7 @@ import {
   getAuditStatistics,
   exportAuditLogs,
   syncMySideline
-} from '/controllers/admin.controller.mjs';
+} from '../../controllers/admin.controller.mjs';
 
 import {
   User,
@@ -303,11 +303,11 @@ import {
   createMockAuditLog,
   Op,
   fn
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
-import AuditService from '/services/auditService.mjs';
-import AuthEmailService from '/services/email/AuthEmailService.mjs';
-import mySidelineService from '/services/mySidelineIntegrationService.mjs';
+import AuditService from '../../services/auditService.mjs';
+import AuthEmailService from '../../services/email/AuthEmailService.mjs';
+import mySidelineService from '../../services/mySidelineIntegrationService.mjs';
 import crypto from 'crypto';
 import { validationResult } from 'express-validator';
 

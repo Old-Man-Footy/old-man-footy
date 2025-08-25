@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { addressUtilsManager } from '/public/js/address-utils.js';
+import { addressUtilsManager } from '../../../public/js/address-utils.js';
 
 describe('address-utils', () => {
   let carnival;

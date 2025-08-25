@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Ensure the path to your refactored script is correct
-import { carnivalListManager } from '/public/js/carnival-list.js';
+import { carnivalListManager } from '../../../public/js/carnival-list.js';
 
 /**
  * @file carnival-list.test.js

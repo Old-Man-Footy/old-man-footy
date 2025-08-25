@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 // Import the manager object directly
-import { adminClaimCarnivalManager } from '/public/js/admin-claim-carnival.js';
+import { adminClaimCarnivalManager } from '../../../public/js/admin-claim-carnival.js';
 
 /**
  * @file admin-claim-carnival.test.js

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import MySidelineEventParserService from '/services/mySidelineEventParserService.mjs';
+import MySidelineEventParserService from '../../services/mySidelineEventParserService.mjs';
 
 // Mock MySidelineDataService and its parseDate method
 vi.mock('./mySidelineDataService.mjs', () => {

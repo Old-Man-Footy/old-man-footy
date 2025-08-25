@@ -124,10 +124,10 @@ const {
   updatePhoneNumber,
   updateName,
   updateEmail,
-} = await import('/controllers/auth.controller.mjs');
+} = await import('../../controllers/auth.controller.mjs');
 
 // Import the email service to access the mocked methods
-const InvitationEmailService = (await import('/services/email/InvitationEmailService.mjs')).default;
+const InvitationEmailService = (await import('../../services/email/InvitationEmailService.mjs')).default;
 
 // Create authController object for test compatibility
 const authController = {

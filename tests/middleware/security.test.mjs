@@ -46,7 +46,7 @@ const {
   createRateLimiter,
   sanitizeString,
   validateInputSecurity
-} = await import('/middleware/security.mjs');
+} = await import('../../middleware/security.mjs');
 
 describe('Security Middleware', () => {
   let mockReq, mockRes, mockNext;
