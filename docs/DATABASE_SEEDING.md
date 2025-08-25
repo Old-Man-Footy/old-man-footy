@@ -20,8 +20,8 @@ npm run seed
 
 ### What Gets Created
 - **12 Rugby League Clubs** across all Australian states
-- **Admin User**: `admin@oldmanfooty.au` / `admin123`
-- **Primary Delegates**: One per club (`primary@[clubname].com.au` / `delegate123`)
+- **Admin User**: `admin@oldmanfooty.au` / `Admin123!`
+- **Primary Delegates**: One per club (`primary@[clubname].com.au` / `Delegate123!`)
 - **Secondary Delegates**: Random additional delegates for some clubs
 - **5 Manual Test Carnivals** with realistic data
 - **MySideline Events**: Automatically imported from MySideline.com.au
@@ -29,8 +29,8 @@ npm run seed
 
 ### Login Credentials
 After seeding, you can log in with:
-- **Admin**: `admin@oldmanfooty.au` / `admin123`
-- **Delegates**: `primary@[clubname].com.au` / `delegate123`
+- **Admin**: `admin@oldmanfooty.au` / `Admin123!`
+- **Delegates**: `primary@[clubname].com.au` / `Delegate123!`
 
 Example delegate emails:
 - `primary@canterburybankstonmasters.com.au`
