@@ -14,7 +14,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import DatabaseOptimizer from './database-optimizer.mjs';
+// Note: Avoid importing DatabaseOptimizer at module top-level to prevent ESM circular deps
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -111,12 +111,27 @@ let sequelizeOptions = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  // Use secure, validated production options
-  const prodOpts = await DatabaseOptimizer.configureProduction();
+  // Inline production options to avoid circular imports at module init
+  const maxPoolSize = Number.isInteger(Number(process.env.SQLITE_MAX_POOL_SIZE)) ? Number(process.env.SQLITE_MAX_POOL_SIZE) : 5;
+  const minPoolSize = Number.isInteger(Number(process.env.SQLITE_MIN_POOL_SIZE)) ? Number(process.env.SQLITE_MIN_POOL_SIZE) : 1;
+  const acquireTimeout = Number.isInteger(Number(process.env.SQLITE_ACQUIRE_TIMEOUT)) ? Number(process.env.SQLITE_ACQUIRE_TIMEOUT) : 30000;
+  const idleTimeout = Number.isInteger(Number(process.env.SQLITE_IDLE_TIMEOUT)) ? Number(process.env.SQLITE_IDLE_TIMEOUT) : 10000;
+  const queryTimeout = Number.isInteger(Number(process.env.SQLITE_QUERY_TIMEOUT)) ? Number(process.env.SQLITE_QUERY_TIMEOUT) : 30000;
+
   sequelizeOptions = {
     ...sequelizeOptions,
-    ...prodOpts,
-    storage: dbPath // Always set correct storage path
+    pool: {
+      max: maxPoolSize,
+      min: minPoolSize,
+      acquire: acquireTimeout,
+      idle: idleTimeout
+    },
+    dialectOptions: {
+      options: { enableForeignKeyConstraints: true },
+      timeout: queryTimeout
+    },
+    logging: false,
+    storage: dbPath
   };
 }
 
@@ -214,8 +229,9 @@ export async function setupDatabase() {
     if (!connected) throw new Error('Failed to establish database connection');
     await runMigrations();
     await checkDatabaseSchema();
-    await DatabaseOptimizer.createIndexes();
-    await DatabaseOptimizer.setupMonitoring();
+  const { default: DatabaseOptimizer } = await import('./database-optimizer.mjs');
+  await DatabaseOptimizer.createIndexes();
+  await DatabaseOptimizer.setupMonitoring();
     console.log('✅ Database setup completed successfully');
   } catch (error) {
     console.error('❌ Database setup failed:', error);
@@ -253,10 +269,11 @@ export async function initializeDatabase() {
     await checkDatabaseSchema();
 
     // Create database indexes for optimization
-    await DatabaseOptimizer.createIndexes();
+  const { default: DatabaseOptimizer } = await import('./database-optimizer.mjs');
+  await DatabaseOptimizer.createIndexes();
 
     // Set up database connection and query monitoring hooks
-    await DatabaseOptimizer.setupMonitoring();
+  await DatabaseOptimizer.setupMonitoring();
     
     console.log('✅ Database initialization completed successfully');
     
