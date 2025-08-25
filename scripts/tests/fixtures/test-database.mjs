@@ -5,8 +5,8 @@
  * Test database connectivity and carnival queries to diagnose the issue
  */
 
-import { sequelize } from '../config/database.mjs';
-import { Carnival, User } from '../models/index.mjs';
+import { sequelize } from '../../../config/database.mjs';
+import { Carnival, User } from '../../../models/index.mjs';
 
 async function testDatabase() {
     try {

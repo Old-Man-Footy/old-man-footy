@@ -11,7 +11,7 @@ import request from 'supertest';
 import express from 'express';
 import session from 'express-session';
 import flash from 'connect-flash';
-import { applyAuthSecurity } from '../middleware/security.mjs';
+import { applyAuthSecurity } from '../../../middleware/security.mjs';
 
 // Create a minimal Express app to test the rate limiting
 const app = express();
