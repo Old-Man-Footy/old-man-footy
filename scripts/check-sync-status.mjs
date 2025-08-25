@@ -74,7 +74,7 @@ async function main() {
     
     try {
         console.log('   Importing models...');
-        const modelsModule = await import('/models/index.mjs');
+        const modelsModule = await import('../models/index.mjs');
         sequelize = modelsModule.sequelize;
         SyncLog = modelsModule.SyncLog;
         

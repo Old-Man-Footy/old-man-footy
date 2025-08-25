@@ -26,7 +26,7 @@ async function captureMySidelineData(outputDir) {
 
     try {
         // Import the scraper service
-        const { default: MySidelineScraperService } = await import('/services/mySidelineScraperService.mjs');
+        const { default: MySidelineScraperService } = await import('../services/mySidelineScraperService.mjs');
         
         const scraperService = new MySidelineScraperService();
         

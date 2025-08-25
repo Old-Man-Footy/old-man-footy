@@ -1329,7 +1329,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
     }
 
     // Get all club registrations for this carnival with their players
-    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('/models/index.mjs');
+    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('../models/index.mjs');
     const clubRegistrations = await CarnivalClub.findAll({
         where: {
             carnivalId: carnival.id,
@@ -1838,7 +1838,7 @@ const deleteSponsorHandler = async (req, res) => {
 const syncMySidelineHandler = async (req, res) => {
     try {
         // Import MySideline service dynamically
-        const { default: mySidelineService } = await import('/services/mySidelineIntegrationService.mjs');
+        const { default: mySidelineService } = await import('../services/mySidelineIntegrationService.mjs');
         
         console.log(`🔄 Admin ${req.user.email} initiated manual MySideline sync`);
         
