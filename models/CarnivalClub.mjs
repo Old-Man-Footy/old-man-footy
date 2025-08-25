@@ -268,9 +268,12 @@ CarnivalClub.init({
     defaultValue: 999
   },
   approvalStatus: {
-    type: DataTypes.ENUM(...APPROVAL_STATUS_ARRAY),
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'pending'
+    defaultValue: 'pending',
+    validate: {
+      isIn: [APPROVAL_STATUS_ARRAY]
+    }
   },
   approvedAt: {
     type: DataTypes.DATE,

@@ -207,7 +207,7 @@ CarnivalClubPlayer.init({
     }
   },
   attendanceStatus: {
-    type: DataTypes.ENUM(...ATTENDANCE_STATUS_ARRAY),
+    type: DataTypes.STRING,
     defaultValue: 'confirmed',
     allowNull: false,
     validate: {

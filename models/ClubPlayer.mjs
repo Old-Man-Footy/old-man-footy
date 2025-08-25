@@ -209,7 +209,7 @@ ClubPlayer.init({
     }
   },
   shorts: {
-    type: DataTypes.ENUM(...PLAYER_SHORTS_COLORS_ARRAY),
+    type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'Unrestricted',
     validate: {

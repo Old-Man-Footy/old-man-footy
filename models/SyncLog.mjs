@@ -137,9 +137,12 @@ SyncLog.init({
     allowNull: false
   },
   status: {
-    type: DataTypes.ENUM('started', 'completed', 'failed'),
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'started'
+    defaultValue: 'started',
+    validate: {
+      isIn: [['started', 'completed', 'failed']]
+    }
   },
   startedAt: {
     type: DataTypes.DATE,

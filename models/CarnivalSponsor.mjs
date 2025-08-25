@@ -153,9 +153,12 @@ CarnivalSponsor.init({
     onDelete: 'CASCADE'
   },
   sponsorshipLevel: {
-    type: DataTypes.ENUM(...SPONSORSHIP_LEVELS_ARRAY),
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'Supporting'
+    defaultValue: 'Supporting',
+    validate: {
+      isIn: [SPONSORSHIP_LEVELS_ARRAY]
+    }
   },
   sponsorshipValue: {
     type: DataTypes.DECIMAL(10, 2),
@@ -180,9 +183,12 @@ CarnivalSponsor.init({
     }
   },
   logoDisplaySize: {
-    type: DataTypes.ENUM(...LOGO_DISPLAY_SIZES_ARRAY),
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'Medium'
+    defaultValue: 'Medium',
+    validate: {
+      isIn: [LOGO_DISPLAY_SIZES_ARRAY]
+    }
   },
   includeInProgram: {
     type: DataTypes.BOOLEAN,

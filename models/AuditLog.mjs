@@ -314,9 +314,12 @@ AuditLog.init({
     allowNull: true
   },
   result: {
-    type: DataTypes.ENUM('SUCCESS', 'FAILURE'),
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'SUCCESS'
+    defaultValue: 'SUCCESS',
+    validate: {
+      isIn: [['SUCCESS', 'FAILURE']]
+    }
   },
   errorMessage: {
     type: DataTypes.TEXT,
@@ -331,7 +334,6 @@ AuditLog.init({
   modelName: 'AuditLog',
   tableName: 'audit_logs',
   timestamps: true,
-  updatedAt: false, // Only track creation time for audit logs
   indexes: [
     {
       fields: ['userId']
