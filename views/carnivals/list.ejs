@@ -121,7 +121,7 @@
                                         <span class="badge badge-sm state-<%= carnival.state.toLowerCase() %> me-1"><%= carnival.state %></span>
                                         <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
                                             <% if (carnival.date >= new Date()) { %>
-                                                <span class="badge badge-sm bg-success me-1">Upcoming</span>
+                                                <span class="badge badge-sm bg-primary me-1">Upcoming</span>
                                             <% } else { %>
                                                 <span class="badge badge-sm bg-secondary me-1">Past Event</span>
                                             <% } %>

@@ -1351,7 +1351,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
                     model: ClubPlayer,
                     as: 'clubPlayer',
                     where: { isActive: true },
-                    attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shortsColour', 'email', 'phoneNumber']
+                    attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shorts', 'email', 'phoneNumber']
                 }]
             }
         ],
@@ -1383,7 +1383,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
                     fullName: `${player.firstName} ${player.lastName}`,
                     dateOfBirth: player.dateOfBirth,
                     age: player.dateOfBirth ? ClubPlayer.calculateAge(player.dateOfBirth) : null,
-                    shortsColour: player.shortsColour || 'Not specified',
+                    shortsColour: player.shorts || 'Not specified',
                     attendanceStatus: playerAssignment.attendanceStatus,
                     isMastersEligible,
                     email: player.email,

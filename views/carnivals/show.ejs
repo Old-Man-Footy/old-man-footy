@@ -78,7 +78,7 @@
                                     <span class="badge bg-danger">Inactive</span>
                                 <% } else if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
                                     <% if (carnival.date >= new Date()) { %>
-                                        <span class="badge bg-success">Upcoming</span>
+                                        <span class="badge bg-primary">Upcoming</span>
                                     <% } else { %>
                                         <span class="badge bg-secondary">Past Event</span>
                                     <% } %>

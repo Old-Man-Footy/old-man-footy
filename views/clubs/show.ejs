@@ -145,7 +145,7 @@
                                                             <%= carnival.locationAddress %>
                                                         </p>
                                                         <div class="mt-auto">
-                                                            <span class="badge bg-success me-1">Upcoming</span>
+                                                            <span class="badge bg-primary me-1">Upcoming</span>
                                                             <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
                                                     </div>
@@ -262,7 +262,7 @@
                                                     </p>
                                                     <div class="mt-auto">
                                                         <% if (new Date(carnival.date) >= new Date()) { %>
-                                                            <span class="badge bg-success me-1">Upcoming</span>
+                                                            <span class="badge bg-primary me-1">Upcoming</span>
                                                         <% } else { %>
                                                             <span class="badge bg-secondary me-1">Past Event</span>
                                                         <% } %>
