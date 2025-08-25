@@ -3,7 +3,7 @@ import { UPLOAD_DIRECTORIES } from './constants.mjs';
 import { sequelize } from './database.mjs';
 import { QueryTypes } from 'sequelize';
 import fs from 'fs/promises';
-import path from 'path';
+import * as path from 'path';
 
 /**
  * DatabaseOptimizer

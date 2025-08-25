@@ -111,24 +111,38 @@ describe('Security Middleware', () => {
       });
 
       it('should block requests exceeding rate limit', () => {
-        const testRateLimit = createRateLimiter({
-          windowMs: 60000,
-          max: 2,
-          message: { error: { status: 429, message: 'Rate limit exceeded' } }
-        });
-
-        // First two requests should pass
-        testRateLimit(mockReq, mockRes, mockNext);
-        testRateLimit(mockReq, mockRes, mockNext);
-        expect(mockNext).toHaveBeenCalledTimes(2);
-
-        // Third request should be blocked
-        mockNext.mockClear();
-        mockRes.status.mockClear();
-        testRateLimit(mockReq, mockRes, mockNext);
+        // Temporarily set NODE_ENV to non-test to enable rate limiting
+        const originalEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'development';
         
-        expect(mockRes.status).toHaveBeenCalledWith(429);
-        expect(mockNext).not.toHaveBeenCalled();
+        try {
+          const testRateLimit = createRateLimiter({
+            windowMs: 60000,
+            max: 2,
+            message: { error: { status: 429, message: 'Rate limit exceeded' } }
+          });
+
+          // Create separate request objects to ensure each has consistent identity
+          const req1 = { ...mockReq, ip: '192.168.1.100' };
+          const req2 = { ...mockReq, ip: '192.168.1.100' };
+          const req3 = { ...mockReq, ip: '192.168.1.100' };
+
+          // First two requests should pass
+          testRateLimit(req1, mockRes, mockNext);
+          testRateLimit(req2, mockRes, mockNext);
+          expect(mockNext).toHaveBeenCalledTimes(2);
+
+          // Third request should be blocked
+          mockNext.mockClear();
+          mockRes.status.mockClear();
+          testRateLimit(req3, mockRes, mockNext);
+          
+          expect(mockRes.status).toHaveBeenCalledWith(429);
+          expect(mockNext).not.toHaveBeenCalled();
+        } finally {
+          // Restore original NODE_ENV
+          process.env.NODE_ENV = originalEnv;
+        }
       });
     });
 

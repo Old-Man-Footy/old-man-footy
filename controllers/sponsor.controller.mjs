@@ -8,7 +8,7 @@
 import { Sponsor, Club } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
 
 /**
@@ -60,7 +60,7 @@ export const showSponsorListings = asyncHandler(async (req, res) => {
     sponsors,
   filters: { search, state, businessType, sponsorshipLevel },
     states: AUSTRALIAN_STATES,
-    sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
+    sponsorshipLevels: SPONSORSHIP_LEVELS,
     additionalCSS: ['/styles/sponsor.styles.css'],
   });
 });
@@ -124,7 +124,7 @@ export const showCreateSponsor = asyncHandler(async (req, res) => {
     title: 'Add New Sponsor',
     user: req.user,
   states: AUSTRALIAN_STATES,
-  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
+  sponsorshipLevels: SPONSORSHIP_LEVELS,
     additionalCSS: ['/styles/sponsor.styles.css'],
     errors: [],
     formData: {},
@@ -151,7 +151,7 @@ export const createSponsor = asyncHandler(async (req, res) => {
       title: 'Add New Sponsor',
       user: req.user,
       states: AUSTRALIAN_STATES,
-  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
+  sponsorshipLevels: SPONSORSHIP_LEVELS,
       errors: errors.array(),
       formData: req.body,
       additionalCSS: ['/styles/sponsor.styles.css'],
@@ -256,7 +256,7 @@ export const showEditSponsor = asyncHandler(async (req, res) => {
     title: 'Edit Sponsor',
     sponsor,
     states: AUSTRALIAN_STATES,
-  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
+  sponsorshipLevels: SPONSORSHIP_LEVELS,
     additionalCSS: ['/styles/sponsor.styles.css'],
     clubs,
   });

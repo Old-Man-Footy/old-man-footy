@@ -8,7 +8,7 @@
 import { Sequelize } from 'sequelize';
 import * as SequelizeModule from 'sequelize';
 import { Umzug, SequelizeStorage } from 'umzug';
-import path from 'path';
+import * as path from 'path';
 import { pathToFileURL } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
