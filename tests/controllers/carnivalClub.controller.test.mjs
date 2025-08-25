@@ -91,7 +91,7 @@ vi.mock('/models/index.mjs', () => {
     updatedAt: new Date('2024-01-01'),
     update: vi.fn().mockResolvedValue(true),
     save: vi.fn().mockResolvedValue(true),
-    club: {
+    participatingClub: {
       id: 1,
       clubName: 'Test Club',
       state: 'NSW',
@@ -724,7 +724,7 @@ describe('Carnival Club Controller', () => {
       const mockCarnival = createMockCarnival();
       const mockRegistration = createMockCarnivalClub({
         approvalStatus: 'pending',
-        club: createMockClub({ clubName: 'Test Club', contactEmail: 'test@club.com' })
+        participatingClub: createMockClub({ clubName: 'Test Club', contactEmail: 'test@club.com' })
       });
 
       Carnival.findOne.mockResolvedValue(mockCarnival);
@@ -741,7 +741,7 @@ describe('Carnival Club Controller', () => {
 
       expect(CarnivalEmailService.sendRegistrationApprovalEmail).toHaveBeenCalledWith(
         mockCarnival,
-        mockRegistration.club,
+        mockRegistration.participatingClub,
         'Test User'
       );
 
@@ -755,7 +755,7 @@ describe('Carnival Club Controller', () => {
       const mockCarnival = createMockCarnival();
       const mockRegistration = createMockCarnivalClub({
         approvalStatus: 'pending',
-        club: createMockClub({ clubName: 'Test Club' })
+        participatingClub: createMockClub({ clubName: 'Test Club' })
       });
 
       req.body = { rejectionReason: 'Carnival is full' };
@@ -774,7 +774,7 @@ describe('Carnival Club Controller', () => {
 
       expect(CarnivalEmailService.sendRegistrationRejectionEmail).toHaveBeenCalledWith(
         mockCarnival,
-        mockRegistration.club,
+        mockRegistration.participatingClub,
         'Test User',
         'Carnival is full'
       );
