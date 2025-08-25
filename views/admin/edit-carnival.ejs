@@ -240,11 +240,15 @@
                                            placeholder="Australia">
                                     <div class="form-text">Country name</div>
                                 </div>
-                                <div class="col-md-6 mb-3 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
-                                        <i class="bi bi-geo"></i> Get GPS from Address
-                                    </button>
-                                    <small class="text-muted ms-2">Auto-fill coordinates</small>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
+                                            <i class="bi bi-geo"></i> Get GPS from Address
+                                        </button>
+                                        <small class="text-muted ms-2">Auto-fill coordinates</small>
+                                    </div>
+                                    <div class="form-text">&nbsp;</div>
                                 </div>
                             </div>
                         </div>
@@ -276,7 +280,7 @@
                                            value="<%= carnival.mySidelineId || '' %>"
                                            placeholder="e.g., 12345">
                                     <div class="form-text">
-                                        The 8+ digit numeric ID from your MySideline event registration page.
+                                        The numeric ID from your MySideline event registration page.
                                     </div>
                                 </div>                                
                             </div>
