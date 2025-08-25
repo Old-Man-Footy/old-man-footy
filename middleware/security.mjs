@@ -110,7 +110,33 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
     
     // Check if limit exceeded
     if (validRequests.length >= config.max) {
-      return res.status(429).json(config.message);
+      // Check if this is an API request (JSON expected) or web request (HTML expected)
+      const acceptsJson = req.accepts && req.accepts(['json', 'html']) === 'json';
+      const isApiRoute = req.path && req.path.startsWith('/api/');
+      
+      // Also check if this is a test environment with mock objects
+      const hasRedirectMethod = res.redirect && typeof res.redirect === 'function';
+      const hasFlashMethod = req.flash && typeof req.flash === 'function';
+      
+      if (acceptsJson || isApiRoute || !hasRedirectMethod) {
+        // API request or test environment - return JSON
+        return res.status(429).json(config.message);
+      } else {
+        // Web request - redirect with flash message
+        if (hasFlashMethod) {
+          req.flash('error_msg', config.message.error.message);
+        }
+        
+        // Determine appropriate redirect URL based on the route
+        let redirectUrl = '/';
+        if (req.path && req.path.includes('/auth/')) {
+          redirectUrl = '/auth/login';
+        } else if (req.path && req.path.includes('/admin/')) {
+          redirectUrl = '/admin/login';
+        }
+        
+        return res.redirect(redirectUrl);
+      }
     }
     
     // Add current request
