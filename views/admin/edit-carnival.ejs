@@ -107,7 +107,7 @@
                                     <span id="dateLabel">Event Date *</span>
                                 </label>
                                 <input type="date" class="form-control" id="date" name="date" 
-                                       value="<%= carnival.date.toISOString().split('T')[0] %>" required>
+                                       value="<%= carnival.date ? carnival.date.toISOString().split('T')[0] : '' %>" required>
                             </div>
                             <div class="col-md-6">
                                 <div id="endDateContainer" data-has-end-date="<%= carnival.endDate ? 'true' : 'false' %>">
