@@ -132,13 +132,19 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="fw-medium">
-                                                    <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
-                                                </span>
-                                                <br>
-                                                <small class="text-muted">
-                                                    <%= carnival.date >= new Date() ? 'Upcoming' : 'Past' %>
-                                                </small>
+                                                <% if (carnival.date) { %>
+                                                    <span class="fw-medium">
+                                                        <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
+                                                    </span>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <%= carnival.date >= new Date() ? 'Upcoming' : 'Past' %>
+                                                    </small>
+                                                <% } else { %>
+                                                    <span class="text-muted">
+                                                        No date set
+                                                    </span>
+                                                <% } %>
                                             </td>
                                             <td>
                                                 <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
