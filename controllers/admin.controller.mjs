@@ -1339,7 +1339,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'club',
+                as: 'participatingClub',
                 attributes: ['id', 'clubName', 'state', 'location']
             },
             {
@@ -1356,7 +1356,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
             }
         ],
         order: [
-            ['club', 'clubName', 'ASC'],
+            ['participatingClub', 'clubName', 'ASC'],
             ['players', 'clubPlayer', 'firstName', 'ASC'],
             ['players', 'clubPlayer', 'lastName', 'ASC']
         ]
@@ -1376,8 +1376,8 @@ const showCarnivalPlayersHandler = async (req, res) => {
                 
                 allPlayers.push({
                     id: player.id,
-                    clubName: registration.club.clubName,
-                    clubState: registration.club.state,
+                    clubName: registration.participatingClub.clubName,
+                    clubState: registration.participatingClub.state,
                     firstName: player.firstName,
                     lastName: player.lastName,
                     fullName: `${player.firstName} ${player.lastName}`,

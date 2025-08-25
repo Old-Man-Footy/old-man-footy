@@ -53,7 +53,7 @@ const showCarnivalAttendeesHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         where: { isActive: true },
         attributes: ['id', 'clubName', 'state', 'location', 'logoUrl'],
       },
@@ -269,7 +269,7 @@ const showEditRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -281,7 +281,7 @@ const showEditRegistrationHandler = async (req, res) => {
   }
 
   return res.render('carnivals/edit-registration', {
-    title: `Edit Registration - ${registration.club.clubName}`,
+    title: `Edit Registration - ${registration.participatingClub.clubName}`,
     carnival,
     registration,
     additionalCSS: ['/styles/carnival.styles.css'],
@@ -404,7 +404,7 @@ const removeClubFromCarnivalHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['clubName'],
       },
     ],
@@ -422,7 +422,7 @@ const removeClubFromCarnivalHandler = async (req, res) => {
 
   return res.json({
     success: true,
-    message: `${registration.club.clubName} has been removed from the carnival.`,
+    message: `${registration.participatingClub.clubName} has been removed from the carnival.`,
   });
 };
 
@@ -691,7 +691,7 @@ const showCarnivalClubPlayersHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -726,7 +726,7 @@ const showCarnivalClubPlayersHandler = async (req, res) => {
   const attendanceStats = await CarnivalClubPlayer.getAttendanceStats(registrationId);
 
   return res.render('carnivals/club-players', {
-    title: `Players - ${registration.club.clubName}`,
+    title: `Players - ${registration.participatingClub.clubName}`,
     carnival,
     registration,
     assignedPlayers,
@@ -768,7 +768,7 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -802,7 +802,7 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
   });
 
   return res.render('carnivals/add-players', {
-    title: `Add Players - ${registration.club.clubName}`,
+    title: `Add Players - ${registration.participatingClub.clubName}`,
     carnival,
     registration,
     availablePlayers,
@@ -1047,7 +1047,7 @@ const showMyClubPlayersForCarnivalHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -1208,7 +1208,7 @@ const approveClubRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['clubName', 'contactEmail'],
       },
     ],
@@ -1240,13 +1240,13 @@ const approveClubRegistrationHandler = async (req, res) => {
   
   await CarnivalEmailService.sendRegistrationApprovalEmail(
     carnival,
-    registration.club,
+    registration.participatingClub,
     `${user.firstName} ${user.lastName}`
   );
 
   return res.json({
     success: true,
-    message: `${registration.club.clubName} has been approved to attend ${carnival.title}.`,
+    message: `${registration.participatingClub.clubName} has been approved to attend ${carnival.title}.`,
   });
 };
 
@@ -1286,7 +1286,7 @@ const rejectClubRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['clubName', 'contactEmail'],
       },
     ],
@@ -1317,14 +1317,14 @@ const rejectClubRegistrationHandler = async (req, res) => {
   // Send rejection notification email
   await CarnivalEmailService.sendRegistrationRejectionEmail(
     carnival,
-    registration.club,
+    registration.participatingClub,
     `${user.firstName} ${user.lastName}`,
     rejectionReason
   );
 
   return res.json({
     success: true,
-    message: `${registration.club.clubName}'s registration has been rejected.`,
+    message: `${registration.participatingClub.clubName}'s registration has been rejected.`,
   });
 };
 

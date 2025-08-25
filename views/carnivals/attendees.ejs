@@ -166,9 +166,9 @@
                                             <div class="d-flex align-items-start">
                                                 <!-- Club Logo -->
                                                 <div class="me-3">
-                                                    <% if (registration.club.logoUrl) { %>
-                                                        <img src="<%= registration.club.logoUrl %>" 
-                                                             alt="<%= registration.club.clubName %>" 
+                                                    <% if (registration.participatingClub.logoUrl) { %>
+                                                        <img src="<%= registration.participatingClub.logoUrl %>" 
+                                                             alt="<%= registration.participatingClub.clubName %>" 
                                                              class="carnival-attendee-logo">
                                                     <% } else { %>
                                                         <div class="carnival-attendee-logo-placeholder d-flex align-items-center justify-content-center">
@@ -182,14 +182,14 @@
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <div>
                                                             <h6 class="card-title mb-1">
-                                                                <% if (registration.club.isActive && registration.club.isPubliclyListed) { %>
-                                                                    <a href="/clubs/<%= registration.club.id %>" class="text-decoration-none">
-                                                                        <%= registration.club.clubName %>
+                                                                <% if (registration.participatingClub.isActive && registration.participatingClub.isPubliclyListed) { %>
+                                                                    <a href="/clubs/<%= registration.participatingClub.id %>" class="text-decoration-none">
+                                                                        <%= registration.participatingClub.clubName %>
                                                                     </a>
                                                                 <% } else { %>
                                                                     <span class="club-inactive-label">
-                                                                        <%= registration.club.clubName %>
-                                                                        <% if (!registration.club.isActive) { %>
+                                                                        <%= registration.participatingClub.clubName %>
+                                                                        <% if (!registration.participatingClub.isActive) { %>
                                                                             <span class="club-inactive-badge">Inactive</span>
                                                                         <% } %>
                                                                     </span>
@@ -200,9 +200,9 @@
                                                             </h6>
                                                             <small class="text-muted">
                                                                 <i class="bi bi-geo-alt"></i> 
-                                                                <%= registration.club.state %>
-                                                                <% if (registration.club.location) { %>
-                                                                    · <%= registration.club.location %>
+                                                                <%= registration.participatingClub.state %>
+                                                                <% if (registration.participatingClub.location) { %>
+                                                                    · <%= registration.participatingClub.location %>
                                                                 <% } %>
                                                             </small>
                                                         </div>
@@ -218,7 +218,7 @@
                                                             <button type="button" 
                                                                     class="btn btn-outline-danger btn-sm remove-attendee"
                                                                     data-registration-id="<%= registration.id %>"
-                                                                    data-club-name="<%= registration.club.clubName %>"
+                                                                    data-club-name="<%= registration.participatingClub.clubName %>"
                                                                     title="Remove Club">
                                                                 <i class="bi bi-trash"></i>
                                                             </button>
@@ -261,13 +261,13 @@
                                                                 <button type="button" 
                                                                         class="btn btn-success btn-sm approve-registration"
                                                                         data-registration-id="<%= registration.id %>"
-                                                                        data-club-name="<%= registration.club.clubName %>">
+                                                                        data-club-name="<%= registration.participatingClub.clubName %>">
                                                                     <i class="bi bi-check-circle"></i> Approve
                                                                 </button>
                                                                 <button type="button" 
                                                                         class="btn btn-danger btn-sm reject-registration"
                                                                         data-registration-id="<%= registration.id %>"
-                                                                        data-club-name="<%= registration.club.clubName %>">
+                                                                        data-club-name="<%= registration.participatingClub.clubName %>">
                                                                     <i class="bi bi-x-circle"></i> Reject
                                                                 </button>
                                                             </div>

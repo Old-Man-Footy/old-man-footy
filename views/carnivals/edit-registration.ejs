@@ -15,7 +15,7 @@
             <!-- Page Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2>Edit Registration - <%= registration.club.clubName %></h2>
+                    <h2>Edit Registration - <%= registration.participatingClub.clubName %></h2>
                     <p class="text-muted">Update registration details for <%= carnival.carnivalName %></p>
                 </div>
                 <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-secondary">
@@ -45,9 +45,9 @@
                                         <div class="alert alert-light border">
                                             <div class="d-flex align-items-center">
                                                 <div class="me-3">
-                                                    <% if (registration.club.logoUrl) { %>
-                                                        <img src="<%= registration.club.logoUrl %>" 
-                                                             alt="<%= registration.club.clubName %>" 
+                                                    <% if (registration.participatingClub.logoUrl) { %>
+                                                        <img src="<%= registration.participatingClub.logoUrl %>" 
+                                                             alt="<%= registration.participatingClub.clubName %>" 
                                                              class="rounded" 
                                                              style="width: 50px; height: 50px; object-fit: contain;">
                                                     <% } else { %>
@@ -58,10 +58,10 @@
                                                     <% } %>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1"><%= registration.club.clubName %></h6>
+                                                    <h6 class="mb-1"><%= registration.participatingClub.clubName %></h6>
                                                     <small class="text-muted">
-                                                        <%= registration.club.state %>
-                                                        <% if (registration.club.location) { %> - <%= registration.club.location %><% } %>
+                                                        <%= registration.participatingClub.state %>
+                                                        <% if (registration.participatingClub.location) { %> - <%= registration.participatingClub.location %><% } %>
                                                     </small>
                                                 </div>
                                             </div>
@@ -224,7 +224,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <strong>Club:</strong> <%= registration.club.clubName %>
+                                <strong>Club:</strong> <%= registration.participatingClub.clubName %>
                             </div>
                             <div class="mb-3">
                                 <strong>Carnival:</strong> <%= carnival.carnivalName %>
@@ -264,7 +264,7 @@
                                 <button type="button" 
                                         class="btn btn-outline-danger remove-registration"
                                         data-registration-id="<%= registration.id %>"
-                                        data-club-name="<%= registration.club.clubName %>">
+                                        data-club-name="<%= registration.participatingClub.clubName %>">
                                     <i class="bi bi-trash"></i> Remove from Carnival
                                 </button>
                             </div>

@@ -33,7 +33,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Club:</strong> <%= registration.club.clubName %></p>
+                            <p><strong>Club:</strong> <%= registration.participatingClub.clubName %></p>
                             <% if (registration.teamName) { %>
                                 <p><strong>Team Name:</strong> <%= registration.teamName %></p>
                             <% } %>
@@ -76,7 +76,7 @@
                                 </button>
                             <% } else { %>
                                 <p class="text-muted">No players available to add. Make sure your club has registered players.</p>
-                                <a href="/clubs/<%= registration.club.id %>/players" class="btn btn-outline-primary">
+                                <a href="/clubs/<%= registration.participatingClub.id %>/players" class="btn btn-outline-primary">
                                     <i class="bi bi-plus-circle"></i> Manage Club Players
                                 </a>
                             <% } %>
