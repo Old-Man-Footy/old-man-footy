@@ -17,8 +17,7 @@
 	- [x] Implemented tests/e2e/404.spec.mjs and verified pass
 - [ ] Maintenance mode: when enabled, renders maintenance page
 	- [x] Implemented tests/e2e/maintenance.spec.mjs (route + API status) and verified pass
-- [ ] Coming soon mode: when enabled, renders coming soon page
-
+- [ ] Coming soon mode: when enabled, renders coming soon page 
 ### Sponsors
 - [x] Sponsors: list page loads, shows empty state when no sponsors (tests/e2e/sponsors.spec.mjs)
 - [ ] Sponsors: filters (search/state/level) update results (needs seed data)
