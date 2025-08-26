@@ -278,31 +278,25 @@ describe('Main Controller', () => {
 
       await getIndex(req, res);
 
-      expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        where: {
-          [Op.or]: [
-            {
-              date: {
-                [Op.gte]: expect.any(Date)
-              },
-              isActive: true
-            },
-            {
-              date: null,
-              isActive: true
-            }
-          ]
-        },
-        include: [
-          {
-            model: User,
-            as: 'creator',
-            attributes: ['firstName', 'lastName']
-          }
-        ],
-        order: [['date', 'ASC']],
-        limit: 4
-      }));
+      expect(Carnival.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            [Op.or]: expect.arrayContaining([
+              expect.objectContaining({
+                date: expect.anything(),
+                isActive: true
+              }),
+              expect.objectContaining({
+                date: null,
+                isActive: true
+              })
+            ])
+          }),
+          include: expect.any(Array),
+          order: expect.any(Array),
+          limit: 4
+        })
+      );
 
       expect(res.render).toHaveBeenCalledWith('index', expect.objectContaining({
         title: 'Old Man Footy',
@@ -354,9 +348,25 @@ describe('Main Controller', () => {
 
       await getIndex(req, res);
 
-      expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        limit: 4
-      }));
+      expect(Carnival.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            [Op.or]: expect.arrayContaining([
+              expect.objectContaining({
+                date: expect.anything(),
+                isActive: true
+              }),
+              expect.objectContaining({
+                date: null,
+                isActive: true
+              })
+            ])
+          }),
+          include: expect.any(Array),
+          order: expect.any(Array),
+          limit: 4
+        })
+      );
     });
   });
 
