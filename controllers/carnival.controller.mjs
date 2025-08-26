@@ -44,9 +44,17 @@ const listCarnivalsHandler = async (req, res) => {
 
   // Date filter - only apply if upcomingFilter is explicitly 'true'
   if (upcomingFilter === 'true') {
-    whereClause.date = { [Op.gte]: new Date() };
-    // When filtering for upcoming only, also filter to active carnivals
-    whereClause.isActive = true;
+    // Include both upcoming carnivals (with dates >= today) AND active carnivals with no date
+    whereClause[Op.or] = [
+      {
+        date: { [Op.gte]: new Date() },
+        isActive: true
+      },
+      {
+        date: null,
+        isActive: true
+      }
+    ];
   }
 
   // MySideline filter

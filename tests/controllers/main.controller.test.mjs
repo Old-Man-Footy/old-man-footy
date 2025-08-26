@@ -133,7 +133,8 @@ vi.mock('/models/index.mjs', () => {
     createMockEmailSubscription,
     Op: {
       gte: Symbol('gte'),
-      ne: Symbol('ne')
+      ne: Symbol('ne'),
+      or: Symbol('or')
     }
   };
 });
@@ -278,13 +279,27 @@ describe('Main Controller', () => {
       await getIndex(req, res);
 
       expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          isActive: true
-        }),
-        include: expect.arrayContaining([expect.objectContaining({
-          model: User,
-          as: 'creator'
-        })]),
+        where: {
+          [Op.or]: [
+            {
+              date: {
+                [Op.gte]: expect.any(Date)
+              },
+              isActive: true
+            },
+            {
+              date: null,
+              isActive: true
+            }
+          ]
+        },
+        include: [
+          {
+            model: User,
+            as: 'creator',
+            attributes: ['firstName', 'lastName']
+          }
+        ],
         order: [['date', 'ASC']],
         limit: 4
       }));

@@ -307,7 +307,16 @@ describe('Carnival Controller', () => {
 
       expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
         where: expect.objectContaining({
-          isActive: true
+          [Op.or]: expect.arrayContaining([
+            expect.objectContaining({
+              date: expect.objectContaining({ [Op.gte]: expect.any(Date) }),
+              isActive: true
+            }),
+            expect.objectContaining({
+              date: null,
+              isActive: true
+            })
+          ])
         }),
         include: expect.arrayContaining([
           expect.objectContaining({

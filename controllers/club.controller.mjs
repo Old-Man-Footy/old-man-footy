@@ -203,12 +203,12 @@ const showClubProfileHandler = async (req, res) => {
 
   // Calculate upcoming carnivals count
   const upcomingCarnivals = carnivals.filter(
-    (carnival) => new Date(carnival.date) >= new Date()
+    (carnival) => !carnival.date || new Date(carnival.date) >= new Date()
   ).length;
 
   // Calculate upcoming attending carnivals count
   const upcomingAttendingCarnivals = attendingCarnivalsList.filter(
-    (carnival) => new Date(carnival.date) >= new Date()
+    (carnival) => !carnival.date || new Date(carnival.date) >= new Date()
   ).length;
 
   // Get full delegate information

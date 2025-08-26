@@ -32,8 +32,16 @@ import asyncHandler from '../middleware/asyncHandler.mjs';
 export const getIndex = asyncHandler(async (req, res) => {
   const upcomingCarnivals = await Carnival.findAll({
     where: {
-      date: { [Op.gte]: new Date() },
-      isActive: true,
+      [Op.or]: [
+        {
+          date: { [Op.gte]: new Date() },
+          isActive: true
+        },
+        {
+          date: null,
+          isActive: true
+        }
+      ]
     },
     include: [
       {
@@ -51,8 +59,16 @@ export const getIndex = asyncHandler(async (req, res) => {
     totalCarnivals: await Carnival.count({ where: { isActive: true } }),
     upcomingCount: await Carnival.count({
       where: {
-        date: { [Op.gte]: new Date() },
-        isActive: true,
+        [Op.or]: [
+          {
+            date: { [Op.gte]: new Date() },
+            isActive: true
+          },
+          {
+            date: null,
+            isActive: true
+          }
+        ]
       },
     }),
     clubsCount: await Club.count({
