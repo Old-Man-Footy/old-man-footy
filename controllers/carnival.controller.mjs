@@ -213,7 +213,7 @@ const listCarnivalsHandler = async (req, res) => {
     // Check if this carnival can be claimed by the current user
     const canTakeOwnership =
       carnival.isActive &&
-      carnival.lastMySidelineSync &&
+      carnival.mySidelineId &&
       !carnival.createdByUserId &&
       userWithClub &&
       userWithClub.clubId &&
@@ -355,11 +355,11 @@ const showCarnivalHandler = async (req, res) => {
   // Check if this is a MySideline event that can be claimed (only for active carnivals)
   const canTakeOwnership =
     carnival.isActive &&
-    carnival.lastMySidelineSync &&
+    carnival.mySidelineId &&
     !carnival.createdByUserId &&
     userWithClub &&
     userWithClub.clubId &&
-    // State-based restriction: can only claim events in club's state or events with no state
+    // State-based restriction: can only claim events in your club's state or events with no state
     (!carnival.state || !userWithClub.club.state || carnival.state === userWithClub.club.state);
 
   // Check if user's club is already registered for this carnival (only for active carnivals)
