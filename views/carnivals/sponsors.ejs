@@ -42,10 +42,10 @@
                                         <!-- Sponsor Logo -->
                                         <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 120px;">
                                             <% if (sponsor.logoUrl) { %>
-                                                <img src="/<%= sponsor.logoUrl %>" 
-                                                     alt="<%= sponsor.sponsorName %> Logo" 
-                                                     class="img-fluid" 
-                                                     style="max-height: 100px; max-width: 100%; object-fit: contain;">
+                                       <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>" 
+                                           alt="<%= sponsor.sponsorName %> Logo" 
+                                           class="img-fluid" 
+                                           style="max-height: 100px; max-width: 100%; object-fit: contain;">
                                             <% } else { %>
                                                 <div class="text-center text-muted">
                                                     <i class="fas fa-building fa-2x mb-2"></i>
@@ -131,10 +131,10 @@
                                             <!-- Sponsor Logo -->
                                             <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 100px;">
                                                 <% if (sponsor.logoUrl) { %>
-                                                    <img src="/<%= sponsor.logoUrl %>" 
-                                                         alt="<%= sponsor.sponsorName %> Logo" 
-                                                         class="img-fluid" 
-                                                         style="max-height: 80px; max-width: 100%; object-fit: contain;">
+                                                    <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>" 
+                                                        alt="<%= sponsor.sponsorName %> Logo" 
+                                                        class="img-fluid" 
+                                                        style="max-height: 80px; max-width: 100%; object-fit: contain;">
                                                 <% } else { %>
                                                     <div class="text-center text-muted">
                                                         <i class="fas fa-building fa-2x"></i>
