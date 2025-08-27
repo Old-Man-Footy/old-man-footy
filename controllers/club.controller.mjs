@@ -135,10 +135,9 @@ const showClubProfileHandler = async (req, res) => {
       },
       {
         model: Sponsor,
-        as: 'sponsors',
+        as: 'clubSponsors',
         where: { isActive: true },
         required: false,
-        through: { attributes: ['displayOrder'] },
       },
     ],
   });
@@ -223,7 +222,7 @@ const showClubProfileHandler = async (req, res) => {
   const primaryDelegate = delegates_full.find((delegate) => delegate.isPrimaryDelegate);
 
   // Sort sponsors using the hierarchical sorting service
-  const sortedSponsors = sortSponsorsHierarchically(club.sponsors, 'club');
+  const sortedSponsors = sortSponsorsHierarchically(club.clubSponsors, 'club');
 
   return res.render('clubs/show', {
     title: `${club.clubName} - Masters Rugby League Club`,
@@ -488,7 +487,7 @@ const showClubSponsorsHandler = async (req, res, next) => {
       include: [
         {
           model: Sponsor,
-          as: 'sponsors',
+          as: 'clubSponsors',
           where: { isActive: true },
           required: false,
         },
@@ -499,8 +498,8 @@ const showClubSponsorsHandler = async (req, res, next) => {
       return res.redirect('/dashboard');
     }
     // Sort sponsors by displayOrder
-    const sponsors = club.sponsors
-      ? club.sponsors.sort((a, b) => {
+    const sponsors = club.clubSponsors
+      ? club.clubSponsors.sort((a, b) => {
           const priorityA = a.displayOrder || 999;
           const priorityB = b.displayOrder || 999;
           return priorityA - priorityB;

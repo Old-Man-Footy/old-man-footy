@@ -954,7 +954,7 @@ describe('Club Controller', () => {
           { id: 1, sponsorName: 'A', displayOrder: 1 },
           { id: 3, sponsorName: 'C' } // no order -> treated as 999
         ];
-        const clubWithSponsors = { ...mockClub, sponsors: [...unsortedSponsors] };
+        const clubWithSponsors = { ...mockClub, clubSponsors: [...unsortedSponsors] };
         Club.findByPk.mockResolvedValue(clubWithSponsors);
 
         await showClubSponsors(req, res, next);
