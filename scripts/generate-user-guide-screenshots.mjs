@@ -274,9 +274,24 @@ class ScreenshotGenerator {
           waitFor: '.dashboard-stats, .card'
         },
         {
+          url: `${CONFIG.baseURL}/clubs/players`,
+          name: 'club-players-management',
+          waitFor: '.club-player-card, .no-players-message, table'
+        },
+        {
           url: `${CONFIG.baseURL}/clubs/manage`,
           name: 'club-management',
           waitFor: '.card, .club-management'
+        },
+        {
+          url: `${CONFIG.baseURL}/clubs/manage/alternate-names`,
+          name: 'club-alternate-names',
+          waitFor: '.card, form, .alternate-names'
+        },
+        {
+          url: `${CONFIG.baseURL}/clubs/manage/sponsors`,
+          name: 'club-sponsors-management',
+          waitFor: '.card, .sponsor-card, .no-sponsors-message'
         },
         {
           url: `${CONFIG.baseURL}/carnivals/new`,

@@ -18,7 +18,7 @@ function setupDOM() {
                     <td>...</td>
                     <td>...</td>
                     <td>...</td>
-                    <td><span class="badge bg-success status-badge">Active</span></td>
+                    <td><span class="badge bg-primary status-badge">Active</span></td>
                     <td><span class="badge bg-info visibility-badge">Listed</span></td>
                     <td>
                         <button 

@@ -63,7 +63,7 @@ export async function showClubPlayers(req, res, next) {
       offset,
       include: [{
         model: Club,
-        as: 'club',
+        as: 'playerClub',
         attributes: ['id', 'clubName']
       }]
     });
@@ -79,7 +79,7 @@ export async function showClubPlayers(req, res, next) {
       order: [['updatedAt', 'DESC']], // Most recently deactivated first
       include: [{
         model: Club,
-        as: 'club',
+        as: 'playerClub',
         attributes: ['id', 'clubName']
       }]
     });
@@ -256,7 +256,7 @@ export async function showEditPlayerForm(req, res, next) {
       },
       include: [{
         model: Club,
-        as: 'club',
+        as: 'playerClub',
         attributes: ['id', 'clubName']
       }]
     });
@@ -300,7 +300,7 @@ export async function updatePlayer(req, res, next) {
         },
         include: [{
           model: Club,
-          as: 'club',
+          as: 'playerClub',
           attributes: ['id', 'clubName']
         }]
       });
