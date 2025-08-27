@@ -158,7 +158,7 @@ describe('AuditService', () => {
   // --- Tests for logAdminAction ---
   describe('logAdminAction', () => {
     it('should log an admin action with specific admin metadata', async () => {
-      const mockAdminUser = { id: 1, email: 'admin@oldmanfooty.com' };
+      const mockAdminUser = { id: 1, email: 'admin@oldmanfooty.au' };
       const mockReq = { user: mockAdminUser };
       const options = {
         oldValues: { role: 'user' },
@@ -180,7 +180,7 @@ describe('AuditService', () => {
         metadata: {
           isAdminAction: true,
           adminUserId: 1,
-          adminEmail: 'admin@oldmanfooty.com',
+          adminEmail: 'admin@oldmanfooty.au',
           targetUserId: 25,
         },
       });
@@ -335,7 +335,7 @@ describe('AuditService', () => {
       };
       const formatted = AuditService.formatAuditLog(log);
       expect(formatted.userName).toBe('System');
-      expect(formatted.userEmail).toBe('system@oldmanfooty.com');
+      expect(formatted.userEmail).toBe('support@oldmanfooty.au');
       expect(formatted.hasChanges).toBe(false);
     });
   });

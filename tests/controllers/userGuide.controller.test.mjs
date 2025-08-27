@@ -2,7 +2,7 @@
  * User Guide Controller Tests
  * 
  * Tests for the user guide functionality, ensuring that the controller
- * correctly reads and renders the markdown-based user guide.
+ * correctly reads and renders different guides based on authentication status.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -35,9 +35,9 @@ describe('User Guide Controller', () => {
     next = vi.fn();
   });
 
-  it('should render the user guide page with content from the markdown file', async () => {
+  it('should render the delegate user guide for authenticated users', async () => {
     // Arrange
-    const mockMarkdownContent = '# User Guide\n\nThis is the guide.';
+    const mockMarkdownContent = '# Delegate User Guide\n\nThis is the delegate guide.';
     fs.readFile.mockResolvedValue(mockMarkdownContent);
 
     // Act
@@ -49,6 +49,49 @@ describe('User Guide Controller', () => {
       title: 'Club Delegate User Guide',
       guideContent: mockMarkdownContent,
       user: req.user,
+      isAuthenticated: true,
+      additionalCSS: ['/styles/user-guide.styles.css'],
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('should render the standard user guide for non-authenticated users', async () => {
+    // Arrange
+    req.user = null;
+    const mockMarkdownContent = '# Standard User Guide\n\nThis is the standard guide.';
+    fs.readFile.mockResolvedValue(mockMarkdownContent);
+
+    // Act
+    await getUserGuide(req, res, next);
+
+    // Assert
+    expect(fs.readFile).toHaveBeenCalledWith(expect.stringContaining('USER_GUIDE_STANDARD.md'), 'utf8');
+    expect(res.render).toHaveBeenCalledWith('user-guide', {
+      title: 'Old Man Footy User Guide',
+      guideContent: mockMarkdownContent,
+      user: null,
+      isAuthenticated: false,
+      additionalCSS: ['/styles/user-guide.styles.css'],
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('should render the standard user guide for users without an ID', async () => {
+    // Arrange
+    req.user = { name: 'User without ID' }; // User object exists but no ID
+    const mockMarkdownContent = '# Standard User Guide\n\nThis is the standard guide.';
+    fs.readFile.mockResolvedValue(mockMarkdownContent);
+
+    // Act
+    await getUserGuide(req, res, next);
+
+    // Assert
+    expect(fs.readFile).toHaveBeenCalledWith(expect.stringContaining('USER_GUIDE_STANDARD.md'), 'utf8');
+    expect(res.render).toHaveBeenCalledWith('user-guide', {
+      title: 'Old Man Footy User Guide',
+      guideContent: mockMarkdownContent,
+      user: req.user,
+      isAuthenticated: false,
       additionalCSS: ['/styles/user-guide.styles.css'],
     });
     expect(next).not.toHaveBeenCalled();
@@ -67,25 +110,6 @@ describe('User Guide Controller', () => {
     // Ensure no response was sent
     expect(res.render).not.toHaveBeenCalled();
     // next() is not called directly by the controller, but by the (real) asyncHandler
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should render correctly even if there is no authenticated user', async () => {
-    // Arrange
-    req.user = null;
-    const mockMarkdownContent = '## Guest Guide';
-    fs.readFile.mockResolvedValue(mockMarkdownContent);
-
-    // Act
-    await getUserGuide(req, res, next);
-
-    // Assert
-    expect(res.render).toHaveBeenCalledWith('user-guide', {
-      title: 'Club Delegate User Guide',
-      guideContent: mockMarkdownContent,
-      user: null,
-      additionalCSS: ['/styles/user-guide.styles.css'],
-    });
     expect(next).not.toHaveBeenCalled();
   });
 });

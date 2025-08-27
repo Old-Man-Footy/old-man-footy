@@ -2,10 +2,30 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <a href="/dashboard" class="btn btn-outline-primary user-guide-back-btn">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Back to Dashboard
-                </a>
+                <% if (isAuthenticated) { %>
+                    <a href="/dashboard" class="btn btn-outline-primary user-guide-back-btn">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Dashboard
+                    </a>
+                <% } else { %>
+                    <a href="/" class="btn btn-outline-primary user-guide-back-btn">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Home
+                    </a>
+                <% } %>
+                
+                <% if (!isAuthenticated) { %>
+                    <div>
+                        <a href="/auth/register" class="btn btn-success me-2">
+                            <i class="fas fa-user-plus me-1"></i>
+                            Join as Delegate
+                        </a>
+                        <a href="/auth/login" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            Login
+                        </a>
+                    </div>
+                <% } %>
             </div>
             
             <div class="card">
@@ -76,11 +96,51 @@
             </div>
             
             <div class="text-center mt-4">
-                <p class="text-muted">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Need help? Contact support at 
-                    <a href="mailto:support@oldmanfooty.com">support@oldmanfooty.com</a>
-                </p>
+                <% if (isAuthenticated) { %>
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Need help with delegate features? Contact support at 
+                        <a href="mailto:support@oldmanfooty.au">support@oldmanfooty.au</a>
+                    </p>
+                <% } else { %>
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-calendar-alt fa-2x text-primary mb-3"></i>
+                                    <h5>Explore Events</h5>
+                                    <p class="card-text">Browse upcoming Masters Rugby League carnivals and tournaments.</p>
+                                    <a href="/carnivals" class="btn btn-outline-primary">View Events</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-users fa-2x text-success mb-3"></i>
+                                    <h5>Find Clubs</h5>
+                                    <p class="card-text">Discover Masters Rugby League clubs in your area.</p>
+                                    <a href="/clubs" class="btn btn-outline-success">Browse Clubs</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="fas fa-handshake fa-2x text-warning mb-3"></i>
+                                    <h5>Our Sponsors</h5>
+                                    <p class="card-text">See who supports the Masters Rugby League community.</p>
+                                    <a href="/sponsors" class="btn btn-outline-warning">View Sponsors</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted mt-3">
+                        <i class="fas fa-envelope me-1"></i>
+                        Questions? <a href="/contact">Contact us</a> or email 
+                        <a href="mailto:support@oldmanfooty.au">support@oldmanfooty.au</a>
+                    </p>
+                <% } %>
             </div>
         </div>
     </div>

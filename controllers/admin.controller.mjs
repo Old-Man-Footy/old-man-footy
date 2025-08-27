@@ -1608,7 +1608,7 @@ const exportAuditLogsHandler = async (req, res) => {
 
     const csvRows = auditLogs.map(log => {
         const userName = log.user ? `${log.user.firstName} ${log.user.lastName}` : 'System';
-        const userEmail = log.user?.email || 'system@oldmanfooty.com';
+        const userEmail = log.user?.email || 'support@oldmanfooty.au';
         const hasChanges = !!(log.oldValues || log.newValues);
         
         return [

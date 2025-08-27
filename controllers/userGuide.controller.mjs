@@ -14,19 +14,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Display user guide page with modular CSS
+ * Display user guide page with authentication-based content
+ * Shows different guides for logged-in delegates vs. general users
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function for error handling
  */
 export const getUserGuide = asyncHandler(async (req, res, next) => {
-  const guidePath = path.join(__dirname, '..', 'docs', 'USER_GUIDE_DELEGATES.md');
+  // Determine which guide to show based on authentication status
+  const isAuthenticated = !!(req.user && req.user.id);
+  
+  // Set appropriate guide file and page title
+  const guideFileName = isAuthenticated ? 'USER_GUIDE_DELEGATES.md' : 'USER_GUIDE_STANDARD.md';
+  const pageTitle = isAuthenticated ? 'Club Delegate User Guide' : 'Old Man Footy User Guide';
+  
+  // Read the appropriate guide content
+  const guidePath = path.join(__dirname, '..', 'docs', guideFileName);
   const guideContent = await fs.readFile(guidePath, 'utf8');
 
   return res.render('user-guide', {
-    title: 'Club Delegate User Guide',
+    title: pageTitle,
     guideContent: guideContent,
     user: req.user,
+    isAuthenticated: isAuthenticated,
     additionalCSS: ['/styles/user-guide.styles.css'],
   });
 });

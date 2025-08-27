@@ -317,7 +317,7 @@ class AuditService {
       entityId: auditLog.entityId,
       userId: auditLog.userId,
       userName: auditLog.user ? `${auditLog.user.firstName} ${auditLog.user.lastName}` : 'System',
-      userEmail: auditLog.user?.email || 'system@oldmanfooty.com',
+      userEmail: auditLog.user?.email || 'support@oldmanfooty.au',
       result: auditLog.result,
       ipAddress: auditLog.ipAddress,
       timestamp: auditLog.createdAt,
