@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../../config/constants.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -300,7 +300,7 @@ describe('Sponsor Controller', () => {
         title: 'Add New Sponsor',
         user: req.user,
         states: AUSTRALIAN_STATES,
-        sponsorshipLevels: SPONSORSHIP_LEVELS
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY
       }));
     });
 
@@ -390,7 +390,7 @@ describe('Sponsor Controller', () => {
         title: 'Edit Sponsor',
         sponsor: mockSponsor,
         states: AUSTRALIAN_STATES,
-        sponsorshipLevels: SPONSORSHIP_LEVELS
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY
       }));
     });
 
