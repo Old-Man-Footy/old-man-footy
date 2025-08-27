@@ -10,13 +10,7 @@ async function updateUserGuideDocumentation() {
   console.log('🚀 Starting User Guide Documentation Update Process...\n');
   
   try {
-    // Step 1: Generate fresh screenshots
-    console.log('📸 Phase 1: Generating Screenshots');
-    console.log('='.repeat(50));
-    const generator = new ScreenshotGenerator();
-    await generator.generateAllScreenshots();
-    
-    console.log('\n📝 Phase 2: Updating User Guides');
+    console.log('\n📝 Updating User Guides');
     console.log('='.repeat(50));
     
     // Step 2: Update the guides with new screenshots and links
