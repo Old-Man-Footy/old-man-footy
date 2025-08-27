@@ -130,10 +130,6 @@ a:focus {
     text-decoration: underline;
 }
 
-a:visited {
-    color: var(--rugby-link-green);
-}
-
 /* Remove underlines from links that already have visual feedback */
 .navbar a:hover,
 .navbar a:focus,
