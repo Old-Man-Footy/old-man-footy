@@ -170,6 +170,8 @@ ecosystem.config.js
 public/**/*.png
 public/**/*.jpg
 public/**/*.jpeg
+
+# Include the screenshots for public documentation
 !public/screenshots/**/*.png
 !public/screenshots/**/*.jpg
 !public/screenshots/**/*.jpeg

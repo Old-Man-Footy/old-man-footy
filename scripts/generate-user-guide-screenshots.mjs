@@ -6,13 +6,19 @@
  * screenshots for both standard user and delegate user guides.
  */
 
+console.log('🎬 Screenshot generation script starting...');
+
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
+console.log('📦 Imports loaded successfully');
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+console.log('📁 Directory paths resolved');
 
 // Configuration
 const CONFIG = {
@@ -23,16 +29,20 @@ const CONFIG = {
   // Test credentials for delegate screenshots
   testCredentials: {
     email: 'admin@oldmanfooty.au',
-    password: 'Admin123!'
+    password: 'admin123'
   }
 };
 
+console.log('⚙️ Configuration loaded:', CONFIG);
+
 class ScreenshotGenerator {
   constructor() {
+    console.log('🏗️ ScreenshotGenerator constructor starting...');
     this.browser = null;
     this.context = null;
     this.page = null;
     this.setupDirectories();
+    console.log('✅ ScreenshotGenerator constructor completed');
   }
 
   setupDirectories() {
@@ -52,23 +62,32 @@ class ScreenshotGenerator {
 
   async initialize() {
     console.log('🚀 Initializing browser...');
-    this.browser = await chromium.launch({ 
-      headless: false, // Set to true for CI/CD
-      slowMo: 1000 // Slow down for better screenshots
-    });
-    
-    this.context = await this.browser.newContext({
-      viewport: CONFIG.viewport,
-      ignoreHTTPSErrors: true,
-    });
-    
-    this.page = await this.context.newPage();
-    await this.page.setViewportSize(CONFIG.viewport);
-    
-    // Wait for page to be ready
-    await this.page.goto(CONFIG.baseURL);
-    await this.page.waitForLoadState('networkidle');
-    console.log('✅ Browser initialized successfully');
+    try {
+      this.browser = await chromium.launch({ 
+        headless: true, // Set to true for CI/CD - changed to headless for testing
+        slowMo: 1000 // Slow down for better screenshots
+      });
+      console.log('✅ Browser launched successfully');
+      
+      this.context = await this.browser.newContext({
+        viewport: CONFIG.viewport,
+        ignoreHTTPSErrors: true,
+      });
+      console.log('✅ Browser context created');
+      
+      this.page = await this.context.newPage();
+      await this.page.setViewportSize(CONFIG.viewport);
+      console.log('✅ Page created with viewport set');
+      
+      // Wait for page to be ready
+      console.log(`🔗 Navigating to ${CONFIG.baseURL}...`);
+      await this.page.goto(CONFIG.baseURL);
+      await this.page.waitForLoadState('networkidle');
+      console.log('✅ Browser initialized successfully');
+    } catch (error) {
+      console.error('❌ Error initializing browser:', error.message);
+      throw error;
+    }
   }
 
   async takeScreenshot(name, selector = null, options = {}) {
@@ -110,13 +129,17 @@ class ScreenshotGenerator {
     try {
       console.log(`🔗 Navigating to: ${url}`);
       await this.page.goto(url, { waitUntil: 'networkidle', timeout: CONFIG.timeout });
+      console.log(`✅ Page loaded: ${url}`);
       
       // Wait for any dynamic content
       if (options.waitFor) {
+        console.log(`⏳ Waiting for: ${options.waitFor}`);
         if (typeof options.waitFor === 'string') {
           await this.page.waitForSelector(options.waitFor, { timeout: CONFIG.timeout });
+          console.log(`✅ Found selector: ${options.waitFor}`);
         } else if (typeof options.waitFor === 'number') {
           await this.page.waitForTimeout(options.waitFor);
+          console.log(`✅ Waited for timeout: ${options.waitFor}ms`);
         }
       }
       
@@ -130,14 +153,20 @@ class ScreenshotGenerator {
   async login() {
     try {
       console.log('🔐 Logging in...');
+      console.log(`🔗 Navigating to login page: ${CONFIG.baseURL}/auth/login`);
       await this.page.goto(`${CONFIG.baseURL}/auth/login`);
+      await this.page.waitForLoadState('networkidle');
       
+      console.log('📝 Filling login form...');
       // Fill login form
       await this.page.fill('input[name="email"]', CONFIG.testCredentials.email);
       await this.page.fill('input[name="password"]', CONFIG.testCredentials.password);
+      
+      console.log('🖱️ Clicking submit button...');
       await this.page.click('button[type="submit"]');
       
       // Wait for redirect to dashboard
+      console.log('⏳ Waiting for redirect to dashboard...');
       await this.page.waitForURL(/dashboard/, { timeout: CONFIG.timeout });
       await this.page.waitForLoadState('networkidle');
       
@@ -145,6 +174,19 @@ class ScreenshotGenerator {
       return true;
     } catch (error) {
       console.error('❌ Login failed:', error.message);
+      console.error('Current URL:', await this.page.url());
+      
+      // Take screenshot of current page for debugging
+      try {
+        await this.page.screenshot({ 
+          path: join(CONFIG.screenshotDir, 'debug-login-failure.png'),
+          fullPage: true 
+        });
+        console.log('📸 Debug screenshot saved: debug-login-failure.png');
+      } catch (screenshotError) {
+        console.error('Failed to take debug screenshot:', screenshotError.message);
+      }
+      
       return false;
     }
   }
@@ -166,12 +208,12 @@ class ScreenshotGenerator {
       {
         url: `${CONFIG.baseURL}/clubs`,
         name: 'clubs-directory',
-        waitFor: '.club-card, .no-clubs-message'
+        waitFor: '.rugby-masters-card, .text-center.py-5'
       },
       {
         url: `${CONFIG.baseURL}/sponsors`,
         name: 'sponsors-network',
-        waitFor: '.sponsor-card, .no-sponsors-message'
+        waitFor: '.sponsor-card, .text-center.py-5'
       },
       {
         url: `${CONFIG.baseURL}/contact`,
@@ -182,11 +224,6 @@ class ScreenshotGenerator {
         url: `${CONFIG.baseURL}/auth/register`,
         name: 'user-registration',
         waitFor: 'form'
-      },
-      {
-        url: `${CONFIG.baseURL}/user-guide`,
-        name: 'user-guide-page',
-        waitFor: 'main'
       }
     ];
 
@@ -207,48 +244,60 @@ class ScreenshotGenerator {
   async generateDelegateUserScreenshots() {
     console.log('\n👤 Generating Delegate User Screenshots...');
     
-    // Login first
-    const loginSuccess = await this.login();
-    if (!loginSuccess) {
-      console.error('❌ Cannot generate delegate screenshots without login');
-      return;
-    }
-
-    const screenshots = [
-      {
-        url: `${CONFIG.baseURL}/dashboard`,
-        name: 'dashboard-overview',
-        waitFor: '.dashboard-stats, .card'
-      },
-      {
-        url: `${CONFIG.baseURL}/admin/carnivals`,
-        name: 'carnival-management',
-        waitFor: '.carnival-list, .admin-content'
-      },
-      {
-        url: `${CONFIG.baseURL}/admin/clubs`,
-        name: 'club-management',
-        waitFor: '.club-list, .admin-content'
-      },
-      {
-        url: `${CONFIG.baseURL}/admin/carnivals/create`,
-        name: 'carnival-creation-form',
-        waitFor: 'form'
+    try {
+      // Login first
+      console.log('🔐 Attempting to log in for delegate screenshots...');
+      const loginSuccess = await this.login();
+      if (!loginSuccess) {
+        console.error('❌ Cannot generate delegate screenshots without login');
+        return;
       }
-    ];
+      console.log('✅ Login successful, proceeding with delegate screenshots');
 
-    for (const screenshot of screenshots) {
-      await this.navigateAndScreenshot(screenshot.url, screenshot.name, {
-        waitFor: screenshot.waitFor,
+      const screenshots = [
+        {
+          url: `${CONFIG.baseURL}/dashboard`,
+          name: 'dashboard-overview',
+          waitFor: '.dashboard-stats, .card'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/carnivals`,
+          name: 'carnival-management',
+          waitFor: '.carnival-list, .admin-content'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/clubs`,
+          name: 'club-management',
+          waitFor: '.club-list, .admin-content'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/carnivals/create`,
+          name: 'carnival-creation-form',
+          waitFor: 'form'
+        }
+      ];
+
+      for (const screenshot of screenshots) {
+        console.log(`📸 Taking delegate screenshot: ${screenshot.name}`);
+        await this.navigateAndScreenshot(screenshot.url, screenshot.name, {
+          waitFor: screenshot.waitFor,
+          subfolder: 'delegate-user'
+        });
+      }
+
+      // Take screenshot of dashboard stats specifically
+      console.log('📸 Taking dashboard stats screenshot');
+      await this.page.goto(`${CONFIG.baseURL}/dashboard`);
+      await this.takeScreenshot('dashboard-stats', '.dashboard-stats', {
         subfolder: 'delegate-user'
       });
+      
+      console.log('✅ Delegate screenshots completed');
+      
+    } catch (error) {
+      console.error('❌ Error generating delegate screenshots:', error.message);
+      console.error('Stack trace:', error.stack);
     }
-
-    // Take screenshot of dashboard stats specifically
-    await this.page.goto(`${CONFIG.baseURL}/dashboard`);
-    await this.takeScreenshot('dashboard-stats', '.dashboard-stats', {
-      subfolder: 'delegate-user'
-    });
   }
 
   async generateAllScreenshots() {
@@ -278,8 +327,10 @@ class ScreenshotGenerator {
 
 // Main execution
 async function main() {
+  console.log('🎯 Main function starting...');
   const generator = new ScreenshotGenerator();
   await generator.generateAllScreenshots();
+  console.log('🏁 Main function completed');
 }
 
 // Handle graceful shutdown
@@ -293,8 +344,22 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+console.log('🔍 Checking execution condition...');
+const currentFile = fileURLToPath(import.meta.url);
+const runFile = process.argv[1];
+
+console.log('Current file:', currentFile);
+console.log('Run file:', runFile);
+console.log('Files match:', currentFile === runFile);
+
+if (currentFile === runFile) {
+  console.log('🚀 Script is being run directly, starting main function...');
+  main().catch(error => {
+    console.error('💥 Fatal error:', error);
+    process.exit(1);
+  });
+} else {
+  console.log('❌ Script execution condition not met');
 }
 
 export default ScreenshotGenerator;

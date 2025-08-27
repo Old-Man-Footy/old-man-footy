@@ -122,7 +122,6 @@ class DocumentationUpdater {
       { name: 'sponsors-network', url: `${CONFIG.baseURL}/sponsors`, waitFor: '.content, main' },
       { name: 'contact-page', url: `${CONFIG.baseURL}/contact`, waitFor: 'form' },
       { name: 'user-registration', url: `${CONFIG.baseURL}/auth/register`, waitFor: 'form' },
-      { name: 'user-guide-page', url: `${CONFIG.baseURL}/user-guide`, waitFor: 'main' }
     ];
 
     for (const screenshot of standardScreenshots) {
@@ -257,12 +256,6 @@ Need help or have questions? Visit our **[Contact Page](${CONFIG.baseURL}/contac
 
 ![Contact Page](/screenshots/standard-user/contact-page.png)
 *Contact form for getting support and asking questions*
-
-### User Guide
-For more detailed information, visit the **[User Guide](${CONFIG.baseURL}/user-guide)** page:
-
-![User Guide Page](/screenshots/standard-user/user-guide-page.png)
-*Comprehensive user guide with step-by-step instructions*
 
 ## Next Steps
 

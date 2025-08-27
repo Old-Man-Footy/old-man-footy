@@ -163,12 +163,6 @@ Need help or have questions? Visit our **[Contact Page](${CONFIG.baseURL}/contac
 ![Contact Page](/screenshots/standard-user/contact-page.png)
 *Contact form for getting support and asking questions*
 
-### User Guide
-For more detailed information, visit the **[User Guide](${CONFIG.baseURL}/user-guide)** page:
-
-![User Guide Page](/screenshots/standard-user/user-guide-page.png)
-*Comprehensive user guide with step-by-step instructions*
-
 ## Next Steps
 
 Ready to get more involved? Consider:
