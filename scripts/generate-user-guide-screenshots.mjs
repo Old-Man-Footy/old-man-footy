@@ -74,8 +74,7 @@ class ScreenshotGenerator {
 
   async takeScreenshot(name, selector = null, options = {}) {
     try {
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `${name}_${timestamp}.png`;
+      const filename = `${name}.png`;
       const fullPath = join(CONFIG.screenshotDir, options.subfolder || 'standard-user', filename);
       
       // Wait for page to be stable
@@ -252,43 +251,12 @@ class ScreenshotGenerator {
     });
   }
 
-  async generateMobileScreenshots() {
-    console.log('\n📱 Generating Mobile Screenshots...');
-    
-    // Switch to mobile viewport
-    await this.page.setViewportSize({ width: 375, height: 812 }); // iPhone X
-    
-    const mobileScreenshots = [
-      {
-        url: CONFIG.baseURL,
-        name: 'mobile-homepage',
-        waitFor: 'main'
-      },
-      {
-        url: `${CONFIG.baseURL}/carnivals`,
-        name: 'mobile-carnivals',
-        waitFor: '.carnival-card, .no-carnivals-message'
-      }
-    ];
-
-    for (const screenshot of mobileScreenshots) {
-      await this.navigateAndScreenshot(screenshot.url, screenshot.name, {
-        waitFor: screenshot.waitFor,
-        subfolder: 'mobile'
-      });
-    }
-
-    // Reset viewport
-    await this.page.setViewportSize(CONFIG.viewport);
-  }
-
   async generateAllScreenshots() {
     try {
       await this.initialize();
       
       await this.generateStandardUserScreenshots();
       await this.generateDelegateUserScreenshots();
-      await this.generateMobileScreenshots();
       
       console.log('\n✅ All screenshots generated successfully!');
       console.log(`📁 Screenshots saved to: ${CONFIG.screenshotDir}`);

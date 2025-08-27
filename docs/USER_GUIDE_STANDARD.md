@@ -2,7 +2,7 @@
 
 Welcome to Old Man Footy, Australia's premier platform for Masters Rugby League events and club management.
 
-![Homepage Overview](./screenshots/standard-user/homepage-overview_2025-08-27.png)
+![Homepage Overview](./screenshots/standard-user/homepage-overview.png)
 *The Old Man Footy homepage provides easy access to all platform features*
 
 ## What is Old Man Footy?
@@ -17,7 +17,7 @@ You can explore many features without creating an account:
 #### Navigation Overview
 The main navigation provides access to all key sections:
 
-![Navigation Menu](./screenshots/standard-user/navigation-menu_2025-08-27.png)
+![Navigation Menu](./screenshots/standard-user/navigation-menu.png)
 *Main navigation menu showing all available sections*
 
 - **[Home](http://localhost:3050)** - Platform overview and latest updates
@@ -29,7 +29,7 @@ The main navigation provides access to all key sections:
 ### Creating an Account
 To unlock full functionality and become a club delegate:
 
-![User Registration](./screenshots/standard-user/user-registration_2025-08-27.png)
+![User Registration](./screenshots/standard-user/user-registration.png)
 *User registration form for creating a new account*
 
 1. Click **[Register](http://localhost:3050/auth/register)** in the top navigation
@@ -44,7 +44,7 @@ To unlock full functionality and become a club delegate:
 #### Carnival Listings
 Browse all upcoming Masters Rugby League events with detailed information:
 
-![Carnivals Listing](./screenshots/standard-user/carnivals-listing_2025-08-27.png)
+![Carnivals Listing](./screenshots/standard-user/carnivals-listing.png)
 *Comprehensive carnival listings with filtering options*
 
 Visit **[Carnivals](http://localhost:3050/carnivals)** to:
@@ -55,7 +55,7 @@ Visit **[Carnivals](http://localhost:3050/carnivals)** to:
 
 ### Club Directory
 
-![Clubs Directory](./screenshots/standard-user/clubs-directory_2025-08-27.png)
+![Clubs Directory](./screenshots/standard-user/clubs-directory.png)
 *Club directory showing Masters Rugby League clubs across Australia*
 
 The **[Clubs Directory](http://localhost:3050/clubs)** allows you to:
@@ -66,7 +66,7 @@ The **[Clubs Directory](http://localhost:3050/clubs)** allows you to:
 
 ### Sponsor Network
 
-![Sponsors Network](./screenshots/standard-user/sponsors-network_2025-08-27.png)
+![Sponsors Network](./screenshots/standard-user/sponsors-network.png)
 *Sponsor network showcasing businesses supporting Masters Rugby League*
 
 Explore the **[Sponsor Network](http://localhost:3050/sponsors)** to:
@@ -79,23 +79,23 @@ Explore the **[Sponsor Network](http://localhost:3050/sponsors)** to:
 ### Contact Us
 Need help or have questions? Visit our **[Contact Page](http://localhost:3050/contact)**:
 
-![Contact Page](./screenshots/standard-user/contact-page_2025-08-27.png)
+![Contact Page](./screenshots/standard-user/contact-page.png)
 *Contact form for getting support and asking questions*
 
 ### User Guide
 For more detailed information, visit the **[User Guide](http://localhost:3050/user-guide)** page:
 
-![User Guide Page](./screenshots/standard-user/user-guide-page_2025-08-27.png)
+![User Guide Page](./screenshots/standard-user/user-guide-page.png)
 *Comprehensive user guide with step-by-step instructions*
 
 ## Mobile Experience
 
 The platform is fully responsive and works great on mobile devices:
 
-![Mobile Homepage](./screenshots/mobile/mobile-homepage_2025-08-27.png)
+![Mobile Homepage](./screenshots/mobile/mobile-homepage.png)
 *Mobile-optimized homepage for on-the-go access*
 
-![Mobile Carnivals](./screenshots/mobile/mobile-carnivals_2025-08-27.png)
+![Mobile Carnivals](./screenshots/mobile/mobile-carnivals.png)
 *Mobile carnival listings with touch-friendly interface*
 
 ## Next Steps

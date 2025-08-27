@@ -15,13 +15,13 @@ Old Man Footy is a platform designed to help manage Masters Rugby League events 
 
 When you log in, you'll see your dashboard which provides comprehensive management tools:
 
-![Dashboard Overview](./screenshots/delegate-user/dashboard-overview_2025-08-27.png)
+![Dashboard Overview](./screenshots/delegate-user/dashboard-overview.png)
 *Club delegate dashboard with quick stats and management options*
 
 ### Quick Stats
 The dashboard provides an at-a-glance view of your club's activity:
 
-![Dashboard Stats](./screenshots/delegate-user/dashboard-stats_2025-08-27.png)
+![Dashboard Stats](./screenshots/delegate-user/dashboard-stats.png)
 *Key statistics showing your club's event participation*
 
 - **[Your Carnivals](http://localhost:3050/dashboard)**: Number of events your club is registered for
@@ -32,7 +32,7 @@ The dashboard provides an at-a-glance view of your club's activity:
 
 ### Carnival Management Interface
 
-![Carnival Management](./screenshots/delegate-user/carnival-management_2025-08-27.png)
+![Carnival Management](./screenshots/delegate-user/carnival-management.png)
 *Comprehensive carnival management interface for delegates*
 
 Access the **[Carnival Management](http://localhost:3050/admin/carnivals)** section to:
@@ -43,7 +43,7 @@ Access the **[Carnival Management](http://localhost:3050/admin/carnivals)** sect
 
 ### Creating a New Carnival
 
-![Carnival Creation Form](./screenshots/delegate-user/carnival-creation-form_2025-08-27.png)
+![Carnival Creation Form](./screenshots/delegate-user/carnival-creation-form.png)
 *Form for creating a new carnival event*
 
 1. Navigate to **[Carnivals](http://localhost:3050/admin/carnivals)** in the admin menu
@@ -60,7 +60,7 @@ Access the **[Carnival Management](http://localhost:3050/admin/carnivals)** sect
 
 ### Club Administration
 
-![Club Management](./screenshots/delegate-user/club-management_2025-08-27.png)
+![Club Management](./screenshots/delegate-user/club-management.png)
 *Club management interface for maintaining club information*
 
 Access **[Club Management](http://localhost:3050/admin/clubs)** to:
