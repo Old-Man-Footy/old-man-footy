@@ -106,11 +106,11 @@ class MySidelineDataService {
                 const existingEvent = await this.findExistingMySidelineEvent(eventData);
                 
                 if (existingEvent) {
-                    // if (eventData.date < new Date() || existingEvent.isActive === false) {
-                    //     // If the event date is in the past or already marked as inactive, skip it
-                    //     console.log(`Skipping update of past event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
-                    //     continue; // Skip to next event
-                    // }
+                    if (eventData.isActive === false && existingEvent.isActive === false) {
+                        // If the event already marked as inactive, skip it
+                        console.log(`Skipping update of inactive event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
+                        continue; // Skip to next event
+                    }
 
                     console.log(`Event already exists: ${eventData.mySidelineTitle} on ${eventData.date}`);
                     // Update existing event with any new information, but only for empty fields
