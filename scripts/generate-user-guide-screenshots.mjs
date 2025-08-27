@@ -17,7 +17,7 @@ const __dirname = dirname(__filename);
 // Configuration
 const CONFIG = {
   baseURL: process.env.BASE_URL || 'http://localhost:3050',
-  screenshotDir: join(__dirname, '../docs/screenshots'),
+  screenshotDir: join(__dirname, '../public/screenshots'),
   viewport: { width: 1920, height: 1080 },
   timeout: 30000,
   // Test credentials for delegate screenshots
@@ -74,7 +74,8 @@ class ScreenshotGenerator {
   async takeScreenshot(name, selector = null, options = {}) {
     try {
       const filename = `${name}.png`;
-      const fullPath = join(CONFIG.screenshotDir, options.subfolder || 'standard-user', filename);
+      const subfolder = options.subfolder || 'standard-user';
+      const screenshotPath = join(CONFIG.screenshotDir, subfolder, filename);
       
       // Wait for page to be stable
       await this.page.waitForLoadState('networkidle');
@@ -85,13 +86,13 @@ class ScreenshotGenerator {
         const element = await this.page.locator(selector);
         await element.waitFor({ state: 'visible' });
         await element.screenshot({ 
-          path: fullPath,
+          path: screenshotPath,
           ...options.screenshotOptions 
         });
       } else {
         // Full page screenshot
         await this.page.screenshot({ 
-          path: fullPath, 
+          path: screenshotPath, 
           fullPage: true,
           ...options.screenshotOptions 
         });

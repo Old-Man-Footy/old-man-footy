@@ -2,7 +2,7 @@
 
 Welcome to Old Man Footy, Australia's premier platform for Masters Rugby League events and club management.
 
-![Homepage Overview](./screenshots/standard-user/homepage-overview.png)
+![Homepage Overview](/screenshots/standard-user/homepage-overview.png)
 *The Old Man Footy homepage provides easy access to all platform features*
 
 ## What is Old Man Footy?
@@ -17,7 +17,7 @@ You can explore many features without creating an account:
 #### Navigation Overview
 The main navigation provides access to all key sections:
 
-![Navigation Menu](./screenshots/standard-user/navigation-menu.png)
+![Navigation Menu](/screenshots/standard-user/navigation-menu.png)
 *Main navigation menu showing all available sections*
 
 - **[Home](http://localhost:3050)** - Platform overview and latest updates
@@ -29,7 +29,7 @@ The main navigation provides access to all key sections:
 ### Creating an Account
 To unlock full functionality and become a club delegate:
 
-![User Registration](./screenshots/standard-user/user-registration.png)
+![User Registration](/screenshots/standard-user/user-registration.png)
 *User registration form for creating a new account*
 
 1. Click **[Register](http://localhost:3050/auth/register)** in the top navigation
@@ -44,7 +44,7 @@ To unlock full functionality and become a club delegate:
 #### Carnival Listings
 Browse all upcoming Masters Rugby League events with detailed information:
 
-![Carnivals Listing](./screenshots/standard-user/carnivals-listing.png)
+![Carnivals Listing](/screenshots/standard-user/carnivals-listing.png)
 *Comprehensive carnival listings with filtering options*
 
 Visit **[Carnivals](http://localhost:3050/carnivals)** to:
@@ -55,7 +55,7 @@ Visit **[Carnivals](http://localhost:3050/carnivals)** to:
 
 ### Club Directory
 
-![Clubs Directory](./screenshots/standard-user/clubs-directory.png)
+![Clubs Directory](/screenshots/standard-user/clubs-directory.png)
 *Club directory showing Masters Rugby League clubs across Australia*
 
 The **[Clubs Directory](http://localhost:3050/clubs)** allows you to:
@@ -66,7 +66,7 @@ The **[Clubs Directory](http://localhost:3050/clubs)** allows you to:
 
 ### Sponsor Network
 
-![Sponsors Network](./screenshots/standard-user/sponsors-network.png)
+![Sponsors Network](/screenshots/standard-user/sponsors-network.png)
 *Sponsor network showcasing businesses supporting Masters Rugby League*
 
 Explore the **[Sponsor Network](http://localhost:3050/sponsors)** to:
@@ -79,13 +79,13 @@ Explore the **[Sponsor Network](http://localhost:3050/sponsors)** to:
 ### Contact Us
 Need help or have questions? Visit our **[Contact Page](http://localhost:3050/contact)**:
 
-![Contact Page](./screenshots/standard-user/contact-page.png)
+![Contact Page](/screenshots/standard-user/contact-page.png)
 *Contact form for getting support and asking questions*
 
 ### User Guide
 For more detailed information, visit the **[User Guide](http://localhost:3050/user-guide)** page:
 
-![User Guide Page](./screenshots/standard-user/user-guide-page.png)
+![User Guide Page](/screenshots/standard-user/user-guide-page.png)
 *Comprehensive user guide with step-by-step instructions*
 
 ## Next Steps

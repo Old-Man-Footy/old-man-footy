@@ -22,10 +22,10 @@
     <% } %>
 </head>
 <body>
-    <!-- Environment Banner for DEV/TEST -->
+    <!-- Environment Banner for  -->
     <% 
-    const nodeEnv = process.env.NODE_ENV || 'development';
-    const showEnvBanner = nodeEnv === 'development' || nodeEnv === 'test';
+    const nodeEnv = process.env.NODE_ENV || '';
+    const showEnvBanner = nodeEnv === 'test';
     %>
     <% if (showEnvBanner) { %>
         <div class="alert alert-warning mb-0 text-center fw-bold py-2 border-0 rounded-0" 

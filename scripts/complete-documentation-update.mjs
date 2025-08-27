@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 
 const CONFIG = {
   baseURL: 'http://localhost:3050',
-  screenshotDir: join(__dirname, '../docs/screenshots'),
+  screenshotDir: join(__dirname, '../public/screenshots'),
   docsDir: join(__dirname, '../docs'),
   viewport: { width: 1920, height: 1080 },
   timeout: 30000,
@@ -37,8 +37,6 @@ class DocumentationUpdater {
       CONFIG.screenshotDir,
       join(CONFIG.screenshotDir, 'standard-user'),
       join(CONFIG.screenshotDir, 'delegate-user'),
-      // Mobile directory removed per user request
-      // join(CONFIG.screenshotDir, 'mobile'),
     ];
 
     directories.forEach(dir => {
@@ -75,17 +73,18 @@ class DocumentationUpdater {
       await this.page.waitForTimeout(2000); // Stability wait
       
       const filename = `${name}.png`;
-      const fullPath = join(CONFIG.screenshotDir, options.subfolder || 'standard-user', filename);
+      const subfolder = options.subfolder || 'standard-user';
+      const screenshotPath = join(CONFIG.screenshotDir, subfolder, filename);
       
       if (options.selector) {
         const element = await this.page.locator(options.selector).first();
         if (await element.isVisible()) {
-          await element.screenshot({ path: fullPath });
+          await element.screenshot({ path: screenshotPath });
         } else {
-          await this.page.screenshot({ path: fullPath, fullPage: true });
+          await this.page.screenshot({ path: screenshotPath, fullPage: true });
         }
       } else {
-        await this.page.screenshot({ path: fullPath, fullPage: true });
+        await this.page.screenshot({ path: screenshotPath, fullPage: true });
       }
       
       console.log(`✅ Screenshot saved: ${filename}`);
@@ -179,7 +178,7 @@ class DocumentationUpdater {
 
 Welcome to Old Man Footy, Australia's premier platform for Masters Rugby League events and club management.
 
-![Homepage Overview](./screenshots/standard-user/homepage-overview.png)
+![Homepage Overview](/screenshots/standard-user/homepage-overview.png)
 *The Old Man Footy homepage provides easy access to all platform features*
 
 ## What is Old Man Footy?
@@ -194,7 +193,7 @@ You can explore many features without creating an account:
 #### Navigation Overview
 The main navigation provides access to all key sections:
 
-![Navigation Menu](./screenshots/standard-user/navigation-menu.png)
+![Navigation Menu](/screenshots/standard-user/navigation-menu.png)
 *Main navigation menu showing all available sections*
 
 - **[Home](${CONFIG.baseURL})** - Platform overview and latest updates
@@ -206,7 +205,7 @@ The main navigation provides access to all key sections:
 ### Creating an Account
 To unlock full functionality and become a club delegate:
 
-![User Registration](./screenshots/standard-user/user-registration.png)
+![User Registration](/screenshots/standard-user/user-registration.png)
 *User registration form for creating a new account*
 
 1. Click **[Register](${CONFIG.baseURL}/auth/register)** in the top navigation
@@ -221,7 +220,7 @@ To unlock full functionality and become a club delegate:
 #### Carnival Listings
 Browse all upcoming Masters Rugby League events with detailed information:
 
-![Carnivals Listing](./screenshots/standard-user/carnivals-listing.png)
+![Carnivals Listing](/screenshots/standard-user/carnivals-listing.png)
 *Comprehensive carnival listings with filtering options*
 
 Visit **[Carnivals](${CONFIG.baseURL}/carnivals)** to:
@@ -232,7 +231,7 @@ Visit **[Carnivals](${CONFIG.baseURL}/carnivals)** to:
 
 ### Club Directory
 
-![Clubs Directory](./screenshots/standard-user/clubs-directory.png)
+![Clubs Directory](/screenshots/standard-user/clubs-directory.png)
 *Club directory showing Masters Rugby League clubs across Australia*
 
 The **[Clubs Directory](${CONFIG.baseURL}/clubs)** allows you to:
@@ -243,7 +242,7 @@ The **[Clubs Directory](${CONFIG.baseURL}/clubs)** allows you to:
 
 ### Sponsor Network
 
-![Sponsors Network](./screenshots/standard-user/sponsors-network.png)
+![Sponsors Network](/screenshots/standard-user/sponsors-network.png)
 *Sponsor network showcasing businesses supporting Masters Rugby League*
 
 Explore the **[Sponsor Network](${CONFIG.baseURL}/sponsors)** to:
@@ -256,13 +255,13 @@ Explore the **[Sponsor Network](${CONFIG.baseURL}/sponsors)** to:
 ### Contact Us
 Need help or have questions? Visit our **[Contact Page](${CONFIG.baseURL}/contact)**:
 
-![Contact Page](./screenshots/standard-user/contact-page.png)
+![Contact Page](/screenshots/standard-user/contact-page.png)
 *Contact form for getting support and asking questions*
 
 ### User Guide
 For more detailed information, visit the **[User Guide](${CONFIG.baseURL}/user-guide)** page:
 
-![User Guide Page](./screenshots/standard-user/user-guide-page.png)
+![User Guide Page](/screenshots/standard-user/user-guide-page.png)
 *Comprehensive user guide with step-by-step instructions*
 
 ## Next Steps
@@ -298,13 +297,13 @@ Old Man Footy is a platform designed to help manage Masters Rugby League events 
 
 When you log in, you'll see your dashboard which provides comprehensive management tools:
 
-![Dashboard Overview](./screenshots/delegate-user/dashboard-overview.png)
+![Dashboard Overview](/screenshots/delegate-user/dashboard-overview.png)
 *Club delegate dashboard with quick stats and management options*
 
 ### Quick Stats
 The dashboard provides an at-a-glance view of your club's activity:
 
-![Dashboard Stats](./screenshots/delegate-user/dashboard-stats.png)
+![Dashboard Stats](/screenshots/delegate-user/dashboard-stats.png)
 *Key statistics showing your club's event participation*
 
 - **[Your Carnivals](${CONFIG.baseURL}/dashboard)**: Number of events your club is registered for
@@ -315,7 +314,7 @@ The dashboard provides an at-a-glance view of your club's activity:
 
 ### Carnival Management Interface
 
-![Carnival Management](./screenshots/delegate-user/carnival-management.png)
+![Carnival Management](/screenshots/delegate-user/carnival-management.png)
 *Comprehensive carnival management interface for delegates*
 
 Access the **[Carnival Management](${CONFIG.baseURL}/admin/carnivals)** section to:
@@ -326,7 +325,7 @@ Access the **[Carnival Management](${CONFIG.baseURL}/admin/carnivals)** section 
 
 ### Creating a New Carnival
 
-![Carnival Creation Form](./screenshots/delegate-user/carnival-creation-form.png)
+![Carnival Creation Form](/screenshots/delegate-user/carnival-creation-form.png)
 *Form for creating a new carnival event*
 
 1. Navigate to **[Carnivals](${CONFIG.baseURL}/admin/carnivals)** in the admin menu
@@ -343,7 +342,7 @@ Access the **[Carnival Management](${CONFIG.baseURL}/admin/carnivals)** section 
 
 ### Club Administration
 
-![Club Management](./screenshots/delegate-user/club-management.png)
+![Club Management](/screenshots/delegate-user/club-management.png)
 *Club management interface for maintaining club information*
 
 Access **[Club Management](${CONFIG.baseURL}/admin/clubs)** to:
