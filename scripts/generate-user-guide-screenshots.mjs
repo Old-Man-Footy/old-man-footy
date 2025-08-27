@@ -16,7 +16,7 @@ const __dirname = dirname(__filename);
 
 // Configuration
 const CONFIG = {
-  baseURL: process.env.BASE_URL || 'http://localhost:3050',
+  baseURL: process.env.APP_URL || 'http://localhost:3050',
   screenshotDir: join(__dirname, '../public/screenshots'),
   viewport: { width: 1920, height: 1080 },
   timeout: 30000,

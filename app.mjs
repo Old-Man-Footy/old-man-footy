@@ -20,6 +20,7 @@ import { applySecurity } from './middleware/security.mjs';
 import { sequelize } from './models/index.mjs';
 import { setupSessionAuth, loadSessionUser } from './middleware/auth.mjs';
 import { setupDatabase } from './config/database.mjs';
+import UserGuideUpdater from './scripts/update-user-guides.mjs';
 
 
 // ES Module equivalents of __dirname
@@ -168,23 +169,31 @@ app.use((error, req, res, next) => {
 /**
  * Main startup sequence
  * 1. Initialize database
- * 2. Start server
- * 3. Initialize MySideline sync (only in non-test environments)
+ * 2. Update user guides with current environment URLs
+ * 3. Start server
+ * 4. Initialize MySideline sync (only in non-test environments)
  */
 async function startServer() {
     try {
         // Step 1: One-time database setup
         await setupDatabase();
-        // Step 2: Sync session store
+        
+        // Step 2: Update user guides with current environment APP_URL
+        console.log('📝 Updating user guides for current environment...');
+        const updater = new UserGuideUpdater({ verbose: false });
+        await updater.updateAllGuides();
+        
+        // Step 3: Sync session store
         await sessionStore.sync();
-        // Step 3: Start the server
+        
+        // Step 4: Start the server
         const PORT = process.env.PORT || 3050;
         const server = app.listen(PORT, () => {
             console.log(`🚀 Old Man Footy server running on port ${PORT}`);
             console.log('📊 Site is now accessible and ready to serve requests');
         });
-        // Step 4: Initialize MySideline sync after server is running (skip in tests)
-        if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
+        // Step 5: Initialize MySideline sync after server is running (skip in jest tests)
+        if (!process.env.JEST_WORKER_ID) {
             global.mySidelineInitTimeout = setTimeout(async () => {
                 await initializeMySidelineSync();
                 global.mySidelineInitTimeout = null;

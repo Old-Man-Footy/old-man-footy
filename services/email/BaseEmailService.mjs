@@ -58,7 +58,7 @@ export class BaseEmailService {
      * @returns {string} Base URL
      */
     _getBaseUrl() {
-        return process.env.BASE_URL || 'http://localhost:3050';
+        return process.env.APP_URL || 'http://localhost:3050';
     }
 
     /**

@@ -10,14 +10,18 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Handle path resolution when called from different contexts
+const rootDir = __dirname.includes('scripts') ? join(__dirname, '..') : __dirname;
+
 const CONFIG = {
-  docsDir: join(__dirname, '../docs'),
-  screenshotDir: join(__dirname, '../public/screenshots'),
-  baseURL: process.env.BASE_URL || 'http://localhost:3050'
+  docsDir: join(rootDir, 'docs'),
+  screenshotDir: join(rootDir, 'public/screenshots'),
+  baseURL: process.env.APP_URL || 'http://localhost:3050'
 };
 
 class UserGuideUpdater {
-  constructor() {
+  constructor(options = {}) {
+    this.verbose = options.verbose !== false; // Default to verbose unless explicitly set to false
     this.screenshots = this.loadScreenshots();
   }
 
@@ -48,7 +52,7 @@ class UserGuideUpdater {
   }
 
   updateStandardUserGuide() {
-    console.log('📝 Updating Standard User Guide...');
+    if (this.verbose) console.log('📝 Updating Standard User Guide...');
     
     const guidePath = join(CONFIG.docsDir, 'USER_GUIDE_STANDARD.md');
     let content = readFileSync(guidePath, 'utf8');
@@ -178,11 +182,11 @@ Ready to get more involved? Consider:
 
 
     writeFileSync(guidePath, updatedContent);
-    console.log('✅ Standard User Guide updated successfully');
+    if (this.verbose) console.log('✅ Standard User Guide updated successfully');
   }
 
   updateDelegateUserGuide() {
-    console.log('📝 Updating Delegate User Guide...');
+    if (this.verbose) console.log('📝 Updating Delegate User Guide...');
     
     const guidePath = join(CONFIG.docsDir, 'USER_GUIDE_DELEGATES.md');
     
@@ -379,7 +383,7 @@ If you encounter issues with the platform:
 *For general platform information and public features, see the [Standard User Guide](./USER_GUIDE_STANDARD.md).*`;
 
     writeFileSync(guidePath, updatedContent);
-    console.log('✅ Delegate User Guide updated successfully');
+    if (this.verbose) console.log('✅ Delegate User Guide updated successfully');
   }
 
   getCurrentDate() {
@@ -387,11 +391,13 @@ If you encounter issues with the platform:
   }
 
   updateAllGuides() {
-    console.log('🚀 Updating all user guides...');
+    if (this.verbose) console.log('🚀 Updating all user guides...');
     this.updateStandardUserGuide();
     this.updateDelegateUserGuide();
-    console.log('✅ All user guides updated successfully!');
-    console.log(`📁 Updated guides available at: ${CONFIG.docsDir}`);
+    if (this.verbose) {
+      console.log('✅ All user guides updated successfully!');
+      console.log(`📁 Updated guides available at: ${CONFIG.docsDir}`);
+    }
   }
 }
 

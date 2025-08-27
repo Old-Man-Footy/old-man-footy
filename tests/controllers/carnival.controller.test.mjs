@@ -323,8 +323,8 @@ describe('Carnival Controller', () => {
             model: User,
             as: 'creator'
           })
-        ]),
-        order: [['date', 'DESC']]
+        ])
+        // Note: No order clause expected - sorting is done in JavaScript
       }));
 
       expect(res.render).toHaveBeenCalledWith('carnivals/list', expect.objectContaining({

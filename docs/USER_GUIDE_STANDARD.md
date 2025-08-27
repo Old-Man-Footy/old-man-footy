@@ -53,6 +53,11 @@ Visit **[Carnivals](http://localhost:3050/carnivals)** to:
 - Access detailed event information
 - Find registration links
 
+#### Event Features
+- **Event Details**: View schedules, locations, participating clubs, and registration information
+- **Filtering Options**: Search by location, date, or event type
+- **Registration Links**: Direct access to event sign-up forms
+
 ### Club Directory
 
 ![Clubs Directory](/screenshots/standard-user/clubs-directory.png)
@@ -73,6 +78,22 @@ Explore the **[Sponsor Network](http://localhost:3050/sponsors)** to:
 - **Sponsor Directory**: Explore businesses supporting Masters Rugby League
 - **Partnership Information**: Learn about sponsorship opportunities
 - **Community Support**: See who's backing the Masters Rugby League community
+
+## Finding Events
+
+### Browse All Events
+1. Visit the **[Carnivals](http://localhost:3050/carnivals)** section from the main menu
+2. Use the search and filter options to narrow down events
+3. Click on any event to view detailed information
+4. Use the registration links to sign up your team
+
+### Event Information
+Each event listing includes:
+- **Date and Time**: When the event takes place
+- **Location**: Venue address and facilities information
+- **Participating Clubs**: Which teams are already registered
+- **Registration Status**: Whether registration is open
+- **Contact Information**: How to get more details
 
 ## Getting Support
 

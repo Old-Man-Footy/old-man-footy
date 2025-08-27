@@ -294,7 +294,7 @@ class AuthService {
     });
 
     // Send password reset email
-    const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.APP_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
     await AuthEmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
     // Log password reset initiation

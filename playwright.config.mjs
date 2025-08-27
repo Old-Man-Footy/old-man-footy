@@ -15,7 +15,7 @@ export default defineConfig({
     ['line']
   ],
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3056',
+    baseURL: process.env.APP_URL || 'http://localhost:3056',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
