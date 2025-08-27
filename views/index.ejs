@@ -82,10 +82,11 @@
                                                 <h6 class="card-title mb-2"><%= carnival.title %></h6>
                                                 <div class="mb-1">
                                                     <small class="text-muted">
-                                                        <i class="bi bi-calendar3"></i> 
-                                                        <%= carnival.date.toLocaleDateString('en-AU', { 
-                                                            month: 'short', 
-                                                            day: 'numeric' 
+                                                        <%- include('partials/carnival-date', { 
+                                                            carnival: carnival, 
+                                                            format: 'compact',
+                                                            showIcon: true,
+                                                            addClass: ''
                                                         }) %>
                                                     </small>
                                                 </div>

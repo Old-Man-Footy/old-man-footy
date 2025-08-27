@@ -287,8 +287,12 @@
 
                                             <div class="mb-2">
                                                 <small class="text-muted">
-                                                    <i class="bi bi-calendar3"></i> 
-                                                    <%= carnival.date.toLocaleDateString('en-AU') %>
+                                                    <%- include('partials/carnival-date', { 
+                                                        carnival: carnival, 
+                                                        format: 'short',
+                                                        showIcon: true,
+                                                        addClass: ''
+                                                    }) %>
                                                 </small>
                                             </div>
 
@@ -406,8 +410,12 @@
 
                                             <div class="mb-2">
                                                 <small class="text-muted">
-                                                    <i class="bi bi-calendar3"></i> 
-                                                    <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
+                                                    <%- include('partials/carnival-date', { 
+                                                        carnival: carnival, 
+                                                        format: 'short',
+                                                        showIcon: true,
+                                                        addClass: ''
+                                                    }) %>
                                                 </small>
                                             </div>
 
