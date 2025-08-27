@@ -20,7 +20,6 @@ import { applySecurity } from './middleware/security.mjs';
 import { sequelize } from './models/index.mjs';
 import { setupSessionAuth, loadSessionUser } from './middleware/auth.mjs';
 import { setupDatabase } from './config/database.mjs';
-import UserGuideUpdater from './scripts/update-user-guides.mjs';
 
 
 // ES Module equivalents of __dirname
@@ -178,12 +177,7 @@ async function startServer() {
         // Step 1: One-time database setup
         await setupDatabase();
         
-        // Step 2: Update user guides with current environment APP_URL
-        console.log('📝 Updating user guides for current environment...');
-        const updater = new UserGuideUpdater({ verbose: false });
-        await updater.updateAllGuides();
-        
-        // Step 3: Sync session store
+        // Step 2: Sync session store
         await sessionStore.sync();
         
         // Step 4: Start the server
