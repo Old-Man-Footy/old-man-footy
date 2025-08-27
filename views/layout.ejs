@@ -33,9 +33,7 @@
             <div class="container d-flex align-items-center justify-content-center">
                 <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
                 <span class="fs-6">
-                    <% if (nodeEnv === 'development') { %>
-                        🚧 DEVELOPMENT ENVIRONMENT 🚧 - This is not the live site
-                    <% } else if (nodeEnv === 'test') { %>
+                    <% if (nodeEnv === 'test') { %>
                         🧪 TEST ENVIRONMENT 🧪 - This is for testing purposes only
                     <% } %>
                 </span>
