@@ -18,7 +18,7 @@ import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import ImageNamingService from '../services/imageNamingService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
 import path from 'path';
 import fs from 'fs/promises';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
@@ -630,7 +630,7 @@ const showAddSponsorHandler = async (req, res) => {
     club,
     availableSponsors,
     states: AUSTRALIAN_STATES,
-    sponsorshipLevels: SPONSORSHIP_LEVELS,
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
     additionalCSS: ['/styles/club.styles.css'],
   });
 };

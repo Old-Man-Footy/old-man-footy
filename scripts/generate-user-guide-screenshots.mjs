@@ -43,6 +43,9 @@ const CONFIG = {
   }
 };
 
+// ID used for sponsor detail screenshot; override via env var if needed
+CONFIG.screenshotSponsorId = process.env.SCREENSHOT_SPONSOR_ID || '1';
+
 console.log('⚙️ Configuration loaded:', CONFIG);
 
 class ScreenshotGenerator {
@@ -267,42 +270,16 @@ class ScreenshotGenerator {
       }
       console.log('✅ Login successful, proceeding with delegate screenshots');
 
+      // Delegate screenshots: capture the exact pages required for documentation.
+      // Removed carnival-listing-delegate and dashboard-stats as they are not required.
       const screenshots = [
-        {
-          url: `${CONFIG.baseURL}/dashboard`,
-          name: 'dashboard-overview',
-          waitFor: '.dashboard-stats, .card'
-        },
-        {
-          url: `${CONFIG.baseURL}/clubs/players`,
-          name: 'club-players-management',
-          waitFor: '.club-player-card, .no-players-message, table'
-        },
-        {
-          url: `${CONFIG.baseURL}/clubs/manage`,
-          name: 'club-management',
-          waitFor: '.card, .club-management'
-        },
-        {
-          url: `${CONFIG.baseURL}/clubs/manage/alternate-names`,
-          name: 'club-alternate-names',
-          waitFor: '.card, form, .alternate-names'
-        },
-        {
-          url: `${CONFIG.baseURL}/clubs/manage/sponsors`,
-          name: 'club-sponsors-management',
-          waitFor: '.card, .sponsor-card, .no-sponsors-message'
-        },
-        {
-          url: `${CONFIG.baseURL}/carnivals/new`,
-          name: 'carnival-creation-form',
-          waitFor: 'form'
-        },
-        {
-          url: `${CONFIG.baseURL}/carnivals`,
-          name: 'carnival-listing-delegate',
-          waitFor: '.carnival-card, .no-carnivals-message'
-        }
+        { url: `${CONFIG.baseURL}/dashboard`, name: 'dashboard', waitFor: '.card, .dashboard-stats' },
+        { url: `${CONFIG.baseURL}/clubs/players`, name: 'club-players', waitFor: '.club-player-card, .no-players-message, table' },
+        { url: `${CONFIG.baseURL}/clubs/manage`, name: 'club-manage', waitFor: '.card, .club-management' },
+        { url: `${CONFIG.baseURL}/clubs/manage/alternate-names`, name: 'club-manage-alternate-names', waitFor: '#addAlternateNameForm, #alternateNamesList, .alternate-name-card, #editAlternateNameModal' },
+        { url: `${CONFIG.baseURL}/clubs/manage/sponsors`, name: 'club-manage-sponsors', waitFor: '.card, .sponsor-card, .no-sponsors-message' },
+        { url: `${CONFIG.baseURL}/sponsors/${CONFIG.screenshotSponsorId}`, name: 'sponsor-detail', waitFor: '.sponsor-detail, .card, .sponsor-info' },
+        { url: `${CONFIG.baseURL}/clubs/players/add`, name: 'club-players-add', waitFor: 'form, input[name="firstName"], input[name="lastName"]' }
       ];
 
       for (const screenshot of screenshots) {
@@ -313,13 +290,6 @@ class ScreenshotGenerator {
         });
       }
 
-      // Take screenshot of dashboard stats specifically
-      console.log('📸 Taking dashboard stats screenshot');
-      await this.page.goto(`${CONFIG.baseURL}/dashboard`);
-      await this.takeScreenshot('dashboard-stats', '.dashboard-stats', {
-        subfolder: 'delegate-user'
-      });
-      
       console.log('✅ Delegate screenshots completed');
       
     } catch (error) {
