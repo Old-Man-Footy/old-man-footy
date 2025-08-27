@@ -32,7 +32,7 @@ try {
     // Create admin user
     const admin = await User.create({
         email: 'admin@oldmanfooty.au',
-        password: 'admin123', // Note: In real implementation this should be hashed
+        password: 'Admin123!', // Note: In real implementation this should be hashed
         firstName: 'System',
         lastName: 'Administrator',
         isActive: true,
@@ -65,7 +65,7 @@ try {
 
     console.log('\n✅ Simple seeding completed successfully!');
     console.log('\n🔐 Login credentials:');
-    console.log('   Admin: admin@oldmanfooty.au / admin123');
+    console.log('   Admin: admin@oldmanfooty.au / Admin123!');
 
 } catch (error) {
     console.error('❌ Seeding failed:', error.message);

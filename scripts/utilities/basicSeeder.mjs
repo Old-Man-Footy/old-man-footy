@@ -81,7 +81,7 @@ class BasicSeeder {
             email: 'admin@oldmanfooty.au',
             firstName: 'Admin',
             lastName: 'User',
-            passwordHash: 'admin123', // Will be hashed by model hook
+            passwordHash: 'Admin123!', // Will be hashed by model hook
             isAdmin: true,
             isActive: true
         });
@@ -93,7 +93,7 @@ class BasicSeeder {
                 email: `primary@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`,
                 firstName: 'Primary',
                 lastName: 'Delegate',
-                passwordHash: 'delegate123', // Will be hashed by model hook
+                passwordHash: 'Delegate123!', // Will be hashed by model hook
                 clubId: club.id,
                 isPrimaryDelegate: true,
                 isActive: true
@@ -106,7 +106,7 @@ class BasicSeeder {
                     email: `delegate@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`,
                     firstName: 'Secondary',
                     lastName: 'Delegate',
-                    passwordHash: 'delegate123', // Will be hashed by model hook
+                    passwordHash: 'Delegate123!', // Will be hashed by model hook
                     clubId: club.id,
                     isPrimaryDelegate: false,
                     isActive: true

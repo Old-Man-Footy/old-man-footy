@@ -96,18 +96,33 @@ const SECURITY_CONFIG = {
  * @returns {Function} Express middleware
  */
 const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
-  // In test environment, disable rate limiting to avoid flakiness in E2E tests
-  if (process.env.NODE_ENV === 'test') {
-    return (_req, _res, next) => next();
+  // Completely disable rate limiting in development and test environments
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV) {
+    console.log('🔓 Rate limiting disabled for development environment');
+    return (req, res, next) => {
+      // Just pass through without any rate limiting in development
+      next();
+    };
   }
 
-  // Simple in-memory rate limiter for this implementation
+  // Simple in-memory rate limiter for production only
   const requests = new Map();
   
   return (req, res, next) => {
     const key = req.ip || req.connection?.remoteAddress || 'unknown';
     const now = Date.now();
     const windowStart = now - config.windowMs;
+    
+    // Skip rate limiting for certain paths to prevent redirect loops
+    const isLoginPage = req.path === '/auth/login';
+    const isHomePage = req.path === '/';
+    const isStaticAsset = req.path.startsWith('/styles') || 
+                         req.path.startsWith('/public');
+    
+    // Always allow access to login page and static assets to prevent loops
+    if (isLoginPage || isHomePage || isStaticAsset) {
+      return next();
+    }
     
     // Get or create request log for this IP
     if (!requests.has(key)) {
@@ -139,15 +154,7 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
           req.flash('error_msg', config.message.error.message);
         }
         
-        // Determine appropriate redirect URL based on the route
-        let redirectUrl = '/';
-        if (req.path && req.path.includes('/auth/')) {
-          redirectUrl = '/auth/login';
-        } else if (req.path && req.path.includes('/admin/')) {
-          redirectUrl = '/admin/login';
-        }
-        
-        return res.redirect(redirectUrl);
+        return res.redirect('/');
       }
     }
     

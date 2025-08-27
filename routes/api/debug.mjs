@@ -30,14 +30,15 @@ router.get('/user/:email', async (req, res) => {
     // Test password verification with known passwords
     let passwordTests = {};
     
-    if (email === 'admin@test.com') {
-      passwordTests.admin123 = await user.checkPassword('admin123');
-      passwordTests.admin123_direct = await bcrypt.compare('admin123', user.passwordHash);
+    if (email === 'admin@oldmanfooty.au') {
+      passwordTests.Admin123 = await user.checkPassword('Admin123!');
+      passwordTests.Admin123_direct = await bcrypt.compare('Admin123!', user.passwordHash);
     }
     
-    if (email === 'delegate@test.com') {
-      passwordTests.delegate123 = await user.checkPassword('delegate123');
-      passwordTests.delegate123_direct = await bcrypt.compare('delegate123', user.passwordHash);
+    // Test for any delegate user
+    if (email.includes('primary@') || email.includes('delegate@')) {
+      passwordTests.Delegate123 = await user.checkPassword('Delegate123!');
+      passwordTests.Delegate123_direct = await bcrypt.compare('Delegate123!', user.passwordHash);
     }
     
     return res.json({

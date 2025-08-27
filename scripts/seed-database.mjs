@@ -842,7 +842,7 @@ class DatabaseSeeder {
                 console.log('\n✅ Database seeding completed successfully');
                 
                 console.log('\n🔐 Login credentials:');
-                console.log('   Admin: admin@oldmanfooty.au / admin123');
+                console.log('   Admin: admin@oldmanfooty.au / Admin123!');
                 
             } catch (seedingError) {
                 console.error('\n❌ Seeding process failed:', seedingError.message);

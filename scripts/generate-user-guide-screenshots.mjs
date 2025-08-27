@@ -8,10 +8,20 @@
 
 console.log('🎬 Screenshot generation script starting...');
 
+// Force development environment for this script
+process.env.NODE_ENV = 'development';
+
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+
+// Load configuration using the same approach as the main app
+import { setEnvironmentVariables } from '../config/config.mjs';
+
+console.log('🔧 Loading environment configuration...');
+await setEnvironmentVariables();
+console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV}`);
 
 console.log('📦 Imports loaded successfully');
 
@@ -28,8 +38,8 @@ const CONFIG = {
   timeout: 30000,
   // Test credentials for delegate screenshots
   testCredentials: {
-    email: 'primary@canterburybankstonmasters.com.au',
-    password: 'delegate123'
+    email: 'primary@canterburybankstownmasters.com.au',
+    password: 'Delegate123!'
   }
 };
 
@@ -153,6 +163,9 @@ class ScreenshotGenerator {
   async login() {
     try {
       console.log('🔐 Logging in...');
+      console.log('🔍 Using credentials:');
+      console.log(`   📧 Email: ${CONFIG.testCredentials.email}`);
+      console.log(`   🔑 Password: ${CONFIG.testCredentials.password}`);
       console.log(`🔗 Navigating to login page: ${CONFIG.baseURL}/auth/login`);
       await this.page.goto(`${CONFIG.baseURL}/auth/login`);
       await this.page.waitForLoadState('networkidle');

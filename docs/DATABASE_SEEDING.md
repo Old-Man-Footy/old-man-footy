@@ -33,7 +33,7 @@ After seeding, you can log in with:
 - **Delegates**: `primary@[clubname].com.au` / `Delegate123!`
 
 Example delegate emails:
-- `primary@canterburybankstonmasters.com.au`
+- `primary@canterburybankstownmasters.com.au`
 - `primary@brisbanebroncosmasters.com.au`
 - `primary@melbournestormmasters.com.au`
 
