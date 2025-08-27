@@ -18,7 +18,7 @@ import {
     EmailSubscription, 
     ClubAlternateName, 
     SyncLog 
-} from '../models/index.mjs';
+} from '../../models/index.mjs';
 import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
 import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
 import { SAMPLE_SPONSORS } from '../fixtures/sponsorFixtures.mjs';

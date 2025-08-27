@@ -5,12 +5,12 @@
  * and their basic relationships
  */
 
-import { Club, User, Carnival, Sponsor, EmailSubscription } from '../models/index.mjs';
+import { Club, User, Carnival, Sponsor, EmailSubscription } from '../../models/index.mjs';
 import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
 import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
 import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
-import MySidelineService from '../services/mySidelineIntegrationService.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import MySidelineService from '../../services/mySidelineIntegrationService.mjs';
+import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
 
 class BasicSeeder {
     constructor() {
@@ -27,7 +27,7 @@ class BasicSeeder {
     async connect() {
         try {
             // Only check connection health, do not run full setup
-            const { getDatabaseConnection } = await import('../config/database.mjs');
+            const { getDatabaseConnection } = await import('../../config/database.mjs');
             const connected = await getDatabaseConnection();
             if (!connected) throw new Error('Failed to establish database connection');
             console.log('✅ SQLite database connection is healthy');

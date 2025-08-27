@@ -38,7 +38,6 @@ const __dirname = path.dirname(__filename);
 
 // Import modular services
 import { validateEnvironment } from './utilities/environmentValidation.mjs';
-import DatabaseBackup from './utilities/databaseBackup.mjs';
 import DataCleanup from './utilities/dataCleanup.mjs';
 import BasicSeeder from './utilities/basicSeeder.mjs';
 import PlayerSeeder from './utilities/playerSeeder.mjs';
@@ -67,7 +66,6 @@ process.on('uncaughtException', (err) => {
  */
 class DatabaseSeeder {
     constructor() {
-        this.backupService = new DatabaseBackup();
         this.cleanupService = new DataCleanup();
         this.basicSeedingService = new BasicSeeder();
         this.playerSeedingService = new PlayerSeeder();
@@ -795,11 +793,11 @@ class DatabaseSeeder {
     }
 
     /**
-     * Run the complete seeding process with enhanced safety checks and backup
+     * Run the complete seeding process with enhanced safety checks
      * @returns {Promise<void>}
      */
     async seed() {
-        console.log('🌱 Starting PROTECTED database seeding process...\n');
+        console.log('🌱 Starting database seeding process...\n');
         
         try {
             // Multiple environment validation checkpoints
@@ -808,13 +806,7 @@ class DatabaseSeeder {
             
             await this.connect();
             
-            console.log('🛡️  SECURITY CHECKPOINT 2: Pre-backup validation');
-            await validateEnvironment();
-            
-            // 🆕 CREATE BACKUP BEFORE ANY CHANGES
-            await this.backupService.createBackup();
-            
-            console.log('🛡️  SECURITY CHECKPOINT 3: Pre-clear validation');
+            console.log('🛡️  SECURITY CHECKPOINT 2: Pre-clear validation');
             await validateEnvironment();
             
             // Choose clearing method based on command line flag
@@ -848,29 +840,13 @@ class DatabaseSeeder {
                 // Update summary to include player statistics
                 await this.generateEnhancedSummary();
                 
-                // Clean up old backups after successful seeding
-                await this.backupService.cleanupOldBackups();
-                
                 console.log('\n✅ Database seeding completed successfully');
-                
-                const backupPath = this.backupService.getBackupPath();
-                if (backupPath) {
-                    console.log(`💾 Backup available at: ${path.basename(backupPath)}`);
-                }
                 
                 console.log('\n🔐 Login credentials:');
                 console.log('   Admin: admin@oldmanfooty.au / admin123');
                 
             } catch (seedingError) {
                 console.error('\n❌ Seeding process failed:', seedingError.message);
-                
-                // Offer to restore from backup
-                const backupPath = this.backupService.getBackupPath();
-                if (backupPath && fs.existsSync(backupPath)) {
-                    console.log('\n🔄 Backup is available for restoration');
-                    console.log(`To restore manually: copy "${backupPath}" over your database file`);
-                }
-                
                 throw seedingError;
             }
             
@@ -890,7 +866,7 @@ const invokedName = process.argv[1] ? path.basename(process.argv[1]) : '';
 if (scriptName === invokedName) {
     // Display safety warning with updated information
     console.log('\n' + '⚠️ '.repeat(20));
-    console.log('🚨 DATABASE SEEDING SCRIPT - MODULAR SELECTIVE OPERATION');
+    console.log('🚨 DATABASE SEEDING SCRIPT - SELECTIVE OPERATION');
     console.log('⚠️ '.repeat(20));
     console.log('DEFAULT: Clears only SEED data, preserves real user data');
     console.log('Only run this on DEVELOPMENT or TEST databases');
