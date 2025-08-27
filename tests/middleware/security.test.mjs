@@ -113,9 +113,9 @@ describe('Security Middleware', () => {
       });
 
       it('should block requests exceeding rate limit', () => {
-        // Temporarily set NODE_ENV to non-test to enable rate limiting
+        // Temporarily set NODE_ENV to production to enable rate limiting
         const originalEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'development';
+        process.env.NODE_ENV = 'production';
         
         try {
           const testRateLimit = createRateLimiter({

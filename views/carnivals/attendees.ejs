@@ -149,11 +149,11 @@
                                             <!-- Approval Status Badge -->
                                             <div class="position-absolute top-0 end-0 mt-2 me-2">
                                                 <% if (registration.approvalStatus === 'approved') { %>
-                                                    <span class="badge bg-success">
+                                                    <span class="badge bg-primary">
                                                         <i class="bi bi-check-circle"></i> Approved
                                                     </span>
                                                 <% } else if (registration.approvalStatus === 'pending') { %>
-                                                    <span class="badge bg-warning text-dark">
+                                                    <span class="badge bg-success text-dark">
                                                         <i class="bi bi-clock"></i> Pending
                                                     </span>
                                                 <% } else if (registration.approvalStatus === 'rejected') { %>
