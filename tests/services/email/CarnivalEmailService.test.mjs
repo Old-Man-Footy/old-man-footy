@@ -252,6 +252,38 @@ describe('CarnivalEmailService', () => {
         expect(result).toEqual({ success: false, message: 'No original email address available' });
     });
 
+    it('should not send email if claiming user has same email as original contact', async () => {
+        const originalEmail = 'john.smith@newclub.com'; // Same as mockClaimingUser.email
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(result).toEqual({ 
+            success: false, 
+            message: 'No notification sent - claiming user is the original contact' 
+        });
+    });
+
+    it('should not send email if claiming user has same email as original contact (case insensitive)', async () => {
+        const originalEmail = 'JOHN.SMITH@NEWCLUB.COM'; // Same as mockClaimingUser.email but different case
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(result).toEqual({ 
+            success: false, 
+            message: 'No notification sent - claiming user is the original contact' 
+        });
+    });
+
     it('should include claiming club location in email if available', async () => {
         const originalEmail = 'original@mysideline.com';
         await carnivalEmailService.sendCarnivalClaimNotification(
@@ -279,6 +311,22 @@ describe('CarnivalEmailService', () => {
         expect(sendEmailMock).toHaveBeenCalledOnce();
         const html = sendEmailMock.mock.calls[0][0].html;
         expect(html).toContain('New Club FC');
+    });
+
+    it('should handle missing claiming user email gracefully', async () => {
+        const originalEmail = 'original@mysideline.com';
+        const userWithoutEmail = { ...mockClaimingUser, email: null };
+        
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            userWithoutEmail, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        // Should still send email since we can't compare emails
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        expect(result).toEqual({ success: true });
     });
   });
 });

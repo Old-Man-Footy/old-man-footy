@@ -229,6 +229,16 @@ export class CarnivalEmailService extends BaseEmailService {
                 return { success: false, message: 'No original email address available' };
             }
 
+            // Check if the claiming user has the same email as the original MySideline contact
+            // If so, don't send a notification (they're claiming their own carnival)
+            if (claimingUser.email && claimingUser.email.toLowerCase() === originalEmail.toLowerCase()) {
+                console.log(`Skipping carnival claim notification - claiming user (${claimingUser.email}) is the same as original contact (${originalEmail})`);
+                return { 
+                    success: false, 
+                    message: 'No notification sent - claiming user is the original contact'
+                };
+            }
+
             const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
             const claimerName = `${claimingUser.firstName} ${claimingUser.lastName}`;
 
