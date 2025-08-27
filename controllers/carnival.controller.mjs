@@ -64,9 +64,9 @@ const listCarnivalsHandler = async (req, res) => {
     whereClause.lastMySidelineSync = null;
   }
 
-  // Search filter
+  // Search filter - handle both search and date filters properly
   if (search) {
-    whereClause[Op.or] = [
+    const searchConditions = [
       // Use UPPER() function for case-insensitive comparison in SQLite
       sequelize.where(
         sequelize.fn('UPPER', sequelize.col('title')),
@@ -83,6 +83,43 @@ const listCarnivalsHandler = async (req, res) => {
         'LIKE',
         `%${search.toUpperCase()}%`
       ),
+    ];
+
+    // If we also have upcoming filter, combine them properly
+    if (upcomingFilter === 'true') {
+      whereClause[Op.and] = [
+        {
+          [Op.or]: [
+            {
+              date: { [Op.gte]: new Date() },
+              isActive: true
+            },
+            {
+              date: null,
+              isActive: true
+            }
+          ]
+        },
+        {
+          [Op.or]: searchConditions
+        }
+      ];
+      // Remove the original [Op.or] since we're restructuring
+      delete whereClause[Op.or];
+    } else {
+      whereClause[Op.or] = searchConditions;
+    }
+  } else if (upcomingFilter === 'true' && !whereClause[Op.or]) {
+    // Handle upcoming filter without search - ensure we don't overwrite existing Op.or
+    whereClause[Op.or] = [
+      {
+        date: { [Op.gte]: new Date() },
+        isActive: true
+      },
+      {
+        date: null,
+        isActive: true
+      }
     ];
   }
 
