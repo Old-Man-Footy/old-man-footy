@@ -1,3 +1,21 @@
+<div class="user-guide container">
+  <h1><%= title %></h1>
+
+    <% if (typeof pages !== 'undefined' && Array.isArray(pages) && pages.length) { %>
+        <% pages.forEach(function(page) { %>
+            <section class="guide-page">
+                <h2><%= page.title %></h2>
+                <p class="lead"><%= page.description %></p>
+                <div class="guide-screenshot">
+                    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" />
+                </div>
+                <p><a href="<%= page.url %>">Open this page in the site</a></p>
+                <hr />
+            </section>
+        <% }); %>
+    <% } %>
+
+</div>
 <div class="container mt-4">
     <div class="row">
         <div class="col-12">

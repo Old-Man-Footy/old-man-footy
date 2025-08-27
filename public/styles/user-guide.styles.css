@@ -236,3 +236,42 @@
 [data-theme="dark"] .page-title {
     color: var(--theme-text-primary) !important;
 }
+
+/* Index-specific polish */
+.user-guide-index .lead {
+    margin-bottom: 1rem;
+    color: #495057;
+}
+
+.user-guide-index .card {
+    transition: transform 160ms ease, box-shadow 160ms ease;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.user-guide-index .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.user-guide-index .card-header-thumb {
+    height: 140px;
+    background-size: cover;
+    background-position: center center;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    border-top-left-radius: calc(.25rem - 1px);
+    border-top-right-radius: calc(.25rem - 1px);
+}
+
+.user-guide-index .card .card-body {
+    padding: 1rem;
+}
+
+.user-guide-index .badge-delegate {
+    background: linear-gradient(90deg,#5b6cff,#6ef);
+    color: #fff;
+    font-weight: 600;
+}
+
+@media (max-width: 767px) {
+    .user-guide-index .card-header-thumb { height: 100px; }
+}

@@ -7,13 +7,9 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getUserGuide } from '../../controllers/userGuide.controller.mjs';
-import fs from 'fs/promises';
-
-// Mock the fs/promises module to avoid actual file system access
-vi.mock('fs/promises');
 
 // Mock the asyncHandler to test the raw controller function
-vi.mock('/middleware/asyncHandler.mjs', () => ({
+vi.mock('../../middleware/asyncHandler.mjs', () => ({
   asyncHandler: (fn) => fn,
 }));
 
@@ -21,13 +17,9 @@ describe('User Guide Controller', () => {
   let req, res, next;
 
   beforeEach(() => {
-    // Reset mocks before each test
     vi.clearAllMocks();
 
-    // Mock Express request, response, and next objects
-    req = {
-      user: { id: 1, name: 'Test User' },
-    };
+    req = { user: { id: 1, name: 'Test User' } };
     res = {
       render: vi.fn(),
       status: vi.fn().mockReturnThis(),
@@ -35,81 +27,58 @@ describe('User Guide Controller', () => {
     next = vi.fn();
   });
 
-  it('should render the delegate user guide for authenticated users', async () => {
-    // Arrange
-    const mockMarkdownContent = '# Delegate User Guide\n\nThis is the delegate guide.';
-    fs.readFile.mockResolvedValue(mockMarkdownContent);
-
+  it('should render the index with delegate pages for authenticated users', async () => {
     // Act
     await getUserGuide(req, res, next);
 
     // Assert
-    expect(fs.readFile).toHaveBeenCalledWith(expect.stringContaining('USER_GUIDE_DELEGATES.md'), 'utf8');
-    expect(res.render).toHaveBeenCalledWith('user-guide', {
+    expect(res.render).toHaveBeenCalledWith('user-guide/index', expect.objectContaining({
       title: 'Club Delegate User Guide',
-      guideContent: mockMarkdownContent,
+      pages: expect.any(Array),
       user: req.user,
       isAuthenticated: true,
-      additionalCSS: ['/styles/user-guide.styles.css'],
-    });
+      additionalCSS: ['/styles/user-guide.styles.css']
+    }));
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should render the standard user guide for non-authenticated users', async () => {
-    // Arrange
+  it('should render the index with public pages for non-authenticated users', async () => {
     req.user = null;
-    const mockMarkdownContent = '# Standard User Guide\n\nThis is the standard guide.';
-    fs.readFile.mockResolvedValue(mockMarkdownContent);
 
-    // Act
     await getUserGuide(req, res, next);
 
-    // Assert
-    expect(fs.readFile).toHaveBeenCalledWith(expect.stringContaining('USER_GUIDE_STANDARD.md'), 'utf8');
-    expect(res.render).toHaveBeenCalledWith('user-guide', {
+    expect(res.render).toHaveBeenCalledWith('user-guide/index', expect.objectContaining({
       title: 'Old Man Footy User Guide',
-      guideContent: mockMarkdownContent,
+      pages: expect.any(Array),
       user: null,
       isAuthenticated: false,
-      additionalCSS: ['/styles/user-guide.styles.css'],
-    });
+      additionalCSS: ['/styles/user-guide.styles.css']
+    }));
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should render the standard user guide for users without an ID', async () => {
-    // Arrange
-    req.user = { name: 'User without ID' }; // User object exists but no ID
-    const mockMarkdownContent = '# Standard User Guide\n\nThis is the standard guide.';
-    fs.readFile.mockResolvedValue(mockMarkdownContent);
+  it('should treat a user without an id as not authenticated', async () => {
+    req.user = { name: 'User without ID' };
 
-    // Act
     await getUserGuide(req, res, next);
 
-    // Assert
-    expect(fs.readFile).toHaveBeenCalledWith(expect.stringContaining('USER_GUIDE_STANDARD.md'), 'utf8');
-    expect(res.render).toHaveBeenCalledWith('user-guide', {
-      title: 'Old Man Footy User Guide',
-      guideContent: mockMarkdownContent,
-      user: req.user,
-      isAuthenticated: false,
-      additionalCSS: ['/styles/user-guide.styles.css'],
-    });
-    expect(next).not.toHaveBeenCalled();
+    // Controller uses presence of req.user to determine authentication
+    expect(res.render).toHaveBeenCalledWith('user-guide/index', expect.objectContaining({
+      title: 'Club Delegate User Guide',
+      isAuthenticated: true,
+      user: req.user
+    }));
   });
 
-  it('should forward file read errors to the error handler', async () => {
-    // Arrange
-    const fileReadError = new Error('Failed to read guide file');
-    fs.readFile.mockRejectedValue(fileReadError);
+  it('should render a 404 error for an unknown page key', async () => {
+    req.params = { pageKey: 'nonexistent-page' };
 
-    // Act & Assert
-    // The asyncHandler is mocked to be a pass-through, so we test if the async function rejects.
-    // The actual asyncHandler would catch this rejection and call next(fileReadError).
-    await expect(getUserGuide(req, res, next)).rejects.toThrow('Failed to read guide file');
+    await getUserGuide(req, res, next);
 
-    // Ensure no response was sent
-    expect(res.render).not.toHaveBeenCalled();
-    // next() is not called directly by the controller, but by the (real) asyncHandler
-    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.render).toHaveBeenCalledWith('error', expect.objectContaining({
+      title: 'Not Found',
+      message: 'User guide page not found'
+    }));
   });
 });

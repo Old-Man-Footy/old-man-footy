@@ -19,7 +19,6 @@
     "test:js": "vitest run --config vitest.config.js.mjs",
     "test:all": "npm run test && npm run test:js",
     "seed": "node scripts/seed-database.mjs",
-    "docs:update": "node scripts/update-user-guide-documentation.mjs",
     "docs:screenshots": "node scripts/generate-user-guide-screenshots.mjs",
     "playwright:install": "playwright install",
     "docker:build:test": "docker build -t old-man-footy:test --target test .",

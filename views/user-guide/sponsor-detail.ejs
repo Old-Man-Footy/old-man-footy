@@ -1,0 +1,29 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Sponsor details and visibility</h2>
+  <p>The Sponsor Details page shows the sponsor profile, logo, description and whether they are publicly visible on the site.</p>
+
+  <h3>Fields explained</h3>
+  <ul>
+    <li><strong>Name</strong> — sponsor's public name.</li>
+    <li><strong>Website</strong> — link to the sponsor's site.</li>
+    <li><strong>Description</strong> — short information about the sponsor and relationship with the club.</li>
+    <li><strong>Publicly visible</strong> — toggle to control whether this sponsor appears in the public sponsor directory.</li>
+  </ul>
+
+  <h3>Editing a sponsor</h3>
+  <ol>
+    <li>Click <em>Edit</em> to update sponsor information.</li>
+    <li>Upload a new logo if needed.</li>
+    <li>Save changes to update the sponsor profile.</li>
+  </ol>
+
+  <p class="mt-3"><a href="<%= page.url.replace(':id', '51') %>">Open an example sponsor page</a></p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div>

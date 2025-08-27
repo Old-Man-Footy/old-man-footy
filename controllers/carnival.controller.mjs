@@ -211,9 +211,11 @@ const listCarnivalsHandler = async (req, res) => {
     const publicData = carnival.getPublicDisplayData();
 
     // Check if this carnival can be claimed by the current user
+    // Allow events that either have a MySideline ID or have a MySideline sync timestamp
+    const hasMySidelineMarker = carnival.mySidelineId || carnival.lastMySidelineSync;
     const canTakeOwnership =
       carnival.isActive &&
-      carnival.mySidelineId &&
+      hasMySidelineMarker &&
       !carnival.createdByUserId &&
       userWithClub &&
       userWithClub.clubId &&

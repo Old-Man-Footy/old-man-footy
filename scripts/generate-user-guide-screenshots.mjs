@@ -279,7 +279,10 @@ class ScreenshotGenerator {
         { url: `${CONFIG.baseURL}/clubs/manage/alternate-names`, name: 'club-manage-alternate-names', waitFor: '#addAlternateNameForm, #alternateNamesList, .alternate-name-card, #editAlternateNameModal' },
         { url: `${CONFIG.baseURL}/clubs/manage/sponsors`, name: 'club-manage-sponsors', waitFor: '.card, .sponsor-card, .no-sponsors-message' },
         { url: `${CONFIG.baseURL}/sponsors/${CONFIG.screenshotSponsorId}`, name: 'sponsor-detail', waitFor: '.sponsor-detail, .card, .sponsor-info' },
-  { url: `${CONFIG.baseURL}/clubs/players/add`, name: 'club-players-add', waitFor: 'form[action="/clubs/players"], input[name="firstName"], input[name="lastName"]' }
+        { url: `${CONFIG.baseURL}/clubs/players/add`, name: 'club-players-add', waitFor: 'form[action="/clubs/players"], input[name="firstName"], input[name="lastName"]' },
+        { url: `${CONFIG.baseURL}/admin/carnivals/create`, name: 'create-carnival', waitFor: 'form, input[name="title"], input[name="date"]', selector: 'form' },
+        { url: `${CONFIG.baseURL}/teams/create`, name: 'create-team', waitFor: 'form, input[name="teamName"]', selector: 'form' },
+        { url: `${CONFIG.baseURL}/admin/carnivals/claim`, name: 'claim-carnival', waitFor: 'form, #claim-carnival-form, input[name="evidence"]', selector: 'form' }
       ];
 
       for (const screenshot of screenshots) {
