@@ -206,6 +206,52 @@ export class CarnivalEmailService extends BaseEmailService {
     }
 
     /**
+     * Send carnival claim notification to original MySideline organiser
+     * @param {Object} carnival - Carnival instance
+     * @param {Object} claimingUser - User who claimed the carnival
+     * @param {Object} claimingClub - Club that claimed the carnival
+     * @param {string} originalEmail - Original MySideline contact email
+     * @returns {Object} Result object with success status
+     */
+    async sendCarnivalClaimNotification(carnival, claimingUser, claimingClub, originalEmail) {
+        try {
+            // Check if emails can be sent
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Carnival Claim Notification', originalEmail, `carnival claimed: ${carnival.title}`);
+                return { 
+                    success: false, 
+                    message: 'Email sending is disabled in the current site mode'
+                };
+            }
+
+            if (!originalEmail) {
+                console.warn('No original email address available for carnival claim notification');
+                return { success: false, message: 'No original email address available' };
+            }
+
+            const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
+            const claimerName = `${claimingUser.firstName} ${claimingUser.lastName}`;
+
+            const mailOptions = {
+                from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                to: originalEmail,
+                subject: `Your carnival "${carnival.title}" has been claimed on Old Man Footy`,
+                html: this._buildCarnivalClaimNotificationHtml(carnival, claimerName, claimingClub, carnivalUrl)
+            };
+
+            const result = await this.sendEmail(mailOptions, 'Carnival Claim Notification');
+            if (result.success) {
+                console.log(`Carnival claim notification email sent to: ${originalEmail}`);
+            }
+            return result;
+
+        } catch (error) {
+            console.error('Failed to send carnival claim notification email:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get carnival notification content based on type
      * @param {string} type - Notification type
      * @param {string} carnivalTitle - Title of the carnival
@@ -552,6 +598,75 @@ export class CarnivalEmailService extends BaseEmailService {
                 </div>
                 
                 ${this._getEmailFooter()}
+            </div>
+        `;
+    }
+
+    /**
+     * Build HTML for carnival claim notification email
+     * @param {Object} carnival - Carnival instance
+     * @param {string} claimerName - Name of the person who claimed the carnival
+     * @param {Object} claimingClub - Club that claimed the carnival
+     * @param {string} carnivalUrl - URL to carnival page
+     * @returns {string} HTML content
+     */
+    _buildCarnivalClaimNotificationHtml(carnival, claimerName, claimingClub, carnivalUrl) {
+        return `
+            <div style="${this._getEmailContainerStyles()}">
+                ${this._getEmailHeader()}
+                
+                <div style="${this._getEmailContentStyles()}">
+                    <h2 style="color: #006837;">🏉 Your Carnival Has Been Claimed</h2>
+                    
+                    <p>Hello,</p>
+                    
+                    <p>This is a notification to let you know that your carnival listed on MySideline has been claimed and is now being managed through Old Man Footy.</p>
+                    
+                    ${this._createInfoBox(`
+                        <h3 style="color: #006837; margin-top: 0;">${carnival.title}</h3>
+                        <p><strong>📅 Date:</strong> ${this._formatDate(carnival.date)}</p>
+                        <p><strong>📍 Location:</strong> ${carnival.locationAddress}</p>
+                        <p><strong>🏟️ State:</strong> ${carnival.state}</p>
+                    `)}
+                    
+                    <p><strong>Who claimed your carnival:</strong></p>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 0;"><strong>👤 Contact Person:</strong> ${claimerName}</p>
+                        <p style="margin: 5px 0 0 0;"><strong>🏛️ Club:</strong> ${claimingClub.clubName}</p>
+                        ${claimingClub.location ? `<p style="margin: 5px 0 0 0;"><strong>📍 Club Location:</strong> ${claimingClub.location}</p>` : ''}
+                    </div>
+                    
+                    <p><strong>What this means:</strong></p>
+                    <ul style="line-height: 1.6;">
+                        <li>🎯 Your carnival is now actively managed on Old Man Footy</li>
+                        <li>📋 Registration and player management is handled through our platform</li>
+                        <li>📧 You can contact the new organiser using the details above</li>
+                        <li>🔗 View the full carnival page using the link below</li>
+                    </ul>
+                    
+                    ${this._createWarningBox(`
+                        <p style="margin: 0; color: #856404;">
+                            <strong>📞 Need to contact the organiser?</strong><br>
+                            If you have questions about your carnival or need to coordinate with the new organiser, 
+                            you can reach out to ${claimerName} directly or view the carnival page for updated contact information.
+                        </p>
+                    `)}
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        ${this._createButton(carnivalUrl, '🏉 View Your Carnival on Old Man Footy')}
+                    </div>
+                    
+                    <p style="font-size: 14px; color: #666;">
+                        <strong>About Old Man Footy:</strong> We're a platform dedicated to connecting masters rugby league clubs across Australia. 
+                        Your carnival is now part of a network that makes it easier for teams to find and register for events.
+                    </p>
+                    
+                    <p style="font-size: 14px; color: #666; text-align: center;">
+                        Thank you for organizing masters rugby league events! 🏉
+                    </p>
+                </div>
+                
+                ${this._getEmailFooter(`Questions? Reply to this email or visit <a href="${this._getBaseUrl()}" style="color: #ccc;">oldmanfooty.au</a>`)}
             </div>
         `;
     }

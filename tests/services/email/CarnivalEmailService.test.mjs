@@ -208,4 +208,77 @@ describe('CarnivalEmailService', () => {
         expect(result).toEqual({ success: false, message: 'No email address available' });
     });
   });
+
+  describe('sendCarnivalClaimNotification', () => {
+    const mockClaimingUser = {
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john.smith@newclub.com'
+    };
+
+    const mockClaimingClub = {
+        clubName: 'New Club FC',
+        location: 'Brisbane, QLD'
+    };
+
+    it('should send claim notification to original MySideline contact', async () => {
+        const originalEmail = 'original@mysideline.com';
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        const mailOptions = sendEmailMock.mock.calls[0][0];
+        expect(mailOptions.to).toBe(originalEmail);
+        expect(mailOptions.subject).toContain('Your carnival "Test Carnival 2025" has been claimed');
+        expect(mailOptions.html).toContain('🏉 Your Carnival Has Been Claimed');
+        expect(mailOptions.html).toContain('John Smith');
+        expect(mailOptions.html).toContain('New Club FC');
+        expect(result).toEqual({ success: true });
+    });
+
+    it('should return failure if no original email is provided', async () => {
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            null
+        );
+        
+        expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(result).toEqual({ success: false, message: 'No original email address available' });
+    });
+
+    it('should include claiming club location in email if available', async () => {
+        const originalEmail = 'original@mysideline.com';
+        await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        const html = sendEmailMock.mock.calls[0][0].html;
+        expect(html).toContain('Brisbane, QLD');
+    });
+
+    it('should handle missing club location gracefully', async () => {
+        const originalEmail = 'original@mysideline.com';
+        const clubWithoutLocation = { ...mockClaimingClub, location: null };
+        
+        await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            clubWithoutLocation, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        const html = sendEmailMock.mock.calls[0][0].html;
+        expect(html).toContain('New Club FC');
+    });
+  });
 });

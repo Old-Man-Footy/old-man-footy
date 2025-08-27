@@ -356,11 +356,16 @@ class Carnival extends Model {
         throw new Error('This carnival already has an owner');
       }
 
-      // All checks passed - update the carnival with user's clubId and contact details (do NOT set createdByUserId)
+      // All checks passed - preserve original MySideline contact email before updating
+      const originalMySidelineContactEmail = carnival.organiserContactEmail;
+
+      // Update the carnival with user's clubId and contact details (do NOT set createdByUserId)
       const updateData = {
         clubId: user.clubId, // Set clubId on claim
         claimedAt: new Date(),
         updatedAt: new Date(),
+        // Preserve original MySideline contact email
+        originalMySidelineContactEmail: originalMySidelineContactEmail,
         // Auto-populate contact details with the claiming user's information
         organiserContactName: `${user.firstName} ${user.lastName}`,
         organiserContactEmail: user.email,
@@ -368,6 +373,23 @@ class Carnival extends Model {
       };
 
       await carnival.update(updateData);
+
+      // Send notification to original MySideline contact if email exists
+      if (originalMySidelineContactEmail) {
+        try {
+          const CarnivalEmailService = (await import('../services/email/CarnivalEmailService.mjs')).default;
+          await CarnivalEmailService.sendCarnivalClaimNotification(
+            carnival, 
+            user, 
+            user.club, 
+            originalMySidelineContactEmail
+          );
+          console.log(`📧 Claim notification sent to original organiser: ${originalMySidelineContactEmail}`);
+        } catch (emailError) {
+          console.warn(`⚠️ Failed to send claim notification email to ${originalMySidelineContactEmail}:`, emailError.message);
+          // Don't fail the claiming process if email fails
+        }
+      }
 
       // Log the ownership claim for audit purposes
       console.log(`🏆 Carnival ownership claimed: "${carnival.title}" (ID: ${carnivalId}) claimed by user ${userId} (${user.club.clubName})`);
@@ -580,11 +602,16 @@ class Carnival extends Model {
         stateWarning = ` Note: This carnival is in ${carnival.state} but the club is based in ${targetClub.state}.`;
       }
 
-      // All checks passed - update the carnival with primary delegate's contact details
+      // All checks passed - preserve original MySideline contact email before updating
+      const originalMySidelineContactEmail = carnival.organiserContactEmail;
+
+      // Update the carnival with primary delegate's contact details
       const updateData = {
         createdByUserId: primaryDelegate.id,
         claimedAt: new Date(),
         updatedAt: new Date(),
+        // Preserve original MySideline contact email
+        originalMySidelineContactEmail: originalMySidelineContactEmail,
         // Auto-populate contact details with the primary delegate's information
         organiserContactName: `${primaryDelegate.firstName} ${primaryDelegate.lastName}`,
         organiserContactEmail: primaryDelegate.email,
@@ -592,6 +619,23 @@ class Carnival extends Model {
       };
 
       await carnival.update(updateData);
+
+      // Send notification to original MySideline contact if email exists
+      if (originalMySidelineContactEmail) {
+        try {
+          const CarnivalEmailService = (await import('../services/email/CarnivalEmailService.mjs')).default;
+          await CarnivalEmailService.sendCarnivalClaimNotification(
+            carnival, 
+            primaryDelegate, 
+            targetClub, 
+            originalMySidelineContactEmail
+          );
+          console.log(`📧 Admin claim notification sent to original organiser: ${originalMySidelineContactEmail}`);
+        } catch (emailError) {
+          console.warn(`⚠️ Failed to send admin claim notification email to ${originalMySidelineContactEmail}:`, emailError.message);
+          // Don't fail the claiming process if email fails
+        }
+      }
 
       // Log the admin claim for audit purposes
       console.log(`🏆 Admin claim: "${carnival.title}" (ID: ${carnivalId}) claimed by admin ${adminUser.email} for club ${targetClub.clubName} (Primary delegate: ${primaryDelegate.email})`);
@@ -962,6 +1006,12 @@ Carnival.init({
   claimedAt: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  // Original MySideline contact email (preserved before claiming)
+  originalMySidelineContactEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Original organiser contact email from MySideline import, preserved when carnival is claimed'
   },
   // Enhanced fields for better carnival management
   maxTeams: {
