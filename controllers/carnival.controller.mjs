@@ -132,7 +132,54 @@ const listCarnivalsHandler = async (req, res) => {
         attributes: ['firstName', 'lastName'],
       },
     ],
-    order: [['date', 'DESC']], // Show newest first so inactive/past carnivals appear after active ones
+    // Remove database ordering - we'll sort in JavaScript for complex prioritization
+  });
+
+  // Custom sorting: Upcoming first, then active no-date, then past/inactive
+  const sortedCarnivals = carnivals.sort((a, b) => {
+    const now = new Date();
+    const aDate = a.date ? new Date(a.date) : null;
+    const bDate = b.date ? new Date(b.date) : null;
+    
+    // Determine category for each carnival
+    // Category 1: Upcoming (has date >= today AND is active)
+    // Category 2: No date but active
+    // Category 3: Past date or inactive
+    const getCategory = (carnival, date) => {
+      if (!carnival.isActive) return 3; // Inactive always goes to category 3
+      if (!date) return 2; // No date but active
+      if (date >= now) return 1; // Upcoming
+      return 3; // Past date
+    };
+    
+    const aCat = getCategory(a, aDate);
+    const bCat = getCategory(b, bDate);
+    
+    // Sort by category first
+    if (aCat !== bCat) {
+      return aCat - bCat;
+    }
+    
+    // Within same category, apply specific sorting
+    if (aCat === 1) {
+      // Category 1: Upcoming - sort by date ascending (soonest first)
+      return aDate - bDate;
+    } else if (aCat === 2) {
+      // Category 2: No date but active - sort alphabetically by title
+      return (a.title || '').localeCompare(b.title || '');
+    } else {
+      // Category 3: Past/inactive - sort by date ascending, then alphabetically
+      if (aDate && bDate) {
+        return aDate - bDate;
+      } else if (aDate && !bDate) {
+        return -1; // Items with dates come before items without dates
+      } else if (!aDate && bDate) {
+        return 1;
+      } else {
+        // Both have no date, sort alphabetically
+        return (a.title || '').localeCompare(b.title || '');
+      }
+    }
   });
 
   // Fetch full user data with club information for ownership checking
@@ -160,7 +207,7 @@ const listCarnivalsHandler = async (req, res) => {
   }
 
   // Process carnivals through getPublicDisplayData and add ownership information
-  const processedCarnivals = carnivals.map((carnival) => {
+  const processedCarnivals = sortedCarnivals.map((carnival) => {
     const publicData = carnival.getPublicDisplayData();
 
     // Check if this carnival can be claimed by the current user
