@@ -28,8 +28,8 @@ const CONFIG = {
   timeout: 30000,
   // Test credentials for delegate screenshots
   testCredentials: {
-    email: 'admin@oldmanfooty.au',
-    password: 'admin123'
+    email: 'primary@canterburybankstonmasters.com.au',
+    password: 'delegate123'
   }
 };
 
@@ -261,19 +261,19 @@ class ScreenshotGenerator {
           waitFor: '.dashboard-stats, .card'
         },
         {
-          url: `${CONFIG.baseURL}/admin/carnivals`,
-          name: 'carnival-management',
-          waitFor: '.carnival-list, .admin-content'
-        },
-        {
-          url: `${CONFIG.baseURL}/admin/clubs`,
+          url: `${CONFIG.baseURL}/clubs/manage`,
           name: 'club-management',
-          waitFor: '.club-list, .admin-content'
+          waitFor: '.card, .club-management'
         },
         {
-          url: `${CONFIG.baseURL}/admin/carnivals/create`,
+          url: `${CONFIG.baseURL}/carnivals/new`,
           name: 'carnival-creation-form',
           waitFor: 'form'
+        },
+        {
+          url: `${CONFIG.baseURL}/carnivals`,
+          name: 'carnival-listing-delegate',
+          waitFor: '.carnival-card, .no-carnivals-message'
         }
       ];
 
