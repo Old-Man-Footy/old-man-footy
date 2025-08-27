@@ -44,7 +44,7 @@ const CONFIG = {
 };
 
 // ID used for sponsor detail screenshot; override via env var if needed
-CONFIG.screenshotSponsorId = process.env.SCREENSHOT_SPONSOR_ID || '1';
+CONFIG.screenshotSponsorId = process.env.SCREENSHOT_SPONSOR_ID || '51';
 
 console.log('⚙️ Configuration loaded:', CONFIG);
 
@@ -279,7 +279,7 @@ class ScreenshotGenerator {
         { url: `${CONFIG.baseURL}/clubs/manage/alternate-names`, name: 'club-manage-alternate-names', waitFor: '#addAlternateNameForm, #alternateNamesList, .alternate-name-card, #editAlternateNameModal' },
         { url: `${CONFIG.baseURL}/clubs/manage/sponsors`, name: 'club-manage-sponsors', waitFor: '.card, .sponsor-card, .no-sponsors-message' },
         { url: `${CONFIG.baseURL}/sponsors/${CONFIG.screenshotSponsorId}`, name: 'sponsor-detail', waitFor: '.sponsor-detail, .card, .sponsor-info' },
-        { url: `${CONFIG.baseURL}/clubs/players/add`, name: 'club-players-add', waitFor: 'form, input[name="firstName"], input[name="lastName"]' }
+  { url: `${CONFIG.baseURL}/clubs/players/add`, name: 'club-players-add', waitFor: 'form[action="/clubs/players"], input[name="firstName"], input[name="lastName"]' }
       ];
 
       for (const screenshot of screenshots) {
