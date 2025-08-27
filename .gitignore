@@ -166,16 +166,13 @@ sessions/
 # PM2 process file
 ecosystem.config.js
 
-# Exclude uploaded images from uploads and images directories, but keep icons
-public/uploads/*.png
-public/uploads/*.jpg 
-public/uploads/*.jpeg
-public/images/*.png
-public/images/*.jpg 
-public/images/*.jpeg
-*.png
-*.jpg
-
+# Ignore images in the public directory and all its subdirectories
+public/**/*.png
+public/**/*.jpg
+public/**/*.jpeg
+!public/screenshots/**/*.png
+!public/screenshots/**/*.jpg
+!public/screenshots/**/*.jpeg
 
 # Keep icon files - they should be committed to the repo
 .env.local
