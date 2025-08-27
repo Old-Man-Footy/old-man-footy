@@ -273,7 +273,7 @@ Ready to get more involved? Consider:
 
 ---
 
-*For club delegates and administrative features, see the [Club Delegate User Guide](./USER_GUIDE_DELEGATES.md).*`;
+*For club delegates and administrative features, see the user guide after logging in.*`;
 
     writeFileSync(standardGuidePath, standardContent);
     console.log('✅ Standard User Guide updated');

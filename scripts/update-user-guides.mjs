@@ -12,7 +12,7 @@ const __dirname = dirname(__filename);
 
 const CONFIG = {
   docsDir: join(__dirname, '../docs'),
-  screenshotDir: join(__dirname, '../docs/screenshots'),
+  screenshotDir: join(__dirname, '../public/screenshots'),
   baseURL: process.env.BASE_URL || 'http://localhost:3050'
 };
 
@@ -24,8 +24,7 @@ class UserGuideUpdater {
   loadScreenshots() {
     const screenshots = {
       'standard-user': [],
-      'delegate-user': [],
-      'mobile': []
+      'delegate-user': []
     };
 
     Object.keys(screenshots).forEach(folder => {
@@ -59,7 +58,7 @@ class UserGuideUpdater {
 
 Welcome to Old Man Footy, Australia's premier platform for Masters Rugby League events and club management.
 
-![Homepage Overview](./screenshots/standard-user/homepage-overview_${this.getCurrentDate()}.png)
+![Homepage Overview](/screenshots/standard-user/homepage-overview.png)
 *The Old Man Footy homepage provides easy access to all platform features*
 
 ## What is Old Man Footy?
@@ -74,7 +73,7 @@ You can explore many features without creating an account:
 #### Navigation Overview
 The main navigation provides access to all key sections:
 
-![Navigation Menu](./screenshots/standard-user/navigation-menu_${this.getCurrentDate()}.png)
+![Navigation Menu](/screenshots/standard-user/navigation-menu.png)
 *Main navigation menu showing all available sections*
 
 - **[Home](${CONFIG.baseURL})** - Platform overview and latest updates
@@ -86,7 +85,7 @@ The main navigation provides access to all key sections:
 ### Creating an Account
 To unlock full functionality and become a club delegate:
 
-![User Registration](./screenshots/standard-user/user-registration_${this.getCurrentDate()}.png)
+![User Registration](/screenshots/standard-user/user-registration.png)
 *User registration form for creating a new account*
 
 1. Click **[Register](${CONFIG.baseURL}/auth/register)** in the top navigation
@@ -101,7 +100,7 @@ To unlock full functionality and become a club delegate:
 #### Carnival Listings
 Browse all upcoming Masters Rugby League events with detailed information:
 
-![Carnivals Listing](./screenshots/standard-user/carnivals-listing_${this.getCurrentDate()}.png)
+![Carnivals Listing](/screenshots/standard-user/carnivals-listing.png)
 *Comprehensive carnival listings with filtering options*
 
 Visit **[Carnivals](${CONFIG.baseURL}/carnivals)** to:
@@ -117,7 +116,7 @@ Visit **[Carnivals](${CONFIG.baseURL}/carnivals)** to:
 
 ### Club Directory
 
-![Clubs Directory](./screenshots/standard-user/clubs-directory_${this.getCurrentDate()}.png)
+![Clubs Directory](/screenshots/standard-user/clubs-directory.png)
 *Club directory showing Masters Rugby League clubs across Australia*
 
 The **[Clubs Directory](${CONFIG.baseURL}/clubs)** allows you to:
@@ -128,7 +127,7 @@ The **[Clubs Directory](${CONFIG.baseURL}/clubs)** allows you to:
 
 ### Sponsor Network
 
-![Sponsors Network](./screenshots/standard-user/sponsors-network_${this.getCurrentDate()}.png)
+![Sponsors Network](/screenshots/standard-user/sponsors-network.png)
 *Sponsor network showcasing businesses supporting Masters Rugby League*
 
 Explore the **[Sponsor Network](${CONFIG.baseURL}/sponsors)** to:
@@ -157,24 +156,14 @@ Each event listing includes:
 ### Contact Us
 Need help or have questions? Visit our **[Contact Page](${CONFIG.baseURL}/contact)**:
 
-![Contact Page](./screenshots/standard-user/contact-page_${this.getCurrentDate()}.png)
+![Contact Page](/screenshots/standard-user/contact-page.png)
 *Contact form for getting support and asking questions*
 
 ### User Guide
 For more detailed information, visit the **[User Guide](${CONFIG.baseURL}/user-guide)** page:
 
-![User Guide Page](./screenshots/standard-user/user-guide-page_${this.getCurrentDate()}.png)
+![User Guide Page](/screenshots/standard-user/user-guide-page.png)
 *Comprehensive user guide with step-by-step instructions*
-
-## Mobile Experience
-
-The platform is fully responsive and works great on mobile devices:
-
-![Mobile Homepage](./screenshots/mobile/mobile-homepage_${this.getCurrentDate()}.png)
-*Mobile-optimized homepage for on-the-go access*
-
-![Mobile Carnivals](./screenshots/mobile/mobile-carnivals_${this.getCurrentDate()}.png)
-*Mobile carnival listings with touch-friendly interface*
 
 ## Next Steps
 
@@ -185,7 +174,8 @@ Ready to get more involved? Consider:
 
 ---
 
-*For club delegates and administrative features, see the [Club Delegate User Guide](./USER_GUIDE_DELEGATES.md).*`;
+*For club delegates and administrative features, see the user guide after logging in.*`;
+
 
     writeFileSync(guidePath, updatedContent);
     console.log('✅ Standard User Guide updated successfully');
@@ -213,13 +203,13 @@ Old Man Footy is a platform designed to help manage Masters Rugby League events 
 
 When you log in, you'll see your dashboard which provides comprehensive management tools:
 
-![Dashboard Overview](./screenshots/delegate-user/dashboard-overview_${this.getCurrentDate()}.png)
+![Dashboard Overview](/screenshots/delegate-user/dashboard-overview.png)
 *Club delegate dashboard with quick stats and management options*
 
 ### Quick Stats
 The dashboard provides an at-a-glance view of your club's activity:
 
-![Dashboard Stats](./screenshots/delegate-user/dashboard-stats_${this.getCurrentDate()}.png)
+![Dashboard Stats](/screenshots/delegate-user/dashboard-stats.png)
 *Key statistics showing your club's event participation*
 
 - **[Your Carnivals](${CONFIG.baseURL}/dashboard)**: Number of events your club is registered for
@@ -235,7 +225,7 @@ The dashboard provides an at-a-glance view of your club's activity:
 
 ### Carnival Management Interface
 
-![Carnival Management](./screenshots/delegate-user/carnival-management_${this.getCurrentDate()}.png)
+![Carnival Management](/screenshots/delegate-user/carnival-management.png)
 *Comprehensive carnival management interface for delegates*
 
 Access the **[Carnival Management](${CONFIG.baseURL}/admin/carnivals)** section to:
@@ -259,7 +249,7 @@ Access the **[Carnival Management](${CONFIG.baseURL}/admin/carnivals)** section 
 
 For managing event information on this platform:
 
-![Carnival Creation Form](./screenshots/delegate-user/carnival-creation-form_${this.getCurrentDate()}.png)
+![Carnival Creation Form](/screenshots/delegate-user/carnival-creation-form.png)
 *Form for creating a new carnival event*
 
 1. Navigate to **[Carnivals](${CONFIG.baseURL}/admin/carnivals)** in the admin menu
@@ -285,7 +275,7 @@ For managing event information on this platform:
 
 ### Club Administration
 
-![Club Management](./screenshots/delegate-user/club-management_${this.getCurrentDate()}.png)
+![Club Management](/screenshots/delegate-user/club-management.png)
 *Club management interface for maintaining club information*
 
 Access **[Club Management](${CONFIG.baseURL}/admin/clubs)** to:
