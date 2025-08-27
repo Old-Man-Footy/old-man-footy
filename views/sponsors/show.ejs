@@ -207,9 +207,9 @@
                 </div>
             <% } %>
             
-            <!-- Statistics -->
+            <!-- Sponsor Details -->
             <div class="sponsor-info-card">
-                <h4 class="mb-3">Statistics</h4>
+                <h4 class="mb-3">Sponsor Details</h4>
                 <div class="row text-center">
                     <div class="col-6">
                         <div class="h3 text-primary mb-0">
@@ -218,10 +218,18 @@
                         <small class="text-muted">Days Active</small>
                     </div>
                     <div class="col-6">
-                        <div class="h3 text-success mb-0">
-                            <%= club ? 1 : 0 %>
+                        <div class="h5 text-success mb-0">
+                            <%= sponsor.sponsorshipLevel || 'Standard' %>
                         </div>
-                        <small class="text-muted">Associated Club</small>
+                        <small class="text-muted">Sponsorship Level</small>
+                    </div>
+                </div>
+                <div class="row text-center mt-3">
+                    <div class="col-12">
+                        <span class="badge <%= sponsor.isActive ? 'bg-success' : 'bg-secondary' %> fs-6">
+                            <i class="bi bi-<%= sponsor.isActive ? 'check-circle' : 'pause-circle' %>"></i>
+                            <%= sponsor.isActive ? 'Active' : 'Inactive' %>
+                        </span>
                     </div>
                 </div>
             </div>
