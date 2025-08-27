@@ -263,8 +263,23 @@ class BasicSeeder {
     async createSponsors() {
         console.log('🤝 Creating test sponsors...');
         
+        // Get available clubs to assign sponsors to
+        const availableClubs = this.createdClubs.length > 0 ? this.createdClubs : await Club.findAll();
+        
+        if (availableClubs.length === 0) {
+            console.log('⚠️  No clubs available to assign sponsors to. Skipping sponsor creation.');
+            return this.createdSponsors;
+        }
+        
         for (const sponsorData of SAMPLE_SPONSORS) {
-            const sponsor = await Sponsor.create(sponsorData);
+            // Assign sponsor to a random club
+            const randomClub = availableClubs[Math.floor(Math.random() * availableClubs.length)];
+            const sponsorWithClub = {
+                ...sponsorData,
+                clubId: randomClub.id
+            };
+            
+            const sponsor = await Sponsor.create(sponsorWithClub);
             this.createdSponsors.push(sponsor);
         }
         

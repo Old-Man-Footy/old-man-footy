@@ -829,7 +829,6 @@ class DatabaseSeeder {
                 this.createdEntities.users = await this.basicSeedingService.createUsers();
                 await this.playerSeedingService.createClubPlayers(this.createdEntities.clubs);
                 this.createdEntities.sponsors = await this.basicSeedingService.createSponsors();
-                await this.linkSponsorsToClubs();
                 this.createdEntities.carnivals = await this.basicSeedingService.createManualCarnivals();
                 await this.linkSponsorsToCarnivals();
                 const carnivalClubs = await this.linkClubsToCarnivals();
