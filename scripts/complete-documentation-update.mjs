@@ -167,21 +167,7 @@ class DocumentationUpdater {
       });
     }
 
-    // Mobile screenshots disabled per user request
-    /*
-    console.log('\n📱 Generating Mobile Screenshots...');
-    await this.page.setViewportSize({ width: 375, height: 812 });
-    
-    await this.takeScreenshot('mobile-homepage', CONFIG.baseURL, {
-      waitFor: 'main',
-      subfolder: 'mobile'
-    });
-    
-    await this.takeScreenshot('mobile-carnivals', `${CONFIG.baseURL}/carnivals`, {
-      waitFor: '.content, main',
-      subfolder: 'mobile'
-    });
-    */
+    // Mobile screenshots completely removed per user request
   }
 
   updateUserGuides() {

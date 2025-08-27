@@ -40,7 +40,6 @@ class ScreenshotGenerator {
       CONFIG.screenshotDir,
       join(CONFIG.screenshotDir, 'standard-user'),
       join(CONFIG.screenshotDir, 'delegate-user'),
-      join(CONFIG.screenshotDir, 'mobile'),
     ];
 
     directories.forEach(dir => {

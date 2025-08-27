@@ -88,16 +88,6 @@ For more detailed information, visit the **[User Guide](http://localhost:3050/us
 ![User Guide Page](./screenshots/standard-user/user-guide-page.png)
 *Comprehensive user guide with step-by-step instructions*
 
-## Mobile Experience
-
-The platform is fully responsive and works great on mobile devices:
-
-![Mobile Homepage](./screenshots/mobile/mobile-homepage.png)
-*Mobile-optimized homepage for on-the-go access*
-
-![Mobile Carnivals](./screenshots/mobile/mobile-carnivals.png)
-*Mobile carnival listings with touch-friendly interface*
-
 ## Next Steps
 
 Ready to get more involved? Consider:
