@@ -303,7 +303,7 @@
 
             <!-- Attending Carnivals Section -->
             <div class="card shadow mb-4">
-                <div class="card-header bg-info d-flex justify-content-between align-items-center">
+                <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-users me-2"></i>Carnivals Attended by <%= club.clubName %>
                     </h5>
@@ -377,7 +377,7 @@
                                                             </p>
                                                         <% } %>
                                                         <div class="mt-auto">
-                                                            <span class="badge bg-info me-1">Attending</span>
+                                                            <span class="badge bg-info text-dark me-1">Attending</span>
                                                             <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
                                                     </div>
@@ -506,7 +506,7 @@
                                                     <% } %>
                                                     <div class="mt-auto">
                                                         <% if (new Date(carnival.date) >= new Date()) { %>
-                                                            <span class="badge bg-info me-1">Attending</span>
+                                                            <span class="badge bg-info text-dark me-1">Attending</span>
                                                         <% } else { %>
                                                             <span class="badge bg-secondary me-1">Attended</span>
                                                         <% } %>

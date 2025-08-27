@@ -19,7 +19,7 @@ function setupDOM() {
                     <td>...</td>
                     <td>...</td>
                     <td><span class="badge bg-primary status-badge">Active</span></td>
-                    <td><span class="badge bg-info visibility-badge">Listed</span></td>
+                    <td><span class="badge bg-info text-dark visibility-badge">Listed</span></td>
                     <td>
                         <button 
                             data-action="toggle-club-status"

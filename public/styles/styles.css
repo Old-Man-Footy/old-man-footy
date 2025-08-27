@@ -248,6 +248,11 @@ a[class*="btn"]:focus,
     color: var(--rugby-dark-green) !important;
 }
 
+.bg-blue {
+    background-color: blue !important;
+    border-left-color: darkblue !important;
+}
+
 /* Ensure text color is applied with higher specificity */
 .card .card-header.bg-info,
 .card-header.bg-info h1,
@@ -660,7 +665,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 [data-theme="dark"] .col-md-6 h5,
 [data-theme="dark"] .col-md-6 .d-flex span,
 [data-theme="dark"] .col-md-6 span:not(.badge):not(.text-primary) {
-    color: var(--theme-text-primary) !important;
+    color: var(--theme-text-primary);
 }
 
 [data-theme="dark"] .social-links .btn {
