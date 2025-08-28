@@ -64,7 +64,6 @@ const ROUTE_DEFINITIONS = {
       { path: '/', name: 'homepage-overview', description: 'Main homepage with upcoming carnivals' },
       { path: '/about', name: 'about-page', description: 'About page' },
       { path: '/contact', name: 'contact-page', description: 'Contact form page' },
-      { path: '/user-guide', name: 'user-guide', description: 'User guide index' },
       { path: '/auth/login', name: 'login-page', description: 'User login page' },
       { path: '/auth/register', name: 'registration-page', description: 'User registration page' },
       { path: '/carnivals', name: 'carnivals-listing', description: 'Public carnival listings' },
