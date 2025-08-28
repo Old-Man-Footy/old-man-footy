@@ -293,7 +293,168 @@ class ScreenshotGenerator {
         });
       }
 
-      console.log('✅ Delegate screenshots completed');
+      // Special case: CSV Import Modal
+      console.log('📸 Taking delegate screenshot: player-csv-import');
+      await this.page.goto(`${CONFIG.baseURL}/clubs/players`);
+      await this.page.waitForSelector('.club-player-card, .no-players-message, table');
+      // Trigger the CSV import modal
+      await this.page.click('[data-bs-target="#csvImportModal"]');
+      await this.page.waitForSelector('#csvImportModal', { state: 'visible' });
+      await this.takeScreenshot('player-csv-import', '#csvImportModal', {
+        subfolder: 'delegate-user'
+      });
+
+      // Special case: Player Medical Information Form
+      console.log('📸 Taking delegate screenshot: player-medical-info');
+      await this.page.goto(`${CONFIG.baseURL}/clubs/players/add`);
+      await this.page.waitForSelector('form');
+      // Scroll to the notes section to focus on medical information
+      await this.page.locator('#notes').scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(1000); // Allow time for scroll
+      await this.takeScreenshot('player-medical-info', '#notes', {
+        subfolder: 'delegate-user'
+      });
+
+      // Special case: Player Bulk Operations Management
+      console.log('📸 Taking delegate screenshot: player-bulk-operations');
+      await this.page.goto(`${CONFIG.baseURL}/clubs/players`);
+      await this.page.waitForSelector('.club-player-card, .no-players-message, table');
+      await this.takeScreenshot('player-bulk-operations', null, {
+        subfolder: 'delegate-user'
+      });
+
+      // Special case: Carnival Registration
+      console.log('📸 Taking delegate screenshot: carnival-registration');
+      await this.page.goto(`${CONFIG.baseURL}/carnivals`);
+      await this.page.waitForSelector('.carnival-card, .no-carnivals-message, table');
+      await this.takeScreenshot('carnival-registration', null, {
+        subfolder: 'delegate-user'
+      });
+
+      // Special case: Carnival Team Management
+      console.log('📸 Taking delegate screenshot: carnival-team-management');
+      await this.page.goto(`${CONFIG.baseURL}/carnivals`);
+      await this.page.waitForSelector('.carnival-card, .no-carnivals-message, table');
+      await this.takeScreenshot('carnival-team-management', null, {
+        subfolder: 'delegate-user'
+      });
+
+      // Special case: Carnival Attendee Management
+      console.log('📸 Taking delegate screenshot: carnival-attendee-management');
+      await this.page.goto(`${CONFIG.baseURL}/carnivals/create`);
+      await this.page.waitForSelector('form, .carnival-form, .create-carnival-form');
+      await this.takeScreenshot('carnival-attendee-management', null, {
+        subfolder: 'delegate-user'
+      });
+
+      // Special case: Carnival Sponsor Management
+      console.log('📸 Taking delegate screenshot: carnival-sponsor-management');
+      await this.page.goto(`${CONFIG.baseURL}/carnivals/sponsor-management-guide`);
+      await this.page.waitForSelector('.carnival-sponsors, [data-testid="carnival-sponsors"], .sponsor-management');
+      await this.takeScreenshot('carnival-sponsor-management', null, {
+        subfolder: 'delegate-user'
+      });
+
+      // Special case: Sponsor Visibility Settings
+      console.log('📸 Taking delegate screenshot: sponsor-visibility-settings');
+      await this.page.goto(`${CONFIG.baseURL}/carnivals/sponsor-visibility-guide`);
+      await this.page.waitForSelector('.sponsor-visibility, [data-testid="sponsor-visibility"], .visibility-settings');
+      await this.takeScreenshot('sponsor-visibility-settings', null, {
+        subfolder: 'delegate-user'
+      });
+
+  async generateAdminUserScreenshots() {
+    console.log('\n👑 Generating Admin User Screenshots...');
+    
+    // Create a separate browser context for admin screenshots
+    const adminContext = await this.browser.newContext({
+      viewport: CONFIG.viewport,
+      ignoreHTTPSErrors: true,
+    });
+    const adminPage = await adminContext.newPage();
+    await adminPage.setViewportSize(CONFIG.viewport);
+    
+    try {
+      console.log('� Logging in as admin...');
+      await adminPage.goto(`${CONFIG.baseURL}/auth/login`);
+      await adminPage.waitForSelector('form[action="/auth/login"]');
+      
+      // Use the correct admin credentials from environment
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@oldmanfooty.au';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
+      
+      console.log(`📧 Admin Email: ${adminEmail}`);
+      await adminPage.fill('input[name="email"]', adminEmail);
+      await adminPage.fill('input[name="password"]', adminPassword);
+      await adminPage.click('button[type="submit"]');
+      
+      // Wait for successful login and redirect
+      await adminPage.waitForURL(/admin/, { timeout: CONFIG.timeout });
+      console.log('✅ Admin login successful');
+      
+      // Admin screenshots
+      const adminScreenshots = [
+        {
+          url: `${CONFIG.baseURL}/admin/dashboard`,
+          name: 'admin-dashboard',
+          waitFor: '.card, [data-testid="admin-stats"], .admin-dashboard'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/users`,
+          name: 'admin-user-management',
+          waitFor: 'table, [data-testid="user-table"], .user-management'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/clubs`,
+          name: 'admin-club-management',
+          waitFor: 'table, [data-testid="club-table"], .club-management'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/carnivals`,
+          name: 'admin-carnival-management',
+          waitFor: 'table, [data-testid="carnival-table"], .carnival-management'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/audit-logs`,
+          name: 'admin-audit-logs',
+          waitFor: 'table, [data-testid="audit-table"], .audit-logs'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/reports`,
+          name: 'admin-reports',
+          waitFor: 'form, [data-testid="reports-form"], .reports-interface'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/mysideline-sync`,
+          name: 'admin-mysideline-sync',
+          waitFor: 'form, [data-testid="sync-form"], .sync-interface, .mysideline-sync'
+        },
+        {
+          url: `${CONFIG.baseURL}/admin/system-health`,
+          name: 'admin-system-health',
+          waitFor: '.health-dashboard, [data-testid="health-dashboard"], .system-health, .health-metrics'
+        }
+      ];
+
+      for (const screenshot of adminScreenshots) {
+        console.log(`📸 Taking admin screenshot: ${screenshot.name}`);
+        await adminPage.goto(screenshot.url, { waitUntil: 'networkidle', timeout: CONFIG.timeout });
+        await adminPage.waitForSelector(screenshot.waitFor, { timeout: CONFIG.timeout });
+        await this.takeScreenshot(screenshot.name, null, {
+          subfolder: 'admin-user'
+        });
+      }
+
+      console.log('✅ Admin screenshots completed');
+      
+    } catch (error) {
+      console.error('❌ Error generating admin screenshots:', error.message);
+      console.error('Stack trace:', error.stack);
+    } finally {
+      await adminContext.close();
+      console.log('🔄 Admin browser context closed');
+    }
+  }
       
     } catch (error) {
       console.error('❌ Error generating delegate screenshots:', error.message);

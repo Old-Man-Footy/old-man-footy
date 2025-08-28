@@ -1,0 +1,439 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Overview</h2>
+  <p>Administrator Reports provide comprehensive data analysis and business intelligence capabilities for the platform. This includes generating detailed reports on users, clubs, carnivals, sponsors, system usage, and performance metrics. Reports are essential for decision-making, trend analysis, compliance reporting, and understanding platform usage patterns.</p>
+
+  <h3>Access Requirements</h3>
+  <ul>
+    <li><strong>Administrator Role</strong> — Must be logged in with admin privileges</li>
+    <li><strong>Report Generation</strong> — Authority to generate and view system reports</li>
+    <li><strong>Data Access</strong> — Access to all platform data for reporting purposes</li>
+    <li><strong>Export Permissions</strong> — Ability to export report data in various formats</li>
+    <li><strong>Direct Access</strong> — Available via `/admin/reports`</li>
+  </ul>
+
+  <h3>Report Capabilities</h3>
+
+  <h4>Data Analysis</h4>
+  <ul>
+    <li><strong>User Analytics</strong> — Comprehensive user registration, activity, and engagement analysis</li>
+    <li><strong>Club Metrics</strong> — Club registration, participation, and growth statistics</li>
+    <li><strong>Carnival Analytics</strong> — Carnival registration, participation, and event metrics</li>
+    <li><strong>Sponsor Performance</strong> — Sponsor visibility, engagement, and effectiveness metrics</li>
+    <li><strong>System Usage</strong> — Platform usage patterns, feature adoption, and performance data</li>
+  </ul>
+
+  <h4>Report Types</h4>
+  <ul>
+    <li><strong>Standard Reports</strong> — Pre-defined reports for common administrative needs</li>
+    <li><strong>Custom Reports</strong> — User-defined reports with custom parameters and filters</li>
+    <li><strong>Scheduled Reports</strong> — Automated report generation on regular schedules</li>
+    <li><strong>Ad-hoc Reports</strong> — On-demand reports for specific analysis needs</li>
+  </ul>
+
+  <h3>Accessing Reports</h3>
+
+  <h4>From Admin Dashboard</h4>
+  <ol>
+    <li><strong>Open Admin Dashboard</strong> — Navigate to `/admin/dashboard`</li>
+    <li><strong>Click Reports Card</strong> — Click on the "System Reports" or analytics statistics card</li>
+    <li><strong>Access Reports</strong> — Click "Generate Reports" link in the card footer</li>
+    <li><strong>View Report Options</strong> — See available report types and generation options</li>
+  </ol>
+
+  <h4>Direct Navigation</h4>
+  <ul>
+    <li><strong>Direct URL</strong> — Go directly to `/admin/reports`</li>
+    <li><strong>Admin Menu</strong> — Access through administrator navigation menu</li>
+    <li><strong>Quick Actions</strong> — Shortcuts from dashboard statistics</li>
+    <li><strong>Report History</strong> — Access previously generated reports</li>
+  </ul>
+
+  <h3>Standard Reports</h3>
+
+  <h4>User Reports</h4>
+
+  <h5>User Registration Report</h5>
+  <ul>
+    <li><strong>Registration Trends</strong> — User registration patterns over time</li>
+    <li><strong>Account Status</strong> — Active, inactive, and suspended account counts</li>
+    <li><strong>Role Distribution</strong> — Distribution of users by role (admin, delegate, etc.)</li>
+    <li><strong>Geographic Distribution</strong> — User distribution by state and region</li>
+    <li><strong>Registration Sources</strong> — How users discovered and registered for the platform</li>
+  </ul>
+
+  <h5>User Activity Report</h5>
+  <ul>
+    <li><strong>Login Frequency</strong> — User login patterns and frequency</li>
+    <li><strong>Feature Usage</strong> — Most used features and functionality</li>
+    <li><strong>Session Duration</strong> — Average session length and engagement metrics</li>
+    <li><strong>Peak Usage Times</strong> — Platform usage patterns by time of day</li>
+    <li><strong>User Retention</strong> — User retention and churn analysis</li>
+  </ul>
+
+  <h4>Club Reports</h4>
+
+  <h5>Club Registration Report</h5>
+  <ul>
+    <li><strong>Club Growth</strong> — Club registration trends and growth patterns</li>
+    <li><strong>Club Status</strong> — Active, inactive, and suspended club counts</li>
+    <li><strong>Geographic Distribution</strong> — Club distribution by state and region</li>
+    <li><strong>Club Size</strong> — Club size distribution (player counts)</li>
+    <li><strong>Logo Compliance</strong> — Clubs with and without logos</li>
+  </ul>
+
+  <h5>Club Activity Report</h5>
+  <ul>
+    <li><strong>Carnival Participation</strong> — Club participation in carnival events</li>
+    <li><strong>Player Management</strong> — Player registration and management activity</li>
+    <li><strong>Sponsor Management</strong> — Sponsor attachment and management activity</li>
+    <li><strong>Club Updates</strong> — Frequency of club profile updates</li>
+    <li><strong>Delegate Activity</strong> — Club delegate login and activity patterns</li>
+  </ul>
+
+  <h4>Carnival Reports</h4>
+
+  <h5>Carnival Overview Report</h5>
+  <ul>
+    <li><strong>Carnival Creation</strong> — Carnival creation trends and patterns</li>
+    <li><strong>Status Distribution</strong> — Distribution by status (draft, published, active, completed)</li>
+    <li><strong>Geographic Distribution</strong> — Carnival distribution by location</li>
+    <li><strong>Organizer Analysis</strong> — Most active carnival organizers</li>
+    <li><strong>Timeline Analysis</strong> — Carnival scheduling patterns and timelines</li>
+  </ul>
+
+  <h5>Carnival Participation Report</h5>
+  <ul>
+    <li><strong>Registration Trends</strong> — Club registration patterns over time</li>
+    <li><strong>Team Formation</strong> — Team creation and player assignment patterns</li>
+    <li><strong>Capacity Analysis</strong> — Carnival capacity utilization and limits</li>
+    <li><strong>Drop-off Analysis</strong> — Clubs that register but don't complete participation</li>
+    <li><strong>Success Metrics</strong> — Carnival completion and satisfaction metrics</li>
+  </ul>
+
+  <h4>Sponsor Reports</h4>
+
+  <h5>Sponsor Overview Report</h5>
+  <ul>
+    <li><strong>Sponsor Growth</strong> — Sponsor registration and attachment trends</li>
+    <li><strong>Sponsor Distribution</strong> — Sponsor distribution by level (Platinum, Gold, Silver, Bronze)</li>
+    <li><strong>Club Attachment</strong> — Sponsor attachment patterns to clubs</li>
+    <li><strong>Carnival Integration</strong> — Sponsor integration with carnival events</li>
+    <li><strong>Visibility Settings</strong> — Public visibility and display preferences</li>
+  </ul>
+
+  <h5>Sponsor Performance Report</h5>
+  <ul>
+    <li><strong>Engagement Metrics</strong> — Sponsor link clicks and engagement</li>
+    <li><strong>Logo Display</strong> — Logo display frequency and effectiveness</li>
+    <li><strong>Club Association</strong> — Sponsor association patterns with clubs</li>
+    <li><strong>Event Integration</strong> — Sponsor integration with carnival events</li>
+    <li><strong>ROI Analysis</strong> — Return on investment for sponsor relationships</li>
+  </ul>
+
+  <h4>System Reports</h4>
+
+  <h5>System Usage Report</h5>
+  <ul>
+    <li><strong>Page Views</strong> — Most visited pages and sections</li>
+    <li><strong>Feature Adoption</strong> — Feature usage and adoption rates</li>
+    <li><strong>Performance Metrics</strong> — System performance and response times</li>
+    <li><strong>Error Analysis</strong> — System errors and failure patterns</li>
+    <li><strong>Resource Usage</strong> — System resource utilization patterns</li>
+  </ul>
+
+  <h5>Security Report</h5>
+  <ul>
+    <li><strong>Authentication Events</strong> — Login, logout, and authentication patterns</li>
+    <li><strong>Security Incidents</strong> — Security events and incident analysis</li>
+    <li><strong>Access Patterns</strong> — User access patterns and anomalies</li>
+    <li><strong>Failed Attempts</strong> — Failed login and access attempts</li>
+    <li><strong>Compliance Metrics</strong> — Security compliance and audit metrics</li>
+  </ul>
+
+  <h3>Custom Report Generation</h3>
+
+  <h4>Report Builder Interface</h4>
+
+  <h5>Data Source Selection</h5>
+  <ul>
+    <li><strong>Primary Data Sources</strong> — Users, clubs, carnivals, sponsors, audit logs</li>
+    <li><strong>Secondary Data Sources</strong> — System logs, performance metrics, integration data</li>
+    <li><strong>Combined Data Sources</strong> — Join multiple data sources for comprehensive analysis</li>
+    <li><strong>External Data</strong> — Include external data sources for correlation analysis</li>
+  </ul>
+
+  <h5>Filter and Parameter Configuration</h5>
+  <ul>
+    <li><strong>Date Range Filters</strong> — Filter data by specific date ranges</li>
+    <li><strong>Categorical Filters</strong> — Filter by categories (status, type, location, etc.)</li>
+    <li><strong>Numerical Filters</strong> — Filter by numerical ranges and thresholds</li>
+    <li><strong>Text Filters</strong> — Filter by text patterns and keywords</li>
+    <li><strong>Custom Logic</strong> — Advanced filtering with custom logic and conditions</li>
+  </ul>
+
+  <h4>Report Structure Configuration</h4>
+
+  <h5>Field Selection</h5>
+  <ul>
+    <li><strong>Available Fields</strong> — Select fields to include in the report</li>
+    <li><strong>Field Grouping</strong> — Group related fields together</li>
+    <li><strong>Calculated Fields</strong> — Create calculated fields and metrics</li>
+    <li><strong>Field Formatting</strong> — Configure display formatting for fields</li>
+  </ul>
+
+  <h5>Aggregation and Summarization</h5>
+  <ul>
+    <li><strong>Grouping Options</strong> — Group data by specific fields</li>
+    <li><strong>Aggregation Functions</strong> — Sum, count, average, minimum, maximum</li>
+    <li><strong>Statistical Functions</strong> — Standard deviation, variance, percentiles</li>
+    <li><strong>Custom Calculations</strong> — Create custom calculation formulas</li>
+  </ul>
+
+  <h4>Report Visualization</h4>
+
+  <h5>Chart Types</h5>
+  <ul>
+    <li><strong>Bar Charts</strong> — Compare values across categories</li>
+    <li><strong>Line Charts</strong> — Show trends over time</li>
+    <li><strong>Pie Charts</strong> — Show proportional distribution</li>
+    <li><strong>Area Charts</strong> — Show cumulative values over time</li>
+    <li><strong>Scatter Plots</strong> — Show relationships between variables</li>
+  </ul>
+
+  <h5>Table Formats</h5>
+  <ul>
+    <li><strong>Summary Tables</strong> — Aggregated data in tabular format</li>
+    <li><strong>Detailed Tables</strong> — Raw data in tabular format</li>
+    <li><strong>Pivot Tables</strong> — Multi-dimensional data analysis</li>
+    <li><strong>Cross-tab Tables</strong> — Cross-tabulation analysis</li>
+  </ul>
+
+  <h3>Report Scheduling and Automation</h3>
+
+  <h4>Scheduled Reports</h4>
+
+  <h5>Schedule Configuration</h5>
+  <ul>
+    <li><strong>Frequency Options</strong> — Daily, weekly, monthly, quarterly scheduling</li>
+    <li><strong>Time Settings</strong> — Specific times for report generation</li>
+    <li><strong>Date Constraints</strong> — Business days only, specific dates, date ranges</li>
+    <li><strong>Time Zone Settings</strong> — Report generation time zone configuration</li>
+  </ul>
+
+  <h5>Delivery Options</h5>
+  <ul>
+    <li><strong>Email Delivery</strong> — Send reports via email to specified recipients</li>
+    <li><strong>File Storage</strong> — Save reports to designated storage locations</li>
+    <li><strong>Dashboard Integration</strong> — Display reports on admin dashboard</li>
+    <li><strong>API Integration</strong> — Make reports available via API endpoints</li>
+  </ul>
+
+  <h4>Report Management</h4>
+
+  <h5>Report Library</h5>
+  <ul>
+    <li><strong>Saved Reports</strong> — Save and reuse report configurations</li>
+    <li><strong>Report Templates</strong> — Create templates for common report types</li>
+    <li><strong>Report Sharing</strong> — Share report configurations with other administrators</li>
+    <li><strong>Report History</strong> — Access historical versions of reports</li>
+  </ul>
+
+  <h5>Report Maintenance</h5>
+  <ul>
+    <li><strong>Report Updates</strong> — Update report configurations as needed</li>
+    <li><strong>Report Archiving</strong> — Archive old reports for historical reference</li>
+    <li><strong>Report Deletion</strong> — Remove obsolete or unused reports</li>
+    <li><strong>Report Permissions</strong> — Control who can access specific reports</li>
+  </ul>
+
+  <h3>Report Export and Distribution</h3>
+
+  <h4>Export Formats</h4>
+
+  <h5>Document Formats</h5>
+  <ul>
+    <li><strong>PDF Export</strong> — Formatted PDF documents for formal reporting</li>
+    <li><strong>Excel Export</strong> — Spreadsheet format for data analysis</li>
+    <li><strong>CSV Export</strong> — Comma-separated values for data import</li>
+    <li><strong>HTML Export</strong> — Web-formatted reports for online viewing</li>
+  </ul>
+
+  <h5>Data Formats</h5>
+  <ul>
+    <li><strong>JSON Export</strong> — Structured data for programmatic access</li>
+    <li><strong>XML Export</strong> — XML format for system integration</li>
+    <li><strong>SQL Export</strong> — Database dump format for data migration</li>
+    <li><strong>API Format</strong> — API-ready format for web service integration</li>
+  </ul>
+
+  <h4>Distribution Methods</h4>
+
+  <h5>Direct Distribution</h5>
+  <ul>
+    <li><strong>Email Attachments</strong> — Send reports as email attachments</li>
+    <li><strong>Download Links</strong> — Provide secure download links</li>
+    <li><strong>File Sharing</strong> — Share reports via file sharing services</li>
+    <li><strong>Cloud Storage</strong> — Store reports in cloud storage systems</li>
+  </ul>
+
+  <h5>Automated Distribution</h5>
+  <ul>
+    <li><strong>FTP Upload</strong> — Automatically upload reports to FTP servers</li>
+    <li><strong>API Integration</strong> — Push reports to external systems via API</li>
+    <li><strong>Webhook Delivery</strong> — Send reports via webhook notifications</li>
+    <li><strong>Integration Platforms</strong> — Integrate with business intelligence platforms</li>
+  </ul>
+
+  <h3>Report Analysis and Insights</h3>
+
+  <h4>Data Visualization</h4>
+
+  <h5>Dashboard Integration</h5>
+  <ul>
+    <li><strong>Interactive Dashboards</strong> — Create interactive dashboard views</li>
+    <li><strong>Real-time Updates</strong> — Display real-time data updates</li>
+    <li><strong>Drill-down Capability</strong> — Drill down into detailed data</li>
+    <li><strong>Cross-filtering</strong> — Filter data across multiple visualizations</li>
+  </ul>
+
+  <h5>Advanced Analytics</h5>
+  <ul>
+    <li><strong>Trend Analysis</strong> — Identify trends and patterns in data</li>
+    <li><strong>Correlation Analysis</strong> — Identify relationships between variables</li>
+    <li><strong>Predictive Analytics</strong> — Forecast future trends and patterns</li>
+    <li><strong>Anomaly Detection</strong> — Identify unusual patterns and outliers</li>
+  </ul>
+
+  <h4>Business Intelligence</h4>
+
+  <h5>Key Performance Indicators (KPIs)</h5>
+  <ul>
+    <li><strong>User Growth KPIs</strong> — User registration and retention metrics</li>
+    <li><strong>Club Engagement KPIs</strong> — Club participation and activity metrics</li>
+    <li><strong>Carnival Success KPIs</strong> — Carnival registration and completion metrics</li>
+    <li><strong>Sponsor Effectiveness KPIs</strong> — Sponsor engagement and ROI metrics</li>
+  </ul>
+
+  <h5>Executive Dashboards</h5>
+  <ul>
+    <li><strong>Executive Summary</strong> — High-level overview of platform performance</li>
+    <li><strong>Growth Metrics</strong> — Platform growth and expansion indicators</li>
+    <li><strong>Operational Metrics</strong> — System performance and operational indicators</li>
+    <li><strong>Financial Metrics</strong> — Revenue and cost-related metrics</li>
+  </ul>
+
+  <h3>Report Security and Compliance</h3>
+
+  <h4>Data Protection</h4>
+
+  <h5>Access Control</h5>
+  <ul>
+    <li><strong>Report Permissions</strong> — Control who can access specific reports</li>
+    <li><strong>Data Classification</strong> — Classify reports by sensitivity level</li>
+    <li><strong>User Authentication</strong> — Require authentication for report access</li>
+    <li><strong>Session Management</strong> — Manage user sessions and timeouts</li>
+  </ul>
+
+  <h5>Data Privacy</h5>
+  <ul>
+    <li><strong>Data Anonymization</strong> — Anonymize sensitive data in reports</li>
+    <li><strong>Data Masking</strong> — Mask sensitive information in report outputs</li>
+    <li><strong>Retention Policies</strong> — Define data retention policies for reports</li>
+    <li><strong>Audit Logging</strong> — Log all report access and generation activities</li>
+  </ul>
+
+  <h4>Compliance Reporting</h4>
+
+  <h5>Regulatory Compliance</h5>
+  <ul>
+    <li><strong>GDPR Compliance</strong> — Ensure reports comply with data protection regulations</li>
+    <li><strong>Audit Reports</strong> — Generate reports for regulatory audits</li>
+    <li><strong>Data Governance</strong> — Maintain data governance and quality standards</li>
+    <li><strong>Compliance Monitoring</strong> — Monitor compliance with organizational policies</li>
+  </ul>
+
+  <h5>Report Validation</h5>
+  <ul>
+    <li><strong>Data Accuracy</strong> — Validate data accuracy in reports</li>
+    <li><strong>Report Integrity</strong> — Ensure report integrity and trustworthiness</li>
+    <li><strong>Source Verification</strong> — Verify data sources and calculations</li>
+    <li><strong>Report Certification</strong> — Certify reports for official use</li>
+  </ul>
+
+  <h3>Report Best Practices</h3>
+
+  <h4>Report Design</h4>
+  <ul>
+    <li><strong>Clear Objectives</strong> — Define clear objectives for each report</li>
+    <li><strong>Appropriate Visualizations</strong> — Choose appropriate charts and graphs</li>
+    <li><strong>Data Relevance</strong> — Include only relevant data in reports</li>
+    <li><strong>Report Structure</strong> — Organize reports with clear structure and navigation</li>
+  </ul>
+
+  <h4>Data Management</h4>
+  <ul>
+    <li><strong>Data Quality</strong> — Ensure data accuracy and completeness</li>
+    <li><strong>Data Consistency</strong> — Maintain consistent data definitions</li>
+    <li><strong>Data Documentation</strong> — Document data sources and calculations</li>
+    <li><strong>Data Updates</strong> — Keep data current and relevant</li>
+  </ul>
+
+  <h4>Report Usage</h4>
+  <ul>
+    <li><strong>Audience Consideration</strong> — Design reports for intended audience</li>
+    <li><strong>Actionable Insights</strong> — Focus on actionable insights and recommendations</li>
+    <li><strong>Regular Review</strong> — Regularly review and update reports</li>
+    <li><strong>Feedback Integration</strong> — Incorporate user feedback into report improvements</li>
+  </ul>
+
+  <h3>Troubleshooting Report Issues</h3>
+
+  <h4>Common Report Problems</h4>
+  <ul>
+    <li><strong>Data Inaccuracy</strong> — Reports showing incorrect or outdated data</li>
+    <li><strong>Performance Issues</strong> — Reports taking too long to generate</li>
+    <li><strong>Missing Data</strong> — Reports missing expected data or fields</li>
+    <li><strong>Formatting Issues</strong> — Report formatting problems in exports</li>
+  </ul>
+
+  <h4>Resolution Strategies</h4>
+  <ul>
+    <li><strong>Data Validation</strong> — Validate data sources and calculations</li>
+    <li><strong>Query Optimization</strong> — Optimize report queries for better performance</li>
+    <li><strong>Data Refresh</strong> — Ensure data is current and up-to-date</li>
+    <li><strong>Format Testing</strong> — Test report exports in different formats</li>
+  </ul>
+
+  <h3>Integration with Business Intelligence Tools</h3>
+
+  <h4>External BI Integration</h4>
+
+  <h5>Data Warehousing</h5>
+  <ul>
+    <li><strong>Data Export</strong> — Export data to external data warehouses</li>
+    <li><strong>ETL Processes</strong> — Set up ETL processes for data integration</li>
+    <li><strong>Data Modeling</strong> — Create data models for advanced analytics</li>
+    <li><strong>Real-time Sync</strong> — Synchronize data in real-time with BI tools</li>
+  </ul>
+
+  <h5>BI Platform Integration</h5>
+  <ul>
+    <li><strong>Tableau Integration</strong> — Connect with Tableau for advanced visualization</li>
+    <li><strong>Power BI Integration</strong> — Integrate with Microsoft Power BI</li>
+    <li><strong>Google Data Studio</strong> — Connect with Google Data Studio</li>
+    <li><strong>Custom BI Tools</strong> — Integrate with custom business intelligence platforms</li>
+  </ul>
+
+  <p class="mt-3">
+    <a href="/admin/reports">Open the Reports page</a>
+  </p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div></content>
+<parameter name="filePath">c:\Users\devon\source\repos\old-man-footy\views\user-guide\admin-reports.ejs

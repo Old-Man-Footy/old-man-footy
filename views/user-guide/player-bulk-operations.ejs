@@ -1,0 +1,182 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Overview</h2>
+  <p>Player management involves various operations to maintain accurate and up-to-date player information. While the platform doesn't have traditional "bulk edit" operations for existing players, you have several powerful tools and best practices for managing multiple players efficiently.</p>
+
+  <h3>Available Player Management Operations</h3>
+
+  <h4>1. CSV Import/Export (Bulk Addition)</h4>
+  <p>The most powerful bulk operation is the CSV import feature, which allows you to add multiple players simultaneously:</p>
+  <ul>
+    <li><strong>Bulk Import</strong> — Add multiple players using a CSV file</li>
+    <li><strong>Update Existing</strong> — Update existing players with matching email addresses</li>
+    <li><strong>Template Download</strong> — Get the exact format required for import</li>
+    <li><strong>Validation</strong> — Automatic checking of data before import</li>
+  </ul>
+
+  <h4>2. Individual Player Operations</h4>
+  <p>Each player can be managed individually with these operations:</p>
+  <ul>
+    <li><strong>View Details</strong> — See complete player information and registration history</li>
+    <li><strong>Edit Information</strong> — Update contact details, medical info, and player status</li>
+    <li><strong>Manage Registrations</strong> — Handle carnival team assignments</li>
+    <li><strong>Communication</strong> — Send emails and manage player communications</li>
+  </ul>
+
+  <h3>Efficient Player Management Strategies</h3>
+
+  <h4>Organizing Player Data</h4>
+
+  <h5>Player Status Management</h5>
+  <ul>
+    <li><strong>Active Players</strong> — Currently participating players</li>
+    <li><strong>Inactive Players</strong> — Temporarily not participating</li>
+    <li><strong>Archived Players</strong> — Former players (kept for historical records)</li>
+    <li><strong>Pending Players</strong> — Awaiting approval or additional information</li>
+  </ul>
+
+  <h5>Categorization and Filtering</h5>
+  <ul>
+    <li><strong>Search by Name</strong> — Quickly find specific players</li>
+    <li><strong>Filter by Status</strong> — Show only active, inactive, or pending players</li>
+    <li><strong>Sort Options</strong> — Organize by name, registration date, or last updated</li>
+    <li><strong>Export Lists</strong> — Generate reports of filtered player lists</li>
+  </ul>
+
+  <h4>Bulk Data Management Techniques</h4>
+
+  <h5>Using CSV for Updates</h5>
+  <p>While you can't bulk edit existing players directly, you can use CSV import with the "Update existing players" option:</p>
+  <ol>
+    <li>Export your current player list (if export functionality is available)</li>
+    <li>Make changes to the CSV file</li>
+    <li>Use CSV import with "Update existing players" enabled</li>
+    <li>The system will update matching players and add new ones</li>
+  </ol>
+
+  <h5>Template-Based Data Entry</h5>
+  <ul>
+    <li><strong>Standardize Formats</strong> — Use consistent date, phone, and address formats</li>
+    <li><strong>Batch Entry Sessions</strong> — Group similar updates together</li>
+    <li><strong>Quality Control</strong> — Review data before submitting</li>
+    <li><strong>Backup Strategy</strong> — Keep copies of important player data</li>
+  </ul>
+
+  <h3>Player Communication Management</h3>
+
+  <h4>Email Communications</h4>
+  <ul>
+    <li><strong>Welcome Emails</strong> — Automatically sent during CSV import</li>
+    <li><strong>Carnival Invitations</strong> — Notify players of upcoming events</li>
+    <li><strong>Status Updates</strong> — Inform players of registration changes</li>
+    <li><strong>Newsletter Distribution</strong> — Send club updates and announcements</li>
+  </ul>
+
+  <h4>Player Status Tracking</h4>
+  <ul>
+    <li><strong>Registration History</strong> — Track which carnivals players have participated in</li>
+    <li><strong>Attendance Records</strong> — Monitor player participation patterns</li>
+    <li><strong>Contact Preferences</strong> — Respect player communication preferences</li>
+    <li><strong>Medical Updates</strong> — Keep emergency contact information current</li>
+  </ul>
+
+  <h3>Best Practices for Large Player Bases</h3>
+
+  <h4>Data Organization</h4>
+  <ul>
+    <li><strong>Consistent Naming</strong> — Use full names and avoid nicknames in primary records</li>
+    <li><strong>Standardized Addresses</strong> — Use consistent address formatting</li>
+    <li><strong>Phone Number Formats</strong> — Standardize mobile and landline formats</li>
+    <li><strong>Email Verification</strong> — Ensure email addresses are valid and monitored</li>
+  </ul>
+
+  <h4>Maintenance Routines</h4>
+  <ul>
+    <li><strong>Regular Audits</strong> — Review player information periodically</li>
+    <li><strong>Contact Updates</strong> — Verify phone numbers and email addresses</li>
+    <li><strong>Medical Reviews</strong> — Update medical information annually</li>
+    <li><strong>Archive Old Records</strong> — Move inactive players to archived status</li>
+  </ul>
+
+  <h4>Emergency Preparedness</h4>
+  <ul>
+    <li><strong>Emergency Contacts</strong> — Ensure all players have emergency contacts listed</li>
+    <li><strong>Medical Information</strong> — Keep medical conditions and allergies updated</li>
+    <li><strong>Contact Verification</strong> — Regularly verify emergency contact details</li>
+    <li><strong>Communication Plans</strong> — Have procedures for contacting players in emergencies</li>
+  </ul>
+
+  <h3>Handling Special Cases</h3>
+
+  <h4>Duplicate Players</h4>
+  <ul>
+    <li><strong>Identify Duplicates</strong> — Use search and filtering to find potential duplicates</li>
+    <li><strong>Merge Records</strong> — Combine information from duplicate entries</li>
+    <li><strong>Prevent Future Duplicates</strong> — Use email matching during CSV import</li>
+    <li><strong>Cleanup Process</strong> — Remove duplicate entries carefully</li>
+  </ul>
+
+  <h4>Missing Information</h4>
+  <ul>
+    <li><strong>Identify Gaps</strong> — Use filtering to find players with incomplete information</li>
+    <li><strong>Contact Players</strong> — Reach out to players for missing details</li>
+    <li><strong>Set Priorities</strong> — Focus on critical information first (emergency contacts, medical info)</li>
+    <li><strong>Follow-up Process</strong> — Track and follow up on missing information requests</li>
+  </ul>
+
+  <h4>Player Status Changes</h4>
+  <ul>
+    <li><strong>Returning Players</strong> — Reactivate archived players when they return</li>
+    <li><strong>Seasonal Changes</strong> — Update player availability for different seasons</li>
+    <li><strong>Contact Updates</strong> — Update contact information when players move</li>
+    <li><strong>Medical Updates</strong> — Review and update medical information regularly</li>
+  </ul>
+
+  <h3>Reporting and Analytics</h3>
+
+  <h4>Player Statistics</h4>
+  <ul>
+    <li><strong>Active Player Count</strong> — Track current active membership</li>
+    <li><strong>Registration Trends</strong> — Monitor carnival participation patterns</li>
+    <li><strong>Demographic Information</strong> — Age groups, locations, and other demographics</li>
+    <li><strong>Contact Success Rates</strong> — Track successful communications with players</li>
+  </ul>
+
+  <h4>Export Capabilities</h4>
+  <ul>
+    <li><strong>Player Lists</strong> — Export filtered player lists for external use</li>
+    <li><strong>Contact Information</strong> — Generate contact lists for communications</li>
+    <li><strong>Medical Information</strong> — Export medical information for emergency planning</li>
+    <li><strong>Registration Reports</strong> — Generate carnival registration reports</li>
+  </ul>
+
+  <h3>Security and Privacy Considerations</h3>
+
+  <h4>Data Protection</h4>
+  <ul>
+    <li><strong>Access Control</strong> — Only authorized delegates can view player information</li>
+    <li><strong>Medical Privacy</strong> — Medical information is treated as sensitive data</li>
+    <li><strong>Contact Information</strong> — Player contact details are protected</li>
+    <li><strong>Audit Trails</strong> — All changes to player information are logged</li>
+  </ul>
+
+  <h4>Communication Privacy</h4>
+  <ul>
+    <li><strong>Consent Requirements</strong> — Obtain consent before sending communications</li>
+    <li><strong>Opt-out Options</strong> — Allow players to opt out of communications</li>
+    <li><strong>Data Retention</strong> — Follow data retention policies for player information</li>
+    <li><strong>Secure Storage</strong> — All player data is stored securely and encrypted</li>
+  </ul>
+
+  <p class="mt-3">
+    <a href="<%= page.url %>">Open the Player Management page</a>
+  </p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div></content>
+<parameter name="filePath">c:\Users\devon\source\repos\old-man-footy\views\user-guide\player-bulk-operations.ejs

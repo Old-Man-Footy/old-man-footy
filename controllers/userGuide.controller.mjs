@@ -19,6 +19,7 @@ import { asyncHandler } from '../middleware/asyncHandler.mjs';
 export const getUserGuide = asyncHandler(async (req, res) => {
   // Consider any truthy req.user as authenticated (product decision: check presence only)
   const isAuthenticated = !!req.user;
+  const isAdmin = req.user && req.user.IsAdmin === true;
 
   // Base folder for screenshots served from public/
   const screenshotBase = isAuthenticated ? '/screenshots/delegate-user' : '/screenshots/standard-user';
@@ -116,6 +117,255 @@ export const getUserGuide = asyncHandler(async (req, res) => {
         'Complete required identity and contact fields',
         'Provide emergency contacts and medical notes',
         'Save the record to add the player to your roster'
+      ]
+    },
+    {
+      key: 'player-csv-import',
+      title: 'Import Players from CSV',
+      url: '/clubs/players/csv-import',
+      screenshot: 'player-csv-import.png',
+      description: 'Bulk import player data using CSV files.',
+      authRequired: true,
+      details: [
+        'Download CSV template with required columns',
+        'Fill template with player information',
+        'Upload and validate data before importing',
+        'Review import results and handle errors'
+      ]
+    },
+    {
+      key: 'player-medical-info',
+      title: 'Player Medical Information',
+      url: '/clubs/players/add',
+      screenshot: 'player-medical-info.png',
+      description: 'Recording medical information and emergency contacts for players.',
+      authRequired: true,
+      details: [
+        'Document allergies, medications and medical conditions',
+        'Record emergency contact information',
+        'Follow best practices for medical data organization',
+        'Update information as needed for player safety'
+      ]
+    },
+    {
+      key: 'player-bulk-operations',
+      title: 'Player Management Strategies',
+      url: '/clubs/players',
+      screenshot: 'player-bulk-operations.png',
+      description: 'Efficient strategies for managing multiple players and player data.',
+      authRequired: true,
+      details: [
+        'CSV import techniques for bulk player management',
+        'Organizing and categorizing player information',
+        'Communication strategies for player groups',
+        'Best practices for large player databases'
+      ]
+    },
+    {
+      key: 'carnival-registration',
+      title: 'Carnival Club Registration',
+      url: '/carnivals',
+      screenshot: 'carnival-registration.png',
+      description: 'How clubs register for carnivals and manage team participation.',
+      authRequired: true,
+      details: [
+        'Register your club for carnival participation',
+        'Manage team rosters and player assignments',
+        'Coordinate with carnival organizers',
+        'Track registration status and updates'
+      ]
+    },
+    {
+      key: 'carnival-team-management',
+      title: 'Carnival Team Management',
+      url: '/carnivals',
+      screenshot: 'carnival-team-management.png',
+      description: 'Managing teams within carnivals after registration approval.',
+      authRequired: true,
+      details: [
+        'Build and manage carnival team rosters',
+        'Coordinate player assignments and logistics',
+        'Handle team communication and preparation',
+        'Manage team changes and player availability'
+      ]
+    },
+    {
+      key: 'carnival-attendee-management',
+      title: 'Carnival Attendee Management',
+      url: '/carnivals/create',
+      screenshot: 'carnival-attendee-management.png',
+      description: 'Managing registered clubs and teams as a carnival organizer.',
+      authRequired: true,
+      details: [
+        'Review and approve club registration requests',
+        'Monitor team formation and player assignments',
+        'Coordinate event logistics and communications',
+        'Manage emergency situations and post-event activities'
+      ]
+    },
+    {
+      key: 'carnival-sponsor-management',
+      title: 'Carnival Sponsor Management',
+      url: '/carnivals/sponsor-management-guide',
+      screenshot: 'carnival-sponsor-management.png',
+      description: 'Link sponsors to carnival events, manage sponsorship levels, and control sponsor display options.',
+      authRequired: true,
+      details: [
+        'Add sponsors to specific carnival events',
+        'Set sponsorship levels (Platinum, Gold, Silver, Bronze, Supporting)',
+        'Configure sponsor benefits and display options',
+        'Manage sponsor visibility and recognition',
+        'Track sponsorship values and relationships'
+      ]
+    },
+    {
+      key: 'sponsor-visibility-settings',
+      title: 'Sponsor Visibility Settings',
+      url: '/carnivals/sponsor-visibility-guide',
+      screenshot: 'sponsor-visibility-settings.png',
+      description: 'Control how sponsors appear on carnival websites, programs, and public listings.',
+      authRequired: true,
+      details: [
+        'Configure public website display options',
+        'Manage sponsor logo sizes and prominence',
+        'Control program inclusion and placement',
+        'Set up temporal and conditional visibility',
+        'Apply bulk visibility changes to multiple sponsors'
+      ]
+    },
+    {
+      key: 'admin-dashboard',
+      title: 'Administrator Dashboard',
+      url: '/admin/dashboard-guide',
+      screenshot: 'admin-dashboard.png',
+      description: 'Central control center for platform administration with system statistics and monitoring.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'Monitor system statistics (users, clubs, carnivals, sponsors)',
+        'Track recent activity and growth metrics',
+        'Access quick navigation to all administrative functions',
+        'Identify system health issues and trends',
+        'Generate reports and access management tools'
+      ]
+    },
+    {
+      key: 'admin-user-management',
+      title: 'Administrator User Management',
+      url: '/admin/users-guide',
+      screenshot: 'admin-user-management.png',
+      description: 'Comprehensive user account administration including editing, password resets, and status control.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'View and search all registered users',
+        'Edit user details and account information',
+        'Reset user passwords securely',
+        'Control account activation and deactivation',
+        'Delete user accounts with proper validation',
+        'Manage user roles and permissions'
+      ]
+    },
+    {
+      key: 'admin-club-management',
+      title: 'Administrator Club Management',
+      url: '/admin/clubs-guide',
+      screenshot: 'admin-club-management.png',
+      description: 'Complete oversight and control over all clubs including editing, status management, and logo uploads.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'View and search all registered clubs',
+        'Edit club details, contact information, and settings',
+        'Manage club status (active/inactive) and visibility',
+        'Upload and manage club logos',
+        'Delete clubs with proper dependency checking',
+        'Monitor club compliance and data quality'
+      ]
+    },
+    {
+      key: 'admin-carnival-management',
+      title: 'Administrator Carnival Management',
+      url: '/admin/carnivals-guide',
+      screenshot: 'admin-carnival-management.png',
+      description: 'Comprehensive carnival event administration including editing, status control, and registration management.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'View and search all carnival events',
+        'Edit carnival details, dates, locations, and settings',
+        'Manage carnival status (draft, published, active, completed)',
+        'Control public visibility and discoverability',
+        'Monitor and manage club registrations',
+        'Oversee carnival participation and compliance'
+      ]
+    },
+    {
+      key: 'admin-audit-logs',
+      title: 'Administrator Audit Logs',
+      url: '/admin/audit-logs-guide',
+      screenshot: 'admin-audit-logs.png',
+      description: 'Comprehensive system activity monitoring with security events, compliance reporting, and audit trails.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'Monitor real-time system activities and security events',
+        'Review historical audit trails for compliance and troubleshooting',
+        'Track user authentication, administrative actions, and system operations',
+        'Generate detailed audit reports for regulatory compliance',
+        'Search and filter audit logs by user, action, resource, and time period',
+        'Configure alerts for security incidents and suspicious activities'
+      ]
+    },
+    {
+      key: 'admin-reports',
+      title: 'Administrator Reports',
+      url: '/admin/reports-guide',
+      screenshot: 'admin-reports.png',
+      description: 'Comprehensive data analysis and business intelligence with user, club, carnival, and sponsor analytics.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'Generate detailed reports on users, clubs, carnivals, and sponsors',
+        'Analyze platform usage patterns, growth trends, and engagement metrics',
+        'Create custom reports with flexible filtering and visualization options',
+        'Schedule automated report generation and distribution',
+        'Export reports in multiple formats (PDF, Excel, CSV, JSON)',
+        'Monitor key performance indicators and business intelligence metrics'
+      ]
+    },
+    {
+      key: 'admin-mysideline-sync',
+      title: 'Administrator MySideline Sync',
+      url: '/admin/mysideline-sync-guide',
+      screenshot: 'admin-mysideline-sync.png',
+      description: 'Comprehensive management and monitoring of external system integration with MySideline including synchronization, API configuration, and error handling.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'Configure and manage MySideline API connections and authentication',
+        'Monitor synchronization status and data transfer health',
+        'Handle integration errors and perform manual synchronization',
+        'Configure data mapping and transformation between systems',
+        'Schedule automated synchronization and manage performance',
+        'Ensure data consistency and compliance across integrated systems'
+      ]
+    },
+    {
+      key: 'admin-system-health',
+      title: 'Administrator System Health',
+      url: '/admin/system-health-guide',
+      screenshot: 'admin-system-health.png',
+      description: 'Comprehensive monitoring and management of platform performance, resource utilization, error tracking, and overall system status.',
+      authRequired: true,
+      adminRequired: true,
+      details: [
+        'Monitor real-time system performance metrics and response times',
+        'Track and analyze system errors with comprehensive error management',
+        'Monitor resource utilization including CPU, memory, and database performance',
+        'Assess overall system health with composite scoring and trend analysis',
+        'Configure proactive alerting for performance and error thresholds',
+        'Generate comprehensive health reports and capacity planning insights'
       ]
     },
     // Delegate-specific workflows not previously listed
@@ -226,17 +476,44 @@ export const getUserGuide = asyncHandler(async (req, res) => {
     }
   ];
 
-  // Map to include screenshot URLs. Use per-page base so public pages keep
-  // their standard screenshots while delegate-only pages use the delegate folder.
-  const pagesMap = Object.fromEntries(pages.map(p => {
-    const base = p.authRequired ? '/screenshots/delegate-user' : '/screenshots/standard-user';
+  // Filter pages based on user authentication and admin status
+  const filteredPages = pages.filter(page => {
+    // Always show public pages (authRequired: false)
+    if (!page.authRequired) return true;
+
+    // For authenticated-only pages, user must be logged in
+    if (!isAuthenticated) return false;
+
+    // For admin-only pages, user must be an admin
+    if (page.adminRequired && !isAdmin) return false;
+
+    // Page is accessible
+    return true;
+  });
+
+  // Map to include screenshot URLs. Use appropriate base folder based on page type
+  const pagesMap = Object.fromEntries(filteredPages.map(p => {
+    let base;
+    if (p.adminRequired) {
+      base = '/screenshots/admin-user';
+    } else if (p.authRequired) {
+      base = '/screenshots/delegate-user';
+    } else {
+      base = '/screenshots/standard-user';
+    }
     return [p.key, { ...p, screenshotUrl: `${base}/${p.screenshot}` }];
   }));
 
-  // Also prepare a pages array where each page has screenshotUrl included so
-  // the index view can render thumbnails without needing per-page rendering.
-  const pagesWithUrls = pages.map(p => {
-    const base = p.authRequired ? '/screenshots/delegate-user' : '/screenshots/standard-user';
+  // Also prepare a pages array where each page has screenshotUrl included
+  const pagesWithUrls = filteredPages.map(p => {
+    let base;
+    if (p.adminRequired) {
+      base = '/screenshots/admin-user';
+    } else if (p.authRequired) {
+      base = '/screenshots/delegate-user';
+    } else {
+      base = '/screenshots/standard-user';
+    }
     return { ...p, screenshotUrl: `${base}/${p.screenshot}` };
   });
 
@@ -256,16 +533,22 @@ export const getUserGuide = asyncHandler(async (req, res) => {
       pages: pagesWithUrls,
       user: req.user || null,
       isAuthenticated,
+      isAdmin,
       additionalCSS: ['/styles/user-guide.styles.css']
     });
   }
 
   // No specific page requested: render an index listing the available guide pages
+  const title = isAdmin ? 'Administrator User Guide' :
+                isAuthenticated ? 'Club Delegate User Guide' :
+                'Old Man Footy User Guide';
+
   return res.render('user-guide/index', {
-    title: isAuthenticated ? 'Club Delegate User Guide' : 'Old Man Footy User Guide',
+    title,
     pages: pagesWithUrls,
     user: req.user || null,
     isAuthenticated,
+    isAdmin,
     additionalCSS: ['/styles/user-guide.styles.css']
   });
 });

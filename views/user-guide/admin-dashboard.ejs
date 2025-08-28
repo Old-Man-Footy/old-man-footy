@@ -1,0 +1,219 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Overview</h2>
+  <p>The Administrator Dashboard serves as the central control center for platform administration. It provides comprehensive system statistics, recent activity monitoring, and quick access to all administrative functions. This dashboard is only accessible to users with administrator privileges.</p>
+
+  <h3>Access Requirements</h3>
+  <ul>
+    <li><strong>Administrator Role</strong> — Must be logged in with admin privileges</li>
+    <li><strong>Secure Access</strong> — All admin functions require proper authentication</li>
+    <li><strong>Audit Logging</strong> — All admin actions are logged for security and compliance</li>
+    <li><strong>Direct URL</strong> — Access via `/admin/dashboard`</li>
+  </ul>
+
+  <h3>Dashboard Components</h3>
+
+  <h4>System Statistics Overview</h4>
+  <ul>
+    <li><strong>Total Users</strong> — Complete count of registered users with inactive user breakdown</li>
+    <li><strong>Total Clubs</strong> — Active clubs with inactive club tracking</li>
+    <li><strong>Total Carnivals</strong> — Active carnival events currently in the system</li>
+    <li><strong>Total Sponsors</strong> — All sponsors registered in the platform</li>
+    <li><strong>Email Subscriptions</strong> — Users subscribed to email notifications</li>
+  </ul>
+
+  <h4>Activity Metrics</h4>
+  <ul>
+    <li><strong>Recent Users</strong> — New user registrations in the past week</li>
+    <li><strong>Recent Carnivals</strong> — Newly created carnival events</li>
+    <li><strong>Upcoming Carnivals</strong> — Future carnival events scheduled</li>
+    <li><strong>Inactive Tracking</strong> — Monitoring of inactive users and clubs</li>
+  </ul>
+
+  <h3>Navigating the Admin Dashboard</h3>
+
+  <h4>Dashboard Layout</h4>
+
+  <h5>Statistics Cards</h5>
+  <ul>
+    <li><strong>Color-Coded Cards</strong> — Each metric has a distinct color for quick identification</li>
+    <li><strong>Interactive Links</strong> — Click any card to access detailed management for that area</li>
+    <li><strong>Secondary Metrics</strong> — Inactive counts and recent activity shown below primary numbers</li>
+    <li><strong>Visual Icons</strong> — Intuitive icons for each metric type</li>
+  </ul>
+
+  <h5>Quick Action Buttons</h5>
+  <ul>
+    <li><strong>Reports Access</strong> — Direct link to generate system reports</li>
+    <li><strong>Standard Dashboard</strong> — Return to regular user dashboard if needed</li>
+    <li><strong>Navigation Shortcuts</strong> — Quick access to key admin functions</li>
+  </ul>
+
+  <h4>Recent Activity Section</h4>
+
+  <h5>User Activity</h5>
+  <ul>
+    <li><strong>Recent Registrations</strong> — Latest user sign-ups with club associations</li>
+    <li><strong>User Details</strong> — Names, registration dates, and associated clubs</li>
+    <li><strong>Club Links</strong> — Direct links to view club details</li>
+    <li><strong>Activity Timeline</strong> — Chronological view of recent user activity</li>
+  </ul>
+
+  <h5>Carnival Activity</h5>
+  <ul>
+    <li><strong>Recent Events</strong> — Newly created carnival events</li>
+    <li><strong>Creator Information</strong> — Who created each carnival</li>
+    <li><strong>Creation Dates</strong> — When each carnival was added to the system</li>
+    <li><strong>Status Indicators</strong> — Active/inactive status of recent carnivals</li>
+  </ul>
+
+  <h3>Using Dashboard Statistics</h3>
+
+  <h4>Monitoring System Health</h4>
+
+  <h5>Growth Metrics</h5>
+  <ul>
+    <li><strong>User Growth</strong> — Track user registration trends</li>
+    <li><strong>Club Expansion</strong> — Monitor club participation growth</li>
+    <li><strong>Event Creation</strong> — Track carnival event creation patterns</li>
+    <li><strong>Engagement Levels</strong> — Monitor sponsor and subscription growth</li>
+  </ul>
+
+  <h5>System Maintenance Indicators</h5>
+  <ul>
+    <li><strong>Inactive Users</strong> — Identify users who may need attention</li>
+    <li><strong>Inactive Clubs</strong> — Track clubs that may need reactivation or cleanup</li>
+    <li><strong>Upcoming Events</strong> — Monitor carnival scheduling and planning</li>
+    <li><strong>Recent Activity</strong> — Ensure system is being actively used</li>
+  </ul>
+
+  <h4>Identifying Issues</h4>
+
+  <h5>Potential Problems</h5>
+  <ul>
+    <li><strong>High Inactive Rates</strong> — Large numbers of inactive users/clubs may indicate issues</li>
+    <li><strong>Low Recent Activity</strong> — Reduced activity may signal engagement problems</li>
+    <li><strong>Missing Growth</strong> — Flat or declining metrics may need investigation</li>
+    <li><strong>Subscription Trends</strong> — Monitor email subscription patterns</li>
+  </ul>
+
+  <h5>Actionable Insights</h5>
+  <ul>
+    <li><strong>User Engagement</strong> — Use metrics to identify engagement opportunities</li>
+    <li><strong>Club Support</strong> — Identify clubs that may need additional support</li>
+    <li><strong>Event Planning</strong> — Track carnival creation patterns for planning</li>
+    <li><strong>System Performance</strong> — Monitor overall platform usage and health</li>
+  </ul>
+
+  <h3>Admin Dashboard Navigation</h3>
+
+  <h4>Accessing Management Areas</h4>
+
+  <h5>From Statistics Cards</h5>
+  <ol>
+    <li><strong>Click Any Card</strong> — Each statistics card has a "Manage" link in the footer</li>
+    <li><strong>Direct Navigation</strong> — Cards link directly to relevant management pages</li>
+    <li><strong>Context Preservation</strong> — Navigation maintains admin context and permissions</li>
+    <li><strong>Quick Access</strong> — Immediate access to detailed management interfaces</li>
+  </ol>
+
+  <h5>Using Top Navigation</h5>
+  <ul>
+    <li><strong>Reports Button</strong> — Access comprehensive system reporting</li>
+    <li><strong>Standard Dashboard</strong> — Switch to regular user dashboard when needed</li>
+    <li><strong>Breadcrumb Navigation</strong> — Clear navigation path indication</li>
+    <li><strong>Admin Menu</strong> — Access to all administrative functions</li>
+  </ul>
+
+  <h4>Admin Menu Structure</h4>
+
+  <h5>Core Administration</h5>
+  <ul>
+    <li><strong>Dashboard</strong> — Current page, system overview</li>
+    <li><strong>Reports</strong> — Generate and view system reports</li>
+    <li><strong>Users</strong> — Manage user accounts and permissions</li>
+    <li><strong>Clubs</strong> — Administrative club management</li>
+  </ul>
+
+  <h5>Event Management</h5>
+  <ul>
+    <li><strong>Carnivals</strong> — Manage carnival events and registrations</li>
+    <li><strong>Sponsors</strong> — Administrative sponsor management</li>
+    <li><strong>Audit Logs</strong> — System activity and security monitoring</li>
+    <li><strong>System</strong> — System administration and integration</li>
+  </ul>
+
+  <h3>Dashboard Best Practices</h3>
+
+  <h4>Regular Monitoring</h4>
+  <ul>
+    <li><strong>Daily Check-ins</strong> — Review dashboard metrics daily for system health</li>
+    <li><strong>Weekly Reviews</strong> — Conduct weekly detailed analysis of trends</li>
+    <li><strong>Monthly Reporting</strong> — Generate monthly reports for stakeholders</li>
+    <li><strong>Issue Tracking</strong> — Monitor for unusual patterns or potential issues</li>
+  </ul>
+
+  <h4>Performance Optimization</h4>
+  <ul>
+    <li><strong>Metric Baselines</strong> — Establish normal ranges for key metrics</li>
+    <li><strong>Trend Analysis</strong> — Track metric changes over time</li>
+    <li><strong>Alert Thresholds</strong> — Set up alerts for concerning metric changes</li>
+    <li><strong>Action Planning</strong> — Develop response plans for metric anomalies</li>
+  </ul>
+
+  <h4>Security Considerations</h4>
+  <ul>
+    <li><strong>Access Control</strong> — Ensure only authorized personnel access admin dashboard</li>
+    <li><strong>Activity Logging</strong> — All admin dashboard access is logged</li>
+    <li><strong>Session Management</strong> — Regular session timeouts for security</li>
+    <li><strong>Data Privacy</strong> — Handle user data appropriately and securely</li>
+  </ul>
+
+  <h3>Troubleshooting Dashboard Issues</h3>
+
+  <h4>Common Issues</h4>
+  <ul>
+    <li><strong>Outdated Statistics</strong> — Dashboard may show cached data, refresh the page</li>
+    <li><strong>Missing Metrics</strong> — Some statistics may be temporarily unavailable</li>
+    <li><strong>Navigation Problems</strong> — Ensure you have proper admin permissions</li>
+    <li><strong>Performance Issues</strong> — Large datasets may cause slow loading</li>
+  </ul>
+
+  <h4>Resolution Steps</h4>
+  <ul>
+    <li><strong>Page Refresh</strong> — Reload the dashboard to get current statistics</li>
+    <li><strong>Permission Check</strong> — Verify your admin role and permissions</li>
+    <li><strong>Cache Clearing</strong> — Clear browser cache if experiencing display issues</li>
+    <li><strong>Support Contact</strong> — Contact technical support for persistent issues</li>
+  </ul>
+
+  <h3>Dashboard Integration</h3>
+
+  <h4>Related Admin Functions</h4>
+  <ul>
+    <li><strong>User Management</strong> — Detailed user account administration</li>
+    <li><strong>Club Management</strong> — Administrative club controls and oversight</li>
+    <li><strong>Carnival Management</strong> — Tournament and event administration</li>
+    <li><strong>Audit Logs</strong> — System activity monitoring and security</li>
+  </ul>
+
+  <h4>Reporting Integration</h4>
+  <ul>
+    <li><strong>Report Generation</strong> — Create detailed reports from dashboard metrics</li>
+    <li><strong>Data Export</strong> — Export dashboard data for external analysis</li>
+    <li><strong>Historical Tracking</strong> — View metric trends over time</li>
+    <li><strong>Stakeholder Communication</strong> — Share dashboard insights with stakeholders</li>
+  </ul>
+
+  <p class="mt-3">
+    <a href="/admin/dashboard">Open the Administrator Dashboard</a>
+  </p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div></content>
+<parameter name="filePath">c:\Users\devon\source\repos\old-man-footy\views\user-guide\admin-dashboard.ejs

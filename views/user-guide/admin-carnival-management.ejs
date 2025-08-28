@@ -1,0 +1,391 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Overview</h2>
+  <p>Administrator Carnival Management provides comprehensive oversight and control over all carnival events on the platform. This includes viewing carnival details, editing event information, managing carnival status, controlling public visibility, and overseeing carnival participation. Administrators can ensure carnivals run smoothly and maintain platform standards.</p>
+
+  <h3>Access Requirements</h3>
+  <ul>
+    <li><strong>Administrator Role</strong> — Must be logged in with admin privileges</li>
+    <li><strong>Carnival Data Access</strong> — Full access to all carnival information and settings</li>
+    <li><strong>Event Management</strong> — Authority to modify carnival details and status</li>
+    <li><strong>Participation Control</strong> — Ability to manage club registrations and team participation</li>
+    <li><strong>Direct Access</strong> — Available via `/admin/carnivals`</li>
+  </ul>
+
+  <h3>Carnival Management Capabilities</h3>
+
+  <h4>Carnival Administration</h4>
+  <ul>
+    <li><strong>View All Carnivals</strong> — Complete list of all carnival events with search and filtering</li>
+    <li><strong>Edit Carnival Details</strong> — Modify event information, dates, locations, and settings</li>
+    <li><strong>Status Control</strong> — Manage carnival operational status (draft, published, active, completed)</li>
+    <li><strong>Visibility Management</strong> — Control public visibility and discoverability</li>
+    <li><strong>Registration Oversight</strong> — Monitor and manage club registrations</li>
+  </ul>
+
+  <h4>Carnival Oversight</h4>
+  <ul>
+    <li><strong>Compliance Monitoring</strong> — Ensure carnivals follow platform guidelines</li>
+    <li><strong>Data Quality</strong> — Maintain accurate and complete carnival information</li>
+    <li><strong>Participation Tracking</strong> — Monitor club and team participation patterns</li>
+    <li><strong>Event Coordination</strong> — Support carnival organizers with platform tools</li>
+  </ul>
+
+  <h3>Accessing Carnival Management</h3>
+
+  <h4>From Admin Dashboard</h4>
+  <ol>
+    <li><strong>Open Admin Dashboard</strong> — Navigate to `/admin/dashboard`</li>
+    <li><strong>Click Carnivals Card</strong> — Click on the "Total Carnivals" statistics card</li>
+    <li><strong>Access Carnival Management</strong> — Click "Manage Carnivals" link in the card footer</li>
+    <li><strong>View Carnival List</strong> — See all carnivals with management options</li>
+  </ol>
+
+  <h4>Direct Navigation</h4>
+  <ul>
+    <li><strong>Direct URL</strong> — Go directly to `/admin/carnivals`</li>
+    <li><strong>Admin Menu</strong> — Access through administrator navigation menu</li>
+    <li><strong>Quick Actions</strong> — Shortcuts from other admin pages</li>
+    <li><strong>Search Results</strong> — Access from carnival search and filter results</li>
+  </ul>
+
+  <h3>Viewing and Searching Carnivals</h3>
+
+  <h4>Carnival List Interface</h4>
+
+  <h5>Carnival Table Columns</h5>
+  <ul>
+    <li><strong>Carnival Name</strong> — Official name of the carnival event</li>
+    <li><strong>Date</strong> — Event date and time</li>
+    <li><strong>Location</strong> — Venue and location details</li>
+    <li><strong>Organizer</strong> — Club or person organizing the event</li>
+    <li><strong>Status</strong> — Operational status (Draft, Published, Active, Completed, Cancelled)</li>
+    <li><strong>Visibility</strong> — Public visibility status</li>
+    <li><strong>Registrations</strong> — Number of registered clubs/teams</li>
+    <li><strong>Created Date</strong> — When the carnival was created</li>
+    <li><strong>Actions</strong> — Available management actions for each carnival</li>
+  </ul>
+
+  <h5>Table Features</h5>
+  <ul>
+    <li><strong>Sorting</strong> — Click column headers to sort by name, date, status, etc.</li>
+    <li><strong>Pagination</strong> — Navigate through large carnival lists</li>
+    <li><strong>Page Size Control</strong> — Adjust number of carnivals displayed per page</li>
+    <li><strong>Export Options</strong> — Export carnival data for external analysis</li>
+  </ul>
+
+  <h4>Search and Filtering</h4>
+
+  <h5>Search Functionality</h5>
+  <ul>
+    <li><strong>Name Search</strong> — Search carnivals by name or partial name</li>
+    <li><strong>Location Search</strong> — Find carnivals by venue or location</li>
+    <li><strong>Organizer Search</strong> — Locate carnivals by organizer name or club</li>
+    <li><strong>Global Search</strong> — Search across multiple fields simultaneously</li>
+  </ul>
+
+  <h5>Advanced Filtering</h5>
+  <ul>
+    <li><strong>Status Filter</strong> — Show only carnivals in specific status (draft, published, active, etc.)</li>
+    <li><strong>Visibility Filter</strong> — Filter by public visibility status</li>
+    <li><strong>Date Range</strong> — Filter by carnival date or creation date</li>
+    <li><strong>Registration Count</strong> — Filter by number of registered clubs</li>
+  </ul>
+
+  <h3>Editing Carnival Information</h3>
+
+  <h4>Accessing Carnival Edit</h4>
+  <ol>
+    <li><strong>Select Carnival</strong> — Find the carnival in the carnival management list</li>
+    <li><strong>Click Edit</strong> — Click the "Edit" button in the Actions column</li>
+    <li><strong>Open Edit Form</strong> — Carnival edit form will open with current details</li>
+    <li><strong>Modify Information</strong> — Update carnival details as needed</li>
+    <li><strong>Save Changes</strong> — Apply the modifications to the carnival record</li>
+  </ol>
+
+  <h4>Editable Carnival Fields</h4>
+
+  <h5>Basic Information</h5>
+  <ul>
+    <li><strong>Carnival Name</strong> — Official carnival name (2-200 characters)</li>
+    <li><strong>Date & Time</strong> — Event date and start time</li>
+    <li><strong>Location</strong> — Venue name and address details</li>
+    <li><strong>Description</strong> — Detailed event description and information</li>
+    <li><strong>Organizer</strong> — Club or person organizing the event</li>
+  </ul>
+
+  <h5>Operational Settings</h5>
+  <ul>
+    <li><strong>Carnival Status</strong> — Operational status (Draft, Published, Active, Completed, Cancelled)</li>
+    <li><strong>Public Visibility</strong> — Control if carnival appears in public listings</li>
+    <li><strong>Registration Settings</strong> — Configure registration parameters and limits</li>
+    <li><strong>Team Limits</strong> — Set maximum number of teams per club</li>
+    <li><strong>Contact Information</strong> — Organizer contact details</li>
+  </ul>
+
+  <h4>Form Validation</h4>
+  <ul>
+    <li><strong>Required Fields</strong> — Carnival name, date, and location are mandatory</li>
+    <li><strong>Name Length</strong> — Carnival name must be between 2-200 characters</li>
+    <li><strong>Date Validation</strong> — Date must be in the future for new carnivals</li>
+    <li><strong>Location Format</strong> — Location details should be complete and accurate</li>
+    <li><strong>Description Length</strong> — Description limited to appropriate length</li>
+    <li><strong>Contact Validation</strong> — Contact information must be in valid format</li>
+  </ul>
+
+  <h3>Carnival Status Management</h3>
+
+  <h4>Status Control</h4>
+
+  <h5>Publishing Carnivals</h5>
+  <ol>
+    <li><strong>Select Draft Carnival</strong> — Choose a carnival in draft status</li>
+    <li><strong>Click Status Toggle</strong> — Click "Change Status" in the Actions column</li>
+    <li><strong>Select Published Status</strong> — Choose "Published" from status options</li>
+    <li><strong>Confirm Publication</strong> — Confirm the carnival publication</li>
+    <li><strong>Visibility Updates</strong> — Carnival becomes visible to clubs for registration</li>
+    <li><strong>Notification</strong> — Consider notifying clubs about the new carnival</li>
+  </ol>
+
+  <h5>Activating Carnivals</h5>
+  <ol>
+    <li><strong>Select Published Carnival</strong> — Choose a published carnival ready to go live</li>
+    <li><strong>Click Status Toggle</strong> — Click "Change Status" in the Actions column</li>
+    <li><strong>Select Active Status</strong> — Choose "Active" from status options</li>
+    <li><strong>Confirm Activation</strong> — Confirm the carnival activation</li>
+    <li><strong>Registration Opens</strong> — Clubs can now register for the carnival</li>
+    <li><strong>Monitor Activity</strong> — Track registration activity and participation</li>
+  </ol>
+
+  <h5>Completing Carnivals</h5>
+  <ol>
+    <li><strong>Select Active Carnival</strong> — Choose an active carnival that has finished</li>
+    <li><strong>Click Status Toggle</strong> — Click "Change Status" in the Actions column</li>
+    <li><strong>Select Completed Status</strong> — Choose "Completed" from status options</li>
+    <li><strong>Confirm Completion</strong> — Confirm the carnival completion</li>
+    <li><strong>Registration Closes</strong> — No more registrations accepted</li>
+    <li><strong>Archive Data</strong> — Carnival data preserved for historical records</li>
+  </ol>
+
+  <h4>Status Implications</h4>
+
+  <h5>Draft Status</h5>
+  <ul>
+    <li><strong>Private Access</strong> — Only administrators and organizers can view</li>
+    <li><strong>No Public Visibility</strong> — Not visible in public carnival listings</li>
+    <li><strong>No Registration</strong> — Clubs cannot register for draft carnivals</li>
+    <li><strong>Work in Progress</strong> — Event details being finalized</li>
+  </ul>
+
+  <h5>Published Status</h5>
+  <ul>
+    <li><strong>Public Visibility</strong> — Carnival appears in public listings</li>
+    <li><strong>Information Only</strong> — Clubs can view details but cannot register</li>
+    <li><strong>Pre-Registration</strong> — Clubs can prepare for upcoming registration</li>
+    <li><strong>Marketing Phase</strong> — Carnival promotion and awareness building</li>
+  </ul>
+
+  <h5>Active Status</h5>
+  <ul>
+    <li><strong>Full Functionality</strong> — Clubs can register and manage teams</li>
+    <li><strong>Registration Open</strong> — Active registration period for clubs</li>
+    <li><strong>Team Management</strong> — Clubs can build and manage carnival teams</li>
+    <li><strong>Live Event</strong> — Carnival is in active planning/execution phase</li>
+  </ul>
+
+  <h5>Completed Status</h5>
+  <ul>
+    <li><strong>Registration Closed</strong> — No more registrations accepted</li>
+    <li><strong>Historical Record</strong> — Carnival data preserved for reference</li>
+    <li><strong>Results Available</strong> — Event results and outcomes recorded</li>
+    <li><strong>Archive Status</strong> — Event moved to historical records</li>
+  </ul>
+
+  <h3>Carnival Visibility Management</h3>
+
+  <h4>Public Visibility Control</h4>
+  <ol>
+    <li><strong>Select Carnival</strong> — Choose the carnival to modify visibility</li>
+    <li><strong>Click Visibility Toggle</strong> — Click "Toggle Visibility" in the Actions column</li>
+    <li><strong>Confirm Change</strong> — Confirm the visibility change</li>
+    <li><strong>Visibility Updates</strong> — Carnival visibility status changes immediately</li>
+    <li><strong>Search Impact</strong> — Carnival appears or disappears from public search results</li>
+  </ol>
+
+  <h4>Visibility Options</h4>
+
+  <h5>Public Visibility</h5>
+  <ul>
+    <li><strong>Search Results</strong> — Carnival appears in public carnival search results</li>
+    <li><strong>Carnival Listings</strong> — Carnival included in general carnival directories</li>
+    <li><strong>Club Access</strong> — Clubs can view carnival details and register</li>
+    <li><strong>Public Information</strong> — Contact details and location visible to public</li>
+  </ul>
+
+  <h5>Private Visibility</h5>
+  <ul>
+    <li><strong>Hidden from Search</strong> — Carnival not visible in public search results</li>
+    <li><strong>Limited Listings</strong> — Carnival excluded from general directories</li>
+    <li><strong>Restricted Access</strong> — Carnival details require special access</li>
+    <li><strong>Contact Protection</strong> — Contact details hidden from public view</li>
+  </ul>
+
+  <h3>Carnival Registration Management</h3>
+
+  <h4>Viewing Registrations</h4>
+  <ol>
+    <li><strong>Select Carnival</strong> — Choose the carnival from the management list</li>
+    <li><strong>Click Registrations</strong> — Click "View Registrations" in the Actions column</li>
+    <li><strong>Open Registration View</strong> — See all registered clubs and teams</li>
+    <li><strong>Review Details</strong> — Examine registration information and team details</li>
+    <li><strong>Export Data</strong> — Export registration data for external use</li>
+  </ol>
+
+  <h4>Registration Information</h4>
+
+  <h5>Club Registration Details</h5>
+  <ul>
+    <li><strong>Club Name</strong> — Registered club name and contact information</li>
+    <li><strong>Registration Date</strong> — When the club registered for the carnival</li>
+    <li><strong>Team Count</strong> — Number of teams registered by the club</li>
+    <li><strong>Player Count</strong> — Total number of players across all teams</li>
+    <li><strong>Contact Details</strong> — Club contact information for coordination</li>
+  </ul>
+
+  <h5>Team Registration Details</h5>
+  <ul>
+    <li><strong>Team Name</strong> — Official team name and designation</li>
+    <li><strong>Grade/Category</strong> — Competition grade or category</li>
+    <li><strong>Player List</strong> — Complete list of team players</li>
+    <li><strong>Captain/Contact</strong> — Team captain or contact person</li>
+    <li><strong>Registration Status</strong> — Team registration confirmation status</li>
+  </ul>
+
+  <h4>Managing Registrations</h4>
+
+  <h5>Registration Approval</h5>
+  <ul>
+    <li><strong>Review Pending</strong> — Check clubs awaiting registration approval</li>
+    <li><strong>Verify Details</strong> — Ensure registration information is complete</li>
+    <li><strong>Approve Registration</strong> — Confirm club registration for the carnival</li>
+    <li><strong>Send Confirmation</strong> — Notify club of registration approval</li>
+  </ul>
+
+  <h5>Registration Removal</h5>
+  <ul>
+    <li><strong>Select Registration</strong> — Choose the club registration to remove</li>
+    <li><strong>Review Impact</strong> — Check for associated teams and players</li>
+    <li><strong>Confirm Removal</strong> — Confirm permanent registration removal</li>
+    <li><strong>Notify Club</strong> — Inform club of registration cancellation</li>
+  </ul>
+
+  <h3>Carnival Deletion Management</h3>
+
+  <h4>Carnival Deletion Process</h4>
+  <ol>
+    <li><strong>Select Carnival</strong> — Choose the carnival for deletion</li>
+    <li><strong>Click Delete</strong> — Click "Delete" in the Actions column</li>
+    <li><strong>Review Dependencies</strong> — System checks for registrations, teams, and other data</li>
+    <li><strong>Confirm Deletion</strong> — Confirm the permanent deletion</li>
+    <li><strong>Data Removal</strong> — Carnival and associated data are permanently removed</li>
+  </ol>
+
+  <h4>Deletion Considerations</h4>
+  <ul>
+    <li><strong>Registration Impact</strong> — Check for registered clubs who will lose carnival access</li>
+    <li><strong>Team Impact</strong> — Review any teams that will be affected by deletion</li>
+    <li><strong>Historical Data</strong> — Audit logs and historical records may reference the carnival</li>
+    <li><strong>Organizer Notification</strong> — Consider impact on carnival organizers</li>
+  </ul>
+
+  <h4>Data Handling Options</h4>
+  <ul>
+    <li><strong>Complete Removal</strong> — Delete all carnival data permanently</li>
+    <li><strong>Registration Cancellation</strong> — Cancel all registrations before deletion</li>
+    <li><strong>Data Archive</strong> — Preserve carnival data in archive for compliance</li>
+    <li><strong>Soft Delete</strong> — Mark as deleted but preserve data structure</li>
+  </ul>
+
+  <h3>Carnival Management Best Practices</h3>
+
+  <h4>Data Quality Management</h4>
+  <ul>
+    <li><strong>Regular Updates</strong> — Periodically review and update carnival information</li>
+    <li><strong>Contact Verification</strong> — Ensure organizer contact information is current</li>
+    <li><strong>Location Accuracy</strong> — Maintain accurate venue and location details</li>
+    <li><strong>Compliance Monitoring</strong> — Ensure carnivals follow platform guidelines</li>
+  </ul>
+
+  <h4>Operational Efficiency</h4>
+  <ul>
+    <li><strong>Bulk Operations</strong> — Use bulk tools for multiple carnival updates</li>
+    <li><strong>Search Optimization</strong> — Use filters to quickly find specific carnivals</li>
+    <li><strong>Status Monitoring</strong> — Regularly review carnival status and transitions</li>
+    <li><strong>Communication</strong> — Keep open communication with carnival organizers</li>
+  </ul>
+
+  <h4>Registration Management</h4>
+  <ul>
+    <li><strong>Timely Approvals</strong> — Process registration requests promptly</li>
+    <li><strong>Capacity Monitoring</strong> — Monitor carnival capacity and registration limits</li>
+    <li><strong>Communication</strong> — Keep clubs informed about registration status</li>
+    <li><strong>Conflict Resolution</strong> — Handle registration issues and disputes</li>
+  </ul>
+
+  <h3>Troubleshooting Carnival Issues</h3>
+
+  <h4>Common Carnival Problems</h4>
+  <ul>
+    <li><strong>Missing Information</strong> — Carnivals with incomplete details or missing data</li>
+    <li><strong>Outdated Dates</strong> — Carnival dates that are no longer current</li>
+    <li><strong>Status Issues</strong> — Carnivals in incorrect status for their current state</li>
+    <li><strong>Visibility Problems</strong> — Carnivals not appearing in search results</li>
+    <li><strong>Registration Issues</strong> — Problems with club registration process</li>
+  </ul>
+
+  <h4>Resolution Strategies</h4>
+  <ul>
+    <li><strong>Data Updates</strong> — Update carnival information with current details</li>
+    <li><strong>Status Correction</strong> — Fix carnival status to match current state</li>
+    <li><strong>Visibility Adjustment</strong> — Fix visibility settings for proper discoverability</li>
+    <li><strong>Registration Support</strong> — Assist clubs with registration problems</li>
+  </ul>
+
+  <h3>Integration with User Management</h3>
+
+  <h4>Carnival-Organizer Relationship</h4>
+  <ul>
+    <li><strong>Organizer Assignment</strong> — Link users as carnival organizers</li>
+    <li><strong>Permission Management</strong> — Control organizer access levels and capabilities</li>
+    <li><strong>Communication</strong> — Coordinate with carnival organizers for updates</li>
+    <li><strong>Account Status</strong> — Manage organizer account status and access</li>
+  </ul>
+
+  <h4>Club-Registration Integration</h4>
+  <ul>
+    <li><strong>Registration Tracking</strong> — Monitor club carnival registrations</li>
+    <li><strong>Team Management</strong> — Track club teams in carnival events</li>
+    <li><strong>Event Participation</strong> — Monitor club participation patterns</li>
+    <li><strong>Communication</strong> — Manage carnival-related club communications</li>
+  </ul>
+
+  <h4>Audit Integration</h4>
+  <ul>
+    <li><strong>Activity Logging</strong> — All carnival management actions are audited</li>
+    <li><strong>Change Tracking</strong> — Track all carnival information modifications</li>
+    <li><strong>Security Monitoring</strong> — Monitor for suspicious carnival management activity</li>
+    <li><strong>Compliance Reporting</strong> — Generate reports for regulatory compliance</li>
+  </ul>
+
+  <p class="mt-3">
+    <a href="/admin/carnivals">Open the Carnival Management page</a>
+  </p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div></content>
+<parameter name="filePath">c:\Users\devon\source\repos\old-man-footy\views\user-guide\admin-carnival-management.ejs

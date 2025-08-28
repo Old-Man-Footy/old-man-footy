@@ -8,7 +8,7 @@
     "start": "node app.mjs",
     "dev": "cross-env NODE_ENV=development node app.mjs",
     "dev:nodemon": "cross-env NODE_ENV=development nodemon --inspect-brk app.mjs",
-  "migrate": "node scripts/run-migrations.mjs",
+    "migrate": "node scripts/run-migrations.mjs",
     "test": "vitest run",
     "test:watch": "cross-env NODE_ENV=test vitest --watch",
     "test:coverage": "vitest --coverage",

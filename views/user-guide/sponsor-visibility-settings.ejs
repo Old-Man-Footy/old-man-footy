@@ -1,0 +1,255 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Overview</h2>
+  <p>Sponsor visibility settings allow you to control how sponsors appear on your carnival website, in programs, and in public listings. This ensures sponsors receive appropriate recognition while maintaining control over your event's branding and presentation.</p>
+
+  <h3>Visibility Control Options</h3>
+
+  <h4>Public Website Display</h4>
+  <ul>
+    <li><strong>Sponsor List</strong> — Control whether sponsors appear in the main sponsor listing</li>
+    <li><strong>Logo Display</strong> — Choose logo size and prominence on sponsor pages</li>
+    <li><strong>Profile Links</strong> — Allow or prevent direct links to sponsor websites</li>
+    <li><strong>Contact Information</strong> — Show or hide sponsor contact details</li>
+  </ul>
+
+  <h4>Program Inclusion</h4>
+  <ul>
+    <li><strong>Printed Programs</strong> — Include sponsors in carnival program booklets</li>
+    <li><strong>Digital Programs</strong> — Display sponsors in online program versions</li>
+    <li><strong>Recognition Levels</strong> — Different acknowledgment formats based on sponsorship level</li>
+    <li><strong>Placement Options</strong> — Control where sponsors appear in program layouts</li>
+  </ul>
+
+  <h4>Event-Specific Visibility</h4>
+  <ul>
+    <li><strong>Temporal Control</strong> — Show sponsors only during active sponsorship periods</li>
+    <li><strong>Selective Display</strong> — Display sponsors on specific event pages only</li>
+    <li><strong>Conditional Visibility</strong> — Show sponsors based on event status or user permissions</li>
+    <li><strong>Custom Branding</strong> — Apply event-specific sponsor presentation styles</li>
+  </ul>
+
+  <h3>Accessing Visibility Settings</h3>
+
+  <h4>From Carnival Management</h4>
+  <ol>
+    <li><strong>Open Carnival</strong> — Navigate to your carnival management dashboard</li>
+    <li><strong>Find Sponsors</strong> — Locate the "Sponsors" section in the management menu</li>
+    <li><strong>Select Sponsor</strong> — Choose the sponsor whose visibility you want to control</li>
+    <li><strong>Access Settings</strong> — Look for "Visibility" or "Display Settings" options</li>
+    <li><strong>Configure Options</strong> — Adjust the visibility settings as needed</li>
+  </ol>
+
+  <h4>Direct Access Methods</h4>
+  <ul>
+    <li><strong>Sponsor Management URL</strong> — Go directly to `/carnivals/[id]/sponsors/visibility`</li>
+    <li><strong>Quick Actions</strong> — Use visibility toggles from sponsor listing pages</li>
+    <li><strong>Bulk Operations</strong> — Apply visibility settings to multiple sponsors at once</li>
+    <li><strong>Settings Shortcuts</strong> — Access through carnival dashboard shortcuts</li>
+  </ul>
+
+  <h3>Managing Public Website Visibility</h3>
+
+  <h4>Sponsor Listing Display</h4>
+
+  <h5>Enabling Public Display</h5>
+  <ol>
+    <li><strong>Select Sponsor</strong> — Choose the sponsor from your carnival sponsor list</li>
+    <li><strong>Open Visibility Settings</strong> — Access the display configuration options</li>
+    <li><strong>Enable Public Display</strong> — Toggle "Show on Public Website" to ON</li>
+    <li><strong>Choose Display Level</strong> — Select how prominently the sponsor should appear</li>
+    <li><strong>Save Settings</strong> — Apply the visibility changes</li>
+  </ol>
+
+  <h5>Display Level Options</h5>
+  <ul>
+    <li><strong>Prominent</strong> — Featured placement with larger logo and enhanced visibility</li>
+    <li><strong>Standard</strong> — Normal listing with standard logo size</li>
+    <li><strong>Minimal</strong> — Listed but with smaller logo and less prominence</li>
+    <li><strong>Hidden</strong> — Not displayed on public website (private sponsorship)</li>
+  </ul>
+
+  <h4>Logo Display Configuration</h4>
+
+  <h5>Logo Size Settings</h5>
+  <ul>
+    <li><strong>Large</strong> — Maximum logo size for premier sponsors (recommended for Platinum)</li>
+    <li><strong>Medium</strong> — Standard logo size for major sponsors (recommended for Gold)</li>
+    <li><strong>Small</strong> — Compact logo size for supporting sponsors (recommended for Silver/Bronze)</li>
+    <li><strong>Icon</strong> — Minimal logo display for basic recognition</li>
+  </ul>
+
+  <h5>Logo Quality and Format</h5>
+  <ul>
+    <li><strong>High Resolution</strong> — Use high-quality logo files for best display</li>
+    <li><strong>Transparent Background</strong> — PNG format with transparent backgrounds preferred</li>
+    <li><strong>Consistent Sizing</strong> — Maintain aspect ratios for professional appearance</li>
+    <li><strong>Brand Guidelines</strong> — Respect sponsor branding requirements</li>
+  </ul>
+
+  <h4>Website Link Management</h4>
+
+  <h5>Enabling Sponsor Links</h5>
+  <ol>
+    <li><strong>Access Sponsor Settings</strong> — Open the sponsor's visibility configuration</li>
+    <li><strong>Enable Website Links</strong> — Toggle "Allow Website Links" to ON</li>
+    <li><strong>Verify URL</strong> — Ensure the sponsor's website URL is correct and accessible</li>
+    <li><strong>Test Link</strong> — Click the test link button to verify functionality</li>
+    <li><strong>Save Configuration</strong> — Apply the link settings</li>
+  </ol>
+
+  <h5>Link Behavior Options</h5>
+  <ul>
+    <li><strong>Open in New Tab</strong> — Links open in new browser tabs (recommended)</li>
+    <li><strong>Open in Same Tab</strong> — Links replace current page (not recommended)</li>
+    <li><strong>No Follow</strong> — Prevent search engine indexing of sponsor links</li>
+    <li><strong>Sponsored Attribution</strong> — Add sponsored link indicators</li>
+  </ul>
+
+  <h3>Program Inclusion Settings</h3>
+
+  <h4>Printed Program Configuration</h4>
+
+  <h5>Including Sponsors in Programs</h5>
+  <ol>
+    <li><strong>Access Program Settings</strong> — Navigate to carnival program configuration</li>
+    <li><strong>Select Sponsor Inclusion</strong> — Choose which sponsors to include</li>
+    <li><strong>Set Recognition Level</strong> — Define how sponsors are acknowledged</li>
+    <li><strong>Configure Placement</strong> — Choose where sponsors appear in the program</li>
+    <li><strong>Preview Layout</strong> — Review how sponsors will appear in the final program</li>
+  </ol>
+
+  <h5>Program Recognition Levels</h5>
+  <ul>
+    <li><strong>Premier Sponsor</strong> — Full page or prominent front section placement</li>
+    <li><strong>Major Sponsor</strong> — Half page or section header placement</li>
+    <li><strong>Supporting Sponsor</strong> — Quarter page or footer placement</li>
+    <li><strong>Contributor</strong> — Logo listing in contributor section</li>
+  </ul>
+
+  <h4>Digital Program Settings</h4>
+
+  <h5>Online Program Display</h5>
+  <ul>
+    <li><strong>Interactive Elements</strong> — Clickable sponsor logos that link to websites</li>
+    <li><strong>Hover Effects</strong> — Enhanced logos with hover animations</li>
+    <li><strong>Mobile Optimization</strong> — Responsive design for mobile program viewers</li>
+    <li><strong>Print-Friendly</strong> — Optimized layouts for printing digital programs</li>
+  </ul>
+
+  <h3>Advanced Visibility Controls</h3>
+
+  <h4>Temporal Visibility Management</h4>
+
+  <h5>Time-Based Display</h5>
+  <ul>
+    <li><strong>Pre-Event Only</strong> — Show sponsors only before the carnival starts</li>
+    <li><strong>During Event</strong> — Display sponsors throughout the event period</li>
+    <li><strong>Post-Event</strong> — Continue showing sponsors after event completion</li>
+    <li><strong>Custom Dates</strong> — Set specific date ranges for sponsor visibility</li>
+  </ul>
+
+  <h5>Seasonal Sponsorships</h5>
+  <ul>
+    <li><strong>Annual Sponsors</strong> — Sponsors who support all carnivals in a season</li>
+    <li><strong>Event-Specific</strong> — Sponsors for particular carnival events only</li>
+    <li><strong>Rotating Sponsors</strong> — Different sponsors featured for different events</li>
+    <li><strong>Guest Sponsors</strong> — Temporary sponsors for special events</li>
+  </ul>
+
+  <h4>Conditional Visibility</h4>
+
+  <h5>User-Based Display</h5>
+  <ul>
+    <li><strong>Public Users</strong> — Sponsors visible to all website visitors</li>
+    <li><strong>Registered Users</strong> — Additional sponsors visible to logged-in users</li>
+    <li><strong>Club Members</strong> — Exclusive sponsors for club members only</li>
+    <li><strong>Administrators</strong> — Sponsors visible only to event organizers</li>
+  </ul>
+
+  <h5>Context-Aware Display</h5>
+  <ul>
+    <li><strong>Page-Specific</strong> — Different sponsors on different carnival pages</li>
+    <li><strong>Section-Based</strong> — Sponsors displayed in relevant sections only</li>
+    <li><strong>Role-Based</strong> — Different visibility for players, coaches, and spectators</li>
+    <li><strong>Location-Based</strong> — Sponsors displayed based on user location</li>
+  </ul>
+
+  <h3>Bulk Visibility Operations</h3>
+
+  <h4>Managing Multiple Sponsors</h4>
+
+  <h5>Bulk Visibility Changes</h5>
+  <ol>
+    <li><strong>Select Multiple Sponsors</strong> — Use checkboxes to select sponsors for bulk operations</li>
+    <li><strong>Choose Operation</strong> — Select the visibility change you want to apply</li>
+    <li><strong>Apply Settings</strong> — Execute the bulk visibility update</li>
+    <li><strong>Review Changes</strong> — Verify the changes were applied correctly</li>
+    <li><strong>Save Configuration</strong> — Confirm and save the bulk changes</li>
+  </ol>
+
+  <h5>Bulk Operation Types</h5>
+  <ul>
+    <li><strong>Show All</strong> — Make all selected sponsors publicly visible</li>
+    <li><strong>Hide All</strong> — Remove all selected sponsors from public display</li>
+    <li><strong>Set Display Level</strong> — Apply the same display level to multiple sponsors</li>
+    <li><strong>Enable Links</strong> — Allow website links for multiple sponsors</li>
+    <li><strong>Program Inclusion</strong> — Add or remove sponsors from carnival programs</li>
+  </ul>
+
+  <h3>Visibility Best Practices</h3>
+
+  <h4>Professional Presentation</h4>
+  <ul>
+    <li><strong>Consistent Branding</strong> — Maintain consistent sponsor presentation across all platforms</li>
+    <li><strong>Quality Logos</strong> — Use high-resolution, professional-quality sponsor logos</li>
+    <li><strong>Balanced Layout</strong> — Avoid overcrowding with too many prominent sponsors</li>
+    <li><strong>Clear Hierarchy</strong> — Use sponsorship levels to create clear visual hierarchy</li>
+  </ul>
+
+  <h4>Sponsor Relationship Management</h4>
+  <ul>
+    <li><strong>Communication</strong> — Keep sponsors informed about their visibility and recognition</li>
+    <li><strong>Value Demonstration</strong> — Show sponsors the value they receive from visibility</li>
+    <li><strong>Feedback Collection</strong> — Gather sponsor feedback on visibility and presentation</li>
+    <li><strong>Performance Tracking</strong> — Monitor sponsor website traffic and engagement</li>
+  </ul>
+
+  <h4>Technical Considerations</h4>
+  <ul>
+    <li><strong>Mobile Optimization</strong> — Ensure sponsor displays work well on mobile devices</li>
+    <li><strong>Loading Performance</strong> — Optimize logo file sizes for fast page loading</li>
+    <li><strong>Accessibility</strong> — Ensure sponsor information is accessible to all users</li>
+    <li><strong>SEO Benefits</strong> — Leverage sponsor visibility for search engine optimization</li>
+  </ul>
+
+  <h3>Troubleshooting Visibility Issues</h3>
+
+  <h4>Common Problems</h4>
+  <ul>
+    <li><strong>Sponsors Not Appearing</strong> — Check visibility settings and public display toggles</li>
+    <li><strong>Logo Display Issues</strong> — Verify logo file quality and format compatibility</li>
+    <li><strong>Broken Links</strong> — Test sponsor website URLs and update as needed</li>
+    <li><strong>Inconsistent Display</strong> — Check for caching issues and clear browser cache</li>
+  </ul>
+
+  <h4>Resolution Steps</h4>
+  <ul>
+    <li><strong>Verify Settings</strong> — Double-check all visibility configuration options</li>
+    <li><strong>Test Display</strong> — View the carnival page as a public user to verify display</li>
+    <li><strong>Check Permissions</strong> — Ensure you have permission to modify sponsor settings</li>
+    <li><strong>Contact Support</strong> — Reach out for assistance with complex visibility issues</li>
+  </ul>
+
+  <p class="mt-3">
+    <a href="<%= page.url %>">Open the Carnival Sponsor Visibility Settings page</a>
+  </p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div></content>
+<parameter name="filePath">c:\Users\devon\source\repos\old-man-footy\views\user-guide\sponsor-visibility-settings.ejs

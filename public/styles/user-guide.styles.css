@@ -275,3 +275,26 @@
 @media (max-width: 767px) {
     .user-guide-index .card-header-thumb { height: 100px; }
 }
+
+/* Admin Badge Styling */
+.badge-admin {
+    background-color: #dc3545 !important;
+    color: white !important;
+    font-weight: bold;
+    border: 1px solid #dc3545;
+}
+
+.badge-admin:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
+
+/* Admin Card Styling */
+.card.border-danger {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.card.border-danger .card-header-thumb {
+    border-bottom: 3px solid #dc3545;
+}

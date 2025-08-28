@@ -1,0 +1,348 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Overview</h2>
+  <p>Administrator Club Management provides comprehensive oversight and control over all clubs on the platform. This includes viewing club details, editing club information, managing club status, controlling public visibility, and handling club logo uploads. Administrators can ensure clubs maintain proper information and follow platform guidelines.</p>
+
+  <h3>Access Requirements</h3>
+  <ul>
+    <li><strong>Administrator Role</strong> — Must be logged in with admin privileges</li>
+    <li><strong>Club Data Access</strong> — Full access to all club information and settings</li>
+    <li><strong>Upload Permissions</strong> — Ability to manage club logo uploads</li>
+    <li><strong>Status Control</strong> — Authority to activate, deactivate, and manage club visibility</li>
+    <li><strong>Direct Access</strong> — Available via `/admin/clubs`</li>
+  </ul>
+
+  <h3>Club Management Capabilities</h3>
+
+  <h4>Club Administration</h4>
+  <ul>
+    <li><strong>View All Clubs</strong> — Complete list of registered clubs with search and filtering</li>
+    <li><strong>Edit Club Details</strong> — Modify club information, contact details, and settings</li>
+    <li><strong>Logo Management</strong> — Upload, update, and manage club logos</li>
+    <li><strong>Status Control</strong> — Activate, deactivate, or manage club operational status</li>
+    <li><strong>Visibility Management</strong> — Control public visibility and discoverability</li>
+  </ul>
+
+  <h4>Club Oversight</h4>
+  <ul>
+    <li><strong>Compliance Monitoring</strong> — Ensure clubs follow platform guidelines</li>
+    <li><strong>Data Quality</strong> — Maintain accurate and complete club information</li>
+    <li><strong>Contact Management</strong> — Keep contact information current and valid</li>
+    <li><strong>Activity Tracking</strong> — Monitor club participation and engagement</li>
+  </ul>
+
+  <h3>Accessing Club Management</h3>
+
+  <h4>From Admin Dashboard</h4>
+  <ol>
+    <li><strong>Open Admin Dashboard</strong> — Navigate to `/admin/dashboard`</li>
+    <li><strong>Click Clubs Card</strong> — Click on the "Total Clubs" statistics card</li>
+    <li><strong>Access Club Management</strong> — Click "Manage Clubs" link in the card footer</li>
+    <li><strong>View Club List</strong> — See all clubs with management options</li>
+  </ol>
+
+  <h4>Direct Navigation</h4>
+  <ul>
+    <li><strong>Direct URL</strong> — Go directly to `/admin/clubs`</li>
+    <li><strong>Admin Menu</strong> — Access through administrator navigation menu</li>
+    <li><strong>Quick Actions</strong> — Shortcuts from other admin pages</li>
+    <li><strong>Search Results</strong> — Access from club search and filter results</li>
+  </ul>
+
+  <h3>Viewing and Searching Clubs</h3>
+
+  <h4>Club List Interface</h4>
+
+  <h5>Club Table Columns</h5>
+  <ul>
+    <li><strong>Club Name</strong> — Official name of the club</li>
+    <li><strong>State</strong> — State or territory where the club is located</li>
+    <li><strong>Contact Email</strong> — Primary contact email for the club</li>
+    <li><strong>Contact Phone</strong> — Primary contact phone number</li>
+    <li><strong>Status</strong> — Operational status (Active, Inactive)</li>
+    <li><strong>Visibility</strong> — Public visibility status</li>
+    <li><strong>Logo</strong> — Thumbnail of club logo (if available)</li>
+    <li><strong>Registration Date</strong> — When the club was registered</li>
+    <li><strong>Actions</strong> — Available management actions for each club</li>
+  </ul>
+
+  <h5>Table Features</h5>
+  <ul>
+    <li><strong>Sorting</strong> — Click column headers to sort by name, state, status, etc.</li>
+    <li><strong>Pagination</strong> — Navigate through large club lists</li>
+    <li><strong>Page Size Control</strong> — Adjust number of clubs displayed per page</li>
+    <li><strong>Export Options</strong> — Export club data for external analysis</li>
+  </ul>
+
+  <h4>Search and Filtering</h4>
+
+  <h5>Search Functionality</h5>
+  <ul>
+    <li><strong>Name Search</strong> — Search clubs by name or partial name</li>
+    <li><strong>Email Search</strong> — Find clubs by contact email address</li>
+    <li><strong>Phone Search</strong> — Locate clubs by contact phone number</li>
+    <li><strong>Global Search</strong> — Search across multiple fields simultaneously</li>
+  </ul>
+
+  <h5>Advanced Filtering</h5>
+  <ul>
+    <li><strong>Status Filter</strong> — Show only active or inactive clubs</li>
+    <li><strong>Visibility Filter</strong> — Filter by public visibility status</li>
+    <li><strong>State Filter</strong> — Filter clubs by state or territory</li>
+    <li><strong>Date Range</strong> — Filter by registration date or last update</li>
+  </ul>
+
+  <h3>Editing Club Information</h3>
+
+  <h4>Accessing Club Edit</h4>
+  <ol>
+    <li><strong>Select Club</strong> — Find the club in the club management list</li>
+    <li><strong>Click Edit</strong> — Click the "Edit" button in the Actions column</li>
+    <li><strong>Open Edit Form</strong> — Club edit form will open with current details</li>
+    <li><strong>Modify Information</strong> — Update club details as needed</li>
+    <li><strong>Save Changes</strong> — Apply the modifications to the club record</li>
+  </ol>
+
+  <h4>Editable Club Fields</h4>
+
+  <h5>Basic Information</h5>
+  <ul>
+    <li><strong>Club Name</strong> — Official club name (2-100 characters)</li>
+    <li><strong>State</strong> — State or territory (required, 2-3 characters)</li>
+    <li><strong>Contact Email</strong> — Primary contact email (must be valid format)</li>
+    <li><strong>Contact Phone</strong> — Primary contact phone (optional, max 20 characters)</li>
+  </ul>
+
+  <h5>Operational Settings</h5>
+  <ul>
+    <li><strong>Club Status</strong> — Active or inactive operational status</li>
+    <li><strong>Public Visibility</strong> — Control if club appears in public listings</li>
+    <li><strong>Logo Upload</strong> — Upload or update club logo image</li>
+    <li><strong>Description</strong> — Optional club description or additional information</li>
+  </ul>
+
+  <h4>Form Validation</h4>
+  <ul>
+    <li><strong>Required Fields</strong> — Club name, state, and contact email are mandatory</li>
+    <li><strong>Name Length</strong> — Club name must be between 2-100 characters</li>
+    <li><strong>State Format</strong> — State must be valid state/territory code</li>
+    <li><strong>Email Format</strong> — Contact email must be in valid format</li>
+    <li><strong>Phone Format</strong> — Phone numbers limited to 20 characters</li>
+    <li><strong>Logo Requirements</strong> — Logo files must meet size and format requirements</li>
+  </ul>
+
+  <h3>Club Logo Management</h3>
+
+  <h4>Logo Upload Process</h4>
+  <ol>
+    <li><strong>Access Club Edit</strong> — Open the club edit form</li>
+    <li><strong>Locate Logo Section</strong> — Find the logo upload area</li>
+    <li><strong>Select Logo File</strong> — Choose image file from your computer</li>
+    <li><strong>Upload File</strong> — Click upload button to process the image</li>
+    <li><strong>Review and Save</strong> — Preview the uploaded logo and save changes</li>
+  </ol>
+
+  <h4>Logo Requirements</h4>
+
+  <h5>Technical Specifications</h5>
+  <ul>
+    <li><strong>File Format</strong> — PNG, JPG, or GIF formats accepted</li>
+    <li><strong>File Size</strong> — Maximum file size limit (check platform settings)</li>
+    <li><strong>Image Dimensions</strong> — Recommended minimum dimensions for quality</li>
+    <li><strong>Aspect Ratio</strong> — Maintain logo proportions for best display</li>
+  </ul>
+
+  <h5>Quality Guidelines</h5>
+  <ul>
+    <li><strong>High Resolution</strong> — Use high-quality images for professional appearance</li>
+    <li><strong>Transparent Background</strong> — PNG format preferred for transparent backgrounds</li>
+    <li><strong>Clear Branding</strong> — Ensure logo is clearly visible and readable</li>
+    <li><strong>Brand Consistency</strong> — Use official club logo and branding</li>
+  </ul>
+
+  <h4>Logo Display Options</h4>
+  <ul>
+    <li><strong>Thumbnail Display</strong> — Small logo in listings and search results</li>
+    <li><strong>Profile Display</strong> — Larger logo on club profile pages</li>
+    <li><strong>Print Quality</strong> — High-resolution version for printed materials</li>
+    <li><strong>Web Optimization</strong> — Optimized version for web display</li>
+  </ul>
+
+  <h3>Club Status Management</h3>
+
+  <h4>Status Control</h4>
+
+  <h5>Activating Clubs</h5>
+  <ol>
+    <li><strong>Select Club</strong> — Choose an inactive club from the list</li>
+    <li><strong>Click Status Toggle</strong> — Click "Toggle Status" in the Actions column</li>
+    <li><strong>Confirm Activation</strong> — Confirm the club activation</li>
+    <li><strong>Status Updates</strong> — Club becomes active and visible</li>
+    <li><strong>Notify Club</strong> — Consider notifying club administrators</li>
+  </ol>
+
+  <h5>Deactivating Clubs</h5>
+  <ol>
+    <li><strong>Select Club</strong> — Choose an active club for deactivation</li>
+    <li><strong>Click Status Toggle</strong> — Click "Toggle Status" in the Actions column</li>
+    <li><strong>Provide Reason</strong> — Enter reason for deactivation (if required)</li>
+    <li><strong>Confirm Deactivation</strong> — Confirm the club deactivation</li>
+    <li><strong>Status Updates</strong> — Club becomes inactive</li>
+  </ol>
+
+  <h4>Status Implications</h4>
+
+  <h5>Active Status</h5>
+  <ul>
+    <li><strong>Full Functionality</strong> — Club can register for carnivals and manage players</li>
+    <li><strong>Public Visibility</strong> — Club appears in public listings (if visibility enabled)</li>
+    <li><strong>Delegate Access</strong> — Club delegates can access management features</li>
+    <li><strong>Carnival Participation</strong> — Club can participate in carnival events</li>
+  </ul>
+
+  <h5>Inactive Status</h5>
+  <ul>
+    <li><strong>Limited Access</strong> — Club management features restricted</li>
+    <li><strong>Hidden Visibility</strong> — Club removed from public listings</li>
+    <li><strong>Carnival Restrictions</strong> — Cannot register for new carnival events</li>
+    <li><strong>Data Preservation</strong> — Club data remains but is inaccessible</li>
+  </ul>
+
+  <h3>Club Visibility Management</h3>
+
+  <h4>Public Visibility Control</h4>
+  <ol>
+    <li><strong>Select Club</strong> — Choose the club to modify visibility</li>
+    <li><strong>Click Visibility Toggle</strong> — Click "Toggle Visibility" in the Actions column</li>
+    <li><strong>Confirm Change</strong> — Confirm the visibility change</li>
+    <li><strong>Visibility Updates</strong> — Club visibility status changes immediately</li>
+    <li><strong>Search Impact</strong> — Club appears or disappears from public search results</li>
+  </ol>
+
+  <h4>Visibility Options</h4>
+
+  <h5>Public Visibility</h5>
+  <ul>
+    <li><strong>Search Results</strong> — Club appears in public club search results</li>
+    <li><strong>Club Listings</strong> — Club included in general club directories</li>
+    <li><strong>Profile Access</strong> — Public users can view club profile</li>
+    <li><strong>Contact Information</strong> — Contact details visible to public users</li>
+  </ul>
+
+  <h5>Private Visibility</h5>
+  <ul>
+    <li><strong>Hidden from Search</strong> — Club not visible in public search results</li>
+    <li><strong>Limited Listings</strong> — Club excluded from general directories</li>
+    <li><strong>Restricted Access</strong> — Club profile requires special access</li>
+    <li><strong>Contact Protection</strong> — Contact details hidden from public view</li>
+  </ul>
+
+  <h3>Club Deletion Management</h3>
+
+  <h4>Club Deletion Process</h4>
+  <ol>
+    <li><strong>Select Club</strong> — Choose the club for deletion</li>
+    <li><strong>Click Delete</strong> — Click "Delete" in the Actions column</li>
+    <li><strong>Review Dependencies</strong> — System checks for players, carnivals, and other data</li>
+    <li><strong>Confirm Deletion</strong> — Confirm the permanent deletion</li>
+    <li><strong>Data Removal</strong> — Club and associated data are permanently removed</li>
+  </ol>
+
+  <h4>Deletion Considerations</h4>
+  <ul>
+    <li><strong>Player Impact</strong> — Check for registered players who will lose club association</li>
+    <li><strong>Carnival Registrations</strong> — Review any active or past carnival registrations</li>
+    <li><strong>Delegate Accounts</strong> — Consider impact on club delegate accounts</li>
+    <li><strong>Historical Data</strong> — Audit logs and historical records may reference the club</li>
+  </ul>
+
+  <h4>Data Handling Options</h4>
+  <ul>
+    <li><strong>Complete Removal</strong> — Delete all club data permanently</li>
+    <li><strong>Player Reassignment</strong> — Move players to another club before deletion</li>
+    <li><strong>Data Archive</strong> — Preserve club data in archive for compliance</li>
+    <li><strong>Soft Delete</strong> — Mark as deleted but preserve data structure</li>
+  </ul>
+
+  <h3>Club Management Best Practices</h3>
+
+  <h4>Data Quality Management</h4>
+  <ul>
+    <li><strong>Regular Updates</strong> — Periodically review and update club information</li>
+    <li><strong>Contact Verification</strong> — Ensure contact information is current and accurate</li>
+    <li><strong>Logo Standards</strong> — Maintain consistent logo quality and branding</li>
+    <li><strong>Compliance Monitoring</strong> — Ensure clubs follow platform guidelines</li>
+  </ul>
+
+  <h4>Operational Efficiency</h4>
+  <ul>
+    <li><strong>Bulk Operations</strong> — Use bulk tools for multiple club updates</li>
+    <li><strong>Search Optimization</strong> — Use filters to quickly find specific clubs</li>
+    <li><strong>Status Monitoring</strong> — Regularly review inactive clubs for reactivation</li>
+    <li><strong>Communication</strong> — Keep open communication with club administrators</li>
+  </ul>
+
+  <h4>Security & Privacy</h4>
+  <ul>
+    <li><strong>Access Control</strong> — Limit admin access to authorized personnel</li>
+    <li><strong>Data Protection</strong> — Handle club information according to privacy regulations</li>
+    <li><strong>Audit Logging</strong> — Log all club management actions</li>
+    <li><strong>Secure Communication</strong> — Use secure channels for club communications</li>
+  </ul>
+
+  <h3>Troubleshooting Club Issues</h3>
+
+  <h4>Common Club Problems</h4>
+  <ul>
+    <li><strong>Missing Logos</strong> — Clubs without logos or with broken logo links</li>
+    <li><strong>Outdated Contact Info</strong> — Contact details that are no longer current</li>
+    <li><strong>Status Issues</strong> — Clubs that should be active but are inactive</li>
+    <li><strong>Visibility Problems</strong> — Clubs not appearing in search results</li>
+  </ul>
+
+  <h4>Resolution Strategies</h4>
+  <ul>
+    <li><strong>Logo Upload</strong> — Help clubs upload proper logo files</li>
+    <li><strong>Contact Updates</strong> — Update contact information with current details</li>
+    <li><strong>Status Correction</strong> — Activate or deactivate clubs as appropriate</li>
+    <li><strong>Visibility Adjustment</strong> — Fix visibility settings for proper discoverability</li>
+  </ul>
+
+  <h3>Integration with User Management</h3>
+
+  <h4>Club-Delegate Relationship</h4>
+  <ul>
+    <li><strong>Delegate Assignment</strong> — Link users as club delegates</li>
+    <li><strong>Permission Management</strong> — Control delegate access levels</li>
+    <li><strong>Communication</strong> — Coordinate with club delegates for updates</li>
+    <li><strong>Account Status</strong> — Manage delegate account status</li>
+  </ul>
+
+  <h4>Carnival Integration</h4>
+  <ul>
+    <li><strong>Registration Tracking</strong> — Monitor club carnival registrations</li>
+    <li><strong>Team Management</strong> — Track club teams in carnival events</li>
+    <li><strong>Event Participation</strong> — Monitor club participation patterns</li>
+    <li><strong>Communication</strong> — Manage carnival-related club communications</li>
+  </ul>
+
+  <h4>Audit Integration</h4>
+  <ul>
+    <li><strong>Activity Logging</strong> — All club management actions are audited</li>
+    <li><strong>Change Tracking</strong> — Track all club information modifications</li>
+    <li><strong>Security Monitoring</strong> — Monitor for suspicious club management activity</li>
+    <li><strong>Compliance Reporting</strong> — Generate reports for regulatory compliance</li>
+  </ul>
+
+  <p class="mt-3">
+    <a href="/admin/clubs">Open the Club Management page</a>
+  </p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div></content>
+<parameter name="filePath">c:\Users\devon\source\repos\old-man-footy\views\user-guide\admin-club-management.ejs

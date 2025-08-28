@@ -1,0 +1,75 @@
+<div class="user-guide-page container">
+  <h1><%= page.title %></h1>
+  <p class="lead"><%= page.description %></p>
+
+  <div class="guide-screenshot mb-4">
+    <img src="<%= page.screenshotUrl %>" alt="<%= page.title %> screenshot" class="img-fluid border" />
+  </div>
+
+  <h2>Overview</h2>
+  <p>The CSV import feature allows you to bulk import multiple players at once using a spreadsheet file. This is especially useful when migrating from another system or when adding many players at the start of a season.</p>
+
+  <h3>CSV Import Process</h3>
+  <ol>
+    <li><strong>Download the Template</strong> — Click the "Download CSV Template" button to get a properly formatted template file.</li>
+    <li><strong>Fill in Player Data</strong> — Open the template in Excel, Google Sheets, or any CSV editor and add your player information following the column headers.</li>
+    <li><strong>Validate Your Data</strong> — Ensure all required fields are filled and data formats match the expected types (dates, phone numbers, etc.).</li>
+    <li><strong>Upload the File</strong> — Select your completed CSV file and click "Import Players".</li>
+    <li><strong>Review Results</strong> — Check the import summary for successful imports and any errors that need to be fixed.</li>
+  </ol>
+
+  <h3>Required CSV Columns</h3>
+  <p>The CSV template includes the following columns. Required fields are marked with an asterisk (*):</p>
+  <ul>
+    <li><strong>firstName*</strong> — Player's first name</li>
+    <li><strong>lastName*</strong> — Player's last name</li>
+    <li><strong>dateOfBirth*</strong> — Date of birth (YYYY-MM-DD format)</li>
+    <li><strong>email*</strong> — Email address</li>
+    <li><strong>phone</strong> — Phone number (optional)</li>
+    <li><strong>emergencyContactName</strong> — Emergency contact name (optional)</li>
+    <li><strong>emergencyContactPhone</strong> — Emergency contact phone (optional)</li>
+    <li><strong>medicalNotes</strong> — Medical conditions or notes (optional)</li>
+    <li><strong>notes</strong> — General notes about the player (optional)</li>
+  </ul>
+
+  <h3>Data Validation Rules</h3>
+  <ul>
+    <li><strong>Age Requirement</strong> — All players must be 35 years or older for Masters Rugby League</li>
+    <li><strong>Email Format</strong> — Must be a valid email address</li>
+    <li><strong>Date Format</strong> — Date of birth must be in YYYY-MM-DD format</li>
+    <li><strong>Phone Numbers</strong> — Should include country code when provided</li>
+    <li><strong>Text Length</strong> — Notes fields have character limits (typically 1000 characters)</li>
+  </ul>
+
+  <h3>Troubleshooting Common Issues</h3>
+  <ul>
+    <li><strong>Invalid Date Format</strong> — Ensure dates are in YYYY-MM-DD format (e.g., 1980-05-15)</li>
+    <li><strong>Player Too Young</strong> — Masters Rugby League requires players to be 35+ years old</li>
+    <li><strong>Duplicate Email</strong> — Each player must have a unique email address</li>
+    <li><strong>Missing Required Fields</strong> — First name, last name, date of birth, and email are mandatory</li>
+    <li><strong>File Format Issues</strong> — Ensure you're uploading a valid CSV file, not Excel (.xlsx)</li>
+  </ul>
+
+  <h3>Best Practices</h3>
+  <ul>
+    <li><strong>Start Small</strong> — Test with 5-10 players first to ensure your data format is correct</li>
+    <li><strong>Backup Your Data</strong> — Keep a copy of your original CSV file</li>
+    <li><strong>Validate Email Addresses</strong> — Ensure all email addresses are current and accessible</li>
+    <li><strong>Check Phone Formats</strong> — Use consistent phone number formatting</li>
+    <li><strong>Review Before Importing</strong> — Take time to review the import summary and fix any issues</li>
+  </ul>
+
+  <h3>Import Results</h3>
+  <p>After uploading, you'll see a summary showing:</p>
+  <ul>
+    <li><strong>Successful Imports</strong> — Number of players successfully added</li>
+    <li><strong>Errors</strong> — List of specific issues that prevented some records from being imported</li>
+    <li><strong>Duplicates</strong> — Players that were skipped because they already exist</li>
+  </ul>
+
+  <p class="mt-3">
+    <a href="<%= page.url %>">Open the CSV Import page</a>
+  </p>
+  <p><a href="/user-guide">Back to guide index</a></p>
+</div></content>
+<parameter name="filePath">c:\Users\devon\source\repos\old-man-footy\views\user-guide\player-csv-import.ejs
