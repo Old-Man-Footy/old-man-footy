@@ -111,7 +111,4 @@ router.get('/api/coming-soon/status', comingSoonController.getComingSoonStatus);
 // Admin statistics (for primary delegates and admins)
 router.get('/admin/stats', ensureAuthenticated, mainController.getStats);
 
-// User Guide - accessible to both authenticated and non-authenticated users
-router.get('/user-guide', userGuideController.getUserGuide);
-
 export default router;

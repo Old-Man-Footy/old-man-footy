@@ -236,7 +236,6 @@ npm run test:coverage
     ├── index.ejs                               # Homepage template
     ├── layout.ejs                              # Main layout template
     ├── maintenance.ejs                         # Maintenance mode template
-    ├── user-guide.ejs                          # User guide template
     ├── admin/                                  # Admin panel view templates
     │   ├── audit-logs.ejs                         # Audit logs management
     │   ├── carnival-players.ejs                   # Carnival player management
