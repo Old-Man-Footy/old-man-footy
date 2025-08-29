@@ -18,30 +18,30 @@ Old Man Footy is your central hub for Masters Rugby League carnivals and clubs a
 - **Club Search**: Find clubs in your area.
 - **Get Started**: Register as a club delegate to unlock management features.
 
-Need more help? Click the links in the navigation or contact us!`,
+Need more help? Click the links in the navigation or contact us!`
   },
   {
     pageIdentifier: 'about',
     title: 'About Page Help',
     content: `# About Old Man Footy
 
-Learn what Old Man Footy does and how it works.
+Welcome to the About page! Here you can learn what Old Man Footy does and how it works.
 
 ## Platform Purpose
-- Connects clubs, players, and fans.
-- Makes Masters Rugby League events discoverable.
+Old Man Footy connects clubs, players, and fans, making Masters Rugby League events discoverable and accessible across Australia.
 
 ## How It Works
-- Browse carnivals and clubs.
-- Register as a delegate to manage events.
+- **Browse Carnivals and Clubs**: Explore upcoming events and club profiles.
+- **Register as a Delegate**: Unlock management features for your club or carnival.
+- **Stay Informed**: Get updates on new carnivals, club activities, and sponsor opportunities.
 
 ## Club Delegate Role
-- Manage club profiles and carnivals.
-- Organize and promote events.
+Delegates manage club profiles, organize carnivals, and promote events. They are the main point of contact for club administration and event coordination.
 
 ## Carnival Organization
-- Delegates create and manage carnivals.
-- All details are available for participants.`,
+Delegates can create and manage carnivals, add sponsors, and invite clubs to participate. All event details are available for participants and fans.
+
+For more details, check the navigation links or contact support.`
   },
   {
     pageIdentifier: 'contact',
@@ -56,7 +56,7 @@ Use the contact form to reach the Old Man Footy team.
 - Provide your club name if relevant.
 
 ## Newsletter Signup
-- Subscribe for updates and news.`,
+- Subscribe for updates and news.`
   },
   {
     pageIdentifier: 'dashboard',
@@ -71,7 +71,7 @@ Welcome to your dashboard!
 - See recent activity and updates.
 
 ## Navigation
-- Use the menu to access different management areas.`,
+- Use the menu to access different management areas.`
   },
   {
     pageIdentifier: 'club-show',
@@ -83,7 +83,7 @@ View detailed information about a club.
 ## Features
 - Club leadership and delegate structure.
 - Club statistics and history.
-- Contact options and social media links.`,
+- Contact options and social media links.`
   },
   {
     pageIdentifier: 'carnival-new',
@@ -99,20 +99,54 @@ Create a new Masters Rugby League carnival.
 
 ## Tips
 - Fields marked as "Imported from MySideline" are read-only unless claimed.
-- Editable fields can be updated by the delegate.`,
+- Editable fields can be updated by the delegate.`
   },
   {
     pageIdentifier: 'sponsors-list',
     title: 'Sponsors List Help',
     content: `# Sponsors List Help
-
-Find and manage sponsors for carnivals and clubs.
+  {
+    pageIdentifier: 'clubs-list',
+Find and explore Masters Rugby League clubs across Australia.
 
 ## Features
-- Search and filter sponsors by state and level.
-- View sponsor details and contact information.
-- Understand Gold/Silver/Bronze levels.
-- Stats bar shows sponsor counts.`,
+  {
+    pageIdentifier: 'clubs-list',
+    title: 'Clubs List Help',
+    content: `# Clubs List Help
+
+Find and explore Masters Rugby League clubs across Australia.
+
+## Features
+- **Club Search**: Use the search bar to find clubs by name or location.
+- **State Filter**: Filter clubs by Australian state to narrow your results.
+- **Club Cards**: Each card displays key club information, including name, location, and delegate contacts.
+- **Contact Delegate**: Use the contact options to reach out and join a club.
+- **Club Profiles**: Click on a club card to view detailed information, history, and social media links.
+
+## Tips
+- Use filters to find clubs near you or in your preferred state.
+- Review club profiles for leadership structure and history.
+- Contact delegates for membership or event participation.
+
+For more help, contact support or check the navigation links.`
+  },
+- **Club Search**: Use the search bar to find clubs by name or location.
+- **State Filter**: Filter clubs by Australian state to narrow your results.
+- **Club Cards**: Each card displays key club information, including name, location, and delegate contacts.
+- **Contact Delegate**: Use the contact options to reach out and join a club.
+- **Club Profiles**: Click on a club card to view detailed information, history, and social media links.
+
+## Tips
+- Use filters to find clubs near you or in your preferred state.
+- Review club profiles for leadership structure and history.
+- Contact delegates for membership or event participation.
+
+For more help, contact support or check the navigation links.`
+  },
+- Contact sponsors directly for partnership opportunities.
+
+For more help, contact support or check the navigation links.`
   },
   {
     pageIdentifier: 'error',
@@ -128,8 +162,8 @@ If you see this page, something went wrong.
 
 ## What to Do
 - Check the URL and try again.
-- Contact support if the problem persists.`,
-  },
+- Contact support if the problem persists.`
+  }
 ];
 
 async function seedHelpContent() {
