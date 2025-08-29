@@ -7,6 +7,7 @@
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import Club from './Club.mjs';
 
 /**
  * Sponsor model class extending Sequelize Model
@@ -19,6 +20,15 @@ class Sponsor extends Model {
    */
   async getClub() {
     return await Club.findByPk(this.clubId);
+  }
+
+  /**
+   * Check if this sponsor is associated with a specific club
+   * @param {number} clubId - The club ID to check association with
+   * @returns {boolean} True if the sponsor is associated with the club
+   */
+  isAssociatedWithClub(clubId) {
+    return this.clubId === clubId;
   }
 }
 

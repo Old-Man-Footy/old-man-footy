@@ -609,7 +609,7 @@ const showAddSponsorHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'clubs',
+        as: 'club',
         where: { id: { [Op.ne]: club.id } },
         required: false,
       },

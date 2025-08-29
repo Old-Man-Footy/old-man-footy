@@ -1678,7 +1678,7 @@ const getSponsorManagementHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'clubs',
+                as: 'club',
                 where: { isActive: true },
                 required: false,
                 attributes: ['id', 'clubName', 'state'],
@@ -1693,7 +1693,7 @@ const getSponsorManagementHandler = async (req, res) => {
     // Add club count to each sponsor
     const sponsorsWithStats = sponsors.map(sponsor => {
         const sponsorData = sponsor.toJSON();
-        sponsorData.clubCount = sponsorData.clubs ? sponsorData.clubs.length : 0;
+        sponsorData.clubCount = sponsorData.club ? 1 : 0;
         return sponsorData;
     });
 
@@ -1724,7 +1724,7 @@ const showEditSponsorHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'clubs',
+                as: 'club',
                 where: { isActive: true },
                 required: false,
                 attributes: ['id', 'clubName', 'state'],
@@ -1763,7 +1763,7 @@ const deleteSponsorHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'clubs',
+                as: 'club',
                 where: { isActive: true },
                 required: false,
                 attributes: ['id', 'clubName']
@@ -1784,7 +1784,7 @@ const deleteSponsorHandler = async (req, res) => {
     }
 
     // Check if sponsor has active club associations
-    const activeClubCount = sponsor.clubs ? sponsor.clubs.length : 0;
+    const activeClubCount = sponsor.club ? 1 : 0;
     let warningMessage = '';
     if (activeClubCount > 0) {
         warningMessage = ` Note: This sponsor is currently associated with ${activeClubCount} club(s). These relationships will be maintained but the sponsor will be hidden from public listings.`;

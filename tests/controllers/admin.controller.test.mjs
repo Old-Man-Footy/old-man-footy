@@ -1353,7 +1353,7 @@ describe('Admin Controller', () => {
         include: expect.arrayContaining([
           expect.objectContaining({
             model: Club,
-            as: 'clubs'
+            as: 'club'
           })
         ])
       }));
@@ -1394,10 +1394,7 @@ describe('Admin Controller', () => {
         id: 1,
         sponsorName: 'Test Sponsor',
         isActive: true,
-        clubs: [
-          createMockClub({ id: 1, clubName: 'Club A' }),
-          createMockClub({ id: 2, clubName: 'Club B' })
-        ]
+        club: createMockClub({ id: 1, clubName: 'Club A' })
       });
 
       req.params.id = '1';
@@ -1413,7 +1410,7 @@ describe('Admin Controller', () => {
 
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: expect.stringContaining('2 club(s)'),
+        message: expect.stringContaining('Sponsor "Test Sponsor" has been deactivated successfully'),
         action: 'deactivated'
       });
     });
