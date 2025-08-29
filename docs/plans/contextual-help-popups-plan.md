@@ -25,7 +25,7 @@ Note: The repository contains route files that include API endpoints and image m
 - **Conciseness**: Keep content focused and actionable (50-200 words per popup)
 - **Progressive Disclosure**: Start with basics, offer "Learn More" for advanced details
 - **Visual Aids**: Include screenshots or diagrams where helpful
-- **Actionable**: End with clear next steps or "Try It" buttons
+- **Actionable**: End with clear next steps
 
 ### 3. Mobile Responsiveness Best Practices
 - **Touch Targets**: Minimum 44px touch targets for help icons
@@ -441,7 +441,6 @@ const helpSystem = {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Got it</button>
-        <button type="button" class="btn btn-primary">Try It</button>
       </div>
     </div>
   </div>

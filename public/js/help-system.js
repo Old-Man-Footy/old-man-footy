@@ -25,7 +25,6 @@ export const helpSystem = {
   this.elements.modal = document.getElementById(this.elements.defaultModalId) || null;
   this.elements.modalTitle = this.elements.modal ? this.elements.modal.querySelector('.help-modal-title') : null;
   this.elements.modalBody = this.elements.modal ? this.elements.modal.querySelector('.help-modal-body') : null;
-  this.elements.modalTry = this.elements.modal ? this.elements.modal.querySelector('.help-modal-try') : null;
   },
 
   bindEvents() {
@@ -39,14 +38,6 @@ export const helpSystem = {
   this.openHelp(key, el, modalId);
       });
     });
-
-    if (this.elements.modalTry) {
-      // Default "Try It" just closes the modal; apps can override by listening for a custom event
-      this.elements.modalTry.addEventListener('click', () => {
-  const bs = bootstrap.Modal.getInstance(this.elements.modal);
-  bs && bs.hide();
-      });
-    }
   },
 
   /**
