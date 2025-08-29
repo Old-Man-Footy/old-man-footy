@@ -41,12 +41,12 @@ Current status: The project direction has been updated. The initial skeleton wil
 - [-] **DEPRECATED**: Example page wiring for `club-options`, `carnivals/new`, etc., will be removed.
 - [-] **DEPRECATED**: Page-specific help-config modules (`public/js/help-config-*.js`) are no longer needed.
 - [x] Help-content markdown stubs (`docs/help-content/*.md`) will be used as the source material for populating the new database table.
-- [ ] **NEW**: Create the `HelpContent` database table and write a migration script.
-- [ ] **NEW**: Create an API endpoint to fetch help content by `pageIdentifier`.
-- [ ] **NEW**: Refactor the JavaScript help system to support the new global button and API.
-- [ ] **NEW**: Add a `data-page-id` attribute to the `<body>` tag of each view to inform the JavaScript which page is active.
-- [ ] Continue populating the `HelpContent` table for all pages per the Page-by-Page plan.
-- [ ] Add unit/integration tests for the new `helpSystem` and API endpoint.
+- [x] **NEW**: Create the `HelpContent` database table and write a migration script.
+- [x] **NEW**: Create an API endpoint to fetch help content by `pageIdentifier`.
+- [x] **NEW**: Refactor the JavaScript help system to support the new global button and API.
+- [x] **NEW**: Add a `data-page-id` attribute to the `<body>` tag of each view to inform the JavaScript which page is active.
+- [x] Continue populating the `HelpContent` table for all pages per the Page-by-Page plan (initial 8 pages complete).
+- [x] Add unit/integration tests for the new `helpSystem` and API endpoint.
 
 ---
 

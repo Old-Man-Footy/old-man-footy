@@ -3,7 +3,7 @@
  * @description Sequelize model for contextual help content.
  */
 import { DataTypes } from 'sequelize';
-import sequelize from './index.mjs';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * HelpContent model

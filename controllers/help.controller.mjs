@@ -4,6 +4,7 @@
  */
 import { validationResult, param } from 'express-validator';
 import HelpContent from '../models/HelpContent.mjs';
+import { marked } from 'marked';
 
 /**
  * GET /api/help/:pageIdentifier
@@ -28,7 +29,9 @@ export async function getHelpContent(req, res, next) {
     if (!help) {
       return res.status(404).json({ error: { status: 404, message: 'Help content not found.' } });
     }
-    return res.json({ title: help.title, content: help.content });
+  // Render markdown to HTML using marked
+  const htmlContent = marked.parse(help.content);
+  return res.json({ title: help.title, content: htmlContent });
   } catch (err) {
     next(err);
   }
