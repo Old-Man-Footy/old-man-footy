@@ -1,66 +1,62 @@
 # Contextual Help Popups Implementation Plan
 
 ## Overview
-Replace the centralized user guide with contextual help popups throughout the application. Each help popup will be triggered by question mark icons (?) placed strategically near relevant UI elements, opening modals with specific, detailed instructions for that particular feature or task.
+This plan outlines the implementation of a contextual help system. The previous approach of using multiple popups per page has been replaced. The new direction is to implement a **single, global "Help" button** with a question mark icon in the main navigation menu (the site's chrome).
+
+When a user clicks this button, a modal window will open, displaying help content specifically tailored to the page they are currently viewing. This provides a centralized, predictable help mechanism while ensuring the content remains contextually relevant. Help content will be stored in and retrieved from a central database table.
 
 ## Paths verification & route-to-view mapping
 
- - [x] Verify each planned URL (route) actually renders a server-side view or client page before creating help popups. Some Express routes are API-only or perform redirects and should not receive UI popups (see "Non-UI / API routes" below).  
- - [x] Create a short mapping document `docs/plans/help-route-to-view.md` that lists each route and the view file (or API) it corresponds to. This will be the source-of-truth for implementation.  
- - [ ] For any route that currently uses partials only (for example via AJAX), create a plan for where the help icon should live (calling page or modal parent), or mark it as deferred.
+- [x] Verify each planned URL (route) actually renders a server-side view or client page before creating help content.
+- [x] Maintain the `docs/plans/help-route-to-view.md` mapping document that lists each route and the view it corresponds to. This will be the source-of-truth for creating `PageIdentifier` keys for the database.
 
-Note: The repository contains route files that include API endpoints and image management POST/DELETE routes that are not pages (for example `/api/maintenance/status`, `/clubs/:clubId/images` and image delete endpoints). These should be excluded when building the per-page help popups; instead, consider adding admin-facing guidance in the relevant management pages where those features are surfaced.
+Note: The repository contains route files that include API endpoints and image management POST/DELETE routes that are not pages (for example `/api/maintenance/status`, `/clubs/:clubId/images`). These should be excluded.
 
 ## Implementation Strategy
 
 ### 1. Technical Architecture
-- **Modal System**: Use Bootstrap modals for consistent styling and behavior
-- **Icon Placement**: Question mark icons using Bootstrap Icons (`bi bi-question-circle`)
-- **JavaScript Management**: Centralized help system with page-specific configurations
-- **Accessibility**: Full ARIA support, keyboard navigation, screen reader compatibility
-- **Mobile Optimization**: Touch-friendly sizing, proper viewport handling
+- **Global Help Button**: A single help button (`<button>` or `<a>`) with a question mark icon (`bi bi-question-circle`) will be placed in the main application layout (`views/layout.ejs`).
+- **Modal System**: A single, reusable Bootstrap modal will be defined in the main layout. Its content will be dynamically populated.
+- **Content Management**: Help content will be stored in a new `HelpContent` table in the database. An API endpoint (e.g., `/api/help/:pageIdentifier`) will be created to fetch content.
+- **JavaScript Management**: A central JavaScript module (`public/js/help-system.js`) will handle the click event on the global help button. It will identify the current page, fetch the relevant content from the API, and display it in the modal.
+- **Accessibility**: The modal will support full ARIA standards, keyboard navigation, and screen reader compatibility.
+- **Mobile Optimization**: The modal will be responsive, appearing full-screen on mobile devices.
 
 ### 2. Help Content Guidelines
-- **Specificity**: Each popup explains one specific task or feature
-- **Conciseness**: Keep content focused and actionable (50-200 words per popup)
-- **Progressive Disclosure**: Start with basics, offer "Learn More" for advanced details
-- **Visual Aids**: Include screenshots or diagrams where helpful
-- **Actionable**: End with clear next steps
+- **Comprehensiveness**: Each page's help content should cover all major features and functions available on that page.
+- **Conciseness**: Use clear headings, bullet points, and short paragraphs. Aim for 100-400 words per page.
+- **Progressive Disclosure**: Use accordions or expandable sections within the modal for complex pages if necessary.
+- **Visual Aids**: Include screenshots or diagrams where helpful.
+- **Actionable**: End with clear next steps or links to related functions.
 
-### 3. Mobile Responsiveness Best Practices
-- **Touch Targets**: Minimum 44px touch targets for help icons
-- **Modal Sizing**: Full-screen modals on mobile, max-width on desktop
-- **Positioning**: Icons positioned to avoid thumb interference zones
-- **Gestures**: Support swipe-to-dismiss for modals
-- **Font Sizing**: Minimum 16px readable text, scalable with device settings
+---
+
+## Progress update (2025-08-29)
+
+Current status: The project direction has been updated. The initial skeleton will be refactored to support the new single-modal approach.
+
+- [~] **RE-SCOPED**: The central modal partial (`views/partials/help-modal.ejs`) will be moved into the main layout (`views/layout.ejs`) as a single global instance.
+- [~] **RE-SCOPED**: The central help manager (`public/js/help-system.js`) will be refactored to remove per-trigger logic. It will now manage the global help button, fetch content via API based on a page identifier, and populate the single modal.
+- [x] The route→view mapping document (`docs/plans/help-route-to-view.md`) remains valid and will be used for content mapping.
+- [-] **DEPRECATED**: Example page wiring for `club-options`, `carnivals/new`, etc., will be removed.
+- [-] **DEPRECATED**: Page-specific help-config modules (`public/js/help-config-*.js`) are no longer needed.
+- [x] Help-content markdown stubs (`docs/help-content/*.md`) will be used as the source material for populating the new database table.
+- [ ] **NEW**: Create the `HelpContent` database table and write a migration script.
+- [ ] **NEW**: Create an API endpoint to fetch help content by `pageIdentifier`.
+- [ ] **NEW**: Refactor the JavaScript help system to support the new global button and API.
+- [ ] **NEW**: Add a `data-page-id` attribute to the `<body>` tag of each view to inform the JavaScript which page is active.
+- [ ] Continue populating the `HelpContent` table for all pages per the Page-by-Page plan.
+- [ ] Add unit/integration tests for the new `helpSystem` and API endpoint.
 
 ---
 
 ## Page-by-Page Implementation Plan
 
-## Progress update (2025-08-29)
-
-Current status: initial skeleton implemented and example pages wired. Use this section to track concrete tasks already completed so the team can monitor rollout progress.
-
-- [x] Central modal partial supporting multiple instances implemented (`views/partials/help-modal.ejs`).
-- [x] Central help manager updated to support per-trigger modal targeting and legacy default (`public/js/help-system.js`).
-- [x] Route→view mapping document created and verified (`docs/plans/help-route-to-view.md`).
-- [x] Example page wiring completed for: `club-options` (help triggers + config), `carnivals/new` (MySideline badges + help triggers + config), `index` (modal include + config), `clubs/manage` (modal include + config), `sponsors/list` (modal include + config).
-- [x] Page-specific help-config modules added under `public/js/help-config-*.js` for the example pages.
-- [x] Help-content markdown stubs created under `docs/help-content/` for: `club-options.md`, `carnivals-new.md`, `index.md`, `clubs.md`, `sponsors.md`.
-- [ ] Continue wiring pages across the site per the Page-by-Page plan (next target: Carnival detail/edit pages and remaining Club flows).
-- [ ] Decide and implement scalable runtime content-loading (fetch markdown/JSON) vs inline page configs.
-- [ ] Add unit/integration tests for `helpSystem` (multi-modal behaviour, event emission, accessibility checks).
-
-Notes:
-- The pattern implemented uses a small page config module (`public/js/help-config-<page>.js`) that sets `window.HELP_SYSTEM_CONFIG.pages['<page-id>']` and initializes the `helpSystem`. This is intentionally lightweight and easy to copy when authoring new pages.
-- For each page the remaining work is typically: place `data-help-key` triggers next to target UI elements, include a modal instance in the view with a unique `modalId`, and create/author the page config module or server-render the help config into `window.HELP_SYSTEM_CONFIG`.
-
-### Public Pages
+Each page listed below requires a single entry in the `HelpContent` database table.
 
 #### 1. Homepage (`/`)
 **Target Audience**: New visitors, potential delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Welcome Overview** (hero section) - What is Old Man Footy?
 - [ ] **Upcoming Carnivals** - How to view and register for carnivals
 - [ ] **Quick Stats** - Understanding the numbers displayed
@@ -69,7 +65,7 @@ Notes:
 
 #### 2. About Page (`/about`)
 **Target Audience**: New visitors
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Platform Purpose** - What Old Man Footy does
 - [ ] **How It Works** - Basic workflow explanation
 - [ ] **Club Delegate Role** - What delegates do
@@ -77,7 +73,7 @@ Notes:
 
 #### 3. Contact Page (`/contact`)
 **Target Audience**: All users
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Contact Form** - How to submit inquiries
 - [ ] **Subject Selection** - When to use each category
 - [ ] **Club Name Field** - When and why to provide club info
@@ -85,7 +81,7 @@ Notes:
 
 #### 4. Sponsors List (`/sponsors`)
 **Target Audience**: Delegates, carnival organizers
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Sponsor Search** - How to find sponsors
 - [ ] **Filter System** - Using state and level filters
 - [ ] **Sponsor Levels** - Understanding Gold/Silver/Bronze
@@ -94,7 +90,7 @@ Notes:
 
 #### 5. Clubs List (`/clubs`)
 **Target Audience**: Potential delegates, visitors
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Club Search** - Finding clubs by name/location
 - [ ] **State Filter** - Filtering by Australian state
 - [ ] **Club Cards** - Understanding club information display
@@ -103,7 +99,7 @@ Notes:
 
 #### 6. Carnivals List (`/carnivals`)
 **Target Audience**: Players, delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Carnival Filters** - Using state and date filters
 - [ ] **Carnival Cards** - Understanding event information
 - [ ] **Registration Links** - How to register for events
@@ -112,7 +108,7 @@ Notes:
 
 #### 7. Individual Sponsor Profile (`/sponsors/:id`)
 **Target Audience**: Delegates, carnival organizers
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Contact Information** - How to reach the sponsor
 - [ ] **Social Media Links** - Connecting on different platforms
 - [ ] **Business Details** - Understanding sponsor capabilities
@@ -120,7 +116,7 @@ Notes:
 
 #### 8. Individual Club Profile (`/clubs/:id`)
 **Target Audience**: Potential members, other delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Club Leadership** - Understanding delegate structure
 - [ ] **Club Statistics** - What the numbers represent
 - [ ] **Contact Options** - How to get in touch
@@ -128,7 +124,7 @@ Notes:
 
 #### 9. Individual Carnival Profile (`/carnivals/:id`)
 **Target Audience**: Players, delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Event Details** - Understanding carnival information
 - [ ] **Registration Process** - How to sign up
 - [ ] **Venue Information** - Finding the location
@@ -156,7 +152,7 @@ Notes:
 
 #### 10. Login Page (`/auth/login`)
 **Target Audience**: Returning users
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Login Form** - How to sign in
 - [ ] **Password Requirements** - What makes a valid password
 - [ ] **Forgot Password** - Recovery process
@@ -164,7 +160,7 @@ Notes:
 
 #### 11. Registration Page (`/auth/register`)
 **Target Audience**: New users
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Registration Form** - Required vs optional fields
 - [ ] **Password Strength** - Creating secure passwords
 - [ ] **Email Validation** - Why email verification matters
@@ -173,7 +169,7 @@ Notes:
 
 #### 12. Invitation Acceptance (`/auth/invite/:token`)
 **Target Audience**: Invited users
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Invitation Process** - What happens when you accept
 - [ ] **Club Association** - How you'll be connected to the club
 - [ ] **Delegate Role** - What privileges you'll have
@@ -185,7 +181,7 @@ Notes:
 
 #### 13. Club Options (`/clubs/options`)
 **Target Audience**: Users without clubs
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Create vs Join** - Understanding the two paths
 - [ ] **Club Creation Form** - Required information
 - [ ] **Autocomplete Search** - Finding existing clubs
@@ -195,7 +191,7 @@ Notes:
 
 #### 14. Club Management Dashboard (`/clubs/manage`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Delegate Overview** - Your role and responsibilities
 - [ ] **Quick Actions** - Common management tasks
 - [ ] **Club Statistics** - Understanding your club's metrics
@@ -204,7 +200,7 @@ Notes:
 
 #### 15. Club Profile Edit (`/clubs/manage/profile`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Profile Fields** - What each field is for
 - [ ] **Image Upload** - Logo and photo requirements
 - [ ] **Social Media** - Setting up social links
@@ -213,7 +209,7 @@ Notes:
 
 #### 16. Club Sponsors Management (`/clubs/manage/sponsors`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Current Sponsors** - Managing existing partnerships
 - [ ] **Add New Sponsor** - Finding and adding sponsors
 - [ ] **Sponsor Priority** - Ordering sponsor display
@@ -221,7 +217,7 @@ Notes:
 
 #### 17. Add Club Sponsor (`/clubs/manage/sponsors/add`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Sponsor Search** - Finding available sponsors
 - [ ] **Existing vs New** - When to use each option
 - [ ] **Contact Process** - Reaching out to sponsors
@@ -229,7 +225,7 @@ Notes:
 
 #### 18. Club Alternate Names (`/clubs/manage/alternate-names`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Alternate Names** - Why they're useful
 - [ ] **Search Optimization** - Improving discoverability
 - [ ] **Name Management** - Adding, editing, removing names
@@ -237,7 +233,7 @@ Notes:
 
 #### 19. Create Club on Behalf (`/clubs/create-on-behalf`)
 **Target Audience**: Delegates, admins
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Proxy Creation** - When and why to use this
 - [ ] **Invitation Email** - What the invitee receives
 - [ ] **Club Setup** - Pre-configuring the new club
@@ -245,7 +241,7 @@ Notes:
 
 #### 20. Claim Club Ownership (`/clubs/:id/claim`)
 **Target Audience**: Invited users
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Ownership Claim** - What claiming means
 - [ ] **Delegate Responsibilities** - Your new role
 - [ ] **Club Transition** - What happens to the previous setup
@@ -257,7 +253,7 @@ Notes:
 
 #### 21. Carnival Creation (`/carnivals/new`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Carnival Basics** - Required information
 - [ ] **Date Selection** - Choosing event dates
 - [ ] **Location Details** - Providing venue information
@@ -269,7 +265,7 @@ Notes:
 
 #### 22. Carnival Edit (`/carnivals/:id/edit`)
 **Target Audience**: Carnival organizers
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Edit Permissions** - Who can modify carnivals
 - [ ] **Change Tracking** - What changes are logged
 - [ ] **Date Modifications** - Impact of date changes
@@ -277,7 +273,7 @@ Notes:
 
 #### 23. Carnival Detail View (`/carnivals/:id`)
 **Target Audience**: Players, delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Event Information** - Understanding carnival details
 - [ ] **Registration Process** - How to sign up
 - [ ] **Club Participation** - How clubs get involved
@@ -285,7 +281,7 @@ Notes:
 
 #### 24. Carnival Sponsors (`/carnivals/:id/sponsors`)
 **Target Audience**: Carnival organizers
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Sponsor Management** - Adding carnival sponsors
 - [ ] **Sponsor Benefits** - What sponsors receive
 - [ ] **Display Priority** - Ordering sponsor visibility
@@ -293,7 +289,7 @@ Notes:
 
 #### 25. Carnival Players (`/carnivals/:id/players`)
 **Target Audience**: Carnival organizers
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Player Overview** - Understanding participant data
 - [ ] **Club Breakdown** - Players by club
 - [ ] **Registration Status** - Tracking signups
@@ -301,7 +297,7 @@ Notes:
 
 #### 26. Carnival Attendees (`/carnivals/:id/attendees`)
 **Target Audience**: Carnival organizers
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Club Management** - Managing participating clubs
 - [ ] **Registration Tracking** - Club signup status
 - [ ] **Communication** - Sending updates to clubs
@@ -313,7 +309,7 @@ Notes:
 
 #### 27. Club Players List (`/clubs/players`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Player Management** - Overview of player functions
 - [ ] **Add Players** - How to register new players
 - [ ] **Player Status** - Understanding player states
@@ -321,7 +317,7 @@ Notes:
 
 #### 28. Add Club Player (`/clubs/players/add`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Player Information** - Required player details
 - [ ] **Contact Details** - Managing player communication
 - [ ] **Registration Process** - Step-by-step signup
@@ -329,7 +325,7 @@ Notes:
 
 #### 29. Edit Club Player (`/clubs/players/:id/edit`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Edit Permissions** - Who can modify players
 - [ ] **Change Tracking** - What modifications are logged
 - [ ] **Data Validation** - Ensuring accurate information
@@ -337,7 +333,7 @@ Notes:
 
 #### 30. Carnival Club Players (`/carnivals/:id/club-players`)
 **Target Audience**: Club delegates
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Carnival Registration** - Registering club for event
 - [ ] **Player Selection** - Choosing which players attend
 - [ ] **Registration Deadlines** - Important dates
@@ -349,7 +345,7 @@ Notes:
 
 #### 31. Admin Dashboard (`/admin/dashboard`)
 **Target Audience**: System administrators
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Admin Overview** - Understanding admin responsibilities
 - [ ] **System Statistics** - Interpreting dashboard metrics
 - [ ] **Quick Actions** - Common administrative tasks
@@ -357,7 +353,7 @@ Notes:
 
 #### 32. User Management (`/admin/users`)
 **Target Audience**: System administrators
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **User Search** - Finding specific users
 - [ ] **User Status** - Understanding account states
 - [ ] **Edit Users** - Modifying user information
@@ -365,7 +361,7 @@ Notes:
 
 #### 33. Club Management (`/admin/clubs`)
 **Target Audience**: System administrators
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Club Oversight** - Administrative club management
 - [ ] **Status Controls** - Activating/deactivating clubs
 - [ ] **Delegate Management** - Managing club leadership
@@ -373,7 +369,7 @@ Notes:
 
 #### 34. Carnival Management (`/admin/carnivals`)
 **Target Audience**: System administrators
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Carnival Oversight** - Administrative carnival management
 - [ ] **Status Controls** - Managing carnival states
 - [ ] **Ownership Management** - Handling carnival ownership
@@ -381,7 +377,7 @@ Notes:
 
 #### 35. Sponsor Management (`/admin/sponsors`)
 **Target Audience**: System administrators
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Sponsor Administration** - Managing sponsor database
 - [ ] **Verification Process** - Validating sponsor information
 - [ ] **Status Management** - Controlling sponsor visibility
@@ -389,7 +385,7 @@ Notes:
 
 #### 36. Audit Logs (`/admin/audit-logs`)
 **Target Audience**: System administrators
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Log Interpretation** - Understanding audit entries
 - [ ] **Search Filters** - Finding specific activities
 - [ ] **Export Functions** - Generating audit reports
@@ -397,7 +393,7 @@ Notes:
 
 #### 37. Reports (`/admin/reports`)
 **Target Audience**: System administrators
-**Help Popups Needed**:
+**Help Topics Needed in HelpContent**:
 - [ ] **Report Generation** - Creating system reports
 - [ ] **Data Analysis** - Interpreting report data
 - [ ] **Export Options** - Downloading report formats
