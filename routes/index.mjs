@@ -3,7 +3,6 @@ import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as mainController from '../controllers/main.controller.mjs';
-import * as userGuideController from '../controllers/userGuide.controller.mjs';
 import * as maintenanceController from '../controllers/maintenance.controller.mjs';
 import * as comingSoonController from '../controllers/comingSoon.controller.mjs';
 

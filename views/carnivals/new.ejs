@@ -73,6 +73,15 @@
                                     Carnival Title *
                                     <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
                                        title="Use a descriptive name that includes the location and any special theme (e.g., 'Gold Coast Masters Carnival 2025')"></i>
+                                    <!-- MySideline badge -->
+                                    <% if (typeof importedFromMySideline !== 'undefined' && importedFromMySideline) { %>
+                                        <span class="badge bg-secondary ms-2">Imported from MySideline</span>
+                                    <% } %>
+                                    <!-- Help trigger for MySideline explanation -->
+                                    <button type="button" class="btn btn-link p-0 align-baseline ms-2 help-trigger" data-help-key="mysideline" data-help-modal="help-carnival-new">
+                                        <i class="bi bi-question-circle" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Help: MySideline import</span>
+                                    </button>
                                 </label>
                                 <input type="text" class="form-control" id="title" name="title" 
                                        value="<%= typeof formData !== 'undefined' ? formData.title : '' %>" required>
@@ -85,6 +94,13 @@
                                         <span id="dateLabel">Date *</span>
                                         <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip" 
                                            title="Select the main carnival date. For multi-day events, use the first day."></i>
+                                        <% if (typeof importedFromMySideline !== 'undefined' && importedFromMySideline) { %>
+                                            <span class="badge bg-secondary ms-2">Imported from MySideline</span>
+                                        <% } %>
+                                        <button type="button" class="btn btn-link p-0 align-baseline ms-2 help-trigger" data-help-key="mysideline" data-help-modal="help-carnival-new">
+                                            <i class="bi bi-question-circle" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Help: MySideline import</span>
+                                        </button>
                                     </label>
                                     <input type="date" class="form-control" id="date" name="date" 
                                            value="<%= typeof formData !== 'undefined' ? formData.date : '' %>" required>
@@ -412,3 +428,6 @@
 </div>
 
 <script mode="module" src="/js/carnival-new.js"></script>
+
+<script type="module" src="/js/help-config-carnivals-new.js"></script>
+<%- include('../partials/help-modal.ejs', { modalId: 'help-carnival-new' }) %>

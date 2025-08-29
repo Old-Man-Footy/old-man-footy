@@ -166,7 +166,6 @@ npm run test:coverage
 │   ├── main.controller.mjs                     # Main application routes
 │   ├── maintenance.controller.mjs              # Maintenance mode handling
 │   ├── sponsor.controller.mjs                  # Sponsor management operations
-│   └── userGuide.controller.mjs                # User guide functionality
 ├── data/                                    # Database files
 │   ├── dev-old-man-footy.db                    # Development SQLite database
 │   └── test-old-man-footy.db                   # Test SQLite database

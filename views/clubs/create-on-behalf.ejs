@@ -63,6 +63,20 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
+                                 <div class="form-group">
+                                <label for="location" class="form-label">
+                                <strong>Location/Suburb</strong>
+                                    </label>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        id="location" 
+                                        name="location" 
+                                        value="<%= formData.location || '' %>"
+                                        placeholder="e.g., Parramatta, NSW">
+                                    <small class="form-text text-muted">City, suburb, or general location</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="state" class="form-label">
                                         <strong>State</strong> <span class="text-danger">*</span>

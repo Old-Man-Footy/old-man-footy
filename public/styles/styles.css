@@ -130,6 +130,10 @@ a:focus {
     text-decoration: underline;
 }
 
+a:visited {
+    color: var(--rugby-link-green);
+}
+
 /* Remove underlines from links that already have visual feedback */
 .navbar a:hover,
 .navbar a:focus,
@@ -1050,8 +1054,8 @@ button[type="submit"]:contains("Complete Registration"):focus {
 .social-links a {
     margin-right: 12px;
     margin-bottom: 8px;
-    background-color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(0,0,0,0.1);
+    /* background-color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(0,0,0,0.1); */
 }
 
 .social-links a:hover,

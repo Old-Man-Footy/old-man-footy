@@ -99,6 +99,13 @@
                                     <% } %>
                                 </div>
                                 <div class="col-md-6">
+                                    <label for="location" class="form-label">Location/Suburb</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           placeholder="e.g., Parramatta, Sydney" value="<%= club.location || '' %>"
+                                           maxlength="100">
+                                    <div class="form-text">Specify your club's home location or suburb</div>
+                                </div>
+                                <div class="col-md-6">
                                     <label for="state" class="form-label">State *</label>
                                     <% if (user.isPrimaryDelegate) { %>
                                         <select class="form-select" id="state" name="state" required>
@@ -119,17 +126,7 @@
                                     <% } %>
                                 </div>
                             </div>
-
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <label for="location" class="form-label">Location/Suburb</label>
-                                    <input type="text" class="form-control" id="location" name="location" 
-                                           placeholder="e.g., Parramatta, Sydney" value="<%= club.location || '' %>"
-                                           maxlength="100">
-                                    <div class="form-text">Specify your club's home location or suburb</div>
-                                </div>
-                            </div>
-
+                            
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <label for="description" class="form-label">Club Description</label>
@@ -339,3 +336,5 @@
 </section>
 
 <script type="module" src="/js/club-manage.js"></script>
+<script type="module" src="/js/help-config-clubs-manage.js"></script>
+<%- include('../partials/help-modal.ejs', { modalId: 'help-clubs-manage' }) %>

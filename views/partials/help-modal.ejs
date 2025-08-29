@@ -1,0 +1,24 @@
+<!-- views/partials/help-modal.ejs -->
+<!-- Reusable help modal partial. Include this at the bottom of any view that wants contextual help. -->
+<% // allow passing a custom modalId when including this partial: include('partials/help-modal.ejs', { modalId: 'help-create-club' }) %>
+<% const _modalId = typeof modalId !== 'undefined' ? modalId : 'help-modal'; %>
+<div class="help-modal modal fade" id="<%= _modalId %>" tabindex="-1" aria-hidden="true" aria-labelledby="helpModalTitle-<%= _modalId %>">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 id="helpModalTitle-<%= _modalId %>" class="modal-title help-modal-title">
+          <i class="bi bi-question-circle text-primary me-2" aria-hidden="true"></i>
+          Help
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body help-modal-body">
+        <!-- populated by public/js/help-system.js -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Got it</button>
+        <button type="button" class="btn btn-primary help-modal-try">Try It</button>
+      </div>
+    </div>
+  </div>
+</div>

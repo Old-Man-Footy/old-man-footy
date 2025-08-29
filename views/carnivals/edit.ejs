@@ -21,7 +21,12 @@
                           enctype="multipart/form-data" class="needs-validation" novalidate>
                         <!-- Basic Information -->
                         <div class="mb-4">
-                            <h5 class="text-primary mb-3">Basic Information</h5>
+                            <h5 class="text-primary mb-3">
+                                Basic Information
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="basic-info" data-help-modal="help-carnival-edit" aria-label="Help: Basic Information">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
+                            </h5>
                             
                             <div class="mb-3">
                                 <label for="title" class="form-label">Carnival Title *</label>
@@ -219,6 +224,9 @@
                         <div class="mb-4">
                             <h5 class="text-primary mb-3">
                                 <i class="bi bi-link-45deg"></i> MySideline Integration
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="mysideline" data-help-modal="help-carnival-edit" aria-label="Help: MySideline Integration">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
                             </h5>
                             <div class="alert alert-info mb-3">
                                 <i class="bi bi-info-circle me-2"></i>
@@ -471,3 +479,6 @@
 </div>
 
 <script type="module" src="/js/carnival-edit.js"></script>
+<!-- Help modal partial for carnival edit page -->
+<%- include('../partials/help-modal.ejs', { modalId: 'help-carnival-edit' }) %>
+<script type="module" src="/js/help-config-carnivals-edit.js"></script>
