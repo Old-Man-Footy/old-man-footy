@@ -3,11 +3,30 @@ pageIdentifier: carnivals-all-players
 title: All Carnival Players Help
 ---
 
-# All Carnival Players
+## Overview
+The All Carnival Players page displays every player registered for a carnival. It’s the main place to view, search, and manage the full roster.
 
-View and manage all players registered for a carnival.
+## Key Features Explained
+### Player List
+Shows all players, including names, clubs, and registration status.
 
-## Features
-- Search and filter players
-- Edit player info
-- Export player list
+### Search & Filter
+Find players by name, club, or status using search and filter options.
+
+### Export Roster
+Download the full player list for offline use.
+
+## Step-by-Step Guides
+**How to Find a Player:**
+1. Use the search bar to enter a player name or club.
+2. Apply filters for registration status or other criteria.
+3. Browse the results and click a player for details.
+
+**How to Export the Roster:**
+1. Click the "Export" button.
+2. Choose your preferred format and save the file.
+
+## Tips & Best Practices
+- Use filters to quickly narrow down large lists.
+- Export the roster before the event for backup.
+- Review player details for eligibility and accuracy.

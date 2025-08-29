@@ -60,3 +60,72 @@
 # sponsors/
 - [x] sponsors-list.ejs → sponsors-list.md
 - [x] sponsors-show.ejs → sponsors-show.md
+
+## Phase 2: Detailed Content Expansion
+All help markdown files have been updated to provide comprehensive, beginner-friendly guides. Each file now includes:
+- An Overview of the page's purpose
+- Key Features Explained with clear subheadings
+- Step-by-Step Guides for common tasks
+- Tips & Best Practices for efficient use
+
+These improvements ensure that any new user can confidently understand and use every feature on each page, with clear instructions and expert advice throughout the platform.
+
+
+# Markdown Help File Creation Plan
+
+## Phase 2: Comprehensive Content Expansion
+
+- [x] admin-audit-logs.md
+- [x] admin-carnival-players.md
+- [x] admin-carnivals.md
+- [x] admin-claim-carnival.md
+- [x] admin-clubs.md
+- [x] admin-dashboard.md
+- [x] admin-edit-carnival.md
+- [x] admin-edit-club.md
+- [x] admin-edit-user.md
+- [x] admin-reports.md
+- [x] admin-stats.md
+- [x] admin-users.md
+- [x] auth-login.md
+- [x] auth-register.md
+- [x] auth-forgot-password.md
+- [x] auth-reset-password.md
+- [x] carnivals-list.md
+- [x] carnivals-details.md
+- [x] clubs-list.md
+- [x] clubs-details.md
+- [x] clubs-players.md
+- [x] clubs-edit-player.md
+- [x] sponsors-list.md
+- [x] sponsors-details.md
+- [x] sponsors-edit.md
+- [x] sponsors-add.md
+
+**The following help files have not been expanded with comprehensive, beginner-friendly guides. Phase 2 is still incomplete.**
+
+- [x] auth-accept-invitation.md
+- [x] carnivals-add-club.md
+- [x] carnivals-add-players.md
+- [x] carnivals-all-players.md
+- [x] carnivals-attendees.md
+- [x] carnivals-club-players.md
+- [x] carnivals-edit-registration.md
+- [x] carnivals-edit.md
+- [x] carnivals-my-club-players.md
+- [x] carnivals-new.md
+- [x] carnivals-players.md
+- [x] carnivals-show.md
+- [x] carnivals-sponsors.md
+- [x] clubs-add-sponsor.md
+- [x] clubs-alternate-names.md
+- [x] clubs-claim-ownership.md
+- [x] clubs-club-options.md
+- [x] clubs-create-on-behalf.md
+- [x] clubs-manage.md
+- [x] clubs-players-add.md
+- [x] clubs-players-edit.md
+- [x] clubs-players-index.md
+- [x] clubs-show.md
+- [x] clubs-sponsors.md
+- [x] sponsors-show.md

@@ -1,10 +1,10 @@
 ---
-pageIdentifier: clubs-players-edit
+pageIdentifier: clubs-edit-player
 title: Edit Club Player Help
 ---
 
 ## Overview
-The Edit Club Player page lets club managers update information for a specific player. It’s used to correct details or update registration status.
+The Edit Club Player page lets you update information for a specific player. It’s used to correct details or update registration status.
 
 ## Key Features Explained
 ### Edit Form

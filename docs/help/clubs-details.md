@@ -1,20 +1,20 @@
 ---
-pageIdentifier: clubs-show
-title: Club Show Help
+pageIdentifier: clubs-details
+title: Club Details Help
 ---
 
 ## Overview
-The Club Show page displays all details about a specific club, including carnivals, players, and sponsors. It’s the main place to review club information and participation.
+The Club Details page shows all information about a specific club, including carnivals, players, and sponsors.
 
 ## Key Features Explained
 ### Club Info
-Shows the club’s name, logo, location, and description.
+Displays the club’s name, logo, location, and description.
 
 ### Carnivals & Players
 Lists all carnivals and players associated with the club.
 
 ### Sponsors
-Displays sponsors supporting the club.
+Shows sponsors supporting the club.
 
 ## Step-by-Step Guides
 **How to View Club Info:**

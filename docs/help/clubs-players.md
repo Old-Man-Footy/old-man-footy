@@ -1,14 +1,14 @@
 ---
-pageIdentifier: carnivals-my-club-players
-title: My Club Players at Carnival Help
+pageIdentifier: clubs-players
+title: Club Players Help
 ---
 
 ## Overview
-The My Club Players at Carnival page lists all players from your club participating in a carnival. It’s the main place to view, add, or edit your club’s player information for the event.
+The Club Players page lists all players registered with a club. It’s the main place to view, add, or edit player information.
 
 ## Key Features Explained
 ### Player List
-Shows all your club’s players, including names, positions, and registration status.
+Shows all players, including names, positions, and registration status.
 
 ### Add/Edit Player
 Buttons to add new players or update details for existing ones.
@@ -17,12 +17,12 @@ Buttons to add new players or update details for existing ones.
 Click a player to see more information and history.
 
 ## Step-by-Step Guides
-**How to Add a Club Player:**
+**How to Add a New Player:**
 1. Click the "Add Player" button.
 2. Fill in the player’s details in the form.
 3. Save the new player.
 
-**How to Edit a Club Player:**
+**How to Edit a Player:**
 1. Select a player from the list.
 2. Click the "Edit" button.
 3. Update details and save changes.
