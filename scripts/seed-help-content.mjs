@@ -2,175 +2,54 @@
  * Seed script for HelpContent table
  * Populates initial markdown help content for key pages.
  */
+import fs from 'fs/promises';
+import path from 'path';
 import HelpContent from '../models/HelpContent.mjs';
 
-const helpPages = [
-  {
-    pageIdentifier: 'homepage',
-    title: 'Homepage Help',
-    content: `# Welcome to Old Man Footy!
+const HELP_DIR = path.resolve(process.cwd(), 'docs', 'help');
 
-Old Man Footy is your central hub for Masters Rugby League carnivals and clubs across Australia.
-
-## Features
-- **Upcoming Carnivals**: View and register for upcoming events.
-- **Quick Stats**: See club and carnival numbers at a glance.
-- **Club Search**: Find clubs in your area.
-- **Get Started**: Register as a club delegate to unlock management features.
-
-Need more help? Click the links in the navigation or contact us!`
-  },
-  {
-    pageIdentifier: 'about',
-    title: 'About Page Help',
-    content: `# About Old Man Footy
-
-Welcome to the About page! Here you can learn what Old Man Footy does and how it works.
-
-## Platform Purpose
-Old Man Footy connects clubs, players, and fans, making Masters Rugby League events discoverable and accessible across Australia.
-
-## How It Works
-- **Browse Carnivals and Clubs**: Explore upcoming events and club profiles.
-- **Register as a Delegate**: Unlock management features for your club or carnival.
-- **Stay Informed**: Get updates on new carnivals, club activities, and sponsor opportunities.
-
-## Club Delegate Role
-Delegates manage club profiles, organize carnivals, and promote events. They are the main point of contact for club administration and event coordination.
-
-## Carnival Organization
-Delegates can create and manage carnivals, add sponsors, and invite clubs to participate. All event details are available for participants and fans.
-
-For more details, check the navigation links or contact support.`
-  },
-  {
-    pageIdentifier: 'contact',
-    title: 'Contact Page Help',
-    content: `# Contact Us
-
-Use the contact form to reach the Old Man Footy team.
-
-## How to Submit Inquiries
-- Fill out all required fields.
-- Select the subject that best matches your inquiry.
-- Provide your club name if relevant.
-
-## Newsletter Signup
-- Subscribe for updates and news.`
-  },
-  {
-    pageIdentifier: 'dashboard',
-    title: 'Dashboard Help',
-    content: `# Dashboard Help
-
-Welcome to your dashboard!
-
-## Features
-- View your club and carnival stats.
-- Access quick actions for management.
-- See recent activity and updates.
-
-## Navigation
-- Use the menu to access different management areas.`
-  },
-  {
-    pageIdentifier: 'club-show',
-    title: 'Club Profile Help',
-    content: `# Club Profile Help
-
-View detailed information about a club.
-
-## Features
-- Club leadership and delegate structure.
-- Club statistics and history.
-- Contact options and social media links.`
-  },
-  {
-    pageIdentifier: 'carnival-new',
-    title: 'Add Carnival Help',
-    content: `# Add New Carnival
-
-Create a new Masters Rugby League carnival.
-
-## Steps
-- Fill out all required fields.
-- Review imported MySideline data (if present).
-- Add sponsors and club participants.
-
-## Tips
-- Fields marked as "Imported from MySideline" are read-only unless claimed.
-- Editable fields can be updated by the delegate.`
-  },
-  {
-    pageIdentifier: 'sponsors-list',
-    title: 'Sponsors List Help',
-    content: `# Sponsors List Help
-  {
-    pageIdentifier: 'clubs-list',
-Find and explore Masters Rugby League clubs across Australia.
-
-## Features
-  {
-    pageIdentifier: 'clubs-list',
-    title: 'Clubs List Help',
-    content: `# Clubs List Help
-
-Find and explore Masters Rugby League clubs across Australia.
-
-## Features
-- **Club Search**: Use the search bar to find clubs by name or location.
-- **State Filter**: Filter clubs by Australian state to narrow your results.
-- **Club Cards**: Each card displays key club information, including name, location, and delegate contacts.
-- **Contact Delegate**: Use the contact options to reach out and join a club.
-- **Club Profiles**: Click on a club card to view detailed information, history, and social media links.
-
-## Tips
-- Use filters to find clubs near you or in your preferred state.
-- Review club profiles for leadership structure and history.
-- Contact delegates for membership or event participation.
-
-For more help, contact support or check the navigation links.`
-  },
-- **Club Search**: Use the search bar to find clubs by name or location.
-- **State Filter**: Filter clubs by Australian state to narrow your results.
-- **Club Cards**: Each card displays key club information, including name, location, and delegate contacts.
-- **Contact Delegate**: Use the contact options to reach out and join a club.
-- **Club Profiles**: Click on a club card to view detailed information, history, and social media links.
-
-## Tips
-- Use filters to find clubs near you or in your preferred state.
-- Review club profiles for leadership structure and history.
-- Contact delegates for membership or event participation.
-
-For more help, contact support or check the navigation links.`
-  },
-- Contact sponsors directly for partnership opportunities.
-
-For more help, contact support or check the navigation links.`
-  },
-  {
-    pageIdentifier: 'error',
-    title: 'Error Page Help',
-    content: `# Error Page Help
-
-If you see this page, something went wrong.
-
-## Common Issues
-- 404: Page not found.
-- 403: Access denied.
-- 500: Internal server error.
-
-## What to Do
-- Check the URL and try again.
-- Contact support if the problem persists.`
+/**
+ * Parse markdown file header and content
+ * @param {string} fileContent
+ * @returns {{ pageIdentifier: string, title: string, content: string }}
+ */
+export function parseMarkdown(fileContent) {
+  const headerMatch = fileContent.match(/---([\s\S]*?)---/);
+  if (!headerMatch) throw new Error('Missing header section');
+  const header = headerMatch[1].trim();
+  const content = fileContent.slice(headerMatch[0].length).trim();
+  let pageIdentifier = '', title = '';
+  for (const line of header.split('\n')) {
+    const [key, ...rest] = line.split(':');
+    if (key.trim() === 'pageIdentifier') pageIdentifier = rest.join(':').trim();
+    if (key.trim() === 'title') title = rest.join(':').trim();
   }
-];
-
-async function seedHelpContent() {
-  for (const page of helpPages) {
-    await HelpContent.upsert(page);
-  }
-  console.log('HelpContent table seeded with initial markdown help content.');
+  if (!pageIdentifier || !title) throw new Error('Header missing pageIdentifier or title');
+  return { pageIdentifier, title, content };
 }
 
-seedHelpContent().catch(console.error);
+export async function seedHelpContent() {
+  console.log('🔄 Seeding help content from markdown files...');
+  const files = await fs.readdir(HELP_DIR);
+  let seededCount = 0;
+  
+  for (const file of files) {
+    if (!file.endsWith('.md')) continue;
+    const filePath = path.join(HELP_DIR, file);
+    const fileContent = await fs.readFile(filePath, 'utf8');
+    const { pageIdentifier, title, content } = parseMarkdown(fileContent);
+    await HelpContent.upsert({ pageIdentifier, title, content });
+    console.log(`✅ Seeded help content: ${pageIdentifier}`);
+    seededCount++;
+  }
+  
+  console.log(`📝 HelpContent table seeded with ${seededCount} markdown help files.`);
+}
+
+// Only run directly when executed as a script (not when imported)
+if (import.meta.url === `file://${process.argv[1]}` && process.env.NODE_ENV !== 'test') {
+  seedHelpContent().catch((err) => {
+    console.error('❌ Error seeding help content:', err);
+    process.exit(1);
+  });
+}

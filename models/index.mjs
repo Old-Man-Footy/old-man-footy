@@ -20,6 +20,7 @@ import Sponsor from './Sponsor.mjs';
 import EmailSubscription from './EmailSubscription.mjs';
 import AuditLog from './AuditLog.mjs';
 import SyncLog from './SyncLog.mjs';
+import HelpContent from './HelpContent.mjs';
 
 /**
  * Define model associations/relationships
@@ -209,5 +210,6 @@ export {
   Sponsor,
   EmailSubscription,
   AuditLog,
-  SyncLog
+  SyncLog,
+  HelpContent
 };

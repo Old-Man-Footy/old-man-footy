@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import HelpContent from '../../models/HelpContent.mjs';
-import sequelize from '../../models/index.mjs';
+import { sequelize } from '../../config/database.mjs';
 
 const testPage = {
   pageIdentifier: 'test-page',
@@ -13,6 +13,7 @@ const testPage = {
 };
 
 describe('HelpContent Model', () => {
+
   beforeEach(async () => {
     await sequelize.sync({ force: true });
   });

@@ -168,16 +168,27 @@ app.use((error, req, res, next) => {
 /**
  * Main startup sequence
  * 1. Initialize database
- * 2. Update user guides with current environment URLs
- * 3. Start server
- * 4. Initialize MySideline sync (only in non-test environments)
+ * 2. Seed help content from markdown files
+ * 3. Update user guides with current environment URLs
+ * 4. Start server
+ * 5. Initialize MySideline sync (only in non-test environments)
  */
 async function startServer() {
     try {
         // Step 1: One-time database setup
         await setupDatabase();
         
-        // Step 2: Sync session store
+        // Step 2: Seed help content on startup
+        try {
+            const { seedHelpContent } = await import('./scripts/seed-help-content.mjs');
+            await seedHelpContent();
+            console.log('✅ Help content seeded successfully');
+        } catch (error) {
+            console.warn('⚠️  Warning: Help content seeding failed:', error.message);
+            // Don't exit - let the site run without help content if needed
+        }        
+        
+        // Step 3: Sync session store
         await sessionStore.sync();
         
         // Step 4: Start the server
