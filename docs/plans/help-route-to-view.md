@@ -1,31 +1,32 @@
 # Help Route → View Mapping
 
 
-GET /auth/invite/:token -> `views/auth/accept-invitation.ejs`
+- GET /auth/invite/:token -> `views/auth/accept-invitation.ejs`
 
 - GET /auth/login -> `views/auth/login.ejs`
 - POST /auth/login -> handler (skip POST help endpoint)
 - POST /clubs/:id/claim -> handler (skip)
-GET /clubs/options -> `views/clubs/club-options.ejs`
+- GET /clubs/options -> `views/clubs/club-options.ejs`
 - GET /clubs/manage/sponsors/add -> `views/clubs/add-sponsor.ejs`
-GET /clubs/manage/profile -> profile form is inside `views/clubs/manage.ejs` (confirmed)
+- GET /clubs/manage/profile -> profile form is inside `views/clubs/manage.ejs` (confirmed)
 - GET /clubs/manage/alternate-names -> `views/clubs/alternate-names.ejs`
 - POST /clubs/join/:id -> action (skip)
-GET /clubs/players -> `views/clubs/players/all-players.ejs` (views exist under `views/clubs/players/`)
-GET /clubs/players/add -> `views/clubs/players/add-players.ejs`
-GET /clubs/players/:id/edit -> `views/clubs/players/edit.ejs`
+- GET /clubs/players -> `views/clubs/players/all-players.ejs` (views exist under `views/clubs/players/`)
+- GET /clubs/players/add -> `views/clubs/players/add-players.ejs`
+- GET /clubs/players/:id/edit -> `views/clubs/players/edit.ejs`
+
 ## Club Players (views under `views/clubs/players/`)
 - GET /clubs/players -> VERIFY: map to `views/clubs/players/*` (multiple views exist under `views/clubs/players/`) — add per-page help as appropriate
 - GET /clubs/players/add -> `views/clubs/players/add` (VERIFY exact filename - helper: see `views/clubs/players/` folder)
-GET /sponsors/new -> admin-only (no `views/sponsors/new.ejs` found in repo; admin sponsor creation appears under `views/admin/` instead)
+- GET /sponsors/new -> admin-only (no `views/sponsors/new.ejs` found in repo; admin sponsor creation appears under `views/admin/` instead)
 
 ## Carnivals
 
- GET /admin/sponsors -> VERIFY (no `views/admin/sponsors.*` found; check controller)
-GET /carnivals/new -> `views/carnivals/new.ejs`
-GET /admin/users/:id/edit -> `views/admin/edit-user.ejs`
-GET /carnivals/:id -> `views/carnivals/show.ejs`
- 404 / not found -> handled by error flow (error template at `views/error.ejs`)
+- GET /admin/sponsors -> VERIFY (no `views/admin/sponsors.*` found; check controller)
+- GET /carnivals/new -> `views/carnivals/new.ejs`
+- GET /admin/users/:id/edit -> `views/admin/edit-user.ejs`
+- GET /carnivals/:id -> `views/carnivals/show.ejs`
+- 404 / not found -> handled by error flow (error template at `views/error.ejs`)
 - POST /carnivals/:id/edit -> handler (skip)
 - GET /carnivals/:id/sponsors -> `views/carnivals/sponsors.ejs`
 - GET /carnivals/:id/players -> `views/carnivals/players.ejs`
