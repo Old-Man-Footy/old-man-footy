@@ -43,12 +43,13 @@ const HelpContent = sequelize.define('HelpContent', {
     defaultValue: DataTypes.NOW,
   },
 }, {
-  tableName: 'HelpContent',
+  tableName: 'help_content',
   timestamps: true,
   indexes: [
     {
       unique: true,
       fields: ['pageIdentifier'],
+      name: 'IX_help_content_page_identifier',
     },
   ],
 });
