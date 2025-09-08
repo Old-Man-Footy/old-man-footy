@@ -399,14 +399,46 @@ npm run test:coverage
 
 ### Docker Deployment
 
-The project includes Docker support:
+The project includes Docker support with separate services for the web application and scheduled maintenance:
 
 ```bash
-# Build and run with Docker Compose
+# Build and run production services (web app + maintenance)
 docker-compose -f docker-compose.prod.yml up -d
 
 # For testing
 docker-compose -f docker-compose.test.yml up
+```
+
+#### Production Services
+
+The production deployment includes two services:
+
+1. **Web Application Service (`app`):**
+   - Main Express.js application serving web requests
+   - Handles user authentication, carnival management, and web interface
+   - Port 3050 exposed for web traffic
+
+2. **Maintenance Service (`maintenance`):**
+   - Scheduled database maintenance using node-cron
+   - Runs daily at 2:00 AM server time (Australia/Sydney)
+   - Performs database optimization, backups, and performance analysis
+   - Shares database volume with main application
+   - Creates backups in `/volume2/docker/old-man-footy-prod/backups`
+
+#### Environment Variables for Production
+
+Additional environment variables for maintenance service:
+
+```env
+# Backup and maintenance settings
+BACKUP_RETENTION_DAYS=30
+TZ=Australia/Sydney
+
+# Database performance tuning
+SQLITE_MAX_POOL_SIZE=10
+SQLITE_MIN_POOL_SIZE=1
+SQLITE_ACQUIRE_TIMEOUT=30000
+SQLITE_IDLE_TIMEOUT=10000
 ```
 
 ## 🤝 Contributing
