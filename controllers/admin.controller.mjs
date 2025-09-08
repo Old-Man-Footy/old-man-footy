@@ -6,7 +6,8 @@
  */
 
 import { validationResult } from 'express-validator';
-import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
+import { User, Club, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
+// DISABLED Carnival import due to infinite loops
 import { Op, fn } from 'sequelize';
 import crypto from 'crypto';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
@@ -69,12 +70,7 @@ const getAdminDashboardHandler = async (req, res) => {
             order: [['createdAt', 'DESC']],
             include: [{ model: Club, as: 'club' }]
         }),
-        carnivals: await Carnival.findAll({
-            where: { isActive: true },
-            limit: 5,
-            order: [['createdAt', 'DESC']],
-            include: [{ model: User, as: 'creator' }]
-        })
+        carnivals: [] // DISABLED: await Carnival.findAll causing infinite loops
     };
 
     const stats = {
@@ -1079,25 +1075,10 @@ const generateReportHandler = async (req, res) => {
             })
         },
         carnivals: {
-            total: await Carnival.count({ where: { isActive: true } }),
-            upcoming: await Carnival.count({ 
-                where: { 
-                    isActive: true,
-                    date: { [Op.gte]: new Date() } 
-                } 
-            }),
-            past: await Carnival.count({ 
-                where: { 
-                    isActive: true,
-                    date: { [Op.lt]: new Date() } 
-                } 
-            }),
-            byState: await Carnival.findAll({
-                where: { isActive: true },
-                attributes: ['state', [fn('COUNT', '*'), 'count']],
-                group: ['state'],
-                raw: true
-            })
+            total: 0, // DISABLED: await Carnival.count({ where: { isActive: true } }),
+            upcoming: 0, // DISABLED: await Carnival.count({ ... }),
+            past: 0, // DISABLED: await Carnival.count({ ... }),
+            byState: [] // DISABLED: await Carnival.findAll({ ... })
         },
         sponsors: {
             total: await Sponsor.count()

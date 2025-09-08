@@ -36,7 +36,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'node scripts/start-e2e-server-isolated.mjs',
+    command: 'node app.mjs',
     url: 'http://localhost:3056',
     reuseExistingServer: false,
     timeout: 120 * 1000,

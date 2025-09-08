@@ -21,8 +21,11 @@ const __dirname = path.dirname(__filename);
 
 const execAsync = promisify(exec);
 
-// Database file location based on environment
-const getDbPath = () => {
+/**
+ * Get database path for current environment
+ * @returns {string} Database file path
+ */
+export function getDbPath() {
   const env = process.env.NODE_ENV || 'development';
   
   switch (env) {
@@ -36,7 +39,7 @@ const getDbPath = () => {
     default:
       return path.join(__dirname, '..', 'data', 'dev-old-man-footy.db');
   }
-};
+}
 
 const dbPath = getDbPath();
 
@@ -325,8 +328,13 @@ export async function checkDatabaseSchema() {
     const actualTables = Array.isArray(results)
       ? results.map(row => row.name)
       : [];
-    const present = expectedTables.filter(t => actualTables.includes(t));
-    const missing = expectedTables.filter(t => !actualTables.includes(t));
+    
+    // Create case-insensitive comparison arrays
+    const actualTablesLower = actualTables.map(t => t.toLowerCase());
+    const expectedTablesLower = expectedTables.map(t => t.toLowerCase());
+    
+    const present = expectedTables.filter(t => actualTablesLower.includes(t.toLowerCase()));
+    const missing = expectedTables.filter(t => !actualTablesLower.includes(t.toLowerCase()));
     if (missing.length > 0) {
       console.warn(`⚠️ Missing tables: ${missing.join(', ')}`);
     } else {
