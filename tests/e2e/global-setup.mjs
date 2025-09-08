@@ -1,15 +1,13 @@
 // Global setup for Playwright E2E (ESM)
-// Resets E2E database before test run for consistent state
-
-import { resetE2EDatabase } from '../../scripts/reset-e2e-database.mjs';
+// Database initialization is now handled by the E2E server startup script
 
 /** @type {import('@playwright/test').FullConfig} */
 export default async function globalSetup() {
   try {
     console.log('🚀 Starting E2E global setup...');
     
-    // Reset E2E database to ensure clean state
-    await resetE2EDatabase();
+    // Database initialization is now handled by scripts/start-e2e-server.mjs
+    console.log('📊 Database initialization delegated to server startup script');
     
     console.log('✅ E2E global setup completed');
   } catch (error) {

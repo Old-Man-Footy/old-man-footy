@@ -5,7 +5,7 @@
  * @description Complete E2E database setup script that:
  * 1. Deletes existing E2E database
  * 2. Runs all migrations to create proper schema
- * 3. Clears all data for clean test state
+ * 3. Ready for clean E2E testing
  */
 
 import { execSync } from 'child_process';
@@ -40,7 +40,7 @@ function executeCommand(command, description) {
  * Setup E2E database from scratch
  */
 async function setupE2EDatabase() {
-    console.log('� Starting E2E Database Setup...');
+    console.log('🚀 Starting E2E Database Setup...');
 
     try {
         // Step 1: Remove existing E2E database
@@ -79,7 +79,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export default setupE2EDatabase;
-    });
-}
-
-export { setupE2EDatabase };
