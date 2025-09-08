@@ -200,7 +200,7 @@ export const getCurrentDatabaseConfig = () => {
   
   const baseConfig = {
     dialect: 'sqlite',
-    logging: env === 'test' ? false : env === 'development' ? console.log : false,
+    logging: env === 'test' || env === 'e2e' ? false : env === 'development' ? console.log : false,
     define: {
       freezeTableName: true,
       timestamps: true
@@ -211,6 +211,7 @@ export const getCurrentDatabaseConfig = () => {
   const storagePath = {
     development: path.join(__dirname, '..', 'data', 'dev-old-man-footy.db'),
     test: path.join(__dirname, '..', 'data', 'test-old-man-footy.db'),
+    e2e: path.join(__dirname, '..', 'data', 'e2e-old-man-footy.db'),
     production: path.join(__dirname, '..', 'data', 'old-man-footy.db')
   };
 
@@ -236,6 +237,15 @@ export const databaseConfig = {
   test: {
     dialect: 'sqlite',
     storage: path.join(__dirname, '..', 'data', 'test-old-man-footy.db'),
+    logging: false,
+    define: {
+      freezeTableName: true,
+      timestamps: true
+    }
+  },
+  e2e: {
+    dialect: 'sqlite',
+    storage: path.join(__dirname, '..', 'data', 'e2e-old-man-footy.db'),
     logging: false,
     define: {
       freezeTableName: true,

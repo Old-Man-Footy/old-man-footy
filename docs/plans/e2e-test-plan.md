@@ -5,8 +5,10 @@
 - [x] Install Playwright browsers and Winldd (Windows)
 - [x] Configure Playwright webServer on port 3056 with reuseExistingServer=false
 - [x] Disable rate limiting in test environment to prevent 429 during E2E
+- [x] **FIXED**: Added setup test (00-setup.spec.mjs) to handle first-user-admin logic ensuring subsequent registrations are regular users
 
 ## Existing Tests Verification
+- [x] Setup: Create admin user first to ensure consistent test environment (tests/e2e/00-setup.spec.mjs)
 - [x] Homepage: loads and shows key sections (tests/e2e/homepage.spec.mjs)
 - [x] Contact: submits contact form (tests/e2e/contact.spec.mjs)
 - [x] Auth: register then login flow (tests/e2e/auth.spec.mjs)

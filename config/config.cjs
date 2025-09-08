@@ -28,6 +28,17 @@ module.exports = {
     migrationStorageTableName: 'SequelizeMeta',
     seederStorageTableName: 'SequelizeData'
   },
+  e2e: {
+    dialect: 'sqlite',
+    storage: './data/e2e-old-man-footy.db',
+    logging: false,
+    define: {
+      underscored: true,
+      freezeTableName: true // disables pluralization; uses the table name defined in the model's 'tableName' property if set
+    },
+    migrationStorageTableName: 'SequelizeMeta',
+    seederStorageTableName: 'SequelizeData'
+  },
   production: {
     dialect: 'sqlite',
     storage: './data/old-man-footy.db',

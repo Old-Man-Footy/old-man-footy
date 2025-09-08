@@ -63,6 +63,8 @@ app.use(methodOverride((req, res) => {
 // Session store using SQLite
 const sessionStore = new SequelizeStore({
     db: sequelize,
+    // Suppress missing table warnings in test environments
+    logging: process.env.NODE_ENV === 'e2e' || process.env.NODE_ENV === 'test' ? false : undefined
 });
 
 // Session configuration - MUST come before any middleware that uses flash messages

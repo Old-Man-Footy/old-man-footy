@@ -29,7 +29,7 @@ npm run test:e2e:debug
 npm run test:all
 ```
 
-## Test Structure
+## Example Test Structure
 
 ```
 tests/

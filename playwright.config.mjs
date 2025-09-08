@@ -41,7 +41,7 @@ export default defineConfig({
   reuseExistingServer: false,
     timeout: 120 * 1000,
     env: {
-      NODE_ENV: 'test',
+      NODE_ENV: 'e2e',
       PORT: '3056',
       SESSION_SECRET: 'test-session-secret-32-characters-min',
       FEATURE_COMING_SOON_MODE: 'false',

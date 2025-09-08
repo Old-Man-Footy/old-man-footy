@@ -24,7 +24,7 @@ async function validateEnvironment() {
     }
     
     // Block if database path suggests production
-    if (dbPath && dbPath.includes('old-man-footy.db') && !dbPath.includes('dev-') && !dbPath.includes('test-')) {
+    if (dbPath && dbPath.includes('old-man-footy.db') && !dbPath.includes('dev-') && !dbPath.includes('test-') && !dbPath.includes('e2e-')) {
         throw new Error('❌ FATAL: Database path appears to be production database. Seeding blocked for safety.');
     }
     
@@ -32,6 +32,7 @@ async function validateEnvironment() {
     const allowedDbNames = [
         'dev-old-man-footy.db',
         'test-old-man-footy.db',
+        'e2e-old-man-footy.db',
         ':memory:'  // In-memory database for tests
     ];
     
