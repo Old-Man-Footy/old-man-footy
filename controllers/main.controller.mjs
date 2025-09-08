@@ -6,7 +6,7 @@
  */
 
 import {
-  // Carnival, // DISABLED: Causing infinite loops
+  Carnival,
   Club,
   User,
   EmailSubscription,
@@ -543,18 +543,28 @@ export const postContact = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, phone, subject, clubName, message, newsletter } = req.body;
 
   // Send contact email using the email service
-  await ContactEmailService.sendContactFormEmail({
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    email: email.trim().toLowerCase(),
-    phone: phone?.trim(),
-    subject,
-    clubName: clubName?.trim(),
-    message: message.trim(),
-    newsletter: newsletter === 'on',
-    userAgent: req.get('User-Agent'),
-    ipAddress: req.ip,
-  });
+  try {
+    const emailResult = await ContactEmailService.sendContactFormEmail({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone?.trim(),
+      subject,
+      clubName: clubName?.trim(),
+      message: message.trim(),
+      newsletter: newsletter === 'on',
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip,
+    });
+
+    // Log if email was blocked (E2E/test environments)
+    if (emailResult && emailResult.blocked) {
+      console.log('📧 Contact form email blocked (E2E/test environment)');
+    }
+  } catch (error) {
+    console.error('Contact form email error:', error);
+    // Continue with form processing even if email fails
+  }
 
   // If user wants newsletter and isn't already subscribed, add them
   if (newsletter === 'on') {

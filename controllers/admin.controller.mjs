@@ -6,8 +6,7 @@
  */
 
 import { validationResult } from 'express-validator';
-import { User, Club, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
-// DISABLED Carnival import due to infinite loops
+import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
 import { Op, fn } from 'sequelize';
 import crypto from 'crypto';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
