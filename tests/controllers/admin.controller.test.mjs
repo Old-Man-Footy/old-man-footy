@@ -1248,15 +1248,26 @@ describe('Admin Controller', () => {
             active: 140,
             inactive: 10,
             admins: 5,
-            primaryDelegates: 30
+            primaryDelegates: 30,
+            loggedInLast30Days: expect.any(Number),
+            loggedInLast7Days: expect.any(Number),
+            neverLoggedIn: expect.any(Number)
           }),
           clubs: expect.objectContaining({
             total: 45,
             byState: expect.any(Array)
           }),
           carnivals: expect.objectContaining({
-            total: 30,
+            total: expect.any(Number),
+            upcoming: expect.any(Number),
+            past: expect.any(Number),
             byState: expect.any(Array)
+          }),
+          sponsors: expect.objectContaining({
+            total: expect.any(Number)
+          }),
+          subscriptions: expect.objectContaining({
+            total: expect.any(Number)
           })
         })
       }));

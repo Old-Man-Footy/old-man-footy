@@ -69,7 +69,11 @@ const getAdminDashboardHandler = async (req, res) => {
             order: [['createdAt', 'DESC']],
             include: [{ model: Club, as: 'club' }]
         }),
-        carnivals: [] // DISABLED: await Carnival.findAll causing infinite loops
+        carnivals: await Carnival.findAll({
+            limit: 5,
+            order: [['createdAt', 'DESC']],
+            include: [{ model: User, as: 'creator' }]
+        })
     };
 
     const stats = {
@@ -1074,10 +1078,25 @@ const generateReportHandler = async (req, res) => {
             })
         },
         carnivals: {
-            total: 0, // DISABLED: await Carnival.count({ where: { isActive: true } }),
-            upcoming: 0, // DISABLED: await Carnival.count({ ... }),
-            past: 0, // DISABLED: await Carnival.count({ ... }),
-            byState: [] // DISABLED: await Carnival.findAll({ ... })
+            total: await Carnival.count({ where: { isActive: true } }),
+            upcoming: await Carnival.count({
+                where: {
+                    isActive: true,
+                    date: { [Op.gte]: new Date() }
+                }
+            }),
+            past: await Carnival.count({
+                where: {
+                    isActive: true,
+                    date: { [Op.lt]: new Date() }
+                }
+            }),
+            byState: await Carnival.findAll({
+                attributes: ['state', [fn('COUNT', '*'), 'count']],
+                where: { isActive: true },
+                group: ['state'],
+                raw: true
+            })
         },
         sponsors: {
             total: await Sponsor.count()

@@ -30,13 +30,28 @@ import asyncHandler from '../middleware/asyncHandler.mjs';
  * @returns {Promise<void>}
  */
 export const getIndex = asyncHandler(async (req, res) => {
-  // PERMANENTLY DISABLED ALL CARNIVAL QUERIES DUE TO INFINITE LOOP CORRUPTION
-  const upcomingCarnivals = []; // Fallback to empty array
+  // Get upcoming carnivals for homepage display
+  const upcomingCarnivals = await Carnival.findAll({
+    where: {
+      isActive: true,
+      date: { [Op.gte]: new Date() }
+    },
+    order: [['date', 'ASC']],
+    limit: 4,
+    include: [
+      { model: User, as: 'creator', attributes: ['firstName', 'lastName'] }
+    ]
+  });
 
-  // Get statistics for the stats runner - ALL CARNIVAL QUERIES PERMANENTLY DISABLED
+  // Get statistics for the stats runner
   const stats = {
-    totalCarnivals: 0, // DISABLED: await Carnival.count({ where: { isActive: true } }),
-    upcomingCount: 0, // DISABLED: Complex Carnival.count query
+    totalCarnivals: await Carnival.count({ where: { isActive: true } }),
+    upcomingCount: await Carnival.count({
+      where: {
+        isActive: true,
+        date: { [Op.gte]: new Date() }
+      }
+    }),
     clubsCount: await Club.count({
       where: {
         isActive: true,
@@ -83,8 +98,15 @@ export const getDashboard = asyncHandler(async (req, res) => {
     ],
   });
 
-  // Get user's carnivals (carnivals they've created) - DISABLED DUE TO CARNIVAL CORRUPTION
-  const userCarnivals = []; // DISABLED: await Carnival.findAll({...})
+  // Get user's carnivals (carnivals they've created)
+  const userCarnivals = await Carnival.findAll({
+    where: {
+      createdByUserId: userWithClub.id,
+      isActive: true
+    },
+    order: [['date', 'DESC']],
+    limit: 5
+  });
 
   // Get player count for user's club
   let playerCount = 0;
@@ -135,8 +157,18 @@ export const getDashboard = asyncHandler(async (req, res) => {
     }));
   }
 
-  // Get upcoming carnivals - DISABLED DUE TO CARNIVAL CORRUPTION
-  const upcomingCarnivals = []; // DISABLED: await Carnival.findAll({...})
+  // Get upcoming carnivals for dashboard display
+  const dashboardUpcomingCarnivals = await Carnival.findAll({
+    where: {
+      isActive: true,
+      date: { [Op.gte]: new Date() }
+    },
+    order: [['date', 'ASC']],
+    limit: 5,
+    include: [
+      { model: User, as: 'creator', attributes: ['firstName', 'lastName'] }
+    ]
+  });
 
   // Get user's clubs (if they have any associated)
   let clubs = [];
@@ -173,7 +205,7 @@ export const getDashboard = asyncHandler(async (req, res) => {
     user: enrichedUser,
     userCarnivals,
     attendingCarnivals, // New: carnivals the user's club is attending
-    upcomingCarnivals,
+    upcomingCarnivals: dashboardUpcomingCarnivals,
     clubs, // Add clubs variable for the dashboard checklist
     carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
     eligibleDelegates,
@@ -449,7 +481,7 @@ export const postUnsubscribe = asyncHandler(async (req, res) => {
 export const getStats = asyncHandler(async (_req, res) => {
   const stats = {
     totalUsers: await User.count(),
-    totalCarnivals: 0, // DISABLED: await Carnival.count() due to corruption
+    totalCarnivals: await Carnival.count({ where: { isActive: true } }),
     totalClubs: await Club.count(),
     totalSubscriptions: await EmailSubscription.count({ where: { isActive: true } }),
   };
