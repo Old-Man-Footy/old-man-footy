@@ -96,14 +96,17 @@ const SECURITY_CONFIG = {
  * @returns {Function} Express middleware
  */
 const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
-  // Completely disable rate limiting in development and test environments
-  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV) {
-    console.log('🔓 Rate limiting disabled for development environment');
+  // Disable rate limiting only in development and e2e environments
+  // Keep enabled in test environment so we can verify it works for users
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'e2e' || !process.env.NODE_ENV) {
+    console.log(`🔓 Rate limiting disabled for ${process.env.NODE_ENV || 'development'} environment`);
     return (req, res, next) => {
-      // Just pass through without any rate limiting in development
+      // Just pass through without any rate limiting in development/e2e environments
       next();
     };
   }
+
+  console.log(`🔒 Rate limiting enabled for ${process.env.NODE_ENV} environment`);
 
   // Simple in-memory rate limiter for production only
   const requests = new Map();
