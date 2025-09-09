@@ -193,7 +193,7 @@ export const up = async (queryInterface, Sequelize) => {
     updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
-  // --- carnivalsponsor Table ---
+  // --- CarnivalSponsor Table ---
   await queryInterface.createTable('carnival_sponsors', {
     id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
     carnivalId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'carnivals', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
