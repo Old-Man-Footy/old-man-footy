@@ -30,16 +30,19 @@ import asyncHandler from '../middleware/asyncHandler.mjs';
  * @returns {Promise<void>}
  */
 export const getIndex = asyncHandler(async (req, res) => {
-  // Get upcoming carnivals for homepage display
+  // Get all upcoming carnivals for homepage display
   const upcomingCarnivals = await Carnival.findAll({
     where: {
       isActive: true,
-      date: { [Op.gte]: new Date() }
+      [Op.or]: [
+        { date: { [Op.gte]: new Date() } },
+        { date: null }
+      ]
     },
     order: [['date', 'ASC']],
     limit: 4,
     include: [
-      { model: User, as: 'creator', attributes: ['firstName', 'lastName'] }
+      { model: User, as:'creator', attributes: ['firstName', 'lastName'] }
     ]
   });
 
@@ -49,7 +52,10 @@ export const getIndex = asyncHandler(async (req, res) => {
     upcomingCount: await Carnival.count({
       where: {
         isActive: true,
-        date: { [Op.gte]: new Date() }
+        [Op.or]: [
+          { date: { [Op.gte]: new Date() } },
+          { date: null }
+        ]
       }
     }),
     clubsCount: await Club.count({
@@ -161,7 +167,10 @@ export const getDashboard = asyncHandler(async (req, res) => {
   const dashboardUpcomingCarnivals = await Carnival.findAll({
     where: {
       isActive: true,
-      date: { [Op.gte]: new Date() }
+      [Op.or]: [
+        { date: { [Op.gte]: new Date() } },
+        { date: null }
+      ]
     },
     order: [['date', 'ASC']],
     limit: 5,

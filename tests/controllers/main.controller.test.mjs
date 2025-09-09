@@ -281,20 +281,18 @@ describe('Main Controller', () => {
       expect(Carnival.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
+            isActive: true,
             [Op.or]: expect.arrayContaining([
               expect.objectContaining({
-                date: expect.anything(),
-                isActive: true
+                date: expect.anything()
               }),
               expect.objectContaining({
-                date: null,
-                isActive: true
+                date: null
               })
             ])
           }),
           include: expect.any(Array),
-          order: expect.any(Array),
-          limit: 4
+          order: expect.any(Array)
         })
       );
 
@@ -337,7 +335,7 @@ describe('Main Controller', () => {
       await expect(getIndex(req, res)).rejects.toThrow('Image service error');
     });
 
-    it('should limit upcoming carnivals to 4', async () => {
+    it('should include carnivals with null dates as upcoming', async () => {
       const manyCarnivals = Array.from({ length: 10 }, (_, i) => 
         createMockCarnival({ id: i + 1, title: `Carnival ${i + 1}` })
       );
@@ -351,20 +349,18 @@ describe('Main Controller', () => {
       expect(Carnival.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
+            isActive: true,
             [Op.or]: expect.arrayContaining([
               expect.objectContaining({
-                date: expect.anything(),
-                isActive: true
+                date: expect.anything()
               }),
               expect.objectContaining({
-                date: null,
-                isActive: true
+                date: null
               })
             ])
           }),
           include: expect.any(Array),
-          order: expect.any(Array),
-          limit: 4
+          order: expect.any(Array)
         })
       );
     });
