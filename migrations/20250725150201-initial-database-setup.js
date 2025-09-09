@@ -17,14 +17,13 @@ export const up = async (queryInterface, Sequelize) => {
     createdByProxy: { type: Sequelize.BOOLEAN, defaultValue: false, allowNull: false },
     inviteEmail: { type: Sequelize.STRING, allowNull: true },
     createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
-    // Additional columns from 20250825121500 migration
     website: { type: Sequelize.STRING, allowNull: true },
     facebookUrl: { type: Sequelize.STRING, allowNull: true },
     instagramUrl: { type: Sequelize.STRING, allowNull: true },
     twitterUrl: { type: Sequelize.STRING, allowNull: true },
     logoUrl: { type: Sequelize.STRING, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- User Table ---
@@ -45,8 +44,8 @@ export const up = async (queryInterface, Sequelize) => {
     passwordResetExpires: { type: Sequelize.DATE, allowNull: true },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     lastLoginAt: { type: Sequelize.DATE, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- ClubAlternateName Table ---
@@ -55,8 +54,8 @@ export const up = async (queryInterface, Sequelize) => {
     clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'clubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
     alternateName: { type: Sequelize.STRING, allowNull: false },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- ClubPlayer Table ---
@@ -71,10 +70,9 @@ export const up = async (queryInterface, Sequelize) => {
     notes: { type: Sequelize.TEXT, allowNull: true },
     shorts: { type: Sequelize.STRING, allowNull: false, defaultValue: 'Unrestricted' },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
-    // Additional columns from 20250825140000 migration
     registeredAt: { type: Sequelize.DATE, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- Carnival Table ---
@@ -108,9 +106,7 @@ export const up = async (queryInterface, Sequelize) => {
     registrationDeadline: { type: Sequelize.DATE, allowNull: true },
     adminNotes: { type: Sequelize.TEXT, allowNull: true },
     createdByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
-    // Additional columns from 20250125130001 migration
     originalMySidelineContactEmail: { type: Sequelize.STRING, allowNull: true },
-    // Additional columns from 20250825120000 migration
     mySidelineAddress: { type: Sequelize.TEXT, allowNull: true },
     mySidelineDate: { type: Sequelize.DATE, allowNull: true },
     locationAddressLine1: { type: Sequelize.STRING(200), allowNull: true },
@@ -130,8 +126,8 @@ export const up = async (queryInterface, Sequelize) => {
     drawFileName: { type: Sequelize.STRING, allowNull: true },
     drawTitle: { type: Sequelize.STRING, allowNull: true },
     drawDescription: { type: Sequelize.TEXT, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- Sponsor Table ---
@@ -154,8 +150,8 @@ export const up = async (queryInterface, Sequelize) => {
     clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'clubs', key: 'id' } },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     isPubliclyVisible: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- CarnivalClub Table ---
@@ -174,15 +170,14 @@ export const up = async (queryInterface, Sequelize) => {
     approvalStatus: { type: Sequelize.STRING, allowNull: false, defaultValue: 'pending' },
     rejectionReason: { type: Sequelize.TEXT, allowNull: true },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
-    // Additional columns from 20250825130000 migration
     registrationNotes: { type: Sequelize.TEXT, allowNull: true },
     paymentAmount: { type: Sequelize.DECIMAL(10, 2), allowNull: true },
     paymentDate: { type: Sequelize.DATEONLY, allowNull: true },
     displayOrder: { type: Sequelize.INTEGER, allowNull: true },
     approvedAt: { type: Sequelize.DATE, allowNull: true },
     approvedByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- CarnivalClubPlayer Table ---
@@ -194,8 +189,8 @@ export const up = async (queryInterface, Sequelize) => {
     attendanceStatus: { type: Sequelize.STRING, allowNull: false, defaultValue: 'confirmed' },
     notes: { type: Sequelize.TEXT, allowNull: true },
     addedAt: { type: Sequelize.DATE, defaultValue: Sequelize.NOW, allowNull: false },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- carnivalsponsor Table ---
@@ -212,8 +207,8 @@ export const up = async (queryInterface, Sequelize) => {
     includeOnWebsite: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     notes: { type: Sequelize.TEXT, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- EmailSubscription Table ---
@@ -225,8 +220,8 @@ export const up = async (queryInterface, Sequelize) => {
     unsubscribeToken: { type: Sequelize.STRING, allowNull: true, unique: true },
     source: { type: Sequelize.STRING, allowNull: true, defaultValue: 'homepage' },
     unsubscribedAt: { type: Sequelize.DATE, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- AuditLog Table ---
@@ -244,8 +239,8 @@ export const up = async (queryInterface, Sequelize) => {
     result: { type: Sequelize.STRING, allowNull: false, defaultValue: 'SUCCESS' },
     errorMessage: { type: Sequelize.TEXT, allowNull: true },
     metadata: { type: Sequelize.JSON, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
   // --- SyncLog Table ---
@@ -260,41 +255,18 @@ export const up = async (queryInterface, Sequelize) => {
     eventsUpdated: { type: Sequelize.INTEGER, allowNull: true, defaultValue: 0 },
     errorMessage: { type: Sequelize.TEXT, allowNull: true },
     metadata: { type: Sequelize.JSON, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false },
-    updatedAt: { type: Sequelize.DATE, allowNull: false }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 
-  // --- Help Content Table (from 20250829120000 migration) ---
+  // --- Help Content Table ---
   await queryInterface.createTable('help_content', {
-    id: {
-      type: Sequelize.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-      allowNull: false,
-    },
-    pageIdentifier: {
-      type: Sequelize.STRING(100),
-      allowNull: false,
-      unique: true,
-    },
-    title: {
-      type: Sequelize.STRING(255),
-      allowNull: false,
-    },
-    content: {
-      type: Sequelize.TEXT,
-      allowNull: false,
-    },
-    createdAt: {
-      type: Sequelize.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-    },
-    updatedAt: {
-      type: Sequelize.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-    },
+    id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true, allowNull: false },
+    pageIdentifier: { type: Sequelize.STRING(100), allowNull: false, unique: true },
+    title: { type: Sequelize.STRING(255), allowNull: false },
+    content: { type: Sequelize.TEXT, allowNull: false },
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
   });
   
   // Add index for help_content table
@@ -303,36 +275,18 @@ export const up = async (queryInterface, Sequelize) => {
     name: 'IX_help_content_pageIdentifier',
   });
 
-  // --- Sessions Table (from 20250908120000 migration) ---
+  // --- Sessions Table ---
   await queryInterface.createTable('sessions', {
-    sid: {
-      type: Sequelize.STRING(32),
-      primaryKey: true,
-      allowNull: false
-    },
-    expires: {
-      type: Sequelize.DATE,
-      allowNull: true
-    },
-    data: {
-      type: Sequelize.TEXT,
-      allowNull: true
-    },
-    createdAt: {
-      type: Sequelize.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-    },
-    updatedAt: {
-      type: Sequelize.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-    }
+    sid: { type: Sequelize.STRING(32), primaryKey: true, allowNull: false },
+    expires: { type: Sequelize.DATE, allowNull: true },
+    data: { type: Sequelize.TEXT, allowNull: true },
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
   });
 };
 
 export const down = async (queryInterface, Sequelize) => {
-  await queryInterface.dropTable('Sessions');
+  await queryInterface.dropTable('sessions');
   await queryInterface.dropTable('help_content');
   await queryInterface.dropTable('sync_logs');
   await queryInterface.dropTable('audit_logs');
