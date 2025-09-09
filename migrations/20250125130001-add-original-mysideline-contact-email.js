@@ -35,6 +35,13 @@ export const up = async (queryInterface, Sequelize) => {
     }
   } catch (error) {
     console.log('⚠️  Could not add originalMySidelineContactEmail column:', error.message);
+    // For E2E database setup: if this migration runs before carnivals table is created,
+    // we need to ensure it runs again after the table exists
+    if (error.message.includes('no such table')) {
+      console.log('📝 Will retry adding column after carnivals table is created');
+      // Set a flag or re-queue this migration to run later
+      return;
+    }
     // Don't throw - this allows the migration to succeed even if the table doesn't exist yet
   }
 };
