@@ -60,6 +60,9 @@ router.get('/', carnivalController.list);
 // Create carnival form
 router.get('/new', ensureAuthenticated, carnivalController.getNew);
 
+// Carnival gallery (public) - MUST come before /:id route
+router.get('/:id/gallery', carnivalController.viewCarnivalGallery);
+
 // Show individual carnival
 router.get('/:id', carnivalController.show);
 

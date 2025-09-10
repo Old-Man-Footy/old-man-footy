@@ -21,6 +21,7 @@ import EmailSubscription from './EmailSubscription.mjs';
 import AuditLog from './AuditLog.mjs';
 import SyncLog from './SyncLog.mjs';
 import HelpContent from './HelpContent.mjs';
+import ImageUpload from './ImageUpload.mjs';
 
 /**
  * Define model associations/relationships
@@ -196,6 +197,29 @@ Carnival.belongsTo(Club, {
   as: 'hostClub'
 });
 
+// ImageUpload associations
+ImageUpload.belongsTo(Carnival, {
+  foreignKey: 'carnivalId',
+  as: 'carnival'
+});
+
+ImageUpload.belongsTo(Club, {
+  foreignKey: 'clubId',
+  as: 'club'
+});
+
+// Carnival has many ImageUploads (one-to-many)
+Carnival.hasMany(ImageUpload, {
+  foreignKey: 'carnivalId',
+  as: 'galleryImages'
+});
+
+// Club has many ImageUploads (one-to-many)
+Club.hasMany(ImageUpload, {
+  foreignKey: 'clubId',
+  as: 'galleryImages'
+});
+
 // Export all models and sequelize instance
 export {
   sequelize,
@@ -211,5 +235,6 @@ export {
   EmailSubscription,
   AuditLog,
   SyncLog,
-  HelpContent
+  HelpContent,
+  ImageUpload
 };

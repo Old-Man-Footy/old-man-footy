@@ -1253,3 +1253,45 @@ export const showAllPlayers = asyncHandler(async (req, res) => {
     additionalCSS: ['/styles/carnival.styles.css'],
   });
 });
+
+/**
+ * Display carnival gallery page
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const viewCarnivalGalleryHandler = asyncHandler(async (req, res) => {
+  const carnivalId = parseInt(req.params.id);
+  
+  if (!carnivalId) {
+    req.flash('error', 'Invalid carnival ID');
+    return res.redirect('/carnivals');
+  }
+
+  // Find the carnival
+  const carnival = await Carnival.findByPk(carnivalId);
+  if (!carnival) {
+    req.flash('error', 'Carnival not found');
+    return res.redirect('/carnivals');
+  }
+
+  // Get gallery images for this carnival
+  const { ImageUpload } = await import('../models/index.mjs');
+  const images = await ImageUpload.getCarnivalImages(carnivalId);
+
+  // Check if user can upload images for this carnival
+  let canUpload = false;
+  if (req.user) {
+    canUpload = await ImageUpload.canUserUploadForCarnival(req.user, carnivalId);
+  }
+
+  res.render('carnivals/gallery', {
+    title: `Gallery - ${carnival.title}`,
+    carnival: carnival,
+    images: images,
+    canUpload: canUpload,
+    additionalCSS: ['/styles/gallery.styles.css'],
+    additionalJS: ['/js/gallery-manager.js']
+  });
+});
+
+export const viewGallery = viewCarnivalGalleryHandler;

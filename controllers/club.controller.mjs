@@ -1544,6 +1544,52 @@ const searchClubsHandler = async (req, res) => {
   });
 };
 
+/**
+ * View club gallery page
+ */
+const viewClubGalleryHandler = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Get club details
+    const club = await Club.findByPk(id, {
+      attributes: ['id', 'clubName', 'location', 'state', 'isActive']
+    });
+
+    if (!club) {
+      req.flash('error_msg', 'Club not found.');
+      return res.redirect('/clubs');
+    }
+
+    if (!club.isActive) {
+      req.flash('error_msg', 'This club is not currently active.');
+      return res.redirect('/clubs');
+    }
+
+    // Get gallery images
+    const { ImageUpload } = await import('../models/ImageUpload.mjs');
+    const images = await ImageUpload.getImagesByEntity('club', id);
+
+    // Check if user can manage images (for showing upload button)
+    let canManage = false;
+    if (req.user) {
+      canManage = await ImageUpload.canUserManageImage(req.user.id, 'club', id);
+    }
+
+    res.render('clubs/gallery', {
+      title: `${club.clubName} - Gallery`,
+      club,
+      images: images || [],
+      canManage,
+      user: req.user || null
+    });
+  } catch (error) {
+    console.error('Error loading club gallery:', error);
+    req.flash('error_msg', 'Error loading gallery. Please try again.');
+    res.redirect(`/clubs/${id}`);
+  }
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
   showClubListingsHandler,
@@ -1569,6 +1615,7 @@ const rawControllers = {
   joinClubHandler,
   leaveClubHandler,
   searchClubsHandler,
+  viewClubGalleryHandler,
 };
 
 // Export wrapped versions using the wrapControllers utility

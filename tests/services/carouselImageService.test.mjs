@@ -205,6 +205,8 @@ describe('CarouselImageService', () => {
         byType: {},
         recentCount: 0,
         totalSize: 0,
+        dbImages: 0,
+        legacyImages: 0,
       });
     });
   });

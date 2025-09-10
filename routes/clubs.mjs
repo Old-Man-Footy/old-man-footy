@@ -112,6 +112,9 @@ router.post('/:id/claim', ensureAuthenticated, clubController.postClaimOwnership
 // Public club listings - MUST come before /:id route
 router.get('/', clubController.showClubListings);
 
+// Club gallery (public) - MUST come before /:id route
+router.get('/:id/gallery', clubController.viewClubGallery);
+
 // Individual club profile (public) - MUST come LAST as it catches all /:id patterns
 router.get('/:id', clubController.showClubProfile);
 
