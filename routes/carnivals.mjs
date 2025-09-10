@@ -61,7 +61,7 @@ router.get('/', carnivalController.list);
 router.get('/new', ensureAuthenticated, carnivalController.getNew);
 
 // Carnival gallery (public) - MUST come before /:id route
-router.get('/:id/gallery', carnivalController.viewCarnivalGallery);
+router.get('/:id/gallery', carnivalController.viewGallery);
 
 // Show individual carnival
 router.get('/:id', carnivalController.show);

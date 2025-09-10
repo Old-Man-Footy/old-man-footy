@@ -8,7 +8,7 @@
 
 import express from 'express';
 import multer from 'multer';
-import { isAuthenticated } from '../../middleware/auth.mjs';
+import { ensureAuthenticated } from '../../middleware/auth.mjs';
 import ImageUploadService from '../../services/imageUploadService.mjs';
 import ImageUpload from '../../models/ImageUpload.mjs';
 import asyncHandler from '../../middleware/asyncHandler.mjs';
@@ -35,7 +35,7 @@ const upload = multer({
  * Upload a new gallery image
  */
 router.post('/upload', 
-  isAuthenticated, 
+  ensureAuthenticated, 
   upload.single('image'), 
   asyncHandler(async (req, res) => {
     try {
@@ -106,7 +106,7 @@ router.post('/upload',
  * Delete a gallery image
  */
 router.delete('/:id', 
-  isAuthenticated, 
+  ensureAuthenticated, 
   asyncHandler(async (req, res) => {
     try {
       const imageId = parseInt(req.params.id);
@@ -253,7 +253,7 @@ router.get('/carousel',
  * Get image upload statistics (admin only)
  */
 router.get('/stats', 
-  isAuthenticated, 
+  ensureAuthenticated, 
   asyncHandler(async (req, res) => {
     try {
       // Only allow admins to view statistics

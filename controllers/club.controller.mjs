@@ -1643,6 +1643,7 @@ export const {
   joinClubHandler: joinClub,
   leaveClubHandler: leaveClub,
   searchClubsHandler: searchClubs,
+  viewClubGalleryHandler: viewClubGallery,
 } = wrapControllers(rawControllers);
 
 rawControllers.showClubSponsorsHandler = showClubSponsorsHandler;
