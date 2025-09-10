@@ -14,19 +14,26 @@
 - [x] Auth: register then login flow (tests/e2e/auth.spec.mjs)
 
 ## New Tests To Add
-- [ ] E2E seed helper: create minimal sponsors to exercise filters
-- [ ] 404: unknown route renders error page
+- [x] E2E seed helper: create minimal sponsors to exercise filters
+- [x] 404: unknown route renders error page
 	- [x] Implemented tests/e2e/404.spec.mjs and verified pass
-- [ ] Maintenance mode: when enabled, renders maintenance page
+- [x] Maintenance mode: when enabled, renders maintenance page
 	- [x] Implemented tests/e2e/maintenance.spec.mjs (route + API status) and verified pass
-- [ ] Coming soon mode: when enabled, renders coming soon page 
+- [x] Coming soon mode: when enabled, renders coming soon page
+	- [x] Implemented tests/e2e/coming-soon.spec.mjs and verified functionality 
 ### Sponsors
 - [x] Sponsors: list page loads, shows empty state when no sponsors (tests/e2e/sponsors.spec.mjs)
-- [ ] Sponsors: filters (search/state/level) update results (needs seed data)
-- [ ] Sponsor profile page renders public details (logo fallback, business type, location, description)
-- [ ] Sponsor external links (website/facebook/instagram/twitter/linkedin) render when present
-- [ ] Sponsor filters can be combined (search + state + level)
-- [ ] Sponsor list stats bar updates counts (Total/Active/Gold/Silver) when seeded
+- [x] Sponsors: filters (search/state/level) update results (needs seed data)
+	- [x] Updated tests/e2e/sponsors.spec.mjs with comprehensive filter tests
+	- [x] Enhanced global setup to seed test data automatically
+- [x] Sponsor filters can be combined (search + state + level)
+	- [x] Covered in sponsors.spec.mjs "combined filters work correctly" test
+- [x] Sponsor list stats bar updates counts (Total/Active/Gold/Silver) when seeded
+	- [x] Covered in sponsors.spec.mjs "displays sponsor statistics correctly" test
+- [x] Sponsor profile page renders public details (logo fallback, business type, location, description)
+	- [x] Implemented tests/e2e/sponsor-profile.spec.mjs with 14 comprehensive tests
+- [x] Sponsor external links (website/facebook/instagram/twitter/linkedin) render when present
+	- [x] Covered in sponsor-profile.spec.mjs social media and contact tests
 - [ ] AuthZ: Create/Edit sponsor pages require admin (redirect or 403 for non-admin)
 
 ### Clubs
@@ -97,9 +104,9 @@
 	- [x] `npx playwright show-report test-results/playwright-report`
 
 ## Data & Seeding Strategy
-- [ ] Add a minimal E2E seed script (scripts/e2e-seed-sponsors.mjs) to create sponsors for filter tests
-- [ ] Ensure seed script respects NODE_ENV=test and uses Sequelize models
-- [ ] Add a cleanup step to reset sponsors between runs (truncate-only in test DB)
+- [x] Add a minimal E2E seed script (scripts/e2e-seed-data.mjs) to create sponsors for filter tests
+- [x] Ensure seed script respects NODE_ENV=e2e and uses Sequelize models
+- [x] Add a cleanup step to reset sponsors between runs (truncate-only in test DB)
 
 ## Selector & Stability Guidelines
 - [x] Prefer getByRole/name for headings, links, buttons
