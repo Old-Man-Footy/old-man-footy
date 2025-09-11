@@ -277,6 +277,7 @@ a[class*="btn"]:focus,
     box-shadow: var(--shadow);
 }
 
+a.btn-primary,
 .btn.btn-primary,
 .btn-primary {
     background-color: var(--rugby-green);
@@ -284,6 +285,9 @@ a[class*="btn"]:focus,
     color: white;
 }
 
+a.btn-primary:hover,
+a.btn-primary:focus,
+a.btn-primary:active,
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active {
@@ -293,11 +297,35 @@ a[class*="btn"]:focus,
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
 }
 
+a.btn-secondary,
+.btn.btn-secondary,
+.btn-secondary {
+    background-color: var(--rugby-dark-green);
+    border-color: var(--rugby-dark-green);
+    color: white;
+}
+
+a.btn-primary:hover,
+a.btn-primary:focus,
+a.btn-primary:active,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--rugby-green);
+    border-color: var(--rugby-green);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+}
+
+a.btn-outline-primary,
 .btn-outline-primary {
     color: var(--rugby-green);
     border-color: var(--rugby-green);
 }
 
+a.btn-outline-primary:hover,
+a.btn-outline-primary:focus,
+a.btn-outline-primary:active,
 .btn-outline-primary:hover,
 .btn-outline-primary:focus,
 .btn-outline-primary:active,
@@ -310,10 +338,33 @@ a[class*="btn"]:focus,
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
 }
 
+a.btn-outline-primary:focus,
 .btn-outline-primary:focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
 }
 
+a.btn-outline-secondary,
+.btn-outline-secondary {
+    color: var(--rugby-dark-green);
+    border-color: var(--rugby-dark-green);
+}
+
+a.btn-outline-secondary:hover,
+a.btn-outline-secondary:focus,
+a.btn-outline-secondary:active,
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active,
+.btn-outline-secondary:not(:disabled):not(.disabled):active,
+.btn-outline-secondary:not(:disabled):not(.disabled).active,
+.show > .btn-outline-secondary.dropdown-toggle {
+    background-color: var(--rugby-dark-green) !important;
+    border-color: var(--rugby-dark-green) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
+}
+
+a.btn-success,
 .btn-success {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
@@ -321,6 +372,9 @@ a[class*="btn"]:focus,
     font-weight: 600;
 }
 
+a.btn-success:hover,
+a.btn-success:focus,
+a.btn-success:active,
 .btn-success:hover,
 .btn-success:focus,
 .btn-success:active {
@@ -330,11 +384,15 @@ a[class*="btn"]:focus,
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
+a.btn-outline-success,
 .btn-outline-success {
     color: var(--rugby-gold);
     border-color: var(--rugby-gold);
 }
 
+a.btn-outline-success:hover,
+a.btn-outline-success:focus,
+a.btn-outline-success:active,    
 .btn-outline-success:hover,
 .btn-outline-success:focus,
 .btn-outline-success:active {
@@ -344,12 +402,14 @@ a[class*="btn"]:focus,
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
+a.btn-group-sm,
 .btn-group-sm .btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
 }
 
 /* Registration Buttons */
+a.btn-register,
 .btn-register,
 .registration-btn,
 a[href*="/auth/register"],
@@ -367,6 +427,9 @@ button[type="submit"]:contains("Complete Registration"),
     border-radius: 0.5rem;
 }
 
+a.btn-register:hover,
+a.btn-register:focus,
+a.btn-register:active,
 .btn-register:hover,
 .btn-register:focus,
 .btn-register:active,
