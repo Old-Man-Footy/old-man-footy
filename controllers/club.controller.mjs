@@ -783,6 +783,143 @@ const removeSponsorFromClubHandler = async (req, res) => {
 };
 
 /**
+ * Show edit sponsor form for club delegates
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showEditClubSponsorHandler = async (req, res) => {
+  const user = req.user;
+  const { sponsorId } = req.params;
+
+  if (!user.clubId) {
+    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
+    return res.redirect('/dashboard');
+  }
+
+  const club = await Club.findByPk(user.clubId);
+
+  if (!club) {
+    req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      clubId: club.id // Ensure sponsor belongs to this club
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    return res.redirect('/clubs/manage/sponsors');
+  }
+
+  return res.render('clubs/edit-sponsor', {
+    title: 'Edit Sponsor',
+    sponsor,
+    club,
+    states: AUSTRALIAN_STATES,
+    sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
+    additionalCSS: ['/styles/sponsor.styles.css'],
+  });
+};
+
+/**
+ * Update sponsor information for club delegates
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updateClubSponsorHandler = async (req, res) => {
+  const user = req.user;
+  const { sponsorId } = req.params;
+
+  if (!user.clubId) {
+    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
+    return res.redirect('/dashboard');
+  }
+
+  const club = await Club.findByPk(user.clubId);
+
+  if (!club) {
+    req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      clubId: club.id // Ensure sponsor belongs to this club
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    return res.redirect('/clubs/manage/sponsors');
+  }
+
+  // Validate request
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', 'Please correct the validation errors.');
+    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+  }
+
+  const {
+    sponsorName,
+    businessType,
+    sponsorshipLevel,
+    contactPerson,
+    contactEmail,
+    contactPhone,
+    website,
+    facebookUrl,
+    instagramUrl,
+    twitterUrl,
+    location,
+    state,
+    description,
+    isPubliclyVisible,
+  } = req.body;
+
+  try {
+    // Handle file upload if provided
+    let logoFilename = sponsor.logoFilename;
+    if (req.file) {
+      logoFilename = req.file.filename;
+    }
+
+    // Update sponsor
+    await sponsor.update({
+      sponsorName: sponsorName.trim(),
+      businessType: businessType ? businessType.trim() : null,
+      sponsorshipLevel,
+      contactPerson: contactPerson ? contactPerson.trim() : null,
+      contactEmail: contactEmail ? contactEmail.trim() : null,
+      contactPhone: contactPhone ? contactPhone.trim() : null,
+      website: website ? website.trim() : null,
+      facebookUrl: facebookUrl ? facebookUrl.trim() : null,
+      instagramUrl: instagramUrl ? instagramUrl.trim() : null,
+      twitterUrl: twitterUrl ? twitterUrl.trim() : null,
+      location: location ? location.trim() : null,
+      state,
+      description: description ? description.trim() : null,
+      logoFilename,
+      isPubliclyVisible: isPubliclyVisible === 'true',
+    });
+
+    req.flash('success_msg', `Sponsor "${sponsorName}" has been updated successfully.`);
+    return res.redirect('/clubs/manage/sponsors');
+  } catch (error) {
+    console.error('Error updating sponsor:', error);
+    req.flash('error_msg', 'An error occurred while updating the sponsor.');
+    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+  }
+};
+
+/**
  * Show club alternate names management page
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -1605,6 +1742,8 @@ const rawControllers = {
   showAddSponsorHandler,
   addSponsorToClubHandler,
   removeSponsorFromClubHandler,
+  showEditClubSponsorHandler,
+  updateClubSponsorHandler,
   showClubAlternateNamesHandler,
   addAlternateNameHandler,
   updateAlternateNameHandler,
@@ -1633,6 +1772,8 @@ export const {
   showAddSponsorHandler: showAddSponsor,
   addSponsorToClubHandler: addSponsorToClub,
   removeSponsorFromClubHandler: removeSponsorFromClub,
+  showEditClubSponsorHandler: showEditClubSponsor,
+  updateClubSponsorHandler: updateClubSponsor,
   showClubAlternateNamesHandler: showClubAlternateNames,
   addAlternateNameHandler: addAlternateName,
   updateAlternateNameHandler: updateAlternateName,

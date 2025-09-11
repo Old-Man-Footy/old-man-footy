@@ -1,0 +1,247 @@
+<div class="container mt-4" data-page-id="clubs-edit-sponsor">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        <i class="bi bi-pencil-square text-primary me-2"></i>
+                        Edit Sponsor
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Edit sponsor information for <%= club.clubName %>
+                    </p>
+                </div>
+                <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Sponsors
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            <%- include('../partials/flash-messages') %>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-building me-2"></i>Sponsor Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/clubs/manage/sponsors/<%= sponsor.id %>/edit" enctype="multipart/form-data" id="sponsorForm">
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="sponsorName" class="form-label">
+                                        Sponsor Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" name="sponsorName" id="sponsorName" 
+                                           value="<%= sponsor.sponsorName || '' %>" required>                                    
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="sponsorshipLevel" class="form-label">Sponsorship Level</label>
+                                    <select class="form-select" name="sponsorshipLevel" id="sponsorshipLevel">
+                                        <option value="">Select level...</option>
+                                        <% sponsorshipLevels.forEach(level => { %>
+                                            <option value="<%= level %>" <%= sponsor.sponsorshipLevel === level ? 'selected' : '' %>>
+                                                <%= level %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="businessType" class="form-label">Business Type</label>
+                                    <input type="text" class="form-control" name="businessType" id="businessType" 
+                                           value="<%= sponsor.businessType || '' %>"
+                                           placeholder="e.g., Restaurant, Sports Shop, Construction">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" name="location" id="location" 
+                                           value="<%= sponsor.location || '' %>"
+                                           placeholder="City or suburb">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="state" class="form-label">State</label>
+                                    <select class="form-select" name="state" id="state">
+                                        <option value="">Select state...</option>
+                                        <% states.forEach(state => { %>
+                                            <option value="<%= state %>" <%= sponsor.state === state ? 'selected' : '' %>>
+                                                <%= state %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="website" class="form-label">Website</label>
+                                    <input type="url" class="form-control" name="website" id="website" 
+                                           value="<%= sponsor.website || '' %>"
+                                           placeholder="https://www.example.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <hr class="my-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-person-lines-fill me-2"></i>Contact Information
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contactPerson" class="form-label">Contact Person</label>
+                                    <input type="text" class="form-control" name="contactPerson" id="contactPerson" 
+                                           value="<%= sponsor.contactPerson || '' %>">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contactEmail" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" name="contactEmail" id="contactEmail" 
+                                           value="<%= sponsor.contactEmail || '' %>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contactPhone" class="form-label">Contact Phone</label>
+                                    <input type="tel" class="form-control" name="contactPhone" id="contactPhone" 
+                                           value="<%= sponsor.contactPhone || '' %>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media -->
+                        <hr class="my-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-share me-2"></i>Social Media
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="facebookUrl" class="form-label">
+                                        <i class="bi bi-facebook me-1"></i>Facebook
+                                    </label>
+                                    <input type="url" class="form-control" name="facebookUrl" id="facebookUrl" 
+                                           value="<%= sponsor.facebookUrl || '' %>"
+                                           placeholder="https://www.facebook.com/yourpage">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instagramUrl" class="form-label">
+                                        <i class="bi bi-instagram me-1"></i>Instagram
+                                    </label>
+                                    <input type="url" class="form-control" name="instagramUrl" id="instagramUrl" 
+                                           value="<%= sponsor.instagramUrl || '' %>"
+                                           placeholder="https://www.instagram.com/yourpage">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="twitterUrl" class="form-label">
+                                        <i class="bi bi-twitter me-1"></i>X (Twitter)
+                                    </label>
+                                    <input type="url" class="form-control" name="twitterUrl" id="twitterUrl" 
+                                           value="<%= sponsor.twitterUrl || '' %>"
+                                           placeholder="https://www.x.com/yourpage">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logo Upload -->
+                        <hr class="my-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-image me-2"></i>Sponsor Logo
+                        </h6>
+
+                        <% if (sponsor.logoFilename) { %>
+                            <div class="mb-3">
+                                <label class="form-label">Current Logo</label>
+                                <div class="d-flex align-items-center">
+                                    <img src="/logos/<%= sponsor.logoFilename %>" 
+                                         alt="<%= sponsor.sponsorName %> Logo" 
+                                         class="me-3 border rounded" 
+                                         style="max-height: 80px; max-width: 120px;">
+                                    <small class="text-muted">
+                                        Upload a new image to replace the current logo
+                                    </small>
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <div class="mb-3">
+                            <label for="logoFile" class="form-label">
+                                <%= sponsor.logoFilename ? 'Replace Logo' : 'Upload Logo' %>
+                            </label>
+                            <input type="file" class="form-control" name="logoFile" id="logoFile" 
+                                   accept="image/jpeg,image/jpg,image/png,image/gif">
+                            <div class="form-text">
+                                Accepted formats: JPG, PNG, GIF. Maximum file size: 5MB.
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <hr class="my-4">
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" name="description" id="description" 
+                                      rows="4" placeholder="Brief description of the sponsor..."><%= sponsor.description || '' %></textarea>
+                            <div class="form-text">
+                                Provide a brief description of the sponsor and their business.
+                            </div>
+                        </div>
+
+                        <!-- Visibility Setting -->
+                        <hr class="my-4">
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="isPubliclyVisible" 
+                                       id="isPubliclyVisible" value="true" 
+                                       <%= sponsor.isPubliclyVisible ? 'checked' : '' %>>
+                                <label class="form-check-label" for="isPubliclyVisible">
+                                    <strong>Make this sponsor publicly visible</strong>
+                                </label>
+                                <div class="form-text">
+                                    If checked, this sponsor will appear on public sponsor listings and the club's public profile.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>Update Sponsor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
