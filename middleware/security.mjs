@@ -392,6 +392,15 @@ export const validatePassword = (password) => {
 export const validateSecureEmail = (email) => {
   const errors = [];
   
+  // Check if email is provided
+  if (!email || typeof email !== 'string') {
+    errors.push('Email address is required');
+    return {
+      isValid: false,
+      errors
+    };
+  }
+  
   // Basic email format validation - more strict
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
@@ -411,7 +420,7 @@ export const validateSecureEmail = (email) => {
   ];
   
   const domain = email.split('@')[1];
-  if (disposableDomains.includes(domain)) {
+  if (domain && disposableDomains.includes(domain)) {
     errors.push('Disposable email addresses are not allowed');
   }
   

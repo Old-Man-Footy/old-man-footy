@@ -31,15 +31,15 @@ const validateCarnival = [
         })
         .isISO8601().withMessage('Valid end date is required'),
     body('locationAddress').trim().isLength({ min: 5, max: 500 }).withMessage('Location must be between 5 and 500 characters'),
-    body('contactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
-    body('contactEmail').custom((email) => {
+    body('organiserContactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
+    body('organiserContactEmail').custom((email) => {
         const result = validateSecureEmail(email);
         if (!result.isValid) {
             throw new Error(result.errors[0]);
         }
         return true;
     }),
-    body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('organiserContactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
     body('registrationFee').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Registration fee must be a valid amount'),
     body('feesDescription').optional().trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
     body('callForVolunteers').optional().trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),

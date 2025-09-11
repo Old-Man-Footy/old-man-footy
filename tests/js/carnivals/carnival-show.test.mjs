@@ -21,9 +21,6 @@ function setupDOM() {
     </form>
     <span id="charCount"></span>
     <div id="postCreationModal"></div>
-    <input type="checkbox" id="nrlAcknowledge" />
-    <input type="checkbox" id="mysidelineAcknowledge" />
-    <button id="acknowledgeButton"></button>
     <button data-toggle-carnival-status="123" data-carnival-title="Test Carnival" data-current-status="true"></button>
     <select id="targetCarnivalId">
       <option value="">Select</option>
@@ -110,8 +107,7 @@ describe('carnivalShowManager', () => {
     expect(submitButton.innerHTML).toContain('Sending...');
   });
 
-  it('exposes acknowledgeAndClose and confirmMerge on window', () => {
-    expect(typeof window.acknowledgeAndClose).toBe('function');
+  it('exposes confirmMerge on window', () => {
     expect(typeof window.confirmMerge).toBe('function');
   });
 
@@ -151,21 +147,6 @@ describe('carnivalShowManager', () => {
     ));
     await carnivalShowManager.toggleCarnivalStatus('123', 'Test Carnival', 'true');
     expect(window.alert).toHaveBeenCalledWith('Carnival deactivated successfully!');
-  });
-
-  it('acknowledgeAndClose hides modal and updates URL', () => {
-    const hideSpy = vi.fn();
-    // Stub bootstrap
-    // eslint-disable-next-line no-undef
-    globalThis.bootstrap = {
-      Modal: {
-        getInstance: () => ({ hide: hideSpy })
-      }
-    };
-    const replaceSpy = vi.spyOn(window.history, 'replaceState');
-    expect(() => carnivalShowManager.acknowledgeAndClose()).not.toThrow();
-    expect(hideSpy).toHaveBeenCalled();
-    expect(replaceSpy).toHaveBeenCalled();
   });
 
   it('confirmMerge updates target name and shows confirm modal', () => {

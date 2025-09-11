@@ -12,7 +12,6 @@ export const carnivalShowManager = {
         this.bindEvents();
         this.initializeCarnivalShowPage();
         // Back-compat for any inline handlers still in views
-        window.acknowledgeAndClose = () => this.acknowledgeAndClose();
         window.confirmMerge = () => this.confirmMerge();
     },
 
@@ -26,9 +25,6 @@ export const carnivalShowManager = {
 
         // Post-creation modal elements
         this.elements.postCreationModal = document.getElementById('postCreationModal');
-        this.elements.nrlCheckbox = document.getElementById('nrlAcknowledge');
-        this.elements.mysidelineCheckbox = document.getElementById('mysidelineAcknowledge');
-        this.elements.acknowledgeButton = document.getElementById('acknowledgeButton');
 
         // Admin status toggle buttons
         this.elements.statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
@@ -184,17 +180,6 @@ export const carnivalShowManager = {
 
         const modal = new bootstrap.Modal(modalEl);
         modal.show();
-
-        const updateButtonState = () => {
-            if (!this.elements.acknowledgeButton) return;
-            const nrl = !!(this.elements.nrlCheckbox && this.elements.nrlCheckbox.checked);
-            const mys = !!(this.elements.mysidelineCheckbox && this.elements.mysidelineCheckbox.checked);
-            this.elements.acknowledgeButton.disabled = !(nrl && mys);
-        };
-
-        if (this.elements.nrlCheckbox) this.elements.nrlCheckbox.addEventListener('change', updateButtonState);
-        if (this.elements.mysidelineCheckbox) this.elements.mysidelineCheckbox.addEventListener('change', updateButtonState);
-        updateButtonState();
     },
 
     /** Placeholder for future merge confirmation init (kept for parity) */
@@ -251,22 +236,6 @@ export const carnivalShowManager = {
                 button.disabled = false;
             }
         });
-    },
-
-    /** Acknowledge and close post-creation modal */
-    acknowledgeAndClose() {
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const instance = bootstrap.Modal.getInstance(document.getElementById('postCreationModal'));
-            if (instance) instance.hide();
-        }
-
-        const url = new URL(window.location);
-        url.searchParams.delete('showPostCreationModal');
-        try {
-            window.history.replaceState({}, document.title, url.toString());
-        } catch (_) {
-            // ignore in test environments without full URL support
-        }
     },
 
     /** Confirm merge operation flow */
