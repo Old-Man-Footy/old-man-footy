@@ -177,11 +177,11 @@
                             <i class="bi bi-image me-2"></i>Sponsor Logo
                         </h6>
 
-                        <% if (sponsor.logoFilename) { %>
+                        <% if (sponsor.logoUrl) { %>
                             <div class="mb-3">
                                 <label class="form-label">Current Logo</label>
                                 <div class="d-flex align-items-center">
-                                    <img src="/logos/<%= sponsor.logoFilename %>" 
+                                    <img src="<%= sponsor.logoUrl %>" 
                                          alt="<%= sponsor.sponsorName %> Logo" 
                                          class="me-3 border rounded" 
                                          style="max-height: 80px; max-width: 120px;">
@@ -194,7 +194,7 @@
 
                         <div class="mb-3">
                             <label for="logoFile" class="form-label">
-                                <%= sponsor.logoFilename ? 'Replace Logo' : 'Upload Logo' %>
+                                <%= sponsor.logoUrl ? 'Replace Logo' : 'Upload Logo' %>
                             </label>
                             <input type="file" class="form-control" name="logoFile" id="logoFile" 
                                    accept="image/jpeg,image/jpg,image/png,image/gif">
