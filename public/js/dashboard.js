@@ -265,7 +265,7 @@ export const dashboardManager = {
         switch (actionValue) {
             case 'transfer':
                 submitButton.innerHTML = `${icon} Leave & Transfer Role`;
-                submitButton.className = 'btn btn-warning';
+                submitButton.className = 'btn btn-success';
                 break;
             case 'deactivate':
                 submitButton.innerHTML = `${icon} Leave & Deactivate Club`;
