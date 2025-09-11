@@ -151,7 +151,7 @@
                                                 <% if (assignment.clubPlayer.shorts) { %>
                                                     <% 
                                                         const shortsColor = assignment.clubPlayer.shorts.toLowerCase();
-                                                        const validColors = ['red', 'blue', 'green', 'yellow', 'white'];
+                                                        const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
                                                         const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
                                                     %>
                                                     <span class="badge <%= cssClass %>">
