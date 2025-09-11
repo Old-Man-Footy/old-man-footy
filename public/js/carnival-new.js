@@ -31,7 +31,13 @@ export const carnivalNewManager = {
             if (this.elements.isMultiDay.checked) {
                 this.elements.dateLabel.textContent = 'Event Start Date *';
                 this.elements.endDateInput.required = true;
+                this.elements.endDateContainer.style.display = 'block';
                 this.updateEndDateMin();
+            } else {
+                // Ensure proper initial state when not a multi-day event
+                this.elements.endDateContainer.style.display = 'none';
+                this.elements.dateLabel.textContent = 'Date *';
+                this.elements.endDateInput.required = false;
             }
         }
 
