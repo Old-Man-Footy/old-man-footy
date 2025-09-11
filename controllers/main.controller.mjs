@@ -31,13 +31,11 @@ import asyncHandler from '../middleware/asyncHandler.mjs';
  */
 export const getIndex = asyncHandler(async (req, res) => {
   // Get all upcoming carnivals for homepage display
-  const upcomingCarnivals = await Carnival.findAll({
+  // First, try to get 4 carnivals with confirmed dates
+  let upcomingCarnivals = await Carnival.findAll({
     where: {
       isActive: true,
-      [Op.or]: [
-        { date: { [Op.gte]: new Date() } },
-        { date: null }
-      ]
+      date: { [Op.gte]: new Date() }
     },
     order: [['date', 'ASC']],
     limit: 4,
@@ -45,6 +43,23 @@ export const getIndex = asyncHandler(async (req, res) => {
       { model: User, as:'creator', attributes: ['firstName', 'lastName'] }
     ]
   });
+
+  // If we don't have 4 carnivals with dates, fill remainder with undated carnivals
+  if (upcomingCarnivals.length < 4) {
+    const undatedCarnivals = await Carnival.findAll({
+      where: {
+        isActive: true,
+        date: null
+      },
+      order: [['createdAt', 'DESC']], // Show most recently created undated carnivals first
+      limit: 4 - upcomingCarnivals.length,
+      include: [
+        { model: User, as:'creator', attributes: ['firstName', 'lastName'] }
+      ]
+    });
+    
+    upcomingCarnivals = [...upcomingCarnivals, ...undatedCarnivals];
+  }
 
   // Get statistics for the stats runner
   const stats = {
