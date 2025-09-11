@@ -456,6 +456,9 @@ const showCarnivalHandler = async (req, res) => {
     }
   }
 
+  // Check if registration is currently active (includes deadline check)
+  const isRegistrationActive = await carnival.isRegistrationActiveAsync();
+
   // Sort sponsors hierarchically using the sorting service
   const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
 
@@ -472,6 +475,7 @@ const showCarnivalHandler = async (req, res) => {
     availableMergeTargets, // Pass available merge targets
     isInactiveCarnival: !carnival.isActive,
     isMySidelineEvent: !!carnival.mySidelineId,
+    isRegistrationActive, // Pass registration status including deadline check
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
     additionalCSS: ['/styles/carnival.styles.css'],
     hostClub,

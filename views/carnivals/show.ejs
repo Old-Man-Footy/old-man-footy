@@ -576,67 +576,98 @@
             </div>
             <!-- Club Registration Section (for delegates) -->
             <% if (user && canRegisterClub && carnival.isActive) { %>
-                <div class="card shadow mb-4 border-success">
-                    <div class="card-header bg-success">
-                        <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Register Club Interest</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-3">Express your club's interest in attending this carnival. Your registration will be reviewed by the hosting club.</p>
-                        
-                        <!-- Registration Form -->
-                        <form action="/carnivals/<%= carnival.id %>/register" method="POST" id="clubRegistrationForm">
-                            <div class="mb-3">
-                                <label for="playerCount" class="form-label">Expected Player Count</label>
-                                <input type="number" class="form-control" id="playerCount" name="playerCount" 
-                                       min="1" max="100" placeholder="e.g. 15">
-                                <div class="form-text">Approximate number of players who might attend</div>
-                            </div>
+                <% if (isRegistrationActive) { %>
+                    <!-- Show registration form when registration is open -->
+                    <div class="card shadow mb-4 border-success">
+                        <div class="card-header bg-success">
+                            <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Register Club Interest</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">Express your club's interest in attending this carnival. Your registration will be reviewed by the hosting club.</p>
                             
-                            <div class="mb-3">
-                                <label for="teamName" class="form-label">Team Name</label>
-                                <input type="text" class="form-control" id="teamName" name="teamName" 
-                                       value="<%= user && user.club ? user.club.clubName : '' %>" 
-                                       maxlength="100" placeholder="Optional team name">
-                            </div>
+                            <!-- Registration Form -->
+                            <form action="/carnivals/<%= carnival.id %>/register" method="POST" id="clubRegistrationForm">
+                                <div class="mb-3">
+                                    <label for="playerCount" class="form-label">Expected Player Count</label>
+                                    <input type="number" class="form-control" id="playerCount" name="playerCount" 
+                                           min="1" max="100" placeholder="e.g. 15">
+                                    <div class="form-text">Approximate number of players who might attend</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="teamName" class="form-label">Team Name</label>
+                                    <input type="text" class="form-control" id="teamName" name="teamName" 
+                                           value="<%= user && user.club ? user.club.clubName : '' %>" 
+                                           maxlength="100" placeholder="Optional team name">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contactPerson" class="form-label">Contact Person</label>
+                                    <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                           value="<%= user.firstName %> <%= user.lastName %>" maxlength="100">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contactEmail" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                           value="<%= user.email %>">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contactPhone" class="form-label">Contact Phone</label>
+                                    <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                           value="<%= user.phoneNumber || '' %>" 
+                                           maxlength="20" placeholder="Optional phone number">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="specialRequirements" class="form-label">Special Requirements</label>
+                                    <textarea class="form-control" id="specialRequirements" name="specialRequirements" 
+                                              rows="3" maxlength="500" placeholder="Any special requirements or notes..."></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-light w-100">
+                                    <i class="bi bi-hand-thumbs-up"></i> Register Interest
+                                </button>
+                            </form>
                             
-                            <div class="mb-3">
-                                <label for="contactPerson" class="form-label">Contact Person</label>
-                                <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
-                                       value="<%= user.firstName %> <%= user.lastName %>" maxlength="100">
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Your interest registration will be reviewed by the hosting club. You'll be notified of their decision via email.
+                                </small>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="contactEmail" class="form-label">Contact Email</label>
-                                <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
-                                       value="<%= user.email %>">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="contactPhone" class="form-label">Contact Phone</label>
-                                <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
-                                       value="<%= user.phoneNumber || '' %>" 
-                                       maxlength="20" placeholder="Optional phone number">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="specialRequirements" class="form-label">Special Requirements</label>
-                                <textarea class="form-control" id="specialRequirements" name="specialRequirements" 
-                                          rows="3" maxlength="500" placeholder="Any special requirements or notes..."></textarea>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-light w-100">
-                                <i class="bi bi-hand-thumbs-up"></i> Register Interest
-                            </button>
-                        </form>
-                        
-                        <div class="mt-3">
-                            <small class="text-muted">
-                                <i class="bi bi-info-circle"></i> 
-                                Your interest registration will be reviewed by the hosting club. You'll be notified of their decision via email.
-                            </small>
                         </div>
                     </div>
-                </div>
+                <% } else { %>
+                    <!-- Show deadline closure message when registration is closed -->
+                    <div class="card shadow mb-4 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-clock"></i> Club Registration Closed</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">
+                                <strong>Club registration for this carnival is now closed.</strong>
+                            </p>
+                            <% if (carnival.registrationDeadline) { %>
+                                <p class="mb-0">
+                                    <i class="bi bi-calendar-x text-warning"></i>
+                                    Registration deadline was: <strong><%= new Date(carnival.registrationDeadline).toLocaleDateString('en-AU', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    }) %></strong>
+                                </p>
+                            <% } %>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i>
+                                    If you need to register your club, please contact the carnival organiser directly.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
             <% } else if (user && userClubRegistration && carnival.isActive) { %>
                 <!-- Show registration status for already registered clubs -->
                 <div class="card shadow mb-4 border-info">
