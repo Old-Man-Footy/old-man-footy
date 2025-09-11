@@ -297,7 +297,7 @@
                         <!-- Registration Section - Full Width -->
                         <% if (carnival.registrationLink) { %>
                             <div class="mb-4">
-                                <h5><i class="bi bi-person-plus text-success"></i> Registration</h5>
+                                <h5><i class="bi bi-person-plus text-success"></i> Player Registration</h5>
                                 <% 
                                 // Check if carnival is inactive OR if the event date is in the past
                                 const isPastEvent = carnival.date && carnival.date instanceof Date && !isNaN(carnival.date) && carnival.date < new Date();
@@ -578,7 +578,7 @@
             <% if (user && canRegisterClub && carnival.isActive) { %>
                 <div class="card shadow mb-4 border-success">
                     <div class="card-header bg-success">
-                        <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Register Interest</h5>
+                        <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Register Club Interest</h5>
                     </div>
                     <div class="card-body">
                         <p class="mb-3">Express your club's interest in attending this carnival. Your registration will be reviewed by the hosting club.</p>
