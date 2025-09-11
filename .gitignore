@@ -170,6 +170,8 @@ ecosystem.config.js
 public/**/*.png
 public/**/*.jpg
 public/**/*.jpeg
+public/**/*.gif
+public/**/*.svg
 
 # Include the screenshots for public documentation
 !public/screenshots/**/*.png
@@ -181,4 +183,7 @@ public/**/*.jpeg
 
 # Test Results
 test-results
-tests\fixtures
+tests/fixtures
+
+# Ignore all files in the uploads directory and its subdirectories
+public/uploads

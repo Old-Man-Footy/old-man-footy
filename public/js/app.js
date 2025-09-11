@@ -317,12 +317,30 @@ const oldmanfooty = {
             });
         });
 
-        // State filter auto-submit
+        // State filter auto-submit (only for search/filter forms, not data entry forms)
         const stateSelects = document.querySelectorAll('select[name="state"]');
         stateSelects.forEach(select => {
             select.addEventListener('change', function() {
                 if (this.form) {
-                    this.form.submit();
+                    // Only auto-submit if this is a search/filter form, not a data entry form
+                    const isSearchForm = this.form.method.toLowerCase() === 'get' || 
+                                        this.form.classList.contains('search-form') ||
+                                        this.form.classList.contains('filter-form') ||
+                                        this.form.querySelector('input[name="search"]') ||
+                                        this.form.querySelector('input[type="search"]');
+                    
+                    // Don't auto-submit if this is clearly a data entry form
+                    const isDataEntryForm = this.form.method.toLowerCase() === 'post' &&
+                                          (this.form.action.includes('/new') || 
+                                           this.form.action.includes('/edit') ||
+                                           this.form.action.includes('/manage') ||
+                                           this.form.classList.contains('needs-validation') ||
+                                           this.form.querySelector('input[type="file"]') ||
+                                           this.form.querySelector('textarea'));
+                    
+                    if (isSearchForm && !isDataEntryForm) {
+                        this.form.submit();
+                    }
                 }
             });
         });
