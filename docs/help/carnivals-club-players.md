@@ -29,5 +29,5 @@ Click a player to see more information and history.
 
 ## Tips & Best Practices
 - Keep player info up to date for accurate records.
-- Use player details to track performance and history.
+- Use player details to track attendance and history.
 - Review player registration status before carnivals.
