@@ -25,7 +25,14 @@ export const helpSystemManager = {
 
   handleHelpClick: async (event) => {
     event.preventDefault(); // Prevent default link behavior
-    const pageId = document.body.dataset.pageId;
+    
+    // Look for data-page-id on body first, then search in DOM
+    let pageId = document.body.dataset.pageId;
+    if (!pageId) {
+      const elementWithPageId = document.querySelector('[data-page-id]');
+      pageId = elementWithPageId?.dataset.pageId;
+    }
+    
     const modal = new bootstrap.Modal(helpSystemManager.elements.helpModal);
     if (!pageId) {
       helpSystemManager.elements.helpModalTitle.textContent = 'General Help';
