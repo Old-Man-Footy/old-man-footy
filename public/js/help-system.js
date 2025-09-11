@@ -24,6 +24,7 @@ export const helpSystemManager = {
   },
 
   handleHelpClick: async (event) => {
+    event.preventDefault(); // Prevent default link behavior
     const pageId = document.body.dataset.pageId;
     const modal = new bootstrap.Modal(helpSystemManager.elements.helpModal);
     if (!pageId) {
