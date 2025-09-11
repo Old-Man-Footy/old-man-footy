@@ -585,6 +585,18 @@
                         <div class="card-body">
                             <p class="mb-3">Express your club's interest in attending this carnival. Your registration will be reviewed by the hosting club.</p>
                             
+                            <!-- Registration Deadline Notice -->
+                            <% if (carnival.registrationDeadline) { %>
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-calendar-check text-info"></i>
+                                    <strong>Registration Deadline:</strong> <%= new Date(carnival.registrationDeadline).toLocaleDateString('en-AU', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    }) %>
+                                </div>
+                            <% } %>
+                            
                             <!-- Registration Form -->
                             <form action="/carnivals/<%= carnival.id %>/register" method="POST" id="clubRegistrationForm">
                                 <div class="mb-3">
