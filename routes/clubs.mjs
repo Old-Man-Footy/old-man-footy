@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { clubUpload, handleUploadError } from '../middleware/upload.mjs';
+import { clubUpload, sponsorUpload, handleUploadError } from '../middleware/upload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as clubController from '../controllers/club.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
@@ -76,7 +76,7 @@ router.get('/manage/sponsors', ensureAuthenticated, clubController.showClubSpons
 
 // Add new sponsor or link existing sponsor to club
 router.get('/manage/sponsors/add', ensureAuthenticated, clubController.showAddSponsor);
-router.post('/manage/sponsors/add', ensureAuthenticated, clubController.addSponsorToClub);
+router.post('/manage/sponsors/add', ensureAuthenticated, sponsorUpload, handleUploadError, clubController.addSponsorToClub);
 
 // Remove sponsor from club
 router.post('/manage/sponsors/:sponsorId/remove', ensureAuthenticated, clubController.removeSponsorFromClub);
