@@ -814,7 +814,7 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
   // Get available players from the club
   const availablePlayers = await ClubPlayer.findAll({
     where: {
-      clubId: registration.club.id,
+      clubId: registration.participatingClub.id,
       isActive: true,
       id: { [Op.notIn]: assignedPlayerIds },
     },
