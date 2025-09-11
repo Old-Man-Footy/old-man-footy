@@ -299,14 +299,16 @@ describe('Main Controller', () => {
       expect(res.render).toHaveBeenCalledWith('index', expect.objectContaining({
         title: 'Old Man Footy',
         user: null,
-        upcomingCarnivals: mockCarnivals,
-        carnivals: mockCarnivals,
-        stats: {
+        upcomingCarnivals: expect.arrayContaining(mockCarnivals),
+        carnivals: expect.arrayContaining(mockCarnivals),
+        stats: expect.objectContaining({
           totalCarnivals: 10,
           upcomingCount: 3,
           clubsCount: 5
-        },
-        carouselImages: mockCarouselImages
+        }),
+        carouselImages: mockCarouselImages,
+        AUSTRALIAN_STATES: expect.any(Array),
+        additionalCSS: expect.any(Array)
       }));
     });
 

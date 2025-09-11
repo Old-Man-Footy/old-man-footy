@@ -1043,23 +1043,20 @@ describe('Club Controller', () => {
         const mockSponsor = {
           id: 2,
           sponsorName: 'Test Sponsor',
-          clubId: 1,
-          isAssociatedWithClub: vi.fn().mockResolvedValue(false)
+          clubId: null,
+          isAssociatedWithClub: vi.fn().mockResolvedValue(false),
+          update: vi.fn().mockResolvedValue(true)
         };
         Sponsor.findByPk.mockResolvedValue(mockSponsor);
-        mockClub.getSponsors = vi.fn().mockResolvedValue([]); // Ensure getSponsors is a spy
-        mockClub.addSponsor = vi.fn().mockResolvedValue(true); // Ensure addSponsor is a spy
+        mockClub.getSponsors = vi.fn().mockResolvedValue([]); // Mock existing sponsors for displayOrder calculation
         Club.findByPk.mockResolvedValue(mockClub); // Ensure controller uses the correct club instance
 
         // Act
         await addSponsorToClub(req, res);
 
         // Assert
-        expect(mockClub.addSponsor).toHaveBeenCalledWith(mockSponsor, expect.objectContaining({
-          through: expect.objectContaining({
-            displayOrder: 1
-          })
-        }));
+        expect(mockSponsor.update).toHaveBeenNthCalledWith(1, { clubId: 1 });
+        expect(mockSponsor.update).toHaveBeenNthCalledWith(2, { displayOrder: 1 });
         expect(req.flash).toHaveBeenCalledWith(
           'success_msg',
           'Sponsor "Test Sponsor" has been added to your club!'

@@ -674,6 +674,9 @@ const addSponsorToClubHandler = async (req, res) => {
       req.flash('error_msg', 'This sponsor is already linked to your club.');
       return res.redirect('/clubs/manage/sponsors');
     }
+
+    // Link the sponsor to the club
+    await sponsor.update({ clubId: club.id });
   } else if (sponsorType === 'new') {
     // Create new sponsor
     const {
@@ -708,6 +711,7 @@ const addSponsorToClubHandler = async (req, res) => {
       twitterUrl: twitterUrl?.trim(),
       linkedinUrl: linkedinUrl?.trim(),
       sponsorshipLevel,
+      clubId: club.id,
       isPubliclyVisible: true,
     };
 
@@ -725,13 +729,12 @@ const addSponsorToClubHandler = async (req, res) => {
     return res.redirect('/clubs/manage/sponsors/add');
   }
 
-  // Link sponsor to club with displayOrder
+  // Set display order for the sponsor
   const currentSponsors = await club.getSponsors();
   const displayOrder = currentSponsors.length + 1;
 
-  await club.addSponsor(sponsor, {
-    through: { displayOrder },
-  });
+  // Update the sponsor's display order
+  await sponsor.update({ displayOrder });
 
   req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club!`);
   return res.redirect('/clubs/manage/sponsors');
@@ -1011,19 +1014,18 @@ const reorderClubSponsorsHandler = async (req, res) => {
     });
   }
 
-  // // Update display orders
-  // TODO: ORDER SPONSORS NEEDS UPDATING AS ClubSponsor TABLE IS NOW DEPRECATED
-  // for (let i = 0; i < sponsorOrder.length; i++) {
-  //   await ClubSponsor.update(
-  //     { displayOrder: i + 1 },
-  //     {
-  //       where: {
-  //         clubId: user.clubId,
-  //         sponsorId: sponsorOrder[i],
-  //       },
-  //     }
-  //   );
-  // }
+  // Update display orders
+  for (let i = 0; i < sponsorOrder.length; i++) {
+    await Sponsor.update(
+      { displayOrder: i + 1 },
+      {
+        where: {
+          id: sponsorOrder[i],
+          clubId: user.clubId,
+        },
+      }
+    );
+  }
 
   return res.json({
     success: true,

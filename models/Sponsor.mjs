@@ -148,17 +148,19 @@ Sponsor.init({
   },
   clubId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'clubs',
       key: 'id'
     },
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
-    comment: 'The club that owns this sponsor',
-    validate: {
-      notNull: { msg: 'Sponsor must be linked to a club.' }
-    }
+    comment: 'The club that owns this sponsor'
+  },
+  displayOrder: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Display order for sponsor listing within a club'
   },
   createdAt: {
     type: DataTypes.DATE,
