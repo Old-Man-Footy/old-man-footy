@@ -909,6 +909,37 @@ button[type="submit"]:contains("Complete Registration"):focus {
     border-radius: 0 !important;
 }
 
+/* Shorts Color Badge Classes */
+.badge-shorts-red {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.badge-shorts-blue {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+.badge-shorts-green {
+    background-color: #198754 !important;
+    color: white !important;
+}
+
+.badge-shorts-yellow {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+
+.badge-shorts-unrestricted {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+/* Icon utility classes */
+.icon-large {
+    font-size: 1.2em;
+}
+
 /* Hero Section Enhancements */
 .hero-section,
 .bg-primary {

@@ -125,6 +125,7 @@
                                         <th>Player Name</th>
                                         <th>Age</th>
                                         <th>Email</th>
+                                        <th>Shorts</th>
                                         <th>Status</th>
                                         <th>Added</th>
                                         <th>Actions</th>
@@ -145,6 +146,20 @@
                                             </td>
                                             <td>
                                                 <small><%= assignment.clubPlayer.email %></small>
+                                            </td>
+                                            <td>
+                                                <% if (assignment.clubPlayer.shorts) { %>
+                                                    <% 
+                                                        const shortsColor = assignment.clubPlayer.shorts.toLowerCase();
+                                                        const validColors = ['red', 'blue', 'green', 'yellow', 'white'];
+                                                        const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
+                                                    %>
+                                                    <span class="badge <%= cssClass %>">
+                                                        <%= assignment.clubPlayer.shorts %>
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="text-muted">-</span>
+                                                <% } %>
                                             </td>
                                             <td>
                                                 <span class="badge bg-<%= assignment.attendanceStatus === 'confirmed' ? 'success' : assignment.attendanceStatus === 'tentative' ? 'warning' : 'danger' %>">
