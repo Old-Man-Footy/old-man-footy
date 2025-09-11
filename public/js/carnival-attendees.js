@@ -34,8 +34,16 @@ export const attendeesManager = {
             const paymentStatus = card.dataset.paymentStatus;
             const showCard = this.shouldShowCard(approvalFilter, paymentFilter, approvalStatus, paymentStatus);
 
-            card.style.display = showCard ? 'block' : 'none';
-            if (showCard) visibleCount++;
+            // Use Bootstrap classes instead of inline styles to preserve grid layout
+            if (showCard) {
+                card.classList.remove('d-none');
+                // Explicitly ensure approval buttons are visible when card is shown
+                const approvalButtons = card.querySelectorAll('.approve-registration, .reject-registration');
+                approvalButtons.forEach(btn => btn.classList.remove('d-none'));
+                visibleCount++;
+            } else {
+                card.classList.add('d-none');
+            }
         });
 
         this.updateFilterResults(visibleCount);

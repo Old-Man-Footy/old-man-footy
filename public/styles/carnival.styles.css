@@ -47,6 +47,22 @@
     margin-top: 2rem;
 }
 
+/* ================================
+   CARNIVAL ATTENDEES APPROVAL BUTTONS
+   ================================ */
+
+/* Ensure approval buttons are always visible when their parent card is visible */
+.carnival-attendee-card:not(.d-none) .approve-registration,
+.carnival-attendee-card:not(.d-none) .reject-registration {
+    display: inline-block !important;
+}
+
+/* Prevent inheritance of d-none class on approval buttons */
+.approve-registration,
+.reject-registration {
+    display: inline-block;
+}
+
 .carnival-status-badge {
     font-size: 0.875rem;
     padding: 0.5rem 1rem;

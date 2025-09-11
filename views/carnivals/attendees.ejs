@@ -182,21 +182,9 @@
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <div>
                                                             <h6 class="card-title mb-1">
-                                                                <% if (registration.participatingClub.isActive && registration.participatingClub.isPubliclyListed) { %>
-                                                                    <a href="/clubs/<%= registration.participatingClub.id %>" class="text-decoration-none">
-                                                                        <%= registration.participatingClub.clubName %>
-                                                                    </a>
-                                                                <% } else { %>
-                                                                    <span class="club-inactive-label">
-                                                                        <%= registration.participatingClub.clubName %>
-                                                                        <% if (!registration.participatingClub.isActive) { %>
-                                                                            <span class="club-inactive-badge">Inactive</span>
-                                                                        <% } %>
-                                                                    </span>
-                                                                <% } %>
-                                                                <% if (registration.teamName) { %>
-                                                                    <small class="text-muted">(<%= registration.teamName %>)</small>
-                                                                <% } %>
+                                                                <a href="/clubs/<%= registration.participatingClub.id %>" class="text-decoration-none">
+                                                                    <%= registration.participatingClub.clubName %>
+                                                                </a>                                                                
                                                             </h6>
                                                             <small class="text-muted">
                                                                 <i class="bi bi-geo-alt"></i> 
