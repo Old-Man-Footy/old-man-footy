@@ -212,8 +212,8 @@
                                 <td>
                                     <div class="fw-semibold">
                                         <%= player.firstName %> <%= player.lastName %>
-                                        <% if (isMasters) { %>
-                                            <span class="badge bg-primary ms-1" style="font-size: 0.7rem;">Masters</span>
+                                        <% if (!isMasters) { %>
+                                            <span class="badge bg-danger ms-1" style="font-size: 0.7rem;">Ineligible</span>
                                         <% } %>
                                     </div>
                                     <% if (player.Club?.location) { %>
@@ -305,4 +305,4 @@
 </div>
 
 <!-- Include JavaScript -->
-<script mode="module" src="/js/carnival-players.js"></script>
+<script type="module" src="/js/carnival-players.js"></script>
