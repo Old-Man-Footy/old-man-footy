@@ -6,6 +6,17 @@
  */
 
 /**
+ * Check if request is an AJAX request
+ * @param {Object} req - Express request object
+ * @returns {boolean} True if request is AJAX
+ */
+function isAjaxRequest(req) {
+  return req.headers.accept && req.headers.accept.includes('application/json') ||
+         req.headers['content-type'] && req.headers['content-type'].includes('application/json') ||
+         req.headers['x-requested-with'] && req.headers['x-requested-with'].toLowerCase() === 'xmlhttprequest';
+}
+
+/**
  * Session authentication setup middleware
  * Adds authentication methods to the request object
  */
@@ -76,6 +87,17 @@ function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return next();
     }
+    
+    // Check if this is an AJAX request
+    if (isAjaxRequest(req)) {
+        // Return JSON error for AJAX requests
+        return res.status(401).json({
+            success: false,
+            message: 'Authentication required. Please log in to perform this action.'
+        });
+    }
+    
+    // Regular redirect for page requests
     req.flash('error_msg', 'Please log in to access this page');
     res.redirect('/auth/login');
 }
@@ -93,6 +115,17 @@ function ensurePrimaryDelegate(req, res, next) {
     if (req.isAuthenticated() && req.user.isPrimaryDelegate) {
         return next();
     }
+    
+    // Check if this is an AJAX request
+    if (isAjaxRequest(req)) {
+        // Return JSON error for AJAX requests
+        return res.status(403).json({
+            success: false,
+            message: 'Access denied. Primary delegate privileges required.'
+        });
+    }
+    
+    // Regular redirect for page requests
     req.flash('error_msg', 'Access denied. Primary delegate privileges required.');
     res.redirect('/dashboard');
 }
@@ -102,6 +135,17 @@ function ensureAdmin(req, res, next) {
     if (req.isAuthenticated() && req.user.isAdmin) {
         return next();
     }
+    
+    // Check if this is an AJAX request
+    if (isAjaxRequest(req)) {
+        // Return JSON error for AJAX requests
+        return res.status(403).json({
+            success: false,
+            message: 'Access denied. Admin privileges required.'
+        });
+    }
+    
+    // Regular redirect for page requests
     req.flash('error_msg', 'Access denied. Admin privileges required.');
     res.redirect('/dashboard');
 }
@@ -114,6 +158,16 @@ function ensureAdmin(req, res, next) {
  */
 export const requireAdmin = (req, res, next) => {
   if (!req.user || !req.user.isAdmin) {
+    // Check if this is an AJAX request
+    if (isAjaxRequest(req)) {
+      // Return JSON error for AJAX requests
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Administrator privileges required.'
+      });
+    }
+    
+    // Regular redirect for page requests
     req.flash('error_msg', 'Access denied. Administrator privileges required.');
     return res.redirect('/');
   }
@@ -128,6 +182,16 @@ export const requireAdmin = (req, res, next) => {
  */
 export const requireAdminOrPrimaryDelegate = (req, res, next) => {
   if (!req.user || (!req.user.isAdmin && !req.user.isPrimaryDelegate)) {
+    // Check if this is an AJAX request
+    if (isAjaxRequest(req)) {
+      // Return JSON error for AJAX requests
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Administrator or primary delegate privileges required.'
+      });
+    }
+    
+    // Regular redirect for page requests
     req.flash('error_msg', 'Access denied. Administrator or primary delegate privileges required.');
     return res.redirect('/');
   }
