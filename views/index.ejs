@@ -18,11 +18,11 @@
                             to help you plan your next Masters trip.</p>
                     </div>
                     <div class="hero-actions d-flex gap-3 flex-wrap">
-                        <a href="/carnivals" class="btn btn-success btn-lg hero-btn">
+                        <a href="/carnivals" class="btn btn-light btn-lg hero-btn">
                             <i class="bi bi-calendar-event"></i> View All Carnivals
                         </a>
                         <% if (!user) { %>
-                            <a href="/auth/register" class="btn btn-outline-success btn-lg hero-btn">
+                            <a href="/auth/register" class="btn btn-outline-light btn-lg hero-btn">
                                 <i class="bi bi-person-plus"></i> Register as Club Delegate
                             </a>
                         <% } %>
@@ -108,7 +108,7 @@
                                                         <i class="bi bi-eye"></i> View
                                                     </a>
                                                     <% if (carnival.registrationLink) { %>
-                                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-success btn-sm" target="_blank">
+                                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-light btn-sm" target="_blank">
                                                             <i class="bi bi-person-plus"></i> Register
                                                         </a>
                                                     <% } %>
@@ -272,7 +272,7 @@
                     All official Masters Rugby League registrations are processed through MySideline. 
                     Find and register for Masters carnivals across Australia.
                 </p>
-                <a href="<%= process.env.MYSIDELINE_URL || '#' %>" class="btn btn-success btn-lg" target="_blank">
+                <a href="<%= process.env.MYSIDELINE_URL || '#' %>" class="btn btn-light btn-lg" target="_blank">
                     <i class="bi bi-box-arrow-up-right"></i> Register on MySideline
                 </a>
             </div>

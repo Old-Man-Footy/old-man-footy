@@ -31,7 +31,7 @@
               </li>
             </ul>
           </div>
-          <a href="/clubs/players/add" class="btn btn-success">
+          <a href="/clubs/players/add" class="btn btn-light">
             <i class="bi bi-person-plus me-2"></i>Add New Player
           </a>
         </div>
@@ -301,7 +301,7 @@
                   <br>Players must be at least 16 years old to register.
                 </p>
               <% } %>
-              <a href="/clubs/players/add" class="btn btn-success">
+              <a href="/clubs/players/add" class="btn btn-light">
                 <i class="bi bi-person-plus me-2"></i>Add Your First Player
               </a>
             </div>
@@ -401,7 +401,7 @@
                         <form method="POST" action="/clubs/players/<%= player.id %>/reactivate" class="d-inline">
                           <button 
                             type="submit" 
-                            class="btn btn-outline-success btn-sm"
+                            class="btn btn-outline-light btn-sm"
                             data-bs-toggle="tooltip"
                             title="Reactivate Player"
                             onclick="return confirm('Are you sure you want to reactivate <%= player.getFullName() %>? They will be added back to your active player roster.')"

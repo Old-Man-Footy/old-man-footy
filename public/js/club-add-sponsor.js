@@ -65,7 +65,7 @@ export const clubAddSponsorManager = {
         el.existingSponsorIdInput.value = data.id;
         el.submitText.textContent = 'Link Existing Sponsor';
         clubAddSponsorManager.disableFormFields(true);
-        el.submitBtn.className = 'btn btn-success';
+        el.submitBtn.className = 'btn btn-light';
         el.submitBtn.innerHTML = '<i class="bi bi-link me-1"></i><span id="submitText">Link Existing Sponsor</span>';
     // When linking, only hide the duplicate alert UI without resetting state or form mode
     clubAddSponsorManager.hideDuplicateAlertUI();

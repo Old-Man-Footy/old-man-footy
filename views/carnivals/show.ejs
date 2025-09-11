@@ -134,7 +134,7 @@
                                 </div>
                                 <div class="d-flex gap-2 flex-wrap">
                                     <!-- Admin Edit Button -->
-                                    <a href="/admin/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-success btn-sm">
+                                    <a href="/admin/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-light btn-sm">
                                         <i class="bi bi-gear"></i> Admin Edit
                                     </a>
                                     
@@ -147,7 +147,7 @@
                                             <i class="bi bi-eye-slash"></i> Deactivate
                                         </button>
                                     <% } else { %>
-                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                        <button type="button" class="btn btn-outline-light btn-sm" 
                                                 data-toggle-carnival-status="<%= carnival.id %>"
                                                 data-carnival-title="<%= carnival.title %>"
                                                 data-current-status="false">
@@ -162,7 +162,7 @@
                                     
                                     <!-- Admin Claim Button (if not already owned by someone) -->
                                     <% if (!carnival.createdByUserId || carnival.createdByUserId === null) { %>
-                                        <a href="/admin/carnivals/<%= carnival.id %>/claim" class="btn btn-outline-success btn-sm">
+                                        <a href="/admin/carnivals/<%= carnival.id %>/claim" class="btn btn-outline-light btn-sm">
                                             <i class="bi bi-hand-thumbs-up"></i> Admin Claim
                                         </a>
                                     <% } %>
@@ -188,7 +188,7 @@
                                 <div class="d-flex gap-2">
                                     <!-- Claim button for unclaimed MySideline events -->
                                     <% if (canTakeOwnership) { %>
-                                        <button type="button" class="btn btn-success btn-sm" 
+                                        <button type="button" class="btn btn-light btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#claimOwnershipModal">
                                             <i class="bi bi-hand-thumbs-up"></i> Claim Event
@@ -204,12 +204,12 @@
 
                                         <!-- View All Players button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
-                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-success btn-sm">
+                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-light btn-sm">
                                                 <i class="bi bi-list-ul"></i> View All Players
                                             </a>
                                         <% } %>
                                         
-                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-success btn-sm">
+                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-light btn-sm">
                                             <i class="bi bi-pencil"></i> Edit Event
                                         </a>
 
@@ -232,7 +232,7 @@
 
                                     <!-- Merge carnival button for MySideline events owned by the user -->
                                     <% if (canMergeCarnival) { %>
-                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                        <button type="button" class="btn btn-outline-light btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#mergeCarnivalModal">
                                             <i class="bi bi-arrow-down-up"></i> Merge Carnival
@@ -320,7 +320,7 @@
                                     </div>
                                 <% } else { %>
                                     <a href="<%= carnival.registrationLink %>" 
-                                       class="btn btn-success" 
+                                       class="btn btn-light" 
                                        target="_blank">
                                         <i class="bi bi-box-arrow-up-right"></i> Register Now
                                         <% if (isMySidelineEvent) { %>
@@ -368,7 +368,7 @@
                             <% if (carnival.drawDescription) { %>
                                 <p><%= carnival.drawDescription %></p>
                             <% } %>
-                            <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-success" target="_blank">
+                            <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-light" target="_blank">
                                 <i class="bi bi-download"></i> Download Draw
                                 <% if (carnival.drawFileName) { %>
                                     (<%= carnival.drawFileName %>)
@@ -430,7 +430,7 @@
                         </div>
                         <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                             <div class="text-center mt-4">
-                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-success">
+                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-light">
                                     <i class="bi bi-list-ul"></i> Manage Attendees
                                 </a>
                             </div>
@@ -624,7 +624,7 @@
                                           rows="3" maxlength="500" placeholder="Any special requirements or notes..."></textarea>
                             </div>
                             
-                            <button type="submit" class="btn btn-success w-100">
+                            <button type="submit" class="btn btn-light w-100">
                                 <i class="bi bi-hand-thumbs-up"></i> Register Interest
                             </button>
                         </form>
@@ -834,7 +834,7 @@
                                 <i class="bi bi-x-circle"></i> Registration Closed
                             </button>
                         <% } else { %>
-                            <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-success" target="_blank">
+                            <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-light" target="_blank">
                                 <i class="bi bi-person-plus"></i> Register
                             </a>
                         <% } %>
@@ -884,7 +884,7 @@
                             <!-- Take Ownership button for unclaimed MySideline events -->
                             <% if (canTakeOwnership) { %>
                                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success" 
+                                    <button type="submit" class="btn btn-sm btn-light" 
                                             data-confirm="Are you sure you want to take ownership of this event for your club? This will allow you to manage and edit the event details.">
                                         <i class="bi bi-hand-thumbs-up"></i> Take Ownership
                                     </button>
@@ -911,7 +911,7 @@
                                     </button>
                                 <% } %>
                                 
-                                <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-sm btn-outline-success">
+                                <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-sm btn-outline-light">
                                     <i class="bi bi-pencil"></i> Edit
                                 </a>
                             <% } %>
@@ -978,7 +978,7 @@
                     <i class="bi bi-x-circle"></i> Cancel
                 </button>
                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-light">
                         <i class="bi bi-hand-thumbs-up"></i> Yes, Claim This Event
                     </button>
                 </form>
@@ -1211,7 +1211,7 @@
                         
                         <div class="d-grid gap-2 mb-3">
                             <a href="https://www.playrugbyleague.com/play/masters/host-application-form/" 
-                               class="btn btn-success" target="_blank" rel="noopener noreferrer">
+                               class="btn btn-light" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-box-arrow-up-right me-2"></i>
                                 Register Event with NRL Masters
                             </a>
@@ -1281,7 +1281,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" id="acknowledgeButton" disabled>
+                <button type="button" class="btn btn-light" id="acknowledgeButton" disabled>
                     <i class="bi bi-check-circle me-2"></i>
                     I Understand - Continue
                 </button>

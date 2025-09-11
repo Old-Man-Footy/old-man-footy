@@ -364,38 +364,38 @@ a.btn-outline-secondary:active,
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
 }
 
-a.btn-success,
-.btn-success {
+a.btn-light,
+.btn-light {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
     font-weight: 600;
 }
 
-a.btn-success:hover,
-a.btn-success:focus,
-a.btn-success:active,
-.btn-success:hover,
-.btn-success:focus,
-.btn-success:active {
+a.btn-light:hover,
+a.btn-light:focus,
+a.btn-light:active,
+.btn-light:hover,
+.btn-light:focus,
+.btn-light:active {
     background-color: #e6c200;
     border-color: #e6c200;
     color: var(--rugby-dark-green);
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
-a.btn-outline-success,
-.btn-outline-success {
+a.btn-outline-light,
+.btn-outline-light {
     color: var(--rugby-gold);
     border-color: var(--rugby-gold);
 }
 
-a.btn-outline-success:hover,
-a.btn-outline-success:focus,
-a.btn-outline-success:active,    
-.btn-outline-success:hover,
-.btn-outline-success:focus,
-.btn-outline-success:active {
+a.btn-outline-light:hover,
+a.btn-outline-light:focus,
+a.btn-outline-light:active,    
+.btn-outline-light:hover,
+.btn-outline-light:focus,
+.btn-outline-light:active {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
@@ -1015,25 +1015,25 @@ button[type="submit"]:contains("Complete Registration"):focus {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
-.hero-btn.btn-success {
+.hero-btn.btn-light {
     background: linear-gradient(45deg, var(--rugby-gold), #f0c800);
     border: none;
     color: var(--rugby-dark-green);
 }
 
-.hero-btn.btn-success:hover {
+.hero-btn.btn-light:hover {
     background: linear-gradient(45deg, #f0c800, var(--rugby-gold));
     color: var(--rugby-dark-green);
 }
 
-.hero-btn.btn-outline-success {
+.hero-btn.btn-outline-light {
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid var(--rugby-gold);
     color: var(--rugby-gold);
     backdrop-filter: blur(10px);
 }
 
-.hero-btn.btn-outline-success:hover {
+.hero-btn.btn-outline-light:hover {
     background: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);

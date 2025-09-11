@@ -90,10 +90,10 @@
                                 <label class="btn btn-outline-secondary btn-sm" for="filter-all">All</label>
 
                                 <input type="radio" class="btn-check" name="approvalFilter" id="filter-approved" value="approved">
-                                <label class="btn btn-outline-success btn-sm" for="filter-approved">Approved</label>
+                                <label class="btn btn-outline-light btn-sm" for="filter-approved">Approved</label>
 
                                 <input type="radio" class="btn-check" name="approvalFilter" id="filter-pending" value="pending">
-                                <label class="btn btn-outline-success btn-sm" for="filter-pending">Pending</label>
+                                <label class="btn btn-outline-light btn-sm" for="filter-pending">Pending</label>
 
                                 <input type="radio" class="btn-check" name="approvalFilter" id="filter-rejected" value="rejected">
                                 <label class="btn btn-outline-danger btn-sm" for="filter-rejected">Rejected</label>
@@ -106,7 +106,7 @@
                                 <label class="btn btn-outline-secondary btn-sm" for="payment-all">All</label>
 
                                 <input type="radio" class="btn-check" name="paymentFilter" id="payment-paid" value="paid">
-                                <label class="btn btn-outline-success btn-sm" for="payment-paid">Paid</label>
+                                <label class="btn btn-outline-light btn-sm" for="payment-paid">Paid</label>
 
                                 <input type="radio" class="btn-check" name="paymentFilter" id="payment-unpaid" value="unpaid">
                                 <label class="btn btn-outline-light btn-sm" for="payment-unpaid">Unpaid</label>
@@ -208,7 +208,7 @@
                                                         </div>
                                                         <div class="btn-group carnival-btn-group-sm">
                                                             <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players" 
-                                                               class="btn btn-outline-success btn-sm" title="Manage Players">
+                                                               class="btn btn-outline-light btn-sm" title="Manage Players">
                                                                 <i class="bi bi-people"></i>
                                                             </a>
                                                             <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/edit" 
@@ -259,7 +259,7 @@
                                                         <div class="mt-3 pt-2 border-top">
                                                             <div class="d-flex gap-2">
                                                                 <button type="button" 
-                                                                        class="btn btn-success btn-sm approve-registration"
+                                                                        class="btn btn-light btn-sm approve-registration"
                                                                         data-registration-id="<%= registration.id %>"
                                                                         data-club-name="<%= registration.participatingClub.clubName %>">
                                                                     <i class="bi bi-check-circle"></i> Approve

@@ -148,7 +148,7 @@ describe('clubAddSponsorManager', () => {
     expect(el.sponsorTypeInput.value).toBe('existing');
     expect(el.existingSponsorIdInput.value).toBe('99');
     expect(el.submitText.textContent).toBe('Link Existing Sponsor');
-    expect(el.submitBtn.className).toContain('btn-success');
+    expect(el.submitBtn.className).toContain('btn-light');
   });
 
   it('should handle create new click', () => {
