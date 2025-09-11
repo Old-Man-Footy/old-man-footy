@@ -725,12 +725,35 @@ const showCarnivalClubPlayersHandler = async (req, res) => {
   // Get attendance statistics
   const attendanceStats = await CarnivalClubPlayer.getAttendanceStats(registrationId);
 
+  // Get already assigned player IDs
+  const assignedPlayerIds = await CarnivalClubPlayer.findAll({
+    where: {
+      carnivalClubId: registrationId,
+      isActive: true,
+    },
+    attributes: ['clubPlayerId'],
+  }).then((results) => results.map((r) => r.clubPlayerId));
+
+  // Get available players from the club (for determining if Add Players button should be shown)
+  const availablePlayers = await ClubPlayer.findAll({
+    where: {
+      clubId: registration.participatingClub.id,
+      isActive: true,
+      id: { [Op.notIn]: assignedPlayerIds },
+    },
+    order: [
+      ['firstName', 'ASC'],
+      ['lastName', 'ASC'],
+    ],
+  });
+
   return res.render('carnivals/club-players', {
     title: `Players - ${registration.participatingClub.clubName}`,
     carnival,
     registration,
     assignedPlayers,
     attendanceStats,
+    availablePlayers,
     additionalCSS: ['/styles/carnival.styles.css'],
   });
 };
