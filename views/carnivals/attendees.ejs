@@ -38,6 +38,14 @@
                     </div>
                 </div>
                 <div class="col-md-2">
+                    <div class="card border-0 bg-info">
+                        <div class="card-body text-center">
+                            <div class="display-6 fw-bold"><%= totalTeams %></div>
+                            <small>Total Teams</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
                     <div class="card border-0 bg-primary">
                         <div class="card-body text-center">
                             <div class="display-6 fw-bold"><%= attendanceStats.approved %></div>
@@ -54,18 +62,10 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <div class="card border-0 bg-info">
+                    <div class="card border-0 bg-secondary">
                         <div class="card-body text-center">
                             <div class="display-6 fw-bold"><%= paidAttendees %></div>
                             <small>Paid</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="card border-0 bg-secondary">
-                        <div class="card-body text-center">
-                            <div class="display-6 fw-bold"><%= totalPlayerCount %></div>
-                            <small>Total Players</small>
                         </div>
                     </div>
                 </div>
@@ -224,6 +224,9 @@
                                                                 <strong>Players:</strong> <%= registration.playerCount %>
                                                             </div>
                                                         <% } %>
+                                                        <div class="col-6">
+                                                            <strong>Teams:</strong> <%= registration.numberOfTeams || 1 %>
+                                                        </div>
                                                         <% if (registration.contactPerson) { %>
                                                             <div class="col-6">
                                                                 <strong>Contact:</strong> <%= registration.contactPerson %>
