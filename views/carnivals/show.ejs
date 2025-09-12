@@ -698,9 +698,9 @@
                     <div class="card-header bg-info text-dark">
                         <h5 class="mb-0">
                             <% if (userClubRegistration.approvalStatus === 'approved') { %>
-                                <i class="bi bi-check-circle"></i> Your Club is Registered
+                                <i class="bi bi-check-circle bg-success"></i> Your Club is Registered
                             <% } else if (userClubRegistration.approvalStatus === 'pending') { %>
-                                <i class="bi bi-clock"></i> Interest Registered
+                                <i class="bi bi-clock  bg-warning"></i> Interest Registered
                             <% } else { %>
                                 <i class="bi bi-x-circle"></i> Registration Status
                             <% } %>
@@ -710,11 +710,11 @@
                         <div class="mb-3">
                             <strong>Registration Status:</strong>
                             <% if (userClubRegistration.approvalStatus === 'approved') { %>
-                                <span class="badge bg-primary ms-2">
+                                <span class="badge bg-success ms-2">
                                     <i class="bi bi-check-circle"></i> Approved
                                 </span>
                                 <% if (userClubRegistration.isPaid) { %>
-                                    <span class="badge bg-info text-dark ms-1">Paid</span>
+                                    <span class="badge bg-success text-dark ms-1">Paid</span>
                                 <% } else { %>
                                     <span class="badge bg-warning text-dark ms-1">Payment Pending</span>
                                 <% } %>
@@ -822,9 +822,9 @@
                                 </small>
                             </div>
                         <% } else if (userClubRegistration.approvalStatus === 'approved' && userClubRegistration.isPaid) { %>
-                            <div class="alert alert-info mb-0">
+                            <div class="alert alert-success mb-0">
                                 <small>
-                                    <i class="bi bi-info-circle"></i> 
+                                    <i class="bi bi-success-circle"></i> 
                                     Contact the organiser to make changes after payment.
                                 </small>
                             </div>

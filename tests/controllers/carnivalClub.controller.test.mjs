@@ -340,8 +340,9 @@ describe('Carnival Club Controller', () => {
     it('should display carnival attendees for authorized carnival organizer', async () => {
       const mockCarnival = createMockCarnival({ id: 1, createdByUserId: 1 });
       const mockAttendingClubs = [
-        createMockCarnivalClub({ id: 1, isPaid: true, playerCount: 15 }),
-        createMockCarnivalClub({ id: 2, isPaid: false, playerCount: 12 })
+        createMockCarnivalClub({ id: 1, isPaid: true, playerCount: 15, approvalStatus: 'approved', numberOfTeams: 2 }),
+        createMockCarnivalClub({ id: 2, isPaid: false, playerCount: 12, approvalStatus: 'pending', numberOfTeams: 1 }),
+        createMockCarnivalClub({ id: 3, isPaid: false, playerCount: 8, approvalStatus: 'approved', numberOfTeams: 1 })
       ];
 
       Carnival.findOne.mockResolvedValue(mockCarnival);
@@ -361,9 +362,10 @@ describe('Carnival Club Controller', () => {
         title: 'Test Carnival - Manage Attendees',
         carnival: mockCarnival,
         attendingClubs: mockAttendingClubs,
-        totalAttendees: 2,
+        totalAttendees: 3,
         paidAttendees: 1,
-        totalPlayerCount: 27
+        totalPlayerCount: 35,
+        totalTeams: 3 // Only approved teams: 2 + 1 = 3 (pending team not counted)
       }));
     });
 

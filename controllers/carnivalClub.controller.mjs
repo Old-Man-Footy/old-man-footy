@@ -86,7 +86,9 @@ const showCarnivalAttendeesHandler = async (req, res) => {
   const totalAttendees = attendingClubs.length;
   const paidAttendees = attendingClubs.filter((cc) => cc.isPaid).length;
   const totalPlayerCount = attendingClubs.reduce((sum, cc) => sum + (cc.playerCount || 0), 0);
-  const totalTeams = attendingClubs.reduce((sum, cc) => sum + (cc.numberOfTeams || 1), 0);
+  const totalTeams = attendingClubs
+    .filter((cc) => cc.approvalStatus === 'approved')
+    .reduce((sum, cc) => sum + (cc.numberOfTeams || 1), 0);
 
   return res.render('carnivals/attendees', {
     title: `${carnival.title} - Manage Attendees`,
