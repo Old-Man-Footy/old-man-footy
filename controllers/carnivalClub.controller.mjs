@@ -17,17 +17,83 @@ import { APPROVAL_STATUS } from '../config/constants.mjs';
  * Calculate total registration fees for a carnival registration
  * @param {Object} carnival - Carnival instance with fee fields
  * @param {number} numberOfTeams - Number of teams registering
- * @param {number} playerCount - Number of players (optional)
+ * @param {number} confirmedPlayerCount - Number of confirmed players (optional)
  * @returns {number} Total calculated fee
  */
-const calculateRegistrationFees = (carnival, numberOfTeams = 1, playerCount = 0) => {
+const calculateRegistrationFees = (carnival, numberOfTeams = 1, confirmedPlayerCount = 0) => {
   const teamFee = parseFloat(carnival.teamRegistrationFee) || 0;
   const perPlayerFee = parseFloat(carnival.perPlayerFee) || 0;
   
   const totalTeamFees = teamFee * numberOfTeams;
-  const totalPlayerFees = perPlayerFee * playerCount;
+  const totalPlayerFees = perPlayerFee * confirmedPlayerCount;
   
   return totalTeamFees + totalPlayerFees;
+};
+
+/**
+ * Get count of confirmed players for a carnival club registration
+ * @param {number} carnivalClubId - The carnival club registration ID
+ * @returns {Promise<number>} Number of confirmed players
+ */
+const getConfirmedPlayerCount = async (carnivalClubId) => {
+  const confirmedCount = await CarnivalClubPlayer.count({
+    where: {
+      carnivalClubId: carnivalClubId,
+      attendanceStatus: 'confirmed',
+      isActive: true
+    }
+  });
+  
+  return confirmedCount;
+};
+
+/**
+ * Recalculate and update registration fees for a carnival club registration
+ * @param {number} carnivalClubId - The carnival club registration ID
+ * @returns {Promise<void>}
+ */
+const recalculateRegistrationFees = async (carnivalClubId) => {
+  // Get the registration
+  const registration = await CarnivalClub.findByPk(carnivalClubId, {
+    include: [{
+      model: Carnival,
+      as: 'carnival',
+      attributes: ['id', 'teamRegistrationFee', 'perPlayerFee', 'clubId']
+    }]
+  });
+  
+  if (!registration || !registration.carnival) {
+    return;
+  }
+  
+  // Skip fee calculation for hosting clubs (they have exemption)
+  const isHostingClub = registration.carnival.clubId && 
+                       parseInt(registration.clubId) === registration.carnival.clubId;
+  
+  if (isHostingClub) {
+    // Hosting club fees are always 0
+    await registration.update({
+      paymentAmount: 0.00,
+      isPaid: true,
+      paymentDate: registration.isPaid ? registration.paymentDate : new Date()
+    });
+    return;
+  }
+  
+  // Get confirmed player count
+  const confirmedPlayerCount = await getConfirmedPlayerCount(carnivalClubId);
+  
+  // Calculate new fee based on confirmed players only
+  const newPaymentAmount = calculateRegistrationFees(
+    registration.carnival, 
+    registration.numberOfTeams || 1, 
+    confirmedPlayerCount
+  );
+  
+  // Update the registration with new payment amount
+  await registration.update({
+    paymentAmount: newPaymentAmount
+  });
 };
 
 /**
@@ -244,6 +310,7 @@ const registerClubForCarnivalHandler = async (req, res) => {
     finalIsPaid = true; // Auto-mark as paid since there's no fee
   } else if (!finalPaymentAmount) {
     // If no payment amount provided, calculate based on carnival fee structure
+    // Note: For new registrations, use total player count as no confirmed players exist yet
     const teamsCount = numberOfTeams ? parseInt(numberOfTeams) : 1;
     const playersCount = playerCount ? parseInt(playerCount) : 0;
     finalPaymentAmount = calculateRegistrationFees(carnival, teamsCount, playersCount);
@@ -615,6 +682,7 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     finalApprovalStatus = 'approved'; // Hosting club auto-approves their own registration
   } else {
     // Calculate fees for non-hosting clubs based on carnival fee structure
+    // Note: For new registrations, use total player count as no confirmed players exist yet
     const teamsCount = numberOfTeams ? parseInt(numberOfTeams) : 1;
     const playersCount = playerCount ? parseInt(playerCount) : 0;
     finalPaymentAmount = calculateRegistrationFees(carnival, teamsCount, playersCount);
@@ -1089,6 +1157,9 @@ const updatePlayerAttendanceStatusHandler = async (req, res) => {
     attendanceStatus: attendanceStatus,
     notes: notes?.trim() || null,
   });
+
+  // Recalculate fees if player status changed to/from confirmed
+  await recalculateRegistrationFees(registrationId);
 
   return res.json({
     success: true,
@@ -1686,3 +1757,6 @@ export const {
   rejectClubRegistrationHandler: rejectClubRegistration,
   updateApprovalStatus: updateApprovalStatus,
 } = wrapControllers(rawControllers);
+
+// Export utility functions for use by other controllers and tests
+export { recalculateRegistrationFees, calculateRegistrationFees, getConfirmedPlayerCount };

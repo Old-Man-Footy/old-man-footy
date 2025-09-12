@@ -206,13 +206,7 @@
                         <!-- Additional Information -->
                         <div class="mb-4">
                             <h5 class="text-primary mb-3">Additional Information</h5>
-                            
-                            <div class="mb-3">
-                                <label for="feesDescription" class="form-label">Fees Description</label>
-                                <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
-                                          placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
-                            </div>
-
+                           
                             <div class="mb-3">
                                 <label for="callForVolunteers" class="form-label">Call for Volunteers</label>
                                 <textarea class="form-control" id="callForVolunteers" name="callForVolunteers" rows="2" 
@@ -291,7 +285,7 @@
                             </div>
                             
                             <!-- Fee Structure -->
-                            <div class="row mb-3">
+                            <div class="row mb-3">                                 
                                 <div class="col-12">
                                     <h6 class="text-secondary mb-3">
                                         <i class="bi bi-currency-dollar"></i> Fee Structure
@@ -302,8 +296,8 @@
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
                                         <input type="number" class="form-control" id="teamRegistrationFee" name="teamRegistrationFee" 
-                                               value="<%= carnival.teamRegistrationFee || '' %>" 
-                                               step="0.01" min="0" placeholder="0.00">
+                                        value="<%= carnival.teamRegistrationFee || '' %>" 
+                                        step="0.01" min="0" placeholder="0.00">
                                     </div>
                                     <div class="form-text">Fee charged per team registration</div>
                                 </div>
@@ -312,10 +306,15 @@
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
                                         <input type="number" class="form-control" id="perPlayerFee" name="perPlayerFee" 
-                                               value="<%= carnival.perPlayerFee || '' %>" 
-                                               step="0.01" min="0" placeholder="0.00">
+                                        value="<%= carnival.perPlayerFee || '' %>" 
+                                        step="0.01" min="0" placeholder="0.00">
                                     </div>
                                     <div class="form-text">Fee charged per registered player</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="feesDescription" class="form-label">Fees Description</label>
+                                    <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
+                                                placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
                                 </div>
                             </div>
                             

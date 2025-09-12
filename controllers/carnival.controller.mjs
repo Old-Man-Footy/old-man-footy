@@ -18,6 +18,9 @@ import {
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+
+// Import recalculation function from carnivalClub controller
+import { recalculateRegistrationFees } from './carnivalClub.controller.mjs';
 import mySidelineService from '../services/mySidelineIntegrationService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
@@ -939,7 +942,39 @@ const updateCarnivalHandler = async (req, res) => {
     }
   }
 
+  // Check if fee structure changed before updating
+  const oldTeamFee = parseFloat(carnival.teamRegistrationFee) || 0;
+  const oldPerPlayerFee = parseFloat(carnival.perPlayerFee) || 0;
+  const newTeamFee = parseFloat(updateData.teamRegistrationFee) || 0;
+  const newPerPlayerFee = parseFloat(updateData.perPlayerFee) || 0;
+  
+  const feeStructureChanged = (oldTeamFee !== newTeamFee) || (oldPerPlayerFee !== newPerPlayerFee);
+
   await carnival.update(updateData);
+
+  // If fee structure changed, recalculate fees for all existing registrations
+  if (feeStructureChanged) {
+    const registrations = await CarnivalClub.findAll({
+      where: {
+        carnivalId: carnival.id,
+        isActive: true
+      },
+      attributes: ['id']
+    });
+
+    // Recalculate fees for each registration
+    for (const registration of registrations) {
+      try {
+        await recalculateRegistrationFees(registration.id);
+      } catch (error) {
+        console.error(`Failed to recalculate fees for registration ${registration.id}:`, error);
+      }
+    }
+    
+    if (registrations.length > 0) {
+      req.flash('info_msg', `Fee structure updated. Registration fees have been automatically recalculated for ${registrations.length} existing registration(s).`);
+    }
+  }
 
   req.flash('success_msg', 'Carnival updated successfully!');
   return res.redirect(`/carnivals/${carnival.id}`);
