@@ -105,7 +105,7 @@ export const adminEditClubManager = {
 
     /**
      * Prevents default browser behavior for drag events.
-     * @param {DragEvent} e - The drag carnival.
+     * @param {DragCarnival} e - The drag carnival.
      */
     preventDefaults(e) {
         e.preventDefault();
@@ -128,7 +128,7 @@ export const adminEditClubManager = {
 
     /**
      * Handles the file drop carnival.
-     * @param {DragEvent} e - The drop carnival.
+     * @param {DragCarnival} e - The drop carnival.
      */
     handleDrop(e) {
         const files = e.dataTransfer.files;

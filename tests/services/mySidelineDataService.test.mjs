@@ -39,13 +39,13 @@ describe('MySidelineDataService', () => {
         vi.clearAllMocks();
     });
 
-    describe('findExistingMySidelineEvent', () => {
+    describe('findExistingMySidelineCarnival', () => {
         it('should find an carnival by mySidelineId first', async () => {
             const eventData = { mySidelineId: '123', title: 'Test Carnival' };
             const mockCarnival = { id: 1, ...eventData };
             Carnival.findOne.mockResolvedValue(mockCarnival);
 
-            const result = await service.findExistingMySidelineEvent(eventData);
+            const result = await service.findExistingMySidelineCarnival(eventData);
 
             expect(Carnival.findOne).toHaveBeenCalledWith({ where: { mySidelineId: '123' } });
             expect(result).toEqual(mockCarnival);
@@ -56,7 +56,7 @@ describe('MySidelineDataService', () => {
             const mockCarnival = { id: 2, ...eventData };
             Carnival.findOne.mockResolvedValue(mockCarnival);
 
-            const result = await service.findExistingMySidelineEvent(eventData);
+            const result = await service.findExistingMySidelineCarnival(eventData);
 
             expect(Carnival.findOne).toHaveBeenCalledWith({
                 where: {
@@ -74,7 +74,7 @@ describe('MySidelineDataService', () => {
             // First two findOne calls find nothing
             Carnival.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null).mockResolvedValueOnce(mockCarnival);
 
-            const result = await service.findExistingMySidelineEvent(eventData);
+            const result = await service.findExistingMySidelineCarnival(eventData);
 
             expect(Carnival.findOne).toHaveBeenCalledTimes(3);
             expect(Carnival.findOne).toHaveBeenLastCalledWith({
@@ -91,21 +91,21 @@ describe('MySidelineDataService', () => {
             const eventData = { title: 'Non-existent Carnival', date: new Date() };
             Carnival.findOne.mockResolvedValue(null);
 
-            const result = await service.findExistingMySidelineEvent(eventData);
+            const result = await service.findExistingMySidelineCarnival(eventData);
 
             expect(result).toBeNull();
             expect(Carnival.findOne).toHaveBeenCalled();
         });
     });
 
-    describe('processScrapedEvents', () => {
+    describe('processScrapedCarnivals', () => {
         it('should create a new carnival if it does not exist', async () => {
-            const scrapedEvents = [{ title: 'New Carnival', date: new Date() }];
+            const scrapedCarnivals = [{ title: 'New Carnival', date: new Date() }];
             Carnival.findOne.mockResolvedValue(null); // No existing carnival
-            const createdEvent = { id: 1, ...scrapedEvents[0], isRegistrationOpen: false };
-            Carnival.create.mockResolvedValue(createdEvent);
+            const createdCarnival = { id: 1, ...scrapedCarnivals[0], isRegistrationOpen: false };
+            Carnival.create.mockResolvedValue(createdCarnival);
 
-            const result = await service.processScrapedEvents(scrapedEvents);
+            const result = await service.processScrapedCarnivals(scrapedCarnivals);
 
             expect(Carnival.create).toHaveBeenCalled();
             expect(result.length).toBe(1);
@@ -113,40 +113,40 @@ describe('MySidelineDataService', () => {
         });
 
         it('should update an existing carnival with new information in empty fields', async () => {
-            const existingEvent = {
+            const existingCarnival = {
                 id: 1,
                 title: 'Existing Carnival',
                 mySidelineId: '123',
                 locationAddress: null, // Field to be updated
                 update: vi.fn().mockResolvedValue(this),
             };
-            const scrapedEvents = [{ mySidelineId: '123', title: 'Existing Carnival', locationAddress: 'New Address' }];
+            const scrapedCarnivals = [{ mySidelineId: '123', title: 'Existing Carnival', locationAddress: 'New Address' }];
 
-            Carnival.findOne.mockResolvedValue(existingEvent);
+            Carnival.findOne.mockResolvedValue(existingCarnival);
 
-            await service.processScrapedEvents(scrapedEvents);
+            await service.processScrapedCarnivals(scrapedCarnivals);
 
-            expect(existingEvent.update).toHaveBeenCalledWith(expect.objectContaining({
+            expect(existingCarnival.update).toHaveBeenCalledWith(expect.objectContaining({
                 locationAddress: 'New Address',
             }));
         });
 
         it('should only update lastMySidelineSync if no other fields need updating', async () => {
-            const existingEvent = {
+            const existingCarnival = {
                 id: 1,
                 title: 'Fully Populated Carnival',
                 mySidelineId: '456',
                 locationAddress: 'Some Address',
                 update: vi.fn().mockResolvedValue(this),
             };
-            const scrapedEvents = [{ mySidelineId: '456', title: 'Fully Populated Carnival', locationAddress: 'Some Address' }];
+            const scrapedCarnivals = [{ mySidelineId: '456', title: 'Fully Populated Carnival', locationAddress: 'Some Address' }];
 
-            Carnival.findOne.mockResolvedValue(existingEvent);
+            Carnival.findOne.mockResolvedValue(existingCarnival);
 
-            await service.processScrapedEvents(scrapedEvents);
+            await service.processScrapedCarnivals(scrapedCarnivals);
 
             // The update call should only contain lastMySidelineSync
-            const updateCallArg = existingEvent.update.mock.calls[0][0];
+            const updateCallArg = existingCarnival.update.mock.calls[0][0];
             expect(Object.keys(updateCallArg)).toEqual(['lastMySidelineSync']);
             expect(updateCallArg.lastMySidelineSync).toBeInstanceOf(Date);
         });

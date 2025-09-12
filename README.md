@@ -219,7 +219,7 @@ npm run test:coverage
 │   ├── emailService.mjs                        # Email notification service
 │   ├── imageNamingService.mjs                  # Image file naming utilities
 │   ├── mySidelineDataService.mjs               # MySideline data processing
-│   ├── mySidelineEventParserService.mjs        # Carnival parsing
+│   ├── mySidelineCarnivalParserService.mjs        # Carnival parsing
 │   ├── mySidelineIntegrationService.mjs        # Main integration service
 │   ├── mySidelineLogoDownloadService.mjs       # Logo downloading
 │   ├── mySidelineScraperService.mjs            # Web scraping service
@@ -295,16 +295,16 @@ npm run test:coverage
 
 1. **Register an Account:** Sign up with your club details
 2. **Create Carnivals:** Add new carnivals with complete information
-3. **Manage Events:** Edit, update, or delete your carnivals
+3. **Manage Carnivals:** Edit, update, or delete your carnivals
 4. **Player Management:** Add and manage club players
 5. **Upload Files:** Add club logos, promotional images, and draw files
-6. **Claim MySideline Events:** Take ownership of imported events
+6. **Claim MySideline Carnivals:** Take ownership of imported events
 7. **Sponsor Management:** Add and manage carnival/club sponsors
 
 ### For Players and Fans
 
 1. **Browse Carnivals:** View all upcoming events with detailed information
-2. **Filter Events:** Search by state, location, or keywords
+2. **Filter Carnivals:** Search by state, location, or keywords
 3. **Subscribe to Updates:** Get email notifications for specific states
 4. **View Details:** Access complete carnival information and contact details
 5. **Club Information:** Browse club details and player rosters

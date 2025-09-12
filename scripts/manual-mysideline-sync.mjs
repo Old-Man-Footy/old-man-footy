@@ -94,16 +94,16 @@ async function main() {
         console.log('🚀 Starting sync operation...\n');
         
         // Trigger the sync
-        const result = await mySidelineService.syncMySidelineEvents();
+        const result = await mySidelineService.syncMySidelineCarnivals();
         
         console.log('\n' + '='.repeat(50));
         console.log('📊 Sync Results:');
         
         if (result && result.success) {
             console.log(`✅ Sync completed successfully!`);
-            console.log(`   Events Processed: ${result.eventsProcessed || 0}`);
-            console.log(`   Events Created: ${result.eventsCreated || 0}`);
-            console.log(`   Events Updated: ${result.eventsUpdated || 0}`);
+            console.log(`   Carnivals Processed: ${result.eventsProcessed || 0}`);
+            console.log(`   Carnivals Created: ${result.eventsCreated || 0}`);
+            console.log(`   Carnivals Updated: ${result.eventsUpdated || 0}`);
             console.log(`   Last Sync: ${result.lastSync || 'Now'}`);           
         } else if (result && !result.success) {
             console.log(`❌ Sync failed: ${result.error || 'Unknown error'}`);

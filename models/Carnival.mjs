@@ -106,7 +106,7 @@ class Carnival extends Model {
    * Check if this is a MySideline imported carnival
    * @returns {boolean} MySideline carnival status
    */
-  get isMySidelineEvent() {
+  get isMySidelineCarnival() {
     return !this.isManuallyEntered;
   }
 
@@ -284,7 +284,7 @@ class Carnival extends Model {
    * Find MySideline imported events
    * @returns {Promise<Array>} Array of MySideline events
    */
-  static async findMySidelineEvents() {
+  static async findMySidelineCarnivals() {
     return await this.findAll({
       where: {
         isActive: true,

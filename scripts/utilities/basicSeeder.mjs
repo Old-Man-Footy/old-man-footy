@@ -225,10 +225,10 @@ class BasicSeeder {
             
             for (const state of states) {
                 try {
-                    const stateEvents = await MySidelineService.getEventsForState(state);
-                    console.log(`Found ${stateEvents.length} events for ${state}`);
+                    const stateCarnivals = await MySidelineService.getCarnivalsForState(state);
+                    console.log(`Found ${stateCarnivals.length} events for ${state}`);
                     
-                    for (const carnival of stateEvents) {
+                    for (const carnival of stateCarnivals) {
                         try {
                             const carnival = await Carnival.create({
                                 ...carnival,

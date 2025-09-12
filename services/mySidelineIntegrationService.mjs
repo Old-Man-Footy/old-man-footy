@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import MySidelineScraperService from './mySidelineScraperService.mjs';
-import MySidelineEventParserService from './mySidelineEventParserService.mjs';
+import MySidelineCarnivalParserService from './mySidelineCarnivalParserService.mjs';
 import MySidelineDataService from './mySidelineDataService.mjs';
 import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
 import ImageNamingService from './imageNamingService.mjs';
@@ -14,7 +14,7 @@ import { Carnival, SyncLog } from '../models/index.mjs';
 class MySidelineIntegrationService {
     constructor() {
         this.scraperService = new MySidelineScraperService();
-        this.parserService = new MySidelineEventParserService();
+        this.parserService = new MySidelineCarnivalParserService();
         this.dataService = new MySidelineDataService();
         this.logoDownloadService = new MySidelineLogoDownloadService();
         
@@ -36,7 +36,7 @@ class MySidelineIntegrationService {
         // Run every day at 3 AM
         cron.schedule('0 3 * * *', async () => {
             console.log('Starting scheduled MySideline sync...');
-            await this.syncMySidelineEvents();
+            await this.syncMySidelineCarnivals();
         });
 
         // Also run on startup if needed - with delay to ensure DB is ready
@@ -57,7 +57,7 @@ class MySidelineIntegrationService {
                 try {
                     const shouldSync = await this.dataService.shouldRunInitialSync();
                     if (shouldSync) {
-                        await this.syncMySidelineEvents();
+                        await this.syncMySidelineCarnivals();
                     }
                     return; // Success, exit retry loop
                 } catch (dbError) {
@@ -80,7 +80,7 @@ class MySidelineIntegrationService {
     /**
      * Main sync function - orchestrates the entire process with proper sync logging
      */
-    async syncMySidelineEvents() {
+    async syncMySidelineCarnivals() {
         if (!this.syncEnabled) {
             console.log('MySideline sync is disabled via MYSIDELINE_SYNC_ENABLED configuration');
             return {
@@ -114,9 +114,9 @@ class MySidelineIntegrationService {
             }
 
             // Step 1: Scrape events using the scraper service
-            const scrapedEvents = await this.scraperService.scrapeEvents();
+            const scrapedCarnivals = await this.scraperService.scrapeCarnivals();
             
-            if (!scrapedEvents || scrapedEvents.length === 0) {
+            if (!scrapedCarnivals || scrapedCarnivals.length === 0) {
                 console.log('No events found from MySideline scraper');
                 
                 // Mark sync as completed even when no events found - this prevents endless retries
@@ -135,7 +135,7 @@ class MySidelineIntegrationService {
 
             // Step 1.5: Validate and clean the scraped data
             console.log('Validating and cleaning scraped carnival data...');
-            const cleanedEvents = scrapedEvents.map(carnival => {
+            const cleanedCarnivals = scrapedCarnivals.map(carnival => {
                 try {
                     return this.scraperService.validateAndCleanData(carnival);
                 } catch (validationError) {
@@ -144,9 +144,9 @@ class MySidelineIntegrationService {
                 }
             }).filter(carnival => carnival !== null); // Remove failed validations
 
-            console.log(`${cleanedEvents.length}/${scrapedEvents.length} events passed validation`);
+            console.log(`${cleanedCarnivals.length}/${scrapedCarnivals.length} events passed validation`);
 
-            if (cleanedEvents.length === 0) {
+            if (cleanedCarnivals.length === 0) {
                 console.log('No events passed validation checks');
                 
                 // Mark sync as completed even when no events pass validation
@@ -164,16 +164,16 @@ class MySidelineIntegrationService {
             }
 
             // Step 2: Process validated events using the data service
-            const processedEvents = await this.dataService.processScrapedEvents(cleanedEvents);
+            const processedCarnivals = await this.dataService.processScrapedCarnivals(cleanedCarnivals);
             
             // Count new vs updated events for logging
-            const eventsCreated = processedEvents.filter(carnival => 
+            const eventsCreated = processedCarnivals.filter(carnival => 
                 carnival.createdAt && new Date(carnival.createdAt) > new Date(Date.now() - 60000) // Created in last minute
             ).length;
-            const eventsUpdated = processedEvents.length - eventsCreated;
+            const eventsUpdated = processedCarnivals.length - eventsCreated;
             
             // For each processed carnival where clubImageUrl starts with http
-            const imageDownloadPromises = processedEvents
+            const imageDownloadPromises = processedCarnivals
                 .filter(carnival => carnival.clubLogoURL 
                     && carnival.clubLogoURL.startsWith('http')).map(carnival => {
                         const logoUrl = carnival.clubLogoURL;
@@ -194,7 +194,7 @@ class MySidelineIntegrationService {
                 console.log(`Downloaded logos for ${results.length} events.`);
                 results.forEach(async result => {
                     // Update the carnival with the public URL
-                    const carnival = processedEvents.find(e => e.id === result.entityId);
+                    const carnival = processedCarnivals.find(e => e.id === result.entityId);
                     if (result.success) {
                         console.log(`Logo downloaded successfully for carnival ${result.entityId}: ${result.publicUrl}`);
                         if (carnival) {
@@ -227,19 +227,19 @@ class MySidelineIntegrationService {
                 })
             };
 
-            console.log(`MySideline sync completed. Processed ${processedEvents.length} events (${eventsCreated} new, ${eventsUpdated} updated).`);
+            console.log(`MySideline sync completed. Processed ${processedCarnivals.length} events (${eventsCreated} new, ${eventsUpdated} updated).`);
             this.lastSyncDate = new Date();
             
             // Mark sync as completed with detailed results
             await syncLog.markCompleted({
-                eventsProcessed: processedEvents.length,
+                eventsProcessed: processedCarnivals.length,
                 eventsCreated: eventsCreated,
                 eventsUpdated: eventsUpdated
             });
             
             return {
                 success: true,
-                eventsProcessed: processedEvents.length,
+                eventsProcessed: processedCarnivals.length,
                 eventsCreated: eventsCreated,
                 eventsUpdated: eventsUpdated,
                 lastSync: this.lastSyncDate
@@ -262,10 +262,10 @@ class MySidelineIntegrationService {
     /**
      * Public method for manual sync (called from admin panel)
      */
-    async fetchEvents() {
+    async fetchCarnivals() {
         try {
             console.log('Starting manual MySideline carnival sync...');
-            const result = await this.syncMySidelineEvents();
+            const result = await this.syncMySidelineCarnivals();
             
             if (result && result.success) {
                 console.log(`Manual MySideline sync completed successfully. Found ${result.eventsProcessed} events.`);
@@ -300,7 +300,7 @@ class MySidelineIntegrationService {
             syncEnabled: this.syncEnabled,
             services: {
                 scraper: 'MySidelineScraperService',
-                parser: 'MySidelineEventParserService',
+                parser: 'MySidelineCarnivalParserService',
                 data: 'MySidelineDataService'
             }
         };

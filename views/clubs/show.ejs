@@ -54,7 +54,7 @@
                                     <div class="col-4">
                                         <div class="stat-item">
                                             <h4 class="text-success"><%= upcomingCarnivals %></h4>
-                                            <p class="text-muted mb-0 small">Upcoming Events</p>
+                                            <p class="text-muted mb-0 small">Upcoming Carnivals</p>
                                         </div>
                                     </div>
                                     <div class="col-4">
@@ -98,26 +98,26 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" 
                                         data-bs-target="#upcoming" type="button" role="tab">
-                                    Upcoming Events (<%= upcomingCarnivals %>)
+                                    Upcoming Carnivals (<%= upcomingCarnivals %>)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="past-tab" data-bs-toggle="tab" 
                                         data-bs-target="#past" type="button" role="tab">
-                                    Past Events (<%= clubCarnivals.length - upcomingCarnivals %>)
+                                    Past Carnivals (<%= clubCarnivals.length - upcomingCarnivals %>)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="all-tab" data-bs-toggle="tab" 
                                         data-bs-target="#all" type="button" role="tab">
-                                    All Events (<%= clubCarnivals.length %>)
+                                    All Carnivals (<%= clubCarnivals.length %>)
                                 </button>
                             </li>
                         </ul>
 
                         <!-- Tab Content -->
                         <div class="tab-content" id="carnivalTabContent">
-                            <!-- Upcoming Events -->
+                            <!-- Upcoming Carnivals -->
                             <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
                                 <% 
                                 const upcoming = clubCarnivals.filter(carnival => 
@@ -181,7 +181,7 @@
                                 <% } %>
                             </div>
 
-                            <!-- Past Events -->
+                            <!-- Past Carnivals -->
                             <div class="tab-pane fade" id="past" role="tabpanel">
                                 <% 
                                 const past = clubCarnivals.filter(carnival => 
@@ -239,7 +239,7 @@
                                 <% } %>
                             </div>
 
-                            <!-- All Events -->
+                            <!-- All Carnivals -->
                             <div class="tab-pane fade" id="all" role="tabpanel">
                                 <div class="row">
                                     <% clubCarnivals.forEach(carnival => { %>
@@ -324,26 +324,26 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="upcoming-attending-tab" data-bs-toggle="tab" 
                                         data-bs-target="#upcoming-attending" type="button" role="tab">
-                                    Upcoming Events (<%= upcomingAttendingCarnivals %>)
+                                    Upcoming Carnivals (<%= upcomingAttendingCarnivals %>)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="past-attending-tab" data-bs-toggle="tab" 
                                         data-bs-target="#past-attending" type="button" role="tab">
-                                    Past Events (<%= attendingCarnivals.length - upcomingAttendingCarnivals %>)
+                                    Past Carnivals (<%= attendingCarnivals.length - upcomingAttendingCarnivals %>)
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="all-attending-tab" data-bs-toggle="tab" 
                                         data-bs-target="#all-attending" type="button" role="tab">
-                                    All Events (<%= attendingCarnivals.length %>)
+                                    All Carnivals (<%= attendingCarnivals.length %>)
                                 </button>
                             </li>
                         </ul>
 
                         <!-- Tab Content -->
                         <div class="tab-content" id="attendingCarnivalTabContent">
-                            <!-- Upcoming Attending Events -->
+                            <!-- Upcoming Attending Carnivals -->
                             <div class="tab-pane fade show active" id="upcoming-attending" role="tabpanel">
                                 <% 
                                 const upcomingAttending = attendingCarnivals.filter(carnival => 
@@ -413,7 +413,7 @@
                                 <% } %>
                             </div>
 
-                            <!-- Past Attending Events -->
+                            <!-- Past Attending Carnivals -->
                             <div class="tab-pane fade" id="past-attending" role="tabpanel">
                                 <% 
                                 const pastAttending = attendingCarnivals.filter(carnival => 
@@ -477,7 +477,7 @@
                                 <% } %>
                             </div>
 
-                            <!-- All Attending Events -->
+                            <!-- All Attending Carnivals -->
                             <div class="tab-pane fade" id="all-attending" role="tabpanel">
                                 <div class="row">
                                     <% attendingCarnivals.forEach(carnival => { %>

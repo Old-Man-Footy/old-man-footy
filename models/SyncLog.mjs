@@ -112,9 +112,9 @@ class SyncLog extends Model {
       totalSyncs: syncs.length,
       successfulSyncs: syncs.filter(s => s.status === 'completed').length,
       failedSyncs: syncs.filter(s => s.status === 'failed').length,
-      totalEventsProcessed: syncs.reduce((sum, s) => sum + (s.eventsProcessed || 0), 0),
-      totalEventsCreated: syncs.reduce((sum, s) => sum + (s.eventsCreated || 0), 0),
-      totalEventsUpdated: syncs.reduce((sum, s) => sum + (s.eventsUpdated || 0), 0),
+      totalCarnivalsProcessed: syncs.reduce((sum, s) => sum + (s.eventsProcessed || 0), 0),
+      totalCarnivalsCreated: syncs.reduce((sum, s) => sum + (s.eventsCreated || 0), 0),
+      totalCarnivalsUpdated: syncs.reduce((sum, s) => sum + (s.eventsUpdated || 0), 0),
       lastSuccessfulSync: syncs.find(s => s.status === 'completed')?.completedAt || null,
       lastFailedSync: syncs.find(s => s.status === 'failed')?.completedAt || null
     };

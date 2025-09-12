@@ -181,7 +181,7 @@ vi.mock('/models/index.mjs', () => {
 // Mock services
 vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   default: {
-    syncEvents: vi.fn().mockResolvedValue({ newEvents: 5 })
+    syncCarnivals: vi.fn().mockResolvedValue({ newCarnivals: 5 })
   }
 }));
 
@@ -212,7 +212,7 @@ import {
   removeSponsorFromCarnival,
   sendEmailToAttendees,
   showAllPlayers,
-  createOrMergeEvent
+  createOrMergeCarnival
 } from '../../controllers/carnival.controller.mjs';
 
 import {
@@ -288,7 +288,7 @@ describe('Carnival Controller', () => {
 
     // Mock services
     sortSponsorsHierarchically.mockReturnValue([]);
-    mySidelineService.syncEvents.mockResolvedValue({ newEvents: 5 });
+    mySidelineService.syncCarnivals.mockResolvedValue({ newCarnivals: 5 });
   });
 
   afterEach(() => {
@@ -817,7 +817,7 @@ describe('Carnival Controller', () => {
 
       await syncMySideline(req, res);
 
-      expect(mySidelineService.syncEvents).toHaveBeenCalled();
+      expect(mySidelineService.syncCarnivals).toHaveBeenCalled();
       expect(req.flash).toHaveBeenCalledWith(
         'success_msg',
         'MySideline sync completed. 5 new events imported.'
@@ -904,7 +904,7 @@ describe('Carnival Controller', () => {
       Carnival.findOne.mockResolvedValue(null);
       Carnival.create.mockResolvedValue(createMockCarnival(carnivalData));
 
-      const result = await createOrMergeEvent(carnivalData, 1);
+      const result = await createOrMergeCarnival(carnivalData, 1);
 
       expect(Carnival.create).toHaveBeenCalledWith(expect.objectContaining({
         ...carnivalData,
@@ -927,7 +927,7 @@ describe('Carnival Controller', () => {
 
       Carnival.findOne.mockResolvedValue(existingCarnival);
 
-      const result = await createOrMergeEvent(carnivalData, 1);
+      const result = await createOrMergeCarnival(carnivalData, 1);
 
       expect(existingCarnival.update).toHaveBeenCalledWith(expect.objectContaining({
         ...carnivalData,
@@ -951,7 +951,7 @@ describe('Carnival Controller', () => {
 
       Carnival.findOne.mockResolvedValue(existingCarnival);
 
-      await expect(createOrMergeEvent(carnivalData, 1)).rejects.toThrow(
+      await expect(createOrMergeCarnival(carnivalData, 1)).rejects.toThrow(
         'A similar manually created carnival already exists for this date'
       );
     });
@@ -1042,8 +1042,8 @@ describe('Carnival Controller', () => {
       }));
     });
 
-    it('should handle missing required data in createOrMergeEvent', async () => {
-      await expect(createOrMergeEvent({}, 1)).rejects.toThrow(
+    it('should handle missing required data in createOrMergeCarnival', async () => {
+      await expect(createOrMergeCarnival({}, 1)).rejects.toThrow(
         'Carnival title and date are required for duplicate detection.'
       );
     });

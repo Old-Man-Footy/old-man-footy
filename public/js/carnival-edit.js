@@ -13,7 +13,7 @@ export const carnivalEditManager = {
         this.cacheDOMElements();
         this.initializePageStyling();
         this.initializeFileUploads();
-        this.initializeMultiDayEventFunctionality();
+        this.initializeMultiDayCarnivalFunctionality();
         this.initializeMySidelineIntegration();
     },
 
@@ -74,7 +74,7 @@ export const carnivalEditManager = {
     },
 
     // Sets up carnival listeners and logic for multi-day events.
-    initializeMultiDayEventFunctionality() {
+    initializeMultiDayCarnivalFunctionality() {
         const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
         if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;
 
@@ -195,7 +195,7 @@ export const carnivalEditManager = {
     // Generates a MySideline URL from an carnival ID.
     generateMySidelineUrl(eventId) {
         const { form } = this.elements;
-        const mySidelineBaseUrl = form ? form.dataset.mysidelineEventUrl : '';
+        const mySidelineBaseUrl = form ? form.dataset.mysidelineCarnivalUrl : '';
         if (!eventId || !mySidelineBaseUrl) return '';
         return `${mySidelineBaseUrl}${eventId}`;
     },
@@ -203,15 +203,23 @@ export const carnivalEditManager = {
     // Updates the registration link field and its status message.
     updateRegistrationLink(url, status, statusClass = 'text-muted') {
         const { registrationLinkInput, linkStatusElement, testLinkBtn } = this.elements;
-        registrationLinkInput.value = url;
-        linkStatusElement.textContent = status;
-        linkStatusElement.className = `form-text ${statusClass}`;
         
-        if (url && this.isValidUrl(url)) {
-            testLinkBtn.style.display = 'block';
-            testLinkBtn.onclick = () => window.open(url, '_blank');
-        } else {
-            testLinkBtn.style.display = 'none';
+        if (registrationLinkInput) {
+            registrationLinkInput.value = url;
+        }
+        
+        if (linkStatusElement) {
+            linkStatusElement.textContent = status;
+            linkStatusElement.className = `form-text ${statusClass}`;
+        }
+        
+        if (testLinkBtn) {
+            if (url && this.isValidUrl(url)) {
+                testLinkBtn.style.display = 'block';
+                testLinkBtn.onclick = () => window.open(url, '_blank');
+            } else {
+                testLinkBtn.style.display = 'none';
+            }
         }
     },
 

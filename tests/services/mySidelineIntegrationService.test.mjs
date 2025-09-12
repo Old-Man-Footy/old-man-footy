@@ -5,17 +5,17 @@ import { Carnival, SyncLog } from '../../models/index.mjs';
 // Mocks
 vi.mock('./mySidelineScraperService.mjs', () => ({
   default: vi.fn().mockImplementation(() => ({
-    scrapeEvents: vi.fn(),
+    scrapeCarnivals: vi.fn(),
     validateAndCleanData: vi.fn(),
   })),
 }));
-vi.mock('./mySidelineEventParserService.mjs', () => ({
+vi.mock('./mySidelineCarnivalParserService.mjs', () => ({
   default: vi.fn().mockImplementation(() => ({})),
 }));
 vi.mock('./mySidelineDataService.mjs', () => ({
   default: vi.fn().mockImplementation(() => ({
     deactivatePastCarnivals: vi.fn(),
-    processScrapedEvents: vi.fn(),
+    processScrapedCarnivals: vi.fn(),
     shouldRunInitialSync: vi.fn(),
   })),
 }));
@@ -37,7 +37,7 @@ vi.mock('/models/index.mjs', () => ({
   },
 }));
 
-describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
+describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
   let service;
   let scraperService, dataService, logoDownloadService;
   let syncLogMock;
@@ -52,12 +52,12 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
 
     // Ensure deactivatePastCarnivals is always a vi.fn()
     dataService.deactivatePastCarnivals = vi.fn();
-    // Ensure scrapeEvents is always a vi.fn()
-    scraperService.scrapeEvents = vi.fn();
+    // Ensure scrapeCarnivals is always a vi.fn()
+    scraperService.scrapeCarnivals = vi.fn();
     // Ensure validateAndCleanData is always a vi.fn()
     scraperService.validateAndCleanData = vi.fn();
-    // Ensure processScrapedEvents is always a vi.fn()
-    dataService.processScrapedEvents = vi.fn();
+    // Ensure processScrapedCarnivals is always a vi.fn()
+    dataService.processScrapedCarnivals = vi.fn();
     // Ensure downloadLogos is always a vi.fn()
     logoDownloadService.downloadLogos = vi.fn();
 
@@ -76,7 +76,7 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
 
   it('returns early if sync is disabled', async () => {
     service.syncEnabled = false;
-    const result = await service.syncMySidelineEvents();
+    const result = await service.syncMySidelineCarnivals();
     expect(result).toEqual({
       success: true,
       eventsProcessed: 0,
@@ -86,14 +86,14 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
 
   it('returns early if already running', async () => {
     service.isRunning = true;
-    const result = await service.syncMySidelineEvents();
+    const result = await service.syncMySidelineCarnivals();
     expect(result).toBeUndefined();
   });
 
   it('handles no events found from scraper', async () => {
     dataService.deactivatePastCarnivals.mockResolvedValue({ success: true, deactivatedCount: 0 });
-    scraperService.scrapeEvents.mockResolvedValue([]);
-    const result = await service.syncMySidelineEvents();
+    scraperService.scrapeCarnivals.mockResolvedValue([]);
+    const result = await service.syncMySidelineCarnivals();
     expect(syncLogMock.markCompleted).toHaveBeenCalledWith({
       eventsProcessed: 0,
       eventsCreated: 0,
@@ -108,11 +108,11 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
 
   it('handles all events failing validation', async () => {
     dataService.deactivatePastCarnivals.mockResolvedValue({ success: true, deactivatedCount: 0 });
-    scraperService.scrapeEvents.mockResolvedValue([{ title: 'Event1' }]);
+    scraperService.scrapeCarnivals.mockResolvedValue([{ title: 'Carnival1' }]);
     scraperService.validateAndCleanData.mockImplementation(() => {
       throw new Error('Invalid');
     });
-    const result = await service.syncMySidelineEvents();
+    const result = await service.syncMySidelineCarnivals();
     expect(syncLogMock.markCompleted).toHaveBeenCalledWith({
       eventsProcessed: 0,
       eventsCreated: 0,
@@ -127,31 +127,31 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
 
   it('processes events and downloads logos', async () => {
     dataService.deactivatePastCarnivals.mockResolvedValue({ success: true, deactivatedCount: 1 });
-    scraperService.scrapeEvents.mockResolvedValue([
-      { title: 'Event1', clubLogoURL: 'http://logo.com/1', id: 1 },
-      { title: 'Event2', clubLogoURL: null, id: 2 },
+    scraperService.scrapeCarnivals.mockResolvedValue([
+      { title: 'Carnival1', clubLogoURL: 'http://logo.com/1', id: 1 },
+      { title: 'Carnival2', clubLogoURL: null, id: 2 },
     ]);
     scraperService.validateAndCleanData.mockImplementation(carnival => carnival);
-    const processedEvents = [
-      expect.objectContaining({ id: 1, clubLogoURL: 'http://logo.com/1', title: 'Event1' }),
-      expect.objectContaining({ id: 2, clubLogoURL: null, title: 'Event2' }),
+    const processedCarnivals = [
+      expect.objectContaining({ id: 1, clubLogoURL: 'http://logo.com/1', title: 'Carnival1' }),
+      expect.objectContaining({ id: 2, clubLogoURL: null, title: 'Carnival2' }),
     ];
-    dataService.processScrapedEvents.mockResolvedValue([
-      { id: 1, clubLogoURL: 'http://logo.com/1', createdAt: new Date().toISOString(), title: 'Event1' },
-      { id: 2, clubLogoURL: null, createdAt: new Date().toISOString(), title: 'Event2' },
+    dataService.processScrapedCarnivals.mockResolvedValue([
+      { id: 1, clubLogoURL: 'http://logo.com/1', createdAt: new Date().toISOString(), title: 'Carnival1' },
+      { id: 2, clubLogoURL: null, createdAt: new Date().toISOString(), title: 'Carnival2' },
     ]);
     logoDownloadService.downloadLogos.mockResolvedValue([
       { entityId: 1, success: true, publicUrl: 'https://cdn/logo1.png' },
     ]);
     Carnival.update.mockResolvedValue([1]);
 
-    const result = await service.syncMySidelineEvents();
+    const result = await service.syncMySidelineCarnivals();
 
     expect(dataService.deactivatePastCarnivals).toHaveBeenCalled();
-    expect(scraperService.scrapeEvents).toHaveBeenCalled();
+    expect(scraperService.scrapeCarnivals).toHaveBeenCalled();
     expect(scraperService.validateAndCleanData).toHaveBeenCalledTimes(2);
-    expect(dataService.processScrapedEvents.mock.calls[0][0]).toEqual(
-      expect.arrayContaining(processedEvents)
+    expect(dataService.processScrapedCarnivals.mock.calls[0][0]).toEqual(
+      expect.arrayContaining(processedCarnivals)
     );
     expect(logoDownloadService.downloadLogos).toHaveBeenCalled();
     expect(Carnival.update).toHaveBeenCalledWith(
@@ -172,20 +172,20 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
 
   it('handles logo download failure and clears logo', async () => {
     dataService.deactivatePastCarnivals.mockResolvedValue({ success: true, deactivatedCount: 0 });
-    scraperService.scrapeEvents.mockResolvedValue([
-      { title: 'Event1', clubLogoURL: 'http://logo.com/1', id: 1 },
+    scraperService.scrapeCarnivals.mockResolvedValue([
+      { title: 'Carnival1', clubLogoURL: 'http://logo.com/1', id: 1 },
     ]);
     scraperService.validateAndCleanData.mockImplementation(carnival => carnival);
-    const processedEvents = [
+    const processedCarnivals = [
       { id: 1, clubLogoURL: 'http://logo.com/1', createdAt: new Date().toISOString() },
     ];
-    dataService.processScrapedEvents.mockResolvedValue(processedEvents);
+    dataService.processScrapedCarnivals.mockResolvedValue(processedCarnivals);
     logoDownloadService.downloadLogos.mockResolvedValue([
       { entityId: 1, success: false, error: 'Download failed' },
     ]);
     Carnival.update.mockResolvedValue([1]);
 
-    const result = await service.syncMySidelineEvents();
+    const result = await service.syncMySidelineCarnivals();
 
     expect(Carnival.update).toHaveBeenCalledWith(
       { clubLogoURL: null },
@@ -197,7 +197,7 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
 
   it('handles errors and marks sync as failed', async () => {
     dataService.deactivatePastCarnivals.mockRejectedValue(new Error('DB error'));
-    const result = await service.syncMySidelineEvents();
+    const result = await service.syncMySidelineCarnivals();
     expect(syncLogMock.markFailed).toHaveBeenCalledWith('DB error');
     expect(result.success).toBe(false);
     expect(result.error).toBe('DB error');

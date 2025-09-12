@@ -79,7 +79,7 @@ const themeManager = {
         localStorage.setItem(this.STORAGE_KEY, theme);
         
         // Dispatch custom carnival for other components
-        window.dispatchEvent(new CustomEvent('themeChanged', { 
+        window.dispatchEvent(new CustomCarnival('themeChanged', { 
             detail: { theme: theme } 
         }));
     },

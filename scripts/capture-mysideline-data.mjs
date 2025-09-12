@@ -32,7 +32,7 @@ async function captureMySidelineData(outputDir) {
         
         // Capture live events
         console.log('📡 Fetching live events from MySideline...');
-        const liveEvents = await scraperService.scrapeEvents();
+        const liveCarnivals = await scraperService.scrapeCarnivals();
         
         // Also capture the raw HTML if possible
         let rawHTML = null;
@@ -48,11 +48,11 @@ async function captureMySidelineData(outputDir) {
             console.warn('⚠️  Could not capture raw HTML:', htmlError.message);
         }
         
-        if (liveEvents && liveEvents.length > 0) {
-            console.log(`✅ Captured ${liveEvents.length} live events`);
+        if (liveCarnivals && liveCarnivals.length > 0) {
+            console.log(`✅ Captured ${liveCarnivals.length} live events`);
             
             // Generate test fixtures content with real data
-            const fixtureContent = generateFixtureFile(liveEvents, rawHTML);
+            const fixtureContent = generateFixtureFile(liveCarnivals, rawHTML);
             
             // Ensure fixtures directory exists
             await fs.mkdir(fixturesDir, { recursive: true });
@@ -65,10 +65,10 @@ async function captureMySidelineData(outputDir) {
             
             // Log sample of captured data
             console.log('\n📋 Sample captured carnival:');
-            console.log(`   Title: ${liveEvents[0].title}`);
-            console.log(`   ID: ${liveEvents[0].mySidelineId}`);
-            console.log(`   Location: ${liveEvents[0].locationAddress}`);
-            console.log(`   Date: ${liveEvents[0].date}`);
+            console.log(`   Title: ${liveCarnivals[0].title}`);
+            console.log(`   ID: ${liveCarnivals[0].mySidelineId}`);
+            console.log(`   Location: ${liveCarnivals[0].locationAddress}`);
+            console.log(`   Date: ${liveCarnivals[0].date}`);
             
         } else {
             console.log('⚠️  No events found on MySideline');
@@ -98,11 +98,11 @@ async function captureMySidelineData(outputDir) {
 
 /**
  * Generates the fixture file content with real captured data
- * @param {Array} capturedEvents - Real events captured from MySideline
+ * @param {Array} capturedCarnivals - Real events captured from MySideline
  * @param {string|null} rawHTML - Raw HTML captured from MySideline (if available)
  * @returns {string} File content for the fixture
  */
-function generateFixtureFile(capturedEvents, rawHTML = null) {
+function generateFixtureFile(capturedCarnivals, rawHTML = null) {
     const timestamp = new Date().toISOString();
     const sanitizedHTML = rawHTML ? sanitizeHTMLForFixture(rawHTML) : '<html><body><!-- HTML not captured --></body></html>';
     
@@ -113,7 +113,7 @@ function generateFixtureFile(capturedEvents, rawHTML = null) {
  * 
  * Data captured on: ${timestamp}
  * Source: MySideline website (live data)
- * Events captured: ${capturedEvents.length}
+ * Carnivals captured: ${capturedCarnivals.length}
  * 
  * ⚠️  This file contains REAL data captured from MySideline.
  * DO NOT modify manually - regenerate using: node scripts/capture-mysideline-data.mjs
@@ -125,7 +125,7 @@ import { vi } from 'vitest';
 export const MYSIDELINE_CAPTURED_HTML = \`${sanitizedHTML}\`;
 
 // Real events captured from MySideline
-export const MYSIDELINE_CAPTURED_EVENTS = ${JSON.stringify(capturedEvents, null, 4)};
+export const MYSIDELINE_CAPTURED_EVENTS = ${JSON.stringify(capturedCarnivals, null, 4)};
 
 // Mock responses using real captured data
 export const MYSIDELINE_CAPTURED_RESPONSES = {
@@ -167,7 +167,7 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
  * @param {Object} overrides - Properties to override in the captured data
  * @returns {Array} Modified captured events
  */
-export function getCapturedEvents(overrides = {}) {
+export function getCapturedCarnivals(overrides = {}) {
     return MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
         ...carnival,
         ...overrides
@@ -200,7 +200,7 @@ export default {
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,
-    getCapturedEvents
+    getCapturedCarnivals
 };
 `;
 }
@@ -219,7 +219,7 @@ function generateEmptyFixtureFile() {
  * 
  * Data captured on: ${timestamp}
  * Source: MySideline website (live data)
- * Events captured: 0
+ * Carnivals captured: 0
  */
 
 import { vi } from 'vitest';
@@ -246,7 +246,7 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
     return vi.fn().mockResolvedValue(mockResponse);
 }
 
-export function getCapturedEvents(overrides = {}) {
+export function getCapturedCarnivals(overrides = {}) {
     return [];
 }
 
@@ -260,7 +260,7 @@ export default {
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,
-    getCapturedEvents
+    getCapturedCarnivals
 };
 `;
 }
@@ -306,7 +306,7 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
     return vi.fn().mockResolvedValue(mockResponse);
 }
 
-export function getCapturedEvents(overrides = {}) {
+export function getCapturedCarnivals(overrides = {}) {
     return [];
 }
 
@@ -320,7 +320,7 @@ export default {
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,
-    getCapturedEvents
+    getCapturedCarnivals
 };
 `;
 }

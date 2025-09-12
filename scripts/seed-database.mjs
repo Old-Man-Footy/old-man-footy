@@ -199,10 +199,10 @@ class DatabaseSeeder {
         
         for (const carnival of majorCarnivals) {
             // Major carnivals get 2-6 sponsors, regular events get 0-3
-            const isMajorEvent = carnival.title.includes('Grand Final') || 
+            const isMajorCarnival = carnival.title.includes('Grand Final') || 
                                 carnival.title.includes('Championship');
-            const maxSponsors = isMajorEvent ? 6 : 3;
-            const minSponsors = isMajorEvent ? 2 : 0;
+            const maxSponsors = isMajorCarnival ? 6 : 3;
+            const minSponsors = isMajorCarnival ? 2 : 0;
             
             const numSponsors = Math.floor(Math.random() * (maxSponsors - minSponsors + 1)) + minSponsors;
             
@@ -221,7 +221,7 @@ class DatabaseSeeder {
                 let sponsorPool;
                 
                 // First sponsor for major events: 50% chance of national sponsor
-                if (i === 0 && isMajorEvent && Math.random() < 0.5 && nationalSponsors.length > 0) {
+                if (i === 0 && isMajorCarnival && Math.random() < 0.5 && nationalSponsors.length > 0) {
                     sponsorPool = nationalSponsors.filter(s => availableSponsors.includes(s));
                 }
                 // 80% chance for local sponsors
@@ -253,13 +253,13 @@ class DatabaseSeeder {
                 let sponsorshipType;
                 let sponsorshipLevel;
                 
-                if (i === 0 && isMajorEvent) {
+                if (i === 0 && isMajorCarnival) {
                     sponsorshipType = Math.random() < 0.7 ? 'Title Sponsor' : 'Presenting Sponsor';
                     sponsorshipLevel = 'Gold';
                 } else if (i === 0) {
                     sponsorshipType = 'Major Sponsor';
                     sponsorshipLevel = Math.random() < 0.6 ? 'Gold' : 'Silver';
-                } else if (i === 1 && isMajorEvent) {
+                } else if (i === 1 && isMajorCarnival) {
                     sponsorshipType = 'Major Sponsor';
                     sponsorshipLevel = Math.random() < 0.5 ? 'Silver' : 'Bronze';
                 } else {
@@ -317,21 +317,21 @@ class DatabaseSeeder {
             const threeMonthsAgo = new Date();
             threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
             
-            const isPastEvent = carnival.date < threeMonthsAgo;
-            const isUpcomingEvent = carnival.date > new Date();
+            const isPastCarnival = carnival.date < threeMonthsAgo;
+            const isUpcomingCarnival = carnival.date > new Date();
             
             // Determine number of attending clubs based on carnival type and timing
             let minClubs, maxClubs;
             
             if (carnival.title.includes('Grand Final') || carnival.title.includes('Championship')) {
-                minClubs = isPastEvent ? 4 : 8;
-                maxClubs = isPastEvent ? 8 : 16;
+                minClubs = isPastCarnival ? 4 : 8;
+                maxClubs = isPastCarnival ? 8 : 16;
             } else if (carnival.title.includes('Cup') || carnival.title.includes('Carnival')) {
-                minClubs = isPastEvent ? 3 : 5;
-                maxClubs = isPastEvent ? 6 : 12;
+                minClubs = isPastCarnival ? 3 : 5;
+                maxClubs = isPastCarnival ? 6 : 12;
             } else {
-                minClubs = isPastEvent ? 2 : 3;
-                maxClubs = isPastEvent ? 5 : 8;
+                minClubs = isPastCarnival ? 2 : 3;
+                maxClubs = isPastCarnival ? 5 : 8;
             }
             
             const numAttendees = Math.floor(Math.random() * (maxClubs - minClubs + 1)) + minClubs;
@@ -374,8 +374,8 @@ class DatabaseSeeder {
                 
                 // Generate registration date (1-60 days before carnival)
                 const registrationDate = new Date(carnival.date);
-                const daysBeforeEvent = Math.floor(Math.random() * 60) + 1;
-                registrationDate.setDate(registrationDate.getDate() - daysBeforeEvent);
+                const daysBeforeCarnival = Math.floor(Math.random() * 60) + 1;
+                registrationDate.setDate(registrationDate.getDate() - daysBeforeCarnival);
                 
                 // Team name variations
                 const teamNames = [
@@ -426,9 +426,9 @@ class DatabaseSeeder {
                 let isPaid;
                 let paymentDate = null;
                 
-                if (isPastEvent) {
+                if (isPastCarnival) {
                     isPaid = Math.random() < 0.95; // 95% of past events are paid
-                } else if (isUpcomingEvent) {
+                } else if (isUpcomingCarnival) {
                     isPaid = Math.random() < 0.6; // 60% of future events are already paid
                 } else {
                     isPaid = Math.random() < 0.8; // 80% of recent events are paid

@@ -64,10 +64,10 @@ describe('clubManageManager', () => {
     const file = new File(['content'], 'drag.png', { type: 'image/png' });
   const fakeFiles = { 0: file, length: 1, item: (i) => (i === 0 ? file : null) };
 
-    const dropEvent = new Carnival('drop');
-  Object.defineProperty(dropEvent, 'dataTransfer', { value: { files: fakeFiles }, configurable: true });
+    const dropCarnival = new Carnival('drop');
+  Object.defineProperty(dropCarnival, 'dataTransfer', { value: { files: fakeFiles }, configurable: true });
 
-    clubManageManager.handleDrop(dropEvent);
+    clubManageManager.handleDrop(dropCarnival);
     expect(changeSpy).toHaveBeenCalled();
   });
 });

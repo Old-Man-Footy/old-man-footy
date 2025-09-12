@@ -109,12 +109,12 @@ describe('AuthFormManager', () => {
             const passwordInput = loginForm.querySelector('input[name="password"]');
             passwordInput.value = 'has-password';
 
-            const submitEvent = new Carnival('submit', { cancelable: true });
+            const submitCarnival = new Carnival('submit', { cancelable: true });
             global.alert = vi.fn();
 
-            loginForm.dispatchEvent(submitEvent);
+            loginForm.dispatchEvent(submitCarnival);
 
-            expect(submitEvent.defaultPrevented).toBe(true);
+            expect(submitCarnival.defaultPrevented).toBe(true);
             expect(global.alert).toHaveBeenCalledWith('Please enter both email and password.');
         });
     });

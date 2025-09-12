@@ -474,7 +474,7 @@ const showCarnivalHandler = async (req, res) => {
     canMergeCarnival, // Pass merge option availability
     availableMergeTargets, // Pass available merge targets
     isInactiveCarnival: !carnival.isActive,
-    isMySidelineEvent: !!carnival.mySidelineId,
+    isMySidelineCarnival: !!carnival.mySidelineId,
     isRegistrationActive, // Pass registration status including deadline check
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
     additionalCSS: ['/styles/carnival.styles.css'],
@@ -602,7 +602,7 @@ const createCarnivalHandler = async (req, res) => {
       carnival = await Carnival.create(carnivalData);
     } else {
       // Use duplicate detection and merging
-      carnival = await createOrMergeEvent(carnivalData, req.user.id);
+      carnival = await createOrMergeCarnival(carnivalData, req.user.id);
     }
 
     // Handle structured file uploads after carnival creation
@@ -763,7 +763,7 @@ const showEditFormHandler = async (req, res) => {
  * @param {number} userId - The user ID creating the carnival.
  * @returns {Promise<Carnival>} The created or merged carnival instance.
  */
-export async function createOrMergeEvent(carnivalData, userId) {
+export async function createOrMergeCarnival(carnivalData, userId) {
     if (!carnivalData.title || !carnivalData.date) {
       throw new Error('Carnival title and date are required for duplicate detection.');
     }
@@ -1014,9 +1014,9 @@ const syncMySidelineHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  const result = await mySidelineService.syncEvents();
+  const result = await mySidelineService.syncCarnivals();
 
-  req.flash('success_msg', `MySideline sync completed. ${result.newEvents} new events imported.`);
+  req.flash('success_msg', `MySideline sync completed. ${result.newCarnivals} new events imported.`);
   return res.redirect('/dashboard');
 };
 

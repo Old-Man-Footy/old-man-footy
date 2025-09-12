@@ -235,7 +235,7 @@ vi.mock('/services/auditService.mjs', () => ({
 
 vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   default: {
-    syncMySidelineEvents: vi.fn().mockResolvedValue({
+    syncMySidelineCarnivals: vi.fn().mockResolvedValue({
       success: true,
       eventsProcessed: 10,
       eventsCreated: 5,
@@ -382,7 +382,7 @@ describe('Admin Controller', () => {
     // Mock services
     AuditService.logAdminAction.mockResolvedValue(true);
     AuthEmailService.sendPasswordResetEmail.mockResolvedValue(true);
-    mySidelineService.syncMySidelineEvents.mockResolvedValue({
+    mySidelineService.syncMySidelineCarnivals.mockResolvedValue({
       success: true,
       eventsProcessed: 10,
       eventsCreated: 5,
@@ -1274,7 +1274,7 @@ describe('Admin Controller', () => {
     });
 
     it('should trigger MySideline sync manually', async () => {
-      mySidelineService.syncMySidelineEvents.mockResolvedValue({
+      mySidelineService.syncMySidelineCarnivals.mockResolvedValue({
         success: true,
         eventsProcessed: 15,
         eventsCreated: 8,
@@ -1283,7 +1283,7 @@ describe('Admin Controller', () => {
 
       await syncMySideline(req, res);
 
-      expect(mySidelineService.syncMySidelineEvents).toHaveBeenCalled();
+      expect(mySidelineService.syncMySidelineCarnivals).toHaveBeenCalled();
       expect(AuditService.logAdminAction).toHaveBeenCalledWith(
         AuditService.ACTIONS.ADMIN_SYSTEM_SYNC,
         req,
@@ -1311,7 +1311,7 @@ describe('Admin Controller', () => {
 
     it('should handle MySideline sync failures', async () => {
       const syncError = new Error('Sync service unavailable');
-      mySidelineService.syncMySidelineEvents.mockRejectedValue(syncError);
+      mySidelineService.syncMySidelineCarnivals.mockRejectedValue(syncError);
 
       await syncMySideline(req, res);
 

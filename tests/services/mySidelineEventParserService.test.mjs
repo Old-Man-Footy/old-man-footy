@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import MySidelineEventParserService from '../../services/mySidelineEventParserService.mjs';
+import MySidelineCarnivalParserService from '../../services/mySidelineCarnivalParserService.mjs';
 
 // Mock MySidelineDataService and its parseDate method
 vi.mock('./mySidelineDataService.mjs', () => {
@@ -39,11 +39,11 @@ vi.mock('./mySidelineDataService.mjs', () => {
   };
 });
 
-describe('MySidelineEventParserService', () => {
+describe('MySidelineCarnivalParserService', () => {
   let parser;
 
   beforeEach(() => {
-    parser = new MySidelineEventParserService();
+    parser = new MySidelineCarnivalParserService();
   });
 
   it('returns original title and null date if input is not a string', () => {

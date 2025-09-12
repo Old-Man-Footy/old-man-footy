@@ -42,8 +42,8 @@ describe('adminEditClubManager', () => {
         });
 
         // **THE FIX IS HERE:**
-        // Mock the DragEvent class.
-        vi.stubGlobal('DragEvent', class extends Carnival {
+        // Mock the DragCarnival class.
+        vi.stubGlobal('DragCarnival', class extends Carnival {
             constructor(type, options) {
                 super(type, options);
                 this.dataTransfer = options.dataTransfer || new DataTransfer();
@@ -65,11 +65,11 @@ describe('adminEditClubManager', () => {
     it('should prevent form submission if a required field is empty', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitEvent = new Carnival('submit', { cancelable: true });
-        const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
+        const submitCarnival = new Carnival('submit', { cancelable: true });
+        const preventDefaultSpy = vi.spyOn(submitCarnival, 'preventDefault');
 
         nameInput.value = '   '; // Empty value
-        form.dispatchEvent(submitEvent);
+        form.dispatchEvent(submitCarnival);
 
         expect(preventDefaultSpy).toHaveBeenCalled();
         expect(alert).toHaveBeenCalledWith('Please fill in all required fields.');
@@ -79,11 +79,11 @@ describe('adminEditClubManager', () => {
     it('should allow form submission if required fields are filled', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitEvent = new Carnival('submit', { cancelable: true });
-        const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
+        const submitCarnival = new Carnival('submit', { cancelable: true });
+        const preventDefaultSpy = vi.spyOn(submitCarnival, 'preventDefault');
 
         nameInput.value = 'Valid Club Name';
-        form.dispatchEvent(submitEvent);
+        form.dispatchEvent(submitCarnival);
 
         expect(preventDefaultSpy).not.toHaveBeenCalled();
         expect(nameInput.classList.contains('is-invalid')).toBe(false);
@@ -137,8 +137,8 @@ describe('adminEditClubManager', () => {
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(testFile);
 
-        const dropEvent = new DragEvent('drop', { dataTransfer });
-        fileUploadArea.dispatchEvent(dropEvent);
+        const dropCarnival = new DragCarnival('drop', { dataTransfer });
+        fileUploadArea.dispatchEvent(dropCarnival);
 
         expect(fileInput.files[0].name).toBe('dropped-logo.png');
         expect(uploadText.textContent).toBe('Selected: dropped-logo.png');

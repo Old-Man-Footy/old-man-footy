@@ -24,7 +24,7 @@ npm run seed
 - **Primary Delegates**: One per club (`primary@[clubname].com.au` / `Delegate123!`)
 - **Secondary Delegates**: Random additional delegates for some clubs
 - **5 Manual Test Carnivals** with realistic data
-- **MySideline Events**: Automatically imported from MySideline.com.au
+- **MySideline Carnivals**: Automatically imported from MySideline.com.au
 - **5 Email Subscriptions** for testing notifications
 
 ### Login Credentials

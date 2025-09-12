@@ -24,7 +24,7 @@ const Carnival = {
         if (data.date < now) return 'completed';
         return 'today';
       })(),
-      isMySidelineEvent: data.isManuallyEntered === false,
+      isMySidelineCarnival: data.isManuallyEntered === false,
       isMultiDay: data.endDate && data.date && (data.endDate > data.date),
       getDateRangeString: () => 'July 1 - July 3, 2025',
       getShortDateRangeString: () => 'Jul 1-3',
@@ -44,7 +44,7 @@ const Carnival = {
   destroy: vi.fn(async () => { mockCarnivals.length = 0; }),
   findUpcoming: vi.fn(async () => mockCarnivals.filter(c => c.date && c.date > Date.now() && c.isActive)),
   findByState: vi.fn(async (state) => mockCarnivals.filter(c => c.state === state)),
-  findMySidelineEvents: vi.fn(async () => mockCarnivals.filter(c => c.isManuallyEntered === false)),
+  findMySidelineCarnivals: vi.fn(async () => mockCarnivals.filter(c => c.isManuallyEntered === false)),
   takeOwnership: vi.fn(async (userId, carnivalId) => {
     if (!userId || !carnivalId) return { success: false, message: 'required' };
     return { success: true };
@@ -103,7 +103,7 @@ describe('Carnival Model', () => {
         isManuallyEntered: false
       });
       // Act & Assert
-      expect(carnival.isMySidelineEvent).toBe(true);
+      expect(carnival.isMySidelineCarnival).toBe(true);
     });
 
     it('should detect multi-day carnivals', async () => {
@@ -209,7 +209,7 @@ describe('Carnival Model', () => {
         isManuallyEntered: false
       });
       // Act
-      const carnivals = await Carnival.findMySidelineEvents();
+      const carnivals = await Carnival.findMySidelineCarnivals();
       // Assert
       expect(Array.isArray(carnivals)).toBe(true);
       expect(carnivals[0].isManuallyEntered).toBe(false);

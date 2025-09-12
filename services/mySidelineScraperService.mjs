@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-import MySidelineEventParserService from './mySidelineEventParserService.mjs';
+import MySidelineCarnivalParserService from './mySidelineCarnivalParserService.mjs';
 
 /**
  * MySideline Web Scraper Service
@@ -14,14 +14,14 @@ class MySidelineScraperService {
         this.useHeadlessBrowser = process.env.NODE_ENV !== 'development';
         
         // Initialize the parser service
-        this.parserService = new MySidelineEventParserService();
+        this.parserService = new MySidelineCarnivalParserService();
     }
 
     /**
      * Main method to scrape MySideline events
      * @returns {Promise<Array>} Array of scraped carnival objects
      */
-    async scrapeEvents() {
+    async scrapeCarnivals() {
         try {
             // Check if scraping is disabled
             if (!this.enableScraping) {
@@ -31,7 +31,7 @@ class MySidelineScraperService {
 
             console.log('Fetching MySideline Masters events via API interception...');
             
-            const events = await this.fetchEventsWithApiInterception();
+            const events = await this.fetchCarnivalsWithApiInterception();
             
             if (events && events.length > 0) {
                 console.log(`Found ${events.length} Masters events from MySideline API`);
@@ -50,7 +50,7 @@ class MySidelineScraperService {
      * Fetch events using browser automation with API interception
      * @returns {Promise<Array>} Array of fetched carnival objects
      */
-    async fetchEventsWithApiInterception() {
+    async fetchCarnivalsWithApiInterception() {
         let browser = null;
         let context = null;
         let page = null;
@@ -104,9 +104,9 @@ class MySidelineScraperService {
             await page.waitForTimeout(10000); // Wait up to 10 seconds for the API call
 
             if (jsonData && jsonData.data) {
-                const processedEvents = await this.processApiResponse(jsonData, imgDictionary);
-                console.log(`✅ Processed ${processedEvents.length} events from API response`);
-                return processedEvents;
+                const processedCarnivals = await this.processApiResponse(jsonData, imgDictionary);
+                console.log(`✅ Processed ${processedCarnivals.length} events from API response`);
+                return processedCarnivals;
             } else {
                 console.log('⚠️ No JSON data captured from API. Using fallback mock data.');                
             }
@@ -136,7 +136,7 @@ class MySidelineScraperService {
             return [];
         }
 
-        const processedEvents = [];
+        const processedCarnivals = [];
 
         for (const item of apiResponse.data) {
             try {
@@ -147,28 +147,28 @@ class MySidelineScraperService {
                 }
 
                 // Skip non-Masters events and Touch events
-                if (!this.isRelevantMastersEvent(item)) {
+                if (!this.isRelevantMastersCarnival(item)) {
                     continue;
                 }
 
-                const processedEvent = this.convertApiItemToEvent(item);
-                if (processedEvent) {
+                const processedCarnival = this.convertApiItemToCarnival(item);
+                if (processedCarnival) {
 
-                    const imageUrl = imgDictionary[processedEvent.mySidelineTitle];
+                    const imageUrl = imgDictionary[processedCarnival.mySidelineTitle];
                     if (imageUrl) {
-                        processedEvent.clubLogoURL = imageUrl.split('?')[0]; // Remove any query parameters
+                        processedCarnival.clubLogoURL = imageUrl.split('?')[0]; // Remove any query parameters
                     } else {
-                        console.log(`Image with alt "${processedEvent.mySidelineTitle}" not found or missing data-url attribute.`);
+                        console.log(`Image with alt "${processedCarnival.mySidelineTitle}" not found or missing data-url attribute.`);
                     }
 
-                    processedEvents.push(processedEvent);
+                    processedCarnivals.push(processedCarnival);
                 }   
             } catch (error) {
                 console.warn(`Failed to process API item ${item?._id || 'unknown'}:`, error.message);
             }
         }
 
-        return processedEvents;
+        return processedCarnivals;
     }
 
     /**
@@ -176,7 +176,7 @@ class MySidelineScraperService {
      * @param {Object} item - API response item
      * @returns {boolean} True if relevant
      */
-    isRelevantMastersEvent(item) {
+    isRelevantMastersCarnival(item) {
         // Add comprehensive null/undefined checks
         if (!item || typeof item !== 'object' || !item.name) {
             return false;
@@ -211,7 +211,7 @@ class MySidelineScraperService {
      * @param {Object} item - API response item
      * @returns {Object} Converted carnival object
      */
-    convertApiItemToEvent(item) {
+    convertApiItemToCarnival(item) {
         // Add comprehensive null/undefined checks at the start
         if (!item || typeof item !== 'object') {
             throw new Error('Item is null, undefined, or not an object');

@@ -5,7 +5,7 @@
  * 
  * Data captured on: 2025-07-18T08:56:09.414Z
  * Source: MySideline website (live data)
- * Events captured: 2
+ * Carnivals captured: 2
  * 
  * ⚠️  This file contains REAL data captured from MySideline.
  * DO NOT modify manually - regenerate using: node scripts/capture-mysideline-data.mjs
@@ -111,7 +111,7 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
  * @param {Object} overrides - Properties to override in the captured data
  * @returns {Array} Modified captured events
  */
-export function getCapturedEvents(overrides = {}) {
+export function getCapturedCarnivals(overrides = {}) {
     return MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
         ...carnival,
         ...overrides
@@ -144,5 +144,5 @@ export default {
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,
-    getCapturedEvents
+    getCapturedCarnivals
 };

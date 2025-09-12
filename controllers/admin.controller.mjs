@@ -1842,7 +1842,7 @@ const syncMySidelineHandler = async (req, res) => {
         console.log(`🔄 Admin ${req.user.email} initiated manual MySideline sync`);
         
         // Trigger the sync
-        const result = await mySidelineService.syncMySidelineEvents();
+        const result = await mySidelineService.syncMySidelineCarnivals();
         
         // Log the admin action - using correct action constant
         await AuditService.logAdminAction(

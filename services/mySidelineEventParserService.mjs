@@ -4,7 +4,7 @@ import MySidelineDataService from './mySidelineDataService.mjs';
  * MySideline Carnival Parser Service
  * Handles parsing and standardization of scraped MySideline carnival data
  */
-class MySidelineEventParserService {
+class MySidelineCarnivalParserService {
     constructor() {
         this.dataService = new MySidelineDataService();
     }
@@ -107,4 +107,4 @@ class MySidelineEventParserService {
     
 }
 
-export default MySidelineEventParserService;
+export default MySidelineCarnivalParserService;
