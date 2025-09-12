@@ -16,7 +16,7 @@
  * @property {Object} elements - Cached DOM elements used for carnival management actions.
  * @method initialize - Initializes the manager by caching elements and binding events.
  * @method cacheElements - Caches necessary DOM elements for carnival management.
- * @method bindEvents - Binds carnival listeners for carnival management actions.
+ * @method bindEvents - Binds event listeners for carnival management actions.
  * @method handleUnregisterClick - Handles the unregister button click carnival.
  * @method handleOwnershipClick - Handles the take ownership button click carnival.
  * @method handleFormConfirm - Handles confirmation dialogs for forms with data-confirm attributes.
@@ -48,7 +48,7 @@ export const carnivalManagementManager = {
     },
 
     /**
-     * Binds all carnival listeners for carnival management actions.
+     * Binds all event listeners for carnival management actions.
      * @returns {void}
      */
     bindEvents() {

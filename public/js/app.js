@@ -122,7 +122,7 @@ const themeManager = {
     },
     
     /**
-     * Setup theme toggle button carnival listener
+     * Setup theme toggle button event listener
      */
     setupToggleButton: function() {
         const toggleButton = document.getElementById('themeToggle');
@@ -284,8 +284,8 @@ const oldmanfooty = {
                 
                 if (input && files.length > 0) {
                     input.files = files;
-                    const carnival = new Event('change', { bubbles: true });
-                    input.dispatchEvent(carnival);
+                    const event = new Event('change', { bubbles: true });
+                    input.dispatchEvent(event);
                 }
             });
         });

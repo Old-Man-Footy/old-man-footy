@@ -7,7 +7,7 @@ export const carnivalAddPlayersManager = {
     elements: {},
 
     /**
-     * Initializes the manager, setting up carnival listeners and UI state.
+     * Initializes the manager, setting up event listeners and UI state.
      * @function
      */
     initialize() {
@@ -38,7 +38,7 @@ export const carnivalAddPlayersManager = {
     },
 
     /**
-     * Binds carnival listeners to cached elements.
+     * Binds event listeners to cached elements.
      * @function
      */
     bindEvents() {
@@ -50,7 +50,7 @@ export const carnivalAddPlayersManager = {
             this.elements.form.addEventListener('submit', this.handleFormSubmit.bind(this));
         }
 
-        // Bind click carnival listeners to the select buttons
+        // Bind click event listeners to the select buttons
         if (this.elements.selectAllBtn) {
             this.elements.selectAllBtn.addEventListener('click', this.selectAll.bind(this));
         }
@@ -59,8 +59,8 @@ export const carnivalAddPlayersManager = {
             this.elements.selectNoneBtn.addEventListener('click', this.selectNone.bind(this));
         }
         
-        // Debug logging to verify carnival listeners are bound
-        console.log('Carnival listeners bound:', {
+        // Debug logging to verify event listeners are bound
+        console.log('event listeners bound:', {
             selectAllBtn: !!this.elements.selectAllBtn,
             selectNoneBtn: !!this.elements.selectNoneBtn,
             checkboxCount: this.elements.checkboxes.length

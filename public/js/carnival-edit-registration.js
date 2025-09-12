@@ -7,7 +7,7 @@
 export const editRegistrationManager = {
     carnivalId: null,
 
-    // Initializes the manager with the carnival ID and sets up the carnival listener.
+    // Initializes the manager with the carnival ID and sets up the event listener.
     initialize(carnivalId) {
         this.carnivalId = carnivalId;
         const removeButton = document.querySelector('.remove-registration');

@@ -47,7 +47,7 @@ export class AdminUserManager {
     }
 
     /**
-     * Initializes the manager by attaching a single carnival listener to the container.
+     * Initializes the manager by attaching a single event listener to the container.
      */
     init() {
         this.container.addEventListener('click', this.handleContainerClick.bind(this));
@@ -161,7 +161,7 @@ export class AdminUserManager {
     }
 
     /**
-     * Sets up carnival listeners for form elements that are not action buttons,
+     * Sets up event listeners for form elements that are not action buttons,
      * such as the club select and primary delegate checkbox.
      */
     initializeFormSpecificLogic() {

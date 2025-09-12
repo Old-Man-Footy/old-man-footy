@@ -73,7 +73,7 @@ export const carnivalEditManager = {
         if (input) input.click();
     },
 
-    // Sets up carnival listeners and logic for multi-day events.
+    // Sets up event listeners and logic for multi-day events.
     initializeMultiDayCarnivalFunctionality() {
         const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
         if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;
@@ -133,7 +133,7 @@ export const carnivalEditManager = {
         }
     },
 
-    // Sets up carnival listeners and logic for MySideline integration.
+    // Sets up event listeners and logic for MySideline integration.
     initializeMySidelineIntegration() {
         const { mySidelineIdInput, registrationLinkInput } = this.elements;
         if (!mySidelineIdInput || !registrationLinkInput) return;

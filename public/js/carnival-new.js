@@ -65,7 +65,7 @@ export const carnivalNewManager = {
         this.elements.carnivalForm = d.getElementById('carnivalForm');
     },
 
-    /** Attach carnival listeners. */
+    /** Attach event listeners. */
     bindEvents() {
         // Make file upload areas clickable
         if (this.elements.fileUploadAreas?.length) {

@@ -12,7 +12,7 @@ export const adminClaimCarnivalManager = {
     carnivalState: null,
 
     /**
-     * Initializes the manager by caching DOM elements and setting up carnival listeners.
+     * Initializes the manager by caching DOM elements and setting up event listeners.
      */
     initialize() {
         this.cacheElements();

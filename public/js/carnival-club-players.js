@@ -9,7 +9,7 @@ export const clubPlayersManager = {
     registrationId: null,
     currentAssignmentId: null,
 
-    // Initializes the manager with necessary IDs and sets up carnival listeners.
+    // Initializes the manager with necessary IDs and sets up event listeners.
     initialize(carnivalId, registrationId) {
         this.carnivalId = carnivalId;
         this.registrationId = registrationId;
@@ -17,7 +17,7 @@ export const clubPlayersManager = {
         this.initializeRemovePlayerListeners();
     },
 
-    // Sets up carnival listeners for all 'Update Status' buttons.
+    // Sets up event listeners for all 'Update Status' buttons.
     initializeStatusUpdateListeners() {
         document.querySelectorAll('.update-status-btn').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -68,7 +68,7 @@ export const clubPlayersManager = {
         }
     },
 
-    // Sets up carnival listeners for all 'Remove Player' buttons.
+    // Sets up event listeners for all 'Remove Player' buttons.
     initializeRemovePlayerListeners() {
         document.querySelectorAll('.remove-player-btn').forEach(button => {
             button.addEventListener('click', (e) => {

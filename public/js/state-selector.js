@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectedText();
     }
 
-    // Carnival listeners
+    // event listeners
     stateToggle.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();

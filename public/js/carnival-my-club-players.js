@@ -10,7 +10,7 @@ export const carnivalMyClubPlayersManager = {
   registrationId: null,
 
   /**
-   * Main entry point. Caches DOM elements and binds carnival listeners.
+   * Main entry point. Caches DOM elements and binds event listeners.
    */
   initialize() {
     this.cacheElements();
@@ -41,7 +41,7 @@ export const carnivalMyClubPlayersManager = {
   },
 
   /**
-   * Binds all carnival listeners for player removal and modal interactions.
+   * Binds all event listeners for player removal and modal interactions.
    */
   bindEvents() {
     this.elements.removePlayerBtns.forEach(btn => {

@@ -9,7 +9,7 @@ export const carnivalListManager = {
     searchTimeout: null,
 
     /**
-     * Initializes the manager by finding relevant form elements and attaching carnival listeners.
+     * Initializes the manager by finding relevant form elements and attaching event listeners.
      */
     initialize() {
         const searchInput = document.getElementById('search');

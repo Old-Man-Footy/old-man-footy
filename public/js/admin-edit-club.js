@@ -9,7 +9,7 @@ export const adminEditClubManager = {
     elements: {},
 
     /**
-     * Initializes the manager by caching DOM elements and setting up carnival listeners.
+     * Initializes the manager by caching DOM elements and setting up event listeners.
      */
     initialize() {
         this.cacheElements();
@@ -30,7 +30,7 @@ export const adminEditClubManager = {
     },
 
     /**
-     * Attaches all necessary carnival listeners to the DOM elements.
+     * Attaches all necessary event listeners to the DOM elements.
      */
     bindEvents() {
         if (this.elements.form) {

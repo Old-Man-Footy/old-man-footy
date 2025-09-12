@@ -21,7 +21,7 @@ export class AuthFormManager {
     }
 
     /**
-     * Initializes the manager by attaching carnival listeners.
+     * Initializes the manager by attaching event listeners.
      */
     init() {
         // Use carnival delegation for password toggle buttons
