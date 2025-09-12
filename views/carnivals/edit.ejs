@@ -412,18 +412,18 @@
                             <h5 class="text-primary mb-3">Update Images & Documents</h5>
                             <p class="text-muted mb-3">Upload new files to replace existing ones (optional)</p>
                             
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="clubLogo" class="form-label">New Club Logo</label>
-                                    <%- include('../partials/logo-uploader', {
-                                        fieldName: 'logo',
-                                        uploadText: 'Click or drag to upload new club logo',
-                                        maxFileSize: 'Max 10MB',
-                                        acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
-                                        helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
-                                        currentImageUrl: carnival.clubLogoURL
-                                    }) %>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="clubLogo" class="form-label">Club Logo</label>
+                                <%- include('../partials/logo-uploader', {
+                                    fieldName: 'logo',
+                                    uploadText: 'Click or drag to upload new club logo',
+                                    maxFileSize: 'Max 10MB',
+                                    acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                                    helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
+                                    currentImageUrl: carnival.clubLogoURL
+                                }) %>
+                            </div>
+                            <div class="row">                                
                                 <div class="col-md-4 mb-3">
                                     <label for="promotionalImage" class="form-label">New Promotional Image</label>
                                     <div class="file-upload-area">
@@ -479,7 +479,7 @@
     </div>
 </div>
 
-<script type="module" src="/js/carnival-edit.js"></script>
+<script src="/js/carnival-edit.js"></script>
 <!-- Help modal partial for carnival edit page -->
 <%- include('../partials/help-modal.ejs', { modalId: 'help-carnival-edit' }) %>
 <script type="module" src="/js/help-config-carnivals-edit.js"></script>

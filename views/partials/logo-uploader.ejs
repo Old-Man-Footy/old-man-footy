@@ -59,13 +59,6 @@ const logoAcceptAttribute = locals.acceptAttribute || 'image/jpeg,image/jpg,imag
         </div>
     </div>
     <div class="col-md-9">
-        <label for="<%= logoInputId %>" class="form-label">
-            <% if (logoCurrentUrl) { %>
-                Upload New Logo
-            <% } else { %>
-                Upload Logo
-            <% } %>
-        </label>
         <div class="file-upload-area mb-3" id="<%= logoInputId %>-upload-area">
             <input type="file" 
                    class="form-control d-none" 
