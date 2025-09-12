@@ -129,6 +129,10 @@ export const carnivalAddPlayersManager = {
     }
 };
 
+// Expose selectAll and selectNone functions globally for template use
+window.selectAll = () => carnivalAddPlayersManager.selectAll();
+window.selectNone = () => carnivalAddPlayersManager.selectNone();
+
 // At the bottom of the file
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded carnival fired, initializing carnivalAddPlayersManager');

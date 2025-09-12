@@ -43,7 +43,7 @@ describe('adminEditClubManager', () => {
 
         // **THE FIX IS HERE:**
         // Mock the DragEvent class.
-        vi.stubGlobal('DragE', class extends Event {
+        vi.stubGlobal('DragEvent', class extends Event {
             constructor(type, options) {
                 super(type, options);
                 this.dataTransfer = options.dataTransfer || new DataTransfer();
@@ -137,7 +137,7 @@ describe('adminEditClubManager', () => {
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(testFile);
 
-        const dropEvent = new Event('drop', { dataTransfer });
+        const dropEvent = new DragEvent('drop', { dataTransfer });
         fileUploadArea.dispatchEvent(dropEvent);
 
         expect(fileInput.files[0].name).toBe('dropped-logo.png');
