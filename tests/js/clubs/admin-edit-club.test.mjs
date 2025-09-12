@@ -42,8 +42,8 @@ describe('adminEditClubManager', () => {
         });
 
         // **THE FIX IS HERE:**
-        // Mock the DragCarnival class.
-        vi.stubGlobal('DragCarnival', class extends Carnival {
+        // Mock the DragEvent class.
+        vi.stubGlobal('DragE', class extends Event {
             constructor(type, options) {
                 super(type, options);
                 this.dataTransfer = options.dataTransfer || new DataTransfer();
