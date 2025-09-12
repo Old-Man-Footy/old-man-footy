@@ -114,7 +114,12 @@ export const attendeesManager = {
     async approveRegistration(registrationId) {
         try {
             const result = await this.sendRequest(`/carnivals/${this.carnivalId}/attendees/${registrationId}/approve`, 'POST');
-            this.handleActionResult(result, 'Error approving registration');
+            if (result.success) {
+                this.updateRegistrationUI(registrationId, 'approved');
+                this.showAlert('success', result.message);
+            } else {
+                this.showAlert('danger', result.message || 'Error approving registration');
+            }
         } catch (error) {
             this.showAlert('danger', 'Error approving registration');
         }
@@ -124,9 +129,97 @@ export const attendeesManager = {
     async rejectRegistration(registrationId, rejectionReason) {
         try {
             const result = await this.sendRequest(`/carnivals/${this.carnivalId}/attendees/${registrationId}/reject`, 'POST', { rejectionReason });
-            this.handleActionResult(result, 'Error rejecting registration');
+            if (result.success) {
+                this.updateRegistrationUI(registrationId, 'rejected', rejectionReason);
+                this.showAlert('success', result.message);
+                // Close the rejection modal
+                const modalElement = document.getElementById('rejectionModal');
+                if (modalElement && typeof bootstrap !== 'undefined') {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+            } else {
+                this.showAlert('danger', result.message || 'Error rejecting registration');
+            }
         } catch (error) {
             this.showAlert('danger', 'Error rejecting registration');
+        }
+    },
+
+    // Updates the UI elements for a registration after approval/rejection
+    updateRegistrationUI(registrationId, newStatus, rejectionReason = null) {
+        const card = document.querySelector(`[data-registration-id="${registrationId}"]`);
+        if (!card) return;
+
+        // Update the data attribute
+        card.dataset.approvalStatus = newStatus;
+
+        // Find and update the status badge
+        const badgeContainer = card.querySelector('.position-absolute.top-0.end-0 .badge');
+        if (badgeContainer) {
+            if (newStatus === 'approved') {
+                badgeContainer.className = 'badge bg-primary';
+                badgeContainer.innerHTML = '<i class="bi bi-check-circle"></i> Approved';
+            } else if (newStatus === 'rejected') {
+                badgeContainer.className = 'badge bg-danger';
+                badgeContainer.innerHTML = '<i class="bi bi-x-circle"></i> Rejected';
+            }
+        }
+
+        // Remove approval/rejection buttons since status is no longer pending
+        const approvalButtonsContainer = card.querySelector('.mt-3.pt-2.border-top');
+        if (approvalButtonsContainer) {
+            approvalButtonsContainer.remove();
+        }
+
+        // Add approval/rejection information
+        const detailsContainer = card.querySelector('.flex-grow-1');
+        if (detailsContainer && newStatus === 'approved') {
+            // Add approval information
+            const approvalInfo = document.createElement('div');
+            approvalInfo.className = 'mt-2';
+            approvalInfo.innerHTML = `
+                <small class="text-success">
+                    <i class="bi bi-check-circle"></i> 
+                    <strong>Approved:</strong> ${new Date().toLocaleDateString()}
+                </small>
+            `;
+            detailsContainer.appendChild(approvalInfo);
+        } else if (detailsContainer && newStatus === 'rejected') {
+            // Add rejection information
+            const rejectionInfo = document.createElement('div');
+            rejectionInfo.className = 'mt-2';
+            rejectionInfo.innerHTML = `
+                <small class="text-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>Rejection Reason:</strong> ${rejectionReason || 'No reason provided'}
+                </small>
+            `;
+            detailsContainer.appendChild(rejectionInfo);
+        }
+
+        // Update statistics counters
+        this.updateAttendanceStatistics(newStatus);
+
+        // Reapply filters to ensure the card visibility is correct
+        this.applyFilters();
+    },
+
+    // Updates the attendance statistics cards at the top of the page
+    updateAttendanceStatistics(newStatus) {
+        const approvedStat = document.querySelector('.bg-primary .display-6');
+        const pendingStat = document.querySelector('.bg-tertiary .display-6');
+        
+        if (approvedStat && pendingStat) {
+            const currentApproved = parseInt(approvedStat.textContent) || 0;
+            const currentPending = parseInt(pendingStat.textContent) || 0;
+
+            if (newStatus === 'approved') {
+                approvedStat.textContent = currentApproved + 1;
+                pendingStat.textContent = Math.max(0, currentPending - 1);
+            } else if (newStatus === 'rejected') {
+                pendingStat.textContent = Math.max(0, currentPending - 1);
+            }
         }
     },
 
@@ -170,7 +263,8 @@ export const attendeesManager = {
             // This now correctly calls the method on the same object.
             this.showAlert('success', result.message);
             if (onSuccess) onSuccess();
-            setTimeout(() => window.location.reload(), 1500);
+            // Remove the automatic page reload to allow for immediate UI updates
+            // setTimeout(() => window.location.reload(), 1500);
         } else {
             this.showAlert('danger', result.message || errorMessage);
         }
