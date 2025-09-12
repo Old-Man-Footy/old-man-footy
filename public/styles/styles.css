@@ -528,6 +528,40 @@ button[type="submit"]:contains("Complete Registration"):focus {
     box-shadow: 0 0 20px rgba(0, 104, 55, 0.6) !important;
 }
 
+/* Dark mode bg-light styling */
+[data-theme="dark"] .bg-light {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .card-body.bg-light {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+/* Ensure proper text colors in dark mode bg-light sections */
+[data-theme="dark"] .bg-light h1,
+[data-theme="dark"] .bg-light h2,
+[data-theme="dark"] .bg-light h3,
+[data-theme="dark"] .bg-light h4,
+[data-theme="dark"] .bg-light h5,
+[data-theme="dark"] .bg-light h6,
+[data-theme="dark"] .card-body.bg-light h1,
+[data-theme="dark"] .card-body.bg-light h2,
+[data-theme="dark"] .card-body.bg-light h3,
+[data-theme="dark"] .card-body.bg-light h4,
+[data-theme="dark"] .card-body.bg-light h5,
+[data-theme="dark"] .card-body.bg-light h6 {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .bg-light p,
+[data-theme="dark"] .bg-light .text-muted,
+[data-theme="dark"] .card-body.bg-light p,
+[data-theme="dark"] .card-body.bg-light .text-muted {
+    color: var(--theme-text-secondary) !important;
+}
+
 /* Clickable Dashboard Stat Card Styling */
 .clickable-card {
     cursor: pointer;
