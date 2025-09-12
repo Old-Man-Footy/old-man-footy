@@ -232,16 +232,45 @@
                                                                 <strong>Contact:</strong> <%= registration.contactPerson %>
                                                             </div>
                                                         <% } %>
-                                                        <div class="col-6">
-                                                            <strong>Payment:</strong>
-                                                            <% if (registration.isPaid) { %>
-                                                                <span class="badge bg-primary">Paid</span>
-                                                                <% if (registration.paymentAmount) { %>
-                                                                    $<%= registration.paymentAmount %>
+                                                        <div class="col-12">
+                                                            <strong>Payment Details:</strong>
+                                                            <% 
+                                                                const teamFee = parseFloat(carnival.teamRegistrationFee || 0);
+                                                                const perPlayerFee = parseFloat(carnival.perPlayerFee || 0);
+                                                                const teams = registration.numberOfTeams || 1;
+                                                                const players = registration.playerCount || 0;
+                                                                const calculatedTotal = (teamFee * teams) + (perPlayerFee * players);
+                                                                const actualAmount = parseFloat(registration.paymentAmount || 0);
+                                                            %>
+                                                            
+                                                            <div class="mt-1">
+                                                                <% if (registration.isPaid) { %>
+                                                                    <span class="badge bg-primary me-2">Paid</span>
+                                                                <% } else { %>
+                                                                    <span class="badge bg-warning me-2">Pending</span>
                                                                 <% } %>
-                                                            <% } else { %>
-                                                                <span class="badge bg-warning">Pending</span>
-                                                            <% } %>
+                                                                
+                                                                <% if (actualAmount > 0) { %>
+                                                                    <strong>Amount: $<%= actualAmount.toFixed(2) %></strong>
+                                                                <% } %>
+                                                                
+                                                                <% if (calculatedTotal !== actualAmount && calculatedTotal > 0) { %>
+                                                                    <br><small class="text-muted">
+                                                                        (Calculated: $<%= calculatedTotal.toFixed(2) %> = 
+                                                                        $<%= teamFee.toFixed(2) %> × <%= teams %> team<%= teams !== 1 ? 's' : '' %>
+                                                                        <% if (players > 0) { %>
+                                                                            + $<%= perPlayerFee.toFixed(2) %> × <%= players %> player<%= players !== 1 ? 's' : '' %>
+                                                                        <% } %>)
+                                                                    </small>
+                                                                <% } else if (calculatedTotal > 0) { %>
+                                                                    <br><small class="text-muted">
+                                                                        $<%= teamFee.toFixed(2) %> × <%= teams %> team<%= teams !== 1 ? 's' : '' %>
+                                                                        <% if (players > 0) { %>
+                                                                            + $<%= perPlayerFee.toFixed(2) %> × <%= players %> player<%= players !== 1 ? 's' : '' %>
+                                                                        <% } %>
+                                                                    </small>
+                                                                <% } %>
+                                                            </div>
                                                         </div>
                                                     </div>
 
@@ -250,7 +279,7 @@
                                                         <div class="mt-3 pt-2 border-top">
                                                             <div class="d-flex gap-2">
                                                                 <button type="button" 
-                                                                        class="btn btn-light btn-sm approve-registration"
+                                                                        class="btn btn-tertiary btn-sm approve-registration"
                                                                         data-registration-id="<%= registration.id %>"
                                                                         data-club-name="<%= registration.participatingClub.clubName %>">
                                                                     <i class="bi bi-check-circle"></i> Approve

@@ -290,6 +290,35 @@
                                 </div>
                             </div>
                             
+                            <!-- Fee Structure -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <h6 class="text-secondary mb-3">
+                                        <i class="bi bi-currency-dollar"></i> Fee Structure
+                                    </h6>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="teamRegistrationFee" class="form-label">Team Registration Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="teamRegistrationFee" name="teamRegistrationFee" 
+                                               value="<%= carnival.teamRegistrationFee || '' %>" 
+                                               step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-text">Fee charged per team registration</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="perPlayerFee" class="form-label">Per-Player Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="perPlayerFee" name="perPlayerFee" 
+                                               value="<%= carnival.perPlayerFee || '' %>" 
+                                               step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-text">Fee charged per registered player</div>
+                                </div>
+                            </div>
+                            
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <div class="form-check">
@@ -468,7 +497,7 @@
                             <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-light">
+                            <button type="submit" class="btn btn-tertiary">
                                 <i class="bi bi-check-circle"></i> Update Carnival
                             </button>
                         </div>

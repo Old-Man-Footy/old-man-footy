@@ -14,6 +14,23 @@ import CarnivalEmailService from '../services/email/CarnivalEmailService.mjs';
 import { APPROVAL_STATUS } from '../config/constants.mjs';
 
 /**
+ * Calculate total registration fees for a carnival registration
+ * @param {Object} carnival - Carnival instance with fee fields
+ * @param {number} numberOfTeams - Number of teams registering
+ * @param {number} playerCount - Number of players (optional)
+ * @returns {number} Total calculated fee
+ */
+const calculateRegistrationFees = (carnival, numberOfTeams = 1, playerCount = 0) => {
+  const teamFee = parseFloat(carnival.teamRegistrationFee) || 0;
+  const perPlayerFee = parseFloat(carnival.perPlayerFee) || 0;
+  
+  const totalTeamFees = teamFee * numberOfTeams;
+  const totalPlayerFees = perPlayerFee * playerCount;
+  
+  return totalTeamFees + totalPlayerFees;
+};
+
+/**
  * Show carnival attendees management page (for carnival organizers)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -223,6 +240,11 @@ const registerClubForCarnivalHandler = async (req, res) => {
   if (isHostingClub) {
     finalPaymentAmount = 0.00; // Hosting clubs are exempt from all registration fees
     finalIsPaid = true; // Auto-mark as paid since there's no fee
+  } else if (!finalPaymentAmount) {
+    // If no payment amount provided, calculate based on carnival fee structure
+    const teamsCount = numberOfTeams ? parseInt(numberOfTeams) : 1;
+    const playersCount = playerCount ? parseInt(playerCount) : 0;
+    finalPaymentAmount = calculateRegistrationFees(carnival, teamsCount, playersCount);
   }
 
   const registrationData = {
@@ -589,6 +611,11 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     finalPaymentAmount = 0.00; // Hosting clubs are exempt from all registration fees
     finalIsPaid = true; // Auto-mark as paid since there's no fee
     finalApprovalStatus = 'approved'; // Hosting club auto-approves their own registration
+  } else {
+    // Calculate fees for non-hosting clubs based on carnival fee structure
+    const teamsCount = numberOfTeams ? parseInt(numberOfTeams) : 1;
+    const playersCount = playerCount ? parseInt(playerCount) : 0;
+    finalPaymentAmount = calculateRegistrationFees(carnival, teamsCount, playersCount);
   }
 
   // Create the registration with delegate's information

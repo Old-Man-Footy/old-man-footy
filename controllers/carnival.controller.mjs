@@ -589,6 +589,9 @@ const createCarnivalHandler = async (req, res) => {
     socialMediaInstagram: req.body.socialMediaInstagram || '',
     socialMediaTwitter: req.body.socialMediaTwitter || '',
     socialMediaWebsite: req.body.socialMediaWebsite || '',
+    // Fee structure
+    teamRegistrationFee: req.body.teamRegistrationFee ? parseFloat(req.body.teamRegistrationFee) : 0,
+    perPlayerFee: req.body.perPlayerFee ? parseFloat(req.body.perPlayerFee) : 0,
   };
 
   // Use the duplicate detection and merging service
@@ -888,6 +891,9 @@ const updateCarnivalHandler = async (req, res) => {
     socialMediaInstagram: req.body.socialMediaInstagram || '',
     socialMediaTwitter: req.body.socialMediaTwitter || '',
     socialMediaWebsite: req.body.socialMediaWebsite || '',
+    // Update fee structure
+    teamRegistrationFee: req.body.teamRegistrationFee ? parseFloat(req.body.teamRegistrationFee) : 0,
+    perPlayerFee: req.body.perPlayerFee ? parseFloat(req.body.perPlayerFee) : 0,
   };
 
   // Handle structured file uploads (including draw documents)

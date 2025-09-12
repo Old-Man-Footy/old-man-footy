@@ -1046,6 +1046,19 @@ Carnival.init({
     type: DataTypes.DATE,
     allowNull: true
   },
+  // Registration fee fields
+  teamRegistrationFee: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0.00,
+    comment: 'Standard team registration fee for this carnival'
+  },
+  perPlayerFee: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0.00,
+    comment: 'Fee charged per player participating in this carnival'
+  },
   // Admin notes (only visible to carnival owner and primary delegates)
   adminNotes: {
     type: DataTypes.TEXT,

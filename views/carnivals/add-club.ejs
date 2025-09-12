@@ -147,14 +147,33 @@
                                                 <i class="bi bi-credit-card"></i> Payment Information
                                             </h6>
                                         </div>
+                                        
+                                        <!-- Carnival Fee Structure (Read-only) -->
+                                        <div class="col-12 mb-3">
+                                            <div class="alert alert-info">
+                                                <h6 class="mb-2"><i class="bi bi-info-circle"></i> Carnival Fee Structure</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <strong>Team Registration Fee:</strong> $<%= carnival.teamRegistrationFee || '0.00' %>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Per-Player Fee:</strong> $<%= carnival.perPlayerFee || '0.00' %>
+                                                    </div>
+                                                </div>
+                                                <div class="form-text mt-2">
+                                                    Leave payment amount blank to auto-calculate based on teams and players
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
                                         <div class="col-md-6">
-                                            <label for="paymentAmount" class="form-label">Registration Fee</label>
+                                            <label for="paymentAmount" class="form-label">Manual Payment Amount (Optional)</label>
                                             <div class="input-group">
                                                 <span class="input-group-text">$</span>
                                                 <input type="number" class="form-control" id="paymentAmount" name="paymentAmount" 
-                                                       step="0.01" min="0" placeholder="0.00">
+                                                       step="0.01" min="0" placeholder="Auto-calculate">
                                             </div>
-                                            <div class="form-text">Enter the registration fee amount</div>
+                                            <div class="form-text">Leave blank to auto-calculate, or enter manual amount</div>
                                         </div>
                                         <div class="col-md-6 d-flex align-items-end">
                                             <div class="form-check">
