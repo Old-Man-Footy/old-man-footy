@@ -276,7 +276,12 @@
                                 </td>
                                 <td>
                                     <% if (player.shortsColour && player.shortsColour.trim() && player.shortsColour !== 'Not specified') { %>
-                                        <span class="badge bg-secondary"><%= player.shortsColour %></span>
+                                        <% 
+                                            const shortsColor = player.shortsColour.toLowerCase();
+                                            const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                                            const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
+                                        %>
+                                        <span class="badge <%= cssClass %>"><%= player.shortsColour %></span>
                                     <% } else { %>
                                         <span class="text-muted">Not specified</span>
                                     <% } %>

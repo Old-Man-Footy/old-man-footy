@@ -194,12 +194,11 @@
                                 </td>
                                 <td>
                                     <% if (player.shortsColour && player.shortsColour !== 'Not specified') { 
-                                         const shortsSlug = (player.shortsColour || '')
-                                            .toString()
-                                            .toLowerCase()
-                                            .replace(/[^a-z0-9]+/g, '-');
+                                         const shortsColor = player.shortsColour.toLowerCase();
+                                         const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                                         const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
                                     %>
-                                        <span class="badge shorts-colour-badge shorts-colour--<%= shortsSlug %>">
+                                        <span class="badge <%= cssClass %>">
                                             <%= player.shortsColour %>
                                         </span>
                                     <% } else { %>
