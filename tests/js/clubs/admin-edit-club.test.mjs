@@ -137,7 +137,7 @@ describe('adminEditClubManager', () => {
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(testFile);
 
-        const dropCarnival = new DragCarnival('drop', { dataTransfer });
+        const dropCarnival = new DragEvent('drop', { dataTransfer });
         fileUploadArea.dispatchEvent(dropCarnival);
 
         expect(fileInput.files[0].name).toBe('dropped-logo.png');
