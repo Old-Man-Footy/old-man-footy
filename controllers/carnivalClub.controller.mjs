@@ -172,6 +172,7 @@ const registerClubForCarnivalHandler = async (req, res) => {
   const {
     clubId,
     playerCount,
+    numberOfTeams,
     teamName,
     contactPerson,
     contactEmail,
@@ -209,6 +210,7 @@ const registerClubForCarnivalHandler = async (req, res) => {
     carnivalId: parseInt(carnivalId),
     clubId: parseInt(clubId),
     playerCount: playerCount ? parseInt(playerCount) : null,
+    numberOfTeams: numberOfTeams ? parseInt(numberOfTeams) : 1,
     teamName: teamName?.trim() || null,
     contactPerson: contactPerson?.trim() || null,
     contactEmail: contactEmail?.trim() || null,
@@ -333,6 +335,7 @@ const updateRegistrationHandler = async (req, res) => {
 
   const {
     playerCount,
+    numberOfTeams,
     teamName,
     contactPerson,
     contactEmail,
@@ -346,6 +349,7 @@ const updateRegistrationHandler = async (req, res) => {
   // Prepare update data
   const updateData = {
     playerCount: playerCount ? parseInt(playerCount) : null,
+    numberOfTeams: numberOfTeams ? parseInt(numberOfTeams) : 1,
     teamName: teamName?.trim() || null,
     contactPerson: contactPerson?.trim() || null,
     contactEmail: contactEmail?.trim() || null,
@@ -549,7 +553,7 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     attributes: ['clubName'],
   });
 
-  const { playerCount, teamName, contactPerson, contactEmail, contactPhone, specialRequirements } =
+  const { playerCount, numberOfTeams, teamName, contactPerson, contactEmail, contactPhone, specialRequirements } =
     req.body;
 
   // Get current count for display order
@@ -565,6 +569,7 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     carnivalId: parseInt(carnivalId),
     clubId: user.clubId,
     playerCount: playerCount ? parseInt(playerCount) : null,
+    numberOfTeams: numberOfTeams ? parseInt(numberOfTeams) : 1,
     teamName: teamName?.trim() || null,
     contactPerson: contactPerson?.trim() || `${user.firstName} ${user.lastName}`,
     contactEmail: contactEmail?.trim() || user.email,
@@ -1081,7 +1086,10 @@ const showMyClubPlayersForCarnivalHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}`);
   }
 
-  // Get assigned players
+  // Get assigned players organized by teams
+  const { teams, unassigned } = await CarnivalClubPlayer.getPlayersByTeam(registration.id);
+  
+  // Get traditional flat list for backward compatibility
   const assignedPlayers = await CarnivalClubPlayer.findAll({
     where: {
       carnivalClubId: registration.id,
@@ -1115,12 +1123,32 @@ const showMyClubPlayersForCarnivalHandler = async (req, res) => {
     ],
   });
 
+  // Generate team names and structure for multi-team display
+  const teamData = [];
+  const clubName = registration.participatingClub.clubName;
+  
+  if (registration.numberOfTeams > 1) {
+    for (let i = 1; i <= registration.numberOfTeams; i++) {
+      const teamName = `${clubName} ${i}`;
+      const teamPlayers = teams[i] || [];
+      teamData.push({
+        teamNumber: i,
+        teamName: teamName,
+        players: teamPlayers,
+        playerCount: teamPlayers.length
+      });
+    }
+  }
+
   return res.render('carnivals/my-club-players', {
     title: `Manage Players - ${carnival.title}`,
     carnival,
     registration,
     assignedPlayers,
     availablePlayers,
+    teams: teamData,
+    unassignedPlayers: unassigned,
+    isMultiTeam: registration.numberOfTeams > 1,
     additionalCSS: ['/styles/carnival.styles.css'],
   });
 };
@@ -1160,8 +1188,11 @@ const addPlayersToMyClubRegistrationHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}`);
   }
 
-  const { playerIds } = req.body;
+  const { playerIds, teamNumber } = req.body;
   const selectedPlayerIds = Array.isArray(playerIds) ? playerIds : [playerIds];
+
+  // Parse team number for multi-team assignments
+  const assignedTeamNumber = teamNumber && teamNumber !== '' ? parseInt(teamNumber) : null;
 
   // Verify all selected players belong to user's club
   const validPlayers = await ClubPlayer.findAll({
@@ -1177,11 +1208,12 @@ const addPlayersToMyClubRegistrationHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/register/players`);
   }
 
-  // Create player assignments
+  // Create player assignments with team number if specified
   const assignments = selectedPlayerIds.map((playerId) => ({
     carnivalClubId: registration.id,
     clubPlayerId: parseInt(playerId),
     attendanceStatus: 'confirmed',
+    teamNumber: assignedTeamNumber,
     addedAt: new Date(),
   }));
 
@@ -1418,6 +1450,125 @@ class CarnivalClubController {
   }
 }
 
+/**
+ * Assign a player to a specific team number
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const assignPlayerToTeamHandler = async (req, res) => {
+  const { carnivalId, assignmentId } = req.params;
+  const { teamNumber } = req.body;
+  const user = req.user;
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid team assignment.',
+      errors: errors.array()
+    });
+  }
+
+  // Ensure user has a club
+  if (!user.clubId) {
+    return res.status(403).json({
+      success: false,
+      message: 'You must be associated with a club to manage players.'
+    });
+  }
+
+  // Get the player assignment and verify ownership
+  const assignment = await CarnivalClubPlayer.findOne({
+    where: { id: assignmentId },
+    include: [
+      {
+        model: CarnivalClub,
+        as: 'carnivalClub',
+        where: {
+          carnivalId: carnivalId,
+          clubId: user.clubId,
+          isActive: true
+        }
+      }
+    ]
+  });
+
+  if (!assignment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Player assignment not found or you do not have permission to modify it.'
+    });
+  }
+
+  // Parse and validate team number (null or empty string means unassigned)
+  const parsedTeamNumber = teamNumber && teamNumber !== '' ? parseInt(teamNumber) : null;
+
+  // Update the team assignment
+  await assignment.update({
+    teamNumber: parsedTeamNumber
+  });
+
+  return res.json({
+    success: true,
+    message: parsedTeamNumber 
+      ? `Player assigned to team ${parsedTeamNumber}.` 
+      : 'Player unassigned from team.',
+    teamNumber: parsedTeamNumber
+  });
+};
+
+/**
+ * Unassign a player from their current team
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const unassignPlayerFromTeamHandler = async (req, res) => {
+  const { carnivalId, assignmentId } = req.params;
+  const user = req.user;
+
+  // Ensure user has a club
+  if (!user.clubId) {
+    return res.status(403).json({
+      success: false,
+      message: 'You must be associated with a club to manage players.'
+    });
+  }
+
+  // Get the player assignment and verify ownership
+  const assignment = await CarnivalClubPlayer.findOne({
+    where: { id: assignmentId },
+    include: [
+      {
+        model: CarnivalClub,
+        as: 'carnivalClub',
+        where: {
+          carnivalId: carnivalId,
+          clubId: user.clubId,
+          isActive: true
+        }
+      }
+    ]
+  });
+
+  if (!assignment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Player assignment not found or you do not have permission to modify it.'
+    });
+  }
+
+  // Unassign from team
+  await assignment.update({
+    teamNumber: null
+  });
+
+  return res.json({
+    success: true,
+    message: 'Player unassigned from team.',
+    teamNumber: null
+  });
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
   showCarnivalAttendeesHandler,
@@ -1436,6 +1587,8 @@ const rawControllers = {
   updatePlayerAttendanceStatusHandler,
   showMyClubPlayersForCarnivalHandler,
   addPlayersToMyClubRegistrationHandler,
+  assignPlayerToTeamHandler,
+  unassignPlayerFromTeamHandler,
   approveClubRegistrationHandler,
   rejectClubRegistrationHandler,
   updateApprovalStatus: CarnivalClubController.prototype.updateApprovalStatus,
@@ -1459,6 +1612,8 @@ export const {
   updatePlayerAttendanceStatusHandler: updatePlayerAttendanceStatus,
   showMyClubPlayersForCarnivalHandler: showMyClubPlayersForCarnival,
   addPlayersToMyClubRegistrationHandler: addPlayersToMyClubRegistration,
+  assignPlayerToTeamHandler: assignPlayerToTeam,
+  unassignPlayerFromTeamHandler: unassignPlayerFromTeam,
   approveClubRegistrationHandler: approveClubRegistration,
   rejectClubRegistrationHandler: rejectClubRegistration,
   updateApprovalStatus: updateApprovalStatus,

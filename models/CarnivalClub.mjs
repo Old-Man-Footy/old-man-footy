@@ -202,6 +202,16 @@ CarnivalClub.init({
     type: DataTypes.INTEGER,
     allowNull: true
   },
+  numberOfTeams: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    validate: {
+      min: 1,
+      max: 10
+    },
+    comment: 'Number of teams the club wants to register for this carnival'
+  },
   teamName: {
     type: DataTypes.STRING,
     allowNull: true,

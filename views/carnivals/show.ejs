@@ -599,11 +599,24 @@
                             
                             <!-- Registration Form -->
                             <form action="/carnivals/<%= carnival.id %>/register" method="POST" id="clubRegistrationForm">
-                                <div class="mb-3">
-                                    <label for="playerCount" class="form-label">Expected Player Count</label>
-                                    <input type="number" class="form-control" id="playerCount" name="playerCount" 
-                                           min="1" max="100" placeholder="e.g. 15">
-                                    <div class="form-text">Approximate number of players who might attend</div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="playerCount" class="form-label">Expected Player Count</label>
+                                            <input type="number" class="form-control" id="playerCount" name="playerCount" 
+                                                   min="1" max="100" placeholder="e.g. 15">
+                                            <div class="form-text">Approximate number of players who might attend</div>
+                                            <span class="text-muted">This is total number of players across all teams</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="numberOfTeams" class="form-label">Number of Teams</label>
+                                            <input type="number" class="form-control" id="numberOfTeams" name="numberOfTeams" 
+                                                   min="1" max="10" value="1" required>
+                                            <div class="form-text">How many teams to register</div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="mb-3">

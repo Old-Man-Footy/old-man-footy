@@ -202,7 +202,10 @@ vi.mock('/models/index.mjs', () => {
       findAll: vi.fn(),
       findOne: vi.fn(),
       bulkCreate: vi.fn(),
-      getAttendanceStats: vi.fn()
+      getAttendanceStats: vi.fn(),
+      getPlayersByTeam: vi.fn(),
+      assignToTeam: vi.fn(),
+      removeFromTeam: vi.fn()
     },
     createMockCarnivalClub,
     createMockCarnival,
@@ -240,6 +243,8 @@ import {
   updatePlayerAttendanceStatus,
   showMyClubPlayersForCarnival,
   addPlayersToMyClubRegistration,
+  assignPlayerToTeam,
+  unassignPlayerFromTeam,
   approveClubRegistration,
   rejectClubRegistration,
   updateApprovalStatus
@@ -313,6 +318,12 @@ describe('Carnival Club Controller', () => {
       pending: 3,
       declined: 2
     });
+    CarnivalClubPlayer.getPlayersByTeam.mockResolvedValue({
+      teams: [],
+      unassigned: []
+    });
+    CarnivalClubPlayer.assignToTeam.mockResolvedValue(true);
+    CarnivalClubPlayer.removeFromTeam.mockResolvedValue(true);
 
     // Mock validation to return no errors by default
     validationResult.mockReturnValue({
@@ -715,6 +726,260 @@ describe('Carnival Club Controller', () => {
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         message: 'Player attendance status updated successfully.'
+      });
+    });
+  });
+
+  describe('Multi-Team Player Management', () => {
+    it('should show my club players with team organization for multi-team registration', async () => {
+      const mockCarnival = createMockCarnival();
+      const mockRegistration = createMockCarnivalClub({
+        numberOfTeams: 2,
+        participatingClub: createMockClub({ clubName: 'Test Club' })
+      });
+      
+      const mockTeamData = {
+        teams: [
+          {
+            teamNumber: 1,
+            players: [
+              createMockCarnivalClubPlayer({ 
+                id: 1, 
+                teamNumber: 1,
+                clubPlayer: createMockClubPlayer({ id: 1, firstName: 'John', lastName: 'Player1' })
+              })
+            ]
+          },
+          {
+            teamNumber: 2, 
+            players: [
+              createMockCarnivalClubPlayer({ 
+                id: 2, 
+                teamNumber: 2,
+                clubPlayer: createMockClubPlayer({ id: 2, firstName: 'Jane', lastName: 'Player2' })
+              })
+            ]
+          }
+        ],
+        unassigned: [
+          createMockCarnivalClubPlayer({ 
+            id: 3, 
+            teamNumber: null,
+            clubPlayer: createMockClubPlayer({ id: 3, firstName: 'Bob', lastName: 'Unassigned' })
+          })
+        ]
+      };
+
+      Carnival.findOne.mockResolvedValue(mockCarnival);
+      CarnivalClub.findOne.mockResolvedValue(mockRegistration);
+      CarnivalClubPlayer.getPlayersByTeam.mockResolvedValue(mockTeamData);
+      CarnivalClubPlayer.findAll.mockResolvedValue([]);
+      ClubPlayer.findAll.mockResolvedValue([]);
+
+      await showMyClubPlayersForCarnival(req, res, next);
+
+      expect(CarnivalClubPlayer.getPlayersByTeam).toHaveBeenCalledWith(mockRegistration.id);
+      expect(res.render).toHaveBeenCalledWith('carnivals/my-club-players', expect.objectContaining({
+        title: 'Manage Players - Test Carnival',
+        carnival: mockCarnival,
+        registration: mockRegistration,
+        additionalCSS: expect.arrayContaining(['/styles/carnival.styles.css']),
+        assignedPlayers: expect.any(Array),
+        availablePlayers: expect.any(Array),
+        unassignedPlayers: expect.any(Array),
+        teams: expect.any(Array),
+        isMultiTeam: true
+      }));
+    });
+
+    it('should show single team view for single-team registration', async () => {
+      const mockCarnival = createMockCarnival();
+      const mockRegistration = createMockCarnivalClub({
+        numberOfTeams: 1,
+        participatingClub: createMockClub({ clubName: 'Test Club' })
+      });
+      
+      const mockTeamData = {
+        teams: [],
+        unassigned: []
+      };
+
+      Carnival.findOne.mockResolvedValue(mockCarnival);
+      CarnivalClub.findOne.mockResolvedValue(mockRegistration);
+      CarnivalClubPlayer.getPlayersByTeam.mockResolvedValue(mockTeamData);
+      CarnivalClubPlayer.findAll.mockResolvedValue([]);
+      ClubPlayer.findAll.mockResolvedValue([]);
+
+      await showMyClubPlayersForCarnival(req, res, next);
+
+      expect(res.render).toHaveBeenCalledWith('carnivals/my-club-players', expect.objectContaining({
+        isMultiTeam: false
+      }));
+    });
+
+    it('should add players to specific team in multi-team registration', async () => {
+      const mockCarnival = createMockCarnival();
+      const mockRegistration = createMockCarnivalClub();
+      const mockValidPlayers = [
+        createMockClubPlayer({ id: 1 }),
+        createMockClubPlayer({ id: 2 })
+      ];
+
+      req.body = { 
+        playerIds: ['1', '2'],
+        teamNumber: '2'
+      };
+
+      Carnival.findOne.mockResolvedValue(mockCarnival);
+      CarnivalClub.findOne.mockResolvedValue(mockRegistration);
+      ClubPlayer.findAll.mockResolvedValue(mockValidPlayers);
+
+      await addPlayersToMyClubRegistration(req, res, next);
+
+      expect(CarnivalClubPlayer.bulkCreate).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            carnivalClubId: mockRegistration.id,
+            clubPlayerId: 1,
+            attendanceStatus: 'confirmed',
+            teamNumber: 2
+          }),
+          expect.objectContaining({
+            carnivalClubId: mockRegistration.id,
+            clubPlayerId: 2,
+            attendanceStatus: 'confirmed',
+            teamNumber: 2
+          })
+        ]),
+        { ignoreDuplicates: true }
+      );
+
+      expect(req.flash).toHaveBeenCalledWith('success_msg', '2 player(s) have been added to your carnival registration.');
+    });
+
+    it('should add players without team assignment when no team specified', async () => {
+      const mockCarnival = createMockCarnival();
+      const mockRegistration = createMockCarnivalClub();
+      const mockValidPlayers = [createMockClubPlayer({ id: 1 })];
+
+      req.body = { 
+        playerIds: ['1'],
+        teamNumber: ''
+      };
+
+      Carnival.findOne.mockResolvedValue(mockCarnival);
+      CarnivalClub.findOne.mockResolvedValue(mockRegistration);
+      ClubPlayer.findAll.mockResolvedValue(mockValidPlayers);
+
+      await addPlayersToMyClubRegistration(req, res, next);
+
+      expect(CarnivalClubPlayer.bulkCreate).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            carnivalClubId: mockRegistration.id,
+            clubPlayerId: 1,
+            attendanceStatus: 'confirmed',
+            teamNumber: null
+          })
+        ]),
+        { ignoreDuplicates: true }
+      );
+    });
+
+    it('should assign player to team successfully', async () => {
+      req.params = { carnivalId: '1', assignmentId: '1' };
+      req.body = { teamNumber: '2' };
+      req.user = { clubId: 1 };
+
+      const mockAssignment = {
+        id: 1,
+        update: vi.fn().mockResolvedValue(true),
+        carnivalClub: { clubId: 1, carnivalId: 1 }
+      };
+
+      CarnivalClubPlayer.findOne.mockResolvedValue(mockAssignment);
+
+      await assignPlayerToTeam(req, res, next);
+
+      expect(mockAssignment.update).toHaveBeenCalledWith({ teamNumber: 2 });
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Player assigned to team 2.',
+        teamNumber: 2
+      });
+    });
+
+    it('should handle invalid team number in player assignment', async () => {
+      req.params = { carnivalId: '1', assignmentId: '1' };
+      req.body = { teamNumber: 'invalid' };
+      req.user = { clubId: 1 };
+
+      // Mock validation error
+      validationResult.mockReturnValue({
+        isEmpty: () => false,
+        array: () => [{ field: 'teamNumber', message: 'Invalid team number' }]
+      });
+
+      await assignPlayerToTeam(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid team assignment.',
+        errors: [{ field: 'teamNumber', message: 'Invalid team number' }]
+      });
+    });
+
+    it('should unassign player from team successfully', async () => {
+      req.params = { carnivalId: '1', assignmentId: '1' };
+      req.user = { clubId: 1 };
+
+      const mockAssignment = {
+        id: 1,
+        teamNumber: 1,
+        update: vi.fn().mockResolvedValue(true),
+        carnivalClub: { clubId: 1, carnivalId: 1 }
+      };
+
+      CarnivalClubPlayer.findOne.mockResolvedValue(mockAssignment);
+
+      await unassignPlayerFromTeam(req, res, next);
+
+      expect(mockAssignment.update).toHaveBeenCalledWith({ teamNumber: null });
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Player unassigned from team.',
+        teamNumber: null
+      });
+    });
+
+    it('should handle player not found during team assignment', async () => {
+      req.params = { carnivalId: '1', assignmentId: '999' };
+      req.body = { teamNumber: '1' };
+      req.user = { clubId: 1 };
+
+      CarnivalClubPlayer.findOne.mockResolvedValue(null);
+
+      await assignPlayerToTeam(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Player assignment not found or you do not have permission to modify it.'
+      });
+    });
+
+    it('should prevent team assignment for unauthorized club', async () => {
+      req.params = { carnivalId: '1', assignmentId: '1' };
+      req.body = { teamNumber: '1' };
+      req.user = { clubId: null }; // User without club
+
+      await assignPlayerToTeam(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'You must be associated with a club to manage players.'
       });
     });
   });

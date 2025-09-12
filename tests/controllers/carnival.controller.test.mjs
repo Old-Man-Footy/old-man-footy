@@ -74,9 +74,10 @@ vi.mock('/models/index.mjs', () => {
       state: 'NSW'
     }),
     canUserEditAsync: vi.fn().mockResolvedValue(true),
+    isRegistrationActiveAsync: vi.fn().mockResolvedValue(true),
     update: vi.fn().mockResolvedValue(true),
     toJSON: vi.fn().mockImplementation(function () {
-      const { toJSON, getPublicDisplayData, canUserEditAsync, update, ...rest } = this;
+      const { toJSON, getPublicDisplayData, canUserEditAsync, isRegistrationActiveAsync, update, ...rest } = this;
       return { ...rest, ...overrides };
     }),
     ...overrides

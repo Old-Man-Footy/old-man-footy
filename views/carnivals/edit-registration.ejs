@@ -76,19 +76,26 @@
                                             <i class="bi bi-people"></i> Team Details
                                         </h6>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="teamName" class="form-label">Team Name</label>
                                         <input type="text" class="form-control" id="teamName" name="teamName" 
                                                value="<%= registration.teamName || '' %>"
                                                placeholder="e.g., Warriors A-Team" maxlength="100">
                                         <div class="form-text">Optional team name if different from club name</div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="playerCount" class="form-label">Number of Players</label>
                                         <input type="number" class="form-control" id="playerCount" name="playerCount" 
                                                value="<%= registration.playerCount || '' %>"
                                                min="1" max="100" placeholder="e.g., 15">
                                         <div class="form-text">Expected number of players attending</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="numberOfTeams" class="form-label">Number of Teams</label>
+                                        <input type="number" class="form-control" id="numberOfTeams" name="numberOfTeams" 
+                                               value="<%= registration.numberOfTeams || 1 %>"
+                                               min="1" max="10" required>
+                                        <div class="form-text">How many teams to register</div>
                                     </div>
                                 </div>
 
