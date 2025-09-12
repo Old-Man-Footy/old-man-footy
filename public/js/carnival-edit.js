@@ -1,6 +1,6 @@
 /**
  * Carnival Edit JavaScript
- * Handles file upload area interactions and multi-day event functionality for the carnival edit page.
+ * Handles file upload area interactions and multi-day carnival functionality for the carnival edit page.
  * Refactored into a testable object pattern.
  */
 
@@ -33,7 +33,7 @@ export const carnivalEditManager = {
             registrationLinkInput: document.getElementById('registrationLink'),
             linkStatusElement: document.getElementById('linkStatus'),
             testLinkBtn: document.getElementById('testLinkBtn'),
-            form: document.querySelector('form[data-mysideline-event-url]'),
+            form: document.querySelector('form[data-mysideline-carnival-url]'),
         };
     },
 
@@ -67,13 +67,13 @@ export const carnivalEditManager = {
 
     // Handle click on a file upload area using an arrow function for proper scoping.
     // Handle click on a file upload area using a regular function for proper `this` binding.
-    handleFileAreaClick: function(event) {
-        const area = event.currentTarget;
+    handleFileAreaClick: function(carnival) {
+        const area = carnival.currentTarget;
         const input = area?.querySelector('input[type="file"]');
         if (input) input.click();
     },
 
-    // Sets up event listeners and logic for multi-day events.
+    // Sets up carnival listeners and logic for multi-day events.
     initializeMultiDayEventFunctionality() {
         const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
         if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;
@@ -95,7 +95,7 @@ export const carnivalEditManager = {
         const isChecked = isMultiDayCheckbox.checked;
 
         endDateContainer.style.display = isChecked ? 'block' : 'none';
-        dateLabel.textContent = isChecked ? 'Event Start Date *' : 'Date *';
+        dateLabel.textContent = isChecked ? 'Carnival Start Date *' : 'Date *';
         endDateInput.required = isChecked;
 
         if (isChecked) {
@@ -133,7 +133,7 @@ export const carnivalEditManager = {
         }
     },
 
-    // Sets up event listeners and logic for MySideline integration.
+    // Sets up carnival listeners and logic for MySideline integration.
     initializeMySidelineIntegration() {
         const { mySidelineIdInput, registrationLinkInput } = this.elements;
         if (!mySidelineIdInput || !registrationLinkInput) return;
@@ -158,14 +158,14 @@ export const carnivalEditManager = {
         }
         const cleanId = eventId.replace(/\D/g, '');
         if (!cleanId) {
-            this.updateRegistrationLink('', 'Please enter a valid numeric MySideline event ID', 'text-warning');
+            this.updateRegistrationLink('', 'Please enter a valid numeric MySideline carnival ID', 'text-warning');
             return;
         }
         if (cleanId !== eventId) {
             mySidelineIdInput.value = cleanId;
         }
         const mySidelineUrl = this.generateMySidelineUrl(cleanId);
-        this.updateRegistrationLink(mySidelineUrl, `✓ Registration link auto-generated from MySideline event ${cleanId}`, 'text-success');
+        this.updateRegistrationLink(mySidelineUrl, `✓ Registration link auto-generated from MySideline carnival ${cleanId}`, 'text-success');
     },
 
     // Handles changes to the registration link input.
@@ -180,7 +180,7 @@ export const carnivalEditManager = {
             const mySidelineMatch = url.match(/mysideline\.com\/register\/(\d+)/);
             if (mySidelineMatch) {
                 const extractedId = mySidelineMatch[1];
-                this.updateRegistrationLink(url, `✓ MySideline registration link (Event ID: ${extractedId})`, 'text-success');
+                this.updateRegistrationLink(url, `✓ MySideline registration link (Carnival ID: ${extractedId})`, 'text-success');
                 if (!mySidelineIdInput.value || mySidelineIdInput.value !== extractedId) {
                     mySidelineIdInput.value = extractedId;
                 }
@@ -192,7 +192,7 @@ export const carnivalEditManager = {
         }
     },
 
-    // Generates a MySideline URL from an event ID.
+    // Generates a MySideline URL from an carnival ID.
     generateMySidelineUrl(eventId) {
         const { form } = this.elements;
         const mySidelineBaseUrl = form ? form.dataset.mysidelineEventUrl : '';

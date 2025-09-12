@@ -192,7 +192,7 @@ describe('Security Middleware', () => {
         expect(result).toBe('Content');
       });
 
-      it('should remove event handlers', () => {
+      it('should remove carnival handlers', () => {
         const maliciousInput = '<img onerror="alert(1)" src="x">Content';
         const result = sanitizeString(maliciousInput);
         expect(result).not.toContain('onerror=');
@@ -655,7 +655,7 @@ describe('Security Middleware', () => {
         
         expect(console.log).toHaveBeenCalledWith(
           'SECURITY_AUDIT:',
-          expect.stringContaining('"event":"test_event"')
+          expect.stringContaining('"carnival":"test_event"')
         );
         expect(console.log).toHaveBeenCalledWith(
           'SECURITY_AUDIT:',

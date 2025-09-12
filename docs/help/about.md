@@ -28,7 +28,7 @@ See how carnivals are created, managed, and promoted on the platform.
 **How to Learn More About Carnivals:**
 1. Visit the Carnivals section.
 2. Browse upcoming and past events.
-3. Click any event for full details and registration options.
+3. Click any carnival for full details and registration options.
 
 ## Tips & Best Practices
 - Read the About page to understand the platform’s values and community focus.

@@ -10,7 +10,7 @@ The Manage Club page lets club managers oversee all aspects of their club, inclu
 ### Member Management
 View, add, or edit club members.
 
-### Event Management
+### Carnival Management
 Manage club participation in carnivals and other events.
 
 ### Sponsor Management
@@ -28,5 +28,5 @@ Add or update sponsors supporting the club.
 
 ## Tips & Best Practices
 - Keep member and sponsor info up to date.
-- Review event participation regularly.
+- Review carnival participation regularly.
 - Contact support for help with club management.

@@ -14,7 +14,7 @@ import { sequelize } from '../config/database.mjs';
 class SyncLog extends Model {
   /**
    * Mark sync as completed
-   * @param {Object} results - Sync results containing event counts
+   * @param {Object} results - Sync results containing carnival counts
    */
   async markCompleted(results = {}) {
     return await this.update({

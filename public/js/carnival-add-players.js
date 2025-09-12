@@ -7,7 +7,7 @@ export const carnivalAddPlayersManager = {
     elements: {},
 
     /**
-     * Initializes the manager, setting up event listeners and UI state.
+     * Initializes the manager, setting up carnival listeners and UI state.
      * @function
      */
     initialize() {
@@ -38,7 +38,7 @@ export const carnivalAddPlayersManager = {
     },
 
     /**
-     * Binds event listeners to cached elements.
+     * Binds carnival listeners to cached elements.
      * @function
      */
     bindEvents() {
@@ -50,7 +50,7 @@ export const carnivalAddPlayersManager = {
             this.elements.form.addEventListener('submit', this.handleFormSubmit.bind(this));
         }
 
-        // Bind click event listeners to the select buttons
+        // Bind click carnival listeners to the select buttons
         if (this.elements.selectAllBtn) {
             this.elements.selectAllBtn.addEventListener('click', this.selectAll.bind(this));
         }
@@ -59,8 +59,8 @@ export const carnivalAddPlayersManager = {
             this.elements.selectNoneBtn.addEventListener('click', this.selectNone.bind(this));
         }
         
-        // Debug logging to verify event listeners are bound
-        console.log('Event listeners bound:', {
+        // Debug logging to verify carnival listeners are bound
+        console.log('Carnival listeners bound:', {
             selectAllBtn: !!this.elements.selectAllBtn,
             selectNoneBtn: !!this.elements.selectNoneBtn,
             checkboxCount: this.elements.checkboxes.length
@@ -94,8 +94,8 @@ export const carnivalAddPlayersManager = {
         checkboxes.forEach(checkbox => {
             console.log('Setting checkbox checked to true:', checkbox);
             checkbox.checked = true;
-            // Trigger change event to ensure UI updates properly
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            // Trigger change carnival to ensure UI updates properly
+            checkbox.dispatchEvent(new Carnival('change', { bubbles: true }));
         });
         this.updateSubmitButton();
     },
@@ -109,8 +109,8 @@ export const carnivalAddPlayersManager = {
         const checkboxes = document.querySelectorAll('.player-checkbox');
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
-            // Trigger change event to ensure UI updates properly
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            // Trigger change carnival to ensure UI updates properly
+            checkbox.dispatchEvent(new Carnival('change', { bubbles: true }));
         });
         this.updateSubmitButton();
     },
@@ -118,12 +118,12 @@ export const carnivalAddPlayersManager = {
     /**
      * Handles form submission, ensuring at least one player is selected.
      * @function
-     * @param {Event} event - The submit event.
+     * @param {Carnival} carnival - The submit carnival.
      */
-    handleFormSubmit(event) {
+    handleFormSubmit(carnival) {
         const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
         if (selectedCount === 0) {
-            event.preventDefault();
+            carnival.preventDefault();
             alert('Please select at least one player to add.');
         }
     }
@@ -131,7 +131,7 @@ export const carnivalAddPlayersManager = {
 
 // At the bottom of the file
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded event fired, initializing carnivalAddPlayersManager');
+    console.log('DOMContentLoaded carnival fired, initializing carnivalAddPlayersManager');
     carnivalAddPlayersManager.initialize();
     console.log('carnivalAddPlayersManager initialized');
 });

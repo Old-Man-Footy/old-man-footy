@@ -4,7 +4,7 @@ title: Carnival Sponsors Help
 ---
 
 ## Overview
-The Carnival Sponsors page lists all sponsors supporting a carnival. It’s the main place to view, add, or edit sponsor information for the event.
+The Carnival Sponsors page lists all sponsors supporting a carnival. It’s the main place to view, add, or edit sponsor information for the carnival.
 
 ## Key Features Explained
 ### Sponsor List

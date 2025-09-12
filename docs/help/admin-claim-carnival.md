@@ -11,7 +11,7 @@ The Claim Carnival page allows admins to take ownership of carnivals imported fr
 Shows all information about the imported carnival.
 
 ### Claim Button
-Lets you confirm ownership and begin managing the event.
+Lets you confirm ownership and begin managing the carnival.
 
 ## Step-by-Step Guides
 **How to Claim a Carnival:**

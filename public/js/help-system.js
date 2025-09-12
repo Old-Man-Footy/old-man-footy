@@ -23,8 +23,8 @@ export const helpSystemManager = {
     }
   },
 
-  handleHelpClick: async (event) => {
-    event.preventDefault(); // Prevent default link behavior
+  handleHelpClick: async (carnival) => {
+    carnival.preventDefault(); // Prevent default link behavior
     
     // Look for data-page-id on body first, then search in DOM
     let pageId = document.body.dataset.pageId;

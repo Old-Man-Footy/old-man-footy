@@ -19,7 +19,7 @@ Assign clubs to carnivals and manage their participation.
 ## Step-by-Step Guides
 **How to Create a New Carnival:**
 1. Click the "Add Carnival" button.
-2. Fill in the event details (name, date, location).
+2. Fill in the carnival details (name, date, location).
 3. Assign participating clubs.
 4. Click "Save" to create the carnival.
 
@@ -29,6 +29,6 @@ Assign clubs to carnivals and manage their participation.
 3. Update details as needed and save changes.
 
 ## Tips & Best Practices
-- Double-check event dates and club assignments before saving.
+- Double-check carnival dates and club assignments before saving.
 - Use the edit feature to keep carnival info current.
 - Archive past carnivals for record-keeping.

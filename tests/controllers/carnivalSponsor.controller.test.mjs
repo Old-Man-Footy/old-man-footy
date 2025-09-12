@@ -62,7 +62,7 @@ vi.mock('/models/index.mjs', () => {
     startDate: new Date('2024-06-01'),
     endDate: new Date('2024-06-03'),
     location: 'Sydney Olympic Park',
-    description: 'Annual carnival event',
+    description: 'Annual carnival carnival',
     registrationOpenDate: new Date('2024-01-01'),
     registrationCloseDate: new Date('2024-05-01'),
     isActive: true,

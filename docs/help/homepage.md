@@ -11,7 +11,7 @@ Welcome to Old Man Footy! This is your starting point for exploring Masters Rugb
 The large banner at the top introduces Old Man Footy and highlights the main purpose of the site.
 
 ### Upcoming Carnivals
-A list of upcoming carnivals is displayed so you can quickly see what's happening soon. Click any event for more details or to register.
+A list of upcoming carnivals is displayed so you can quickly see what's happening soon. Click any carnival for more details or to register.
 
 ### Quick Stats
 See at-a-glance statistics about clubs, carnivals, and registered players. This helps you understand the scale and activity of the community.
@@ -31,7 +31,7 @@ The top menu lets you access all major sections: Clubs, Carnivals, Sponsors, Con
 **How to Register for a Carnival:**
 1. Scroll to the "Upcoming Carnivals" section.
 2. Click on the carnival you want to join.
-3. Follow the registration instructions on the event page.
+3. Follow the registration instructions on the carnival page.
 
 **How to Get Help:**
 1. Click the Help button in the top navigation.

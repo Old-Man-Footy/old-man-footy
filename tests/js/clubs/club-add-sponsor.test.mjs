@@ -126,7 +126,7 @@ describe('clubAddSponsorManager', () => {
     const input = clubAddSponsorManager.elements.sponsorNameInput;
     const checkSpy = vi.spyOn(clubAddSponsorManager, 'checkForDuplicates').mockResolvedValue();
     input.value = 'Sponsor';
-    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Carnival('input'));
     await new Promise(r => setTimeout(r, 600));
     expect(checkSpy).toHaveBeenCalledWith('Sponsor');
     checkSpy.mockRestore();
@@ -136,7 +136,7 @@ describe('clubAddSponsorManager', () => {
     const input = clubAddSponsorManager.elements.sponsorNameInput;
     const hideSpy = vi.spyOn(clubAddSponsorManager, 'hideDuplicateAlert');
     input.value = 'ab';
-    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Carnival('input'));
     expect(hideSpy).toHaveBeenCalled();
     hideSpy.mockRestore();
   });
@@ -161,7 +161,7 @@ describe('clubAddSponsorManager', () => {
   it('should handle form submit and show loading state', () => {
     const el = clubAddSponsorManager.elements;
     el.sponsorTypeInput.value = 'new';
-    const evt = new Event('submit');
+    const evt = new Carnival('submit');
     el.submitBtn.disabled = false;
     el.submitBtn.innerHTML = '<span id="submitText">Add Sponsor</span>';
     clubAddSponsorManager.handleFormSubmit(evt);

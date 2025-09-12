@@ -89,7 +89,7 @@ export class AuthEmailService extends BaseEmailService {
                     <p>You'll now receive email updates about:</p>
                     <ul>
                         <li>New rugby league carnivals ${stateText}</li>
-                        <li>Event updates and schedule changes</li>
+                        <li>Carnival updates and schedule changes</li>
                         <li>Registration reminders</li>
                         <li>Important announcements</li>
                     </ul>

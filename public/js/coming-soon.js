@@ -86,7 +86,7 @@ function setupEmailSubscription() {
     }
     
     if (form && submitBtn) {
-        console.log('Adding event listener to form');
+        console.log('Adding carnival listener to form');
         form.addEventListener('submit', function(e) {
             console.log('Form submitted!');
             e.preventDefault();

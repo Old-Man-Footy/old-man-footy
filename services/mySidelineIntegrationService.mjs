@@ -96,7 +96,7 @@ class MySidelineIntegrationService {
         }
 
         this.isRunning = true;
-        console.log('Starting MySideline event synchronization...');
+        console.log('Starting MySideline carnival synchronization...');
 
         // Create sync log entry at the start - this ensures we always track sync attempts
         const syncLog = await SyncLog.startSync('mysideline', {
@@ -134,15 +134,15 @@ class MySidelineIntegrationService {
             }
 
             // Step 1.5: Validate and clean the scraped data
-            console.log('Validating and cleaning scraped event data...');
-            const cleanedEvents = scrapedEvents.map(event => {
+            console.log('Validating and cleaning scraped carnival data...');
+            const cleanedEvents = scrapedEvents.map(carnival => {
                 try {
-                    return this.scraperService.validateAndCleanData(event);
+                    return this.scraperService.validateAndCleanData(carnival);
                 } catch (validationError) {
-                    console.warn(`Failed to validate event "${event.title}": ${validationError.message}`);
+                    console.warn(`Failed to validate carnival "${carnival.title}": ${validationError.message}`);
                     return null; // Mark for filtering out
                 }
-            }).filter(event => event !== null); // Remove failed validations
+            }).filter(carnival => carnival !== null); // Remove failed validations
 
             console.log(`${cleanedEvents.length}/${scrapedEvents.length} events passed validation`);
 
@@ -167,18 +167,18 @@ class MySidelineIntegrationService {
             const processedEvents = await this.dataService.processScrapedEvents(cleanedEvents);
             
             // Count new vs updated events for logging
-            const eventsCreated = processedEvents.filter(event => 
-                event.createdAt && new Date(event.createdAt) > new Date(Date.now() - 60000) // Created in last minute
+            const eventsCreated = processedEvents.filter(carnival => 
+                carnival.createdAt && new Date(carnival.createdAt) > new Date(Date.now() - 60000) // Created in last minute
             ).length;
             const eventsUpdated = processedEvents.length - eventsCreated;
             
-            // For each processed event where clubImageUrl starts with http
+            // For each processed carnival where clubImageUrl starts with http
             const imageDownloadPromises = processedEvents
-                .filter(event => event.clubLogoURL 
-                    && event.clubLogoURL.startsWith('http')).map(event => {
-                        const logoUrl = event.clubLogoURL;
+                .filter(carnival => carnival.clubLogoURL 
+                    && carnival.clubLogoURL.startsWith('http')).map(carnival => {
+                        const logoUrl = carnival.clubLogoURL;
                         const entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL; // Use constant instead of string
-                        const entityId = event.id;
+                        const entityId = carnival.id;
                         const imageType = ImageNamingService.IMAGE_TYPES.LOGO;
                         return { logoUrl, entityType, entityId, imageType };                
             });
@@ -193,34 +193,34 @@ class MySidelineIntegrationService {
             if (results && results.length > 0) {
                 console.log(`Downloaded logos for ${results.length} events.`);
                 results.forEach(async result => {
-                    // Update the event with the public URL
-                    const event = processedEvents.find(e => e.id === result.entityId);
+                    // Update the carnival with the public URL
+                    const carnival = processedEvents.find(e => e.id === result.entityId);
                     if (result.success) {
-                        console.log(`Logo downloaded successfully for event ${result.entityId}: ${result.publicUrl}`);
-                        if (event) {
+                        console.log(`Logo downloaded successfully for carnival ${result.entityId}: ${result.publicUrl}`);
+                        if (carnival) {
                             try {
                                 await Carnival.update(
                                     { clubLogoURL: result.publicUrl },
-                                    { where: { id: event.id } }
+                                    { where: { id: carnival.id } }
                                 );
-                                console.log(`✅ Updated event ${event.id} with new logo URL`);
+                                console.log(`✅ Updated carnival ${carnival.id} with new logo URL`);
                             } catch (updateError) {
-                                console.error(`❌ Failed to update event ${event.id} logo URL:`, updateError.message);
+                                console.error(`❌ Failed to update carnival ${carnival.id} logo URL:`, updateError.message);
                             }
                         } else {
-                            console.warn(`Event with ID ${result.entityId} not found in processed events.`);
+                            console.warn(`Carnival with ID ${result.entityId} not found in processed events.`);
                         }
                     } else {
-                        console.warn(`Failed to download logo for event ${result.entityId}: ${result.error}`);
-                        if (event) {
+                        console.warn(`Failed to download logo for carnival ${result.entityId}: ${result.error}`);
+                        if (carnival) {
                             try {
                                 await Carnival.update(
                                     { clubLogoURL: null },
-                                    { where: { id: event.id } }
+                                    { where: { id: carnival.id } }
                                 );
-                                console.log(`✅ Cleared external logo from event ${event.id}`);
+                                console.log(`✅ Cleared external logo from carnival ${carnival.id}`);
                             } catch (updateError) {
-                                console.error(`❌ Failed to clear logo from ${event.id}:`, updateError.message);
+                                console.error(`❌ Failed to clear logo from ${carnival.id}:`, updateError.message);
                             }
                         }
                     }
@@ -264,7 +264,7 @@ class MySidelineIntegrationService {
      */
     async fetchEvents() {
         try {
-            console.log('Starting manual MySideline event sync...');
+            console.log('Starting manual MySideline carnival sync...');
             const result = await this.syncMySidelineEvents();
             
             if (result && result.success) {

@@ -13,7 +13,7 @@ export const SAMPLE_CARNIVALS = [
     {
         title: 'NSW Masters Grand Final',
         date: new Date('2025-09-15'),
-        endDate: null, // Single day event
+        endDate: null, // Single day carnival
         state: 'NSW',
         locationAddress: 'ANZ Stadium, Olympic Park, Sydney NSW 2127',
         locationSuburb: 'Sydney Olympic Park',
@@ -47,7 +47,7 @@ export const SAMPLE_CARNIVALS = [
         currentRegistrations: 0,
         isRegistrationOpen: true,
         registrationDeadline: new Date('2025-08-15'),
-        adminNotes: 'Premier championship event - expect high attendance'
+        adminNotes: 'Premier championship carnival - expect high attendance'
     },
     {
         title: 'Cronulla Beach Masters Tournament',
@@ -87,7 +87,7 @@ export const SAMPLE_CARNIVALS = [
     {
         title: 'Queensland Masters Carnival',
         date: new Date('2025-08-20'),
-        endDate: new Date('2025-08-21'), // Two-day event
+        endDate: new Date('2025-08-21'), // Two-day carnival
         state: 'QLD',
         locationAddress: 'Suncorp Stadium, Milton QLD 4064',
         locationSuburb: 'Milton',
@@ -114,7 +114,7 @@ export const SAMPLE_CARNIVALS = [
         currentRegistrations: 0,
         isRegistrationOpen: true,
         registrationDeadline: new Date('2025-08-01'),
-        adminNotes: 'Major two-day event - coordinate accommodation'
+        adminNotes: 'Major two-day carnival - coordinate accommodation'
     },
     {
         title: 'Gold Coast Summer Festival',
@@ -146,7 +146,7 @@ export const SAMPLE_CARNIVALS = [
         currentRegistrations: 0,
         isRegistrationOpen: true,
         registrationDeadline: new Date('2025-12-15'),
-        adminNotes: 'Family-friendly holiday event'
+        adminNotes: 'Family-friendly holiday carnival'
     },
     {
         title: 'North Queensland Cowboys Heritage Cup',
@@ -210,7 +210,7 @@ export const SAMPLE_CARNIVALS = [
         currentRegistrations: 0,
         isRegistrationOpen: true,
         registrationDeadline: new Date('2025-07-15'),
-        adminNotes: 'Victorian state championship - high profile event'
+        adminNotes: 'Victorian state championship - high profile carnival'
     },
     {
         title: 'Geelong Waterfront Masters Cup',
@@ -258,13 +258,13 @@ export const SAMPLE_CARNIVALS = [
         venueName: 'HBF Park',
         locationLatitude: -31.9505,
         locationLongitude: 115.7818,
-        scheduleDetails: 'Festival format with social games and skill competitions. Family-friendly event.',
+        scheduleDetails: 'Festival format with social games and skill competitions. Family-friendly carnival.',
         organiserContactName: 'David Brown',
         organiserContactEmail: 'david.brown@wamasters.com.au',
         organiserContactPhone: '0445 678 901',
         registrationLink: 'https://www.wamasters.com.au/festival',
         feesDescription: 'Participation fee: $100 per team. Includes BBQ lunch.',
-        callForVolunteers: 'Looking for BBQ helpers and event coordinators.',
+        callForVolunteers: 'Looking for BBQ helpers and carnival coordinators.',
         socialMediaFacebook: null,
         socialMediaInstagram: null,
         socialMediaTwitter: null,
@@ -434,7 +434,7 @@ export const SAMPLE_CARNIVALS = [
         currentRegistrations: 0,
         isRegistrationOpen: true,
         registrationDeadline: new Date('2025-09-05'),
-        adminNotes: 'Northern Tasmania two-day event - coordinate accommodation'
+        adminNotes: 'Northern Tasmania two-day carnival - coordinate accommodation'
     },
     {
         title: 'Darwin Crocodiles Top End Tournament',
@@ -498,6 +498,6 @@ export const SAMPLE_CARNIVALS = [
         currentRegistrations: 0,
         isRegistrationOpen: true,
         registrationDeadline: new Date('2025-06-20'),
-        adminNotes: 'National capital event - coordinate Parliament House tours'
+        adminNotes: 'National capital carnival - coordinate Parliament House tours'
     }
 ];

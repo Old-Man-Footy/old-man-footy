@@ -14,7 +14,7 @@ Shows all registered players for the selected carnival.
 Buttons to add new players, edit details, or remove players from the list.
 
 ### Attendance Tracking
-Mark which players attended the event for accurate records.
+Mark which players attended the carnival for accurate records.
 
 ### Export Player List
 Download the full list for offline use or reporting.

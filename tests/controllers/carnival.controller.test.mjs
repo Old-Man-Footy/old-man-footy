@@ -4,7 +4,7 @@
  * Comprehensive test suite for the most complex controller in the system following the proven 
  * pattern from club.controller.test.mjs and main.controller.test.mjs with 100% success rate implementation.
  * 
- * Covers event management, file uploads, registration workflows, MySideline integration, and complex business logic.
+ * Covers carnival management, file uploads, registration workflows, MySideline integration, and complex business logic.
  * 
  * @author Old Man Footy System
  */
@@ -790,7 +790,7 @@ describe('Carnival Controller', () => {
   });
 
   describe('MySideline Integration', () => {
-    it('should take ownership of MySideline event', async () => {
+    it('should take ownership of MySideline carnival', async () => {
       req.params.id = '1';
       req.user = { id: 1 };
 
@@ -801,7 +801,7 @@ describe('Carnival Controller', () => {
       expect(res.redirect).toHaveBeenCalledWith('/carnivals/1');
     });
 
-    it('should release ownership of MySideline event', async () => {
+    it('should release ownership of MySideline carnival', async () => {
       req.params.id = '1';
       req.user = { id: 1 };
 
@@ -913,7 +913,7 @@ describe('Carnival Controller', () => {
       expect(result).toEqual(expect.objectContaining(carnivalData));
     });
 
-    it('should merge with existing MySideline event', async () => {
+    it('should merge with existing MySideline carnival', async () => {
       const carnivalData = {
         title: 'New Carnival',
         date: new Date('2025-12-25'),

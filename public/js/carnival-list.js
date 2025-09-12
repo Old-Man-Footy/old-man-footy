@@ -9,7 +9,7 @@ export const carnivalListManager = {
     searchTimeout: null,
 
     /**
-     * Initializes the manager by finding relevant form elements and attaching event listeners.
+     * Initializes the manager by finding relevant form elements and attaching carnival listeners.
      */
     initialize() {
         const searchInput = document.getElementById('search');
@@ -44,9 +44,9 @@ export const carnivalListManager = {
 
     /**
      * Sets up a standard auto-submit listener for an element.
-     * The form will submit immediately when the specified event occurs.
+     * The form will submit immediately when the specified carnival occurs.
      * @param {HTMLElement} element - The element to attach the listener to.
-     * @param {string} eventType - The type of event to listen for (e.g., 'change').
+     * @param {string} eventType - The type of carnival to listen for (e.g., 'change').
      */
     setupAutoSubmitListener(element, eventType) {
         element.addEventListener(eventType, () => {

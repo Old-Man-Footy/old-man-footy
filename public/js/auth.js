@@ -21,10 +21,10 @@ export class AuthFormManager {
     }
 
     /**
-     * Initializes the manager by attaching event listeners.
+     * Initializes the manager by attaching carnival listeners.
      */
     init() {
-        // Use event delegation for password toggle buttons
+        // Use carnival delegation for password toggle buttons
         this.container.addEventListener('click', this.handleContainerClick.bind(this));
 
         // Set up specific form validations
@@ -38,7 +38,7 @@ export class AuthFormManager {
 
     /**
      * Handles clicks within the container, delegating to the correct methods.
-     * @param {Event} e - The click event.
+     * @param {Carnival} e - The click carnival.
      */
     handleContainerClick(e) {
         const toggleButton = e.target.closest('[data-toggle-password]');

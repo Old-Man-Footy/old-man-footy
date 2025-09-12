@@ -63,7 +63,7 @@ describe('registration-form.js', () => {
     const warn = document.getElementById('deactivatedClubWarning');
 
     name.value = 'Tigers';
-    name.dispatchEvent(new Event('input'));
+    name.dispatchEvent(new Carnival('input'));
 
     expect(stateSel.value).toBe('NSW');
     expect(loc.value).toBe('Sydney');
@@ -78,7 +78,7 @@ describe('registration-form.js', () => {
     const cb = document.getElementById('confirmReactivation');
 
     name.value = 'Falcons';
-    name.dispatchEvent(new Event('input'));
+    name.dispatchEvent(new Carnival('input'));
 
     expect(warn.style.display).toBe('block');
     expect(stateHelp.textContent).toContain('Pre-filled from deactivated club');
@@ -87,7 +87,7 @@ describe('registration-form.js', () => {
 
     // When user confirms reactivation, help text updates
     cb.checked = true;
-    cb.dispatchEvent(new Event('change'));
+    cb.dispatchEvent(new Carnival('change'));
     expect(stateHelp.textContent).toContain('Will be updated when club is reactivated');
     expect(locHelp.textContent).toContain('Will be updated when club is reactivated');
   });
@@ -101,7 +101,7 @@ describe('registration-form.js', () => {
 
     // Choose deactivated club and ensure fields have values
     name.value = 'Falcons';
-    name.dispatchEvent(new Event('input'));
+    name.dispatchEvent(new Carnival('input'));
     stateSel.value = 'QLD';
     loc.value = 'Brisbane';
 

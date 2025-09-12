@@ -17,7 +17,7 @@
                     <% } %>
 
                     <form method="POST" action="/carnivals/<%= carnival.id %>/edit" 
-                          data-mysideline-event-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://www.mysideline.com/register/' %>"
+                          data-mysideline-carnival-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://www.mysideline.com/register/' %>"
                           enctype="multipart/form-data" class="needs-validation" novalidate>
                         <!-- Basic Information -->
                         <div class="mb-4">
@@ -60,7 +60,7 @@
                                         <input class="form-check-input" type="checkbox" id="isMultiDay" name="isMultiDay" 
                                                <%= carnival.endDate ? 'checked' : '' %>>
                                         <label class="form-check-label" for="isMultiDay">
-                                            Multi-day event
+                                            Multi-day carnival
                                         </label>
                                     </div>
                                 </div>
@@ -124,7 +124,7 @@
                                         <input type="text" class="form-control" id="locationSuburb" name="locationSuburb" 
                                                value="<%= carnival.locationSuburb || '' %>"
                                                placeholder="e.g., Parramatta">
-                                        <div class="form-text">The suburb or city where the event is held</div>
+                                        <div class="form-text">The suburb or city where the carnival is held</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="locationPostcode" class="form-label">Postcode</label>
@@ -160,7 +160,7 @@
                                         <input type="text" class="form-control" id="locationCountry" name="locationCountry" 
                                                value="<%= carnival.locationCountry || 'Australia' %>"
                                                placeholder="Australia">
-                                        <div class="form-text">Country where the event is held</div>
+                                        <div class="form-text">Country where the carnival is held</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">&nbsp;</label>
@@ -231,19 +231,19 @@
                             <div class="alert alert-info mb-3">
                                 <i class="bi bi-info-circle me-2"></i>
                                 <strong>MySideline Integration:</strong> Connect your carnival with MySideline for official player registrations.
-                                Enter the MySideline event ID to automatically generate the registration link.
+                                Enter the MySideline carnival ID to automatically generate the registration link.
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="mySidelineId" class="form-label">
-                                        <i class="bi bi-hash"></i> MySideline Event ID
+                                        <i class="bi bi-hash"></i> MySideline Carnival ID
                                     </label>
                                     <input type="text" class="form-control" id="mySidelineId" name="mySidelineId" 
                                            value="<%= carnival.mySidelineId || '' %>"
                                            placeholder="e.g., 12345">
                                     <div class="form-text">
-                                        The numeric ID from your MySideline event registration page.
+                                        The numeric ID from your MySideline carnival registration page.
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3">

@@ -78,10 +78,10 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
 // Delete carnival
 router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);
 
-// Take ownership of MySideline event
+// Take ownership of MySideline carnival
 router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeOwnership);
 
-// Release ownership of MySideline event
+// Release ownership of MySideline carnival
 router.post('/:id/release-ownership', ensureAuthenticated, carnivalController.releaseOwnership);
 
 // Merge MySideline carnival with existing carnival

@@ -53,7 +53,7 @@
                             <div>
                                 <h6 class="alert-heading mb-2">Smart Duplicate Prevention</h6>
                                 <p class="mb-1">Our system automatically checks for similar events from MySideline to prevent duplicates.</p>
-                                <small class="text-muted">However, for best results we recommend waiting until the MySideline event is live and has synced to OldManFooty. Once synced, you will be able to claim it on the event management page. This process ensures your data is merged with the imported event.</small>
+                                <small class="text-muted">However, for best results we recommend waiting until the MySideline carnival is live and has synced to OldManFooty. Once synced, you will be able to claim it on the carnival management page. This process ensures your data is merged with the imported carnival.</small>
                                 <small class="text-muted">If your carnival is not NRL-affiliated, you can create a new carnival instead. Manual merge options are available if needed.</small>
                             </div>
                         </div>
@@ -106,14 +106,14 @@
                                 </div>
                             </div>
 
-                            <!-- Multi-day event section -->
+                            <!-- Multi-day carnival section -->
                             <div class="row">
                                 <div class="col-12 mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="isMultiDay" name="isMultiDay" 
                                                <%= typeof formData !== 'undefined' && formData.endDate ? 'checked' : '' %>>
                                         <label class="form-check-label" for="isMultiDay">
-                                            Multi-day event
+                                            Multi-day carnival
                                         </label>
                                     </div>
                                 </div>
@@ -192,7 +192,7 @@
                                         <input type="text" class="form-control" id="locationSuburb" name="locationSuburb" 
                                                value="<%= typeof formData !== 'undefined' ? formData.locationSuburb : '' %>"
                                                placeholder="e.g., Parramatta">
-                                        <div class="form-text">The suburb or city where the event is held</div>
+                                        <div class="form-text">The suburb or city where the carnival is held</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="locationPostcode" class="form-label">Postcode</label>
@@ -228,7 +228,7 @@
                                         <input type="text" class="form-control" id="locationCountry" name="locationCountry" 
                                                value="<%= typeof formData !== 'undefined' ? formData.locationCountry : 'Australia' %>"
                                                placeholder="Australia">
-                                        <div class="form-text">Country where the event is held</div>
+                                        <div class="form-text">Country where the carnival is held</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">&nbsp;</label>

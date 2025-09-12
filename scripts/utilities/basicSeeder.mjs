@@ -157,7 +157,7 @@ class BasicSeeder {
                 organiserContactEmail: carnivalData.organiserContactEmail,
                 organiserContactPhone: carnivalData.organiserContactPhone,
                 
-                // Event details
+                // Carnival details
                 scheduleDetails: carnivalData.scheduleDetails,
                 registrationLink: carnivalData.registrationLink,
                 feesDescription: carnivalData.feesDescription,
@@ -228,10 +228,10 @@ class BasicSeeder {
                     const stateEvents = await MySidelineService.getEventsForState(state);
                     console.log(`Found ${stateEvents.length} events for ${state}`);
                     
-                    for (const event of stateEvents) {
+                    for (const carnival of stateEvents) {
                         try {
                             const carnival = await Carnival.create({
-                                ...event,
+                                ...carnival,
                                 isManuallyEntered: false,
                                 isActive: true,
                                 createdAt: new Date(),
@@ -242,7 +242,7 @@ class BasicSeeder {
                             totalImported++;
                             console.log(`Created carnival: ${carnival.title}`);
                         } catch (createError) {
-                            console.error(`Failed to create carnival for ${event.title}:`, createError.message);
+                            console.error(`Failed to create carnival for ${carnival.title}:`, createError.message);
                         }
                     }
                 } catch (stateError) {

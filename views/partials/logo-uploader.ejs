@@ -155,8 +155,8 @@ const logoAcceptAttribute = locals.acceptAttribute || 'image/jpeg,image/jpg,imag
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 this.elements.fileInput.files = files;
-                // Trigger change event to run handleFileSelect logic
-                this.elements.fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                // Trigger change carnival to run handleFileSelect logic
+                this.elements.fileInput.dispatchEvent(new Carnival('change', { bubbles: true }));
             }
         },
         

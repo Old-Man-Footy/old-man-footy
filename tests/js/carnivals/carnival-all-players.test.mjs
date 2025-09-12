@@ -66,16 +66,16 @@ describe('carnivalAllPlayersManager', () => {
     it('should filter players by search input', () => {
         const searchInput = document.getElementById('searchInput');
         searchInput.value = 'bob';
-        searchInput.dispatchEvent(new Event('input'));
+        searchInput.dispatchEvent(new Carnival('input'));
         expect(document.getElementById('playerCount').textContent).toBe('1');
     });
 
     it('should sort players by name', () => {
         const nameHeader = document.querySelector('[data-sort="name"]');
-        nameHeader.dispatchEvent(new Event('click')); // asc
+        nameHeader.dispatchEvent(new Carnival('click')); // asc
         let rows = document.querySelectorAll('.player-row');
         expect(rows[0].dataset.name).toBe('Alice Smith');
-        nameHeader.dispatchEvent(new Event('click')); // desc
+        nameHeader.dispatchEvent(new Carnival('click')); // desc
         rows = document.querySelectorAll('.player-row');
         expect(rows[0].dataset.name).toBe('Charlie Day');
     });
@@ -83,7 +83,7 @@ describe('carnivalAllPlayersManager', () => {
     it('should alert if no players are visible for export', () => {
         const searchInput = document.getElementById('searchInput');
         searchInput.value = 'nonexistent';
-        searchInput.dispatchEvent(new Event('input'));
+        searchInput.dispatchEvent(new Carnival('input'));
         carnivalAllPlayersManager.exportToCSV();
         expect(window.alert).toHaveBeenCalledWith('No players to export. Please adjust your filters.');
     });
@@ -91,11 +91,11 @@ describe('carnivalAllPlayersManager', () => {
     it('should alert if no players are visible for printing', () => {
         const clubFilter = document.getElementById('clubFilter');
         clubFilter.value = 'Tigers';
-        clubFilter.dispatchEvent(new Event('change'));
+        clubFilter.dispatchEvent(new Carnival('change'));
 
         const mastersRadio = document.querySelector('input[name="ageFilter"][value="masters"]');
         mastersRadio.checked = true;
-        mastersRadio.dispatchEvent(new Event('change'));
+        mastersRadio.dispatchEvent(new Carnival('change'));
 
         carnivalAllPlayersManager.printPlayerList();
         expect(window.alert).toHaveBeenCalledWith('No players to print. Please adjust your filters.');
@@ -104,14 +104,14 @@ describe('carnivalAllPlayersManager', () => {
     it('should update player count when filtering by club', () => {
         const clubFilter = document.getElementById('clubFilter');
         clubFilter.value = 'Lions';
-        clubFilter.dispatchEvent(new Event('change'));
+        clubFilter.dispatchEvent(new Carnival('change'));
         expect(document.getElementById('playerCount').textContent).toBe('2');
     });
 
     it('should update player count when filtering by age group', () => {
         const mastersRadio = document.querySelector('input[name="ageFilter"][value="masters"]');
         mastersRadio.checked = true;
-        mastersRadio.dispatchEvent(new Event('change'));
+        mastersRadio.dispatchEvent(new Carnival('change'));
         expect(document.getElementById('playerCount').textContent).toBe('1');
     });
 });

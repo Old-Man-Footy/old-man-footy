@@ -20,7 +20,7 @@ export class RegistrationFormValidator {
   }
 
   /**
-   * Initializes the validation by attaching an event listener.
+   * Initializes the validation by attaching an carnival listener.
    * Does nothing if the required password fields are not found.
    */
   init() {

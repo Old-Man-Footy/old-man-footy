@@ -25,7 +25,7 @@ export const contactManager = {
         this.elements.submitButton = this.elements.form?.querySelector('button[type="submit"]') || null;
     },
 
-    /** Attach event listeners */
+    /** Attach carnival listeners */
     bindEvents() {
         if (this.elements.message && this.elements.charCount) {
             this.elements.message.addEventListener('input', this.updateCharCount);

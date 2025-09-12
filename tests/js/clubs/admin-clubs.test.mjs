@@ -79,7 +79,7 @@ describe('adminClubsManager', () => {
         const showToastSpy = vi.spyOn(adminClubsManager, 'showToast');
         const updateUISpy = vi.spyOn(adminClubsManager, 'updateStatusUI');
 
-        // Initialize the manager to set up event listeners
+        // Initialize the manager to set up carnival listeners
         adminClubsManager.initialize();
         
         const statusButton = document.querySelector('[data-action="toggle-club-status"]');

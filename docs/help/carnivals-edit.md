@@ -24,5 +24,5 @@ Shows clear messages if required fields are missing or invalid.
 
 ## Tips & Best Practices
 - Double-check details before saving to avoid mistakes.
-- Update event info promptly for accurate scheduling.
+- Update carnival info promptly for accurate scheduling.
 - Contact support if you encounter errors.

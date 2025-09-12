@@ -28,13 +28,13 @@ describe('clubClaimOwnershipManager', () => {
     // Check one
     const c1 = document.getElementById('c1');
     c1.checked = true;
-    c1.dispatchEvent(new Event('change'));
+    c1.dispatchEvent(new Carnival('change'));
     expect(el.claimButton.disabled).toBe(true);
 
     // Check the other
     const c2 = document.getElementById('c2');
     c2.checked = true;
-    c2.dispatchEvent(new Event('change'));
+    c2.dispatchEvent(new Carnival('change'));
     expect(el.claimButton.disabled).toBe(false);
     expect(el.claimButton.classList.contains('btn-primary')).toBe(true);
   });
@@ -45,12 +45,12 @@ describe('clubClaimOwnershipManager', () => {
     // Make both checked first
     document.getElementById('c1').checked = true;
     document.getElementById('c2').checked = true;
-    el.checkboxes[0].dispatchEvent(new Event('change'));
+    el.checkboxes[0].dispatchEvent(new Carnival('change'));
     expect(el.claimButton.disabled).toBe(false);
 
     // Uncheck one
     document.getElementById('c2').checked = false;
-    el.checkboxes[1].dispatchEvent(new Event('change'));
+    el.checkboxes[1].dispatchEvent(new Carnival('change'));
     expect(el.claimButton.disabled).toBe(true);
     expect(el.claimButton.classList.contains('btn-secondary')).toBe(true);
   });

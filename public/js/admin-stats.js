@@ -9,7 +9,7 @@ export const adminStatsManager = {
     elements: {},
 
     /**
-     * Initializes the manager by caching DOM elements and setting up event listeners and charts.
+     * Initializes the manager by caching DOM elements and setting up carnival listeners and charts.
      */
     initialize() {
         this.cacheElements();
@@ -36,7 +36,7 @@ export const adminStatsManager = {
     },
 
     /**
-     * Attaches all necessary event listeners to the DOM elements.
+     * Attaches all necessary carnival listeners to the DOM elements.
      */
     bindEvents() {
         if (this.elements.periodSelect) {

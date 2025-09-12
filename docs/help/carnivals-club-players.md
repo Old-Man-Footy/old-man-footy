@@ -4,7 +4,7 @@ title: Carnival Club Players Help
 ---
 
 ## Overview
-The Carnival Club Players page lists all players from a specific club participating in a carnival. It’s the main place to view, add, or edit club player information for the event.
+The Carnival Club Players page lists all players from a specific club participating in a carnival. It’s the main place to view, add, or edit club player information for the carnival.
 
 ## Key Features Explained
 ### Player List

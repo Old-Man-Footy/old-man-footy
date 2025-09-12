@@ -4,7 +4,7 @@ title: Add Club to Carnival Help
 ---
 
 ## Overview
-The Add Club to Carnival page lets organizers add clubs to a carnival. This is essential for managing club participation and event logistics.
+The Add Club to Carnival page lets organizers add clubs to a carnival. This is essential for managing club participation and carnival logistics.
 
 ## Key Features Explained
 ### Club Selection

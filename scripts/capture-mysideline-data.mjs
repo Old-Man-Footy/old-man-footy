@@ -64,7 +64,7 @@ async function captureMySidelineData(outputDir) {
             console.log('🎯 Test fixtures updated with real MySideline data!');
             
             // Log sample of captured data
-            console.log('\n📋 Sample captured event:');
+            console.log('\n📋 Sample captured carnival:');
             console.log(`   Title: ${liveEvents[0].title}`);
             console.log(`   ID: ${liveEvents[0].mySidelineId}`);
             console.log(`   Location: ${liveEvents[0].locationAddress}`);
@@ -168,8 +168,8 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
  * @returns {Array} Modified captured events
  */
 export function getCapturedEvents(overrides = {}) {
-    return MYSIDELINE_CAPTURED_EVENTS.map(event => ({
-        ...event,
+    return MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+        ...carnival,
         ...overrides
     }));
 }
@@ -178,17 +178,17 @@ export function getCapturedEvents(overrides = {}) {
  * Database test data derived from captured events
  */
 export const MYSIDELINE_DB_TEST_DATA = {
-    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_EVENTS.map(event => ({
-        title: event.title,
-        mySidelineId: event.mySidelineId,
-        mySidelineTitle: event.mySidelineTitle,
-        mySidelineAddress: event.mySidelineAddress,
-        mySidelineDate: event.mySidelineDate,
-        date: event.date,
-        locationAddress: event.locationAddress,
-        state: event.state,
-        organiserContactEmail: event.organiserContactEmail,
-        description: event.description,
+    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+        title: carnival.title,
+        mySidelineId: carnival.mySidelineId,
+        mySidelineTitle: carnival.mySidelineTitle,
+        mySidelineAddress: carnival.mySidelineAddress,
+        mySidelineDate: carnival.mySidelineDate,
+        date: carnival.date,
+        locationAddress: carnival.locationAddress,
+        state: carnival.state,
+        organiserContactEmail: carnival.organiserContactEmail,
+        description: carnival.description,
         isActive: true,
         source: 'MySideline'
     }))
@@ -224,7 +224,7 @@ function generateEmptyFixtureFile() {
 
 import { vi } from 'vitest';
 
-export const MYSIDELINE_CAPTURED_HTML = '<html><body><div class="event-list"></div></body></html>';
+export const MYSIDELINE_CAPTURED_HTML = '<html><body><div class="carnival-list"></div></body></html>';
 export const MYSIDELINE_CAPTURED_EVENTS = [];
 
 export const MYSIDELINE_CAPTURED_RESPONSES = {

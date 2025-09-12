@@ -38,13 +38,13 @@ describe('carnivalListManager', () => {
         it('should debounce and submit the form after the delay', () => {
             const searchInput = document.getElementById('search');
             const form = document.getElementById('test-form');
-            // **THE FIX IS HERE:** The mock implementation no longer expects an event object.
+            // **THE FIX IS HERE:** The mock implementation no longer expects an carnival object.
             const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
 
             carnivalListManager.setupSearchListener(searchInput, 500);
 
             // Simulate a user typing
-            searchInput.dispatchEvent(new Event('input'));
+            searchInput.dispatchEvent(new Carnival('input'));
             
             // Immediately after input, submit should not have been called
             expect(submitSpy).not.toHaveBeenCalled();
@@ -64,9 +64,9 @@ describe('carnivalListManager', () => {
             carnivalListManager.setupSearchListener(searchInput, 500);
 
             // Simulate rapid typing
-            searchInput.dispatchEvent(new Event('input'));
+            searchInput.dispatchEvent(new Carnival('input'));
             vi.advanceTimersByTime(200); // Not enough time to submit
-            searchInput.dispatchEvent(new Event('input'));
+            searchInput.dispatchEvent(new Carnival('input'));
             
             // Advance timers past the delay for the *second* input
             vi.advanceTimersByTime(501);
@@ -77,15 +77,15 @@ describe('carnivalListManager', () => {
     });
 
     describe('setupAutoSubmitListener', () => {
-        it('should submit the form immediately on event', () => {
+        it('should submit the form immediately on carnival', () => {
             const stateSelect = document.getElementById('state');
             const form = document.getElementById('test-form');
             const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
 
             carnivalListManager.setupAutoSubmitListener(stateSelect, 'change');
             
-            // Simulate the change event
-            stateSelect.dispatchEvent(new Event('change'));
+            // Simulate the change carnival
+            stateSelect.dispatchEvent(new Carnival('change'));
 
             expect(submitSpy).toHaveBeenCalledTimes(1);
         });

@@ -4,11 +4,11 @@ title: Edit Carnival Registration Help
 ---
 
 ## Overview
-The Edit Carnival Registration page lets organizers update registration details for clubs and players. This is essential for correcting errors and managing changes before the event.
+The Edit Carnival Registration page lets organizers update registration details for clubs and players. This is essential for correcting errors and managing changes before the carnival.
 
 ## Key Features Explained
 ### Registration Form
-Fields for club, player, and event details.
+Fields for club, player, and carnival details.
 
 ### Save Changes
 Button to save updates to the registration record.

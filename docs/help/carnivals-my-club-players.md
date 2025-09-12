@@ -4,7 +4,7 @@ title: My Club Players at Carnival Help
 ---
 
 ## Overview
-The My Club Players at Carnival page lists all players from your club participating in a carnival. It’s the main place to view, add, or edit your club’s player information for the event.
+The My Club Players at Carnival page lists all players from your club participating in a carnival. It’s the main place to view, add, or edit your club’s player information for the carnival.
 
 ## Key Features Explained
 ### Player List

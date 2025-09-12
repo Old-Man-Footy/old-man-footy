@@ -8,7 +8,7 @@ The Club Options page lets club managers configure settings and preferences for 
 
 ## Key Features Explained
 ### Settings Panel
-Options to update club info, communication preferences, and event participation.
+Options to update club info, communication preferences, and carnival participation.
 
 ### Save Changes
 Button to save updates to club settings.

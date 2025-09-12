@@ -60,7 +60,7 @@ class CarouselImageService {
                     displayType: 'Carnival Gallery',
                     entityType: 'carnival',
                     entityId: image.carnivalId,
-                    entityName: image.carnival ? image.carnival.title : 'Carnival Event',
+                    entityName: image.carnival ? image.carnival.title : 'Carnival Carnival',
                     uploader: null, // Not tracking uploader in ImageUpload model
                     attribution: image.displayAttribution,
                     isPrimary: false

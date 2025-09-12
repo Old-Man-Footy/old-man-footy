@@ -28,7 +28,7 @@ describe('clubManageManager', () => {
   it('validates required fields and prevents submission when empty', () => {
     const form = clubManageManager.elements.form;
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    const evt = new Event('submit', { cancelable: true });
+    const evt = new Carnival('submit', { cancelable: true });
     form.dispatchEvent(evt);
     expect(alertSpy).toHaveBeenCalled();
     alertSpy.mockRestore();
@@ -39,7 +39,7 @@ describe('clubManageManager', () => {
     // Simulate some content and a scrollHeight
     Object.defineProperty(ta, 'scrollHeight', { value: 200, configurable: true });
     ta.value = 'Some long content';
-    ta.dispatchEvent(new Event('input'));
+    ta.dispatchEvent(new Carnival('input'));
     expect(ta.style.height).toBe('200px');
   });
 
@@ -52,7 +52,7 @@ describe('clubManageManager', () => {
   const fakeFiles = { 0: file, length: 1, item: (i) => (i === 0 ? file : null) };
   Object.defineProperty(input, 'files', { value: fakeFiles, configurable: true });
 
-    input.dispatchEvent(new Event('change'));
+    input.dispatchEvent(new Carnival('change'));
     expect(uploadText.textContent).toContain('logo.png');
   });
 
@@ -64,7 +64,7 @@ describe('clubManageManager', () => {
     const file = new File(['content'], 'drag.png', { type: 'image/png' });
   const fakeFiles = { 0: file, length: 1, item: (i) => (i === 0 ? file : null) };
 
-    const dropEvent = new Event('drop');
+    const dropEvent = new Carnival('drop');
   Object.defineProperty(dropEvent, 'dataTransfer', { value: { files: fakeFiles }, configurable: true });
 
     clubManageManager.handleDrop(dropEvent);

@@ -46,7 +46,7 @@ describe('adminClaimCarnivalManager', () => {
         
         // Simulate selecting Club A (VIC)
         clubSelect.value = '1';
-        clubSelect.dispatchEvent(new Event('change'));
+        clubSelect.dispatchEvent(new Carnival('change'));
 
         expect(document.getElementById('delegateName').textContent).toBe('Alice');
         expect(document.getElementById('delegateEmail').textContent).toBe('alice@club.com');
@@ -61,7 +61,7 @@ describe('adminClaimCarnivalManager', () => {
         
         // Simulate selecting Club B (NSW)
         clubSelect.value = '2';
-        clubSelect.dispatchEvent(new Event('change'));
+        clubSelect.dispatchEvent(new Carnival('change'));
 
         expect(document.getElementById('delegateName').textContent).toBe('Bob');
         expect(document.getElementById('stateWarning').classList.contains('d-none')).toBe(false);
@@ -73,12 +73,12 @@ describe('adminClaimCarnivalManager', () => {
         
         // First, select a club to make sure the info is visible
         clubSelect.value = '1';
-        clubSelect.dispatchEvent(new Event('change'));
+        clubSelect.dispatchEvent(new Carnival('change'));
         expect(document.getElementById('claimButton').disabled).toBe(false);
 
         // Now, simulate selecting the default "Select a club" option
         clubSelect.value = '';
-        clubSelect.dispatchEvent(new Event('change'));
+        clubSelect.dispatchEvent(new Carnival('change'));
 
         expect(document.getElementById('selectedClubInfo').classList.contains('d-none')).toBe(true);
         expect(document.getElementById('claimButton').disabled).toBe(true);
@@ -90,10 +90,10 @@ describe('adminClaimCarnivalManager', () => {
         // Spy on the method we expect to be called
         const handleChangeSpy = vi.spyOn(adminClaimCarnivalManager, 'handleClubChange');
 
-        // Simulate the user event
-        clubSelect.dispatchEvent(new Event('change'));
+        // Simulate the user carnival
+        clubSelect.dispatchEvent(new Carnival('change'));
 
-        // Assert that the event handler called our method
+        // Assert that the carnival handler called our method
         expect(handleChangeSpy).toHaveBeenCalled();
     });
 

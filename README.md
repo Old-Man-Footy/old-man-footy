@@ -182,7 +182,7 @@ npm run test:coverage
 │   └── *.mjs                                   # Database schema migration files
 ├── models/                                  # MVC Models - Database schemas and logic
 │   ├── AuditLog.mjs                            # Audit logging model
-│   ├── Carnival.mjs                            # Carnival event model
+│   ├── Carnival.mjs                            # Carnival carnival model
 │   ├── CarnivalClub.mjs                        # Carnival-club relationship model
 │   ├── CarnivalClubPlayer.mjs                  # Carnival club player model
 │   ├── CarnivalSponsor.mjs                     # Carnival sponsorship model
@@ -219,7 +219,7 @@ npm run test:coverage
 │   ├── emailService.mjs                        # Email notification service
 │   ├── imageNamingService.mjs                  # Image file naming utilities
 │   ├── mySidelineDataService.mjs               # MySideline data processing
-│   ├── mySidelineEventParserService.mjs        # Event parsing
+│   ├── mySidelineEventParserService.mjs        # Carnival parsing
 │   ├── mySidelineIntegrationService.mjs        # Main integration service
 │   ├── mySidelineLogoDownloadService.mjs       # Logo downloading
 │   ├── mySidelineScraperService.mjs            # Web scraping service
@@ -335,7 +335,7 @@ npm run test:coverage
 - `GET /carnivals/:id/edit` - Edit carnival form (owner only)
 - `POST /carnivals/:id/edit` - Update carnival (owner only)
 - `POST /carnivals/:id/delete` - Delete carnival (owner only)
-- `POST /carnivals/:id/take-ownership` - Claim MySideline event
+- `POST /carnivals/:id/take-ownership` - Claim MySideline carnival
 
 ### Clubs & Players
 

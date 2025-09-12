@@ -503,11 +503,11 @@ export const apiSecurity = (req, res, next) => {
  * Security audit logging middleware
  * Logs security-relevant events
  */
-export const securityAuditLog = (event, details = {}) => {
+export const securityAuditLog = (carnival, details = {}) => {
   return (req, res, next) => {
     const logData = {
       timestamp: new Date().toISOString(),
-      event,
+      carnival,
       ip: req.ip || req.connection?.remoteAddress,
       userAgent: req.get ? req.get('User-Agent') : 'Unknown',
       userId: req.user?.id || null,

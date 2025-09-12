@@ -38,8 +38,8 @@ describe('RegistrationFormValidator', () => {
         passwordField.value = 'password123';
         confirmPasswordField.value = 'password321';
 
-        // Simulate an input event on the confirmation field
-        confirmPasswordField.dispatchEvent(new Event('input'));
+        // Simulate an input carnival on the confirmation field
+        confirmPasswordField.dispatchEvent(new Carnival('input'));
 
         expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
     });
@@ -48,8 +48,8 @@ describe('RegistrationFormValidator', () => {
         passwordField.value = 'password123';
         confirmPasswordField.value = 'password123';
 
-        // Simulate an input event on the confirmation field
-        confirmPasswordField.dispatchEvent(new Event('input'));
+        // Simulate an input carnival on the confirmation field
+        confirmPasswordField.dispatchEvent(new Carnival('input'));
 
         expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');
     });
@@ -58,12 +58,12 @@ describe('RegistrationFormValidator', () => {
         // Initial non-matching state
         passwordField.value = 'password123';
         confirmPasswordField.value = 'password321';
-        confirmPasswordField.dispatchEvent(new Event('input'));
+        confirmPasswordField.dispatchEvent(new Carnival('input'));
         expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
 
         // User corrects the password
         confirmPasswordField.value = 'password123';
-        confirmPasswordField.dispatchEvent(new Event('input'));
+        confirmPasswordField.dispatchEvent(new Carnival('input'));
         expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');
     });
 

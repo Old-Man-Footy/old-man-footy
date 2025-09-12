@@ -69,8 +69,8 @@ export const galleryManager = {
         document.addEventListener('keydown', this.handleKeyNavigation);
     },
 
-    handleFileSelect: (event) => {
-        const files = Array.from(event.target.files);
+    handleFileSelect: (carnival) => {
+        const files = Array.from(carnival.target.files);
         
         if (files.length > galleryManager.maxFiles) {
             galleryManager.showError(`Maximum ${galleryManager.maxFiles} files allowed`);
@@ -150,8 +150,8 @@ export const galleryManager = {
         }, 100);
     },
 
-    removePreview: (event) => {
-        const index = parseInt(event.target.closest('[data-file-index]').dataset.fileIndex);
+    removePreview: (carnival) => {
+        const index = parseInt(carnival.target.closest('[data-file-index]').dataset.fileIndex);
         galleryManager.selectedFiles.splice(index, 1);
         
         if (galleryManager.selectedFiles.length === 0) {
@@ -243,16 +243,16 @@ export const galleryManager = {
         galleryManager.clearMessages();
     },
 
-    handleGalleryClick: async (event) => {
+    handleGalleryClick: async (carnival) => {
         // Handle delete button clicks
-        if (event.target.closest('.delete-image-btn')) {
-            const imageId = event.target.closest('.delete-image-btn').dataset.imageId;
+        if (carnival.target.closest('.delete-image-btn')) {
+            const imageId = carnival.target.closest('.delete-image-btn').dataset.imageId;
             await galleryManager.deleteImage(imageId);
             return;
         }
 
         // Handle gallery image clicks for modal
-        const galleryImage = event.target.closest('.gallery-image');
+        const galleryImage = carnival.target.closest('.gallery-image');
         if (galleryImage) {
             const imageSrc = galleryImage.dataset.imageSrc;
             const imageAlt = galleryImage.dataset.imageAlt;
@@ -362,16 +362,16 @@ export const galleryManager = {
         }
     },
 
-    handleKeyNavigation: (event) => {
+    handleKeyNavigation: (carnival) => {
         if (!galleryManager.elements.imageModal.classList.contains('show')) return;
 
-        switch(event.key) {
+        switch(carnival.key) {
             case 'ArrowLeft':
-                event.preventDefault();
+                carnival.preventDefault();
                 galleryManager.showPrevImage();
                 break;
             case 'ArrowRight':
-                event.preventDefault();
+                carnival.preventDefault();
                 galleryManager.showNextImage();
                 break;
             case 'Escape':

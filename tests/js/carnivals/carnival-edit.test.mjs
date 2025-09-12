@@ -10,7 +10,7 @@ import { carnivalEditManager } from '../../../public/js/carnival-edit.js';
 // Helper function to set up the DOM for each test
 function setupDOM() {
     document.body.innerHTML = `
-        <form data-mysideline-event-url="https://mysideline.com/register/">
+        <form data-mysideline-carnival-url="https://mysideline.com/register/">
             <div id="endDateContainer" data-has-end-date="false">
                 <input type="date" id="endDate" name="endDate" />
             </div>
@@ -94,10 +94,10 @@ describe('carnivalEditManager', () => {
         const endDateInput = document.getElementById('endDate');
 
         checkbox.checked = true;
-        checkbox.dispatchEvent(new Event('change'));
+        checkbox.dispatchEvent(new Carnival('change'));
 
         expect(container.style.display).toBe('block');
-        expect(label.textContent).toContain('Event Start Date');
+        expect(label.textContent).toContain('Carnival Start Date');
         expect(endDateInput.required).toBe(true);
     });
 
@@ -107,11 +107,11 @@ describe('carnivalEditManager', () => {
         const endDateInput = document.getElementById('endDate');
         
         checkbox.checked = true;
-        checkbox.dispatchEvent(new Event('change'));
+        checkbox.dispatchEvent(new Carnival('change'));
         endDateInput.value = '2025-01-02';
 
         checkbox.checked = false;
-        checkbox.dispatchEvent(new Event('change'));
+        checkbox.dispatchEvent(new Carnival('change'));
 
         expect(endDateInput.value).toBe('');
     });
@@ -175,8 +175,8 @@ describe('carnivalEditManager', () => {
         const mySidelineIdInput = document.getElementById('mySidelineId');
         const registrationLinkInput = document.getElementById('registrationLink');
         
-        mySidelineIdInput.value = 'event-12345';
-        mySidelineIdInput.dispatchEvent(new Event('input'));
+        mySidelineIdInput.value = 'carnival-12345';
+        mySidelineIdInput.dispatchEvent(new Carnival('input'));
 
         expect(mySidelineIdInput.value).toBe('12345');
         expect(registrationLinkInput.value).toBe('https://mysideline.com/register/12345');
@@ -189,10 +189,10 @@ describe('carnivalEditManager', () => {
         const registrationLinkInput = document.getElementById('registrationLink');
         
         registrationLinkInput.value = 'https://mysideline.com/register/98765';
-        registrationLinkInput.dispatchEvent(new Event('input'));
+        registrationLinkInput.dispatchEvent(new Carnival('input'));
 
         expect(mySidelineIdInput.value).toBe('98765');
-        expect(document.getElementById('linkStatus').textContent).toContain('Event ID: 98765');
+        expect(document.getElementById('linkStatus').textContent).toContain('Carnival ID: 98765');
     });
 
     it('should handle registration link changes with invalid URL', () => {
@@ -201,7 +201,7 @@ describe('carnivalEditManager', () => {
         const linkStatusElement = document.getElementById('linkStatus');
 
         registrationLinkInput.value = 'invalid-url';
-        registrationLinkInput.dispatchEvent(new Event('input'));
+        registrationLinkInput.dispatchEvent(new Carnival('input'));
 
         expect(linkStatusElement.textContent).toContain('Please enter a valid URL');
         expect(linkStatusElement.className).toContain('text-warning');

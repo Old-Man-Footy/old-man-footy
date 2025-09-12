@@ -57,7 +57,7 @@ describe('adminStatsManager', () => {
             
             // Simulate selecting 'Custom'
             periodSelect.value = 'custom';
-            periodSelect.dispatchEvent(new Event('change'));
+            periodSelect.dispatchEvent(new Carnival('change'));
 
             expect(startDateGroup.style.display).toBe('block');
         });
@@ -73,7 +73,7 @@ describe('adminStatsManager', () => {
             
             // Simulate selecting 'This Week'
             periodSelect.value = 'week';
-            periodSelect.dispatchEvent(new Event('change'));
+            periodSelect.dispatchEvent(new Carnival('change'));
 
             expect(startDateGroup.style.display).toBe('none');
         });

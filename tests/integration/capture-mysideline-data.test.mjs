@@ -88,12 +88,12 @@ const SAMPLE_HTML_RESPONSE = `
     <title>MySideline - Masters Rugby League</title>
 </head>
 <body>
-    <div class="event-list">
-        <div class="event-item" data-event-id="123456789">
+    <div class="carnival-list">
+        <div class="carnival-item" data-carnival-id="123456789">
             <h3>Masters Rugby League Carnival 2025 - QLD</h3>
             <p>Redcliffe, QLD</p>
         </div>
-        <div class="event-item" data-event-id="987654321">
+        <div class="carnival-item" data-carnival-id="987654321">
             <h3>NSW Masters Championship 2025</h3>
             <p>Sydney, NSW</p>
         </div>
@@ -258,7 +258,7 @@ describe('MySideline Capture Script', () => {
             // Mock successful HTML fetch
             mockFetch.mockResolvedValue({
                 ok: true,
-                text: () => Promise.resolve('<html><body><div class="event-list"></div></body></html>')
+                text: () => Promise.resolve('<html><body><div class="carnival-list"></div></body></html>')
             });
 
             // Mock the MySidelineScraperService import

@@ -24,10 +24,10 @@ export const addressUtilsManager = {
   },
 
   /**
-   * Bind event listeners to DOM elements
+   * Bind carnival listeners to DOM elements
    */
   bindEvents() {
-    // Bind event listeners if needed in the future
+    // Bind carnival listeners if needed in the future
   },
 
   /**

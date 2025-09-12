@@ -4,7 +4,7 @@ title: Carnival Attendees Help
 ---
 
 ## Overview
-The Carnival Attendees page lists everyone attending the carnival, including players, coaches, and guests. It’s the main place to manage attendance and event logistics.
+The Carnival Attendees page lists everyone attending the carnival, including players, coaches, and guests. It’s the main place to manage attendance and carnival logistics.
 
 ## Key Features Explained
 ### Attendee List
@@ -29,5 +29,5 @@ Track who has confirmed, declined, or is pending.
 
 ## Tips & Best Practices
 - Keep attendee info up to date for accurate records.
-- Track attendance status for event planning.
+- Track attendance status for carnival planning.
 - Contact attendees for confirmations or updates.

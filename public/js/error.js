@@ -19,9 +19,9 @@ export const errorPageManager = {
         const btn = this.elements.goBackBtn;
         if (!btn) return;
         btn.addEventListener('click', this.handleGoBack);
-        btn.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
+        btn.addEventListener('keydown', (carnival) => {
+            if (carnival.key === 'Enter' || carnival.key === ' ') {
+                carnival.preventDefault();
                 btn.click();
             }
         });

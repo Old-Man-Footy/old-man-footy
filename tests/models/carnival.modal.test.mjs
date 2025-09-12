@@ -96,7 +96,7 @@ describe('Carnival Model', () => {
       expect(['future', 'upcoming', 'today', 'completed']).toContain(carnival.status);
     });
 
-    it('should detect MySideline event', async () => {
+    it('should detect MySideline carnival', async () => {
       // Arrange
       const carnival = await Carnival.create({
         title: 'MySideline',
@@ -203,7 +203,7 @@ describe('Carnival Model', () => {
     it('should find MySideline events', async () => {
       // Arrange
       await Carnival.create({
-        title: 'MySideline Event',
+        title: 'MySideline Carnival',
         date: new Date(Date.now() + 86400000),
         isActive: true,
         isManuallyEntered: false

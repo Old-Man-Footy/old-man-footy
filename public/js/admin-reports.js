@@ -9,7 +9,7 @@ export const adminReportsManager = {
     elements: {},
 
     /**
-     * Initializes the manager by caching DOM elements, adding styles, and setting up event listeners.
+     * Initializes the manager by caching DOM elements, adding styles, and setting up carnival listeners.
      */
     initialize() {
         this.cacheElements();
@@ -30,7 +30,7 @@ export const adminReportsManager = {
     },
 
     /**
-     * Attaches all necessary event listeners to the DOM elements.
+     * Attaches all necessary carnival listeners to the DOM elements.
      */
     bindEvents() {
         if (this.elements.printBtn) {

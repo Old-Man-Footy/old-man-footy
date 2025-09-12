@@ -12,8 +12,8 @@ class MySidelineDataService {
     }
 
     /**
-     * Find existing MySideline event using robust matching with mySidelineId priority
-     * @param {Object} eventData - Event data to match against
+     * Find existing MySideline carnival using robust matching with mySidelineId priority
+     * @param {Object} eventData - Carnival data to match against
      * @returns {Promise<Carnival|null>} Existing carnival or null
      */
     async findExistingMySidelineEvent(eventData) {
@@ -26,7 +26,7 @@ class MySidelineDataService {
             });
             
             if (match) {
-                console.log(`Found existing MySideline event by ID: ${eventData.mySidelineId} - "${eventData.title}"`);
+                console.log(`Found existing MySideline carnival by ID: ${eventData.mySidelineId} - "${eventData.title}"`);
                 return match;
             }
         }
@@ -45,7 +45,7 @@ class MySidelineDataService {
                     (eventData.mySidelineDate instanceof Date && !isNaN(eventData.mySidelineDate.getTime()))) {
                     whereConditions.mySidelineDate = eventData.mySidelineDate;
                 } else {
-                    console.warn(`Invalid mySidelineDate for event "${eventData.mySidelineTitle}": ${eventData.mySidelineDate}`);
+                    console.warn(`Invalid mySidelineDate for carnival "${eventData.mySidelineTitle}": ${eventData.mySidelineDate}`);
                 }
             }
 
@@ -57,7 +57,7 @@ class MySidelineDataService {
             const match = await Carnival.findOne({ where: whereConditions });
             
             if (match) {
-                console.log(`Found existing MySideline event by legacy fields: "${eventData.mySidelineTitle}"`);
+                console.log(`Found existing MySideline carnival by legacy fields: "${eventData.mySidelineTitle}"`);
                 return match;
             }
         }
@@ -77,11 +77,11 @@ class MySidelineDataService {
                 });
 
                 if (match) {
-                    console.log(`Found existing MySideline event by date and title: "${eventData.title}" on ${eventData.date}`);
+                    console.log(`Found existing MySideline carnival by date and title: "${eventData.title}" on ${eventData.date}`);
                     return match;
                 }
             } else {
-                console.warn(`Invalid date for event "${eventData.title}": ${eventData.date}. Skipping date-based matching.`);
+                console.warn(`Invalid date for carnival "${eventData.title}": ${eventData.date}. Skipping date-based matching.`);
             }
         }
         
@@ -90,8 +90,8 @@ class MySidelineDataService {
 
     /**
      * Process scraped events and save to database
-     * @param {Array} scrapedEvents - Array of scraped event objects
-     * @returns {Promise<Array>} Array of processed event objects
+     * @param {Array} scrapedEvents - Array of scraped carnival objects
+     * @returns {Promise<Array>} Array of processed carnival objects
      */
     async processScrapedEvents(scrapedEvents) {
         console.log(`Processing ${scrapedEvents.length} scraped MySideline events...`);
@@ -102,18 +102,18 @@ class MySidelineDataService {
         const processedEvents = [];        
         for (const eventData of scrapedEvents) {
             try {
-                // Check if event already exists
+                // Check if carnival already exists
                 const existingEvent = await this.findExistingMySidelineEvent(eventData);
                 
                 if (existingEvent) {
                     if (eventData.isActive === false && existingEvent.isActive === false) {
-                        // If the event already marked as inactive, skip it
-                        console.log(`Skipping update of inactive event: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
-                        continue; // Skip to next event
+                        // If the carnival already marked as inactive, skip it
+                        console.log(`Skipping update of inactive carnival: ${eventData.mySidelineTitle} on ${eventData.date} at ${eventData.locationAddress}`);
+                        continue; // Skip to next carnival
                     }
 
-                    console.log(`Event already exists: ${eventData.mySidelineTitle} on ${eventData.date}`);
-                    // Update existing event with any new information, but only for empty fields
+                    console.log(`Carnival already exists: ${eventData.mySidelineTitle} on ${eventData.date}`);
+                    // Update existing carnival with any new information, but only for empty fields
                     const updateData = {
                         id: existingEvent.id
                     };
@@ -221,16 +221,16 @@ class MySidelineDataService {
                     // Only perform update if there are fields to update
                     if (Object.keys(updateData).length > 2) { // > 2 because id and lastMySidelineSync are always included
                         await existingEvent.update(updateData);
-                        console.log(`Updated ${Object.keys(updateData).length - 2} empty fields for event: ${eventData.title}`);
+                        console.log(`Updated ${Object.keys(updateData).length - 2} empty fields for carnival: ${eventData.title}`);
                     } else {
                         await existingEvent.update({ lastMySidelineSync: lastMySidelineSync });
                     }
                     
                     processedEvents.push(existingEvent);
                 } else {
-                    // Create new event
+                    // Create new carnival
                     const newEvent = await Carnival.create({
-                        // Core event fields
+                        // Core carnival fields
                         title: eventData.title,
                         date: eventData.date,                    
                         endDate: null,
@@ -259,7 +259,7 @@ class MySidelineDataService {
                         organiserContactEmail: eventData.organiserContactEmail,
                         organiserContactPhone: eventData.organiserContactPhone,
                         
-                        // Event details
+                        // Carnival details
                         scheduleDetails: eventData.scheduleDetails,
                         registrationLink: eventData.registrationLink,
                         
@@ -276,16 +276,16 @@ class MySidelineDataService {
                         isActive: eventData.isActive !== undefined ? eventData.isActive : true,
                     });
 
-                    // If the event is more than 7 days in the future, set registration open
+                    // If the carnival is more than 7 days in the future, set registration open
                     if (eventData.date > new Date() + (7 * 24 * 60 * 60 * 1000)) {
                         newEvent.isRegistrationOpen = true;
                     }
                     
-                    console.log(`Created new MySideline event: ${newEvent.title}`);
+                    console.log(`Created new MySideline carnival: ${newEvent.title}`);
                     processedEvents.push(newEvent);
                 }
             } catch (error) {
-                console.error(`Failed to process event "${eventData.title}":`, error.message);
+                console.error(`Failed to process carnival "${eventData.title}":`, error.message);
             }
         }
         

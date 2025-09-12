@@ -2,7 +2,7 @@
  * Carnival Model - SQLite/Sequelize Implementation
  * 
  * Manages rugby league carnival events, including MySideline integration
- * and comprehensive event management for the Old Man Footy platform.
+ * and comprehensive carnival management for the Old Man Footy platform.
  */
 
 import { DataTypes, Model, Op } from 'sequelize';
@@ -103,8 +103,8 @@ class Carnival extends Model {
   }
 
   /**
-   * Check if this is a MySideline imported event
-   * @returns {boolean} MySideline event status
+   * Check if this is a MySideline imported carnival
+   * @returns {boolean} MySideline carnival status
    */
   get isMySidelineEvent() {
     return !this.isManuallyEntered;
@@ -340,7 +340,7 @@ class Carnival extends Model {
 
       // State-based restriction: delegates can only claim events in their club's state or events with no state
       if (carnival.state && user.club.state && carnival.state !== user.club.state) {
-        throw new Error(`You can only claim events in your club's state (${user.club.state}) or events with no specific state. This event is in ${carnival.state}.`);
+        throw new Error(`You can only claim events in your club's state (${user.club.state}) or events with no specific state. This carnival is in ${carnival.state}.`);
       }
 
       // Business rule checks
@@ -494,7 +494,7 @@ class Carnival extends Model {
 
       return {
         success: true,
-        message: `You have successfully released ownership of "${carnival.title}". The event is now available for the correct organizer to claim.${warningMessage}`,
+        message: `You have successfully released ownership of "${carnival.title}". The carnival is now available for the correct organizer to claim.${warningMessage}`,
         carnival: carnival,
         releasedBy: {
           userId: user.id,
@@ -684,7 +684,7 @@ class Carnival extends Model {
     const endDate = this.endDate ? new Date(this.endDate) : null;
     
     if (!endDate || startDate.toDateString() === endDate.toDateString()) {
-      // Single day event
+      // Single day carnival
       return startDate.toLocaleDateString('en-AU', { 
         weekday: 'long', 
         year: 'numeric', 
@@ -693,7 +693,7 @@ class Carnival extends Model {
       });
     }
     
-    // Multi-day event
+    // Multi-day carnival
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
     const startMonth = startDate.getMonth();
@@ -722,14 +722,14 @@ class Carnival extends Model {
     const endDate = this.endDate ? new Date(this.endDate) : null;
     
     if (!endDate || startDate.toDateString() === endDate.toDateString()) {
-      // Single day event
+      // Single day carnival
       return startDate.toLocaleDateString('en-AU', { 
         month: 'short', 
         day: 'numeric' 
       });
     }
     
-    // Multi-day event
+    // Multi-day carnival
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
     const startMonth = startDate.getMonth();
@@ -769,7 +769,7 @@ Carnival.init({
   mySidelineId: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    comment: 'Unique MySideline event identifier (numeric) for reliable duplicate detection'
+    comment: 'Unique MySideline carnival identifier (numeric) for reliable duplicate detection'
   },
   mySidelineAddress: {
     type: DataTypes.TEXT,
@@ -788,7 +788,7 @@ Carnival.init({
   endDate: {
     type: DataTypes.DATE,
     allowNull: true,
-    comment: 'End date for multi-day carnivals. If null, carnival is a single day event.'
+    comment: 'End date for multi-day carnivals. If null, carnival is a single day carnival.'
   },
   locationAddress: {
     type: DataTypes.TEXT,
@@ -801,17 +801,17 @@ Carnival.init({
   locationLatitude: {
     type: DataTypes.DECIMAL(10, 8),
     allowNull: true,
-    comment: 'Latitude coordinate for the event location'
+    comment: 'Latitude coordinate for the carnival location'
   },
   locationLongitude: {
     type: DataTypes.DECIMAL(11, 8),
     allowNull: true,
-    comment: 'Longitude coordinate for the event location'
+    comment: 'Longitude coordinate for the carnival location'
   },
   locationSuburb: {
     type: DataTypes.STRING(100),
     allowNull: true,
-    comment: 'Suburb/city name for the event location',
+    comment: 'Suburb/city name for the carnival location',
     set(value) {
       this.setDataValue('locationSuburb', value ? value.trim() : value);
     }
@@ -819,7 +819,7 @@ Carnival.init({
   locationPostcode: {
     type: DataTypes.STRING(10),
     allowNull: true,
-    comment: 'Postcode for the event location',
+    comment: 'Postcode for the carnival location',
     set(value) {
       this.setDataValue('locationPostcode', value ? value.trim() : value);
     }
@@ -828,7 +828,7 @@ Carnival.init({
     type: DataTypes.STRING(50),
     allowNull: true,
     defaultValue: 'Australia',
-    comment: 'Country for the event location',
+    comment: 'Country for the carnival location',
     set(value) {
       this.setDataValue('locationCountry', value ? value.trim() : value);
     }

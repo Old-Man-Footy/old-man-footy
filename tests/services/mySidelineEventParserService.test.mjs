@@ -53,14 +53,14 @@ describe('MySidelineEventParserService', () => {
   });
 
   it('extracts date in (DD/MM/YYYY) format from title', () => {
-    const result = parser.extractAndStripDateFromTitle('Some Event (19/07/2025)');
-    expect(result.cleanTitle).toBe('Some Event');
+    const result = parser.extractAndStripDateFromTitle('Some Carnival (19/07/2025)');
+    expect(result.cleanTitle).toBe('Some Carnival');
     expect(result.extractedDate).toEqual(new Date(2025, 6, 19));
   });
 
   it('extracts date in (DD-MM-YYYY) format from title', () => {
-    const result = parser.extractAndStripDateFromTitle('Another Event (05-12-2024)');
-    expect(result.cleanTitle).toBe('Another Event');
+    const result = parser.extractAndStripDateFromTitle('Another Carnival (05-12-2024)');
+    expect(result.cleanTitle).toBe('Another Carnival');
     expect(result.extractedDate).toEqual(new Date(2024, 11, 5));
   });
 
@@ -77,20 +77,20 @@ describe('MySidelineEventParserService', () => {
   });
 
   it('extracts date with - DD/MM/YYYY format', () => {
-    const result = parser.extractAndStripDateFromTitle('Event Name - 21/06/2025');
-    expect(result.cleanTitle).toBe('Event Name');
+    const result = parser.extractAndStripDateFromTitle('Carnival Name - 21/06/2025');
+    expect(result.cleanTitle).toBe('Carnival Name');
     expect(result.extractedDate).toEqual(new Date(2025, 5, 21));
   });
 
   it('extracts date with | DDth Month YYYY format', () => {
-    const result = parser.extractAndStripDateFromTitle('Event | 20th Sep 2024');
-    expect(result.cleanTitle).toBe('Event');
+    const result = parser.extractAndStripDateFromTitle('Carnival | 20th Sep 2024');
+    expect(result.cleanTitle).toBe('Carnival');
     expect(result.extractedDate).toEqual(new Date(2024, 8, 20));
   });
 
   it('extracts date at end: Title DD/MM/YYYY', () => {
-    const result = parser.extractAndStripDateFromTitle('My Event 05/02/2026');
-    expect(result.cleanTitle).toBe('My Event');
+    const result = parser.extractAndStripDateFromTitle('My Carnival 05/02/2026');
+    expect(result.cleanTitle).toBe('My Carnival');
     expect(result.extractedDate).toEqual(new Date(2026, 1, 5));
   });
 
@@ -107,27 +107,27 @@ describe('MySidelineEventParserService', () => {
   });
 
   it('removes trailing and leading dashes or pipes', () => {
-    const result = parser.extractAndStripDateFromTitle('- Event Name - 21/06/2025 -');
-    expect(result.cleanTitle).toBe('Event Name');
+    const result = parser.extractAndStripDateFromTitle('- Carnival Name - 21/06/2025 -');
+    expect(result.cleanTitle).toBe('Carnival Name');
     expect(result.extractedDate).toEqual(new Date(2025, 5, 21));
   });
 
   it('removes brackets and normalizes whitespace', () => {
-    const result = parser.extractAndStripDateFromTitle('  (Some Event) (19/07/2025)  ');
-    expect(result.cleanTitle).toBe('Some Event');
+    const result = parser.extractAndStripDateFromTitle('  (Some Carnival) (19/07/2025)  ');
+    expect(result.cleanTitle).toBe('Some Carnival');
     expect(result.extractedDate).toEqual(new Date(2025, 6, 19));
   });
 
   it('returns original title and null date if no date is found', () => {
-    const result = parser.extractAndStripDateFromTitle('Just a regular event');
-    expect(result.cleanTitle).toBe('Just a regular event');
+    const result = parser.extractAndStripDateFromTitle('Just a regular carnival');
+    expect(result.cleanTitle).toBe('Just a regular carnival');
     expect(result.extractedDate).toBeNull();
   });
 
   it('returns original title and null date if date is unparseable', () => {
     // The mock parseDate returns null for unknown formats
-    const result = parser.extractAndStripDateFromTitle('Event (notadate)');
-    expect(result.cleanTitle).toBe('Event');
+    const result = parser.extractAndStripDateFromTitle('Carnival (notadate)');
+    expect(result.cleanTitle).toBe('Carnival');
     expect(result.extractedDate).toBeNull();
   });
 });

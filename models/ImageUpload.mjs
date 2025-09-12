@@ -33,7 +33,7 @@ class ImageUpload extends Model {
    * @returns {string} Attribution text or default message
    */
   get displayAttribution() {
-    return this.attribution || 'Photo courtesy of event organisers';
+    return this.attribution || 'Photo courtesy of carnival organisers';
   }
 
   /**

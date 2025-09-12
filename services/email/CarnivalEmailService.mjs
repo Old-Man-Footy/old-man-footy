@@ -345,7 +345,7 @@ export class CarnivalEmailService extends BaseEmailService {
                     
                     ${type === 'merged' ? this._createInfoBox(`
                         <p style="margin: 0; color: #006837; font-weight: bold;">
-                            This carnival has been enhanced by merging user-provided details with MySideline event data, 
+                            This carnival has been enhanced by merging user-provided details with MySideline carnival data, 
                             giving you the most complete and up-to-date information available!
                         </p>
                     `) : ''}

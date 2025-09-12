@@ -24,7 +24,7 @@ async function apiRequest(url, options) {
 
 /**
  * Manages user-related actions on an admin page (list or edit).
- * It uses event delegation and requires a "confirmation provider" to handle user prompts,
+ * It uses carnival delegation and requires a "confirmation provider" to handle user prompts,
  * decoupling it from native browser dialogs.
  */
 export class AdminUserManager {
@@ -47,7 +47,7 @@ export class AdminUserManager {
     }
 
     /**
-     * Initializes the manager by attaching a single event listener to the container.
+     * Initializes the manager by attaching a single carnival listener to the container.
      */
     init() {
         this.container.addEventListener('click', this.handleContainerClick.bind(this));
@@ -55,8 +55,8 @@ export class AdminUserManager {
     }
 
     /**
-     * Handles all clicks within the container using event delegation.
-     * @param {Event} e - The click event.
+     * Handles all clicks within the container using carnival delegation.
+     * @param {Carnival} e - The click carnival.
      */
     async handleContainerClick(e) {
         const button = e.target.closest('button[data-action]');
@@ -127,7 +127,7 @@ export class AdminUserManager {
             });
             // Instead of reloading, we can now update the UI dynamically.
             // This part would be specific to the consuming application's UI structure.
-            window.location.reload(); // Or emit a custom event for the UI to handle.
+            window.location.reload(); // Or emit a custom carnival for the UI to handle.
         } catch (error) {
             await this.alert(`Error updating user status: ${error.message}`);
         }
@@ -161,7 +161,7 @@ export class AdminUserManager {
     }
 
     /**
-     * Sets up event listeners for form elements that are not action buttons,
+     * Sets up carnival listeners for form elements that are not action buttons,
      * such as the club select and primary delegate checkbox.
      */
     initializeFormSpecificLogic() {

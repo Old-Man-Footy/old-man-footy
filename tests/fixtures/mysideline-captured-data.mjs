@@ -21,12 +21,12 @@ export const MYSIDELINE_CAPTURED_HTML = `
     <title>MySideline - Masters Rugby League</title>
 </head>
 <body>
-    <div class="event-list">
-        <div class="event-item" data-event-id="123456789">
+    <div class="carnival-list">
+        <div class="carnival-item" data-carnival-id="123456789">
             <h3>Masters Rugby League Carnival 2025 - QLD</h3>
             <p>Redcliffe, QLD</p>
         </div>
-        <div class="event-item" data-event-id="987654321">
+        <div class="carnival-item" data-carnival-id="987654321">
             <h3>NSW Masters Championship 2025</h3>
             <p>Sydney, NSW</p>
         </div>
@@ -112,8 +112,8 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
  * @returns {Array} Modified captured events
  */
 export function getCapturedEvents(overrides = {}) {
-    return MYSIDELINE_CAPTURED_EVENTS.map(event => ({
-        ...event,
+    return MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+        ...carnival,
         ...overrides
     }));
 }
@@ -122,17 +122,17 @@ export function getCapturedEvents(overrides = {}) {
  * Database test data derived from captured events
  */
 export const MYSIDELINE_DB_TEST_DATA = {
-    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_EVENTS.map(event => ({
-        title: event.title,
-        mySidelineId: event.mySidelineId,
-        mySidelineTitle: event.mySidelineTitle,
-        mySidelineAddress: event.mySidelineAddress,
-        mySidelineDate: event.mySidelineDate,
-        date: event.date,
-        locationAddress: event.locationAddress,
-        state: event.state,
-        organiserContactEmail: event.organiserContactEmail,
-        description: event.description,
+    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+        title: carnival.title,
+        mySidelineId: carnival.mySidelineId,
+        mySidelineTitle: carnival.mySidelineTitle,
+        mySidelineAddress: carnival.mySidelineAddress,
+        mySidelineDate: carnival.mySidelineDate,
+        date: carnival.date,
+        locationAddress: carnival.locationAddress,
+        state: carnival.state,
+        organiserContactEmail: carnival.organiserContactEmail,
+        description: carnival.description,
         isActive: true,
         source: 'MySideline'
     }))

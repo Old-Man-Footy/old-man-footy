@@ -4,7 +4,7 @@ title: New Carnival Help
 ---
 
 ## Overview
-The New Carnival page lets organizers create a new carnival event. It’s the starting point for setting up dates, locations, and participants.
+The New Carnival page lets organizers create a new carnival carnival. It’s the starting point for setting up dates, locations, and participants.
 
 ## Key Features Explained
 ### Creation Form

@@ -12,7 +12,7 @@ export const adminClaimCarnivalManager = {
     carnivalState: null,
 
     /**
-     * Initializes the manager by caching DOM elements and setting up event listeners.
+     * Initializes the manager by caching DOM elements and setting up carnival listeners.
      */
     initialize() {
         this.cacheElements();
@@ -43,7 +43,7 @@ export const adminClaimCarnivalManager = {
     },
 
     /**
-     * Handles the 'change' event on the club select dropdown.
+     * Handles the 'change' carnival on the club select dropdown.
      */
     handleClubChange() {
         const { clubSelect } = this.elements;

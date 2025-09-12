@@ -91,7 +91,7 @@
                                     <% if (carnival.date >= new Date()) { %>
                                         <span class="badge bg-primary">Upcoming</span>
                                     <% } else { %>
-                                        <span class="badge bg-secondary">Past Event</span>
+                                        <span class="badge bg-secondary">Past Carnival</span>
                                     <% } %>
                                 <% } else { %>
                                     <span class="badge bg-warning text-dark">Date TBA</span>
@@ -179,9 +179,9 @@
                                     <i class="bi bi-gear-fill me-2"></i>
                                     <strong>
                                         <% if (canTakeOwnership) { %>
-                                            You can claim ownership of this MySideline event
+                                            You can claim ownership of this MySideline carnival
                                         <% } else { %>
-                                            You are the organizer of this event
+                                            You are the organizer of this carnival
                                         <% } %>
                                     </strong>
                                 </div>
@@ -191,7 +191,7 @@
                                         <button type="button" class="btn btn-light btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#claimOwnershipModal">
-                                            <i class="bi bi-hand-thumbs-up"></i> Claim Event
+                                            <i class="bi bi-hand-thumbs-up"></i> Claim Carnival
                                         </button>
                                     <% } %>
 
@@ -210,8 +210,7 @@
                                         <% } %>
                                         
                                         <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-pencil"></i> Edit Event
-                                        </a>
+                                            <i class="bi bi-pencil"></i> Edit Carnival                                        </a>
 
                                         <!-- Email Attendees button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
@@ -299,7 +298,7 @@
                             <div class="mb-4">
                                 <h5><i class="bi bi-person-plus text-success"></i> Player Registration</h5>
                                 <% 
-                                // Check if carnival is inactive OR if the event date is in the past
+                                // Check if carnival is inactive OR if the carnival date is in the past
                                 const isPastEvent = carnival.date && carnival.date instanceof Date && !isNaN(carnival.date) && carnival.date < new Date();
                                 const shouldDisableRegistration = !carnival.isActive || isPastEvent;
                                 %>
@@ -314,7 +313,7 @@
                                             <% if (!carnival.isActive) { %>
                                                 Registration is no longer available for this carnival.
                                             <% } else if (isPastEvent) { %>
-                                                Registration is closed - this event has already taken place.
+                                                Registration is closed - this carnival has already taken place.
                                             <% } %>
                                         </small>
                                     </div>
@@ -463,7 +462,7 @@
             <% if (sponsors && sponsors.length > 0) { %>
                 <div class="card shadow mb-4">
                     <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="bi bi-star-fill"></i> Event Sponsors</h5>
+                        <h5 class="mb-0"><i class="bi bi-star-fill"></i> Carnival Sponsors</h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -860,7 +859,7 @@
     <div class="container py-4">
         <div class="row">
             <div class="col-md-6">
-                <h5 class="text-primary mb-3">Event Summary</h5>
+                <h5 class="text-primary mb-3">Carnival Summary</h5>
                 <div class="d-flex align-items-center mb-2">
                     <i class="bi bi-calendar3 text-primary me-2"></i>
                     <span>
@@ -932,7 +931,7 @@
                     <% } %>
                 </div>
 
-                <!-- Admin Actions for Event Owners -->
+                <!-- Admin Actions for Carnival Owners -->
                 <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                     <div class="mt-3">
                         <h6 class="text-muted mb-2">Admin Actions</h6>
@@ -941,7 +940,7 @@
                             <% if (canTakeOwnership) { %>
                                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-light" 
-                                            data-confirm="Are you sure you want to take ownership of this event for your club? This will allow you to manage and edit the event details.">
+                                            data-confirm="Are you sure you want to take ownership of this carnival for your club? This will allow you to manage and edit the carnival details.">
                                         <i class="bi bi-hand-thumbs-up"></i> Take Ownership
                                     </button>
                                 </form>
@@ -982,9 +981,9 @@
         <div class="row">
             <div class="col-12 text-center text-muted">
                 <small>
-                    Event details are provided by the hosting club. For questions or corrections, please contact the organiser.
+                    Carnival details are provided by the hosting club. For questions or corrections, please contact the organiser.
                     <br>
-                    <strong>Event ID:</strong> <%= carnival.id %> | 
+                    <strong>Carnival ID:</strong> <%= carnival.id %> | 
                     <strong>Last Updated:</strong> <%= new Date(carnival.updatedAt).toLocaleDateString('en-AU') %>
                 </small>
             </div>
@@ -999,7 +998,7 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="claimOwnershipModalLabel">
                     <i class="bi bi-hand-thumbs-up text-warning me-2"></i>
-                    Claim Event Ownership
+                    Claim Carnival Ownership
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -1009,23 +1008,23 @@
                     <strong>What does claiming ownership mean?</strong>
                 </div>
                 
-                <p>By claiming ownership of this MySideline event, you will:</p>
+                <p>By claiming ownership of this MySideline carnival, you will:</p>
                 
                 <ul class="mb-3">
-                    <li><strong>Gain full control</strong> - Edit event details, contact information, and scheduling</li>
+                    <li><strong>Gain full control</strong> - Edit carnival details, contact information, and scheduling</li>
                     <li><strong>Manage attendees</strong> - Add, remove, and communicate with registered clubs</li>
-                    <li><strong>Update information</strong> - Keep event details current and accurate</li>
-                    <li><strong>Handle registrations</strong> - Manage the registration process for your event</li>
+                    <li><strong>Update information</strong> - Keep carnival details current and accurate</li>
+                    <li><strong>Handle registrations</strong> - Manage the registration process for your carnival</li>
                 </ul>
                 
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Important:</strong> Once you claim ownership, you become responsible for managing this event. 
+                    <strong>Important:</strong> Once you claim ownership, you become responsible for managing this carnival. 
                     This action cannot be undone without administrator assistance.
                 </div>
                 
                 <p class="mb-0">
-                    <strong>Current Event:</strong> <%= carnival.title %><br>
+                    <strong>Current Carnival:</strong> <%= carnival.title %><br>
                     <strong>Your Club:</strong> <%= user && user.club ? user.club.clubName : 'Your Club' %>
                 </p>
             </div>
@@ -1035,7 +1034,7 @@
                 </button>
                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
                     <button type="submit" class="btn btn-light">
-                        <i class="bi bi-hand-thumbs-up"></i> Yes, Claim This Event
+                        <i class="bi bi-hand-thumbs-up"></i> Yes, Claim This Carnival
                     </button>
                 </form>
             </div>
@@ -1050,18 +1049,18 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="releaseOwnershipModalLabel">
                     <i class="bi bi-unlock text-danger me-2"></i>
-                    Release Event Ownership
+                    Release Carnival Ownership
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Warning:</strong> Releasing ownership will remove your access to manage this event.
+                    <strong>Warning:</strong> Releasing ownership will remove your access to manage this carnival.
                 </div>
                 
                 <p class="mb-0">
-                    <strong>Event:</strong> <%= carnival.title %><br>
+                    <strong>Carnival:</strong> <%= carnival.title %><br>
                     <strong>Your Club:</strong> <%= user && user.club ? user.club.clubName : 'Your Club' %>
                 </p>
             </div>
@@ -1101,7 +1100,7 @@
                 
                 <ul class="mb-3">
                     <li><strong>Copy MySideline data</strong> - Registration link and MySideline fields will be copied to your selected carnival</li>
-                    <li><strong>Fill empty fields</strong> - Any empty fields in your target carnival will be populated from this MySideline event</li>
+                    <li><strong>Fill empty fields</strong> - Any empty fields in your target carnival will be populated from this MySideline carnival</li>
                     <li><strong>Deactivate this carnival</strong> - This MySideline carnival will be marked as inactive</li>
                     <li><strong>Preserve your data</strong> - Existing data in your target carnival will not be overwritten</li>
                 </ul>
@@ -1133,9 +1132,9 @@
                         </select>
                         <div class="form-text">
                             <% if (user && user.isAdmin) { %>
-                                As an administrator, you can merge this MySideline event into any active carnival on the platform.
+                                As an administrator, you can merge this MySideline carnival into any active carnival on the platform.
                             <% } else { %>
-                                Select which of your existing carnivals you want to merge this MySideline event into.
+                                Select which of your existing carnivals you want to merge this MySideline carnival into.
                             <% } %>
                         </div>
                     </div>
@@ -1150,7 +1149,7 @@
                     
                     <div class="mb-3">
                         <p><strong>Source (MySideline):</strong> <%= carnival.title %></p>
-                        <p><strong>Action:</strong> Data from this event will be merged into your selected carnival above, then this event will be deactivated.</p>
+                        <p><strong>Action:</strong> Data from this carnival will be merged into your selected carnival above, then this carnival will be deactivated.</p>
                     </div>
                 </form>
             </div>
@@ -1261,7 +1260,7 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-3">
-                            <strong>For all official NRL Masters competitions</strong>, you must also register your event 
+                            <strong>For all official NRL Masters competitions</strong>, you must also register your carnival 
                             with the National Rugby League through their official portal:
                         </p>
                         
@@ -1269,7 +1268,7 @@
                             <a href="https://www.playrugbyleague.com/play/masters/host-application-form/" 
                                class="btn btn-light" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-box-arrow-up-right me-2"></i>
-                                Register Event with NRL Masters
+                                Register Carnival with NRL Masters
                             </a>
                         </div>
                         
@@ -1293,9 +1292,9 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-3">
-                            <strong>Potential Duplicate Events:</strong> MySideline may import a similar event that didn't 
+                            <strong>Potential Duplicate Events:</strong> MySideline may import a similar carnival that didn't 
                             automatically merge with your carnival. If this happens, you may need to manually merge the 
-                            MySideline carnival with your event to avoid duplicates.
+                            MySideline carnival with your carnival to avoid duplicates.
                         </p>
                         
                         <div class="alert alert-warning border-0 mb-0">

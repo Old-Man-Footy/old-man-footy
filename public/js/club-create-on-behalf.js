@@ -81,10 +81,10 @@ export const clubCreateOnBehalfManager = {
         }
     },
 
-    handleFormSubmit: (event) => {
+    handleFormSubmit: (carnival) => {
         const isValid = clubCreateOnBehalfManager.validateRequiredFields(['clubName', 'state', 'inviteEmail']);
         if (!isValid) {
-            event.preventDefault?.();
+            carnival.preventDefault?.();
             try {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (_) {

@@ -41,7 +41,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Event Type</label>
+                        <label class="form-label">Carnival Type</label>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="upcoming" name="upcoming" value="true" 
                                    <%= currentFilters.upcoming === 'true' ? 'checked' : '' %>>
@@ -123,7 +123,7 @@
                                             <% if (carnival.date >= new Date()) { %>
                                                 <span class="badge badge-sm bg-primary me-1">Upcoming</span>
                                             <% } else { %>
-                                                <span class="badge badge-sm bg-secondary me-1">Past Event</span>
+                                                <span class="badge badge-sm bg-secondary me-1">Past Carnival</span>
                                             <% } %>
                                         <% } else { %>
                                             <span class="badge badge-sm bg-warning text-dark me-1">Date TBA</span>

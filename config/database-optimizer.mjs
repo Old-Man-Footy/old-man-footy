@@ -241,7 +241,7 @@ class DatabaseOptimizer {
                 }
             }
 
-            // Sequelize connection event monitoring
+            // Sequelize connection carnival monitoring
             if (typeof sequelize.addHook === 'function') {
                 try {
                     await safeAddHook('beforeConnect', () => {

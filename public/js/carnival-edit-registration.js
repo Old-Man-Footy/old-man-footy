@@ -7,7 +7,7 @@
 export const editRegistrationManager = {
     carnivalId: null,
 
-    // Initializes the manager with the carnival ID and sets up the event listener.
+    // Initializes the manager with the carnival ID and sets up the carnival listener.
     initialize(carnivalId) {
         this.carnivalId = carnivalId;
         const removeButton = document.querySelector('.remove-registration');
@@ -18,7 +18,7 @@ export const editRegistrationManager = {
         }
     },
 
-    // Handles the click event on the remove button.
+    // Handles the click carnival on the remove button.
     handleRemoveClick(button) {
         const { registrationId, clubName } = button.dataset;
         if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {

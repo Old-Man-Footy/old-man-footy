@@ -4,7 +4,7 @@ title: Carnival Players Help
 ---
 
 ## Overview
-The Carnival Players page lists all players registered for a carnival. It’s the main place to view, add, or edit player information for the event.
+The Carnival Players page lists all players registered for a carnival. It’s the main place to view, add, or edit player information for the carnival.
 
 ## Key Features Explained
 ### Player List

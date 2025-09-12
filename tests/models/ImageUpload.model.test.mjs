@@ -412,7 +412,7 @@ describe('ImageUpload Model', () => {
                 carnivalId: 1
             });
 
-            expect(imageWithoutAttribution.displayAttribution).toBe('Photo courtesy of event organisers');
+            expect(imageWithoutAttribution.displayAttribution).toBe('Photo courtesy of carnival organisers');
         });
 
         it('should have displayAttribution getter with custom attribution', () => {

@@ -1,7 +1,7 @@
 /**
  * Alternate Names Management (Refactored)
  * Handles adding, editing, and deleting alternate names for clubs using a modular,
- * event-driven approach.
+ * carnival-driven approach.
  */
 
 /**

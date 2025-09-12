@@ -71,7 +71,7 @@ describe('Theme Manager', () => {
     expect(localStorage.getItem('oldmanfooty-theme')).toBe('dark');
   });
 
-  it('should dispatch themeChanged event', () => {
+  it('should dispatch themeChanged carnival', () => {
     const handler = vi.fn();
     window.addEventListener('themeChanged', handler);
     themeManager.applyTheme('dark');
@@ -98,8 +98,8 @@ describe('OldManFooty App', () => {
   it('should add was-validated class on invalid form submit', () => {
     const form = document.querySelector('.needs-validation');
     form.checkValidity = vi.fn(() => false);
-    const event = new Event('submit', { bubbles: true, cancelable: true });
-    form.dispatchEvent(event);
+    const carnival = new Carnival('submit', { bubbles: true, cancelable: true });
+    form.dispatchEvent(carnival);
     expect(form.classList.contains('was-validated')).toBe(true);
   });
 
@@ -108,8 +108,8 @@ describe('OldManFooty App', () => {
     const preview = document.querySelector('.upload-preview');
     const file = new File(['dummy'], 'test.png', { type: 'image/png' });
     Object.defineProperty(input, 'files', { value: [file] });
-    const event = new Event('change');
-    input.dispatchEvent(event);
+    const carnival = new Carnival('change');
+    input.dispatchEvent(carnival);
     await new Promise(r => setTimeout(r, 10));
     expect(preview.innerHTML).toContain('img');
   });
@@ -117,8 +117,8 @@ describe('OldManFooty App', () => {
   it('should auto-expand textarea on input', () => {
     const textarea = document.querySelector('textarea');
     textarea.value = 'Hello\nWorld';
-    const event = new Event('input');
-    textarea.dispatchEvent(event);
+    const carnival = new Carnival('input');
+    textarea.dispatchEvent(carnival);
     expect(textarea.style.height).not.toBe('');
   });
 
@@ -130,8 +130,8 @@ describe('OldManFooty App', () => {
     document.body.appendChild(form);
     const submitSpy = vi.spyOn(form, 'submit');
     input.value = 'test';
-    const event = new Event('input');
-    input.dispatchEvent(event);
+    const carnival = new Carnival('input');
+    input.dispatchEvent(carnival);
     await new Promise(r => setTimeout(r, 900));
     expect(submitSpy).toHaveBeenCalled();
   });

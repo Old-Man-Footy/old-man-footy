@@ -10,7 +10,7 @@ export const adminClubsManager = {
     elements: {},
 
     /**
-     * Initializes the manager by caching DOM elements and setting up event listeners.
+     * Initializes the manager by caching DOM elements and setting up carnival listeners.
      */
     initialize() {
         this.cacheElements();
@@ -24,12 +24,12 @@ export const adminClubsManager = {
     cacheElements() {
         this.elements = {
             searchInput: document.getElementById('search'),
-            document: document, // For event delegation
+            document: document, // For carnival delegation
         };
     },
 
     /**
-     * Sets up a single event listener on the document to handle all toggle actions.
+     * Sets up a single carnival listener on the document to handle all toggle actions.
      */
     bindEvents() {
         this.elements.document.addEventListener('click', (e) => {

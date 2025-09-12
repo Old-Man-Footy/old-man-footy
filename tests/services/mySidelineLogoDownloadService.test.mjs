@@ -37,9 +37,9 @@ vi.mock('https', () => ({
           'content-type': 'image/png',
           'content-length': '100'
         },
-        on: (event, handler) => {
-          if (event === 'data') handler(Buffer.from([1, 2, 3]));
-          if (event === 'end') handler();
+        on: (carnival, handler) => {
+          if (carnival === 'data') handler(Buffer.from([1, 2, 3]));
+          if (carnival === 'end') handler();
         }
       };
       cb(response);
@@ -61,9 +61,9 @@ vi.mock('http', () => ({
           'content-type': 'image/png',
           'content-length': '100'
         },
-        on: (event, handler) => {
-          if (event === 'data') handler(Buffer.from([1, 2, 3]));
-          if (event === 'end') handler();
+        on: (carnival, handler) => {
+          if (carnival === 'data') handler(Buffer.from([1, 2, 3]));
+          if (carnival === 'end') handler();
         }
       };
       cb(response);

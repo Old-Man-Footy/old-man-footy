@@ -21,12 +21,12 @@ if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
     const startDate = new Date(carnival.date);
     const endDate = carnival.endDate ? new Date(carnival.endDate) : null;
     
-    // Check if it's a multi-day event
+    // Check if it's a multi-day carnival
     isMultiDay = endDate && startDate.toDateString() !== endDate.toDateString();
     
     if (format === 'full') {
         if (isMultiDay) {
-            // Multi-day event - full format
+            // Multi-day carnival - full format
             const startYear = startDate.getFullYear();
             const endYear = endDate.getFullYear();
             const startMonth = startDate.getMonth();
@@ -43,7 +43,7 @@ if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
                 dateString = `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
             }
         } else {
-            // Single day event - full format
+            // Single day carnival - full format
             dateString = startDate.toLocaleDateString('en-AU', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -53,7 +53,7 @@ if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
         }
     } else if (format === 'short') {
         if (isMultiDay) {
-            // Multi-day event - short format
+            // Multi-day carnival - short format
             const startYear = startDate.getFullYear();
             const endYear = endDate.getFullYear();
             const startMonth = startDate.getMonth();
@@ -67,7 +67,7 @@ if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
                 dateString = `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
             }
         } else {
-            // Single day event - short format
+            // Single day carnival - short format
             dateString = startDate.toLocaleDateString('en-AU', { 
                 month: 'short', 
                 day: 'numeric',
@@ -76,7 +76,7 @@ if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
         }
     } else if (format === 'compact') {
         if (isMultiDay) {
-            // Multi-day event - compact format
+            // Multi-day carnival - compact format
             const startMonth = startDate.getMonth();
             const endMonth = endDate.getMonth();
             
@@ -88,7 +88,7 @@ if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
                 dateString = `${startDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
             }
         } else {
-            // Single day event - compact format
+            // Single day carnival - compact format
             dateString = startDate.toLocaleDateString('en-AU', { 
                 month: 'short', 
                 day: 'numeric' 

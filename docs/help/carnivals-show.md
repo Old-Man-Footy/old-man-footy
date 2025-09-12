@@ -4,7 +4,7 @@ title: Carnival Show Help
 ---
 
 ## Overview
-The Carnival Show page displays all details about a specific carnival, including clubs, players, and sponsors. It’s the main place to review event information and participation.
+The Carnival Show page displays all details about a specific carnival, including clubs, players, and sponsors. It’s the main place to review carnival information and participation.
 
 ## Key Features Explained
 ### Carnival Info
@@ -14,7 +14,7 @@ Shows the carnival’s name, date, location, and description.
 Lists all clubs and players participating in the carnival.
 
 ### Sponsors
-Displays sponsors supporting the event.
+Displays sponsors supporting the carnival.
 
 ## Step-by-Step Guides
 **How to View Carnival Info:**

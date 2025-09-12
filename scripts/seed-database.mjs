@@ -591,13 +591,13 @@ class DatabaseSeeder {
         const benefits = [];
         
         if (type === 'Title Sponsor') {
-            benefits.push('Event naming rights');
-            benefits.push('Logo on all event materials');
+            benefits.push('Carnival naming rights');
+            benefits.push('Logo on all carnival materials');
             benefits.push('Opening ceremony presentation');
             benefits.push('Trophy presentation rights');
             benefits.push('Premium hospitality package');
         } else if (type === 'Presenting Sponsor') {
-            benefits.push('Logo on event materials');
+            benefits.push('Logo on carnival materials');
             benefits.push('Ground announcements');
             benefits.push('Hospitality package');
             benefits.push('Social media promotion');

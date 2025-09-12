@@ -131,7 +131,7 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
       { title: 'Event1', clubLogoURL: 'http://logo.com/1', id: 1 },
       { title: 'Event2', clubLogoURL: null, id: 2 },
     ]);
-    scraperService.validateAndCleanData.mockImplementation(event => event);
+    scraperService.validateAndCleanData.mockImplementation(carnival => carnival);
     const processedEvents = [
       expect.objectContaining({ id: 1, clubLogoURL: 'http://logo.com/1', title: 'Event1' }),
       expect.objectContaining({ id: 2, clubLogoURL: null, title: 'Event2' }),
@@ -175,7 +175,7 @@ describe('MySidelineIntegrationService.syncMySidelineEvents', () => {
     scraperService.scrapeEvents.mockResolvedValue([
       { title: 'Event1', clubLogoURL: 'http://logo.com/1', id: 1 },
     ]);
-    scraperService.validateAndCleanData.mockImplementation(event => event);
+    scraperService.validateAndCleanData.mockImplementation(carnival => carnival);
     const processedEvents = [
       { id: 1, clubLogoURL: 'http://logo.com/1', createdAt: new Date().toISOString() },
     ];

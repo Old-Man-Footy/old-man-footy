@@ -43,7 +43,7 @@ describe('adminEditClubManager', () => {
 
         // **THE FIX IS HERE:**
         // Mock the DragEvent class.
-        vi.stubGlobal('DragEvent', class extends Event {
+        vi.stubGlobal('DragEvent', class extends Carnival {
             constructor(type, options) {
                 super(type, options);
                 this.dataTransfer = options.dataTransfer || new DataTransfer();
@@ -65,7 +65,7 @@ describe('adminEditClubManager', () => {
     it('should prevent form submission if a required field is empty', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitEvent = new Event('submit', { cancelable: true });
+        const submitEvent = new Carnival('submit', { cancelable: true });
         const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
 
         nameInput.value = '   '; // Empty value
@@ -79,7 +79,7 @@ describe('adminEditClubManager', () => {
     it('should allow form submission if required fields are filled', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitEvent = new Event('submit', { cancelable: true });
+        const submitEvent = new Carnival('submit', { cancelable: true });
         const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
 
         nameInput.value = 'Valid Club Name';
@@ -94,7 +94,7 @@ describe('adminEditClubManager', () => {
         // Mock scrollHeight as it's a layout-dependent property
         Object.defineProperty(textarea, 'scrollHeight', { value: 150, configurable: true });
 
-        textarea.dispatchEvent(new Event('input'));
+        textarea.dispatchEvent(new Carnival('input'));
 
         expect(textarea.style.height).toBe('150px');
     });
@@ -116,7 +116,7 @@ describe('adminEditClubManager', () => {
 
         // Simulate file selection
         Object.defineProperty(fileInput, 'files', { value: [testFile] });
-        fileInput.dispatchEvent(new Event('change'));
+        fileInput.dispatchEvent(new Carnival('change'));
 
         expect(uploadText.textContent).toBe('Selected: logo.png');
     });

@@ -25,7 +25,7 @@ export const adminCarnivalsManager = {
         // Setup status toggle buttons
         const statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
         statusToggleButtons.forEach(button => {
-          button.addEventListener('click', (event) => {
+          button.addEventListener('click', (carnival) => {
             const carnivalId = button.getAttribute('data-toggle-carnival-status');
             const carnivalTitle = button.getAttribute('data-carnival-title');
             const currentStatus = button.getAttribute('data-current-status') === 'true';

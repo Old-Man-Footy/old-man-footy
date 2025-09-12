@@ -10,7 +10,7 @@ export const carnivalMyClubPlayersManager = {
   registrationId: null,
 
   /**
-   * Main entry point. Caches DOM elements and binds event listeners.
+   * Main entry point. Caches DOM elements and binds carnival listeners.
    */
   initialize() {
     this.cacheElements();
@@ -41,7 +41,7 @@ export const carnivalMyClubPlayersManager = {
   },
 
   /**
-   * Binds all event listeners for player removal and modal interactions.
+   * Binds all carnival listeners for player removal and modal interactions.
    */
   bindEvents() {
     this.elements.removePlayerBtns.forEach(btn => {
@@ -73,11 +73,11 @@ export const carnivalMyClubPlayersManager = {
   },
 
   /**
-   * Handles click event for removing a player from the carnival.
-   * @param {Event} event
+   * Handles click carnival for removing a player from the carnival.
+   * @param {Carnival} carnival
    */
-  handleRemovePlayerClick: (event) => {
-    const btn = event.currentTarget;
+  handleRemovePlayerClick: (carnival) => {
+    const btn = carnival.currentTarget;
     const assignmentId = btn.dataset.assignmentId;
     const playerName = btn.dataset.playerName;
     if (confirm(`Are you sure you want to remove "${playerName}" from this carnival?`)) {
@@ -87,10 +87,10 @@ export const carnivalMyClubPlayersManager = {
 
   /**
    * Handles team assignment dropdown changes
-   * @param {Event} event
+   * @param {Carnival} carnival
    */
-  handleTeamAssignmentChange: async (event) => {
-    const select = event.currentTarget;
+  handleTeamAssignmentChange: async (carnival) => {
+    const select = carnival.currentTarget;
     const assignmentId = select.dataset.assignmentId;
     const teamNumber = select.value;
     const playerName = select.dataset.playerName;
@@ -130,11 +130,11 @@ export const carnivalMyClubPlayersManager = {
 
   /**
    * Handles move player button clicks in dropdown menus
-   * @param {Event} event
+   * @param {Carnival} carnival
    */
-  handleMovePlayerClick: async (event) => {
-    event.preventDefault();
-    const btn = event.currentTarget;
+  handleMovePlayerClick: async (carnival) => {
+    carnival.preventDefault();
+    const btn = carnival.currentTarget;
     const assignmentId = btn.dataset.assignmentId;
     const targetTeam = btn.dataset.targetTeam;
     const playerName = btn.dataset.playerName;
@@ -237,7 +237,7 @@ export const carnivalMyClubPlayersManager = {
 
   /**
    * Validates modal form submission to ensure at least one player is selected.
-   * @param {Event} e
+   * @param {Carnival} e
    */
   handleModalFormSubmit: (e) => {
     const selectedCount = document.querySelectorAll('.modal-player-checkbox:checked').length;

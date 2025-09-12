@@ -78,7 +78,7 @@ const themeManager = {
         // Save to localStorage
         localStorage.setItem(this.STORAGE_KEY, theme);
         
-        // Dispatch custom event for other components
+        // Dispatch custom carnival for other components
         window.dispatchEvent(new CustomEvent('themeChanged', { 
             detail: { theme: theme } 
         }));
@@ -122,7 +122,7 @@ const themeManager = {
     },
     
     /**
-     * Setup theme toggle button event listener
+     * Setup theme toggle button carnival listener
      */
     setupToggleButton: function() {
         const toggleButton = document.getElementById('themeToggle');
@@ -216,10 +216,10 @@ const oldmanfooty = {
         // Bootstrap validation
         const forms = document.querySelectorAll('.needs-validation');
         Array.prototype.slice.call(forms).forEach(function(form) {
-            form.addEventListener('submit', function(event) {
+            form.addEventListener('submit', function(carnival) {
                 if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
+                    carnival.preventDefault();
+                    carnival.stopPropagation();
                 }
                 form.classList.add('was-validated');
             }, false);
@@ -284,8 +284,8 @@ const oldmanfooty = {
                 
                 if (input && files.length > 0) {
                     input.files = files;
-                    const event = new Event('change', { bubbles: true });
-                    input.dispatchEvent(event);
+                    const carnival = new Carnival('change', { bubbles: true });
+                    input.dispatchEvent(carnival);
                 }
             });
         });

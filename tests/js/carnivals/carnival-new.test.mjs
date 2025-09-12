@@ -43,7 +43,7 @@ describe('carnivalNewManager', () => {
   it('should show mysidelineButtonContainer when title length > 3', () => {
     const title = carnivalNewManager.elements.title;
     const container = carnivalNewManager.elements.mysidelineContainer;
-    title.value = 'Carnival Event';
+    title.value = 'Carnival Carnival';
     carnivalNewManager.handleTitleInput();
     expect(container.style.display).toBe('block');
   });
@@ -60,7 +60,7 @@ describe('carnivalNewManager', () => {
     const area = carnivalNewManager.elements.fileUploadAreas[0];
     const input = area.querySelector('input[type="file"]');
     const clickSpy = vi.spyOn(input, 'click');
-    area.dispatchEvent(new Event('click', { bubbles: true }));
+    area.dispatchEvent(new Carnival('click', { bubbles: true }));
     expect(clickSpy).toHaveBeenCalled();
   });
 
@@ -70,7 +70,7 @@ describe('carnivalNewManager', () => {
     carnivalNewManager.handleMultiDayToggle();
     expect(els.endDateContainer.style.display).toBe('block');
     expect(els.endDateInput.required).toBe(true);
-    expect(els.dateLabel.textContent).toBe('Event Start Date *');
+    expect(els.dateLabel.textContent).toBe('Carnival Start Date *');
   });
 
   it('should hide endDateContainer and clear endDate when multi-day is unchecked', () => {

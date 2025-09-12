@@ -31,9 +31,9 @@ export const clubPlayersFormManager = {
                 input.addEventListener('blur', () => this.validateField(input));
                 input.addEventListener('input', () => this.clearFieldError(input));
             });
-            form.addEventListener('submit', (event) => {
+            form.addEventListener('submit', (carnival) => {
                 if (!this.validateForm(form)) {
-                    event.preventDefault();
+                    carnival.preventDefault();
                     this.showFormErrors();
                 } else {
                     this.showSubmissionLoading();
@@ -76,11 +76,11 @@ export const clubPlayersFormManager = {
     initializeFormEnhancements() {
         const nameFields = document.querySelectorAll('#firstName, #lastName');
         nameFields.forEach(field => {
-            field.addEventListener('input', (event) => {
-                const value = event.target.value;
+            field.addEventListener('input', (carnival) => {
+                const value = carnival.target.value;
                 const capitalizedValue = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
                 if (value !== capitalizedValue) {
-                    event.target.value = capitalizedValue;
+                    carnival.target.value = capitalizedValue;
                 }
             });
         });

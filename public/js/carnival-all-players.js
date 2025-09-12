@@ -14,7 +14,7 @@ export const carnivalAllPlayersManager = {
     currentSort: { column: null, direction: 'asc' },
 
     /**
-     * Initializes the manager, setting up event listeners and UI state.
+     * Initializes the manager, setting up carnival listeners and UI state.
      * @function
      */
     initialize() {
@@ -37,7 +37,7 @@ export const carnivalAllPlayersManager = {
     },
 
     /**
-     * Binds event listeners to cached elements.
+     * Binds carnival listeners to cached elements.
      * @function
      */
     bindEvents() {

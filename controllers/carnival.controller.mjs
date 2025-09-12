@@ -354,7 +354,7 @@ const showCarnivalHandler = async (req, res) => {
     });
   }
 
-  // Check if this is a MySideline event that can be claimed (only for active carnivals)
+  // Check if this is a MySideline carnival that can be claimed (only for active carnivals)
   const canTakeOwnership =
     carnival.isActive &&
     carnival.mySidelineId &&
@@ -715,7 +715,7 @@ const createCarnivalHandler = async (req, res) => {
   if (wasMerged) {
     req.flash(
       'success_msg',
-      `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`
+      `Carnival successfully merged with existing MySideline carnival! Your data has been combined with the imported carnival: "${carnival.title}"`
     );
     return res.redirect(`/carnivals/${carnival.id}`);
   } else {
@@ -756,11 +756,11 @@ const showEditFormHandler = async (req, res) => {
 
 
 /**
- * Create or merge a carnival event, preventing duplicates.
- * If a matching MySideline event exists (by title/mySidelineTitle and date),
- * update it with any new data from the user-created event, otherwise create a new one.
+ * Create or merge a carnival carnival, preventing duplicates.
+ * If a matching MySideline carnival exists (by title/mySidelineTitle and date),
+ * update it with any new data from the user-created carnival, otherwise create a new one.
  * @param {Object} carnivalData - The carnival data to create.
- * @param {number} userId - The user ID creating the event.
+ * @param {number} userId - The user ID creating the carnival.
  * @returns {Promise<Carnival>} The created or merged carnival instance.
  */
 export async function createOrMergeEvent(carnivalData, userId) {
@@ -785,9 +785,9 @@ export async function createOrMergeEvent(carnivalData, userId) {
     });
   
     if (existing) {
-      // Only merge if the existing event is a MySideline import
+      // Only merge if the existing carnival is a MySideline import
       if (!existing.isManuallyEntered) {
-        // Merge user-provided data into the MySideline event (prefer user data if present)
+        // Merge user-provided data into the MySideline carnival (prefer user data if present)
         await existing.update({
           ...carnivalData,
           isManuallyEntered: false, // preserve MySideline status
@@ -797,10 +797,10 @@ export async function createOrMergeEvent(carnivalData, userId) {
         });
         return existing;
       } else if (existing.clubId === carnivalData.clubId) {
-        // If the existing event is manually entered but belongs to the same club, merge data
+        // If the existing carnival is manually entered but belongs to the same club, merge data
         throw new Error('A similar manually created carnival already exists for this date. Please check for duplicates.');
       }
-      // If the existing event is manually entered and belongs to a different club, allow creation.    
+      // If the existing carnival is manually entered and belongs to a different club, allow creation.    
     }
   
     // No duplicate found, create new carnival
@@ -967,7 +967,7 @@ const deleteCarnivalHandler = async (req, res) => {
 };
 
 /**
- * Take ownership of MySideline event
+ * Take ownership of MySideline carnival
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -985,7 +985,7 @@ const takeOwnershipHandler = async (req, res) => {
 };
 
 /**
- * Release ownership of MySideline event
+ * Release ownership of MySideline carnival
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */

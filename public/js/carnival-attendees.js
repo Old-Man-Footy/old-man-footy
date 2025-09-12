@@ -7,7 +7,7 @@
 export const attendeesManager = {
     carnivalId: null,
 
-    // Initializes the manager with the carnival ID and sets up event listeners.
+    // Initializes the manager with the carnival ID and sets up carnival listeners.
     initialize(carnivalId) {
         this.carnivalId = carnivalId;
         this.initializeFiltering();
@@ -15,7 +15,7 @@ export const attendeesManager = {
         this.initializeRemoveActions();
     },
 
-    // Sets up event listeners for the filter radio buttons.
+    // Sets up carnival listeners for the filter radio buttons.
     initializeFiltering() {
         document.querySelectorAll('input[name="approvalFilter"], input[name="paymentFilter"]')
             .forEach(filter => {
@@ -86,7 +86,7 @@ export const attendeesManager = {
         return noResultsMsg;
     },
 
-    // Sets up event listeners for approve/reject buttons.
+    // Sets up carnival listeners for approve/reject buttons.
     initializeApprovalActions() {
         document.querySelectorAll('.approve-registration').forEach(button => {
             button.addEventListener('click', () => {

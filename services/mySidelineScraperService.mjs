@@ -19,7 +19,7 @@ class MySidelineScraperService {
 
     /**
      * Main method to scrape MySideline events
-     * @returns {Promise<Array>} Array of scraped event objects
+     * @returns {Promise<Array>} Array of scraped carnival objects
      */
     async scrapeEvents() {
         try {
@@ -48,7 +48,7 @@ class MySidelineScraperService {
 
     /**
      * Fetch events using browser automation with API interception
-     * @returns {Promise<Array>} Array of fetched event objects
+     * @returns {Promise<Array>} Array of fetched carnival objects
      */
     async fetchEventsWithApiInterception() {
         let browser = null;
@@ -172,7 +172,7 @@ class MySidelineScraperService {
     }
 
     /**
-     * Check if an API item represents a relevant Masters event
+     * Check if an API item represents a relevant Masters carnival
      * @param {Object} item - API response item
      * @returns {boolean} True if relevant
      */
@@ -207,9 +207,9 @@ class MySidelineScraperService {
     }
 
     /**
-     * Convert API item to our internal event format
+     * Convert API item to our internal carnival format
      * @param {Object} item - API response item
-     * @returns {Object} Converted event object
+     * @returns {Object} Converted carnival object
      */
     convertApiItemToEvent(item) {
         // Add comprehensive null/undefined checks at the start
@@ -272,11 +272,11 @@ class MySidelineScraperService {
         let { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(item.name);
         if (!carnivalName || carnivalName.trim() === '') {
             // If no title was extracted, use the full title.
-            carnivalName = item.name || 'Masters Rugby League Event';                
+            carnivalName = item.name || 'Masters Rugby League Carnival';                
         }
 
         return {
-            // Core event data
+            // Core carnival data
             title: carnivalName,
             date: eventDate,
             locationAddress: locationAddress || 'TBC',
@@ -299,7 +299,7 @@ class MySidelineScraperService {
             socialMediaWebsite: item.meta?.website || null,
             socialMediaFacebook: item.meta?.facebook || null,
             
-            // Event details
+            // Carnival details
             scheduleDetails: item.finderDetails?.description || null,
             
             // System fields
@@ -359,7 +359,7 @@ class MySidelineScraperService {
         // Ensure title is present (required field)
         if (!cleanedData.title || cleanedData.title.trim() === '') {
             console.warn('No title provided, using default');
-            cleanedData.title = 'Masters Rugby League Event';
+            cleanedData.title = 'Masters Rugby League Carnival';
         }
 
         // Clean string fields
@@ -540,8 +540,8 @@ class MySidelineScraperService {
                                 console.log(`  - Converted relative URL to: ${srcUrl}`);
                             }
 
-                            // For MySideline events, use the full alt text as the event key
-                            // Alt text format: "Team A vs Team B - Date" or just "Event Name"
+                            // For MySideline events, use the full alt text as the carnival key
+                            // Alt text format: "Team A vs Team B - Date" or just "Carnival Name"
                             // We want to use this as the key to match against mySidelineTitle
                             const eventKey = altText;
 

@@ -1,8 +1,8 @@
 import MySidelineDataService from './mySidelineDataService.mjs';
 
 /**
- * MySideline Event Parser Service
- * Handles parsing and standardization of scraped MySideline event data
+ * MySideline Carnival Parser Service
+ * Handles parsing and standardization of scraped MySideline carnival data
  */
 class MySidelineEventParserService {
     constructor() {
@@ -41,7 +41,7 @@ class MySidelineEventParserService {
             {
                 // Combined pattern for dates found at the very end of a string.
                 // Handles: Title DD/MM/YYYY, Title DDth Month YYYY
-                // Examples: Carnival 20th Sep 2024, Another Event 5 Feb 2026
+                // Examples: Carnival 20th Sep 2024, Another Carnival 5 Feb 2026
                 pattern: /\s+((?:\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4})|(?:\d{1,2}(?:st|nd|rd|th)?\s+[a-zA-Z]{3,}\s+\d{4})|(?:[a-zA-Z]{3,}\s+\d{1,2},?\s+\d{4}))\s*$/gi,
                 extract: (match) => match[1].trim()
             }
@@ -90,7 +90,7 @@ class MySidelineEventParserService {
             .replace(/\s+/g, ' ') // Normalize whitespace
             .trim();
 
-        // If cleanTitle is empty, try to recover original event name from brackets
+        // If cleanTitle is empty, try to recover original carnival name from brackets
         if (!cleanTitle) {
             const eventMatch = title.match(/\(([^\d]+)\)/);
             if (eventMatch && eventMatch[1]) {

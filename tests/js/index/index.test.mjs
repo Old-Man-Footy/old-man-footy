@@ -51,7 +51,7 @@ describe('index.js', () => {
     // Uncheck the checkbox to trigger validation
     document.querySelector('.state-checkbox').checked = false;
     const form = document.getElementById('subscribeForm');
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    form.dispatchEvent(new Carnival('submit', { cancelable: true }));
     const msg = document.querySelector('.subscription-message');
     expect(msg).toBeTruthy();
   });
