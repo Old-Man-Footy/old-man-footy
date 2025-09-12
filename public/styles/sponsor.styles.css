@@ -347,13 +347,13 @@
     transform: translateY(-1px);
 }
 
-.sponsor-action-buttons .btn-outline-light {
+.sponsor-action-buttons .btn-outline-tertiary {
     background-color: rgba(220, 53, 69, 0.1);
     border-color: rgba(220, 53, 69, 0.5);
     color: #ff6b7a;
 }
 
-.sponsor-action-buttons .btn-outline-light:hover {
+.sponsor-action-buttons .btn-outline-tertiary:hover {
     background-color: rgba(220, 53, 69, 0.2);
     border-color: rgba(220, 53, 69, 0.7);
     color: #ff6b7a;

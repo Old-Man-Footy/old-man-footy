@@ -368,7 +368,7 @@ a.btn-outline-secondary:active,
 
 a.btn-tertiary,
 .btn-tertiary,
-.btn-check:checked + .btn-outline-light {
+.btn-check:checked + .btn-outline-tertiary {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
@@ -387,18 +387,18 @@ a.btn-tertiary:active,
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
-a.btn-outline-light,
-.btn-outline-light {
+a.btn-outline-tertiary,
+.btn-outline-tertiary {
     color: var(--rugby-gold);
     border-color: var(--rugby-gold);
 }
 
-a.btn-outline-light:hover,
-a.btn-outline-light:focus,
-a.btn-outline-light:active,    
-.btn-outline-light:hover,
-.btn-outline-light:focus,
-.btn-outline-light:active {
+a.btn-outline-tertiary:hover,
+a.btn-outline-tertiary:focus,
+a.btn-outline-tertiary:active,    
+.btn-outline-tertiary:hover,
+.btn-outline-tertiary:focus,
+.btn-outline-tertiary:active {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
@@ -1123,14 +1123,14 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: var(--rugby-dark-green);
 }
 
-.hero-btn.btn-outline-light {
+.hero-btn.btn-outline-tertiary {
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid var(--rugby-gold);
     color: var(--rugby-gold);
     backdrop-filter: blur(10px);
 }
 
-.hero-btn.btn-outline-light:hover {
+.hero-btn.btn-outline-tertiary:hover {
     background: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);

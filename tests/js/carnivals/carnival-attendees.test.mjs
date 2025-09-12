@@ -62,9 +62,10 @@ describe('handleActionResult', () => {
     window.location = originalLocation;
   });
 
-  it('calls showAlert with success without reloading on success', () => {
+  it('calls showAlert with success and reloads on success', () => {
     const result = { success: true, message: 'Approved!' };
     const onSuccess = vi.fn();
+    vi.useFakeTimers();
 
     // Call the method on the manager object
     attendeesManager.handleActionResult(result, 'Error', onSuccess);
@@ -73,8 +74,9 @@ describe('handleActionResult', () => {
     expect(showAlertSpy).toHaveBeenCalledWith('success', 'Approved!');
     expect(onSuccess).toHaveBeenCalled();
     
-    // Verify that reload is NOT called since we removed the automatic reload
-    expect(window.location.reload).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    expect(window.location.reload).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it('calls showAlert with danger on failure', () => {
@@ -96,7 +98,7 @@ describe('updateRegistrationUI', () => {
     document.body.innerHTML = `
       <div data-registration-id="123" data-approval-status="pending">
         <div class="position-absolute top-0 end-0">
-          <span class="badge bg-tertiary text-dark">
+          <span class="badge bg-tertiary">
             <i class="bi bi-clock"></i> Pending
           </span>
         </div>
