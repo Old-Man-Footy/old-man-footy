@@ -343,7 +343,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 bg-success text-white">
+                <div class="card border-0 bg-light text-white">
                     <div class="card-body text-center">
                         <div class="display-6 fw-bold"><%= assignedPlayers.filter(p => p.clubPlayer.isMastersEligible()).length %></div>
                         <small>Masters Eligible</small>
@@ -420,7 +420,7 @@
                                                         <small class="text-muted">Age: <%= player.getAge() %></small>
                                                     <% } %>
                                                     <% if (player.isMastersEligible()) { %>
-                                                        <span class="badge bg-success ms-2">Masters</span>
+                                                        <span class="badge bg-light ms-2">Masters</span>
                                                     <% } else { %>
                                                         <span class="badge bg-warning text-dark ms-2">Under 35</span>
                                                     <% } %>

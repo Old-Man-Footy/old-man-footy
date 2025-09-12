@@ -129,7 +129,7 @@
                                     <small class="text-muted d-block">Status</small>
                                     <span class="fw-medium">
                                         <% if (user.isActive) { %>
-                                            <span class="badge bg-primar">Active</span>
+                                            <span class="badge bg-success">Active</span>
                                         <% } else { %>
                                             <span class="badge bg-warning">Inactive</span>
                                         <% } %>
@@ -435,7 +435,7 @@
                                             <div class="mb-3">
                                                 <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                 <% if (new Date(carnival.date) >= new Date()) { %>
-                                                    <span class="badge bg-success">Upcoming</span>
+                                                    <span class="badge bg-light">Upcoming</span>
                                                 <% } else { %>
                                                     <span class="badge bg-secondary">Past</span>
                                                 <% } %>
@@ -641,7 +641,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-info" id="quickStartChecklist">
-                <div class="card-header bg-success">
+                <div class="card-header bg-light">
                     <h5 class="mb-0">
                         <i class="bi bi-list-check"></i> Quick Start Checklist
                         <small class="opacity-75">(New User)</small>

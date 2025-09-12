@@ -979,7 +979,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: white;
 }
 
-.bg-success {
+.bg-light {
     background: linear-gradient(135deg, var(--rugby-gold) 0%, #e6c200 100%) !important;
 }
 

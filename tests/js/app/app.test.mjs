@@ -158,7 +158,7 @@ describe('OldManFooty App', () => {
     oldmanfooty.showToast('Test', 'success');
     const toast = document.querySelector('.toast');
     expect(toast).not.toBeNull();
-    expect(toast.className).toContain('bg-success');
+    expect(toast.className).toContain('bg-light');
   });
 });
 
