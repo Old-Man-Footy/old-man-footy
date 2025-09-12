@@ -142,7 +142,7 @@
 
 <!-- Image Carousel Section -->
 <% if (carouselImages && carouselImages.length > 0) { %>
-<section class="py-4 bg-light" data-carousel-images='<%= JSON.stringify(carouselImages) %>'>
+<section class="py-4 bg-tertiary" data-carousel-images='<%= JSON.stringify(carouselImages) %>'>
     <div class="container">
         <div class="row">
             <div class="col-12">
@@ -165,7 +165,7 @@
                                             <% if (image.type === 'gallery') { %>
                                                 <span class="badge bg-secondary">Gallery</span>
                                             <% } else if (image.type === 'promotional') { %>
-                                                <span class="badge bg-light">Promo</span>
+                                                <span class="badge bg-tertiary">Promo</span>
                                             <% } %>
                                         </div>
                                     </div>

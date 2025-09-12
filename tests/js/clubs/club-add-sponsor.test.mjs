@@ -91,7 +91,7 @@ describe('clubAddSponsorManager', () => {
     fields.forEach(field => {
       if (field.id !== 'sponsorName') {
         expect(field.disabled).toBe(true);
-        expect(field.classList.contains('bg-light')).toBe(true);
+        expect(field.classList.contains('bg-tertiary')).toBe(true);
       }
     });
   });
@@ -102,7 +102,7 @@ describe('clubAddSponsorManager', () => {
     fields.forEach(field => {
       if (field.id !== 'sponsorName') {
         expect(field.disabled).toBe(false);
-        expect(field.classList.contains('bg-light')).toBe(false);
+        expect(field.classList.contains('bg-tertiary')).toBe(false);
       }
     });
   });

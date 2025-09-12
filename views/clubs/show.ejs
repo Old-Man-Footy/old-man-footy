@@ -89,7 +89,7 @@
                     <h5 class="mb-0">
                         <i class="fas fa-calendar-alt me-2"></i>Carnivals Hosted by <%= club.clubName %>
                     </h5>
-                    <span class="badge bg-light text-primary"><%= clubCarnivals.length %> Total</span>
+                    <span class="badge bg-tertiary text-primary"><%= clubCarnivals.length %> Total</span>
                 </div>
                 <div class="card-body">
                     <% if (clubCarnivals.length > 0) { %>
@@ -315,7 +315,7 @@
                     <h5 class="mb-0">
                         <i class="fas fa-users me-2"></i>Carnivals Attended by <%= club.clubName %>
                     </h5>
-                    <span class="badge bg-light text-info"><%= attendingCarnivals.length %> Total</span>
+                    <span class="badge bg-tertiary text-info"><%= attendingCarnivals.length %> Total</span>
                 </div>
                 <div class="card-body">
                     <% if (attendingCarnivals.length > 0) { %>
@@ -601,7 +601,7 @@
             <!-- Contact Information -->
             <% if (club.contactPerson || club.contactEmail || club.contactPhone || club.website) { %>
                 <div class="card shadow mb-4 club-contact-card">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-tertiary">
                         <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Contact Information</h5>
                     </div>
                     <div class="card-body">

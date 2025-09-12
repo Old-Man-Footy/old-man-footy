@@ -49,7 +49,7 @@
                                             <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
                                                  class="me-2" style="height: 30px; width: auto; max-width: 40px; object-fit: contain;">
                                         <% } else { %>
-                                            <div class="me-2 d-flex align-items-center justify-content-center bg-light border rounded" 
+                                            <div class="me-2 d-flex align-items-center justify-content-center bg-tertiary border rounded" 
                                                  style="height: 30px; width: 40px; min-width: 40px;">
                                                 <i class="bi bi-shield text-muted" style="font-size: 0.8rem;"></i>
                                             </div>
@@ -73,7 +73,7 @@
                                     </div>
                                     <% if (club.attendingPlayers > 0) { %>
                                         <div class="mt-2 text-center">
-                                            <span class="badge bg-light">
+                                            <span class="badge bg-tertiary">
                                                 <i class="bi bi-check-circle"></i> <%= club.attendingPlayers %> Attending
                                             </span>
                                         </div>
@@ -250,7 +250,7 @@
                                 </td>
                                 <td>
                                     <% if (attendanceStatus === 'Attending') { %>
-                                        <span class="badge bg-light">
+                                        <span class="badge bg-tertiary">
                                             <i class="bi bi-check-circle"></i> Attending
                                         </span>
                                     <% } else if (attendanceStatus === 'Maybe') { %>

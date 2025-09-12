@@ -751,7 +751,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-tertiary) 100%);
 }
 
-[data-theme="dark"] .py-4.bg-light {
+[data-theme="dark"] .py-4.bg-tertiary {
     background-color: var(--theme-bg-secondary) !important;
 }
 
@@ -979,7 +979,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: white;
 }
 
-.bg-light {
+.bg-tertiary {
     background: linear-gradient(135deg, var(--rugby-gold) 0%, #e6c200 100%) !important;
 }
 
@@ -1473,12 +1473,12 @@ button[type="submit"]:contains("Complete Registration"):focus {
 
 /* Email Subscription Section */
 #subscribe,
-.bg-light {
+.bg-tertiary {
     background-color: var(--theme-bg-secondary) !important;
 }
 
 [data-theme="dark"] #subscribe,
-[data-theme="dark"] .bg-light {
+[data-theme="dark"] .bg-tertiary {
     background-color: var(--theme-bg-secondary) !important;
 }
 

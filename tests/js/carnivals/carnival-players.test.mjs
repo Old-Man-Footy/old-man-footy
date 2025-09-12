@@ -149,7 +149,7 @@ describe('carnivalPlayersManager', () => {
     carnivalPlayersManager.updateClubSummaryHighlight();
     const lionsCard = carnivalPlayersManager.elements.clubSummaryCards.find(card => card.dataset.club === 'Lions');
     expect(lionsCard.classList.contains('border-primary')).toBe(true);
-    expect(lionsCard.classList.contains('bg-light')).toBe(true);
+    expect(lionsCard.classList.contains('bg-tertiary')).toBe(true);
   });
 
   it('should sort players by name ascending and descending', () => {
