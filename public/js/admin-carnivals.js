@@ -63,7 +63,7 @@ export const adminCarnivalsManager = {
           messageElement.textContent = 'Are you sure you want to reactivate this carnival?';
           warningElement.textContent = 'Reactivated carnivals will become visible on the site again';
           actionTextElement.textContent = 'Reactivate';
-          confirmButton.className = 'btn btn-light';
+          confirmButton.className = 'btn btn-tertiary';
           confirmButton.innerHTML = '<i class="bi bi-eye"></i> Reactivate Carnival';
         }
     

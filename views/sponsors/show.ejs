@@ -23,7 +23,7 @@
                     </div>
                     <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
                         <div class="sponsor-action-buttons">
-                            <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-light">
+                            <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-tertiary">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
                             <button class="btn btn-outline-light" data-action="delete-sponsor-btn">

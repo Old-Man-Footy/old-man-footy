@@ -72,7 +72,7 @@
                 <!-- Gallery Link -->
                 <% if (carnival.promotionalImageURL) { %>
                     <div class="card-img-overlay d-flex align-items-end justify-content-end">
-                        <a href="/carnivals/<%= carnival.id %>/gallery" class="btn btn-light btn-sm shadow">
+                        <a href="/carnivals/<%= carnival.id %>/gallery" class="btn btn-tertiary btn-sm shadow">
                             <i class="fas fa-images me-1"></i>
                             View Gallery
                         </a>
@@ -188,7 +188,7 @@
                                 <div class="d-flex gap-2">
                                     <!-- Claim button for unclaimed MySideline events -->
                                     <% if (canTakeOwnership) { %>
-                                        <button type="button" class="btn btn-light btn-sm" 
+                                        <button type="button" class="btn btn-tertiary btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#claimOwnershipModal">
                                             <i class="bi bi-hand-thumbs-up"></i> Claim Carnival
@@ -319,7 +319,7 @@
                                     </div>
                                 <% } else { %>
                                     <a href="<%= carnival.registrationLink %>" 
-                                       class="btn btn-light" 
+                                       class="btn btn-tertiary" 
                                        target="_blank">
                                         <i class="bi bi-box-arrow-up-right"></i> Register Now
                                         <% if (isMySidelineCarnival) { %>
@@ -650,7 +650,7 @@
                                               rows="3" maxlength="500" placeholder="Any special requirements or notes..."></textarea>
                                 </div>
                                 
-                                <button type="submit" class="btn btn-light w-100">
+                                <button type="submit" class="btn btn-tertiary w-100">
                                     <i class="bi bi-hand-thumbs-up"></i> Register Interest
                                 </button>
                             </form>
@@ -889,7 +889,7 @@
                                 <i class="bi bi-x-circle"></i> Registration Closed
                             </button>
                         <% } else { %>
-                            <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-light" target="_blank">
+                            <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-tertiary" target="_blank">
                                 <i class="bi bi-person-plus"></i> Register
                             </a>
                         <% } %>
@@ -939,7 +939,7 @@
                             <!-- Take Ownership button for unclaimed MySideline events -->
                             <% if (canTakeOwnership) { %>
                                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-light" 
+                                    <button type="submit" class="btn btn-sm btn-tertiary" 
                                             data-confirm="Are you sure you want to take ownership of this carnival for your club? This will allow you to manage and edit the carnival details.">
                                         <i class="bi bi-hand-thumbs-up"></i> Take Ownership
                                     </button>
@@ -1033,7 +1033,7 @@
                     <i class="bi bi-x-circle"></i> Cancel
                 </button>
                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
-                    <button type="submit" class="btn btn-light">
+                    <button type="submit" class="btn btn-tertiary">
                         <i class="bi bi-hand-thumbs-up"></i> Yes, Claim This Carnival
                     </button>
                 </form>
@@ -1265,7 +1265,7 @@
                         
                         <div class="d-grid gap-2 mb-3">
                             <a href="https://www.playrugbyleague.com/play/masters/host-application-form/" 
-                               class="btn btn-light" target="_blank" rel="noopener noreferrer">
+                               class="btn btn-tertiary" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-box-arrow-up-right me-2"></i>
                                 Register Carnival with NRL Masters
                             </a>

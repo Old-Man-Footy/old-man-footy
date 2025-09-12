@@ -163,7 +163,7 @@
                                                         </a>
                                                         <% if (carnival.registrationLink) { %>
                                                             <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                               class="btn btn-light btn-sm">
+                                                               class="btn btn-tertiary btn-sm">
                                                                 <i class="fas fa-user-plus me-1"></i>Register
                                                             </a>
                                                         <% } %>
@@ -283,7 +283,7 @@
                                                     </a>
                                                     <% if (new Date(carnival.date) >= new Date() && carnival.registrationLink) { %>
                                                         <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                           class="btn btn-light btn-sm">
+                                                           class="btn btn-tertiary btn-sm">
                                                             <i class="fas fa-user-plus me-1"></i>Register
                                                         </a>
                                                     <% } %>
@@ -395,7 +395,7 @@
                                                         </a>
                                                         <% if (carnival.registrationLink) { %>
                                                             <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                               class="btn btn-light btn-sm">
+                                                               class="btn btn-tertiary btn-sm">
                                                                 <i class="fas fa-user-plus me-1"></i>Register
                                                             </a>
                                                         <% } %>
@@ -527,7 +527,7 @@
                                                     </a>
                                                     <% if (new Date(carnival.date) >= new Date() && carnival.registrationLink) { %>
                                                         <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                           class="btn btn-light btn-sm">
+                                                           class="btn btn-tertiary btn-sm">
                                                             <i class="fas fa-user-plus me-1"></i>Register
                                                         </a>
                                                     <% } %>
@@ -726,7 +726,7 @@
                     <div class="mt-3">
                         <h6 class="text-muted mb-2">Admin Actions</h6>
                         <div class="d-flex flex-wrap gap-2">
-                            <a href="/carnivals/new" class="btn btn-sm btn-light">
+                            <a href="/carnivals/new" class="btn btn-sm btn-tertiary">
                                 <i class="bi bi-plus"></i> Add New Carnival
                             </a>
                             <a href="/clubs/<%= club.id %>/manage" class="btn btn-sm btn-outline-light">

@@ -76,7 +76,7 @@ describe('adminCarnivalsManager', () => {
 
         expect(document.getElementById('toggleCarnivalTitle').textContent).toBe('Inactive Carnival');
         expect(document.getElementById('statusToggleMessage').textContent).toContain('reactivate');
-        expect(document.getElementById('confirmStatusToggle').className).toContain('btn-light');
+        expect(document.getElementById('confirmStatusToggle').className).toContain('btn-tertiary');
         expect(bootstrap.Modal).toHaveBeenCalled();
     });
 
