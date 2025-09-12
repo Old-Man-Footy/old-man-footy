@@ -134,44 +134,16 @@
                                 <h6 class="text-primary mb-3">
                                     <i class="bi bi-image"></i> Club Logo
                                 </h6>
-                                <div class="row align-items-center">
-                                    <div class="col-md-3">
-                                        <% if (club.logoUrl) { %>
-                                            <div class="card">
-                                                <img src="<%= club.logoUrl %>" class="card-img-top" alt="Current Club Logo" 
-                                                     style="height: 150px; object-fit: contain; background: #f8f9fa;">
-                                                <div class="card-body text-center p-2">
-                                                    <small class="text-muted">Current Logo</small>
-                                                </div>
-                                            </div>
-                                        <% } else { %>
-                                            <div class="card bg-light">
-                                                <div class="card-body text-center" style="height: 150px; display: flex; align-items: center; justify-content: center;">
-                                                    <div>
-                                                        <i class="bi bi-image display-6 text-muted"></i>
-                                                        <div class="mt-2">
-                                                            <small class="text-muted">No logo uploaded</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <% } %>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <label for="logo" class="form-label">Upload New Logo</label>
-                                        <div class="file-upload-area mb-3">
-                                            <input type="file" class="form-control" id="logo" name="logo" 
-                                                   accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp" 
-                                                   style="display: none;">
-                                            <i class="bi bi-cloud-upload display-6 text-muted"></i>
-                                            <p class="upload-text mt-2">Click or drag to upload new club logo</p>
-                                            <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
-                                        </div>
-                                        <div class="form-text">
-                                            Upload a new logo to replace the current one. Recommended size: 200x200 pixels or larger, square format.
-                                        </div>
-                                    </div>
-                                </div>
+                                <%- include('../partials/logo-uploader', { 
+                                    fieldName: 'logo',
+                                    inputId: 'logo',
+                                    uploadText: 'Click or drag to upload new club logo',
+                                    maxFileSize: 'Max 10MB',
+                                    acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                                    helpText: 'Upload a new logo to replace the current one. Recommended size: 200x200 pixels or larger, square format.',
+                                    currentLogoUrl: club.logoUrl,
+                                    currentLogoAlt: 'Current Club Logo'
+                                }) %>
                             </div>
                         </div>
 

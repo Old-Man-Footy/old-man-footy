@@ -494,13 +494,14 @@
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label for="clubLogo" class="form-label">New Club Logo</label>
-                                    <div class="file-upload-area">
-                                        <input type="file" class="form-control admin-file-input-hidden" id="clubLogo" name="logo" 
-                                               accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
-                                        <i class="bi bi-cloud-upload display-6 text-muted"></i>
-                                        <p class="upload-text mt-2">Click or drag to upload new club logo</p>
-                                        <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
-                                    </div>
+                                    <%- include('../../partials/logo-uploader', {
+                                        fieldName: 'logo',
+                                        uploadText: 'Click or drag to upload new club logo',
+                                        maxFileSize: 'Max 10MB',
+                                        acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                                        helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
+                                        currentImageUrl: carnival.clubLogoURL
+                                    }) %>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="promotionalImage" class="form-label">New Promotional Image</label>

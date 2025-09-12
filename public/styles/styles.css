@@ -793,6 +793,35 @@ button[type="submit"]:contains("Complete Registration"):focus {
     font-weight: 500;
 }
 
+.file-upload-area.file-selected {
+    border-color: var(--rugby-green);
+    background-color: var(--rugby-light-green);
+}
+
+.file-upload-area.file-selected .upload-text {
+    color: var(--rugby-green);
+    font-weight: 600;
+}
+
+/* Logo Uploader Component */
+.logo-preview-image {
+    height: 150px;
+    object-fit: contain;
+    background: #f8f9fa;
+}
+
+.logo-uploader-no-logo {
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Dark theme logo uploader styles */
+[data-theme="dark"] .logo-preview-image {
+    background: var(--theme-bg-tertiary);
+}
+
 /* Form Enhancements */
 .form-control,
 .form-select {
@@ -2178,4 +2207,9 @@ button[type="submit"]:contains("Complete Registration"):focus {
 
 [data-theme="dark"] #global-help-modal .modal-body th {
     background: var(--rugby-dark-green);
+}
+
+/* File Input Hidden Utility */
+.file-input-hidden {
+    display: none !important;
 }

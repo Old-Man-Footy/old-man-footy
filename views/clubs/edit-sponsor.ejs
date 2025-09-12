@@ -192,16 +192,12 @@
                             </div>
                         <% } %>
 
-                        <div class="mb-3">
-                            <label for="logoFile" class="form-label">
-                                <%= sponsor.logoUrl ? 'Replace Logo' : 'Upload Logo' %>
-                            </label>
-                            <input type="file" class="form-control" name="logoFile" id="logoFile" 
-                                   accept="image/jpeg,image/jpg,image/png,image/gif">
-                            <div class="form-text">
-                                Accepted formats: JPG, PNG, GIF. Maximum file size: 5MB.
-                            </div>
-                        </div>
+                        <!-- Logo Upload -->
+                        <%- include('../partials/logo-uploader', {
+                            entityType: 'sponsor',
+                            existingLogoUrl: sponsor.logoUrl,
+                            existingLogoName: sponsor.name + ' Logo'
+                        }) %>
 
                         <!-- Description -->
                         <hr class="my-4">
