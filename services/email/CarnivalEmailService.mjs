@@ -91,6 +91,16 @@ export class CarnivalEmailService extends BaseEmailService {
                 return { success: true, emailsSent: 0, message: 'No attendee clubs to email' };
             }
 
+            // Check if emails can be sent
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Carnival Attendees Notification', 'subscribers', `${type} carnival: ${carnival.title}`);
+                return { 
+                    success: false, 
+                    message: 'Email sending is disabled in the current site mode', 
+                    emailsSent: 0 
+                };
+            }
+
             const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
             
             const promises = attendeeClubs.map(club => {
@@ -149,6 +159,16 @@ export class CarnivalEmailService extends BaseEmailService {
                 return { success: false, message: 'No email address available' };
             }
 
+            // Check if emails can be sent
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Carnival Registration Approval', 'subscribers', `${type} carnival: ${carnival.title}`);
+                return { 
+                    success: false, 
+                    message: 'Email sending is disabled in the current site mode', 
+                    emailsSent: 0 
+                };
+            }
+
             const mailOptions = {
                 from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
                 to: recipient.email,
@@ -184,6 +204,16 @@ export class CarnivalEmailService extends BaseEmailService {
             if (!recipient.email) {
                 console.warn(`No email found for club: ${club.clubName}`);
                 return { success: false, message: 'No email address available' };
+            }
+
+            // Check if emails can be sent
+            if (!this._canSendEmails()) {
+                this._logBlockedEmail('Carnival Registration Rejection', 'subscribers', `${type} carnival: ${carnival.title}`);
+                return { 
+                    success: false, 
+                    message: 'Email sending is disabled in the current site mode', 
+                    emailsSent: 0 
+                };
             }
 
             const mailOptions = {
