@@ -36,6 +36,12 @@ const Carnival = {
           organiserContactPhone: this.obfuscatePhone(this.organiserContactPhone),
           registrationLink: null
         };
+      },
+      // Add method to simulate team counting from CarnivalClub
+      getApprovedTeamsCount: async function() {
+        // Mock implementation that simulates SUM(numberOfTeams) from CarnivalClub
+        // In real implementation, this would use Sequelize to sum numberOfTeams
+        return this.currentRegistrations || 0;
       }
     };
     mockCarnivals.push(carnival);
@@ -65,7 +71,7 @@ describe('Carnival Model', () => {
   });
 
   describe('Computed properties and instance methods', () => {
-    it('should correctly compute isRegistrationActive', async () => {
+    it('should correctly compute isRegistrationActive based on team count', async () => {
       // Arrange
       const carnival = await Carnival.create({
         title: 'Test Carnival',
@@ -73,12 +79,17 @@ describe('Carnival Model', () => {
         isRegistrationOpen: true,
         registrationDeadline: new Date(Date.now() + 86400000),
         maxTeams: 10,
-        currentRegistrations: 5
+        currentRegistrations: 5 // This represents team count, not club count
       });
       // Act & Assert
       expect(carnival.isRegistrationActive).toBe(true);
+      
+      // When team count reaches maxTeams, registration should be inactive
       carnival.currentRegistrations = 10;
       expect(carnival.isRegistrationActive).toBe(false);
+      
+      // When registration is closed, should be inactive regardless of team count
+      carnival.currentRegistrations = 5;
       carnival.isRegistrationOpen = false;
       expect(carnival.isRegistrationActive).toBe(false);
     });
@@ -167,6 +178,46 @@ describe('Carnival Model', () => {
       expect(data.organiserContactPhone).toContain('***');
       expect(data.organiserContactPhone).toMatch(/^\d{2}\*\*\*\d{2}$/);
       expect(data.registrationLink).toBeNull();
+    });
+
+    it('should count approved teams using getApprovedTeamsCount method', async () => {
+      // Arrange
+      const carnival = await Carnival.create({
+        title: 'Team Count Test',
+        date: new Date(Date.now() + 86400000),
+        isRegistrationOpen: true,
+        maxTeams: 10,
+        currentRegistrations: 5 // This represents the sum of numberOfTeams from approved CarnivalClub records
+      });
+      
+      // Act
+      const teamCount = await carnival.getApprovedTeamsCount();
+      
+      // Assert
+      expect(teamCount).toBe(5);
+      expect(typeof teamCount).toBe('number');
+    });
+
+    it('should correctly determine registration status based on team count vs maxTeams', async () => {
+      // Arrange
+      const carnival = await Carnival.create({
+        title: 'Registration Status Test',
+        date: new Date(Date.now() + 86400000),
+        isRegistrationOpen: true,
+        maxTeams: 8,
+        currentRegistrations: 6 // 6 teams registered (sum of numberOfTeams from approved clubs)
+      });
+      
+      // Act & Assert
+      expect(carnival.isRegistrationActive).toBe(true); // 6 < 8, should be active
+      
+      // Simulate reaching the team limit
+      carnival.currentRegistrations = 8; // Now at maxTeams
+      expect(carnival.isRegistrationActive).toBe(false); // 8 >= 8, should be inactive
+      
+      // Simulate exceeding the team limit
+      carnival.currentRegistrations = 10; // Exceeds maxTeams
+      expect(carnival.isRegistrationActive).toBe(false); // 10 > 8, should be inactive
     });
   });
 

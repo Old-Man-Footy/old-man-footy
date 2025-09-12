@@ -25,6 +25,7 @@ function createMockCarnivalClub(data) {
     id: carnivalClubStore.length + 1,
     isActive: data.isActive !== undefined ? data.isActive : true,
     approvalStatus: data.approvalStatus || 'pending',
+    numberOfTeams: data.numberOfTeams || 1, // Default to 1 team if not specified
     getCarnivalDetails: async function() {
       return carnivalStore.find(c => c.id === this.carnivalId);
     },
@@ -66,6 +67,22 @@ const CarnivalClub = {
       if (cc.approvalStatus === 'rejected') counts.rejected++;
     }
     return counts;
+  },
+  // New method to get team count (sum of numberOfTeams for approved registrations)
+  getApprovedTeamsCount: async carnivalId => {
+    const approvedRegistrations = carnivalClubStore.filter(cc => 
+      cc.carnivalId === carnivalId && cc.isActive && cc.approvalStatus === 'approved'
+    );
+    return approvedRegistrations.reduce((total, cc) => total + (cc.numberOfTeams || 1), 0);
+  },
+  // Method to update carnival's currentRegistrations based on team count
+  updateCarnivalRegistrationCount: async carnivalId => {
+    const teamCount = await CarnivalClub.getApprovedTeamsCount(carnivalId);
+    const carnival = carnivalStore.find(c => c.id === carnivalId);
+    if (carnival) {
+      carnival.currentRegistrations = teamCount;
+    }
+    return teamCount;
   }
 };
 
@@ -160,6 +177,90 @@ describe('CarnivalClub Model (Mocked)', () => {
       expect(counts).toHaveProperty('approved', 1);
       expect(counts).toHaveProperty('pending', 0);
       expect(counts).toHaveProperty('total', 1);
+    });
+
+    it('should calculate approved teams count based on numberOfTeams', async () => {
+      // Add additional registrations with different numberOfTeams
+      createMockCarnivalClub({
+        carnivalId: carnival.id,
+        clubId: club.id + 1,
+        approvalStatus: 'approved',
+        numberOfTeams: 2,
+        isActive: true
+      });
+      
+      createMockCarnivalClub({
+        carnivalId: carnival.id,
+        clubId: club.id + 2,
+        approvalStatus: 'pending', // Should not be counted
+        numberOfTeams: 3,
+        isActive: true
+      });
+
+      const teamCount = await CarnivalClub.getApprovedTeamsCount(carnival.id);
+      expect(teamCount).toBe(3); // 1 (first club) + 2 (second club), pending not counted
+    });
+
+    it('should update carnival registration count with team count', async () => {
+      // Create multiple registrations with different team counts
+      createMockCarnivalClub({
+        carnivalId: carnival.id,
+        clubId: club.id + 1,
+        approvalStatus: 'approved',
+        numberOfTeams: 3,
+        isActive: true
+      });
+
+      const teamCount = await CarnivalClub.updateCarnivalRegistrationCount(carnival.id);
+      expect(teamCount).toBe(4); // 1 + 3 teams
+
+      // Verify the carnival's currentRegistrations was updated
+      const updatedCarnival = carnivalStore.find(c => c.id === carnival.id);
+      expect(updatedCarnival.currentRegistrations).toBe(4);
+    });
+
+    it('should only count approved registrations for team count', async () => {
+      // Add registrations with different statuses
+      createMockCarnivalClub({
+        carnivalId: carnival.id,
+        clubId: club.id + 1,
+        approvalStatus: 'approved',
+        numberOfTeams: 2,
+        isActive: true
+      });
+      
+      createMockCarnivalClub({
+        carnivalId: carnival.id,
+        clubId: club.id + 2,
+        approvalStatus: 'rejected',
+        numberOfTeams: 5,
+        isActive: true
+      });
+
+      createMockCarnivalClub({
+        carnivalId: carnival.id,
+        clubId: club.id + 3,
+        approvalStatus: 'pending',
+        numberOfTeams: 1,
+        isActive: true
+      });
+
+      const teamCount = await CarnivalClub.getApprovedTeamsCount(carnival.id);
+      expect(teamCount).toBe(3); // Only approved: 1 (original) + 2 (new approved)
+    });
+
+    it('should handle registrations without numberOfTeams field', async () => {
+      // Create a registration without numberOfTeams (should default to 1)
+      createMockCarnivalClub({
+        carnivalId: carnival.id,
+        clubId: club.id + 1,
+        approvalStatus: 'approved',
+        // numberOfTeams not specified
+        isActive: true
+      });
+
+      const teamCount = await CarnivalClub.getApprovedTeamsCount(carnival.id);
+      expect(teamCount).toBe(2); // 1 (original) + 1 (default for new registration)
     });
   });
 });

@@ -24,25 +24,18 @@ class Carnival extends Model {
   }
 
   /**
-   * Update currentRegistrations to reflect only approved teams
-   * @returns {Promise<number>} Number of approved registrations
+   * Update currentRegistrations to reflect approved teams count
+   * @returns {Promise<number>} Number of approved teams
    */
   async updateCurrentRegistrations() {
-    const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
-    const approvedCount = await CarnivalClub.count({
-      where: {
-        carnivalId: this.id,
-        isActive: true,
-        approvalStatus: 'approved'
-      }
-    });
+    const approvedTeamsCount = await this.getApprovedTeamsCount();
     
-    // Update the currentRegistrations field
-    await this.update({ currentRegistrations: approvedCount }, { 
+    // Update the currentRegistrations field to store team count
+    await this.update({ currentRegistrations: approvedTeamsCount }, { 
       silent: true // Prevent triggering hooks to avoid recursion
     });
     
-    return approvedCount;
+    return approvedTeamsCount;
   }
 
   /**
@@ -61,6 +54,27 @@ class Carnival extends Model {
   }
 
   /**
+   * Get current approved teams count (real-time) - sum of numberOfTeams
+   * @returns {Promise<number>}
+   */
+  async getApprovedTeamsCount() {
+    const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
+    const { Op } = await import('sequelize');
+    
+    const result = await CarnivalClub.findAll({
+      attributes: [[CarnivalClub.sequelize.fn('SUM', CarnivalClub.sequelize.col('numberOfTeams')), 'totalTeams']],
+      where: {
+        carnivalId: this.id,
+        isActive: true,
+        approvalStatus: 'approved'
+      },
+      raw: true
+    });
+    
+    return parseInt(result[0]?.totalTeams) || 0;
+  }
+
+  /**
    * Check if registration is currently active (async version with real-time count)
    * @returns {Promise<boolean>} Registration status
    */
@@ -69,8 +83,8 @@ class Carnival extends Model {
     if (this.registrationDeadline && new Date() > this.registrationDeadline) return false;
     
     if (this.maxTeams) {
-      const approvedCount = await this.getApprovedRegistrationsCount();
-      if (approvedCount >= this.maxTeams) return false;
+      const approvedTeamsCount = await this.getApprovedTeamsCount();
+      if (approvedTeamsCount >= this.maxTeams) return false;
     }
     
     return true;
