@@ -37,6 +37,10 @@
                             <label for="email" class="form-label">Email Address</label>
                             <input type="email" class="form-control" id="email" name="email" 
                                    value="<%= typeof formData !== 'undefined' ? formData.email : '' %>" required>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle text-primary"></i> 
+                                <strong>Recommendation:</strong> Use your club's email address if possible. Each account manages one club only.
+                            </div>
                             <div class="invalid-feedback">Please provide a valid email address.</div>
                         </div>
 
@@ -67,6 +71,11 @@
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i>
                             <strong>Next Steps:</strong> After registration, you'll be able to create a new club or request to join an existing club from your dashboard.
+                            <hr>
+                            <small class="text-muted">
+                                <i class="bi bi-lightbulb"></i> 
+                                <strong>Tip:</strong> If you manage multiple clubs, you'll need separate accounts for each club. Consider using each club's official email address.
+                            </small>
                         </div>
 
                         <div class="d-grid">
