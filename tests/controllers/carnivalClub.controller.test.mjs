@@ -59,8 +59,8 @@ vi.mock('/config/constants.mjs', () => ({
 // Mock email service
 vi.mock('/services/email/CarnivalEmailService.mjs', () => ({
   default: {
-    sendRegistrationApprovalEmail: vi.fn().mockResolvedValue(true),
-    sendRegistrationRejectionEmail: vi.fn().mockResolvedValue(true)
+    sendRegistrationApproval: vi.fn().mockResolvedValue(true),
+    sendRegistrationRejection: vi.fn().mockResolvedValue(true)
   }
 }));
 
@@ -1005,7 +1005,7 @@ describe('Carnival Club Controller', () => {
         rejectionReason: null
       });
 
-      expect(CarnivalEmailService.sendRegistrationApprovalEmail).toHaveBeenCalledWith(
+      expect(CarnivalEmailService.sendRegistrationApproval).toHaveBeenCalledWith(
         mockCarnival,
         mockRegistration.participatingClub,
         'Test User'
@@ -1038,7 +1038,7 @@ describe('Carnival Club Controller', () => {
         rejectionReason: 'Carnival is full'
       });
 
-      expect(CarnivalEmailService.sendRegistrationRejectionEmail).toHaveBeenCalledWith(
+      expect(CarnivalEmailService.sendRegistrationRejection).toHaveBeenCalledWith(
         mockCarnival,
         mockRegistration.participatingClub,
         'Test User',

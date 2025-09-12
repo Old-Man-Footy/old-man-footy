@@ -1349,12 +1349,16 @@ const approveClubRegistrationHandler = async (req, res) => {
   });
 
   // Send approval notification email
-  
-  await CarnivalEmailService.sendRegistrationApprovalEmail(
-    carnival,
-    registration.participatingClub,
-    `${user.firstName} ${user.lastName}`
-  );
+  try {
+    await CarnivalEmailService.sendRegistrationApproval(
+      carnival,
+      registration.participatingClub,
+      `${user.firstName} ${user.lastName}`
+    );
+  } catch (emailError) {
+    console.warn('Failed to send approval email:', emailError.message);
+    // Continue execution - registration was successful even if email failed
+  }
 
   return res.json({
     success: true,
@@ -1427,12 +1431,17 @@ const rejectClubRegistrationHandler = async (req, res) => {
   });
 
   // Send rejection notification email
-  await CarnivalEmailService.sendRegistrationRejectionEmail(
-    carnival,
-    registration.participatingClub,
-    `${user.firstName} ${user.lastName}`,
-    rejectionReason
-  );
+  try {
+    await CarnivalEmailService.sendRegistrationRejection(
+      carnival,
+      registration.participatingClub,
+      `${user.firstName} ${user.lastName}`,
+      rejectionReason
+    );
+  } catch (emailError) {
+    console.warn('Failed to send rejection email:', emailError.message);
+    // Continue execution - registration was successful even if email failed
+  }
 
   return res.json({
     success: true,
