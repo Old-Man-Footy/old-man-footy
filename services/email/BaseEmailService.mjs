@@ -21,8 +21,8 @@ export class BaseEmailService {
      * @returns {boolean} True if emails can be sent, false otherwise
      */
     _canSendEmails() {
-        // Don't send emails in test or e2e environments
-        if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'e2e') {
+        // Don't send emails in test environment
+        if (process.env.NODE_ENV === 'test') {
             console.log(`📧 Email sending disabled: ${process.env.NODE_ENV} environment`);
             return false;
         }

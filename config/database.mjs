@@ -33,8 +33,6 @@ export function getDbPath() {
       return path.join(__dirname, '..', 'data', 'old-man-footy.db');
     case 'test':
       return path.join(__dirname, '..', 'data', 'test-old-man-footy.db');
-    case 'e2e':
-      return path.join(__dirname, '..', 'data', 'e2e-old-man-footy.db');
     case 'development':
     default:
       return path.join(__dirname, '..', 'data', 'dev-old-man-footy.db');

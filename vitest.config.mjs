@@ -23,7 +23,6 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/js/**',
-      '**/e2e/**',
       '**/test-results/**'
     ],
     
