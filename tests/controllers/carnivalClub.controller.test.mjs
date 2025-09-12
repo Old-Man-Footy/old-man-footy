@@ -570,11 +570,12 @@ describe('Carnival Club Controller', () => {
         clubId: 1,
         playerCount: 15,
         teamName: 'My Team',
-        approvalStatus: 'pending',
-        isPaid: false
+        approvalStatus: 'approved',
+        isPaid: true,
+        paymentAmount: 0
       }));
 
-      expect(req.flash).toHaveBeenCalledWith('success_msg', expect.stringContaining('pending approval'));
+      expect(req.flash).toHaveBeenCalledWith('success_msg', expect.stringContaining('successfully registered'));
       expect(res.redirect).toHaveBeenCalledWith('/carnivals/1');
     });
 

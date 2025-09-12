@@ -199,6 +199,13 @@ const registerClubForCarnivalHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/attendees`);
   }
 
+  // Validate that the club exists before proceeding
+  const club = await Club.findByPk(clubId);
+  if (!club) {
+    req.flash('error_msg', 'Club not found');
+    return res.redirect(`/carnivals/${carnivalId}/attendees`);
+  }
+
   // Get current count for display order
   const currentCount = await CarnivalClub.count({
     where: {
@@ -207,7 +214,17 @@ const registerClubForCarnivalHandler = async (req, res) => {
     },
   });
 
-  // Create the registration
+  // Create the registration with hosting club fee exemption logic
+  const isHostingClub = carnival.clubId && parseInt(clubId) === carnival.clubId;
+  let finalPaymentAmount = paymentAmount ? parseFloat(paymentAmount) : null;
+  let finalIsPaid = isPaid === 'on';
+  
+  // Apply hosting club fee exemption
+  if (isHostingClub) {
+    finalPaymentAmount = 0.00; // Hosting clubs are exempt from all registration fees
+    finalIsPaid = true; // Auto-mark as paid since there's no fee
+  }
+
   const registrationData = {
     carnivalId: parseInt(carnivalId),
     clubId: parseInt(clubId),
@@ -219,19 +236,14 @@ const registerClubForCarnivalHandler = async (req, res) => {
     contactPhone: contactPhone?.trim() || null,
     specialRequirements: specialRequirements?.trim() || null,
     registrationNotes: registrationNotes?.trim() || null,
-    paymentAmount: paymentAmount ? parseFloat(paymentAmount) : null,
-    isPaid: isPaid === 'on',
-    paymentDate: isPaid === 'on' ? new Date() : null,
+    paymentAmount: finalPaymentAmount,
+    isPaid: finalIsPaid,
+    paymentDate: finalIsPaid ? new Date() : null,
     displayOrder: currentCount + 1,
     approvalStatus: 'approved', // Host club adding clubs directly = auto-approved
   };
 
   const registration = await CarnivalClub.create(registrationData);
-
-  // Get club name for success message
-  const club = await Club.findByPk(clubId, {
-    attributes: ['clubName'],
-  });
 
   req.flash(
     'success_msg',
@@ -566,6 +578,19 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     },
   });
 
+  // Apply hosting club fee exemption logic for self-registration
+  const isHostingClub = carnival.clubId && user.clubId === carnival.clubId;
+  let finalPaymentAmount = null; // Self-registrations typically have no upfront payment
+  let finalIsPaid = false;
+  let finalApprovalStatus = 'pending';
+  
+  // Hosting club self-registrations get fee exemption
+  if (isHostingClub) {
+    finalPaymentAmount = 0.00; // Hosting clubs are exempt from all registration fees
+    finalIsPaid = true; // Auto-mark as paid since there's no fee
+    finalApprovalStatus = 'approved'; // Hosting club auto-approves their own registration
+  }
+
   // Create the registration with delegate's information
   const registrationData = {
     carnivalId: parseInt(carnivalId),
@@ -578,19 +603,22 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     contactPhone: contactPhone?.trim() || null,
     specialRequirements: specialRequirements?.trim() || null,
     registrationNotes: `Self-registered by ${user.firstName} ${user.lastName} (${user.email})`,
-    isPaid: false, // Delegates register unpaid by default
-    paymentDate: null,
+    paymentAmount: finalPaymentAmount,
+    isPaid: finalIsPaid, // Delegates register unpaid by default, except hosting clubs
+    paymentDate: finalIsPaid ? new Date() : null,
     displayOrder: currentCount + 1,
     registrationDate: new Date(),
-    approvalStatus: 'pending', // Self-registrations need approval
+    approvalStatus: finalApprovalStatus, // Self-registrations need approval, except hosting clubs
   };
 
   await CarnivalClub.create(registrationData);
 
-  req.flash(
-    'success_msg',
-    `${club.clubName} has registered interest to attend ${carnival.title}! Your registration is pending approval from the hosting club. You'll be notified once approved.`
-  );
+  // Different messages for hosting vs non-hosting clubs
+  const successMessage = isHostingClub 
+    ? `${club.clubName} has been successfully registered for ${carnival.title}! As the hosting club, your registration has been automatically approved.`
+    : `${club.clubName} has registered interest to attend ${carnival.title}! Your registration is pending approval from the hosting club. You'll be notified once approved.`;
+
+  req.flash('success_msg', successMessage);
   return res.redirect(`/carnivals/${carnivalId}`);
 };
 
