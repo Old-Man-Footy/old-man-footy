@@ -105,7 +105,7 @@ export const adminEditClubManager = {
 
     /**
      * Prevents default browser behavior for drag events.
-     * @param {DragEvent} e - The drag carnival.
+     * @param {DragEvent} e - The drag event.
      */
     preventDefaults(e) {
         e.preventDefault();
@@ -113,14 +113,14 @@ export const adminEditClubManager = {
     },
 
     /**
-     * Adds a highlight class during a drag-over carnival.
+     * Adds a highlight class during a drag-over event.
      */
     highlight() {
         this.elements.fileUploadArea.classList.add('drag-over');
     },
 
     /**
-     * Removes the highlight class after a drag carnival.
+     * Removes the highlight class after a drag event.
      */
     unhighlight() {
         this.elements.fileUploadArea.classList.remove('drag-over');
