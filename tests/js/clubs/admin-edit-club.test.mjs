@@ -65,7 +65,7 @@ describe('adminEditClubManager', () => {
     it('should prevent form submission if a required field is empty', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitCarnival = new Carnival('submit', { cancelable: true });
+        const submitCarnival = new Event('submit', { cancelable: true });
         const preventDefaultSpy = vi.spyOn(submitCarnival, 'preventDefault');
 
         nameInput.value = '   '; // Empty value
@@ -79,7 +79,7 @@ describe('adminEditClubManager', () => {
     it('should allow form submission if required fields are filled', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitCarnival = new Carnival('submit', { cancelable: true });
+        const submitCarnival = new Event('submit', { cancelable: true });
         const preventDefaultSpy = vi.spyOn(submitCarnival, 'preventDefault');
 
         nameInput.value = 'Valid Club Name';
@@ -94,7 +94,7 @@ describe('adminEditClubManager', () => {
         // Mock scrollHeight as it's a layout-dependent property
         Object.defineProperty(textarea, 'scrollHeight', { value: 150, configurable: true });
 
-        textarea.dispatchEvent(new Carnival('input'));
+        textarea.dispatchEvent(new Event('input'));
 
         expect(textarea.style.height).toBe('150px');
     });
@@ -116,7 +116,7 @@ describe('adminEditClubManager', () => {
 
         // Simulate file selection
         Object.defineProperty(fileInput, 'files', { value: [testFile] });
-        fileInput.dispatchEvent(new Carnival('change'));
+        fileInput.dispatchEvent(new Event('change'));
 
         expect(uploadText.textContent).toBe('Selected: logo.png');
     });

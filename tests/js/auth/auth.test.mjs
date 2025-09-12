@@ -78,7 +78,7 @@ describe('AuthFormManager', () => {
 
             // Simulate input carnival on the form
             const form = container.querySelector('form[data-form-type="accept-invitation"]');
-            form.dispatchEvent(new Carnival('input', { bubbles: true }));
+            form.dispatchEvent(new Event('input', { bubbles: true }));
 
             expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
         });
@@ -97,7 +97,7 @@ describe('AuthFormManager', () => {
 
             // Simulate input carnival on the form
             const form = container.querySelector('form[data-form-type="accept-invitation"]');
-            form.dispatchEvent(new Carnival('input', { bubbles: true }));
+            form.dispatchEvent(new Event('input', { bubbles: true }));
 
             expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');
         });
@@ -109,7 +109,7 @@ describe('AuthFormManager', () => {
             const passwordInput = loginForm.querySelector('input[name="password"]');
             passwordInput.value = 'has-password';
 
-            const submitCarnival = new Carnival('submit', { cancelable: true });
+            const submitCarnival = new Event('submit', { cancelable: true });
             global.alert = vi.fn();
 
             loginForm.dispatchEvent(submitCarnival);

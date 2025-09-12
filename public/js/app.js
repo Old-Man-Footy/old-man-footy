@@ -284,7 +284,7 @@ const oldmanfooty = {
                 
                 if (input && files.length > 0) {
                     input.files = files;
-                    const carnival = new Carnival('change', { bubbles: true });
+                    const carnival = new Event('change', { bubbles: true });
                     input.dispatchEvent(carnival);
                 }
             });

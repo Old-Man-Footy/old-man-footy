@@ -47,7 +47,7 @@ describe('clubAutocompleteManager', () => {
   it('should hide suggestions and join option for short queries', async () => {
     const input = clubAutocompleteManager.elements.clubNameInput;
     input.value = 'a';
-    input.dispatchEvent(new Carnival('input'));
+    input.dispatchEvent(new Event('input'));
     vi.runAllTimers();
     expect(clubAutocompleteManager.elements.clubSuggestions.style.display).toBe('none');
     expect(clubAutocompleteManager.elements.joinClubOption.style.display).toBe('none');
@@ -66,7 +66,7 @@ describe('clubAutocompleteManager', () => {
 
     // Click the first suggestion
     const firstItem = list.querySelector('.list-group-item');
-    firstItem.dispatchEvent(new Carnival('click'));
+    firstItem.dispatchEvent(new Event('click'));
     expect(clubAutocompleteManager.state.selectedClub?.id).toBe(1);
     expect(clubAutocompleteManager.elements.joinClubOption.style.display).toBe('block');
     expect(clubAutocompleteManager.elements.joinFoundClub.dataset.clubId).toBe('1');
@@ -76,9 +76,9 @@ describe('clubAutocompleteManager', () => {
     const input = clubAutocompleteManager.elements.clubNameInput;
     const spy = vi.spyOn(clubAutocompleteManager, 'performSearch').mockResolvedValue();
     input.value = 'Cl';
-    input.dispatchEvent(new Carnival('input'));
+    input.dispatchEvent(new Event('input'));
     input.value = 'Club';
-    input.dispatchEvent(new Carnival('input'));
+    input.dispatchEvent(new Event('input'));
     vi.advanceTimersByTime(300);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith('Club');

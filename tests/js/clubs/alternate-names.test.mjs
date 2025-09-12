@@ -71,7 +71,7 @@ describe('AlternateNamesManager', () => {
             });
 
             const addForm = container.querySelector('#addAlternateNameForm');
-            addForm.dispatchEvent(new Carnival('submit', { bubbles: true }));
+            addForm.dispatchEvent(new Event('submit', { bubbles: true }));
 
             await new Promise(process.nextTick); // Wait for async operations
 
@@ -90,7 +90,7 @@ describe('AlternateNamesManager', () => {
             });
 
             const addForm = container.querySelector('#addAlternateNameForm');
-            addForm.dispatchEvent(new Carnival('submit', { bubbles: true }));
+            addForm.dispatchEvent(new Event('submit', { bubbles: true }));
 
             await new Promise(process.nextTick);
 
@@ -153,7 +153,7 @@ describe('AlternateNamesManager', () => {
             document.getElementById('editAlternateName').value = 'Updated Name';
 
             const editForm = container.querySelector('#editAlternateNameForm');
-            editForm.dispatchEvent(new Carnival('submit', { bubbles: true }));
+            editForm.dispatchEvent(new Event('submit', { bubbles: true }));
 
             await new Promise(process.nextTick);
 

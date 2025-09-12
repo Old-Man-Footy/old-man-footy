@@ -149,7 +149,7 @@ const logoAcceptAttribute = locals.acceptAttribute || 'image/jpeg,image/jpg,imag
             if (files.length > 0) {
                 this.elements.fileInput.files = files;
                 // Trigger change carnival to run handleFileSelect logic
-                this.elements.fileInput.dispatchEvent(new Carnival('change', { bubbles: true }));
+                this.elements.fileInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
         },
         

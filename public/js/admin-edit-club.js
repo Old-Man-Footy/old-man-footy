@@ -134,8 +134,8 @@ export const adminEditClubManager = {
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             this.elements.fileInput.files = files;
-            // Dispatch a change carnival so the handleFileSelect logic runs
-            this.elements.fileInput.dispatchEvent(new Carnival('change', { bubbles: true }));
+            // Dispatch a change event so the handleFileSelect logic runs
+            this.elements.fileInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
     }
 };

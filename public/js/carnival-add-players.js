@@ -95,7 +95,7 @@ export const carnivalAddPlayersManager = {
             console.log('Setting checkbox checked to true:', checkbox);
             checkbox.checked = true;
             // Trigger change carnival to ensure UI updates properly
-            checkbox.dispatchEvent(new Carnival('change', { bubbles: true }));
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
         });
         this.updateSubmitButton();
     },
@@ -110,7 +110,7 @@ export const carnivalAddPlayersManager = {
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
             // Trigger change carnival to ensure UI updates properly
-            checkbox.dispatchEvent(new Carnival('change', { bubbles: true }));
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
         });
         this.updateSubmitButton();
     },

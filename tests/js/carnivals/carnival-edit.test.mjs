@@ -94,7 +94,7 @@ describe('carnivalEditManager', () => {
         const endDateInput = document.getElementById('endDate');
 
         checkbox.checked = true;
-        checkbox.dispatchEvent(new Carnival('change'));
+        checkbox.dispatchEvent(new Event('change'));
 
         expect(container.style.display).toBe('block');
         expect(label.textContent).toContain('Carnival Start Date');
@@ -107,11 +107,11 @@ describe('carnivalEditManager', () => {
         const endDateInput = document.getElementById('endDate');
         
         checkbox.checked = true;
-        checkbox.dispatchEvent(new Carnival('change'));
+        checkbox.dispatchEvent(new Event('change'));
         endDateInput.value = '2025-01-02';
 
         checkbox.checked = false;
-        checkbox.dispatchEvent(new Carnival('change'));
+        checkbox.dispatchEvent(new Event('change'));
 
         expect(endDateInput.value).toBe('');
     });
@@ -176,7 +176,7 @@ describe('carnivalEditManager', () => {
         const registrationLinkInput = document.getElementById('registrationLink');
         
         mySidelineIdInput.value = 'carnival-12345';
-        mySidelineIdInput.dispatchEvent(new Carnival('input'));
+        mySidelineIdInput.dispatchEvent(new Event('input'));
 
         expect(mySidelineIdInput.value).toBe('12345');
         expect(registrationLinkInput.value).toBe('https://mysideline.com/register/12345');
@@ -189,7 +189,7 @@ describe('carnivalEditManager', () => {
         const registrationLinkInput = document.getElementById('registrationLink');
         
         registrationLinkInput.value = 'https://mysideline.com/register/98765';
-        registrationLinkInput.dispatchEvent(new Carnival('input'));
+        registrationLinkInput.dispatchEvent(new Event('input'));
 
         expect(mySidelineIdInput.value).toBe('98765');
         expect(document.getElementById('linkStatus').textContent).toContain('Carnival ID: 98765');
@@ -201,7 +201,7 @@ describe('carnivalEditManager', () => {
         const linkStatusElement = document.getElementById('linkStatus');
 
         registrationLinkInput.value = 'invalid-url';
-        registrationLinkInput.dispatchEvent(new Carnival('input'));
+        registrationLinkInput.dispatchEvent(new Event('input'));
 
         expect(linkStatusElement.textContent).toContain('Please enter a valid URL');
         expect(linkStatusElement.className).toContain('text-warning');

@@ -72,10 +72,10 @@ describe('clubOptionsManager', () => {
 
     // search Tigers
     search.value = 'tig';
-    search.dispatchEvent(new Carnival('input'));
+    search.dispatchEvent(new Event('input'));
     // NSW state
     stateFilter.value = 'NSW';
-    stateFilter.dispatchEvent(new Carnival('change'));
+    stateFilter.dispatchEvent(new Event('change'));
 
     const items = document.querySelectorAll('.club-item');
     expect(items[0].style.display).toBe('block');
@@ -87,7 +87,7 @@ describe('clubOptionsManager', () => {
     const suggestions = document.getElementById('clubSuggestions');
 
     input.value = 'tig';
-    input.dispatchEvent(new Carnival('input'));
+    input.dispatchEvent(new Event('input'));
 
     vi.advanceTimersByTime(350);
 
@@ -97,7 +97,7 @@ describe('clubOptionsManager', () => {
     expect(items.length).toBeGreaterThan(0);
 
     // click first suggestion
-    items[0].dispatchEvent(new Carnival('click'));
+    items[0].dispatchEvent(new Event('click'));
 
     // join section shown
     const joinSection = document.getElementById('joinClubOption');
@@ -150,7 +150,7 @@ describe('clubOptionsManager', () => {
     location.setAttribute('data-required', 'true');
 
     const submitSpy = vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(() => {});
-    form.dispatchEvent(new Carnival('submit'));
+    form.dispatchEvent(new Event('submit'));
 
     expect(submitSpy).toHaveBeenCalled();
     expect(clubName.hasAttribute('required')).toBe(true);

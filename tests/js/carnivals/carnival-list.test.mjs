@@ -44,7 +44,7 @@ describe('carnivalListManager', () => {
             carnivalListManager.setupSearchListener(searchInput, 500);
 
             // Simulate a user typing
-            searchInput.dispatchEvent(new Carnival('input'));
+            searchInput.dispatchEvent(new Event('input'));
             
             // Immediately after input, submit should not have been called
             expect(submitSpy).not.toHaveBeenCalled();
@@ -64,9 +64,9 @@ describe('carnivalListManager', () => {
             carnivalListManager.setupSearchListener(searchInput, 500);
 
             // Simulate rapid typing
-            searchInput.dispatchEvent(new Carnival('input'));
+            searchInput.dispatchEvent(new Event('input'));
             vi.advanceTimersByTime(200); // Not enough time to submit
-            searchInput.dispatchEvent(new Carnival('input'));
+            searchInput.dispatchEvent(new Event('input'));
             
             // Advance timers past the delay for the *second* input
             vi.advanceTimersByTime(501);
@@ -85,7 +85,7 @@ describe('carnivalListManager', () => {
             carnivalListManager.setupAutoSubmitListener(stateSelect, 'change');
             
             // Simulate the change carnival
-            stateSelect.dispatchEvent(new Carnival('change'));
+            stateSelect.dispatchEvent(new Event('change'));
 
             expect(submitSpy).toHaveBeenCalledTimes(1);
         });

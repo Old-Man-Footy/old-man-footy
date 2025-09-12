@@ -109,7 +109,7 @@ describe('carnivalMyClubPlayersManager', () => {
       const btn = carnivalMyClubPlayersManager.elements.removePlayerBtns[0];
       const removeSpy = vi.spyOn(carnivalMyClubPlayersManager, 'removePlayer').mockImplementation(() => {});
       vi.spyOn(window, 'confirm').mockReturnValue(true);
-      btn.dispatchEvent(new Carnival('click', { bubbles: true }));
+      btn.dispatchEvent(new Event('click', { bubbles: true }));
       expect(removeSpy).toHaveBeenCalledWith(btn.dataset.assignmentId);
     });
 
@@ -117,7 +117,7 @@ describe('carnivalMyClubPlayersManager', () => {
       const btn = carnivalMyClubPlayersManager.elements.removePlayerBtns[0];
       const removeSpy = vi.spyOn(carnivalMyClubPlayersManager, 'removePlayer').mockImplementation(() => {});
       vi.spyOn(window, 'confirm').mockReturnValue(false);
-      btn.dispatchEvent(new Carnival('click', { bubbles: true }));
+      btn.dispatchEvent(new Event('click', { bubbles: true }));
       expect(removeSpy).not.toHaveBeenCalled();
     });
   });

@@ -38,11 +38,11 @@ describe('carnivalAddPlayersManager', () => {
         const submitBtn = document.getElementById('submitBtn');
         const checkboxes = document.querySelectorAll('.player-checkbox');
         checkboxes[0].checked = true;
-        checkboxes[0].dispatchEvent(new Carnival('change', { bubbles: true }));
+        checkboxes[0].dispatchEvent(new Event('change', { bubbles: true }));
         expect(submitBtn.disabled).toBe(false);
         expect(submitBtn.innerHTML).toContain('Add 1 Selected Player');
         checkboxes[1].checked = true;
-        checkboxes[1].dispatchEvent(new Carnival('change', { bubbles: true }));
+        checkboxes[1].dispatchEvent(new Event('change', { bubbles: true }));
         expect(submitBtn.innerHTML).toContain('Add 2 Selected Players');
     });
 
@@ -65,7 +65,7 @@ describe('carnivalAddPlayersManager', () => {
         const form = document.getElementById('addPlayersForm');
         const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
         // No checkboxes checked
-        form.dispatchEvent(new Carnival('submit', { bubbles: true, cancelable: true }));
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
         expect(alertMock).toHaveBeenCalledWith('Please select at least one player to add.');
         alertMock.mockRestore();
     });
@@ -76,7 +76,7 @@ describe('carnivalAddPlayersManager', () => {
         const checkboxes = document.querySelectorAll('.player-checkbox');
         checkboxes[0].checked = true;
         // Simulate submit carnival
-        const carnival = new Carnival('submit', { bubbles: true, cancelable: true });
+        const carnival = new Event('submit', { bubbles: true, cancelable: true });
         carnival.preventDefault = preventDefault;
         form.dispatchEvent(carnival);
         expect(preventDefault).not.toHaveBeenCalled();
@@ -86,10 +86,10 @@ describe('carnivalAddPlayersManager', () => {
         const submitBtn = document.getElementById('submitBtn');
         const checkboxes = document.querySelectorAll('.player-checkbox');
         checkboxes[0].checked = true;
-        checkboxes[0].dispatchEvent(new Carnival('change', { bubbles: true }));
+        checkboxes[0].dispatchEvent(new Event('change', { bubbles: true }));
         expect(submitBtn.innerHTML).toContain('Add 1 Selected Player');
         checkboxes[1].checked = true;
-        checkboxes[1].dispatchEvent(new Carnival('change', { bubbles: true }));
+        checkboxes[1].dispatchEvent(new Event('change', { bubbles: true }));
         expect(submitBtn.innerHTML).toContain('Add 2 Selected Players');
     });
 });

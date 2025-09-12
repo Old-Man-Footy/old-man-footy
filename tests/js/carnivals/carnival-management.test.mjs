@@ -54,7 +54,7 @@ describe('carnivalManagementManager', () => {
 
     it('should prevent form submission if confirmation is cancelled', () => {
         const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-        const carnival = new Carnival('submit', { bubbles: true, cancelable: true });
+        const carnival = new Event('submit', { bubbles: true, cancelable: true });
         const preventDefaultSpy = vi.spyOn(carnival, 'preventDefault');
         carnivalManagementManager.elements.confirmForms[0].dispatchEvent(carnival);
         expect(confirmSpy).toHaveBeenCalled();

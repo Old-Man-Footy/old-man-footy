@@ -67,7 +67,7 @@ describe('clubCreateOnBehalfManager', () => {
   document.querySelector('[name="clubName"]').value = '';
   document.getElementById('state').value = '';
   document.getElementById('inviteEmail').value = '';
-    const evt = new Carnival('submit', { cancelable: true });
+    const evt = new Event('submit', { cancelable: true });
     // Simulate dispatch where preventDefault is called by handler via carnival argument
     form.addEventListener('submit', (e) => e.preventDefault());
     form.dispatchEvent(evt);

@@ -98,7 +98,7 @@ describe('OldManFooty App', () => {
   it('should add was-validated class on invalid form submit', () => {
     const form = document.querySelector('.needs-validation');
     form.checkValidity = vi.fn(() => false);
-    const carnival = new Carnival('submit', { bubbles: true, cancelable: true });
+    const carnival = new Event('submit', { bubbles: true, cancelable: true });
     form.dispatchEvent(carnival);
     expect(form.classList.contains('was-validated')).toBe(true);
   });
@@ -108,7 +108,7 @@ describe('OldManFooty App', () => {
     const preview = document.querySelector('.upload-preview');
     const file = new File(['dummy'], 'test.png', { type: 'image/png' });
     Object.defineProperty(input, 'files', { value: [file] });
-    const carnival = new Carnival('change');
+    const carnival = new Event('change');
     input.dispatchEvent(carnival);
     await new Promise(r => setTimeout(r, 10));
     expect(preview.innerHTML).toContain('img');
@@ -117,7 +117,7 @@ describe('OldManFooty App', () => {
   it('should auto-expand textarea on input', () => {
     const textarea = document.querySelector('textarea');
     textarea.value = 'Hello\nWorld';
-    const carnival = new Carnival('input');
+    const carnival = new Event('input');
     textarea.dispatchEvent(carnival);
     expect(textarea.style.height).not.toBe('');
   });
@@ -130,7 +130,7 @@ describe('OldManFooty App', () => {
     document.body.appendChild(form);
     const submitSpy = vi.spyOn(form, 'submit');
     input.value = 'test';
-    const carnival = new Carnival('input');
+    const carnival = new Event('input');
     input.dispatchEvent(carnival);
     await new Promise(r => setTimeout(r, 900));
     expect(submitSpy).toHaveBeenCalled();

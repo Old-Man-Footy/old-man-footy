@@ -53,7 +53,7 @@ describe('addClubManager', () => {
 
         // Simulate selecting the 'Lions' option
         clubSelect.value = '1';
-        clubSelect.dispatchEvent(new Carnival('change'));
+        clubSelect.dispatchEvent(new Event('change'));
 
         // Check that the input fields were populated
         expect(teamNameInput.value).toBe('Lions');
@@ -67,12 +67,12 @@ describe('addClubManager', () => {
         
         // First, select a club to populate the fields
         clubSelect.value = '1';
-        clubSelect.dispatchEvent(new Carnival('change'));
+        clubSelect.dispatchEvent(new Event('change'));
         expect(teamNameInput.value).toBe('Lions'); // Verify it's populated
 
         // Now, select the default "Select a Club" option
         clubSelect.value = '';
-        clubSelect.dispatchEvent(new Carnival('change'));
+        clubSelect.dispatchEvent(new Event('change'));
 
         // Check that the fields are cleared
         expect(teamNameInput.value).toBe('');
@@ -83,7 +83,7 @@ describe('addClubManager', () => {
         const teamNameInput = document.getElementById('teamName');
 
         clubSelect.value = '1';
-        clubSelect.dispatchEvent(new Carnival('change'));
+        clubSelect.dispatchEvent(new Event('change'));
         
         // Immediately after, the class should be present
         expect(teamNameInput.classList.contains('auto-populated')).toBe(true);
@@ -102,7 +102,7 @@ describe('addClubManager', () => {
         
         // Simulate selecting the default option
         clubSelect.value = '';
-        clubSelect.dispatchEvent(new Carnival('change'));
+        clubSelect.dispatchEvent(new Event('change'));
 
         expect(clearSpy).toHaveBeenCalled();
     });

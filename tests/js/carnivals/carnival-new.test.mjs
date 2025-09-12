@@ -60,7 +60,7 @@ describe('carnivalNewManager', () => {
     const area = carnivalNewManager.elements.fileUploadAreas[0];
     const input = area.querySelector('input[type="file"]');
     const clickSpy = vi.spyOn(input, 'click');
-    area.dispatchEvent(new Carnival('click', { bubbles: true }));
+    area.dispatchEvent(new Event('click', { bubbles: true }));
     expect(clickSpy).toHaveBeenCalled();
   });
 

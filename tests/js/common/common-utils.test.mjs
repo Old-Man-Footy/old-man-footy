@@ -52,7 +52,7 @@ describe('common-utils.js', () => {
     commonUtilsManager.initialize();
     vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
     const form = document.getElementById('f1');
-    const evt = new Carnival('submit', { cancelable: true });
+    const evt = new Event('submit', { cancelable: true });
     const prevented = !form.dispatchEvent(evt);
     expect(prevented).toBe(true);
   });
