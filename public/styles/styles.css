@@ -279,7 +279,8 @@ a[class*="btn"]:focus,
 
 a.btn-primary,
 .btn.btn-primary,
-.btn-primary {
+.btn-primary,
+.btn-check:checked + .btn-outline-primary {
     background-color: var(--rugby-green);
     border-color: var(--rugby-green);
     color: white;
@@ -299,7 +300,8 @@ a.btn-primary:active,
 
 a.btn-secondary,
 .btn.btn-secondary,
-.btn-secondary {
+.btn-secondary,
+.btn-check:checked + .btn-outline-secondary {
     background-color: var(--rugby-dark-green);
     border-color: var(--rugby-dark-green);
     color: white;
@@ -365,7 +367,8 @@ a.btn-outline-secondary:active,
 }
 
 a.btn-light,
-.btn-light {
+.btn-light,
+.btn-check:checked + .btn-outline-light {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
