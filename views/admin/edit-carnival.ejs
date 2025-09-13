@@ -78,6 +78,17 @@
                     <form method="POST" action="/admin/carnivals/<%= carnival.id %>/edit" 
                           data-mysideline-carnival-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=' %>"
                           enctype="multipart/form-data" class="needs-validation" novalidate>
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                Basic Information
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="basic-info" data-help-modal="help-admin-carnival-edit" aria-label="Help: Basic Information">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
+                            </h6>
+                        </div>
+                        
                         <div class="row mb-3">
                             <div class="col-md-8">
                                 <label for="title" class="form-label">Carnival Title *</label>
@@ -264,6 +275,9 @@
                         <div class="mb-3">
                             <h6 class="text-primary mb-3">
                                 <i class="bi bi-link-45deg"></i> MySideline Integration
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="mysideline" data-help-modal="help-admin-carnival-edit" aria-label="Help: MySideline Integration">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
                             </h6>
                             <div class="alert alert-info mb-3">
                                 <i class="bi bi-info-circle me-2"></i>
@@ -303,13 +317,6 @@
                                     Player registration link - will auto-update when MySideline ID is entered above
                                 </span>
                             </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="feesDescription" class="form-label">Fees Description</label>
-                            <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
-                                      placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
-                            <div class="form-text">Description of fees and payment information</div>
                         </div>
 
                         <div class="mb-3">
@@ -362,6 +369,43 @@
                                         <% } %>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Fee Structure -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-currency-dollar"></i> Fee Structure
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="teamRegistrationFee" class="form-label">Team Registration Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="teamRegistrationFee" name="teamRegistrationFee" 
+                                        value="<%= carnival.teamRegistrationFee || '' %>" 
+                                        step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-text">Fee charged per team registration</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="perPlayerFee" class="form-label">Per-Player Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="perPlayerFee" name="perPlayerFee" 
+                                        value="<%= carnival.perPlayerFee || '' %>" 
+                                        step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-text">Fee charged per confirmed player</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="feesDescription" class="form-label">Fees Description</label>
+                                <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
+                                          placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
+                                <div class="form-text">Description of fees and payment information</div>
                             </div>
                         </div>
 
@@ -583,3 +627,6 @@
 
 <!-- Include external JavaScript file for admin carnival functionality -->
 <script type="module" src="/js/admin-carnivals.js"></script>
+
+<!-- Help modal partial for admin carnival edit page -->
+<%- include('../../partials/help-modal.ejs', { modalId: 'help-admin-carnival-edit' }) %>
