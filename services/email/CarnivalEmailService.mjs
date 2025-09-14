@@ -161,7 +161,7 @@ export class CarnivalEmailService extends BaseEmailService {
 
             // Check if emails can be sent
             if (!this._canSendEmails()) {
-                this._logBlockedEmail('Carnival Registration Approval', 'subscribers', `${type} carnival: ${carnival.title}`);
+                this._logBlockedEmail('Carnival Registration Approval', 'subscribers', `registration carnival: ${carnival.title}`);
                 return { 
                     success: false, 
                     message: 'Email sending is disabled in the current site mode', 
@@ -208,7 +208,7 @@ export class CarnivalEmailService extends BaseEmailService {
 
             // Check if emails can be sent
             if (!this._canSendEmails()) {
-                this._logBlockedEmail('Carnival Registration Rejection', 'subscribers', `${type} carnival: ${carnival.title}`);
+                this._logBlockedEmail('Carnival Registration Rejection', 'subscribers', `rejection carnival: ${carnival.title}`);
                 return { 
                     success: false, 
                     message: 'Email sending is disabled in the current site mode', 
