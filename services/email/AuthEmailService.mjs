@@ -1,5 +1,4 @@
-import { BaseEmailService } from './BaseEmailService.mjs';
-
+import { BaseEmailService } from './BaseEmailService.mjs';    
 /**
  * Authentication Email Service Class
  * Handles all authentication-related emails (password reset, welcome emails)
@@ -34,7 +33,7 @@ export class AuthEmailService extends BaseEmailService {
         }
         
         const mailOptions = {
-            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Welcome to Old Man Footy - Masters Carnival Notifications',
             html: this._buildWelcomeEmailHtml(stateText, stateArray, unsubscribeUrl)
@@ -54,7 +53,7 @@ export class AuthEmailService extends BaseEmailService {
         const resetUrl = `${this._getBaseUrl()}/auth/reset-password/${resetToken}`;
         
         const mailOptions = {
-            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Password Reset Request - Old Man Footy',
             html: this._buildPasswordResetEmailHtml(firstName, resetUrl)

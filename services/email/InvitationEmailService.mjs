@@ -21,7 +21,7 @@ export class InvitationEmailService extends BaseEmailService {
         const inviteUrl = `${this._getBaseUrl()}/auth/register?token=${inviteToken}`;
         
         const mailOptions = {
-            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: `Invitation to join ${clubName} on Old Man Footy`,
             html: `
@@ -76,7 +76,7 @@ export class InvitationEmailService extends BaseEmailService {
         const dashboardUrl = `${this._getBaseUrl()}/dashboard`;
         
         const mailOptions = {
-            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
             to: newPrimaryEmail,
             subject: `You are now the Primary Delegate for ${clubName}`,
             html: `
@@ -136,7 +136,7 @@ export class InvitationEmailService extends BaseEmailService {
         const clubUrl = `${this._getBaseUrl()}/clubs/${club.id}`;
         
         const mailOptions = {
-            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
             to: inviteEmail,
             subject: `You've been invited to claim ${club.clubName} on Old Man Footy`,
             html: `

@@ -49,7 +49,7 @@ export class CarnivalEmailService extends BaseEmailService {
                 const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?token=${subscription.unsubscribeToken}`;
                 
                 const mailOptions = {
-                    from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                    from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
                     to: subscription.email,
                     subject: subject,
                     html: this._buildCarnivalNotificationHtml(carnival, type, headerText, carnivalUrl, unsubscribeUrl)
@@ -112,7 +112,7 @@ export class CarnivalEmailService extends BaseEmailService {
                 }
 
                 const mailOptions = {
-                    from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                    from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
                     to: recipient.email,
                     subject: `Important Update: ${carnival.title}`,
                     html: this._buildCarnivalInfoToAttendeesHtml(carnival, club, senderName, customMessage, carnivalUrl, recipient.name)
@@ -170,7 +170,7 @@ export class CarnivalEmailService extends BaseEmailService {
             }
 
             const mailOptions = {
-                from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
                 to: recipient.email,
                 subject: `🎉 Registration Approved: ${carnival.title}`,
                 html: this._buildRegistrationApprovalHtml(carnival, club, approverName, recipient.name, carnivalUrl, loginUrl)
@@ -217,7 +217,7 @@ export class CarnivalEmailService extends BaseEmailService {
             }
 
             const mailOptions = {
-                from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
                 to: recipient.email,
                 subject: `Registration Update: ${carnival.title}`,
                 html: this._buildRegistrationRejectionHtml(carnival, club, rejectorName, rejectionReason, recipient.name, carnivalUrl)
@@ -273,7 +273,7 @@ export class CarnivalEmailService extends BaseEmailService {
             const claimerName = `${claimingUser.firstName} ${claimingUser.lastName}`;
 
             const mailOptions = {
-                from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+                from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
                 to: originalEmail,
                 subject: `Your carnival "${carnival.title}" has been claimed on Old Man Footy`,
                 html: this._buildCarnivalClaimNotificationHtml(carnival, claimerName, claimingClub, carnivalUrl)

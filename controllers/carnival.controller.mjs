@@ -1122,16 +1122,11 @@ export const sendEmailToAttendees = asyncHandler(async (req, res) => {
     const carnival = await Carnival.findByPk(id, {
       include: [
         {
-          model: User,
-          as: 'creator',
-          attributes: ['firstName', 'lastName', 'email', 'id'],
-        },
-        {
           model: Club,
           as: 'attendingClubs',
           attributes: ['id', 'clubName', 'state', 'location', 'contactEmail', 'contactPerson'],
           through: {
-            attributes: ['approvalStatus'],
+            attributes: ['approvalStatus', 'contactEmail', 'contactPerson'],
             where: { isActive: true, approvalStatus: 'approved' },
           },
           required: false,
