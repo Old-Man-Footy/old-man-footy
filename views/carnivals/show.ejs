@@ -1318,3 +1318,109 @@
     </div>
 </div>
 <% } %>
+
+<!-- Email Attendees Modal -->
+<% if (user && carnival.attendingClubs && carnival.attendingClubs.length > 0 && 
+       ((user.id === carnival.createdByUserId) || 
+        (user.clubId && carnival.attendingClubs.some(club => club.id === user.clubId)))) { %>
+<div class="modal fade" id="emailAttendeesModal" tabindex="-1" aria-labelledby="emailAttendeesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailAttendeesModalLabel">
+                    <i class="bi bi-envelope me-2"></i>
+                    Email Attendee Clubs
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="emailAttendeesForm" action="/carnivals/<%= carnival.id %>/email-attendees" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <p class="text-muted">
+                            Send a custom message to all attending clubs for "<%= carnival.title %>". 
+                            This email will be sent to the primary contact for each club.
+                        </p>
+                    </div>
+
+                    <!-- Recipients Info -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-people me-1"></i>
+                            Recipients (<%= carnival.attendingClubs.length %> clubs)
+                        </label>
+                        <div class="border rounded p-2 bg-light">
+                            <% carnival.attendingClubs.forEach((club, index) => { %>
+                                <%= club.clubName %><% if (index < carnival.attendingClubs.length - 1) { %>, <% } %>
+                            <% }); %>
+                        </div>
+                    </div>
+
+                    <!-- Subject Field -->
+                    <div class="mb-3">
+                        <label for="emailSubject" class="form-label">
+                            <i class="bi bi-tag me-1"></i>
+                            Subject <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="emailSubject" 
+                               name="subject" 
+                               value="Update regarding <%= carnival.title %>"
+                               required 
+                               maxlength="200">
+                        <div class="form-text">
+                            Maximum 200 characters
+                        </div>
+                    </div>
+
+                    <!-- Custom Message Field -->
+                    <div class="mb-3">
+                        <label for="customMessage" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Your Message <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" 
+                                  id="customMessage" 
+                                  name="customMessage" 
+                                  rows="6" 
+                                  required 
+                                  maxlength="2000"
+                                  placeholder="Enter your message to all attending clubs..."></textarea>
+                        <div class="form-text d-flex justify-content-between">
+                            <span>Maximum 2000 characters. This will be included in the email along with carnival details.</span>
+                            <span class="char-counter text-muted">0/2000</span>
+                        </div>
+                    </div>
+
+                    <!-- Preview Info -->
+                    <div class="alert alert-info border-0">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Email Preview
+                        </h6>
+                        <p class="mb-1">
+                            Your custom message will be included in a professional email template that also contains:
+                        </p>
+                        <ul class="mb-0">
+                            <li>Carnival details (title, date, location)</li>
+                            <li>Your contact information as the sender</li>
+                            <li>Link to the carnival page</li>
+                            <li>Standard email footer</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="sendEmailBtn">
+                        <i class="bi bi-send me-1"></i>
+                        Send Email to All Clubs
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<% } %>

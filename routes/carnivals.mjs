@@ -101,7 +101,16 @@ router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, carnivalCont
 
 // Send email to attendee clubs
 router.post('/:id/email-attendees', ensureAuthenticated, [
-    body('message').optional().trim().isLength({ max: 2000 }).withMessage('Message must be 2000 characters or less')
+    body('subject')
+        .notEmpty()
+        .withMessage('Subject is required')
+        .isLength({ max: 200 })
+        .withMessage('Subject must be 200 characters or less'),
+    body('customMessage')
+        .notEmpty()
+        .withMessage('Message is required')
+        .isLength({ max: 2000 })
+        .withMessage('Message must be 2000 characters or less')
 ], carnivalController.sendEmailToAttendees);
 
 // Show comprehensive player list for all clubs attending a carnival

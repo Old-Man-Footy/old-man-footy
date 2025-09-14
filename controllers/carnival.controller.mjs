@@ -1099,9 +1099,100 @@ export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
 });
 
 export const sendEmailToAttendees = asyncHandler(async (req, res) => {
-  // Placeholder for email attendees functionality
-  req.flash('error_msg', 'Email attendees functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}`);
+  try {
+    const { id } = req.params;
+    const { subject, customMessage } = req.body;
+    const user = req.user;
+
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessage = errors.array().map(error => error.msg).join(', ');
+      req.flash('error_msg', errorMessage);
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Validate required fields
+    if (!subject || !customMessage) {
+      req.flash('error_msg', 'Subject and message are required.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Fetch carnival with attending clubs and their contact information
+    const carnival = await Carnival.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['firstName', 'lastName', 'email', 'id'],
+        },
+        {
+          model: Club,
+          as: 'attendingClubs',
+          attributes: ['id', 'clubName', 'state', 'location', 'contactEmail', 'contactName'],
+          through: {
+            attributes: ['approvalStatus'],
+            where: { isActive: true, approvalStatus: 'approved' },
+          },
+          required: false,
+        },
+      ],
+    });
+
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found.');
+      return res.redirect('/carnivals');
+    }
+
+    // Check if user has permission to send emails
+    const isCreator = user.id === carnival.createdByUserId;
+    const isAttendingClub = user.clubId && carnival.attendingClubs.some(club => club.id === user.clubId);
+    
+    if (!isCreator && !isAttendingClub) {
+      req.flash('error_msg', 'You do not have permission to send emails for this carnival.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Filter attending clubs to only approved ones
+    const approvedClubs = carnival.attendingClubs.filter(club => 
+      club.CarnivalClub?.approvalStatus === 'approved'
+    );
+
+    if (approvedClubs.length === 0) {
+      req.flash('error_msg', 'No approved attending clubs to email.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Import and use the CarnivalEmailService
+    const { CarnivalEmailService } = await import('../services/email/CarnivalEmailService.mjs');
+    const emailService = new CarnivalEmailService();
+    
+    // Get sender name
+    const senderName = `${user.firstName} ${user.lastName}`;
+    
+    // Send emails to attendee clubs
+    const result = await emailService.sendCarnivalInfoToAttendees(
+      carnival, 
+      approvedClubs, 
+      senderName, 
+      customMessage
+    );
+
+    if (result.success) {
+      req.flash('success_msg', 
+        `Email successfully sent to ${result.emailsSent} attending club${result.emailsSent !== 1 ? 's' : ''}.`
+      );
+    } else {
+      req.flash('error_msg', result.message || 'Failed to send emails to attending clubs.');
+    }
+
+    return res.redirect(`/carnivals/${id}`);
+
+  } catch (error) {
+    console.error('Error sending email to attendees:', error);
+    req.flash('error_msg', 'An error occurred while sending emails. Please try again.');
+    return res.redirect(`/carnivals/${req.params.id}`);
+  }
 });
 
 export const showAllPlayers = asyncHandler(async (req, res) => {
