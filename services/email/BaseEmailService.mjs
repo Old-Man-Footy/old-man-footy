@@ -17,7 +17,7 @@ export class BaseEmailService {
     }
 
     /**
-     * Check if emails should be sent based on site mode
+     * Check if emails should be sent based on site mode and configuration
      * @returns {boolean} True if emails can be sent, false otherwise
      */
     _canSendEmails() {
@@ -27,10 +27,20 @@ export class BaseEmailService {
             return false;
         }
 
+        // Check if email notifications feature flag is enabled
         if (process.env.FEATURE_EMAIL_NOTIFICATIONS !== 'true') {
             console.log('📧 Email sending disabled: Email notifications feature is off')
             return false
         };
+
+        // Check if all required email environment variables are set
+        const requiredEmailVars = ['EMAIL_FROM_NAME', 'EMAIL_FROM', 'EMAIL_PASSWORD', 'EMAIL_SERVICE', 'EMAIL_USER'];
+        for (const varName of requiredEmailVars) {
+            if (!process.env[varName] || process.env[varName].trim() === '') {
+                console.log(`📧 Email sending disabled: Required environment variable ${varName} is not set`);
+                return false;
+            }
+        }
 
         // Don't send emails if coming soon mode is enabled
         if (process.env.FEATURE_COMING_SOON_MODE === 'true') {
