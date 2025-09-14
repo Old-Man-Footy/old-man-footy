@@ -47,23 +47,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0"><%= totalPlayers %></h4>
-                            <p class="mb-0">Total Players</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-people" style="font-size: 2rem;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
                             <h4 class="mb-0"><%= totalMastersEligible %></h4>
-                            <p class="mb-0">Masters Eligible</p>
+                            <p class="mb-0">Total Players</p>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-trophy" style="font-size: 2rem;"></i>
@@ -82,21 +67,6 @@
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-building" style="font-size: 2rem;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-warning text-dark h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-0"><%= Math.round((totalMastersEligible / totalPlayers) * 100) || 0 %>%</h4>
-                            <p class="mb-0">Masters Rate</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-percent" style="font-size: 2rem;"></i>
                         </div>
                     </div>
                 </div>
@@ -127,14 +97,8 @@
                                         </div>
                                     </div>
                                     <div class="row text-center">
-                                        <div class="col-6">
-                                            <div class="fw-bold text-primary" style="font-size: 1.1rem;"><%= club.total %></div>
-                                            <small class="text-muted">Total</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="fw-bold text-success" style="font-size: 1.1rem;"><%= club.mastersEligible %></div>
-                                            <small class="text-muted">Masters</small>
-                                        </div>
+                                        <div class="fw-bold text-success" style="font-size: 1.1rem;"><%= club.mastersEligible %></div>
+                                        <small class="text-muted">Total Eligible Players</small>
                                     </div>
                                 </div>
                             </div>

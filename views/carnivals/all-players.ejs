@@ -104,14 +104,8 @@
                             <span class="badge state-<%= club.state.toLowerCase() %> mb-2"><%= club.state %></span>
                         <% } %>
                         <div class="row text-center">
-                            <div class="col-6">
-                                <div class="fw-bold text-primary"><%= club.total %></div>
-                                <small class="text-muted">Total</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="fw-bold text-success"><%= club.mastersEligible %></div>
-                                <small class="text-muted">Masters</small>
-                            </div>
+                            <div class="fw-bold text-success"><%= club.mastersEligible %></div>
+                            <small class="text-muted">Total Eligible Players</small>
                         </div>
                     </div>
                 </div>
