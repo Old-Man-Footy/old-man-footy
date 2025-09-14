@@ -1129,7 +1129,7 @@ export const sendEmailToAttendees = asyncHandler(async (req, res) => {
         {
           model: Club,
           as: 'attendingClubs',
-          attributes: ['id', 'clubName', 'state', 'location', 'contactEmail', 'contactName'],
+          attributes: ['id', 'clubName', 'state', 'location', 'contactEmail', 'contactPerson'],
           through: {
             attributes: ['approvalStatus'],
             where: { isActive: true, approvalStatus: 'approved' },
