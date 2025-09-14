@@ -1,0 +1,109 @@
+<%- include('partials/header', { 
+    title: 'Unsubscribe Success',
+    additionalCSS: ['/styles/unsubscribe.css']
+}) %>
+
+<div class="container">
+    <div class="unsubscribe-success-page">
+        <div class="success-header">
+            <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <h1>Successfully Unsubscribed</h1>
+            <p class="success-subtitle">You have been removed from our email list</p>
+        </div>
+
+        <div class="success-content">
+            <div class="confirmation-details">
+                <h2><i class="bi bi-info-circle"></i> What happened?</h2>
+                <p>The email address <strong><%= email %></strong> has been successfully unsubscribed from all Old Man Footy email notifications.</p>
+                
+                <div class="unsubscribed-from">
+                    <h3>You will no longer receive:</h3>
+                    <ul>
+                        <li><i class="bi bi-megaphone"></i> Carnival announcements and updates</li>
+                        <li><i class="bi bi-person-check"></i> Registration notifications</li>
+                        <li><i class="bi bi-exclamation-circle"></i> Important system notifications</li>
+                        <li><i class="bi bi-newspaper"></i> Newsletter updates</li>
+                    </ul>
+                </div>
+
+                <% if (feedback) { %>
+                    <div class="feedback-received">
+                        <h3><i class="bi bi-heart"></i> Thank you for your feedback!</h3>
+                        <p>We've recorded your feedback and will use it to improve our email communications.</p>
+                        <div class="feedback-summary">
+                            <strong>Reason:</strong> 
+                            <% if (feedback === 'too_frequent') { %>
+                                Too many emails
+                            <% } else if (feedback === 'not_relevant') { %>
+                                Content not relevant
+                            <% } else if (feedback === 'no_longer_interested') { %>
+                                No longer interested
+                            <% } else if (feedback === 'other') { %>
+                                Other reason
+                            <% } %>
+                        </div>
+                        <% if (feedbackText) { %>
+                            <div class="feedback-text">
+                                <strong>Additional comments:</strong> <%= feedbackText %>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="next-steps">
+                <h2><i class="bi bi-arrow-right-circle"></i> What's next?</h2>
+                <div class="action-cards">
+                    <div class="action-card">
+                        <div class="card-icon"><i class="bi bi-house"></i></div>
+                        <h3>Visit Our Website</h3>
+                        <p>Continue browsing Old Man Footy for carnival information and updates.</p>
+                        <a href="/" class="btn btn-primary">Go to Homepage</a>
+                    </div>
+
+                    <div class="action-card">
+                        <div class="card-icon"><i class="bi bi-envelope"></i></div>
+                        <h3>Resubscribe Later</h3>
+                        <p>Changed your mind? You can always sign up for emails again.</p>
+                        <a href="/contact" class="btn btn-secondary">Contact Us</a>
+                    </div>
+
+                    <div class="action-card">
+                        <div class="card-icon"><i class="bi bi-calendar-event"></i></div>
+                        <h3>View Carnivals</h3>
+                        <p>Check out upcoming carnivals and registration information.</p>
+                        <a href="/carnivals" class="btn btn-secondary">Browse Carnivals</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="important-notice">
+                <h2><i class="bi bi-exclamation-triangle"></i> Important Information</h2>
+                <div class="notice-content">
+                    <p><strong>Permanent Action:</strong> This unsubscribe action is permanent. Your email preferences have been updated in our system.</p>
+                    
+                    <p><strong>Processing Time:</strong> You may still receive emails that were already scheduled before you unsubscribed. Please allow up to 24 hours for the change to take full effect.</p>
+                    
+                    <p><strong>Essential Communications:</strong> You may still receive essential communications related to any active registrations or administrative matters.</p>
+                    
+                    <p><strong>Questions?</strong> If you have any questions about this unsubscribe or our email policies, please <a href="/contact"><i class="bi bi-envelope"></i> contact us</a>.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-section">
+            <p class="thank-you"><i class="bi bi-heart"></i> Thank you for being part of the Old Man Footy community!</p>
+            <p class="timestamp">Unsubscribed on <%= new Date().toLocaleDateString('en-AU', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) %></p>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script  type="module"src="/js/unsubscribe.js"></script>

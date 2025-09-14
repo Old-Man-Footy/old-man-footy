@@ -448,15 +448,22 @@ export const postSubscribe = async (req, res) => {
  * Display unsubscribe page
  */
 export const getUnsubscribe = asyncHandler(async (req, res) => {
-  const { token } = req.params;
+  const { token } = req.query;
 
-  // Decrypt token to get email
-  const decipher = crypto.createDecipher('aes192', process.env.ENCRYPTION_KEY || 'default-key');
-  let email = decipher.update(token, 'hex', 'utf8');
-  email += decipher.final('utf8');
+  if (!token) {
+    return res.status(400).render('error', {
+      title: 'Invalid Link',
+      message: 'This unsubscribe link is missing required information.',
+      error: null,
+      additionalCSS: [],
+    });
+  }
 
   const subscription = await EmailSubscription.findOne({
-    where: { email, isActive: true },
+    where: { 
+      unsubscribeToken: token,
+      isActive: true 
+    },
   });
 
   if (!subscription) {
@@ -469,9 +476,10 @@ export const getUnsubscribe = asyncHandler(async (req, res) => {
   }
 
   return res.render('unsubscribe', {
-    title: 'Unsubscribe',
-    email: subscription.email,
-    additionalCSS: [],
+    title: 'Unsubscribe from Email Notifications',
+    subscription,
+    token,
+    additionalCSS: ['/styles/forms.css'],
   });
 });
 
@@ -479,23 +487,44 @@ export const getUnsubscribe = asyncHandler(async (req, res) => {
  * Process unsubscribe request
  */
 export const postUnsubscribe = asyncHandler(async (req, res) => {
-  const { email } = req.body;
+  const { token } = req.body;
 
-  const subscription = await EmailSubscription.findOne({
-    where: { email },
-  });
-
-  if (subscription) {
-    await subscription.update({
-      isActive: false,
-      // unsubscribedAt is now automatically set by the model hook
+  if (!token) {
+    return res.status(400).render('error', {
+      title: 'Invalid Request',
+      message: 'Missing required information to process unsubscribe request.',
+      error: null,
+      additionalCSS: [],
     });
   }
 
-  return res.render('success', {
-    title: 'Unsubscribed',
-    message: 'You have been successfully unsubscribed from our newsletter.',
-    additionalCSS: [],
+  const subscription = await EmailSubscription.findOne({
+    where: { 
+      unsubscribeToken: token,
+      isActive: true
+    },
+  });
+
+  if (!subscription) {
+    return res.status(400).render('error', {
+      title: 'Invalid Link',
+      message: 'This unsubscribe link is invalid or has already been used.',
+      error: null,
+      additionalCSS: [],
+    });
+  }
+
+  // Update subscription to inactive (this will trigger the beforeUpdate hook)
+  await subscription.update({
+    isActive: false,
+    // unsubscribedAt is automatically set by the model hook
+  });
+
+  return res.render('unsubscribe-success', {
+    title: 'Successfully Unsubscribed',
+    message: 'You have been successfully unsubscribed from our email notifications.',
+    email: subscription.email,
+    additionalCSS: ['/styles/forms.css'],
   });
 });
 

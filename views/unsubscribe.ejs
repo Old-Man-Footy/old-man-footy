@@ -1,0 +1,81 @@
+<%- include('partials/header', { 
+    title: 'Email Unsubscribe',
+    additionalCSS: ['/styles/unsubscribe.css']
+}) %>
+
+<div class="container">
+    <div class="unsubscribe-page">
+        <div class="header-section">
+            <h1><i class="bi bi-envelope-slash"></i> Email Unsubscribe</h1>
+            <p class="subtitle">We're sorry to see you go!</p>
+        </div>
+
+        <div class="unsubscribe-form-container">
+            <div class="subscription-info">
+                <h2>Unsubscribe from Email Notifications</h2>
+                <p>You are about to unsubscribe the email address:</p>
+                <div class="email-display">
+                    <strong><%= subscription.email %></strong>
+                </div>
+                <p class="info-text">
+                    You will no longer receive email notifications about:
+                </p>
+                <ul class="notification-types">
+                    <li><i class="bi bi-megaphone"></i> Carnival announcements and updates</li>
+                    <li><i class="bi bi-person-check"></i> Registration notifications</li>
+                    <li><i class="bi bi-exclamation-circle"></i> Important system notifications</li>
+                    <li><i class="bi bi-newspaper"></i> Newsletter updates</li>
+                </ul>
+            </div>
+
+            <form id="unsubscribeForm" method="POST" action="/unsubscribe" class="unsubscribe-form">
+                <input type="hidden" name="token" value="<%= token %>">
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger btn-large">
+                        <i class="bi bi-x-circle"></i> Confirm Unsubscribe
+                    </button>
+                    <a href="/" class="btn btn-secondary btn-large">
+                        <i class="bi bi-arrow-left"></i> Keep Subscription & Go Home
+                    </a>
+                </div>
+
+                <div class="feedback-section">
+                    <h3><i class="bi bi-chat-square-text"></i> Before you go... (Optional)</h3>
+                    <p>Help us improve by telling us why you're unsubscribing:</p>
+                    <div class="feedback-options">
+                        <label class="feedback-option">
+                            <input type="radio" name="feedback" value="too_frequent">
+                            Too many emails
+                        </label>
+                        <label class="feedback-option">
+                            <input type="radio" name="feedback" value="not_relevant">
+                            Content not relevant
+                        </label>
+                        <label class="feedback-option">
+                            <input type="radio" name="feedback" value="no_longer_interested">
+                            No longer interested
+                        </label>
+                        <label class="feedback-option">
+                            <input type="radio" name="feedback" value="other">
+                            Other reason
+                        </label>
+                    </div>
+                    <textarea name="feedback_text" placeholder="Additional comments (optional)..." class="feedback-textarea form-control"></textarea>
+                </div>
+            </form>
+        </div>
+
+        <div class="footer-section">
+            <div class="note">
+                <i class="bi bi-info-circle"></i>
+                <strong>Note:</strong> This action is permanent. You can always resubscribe by visiting our homepage and signing up again.
+            </div>
+            <p class="contact-info">
+                If you have any questions, please <a href="/contact"><i class="bi bi-envelope"></i> contact us</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="/js/unsubscribe.js"></script>

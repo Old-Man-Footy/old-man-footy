@@ -1,4 +1,6 @@
-import { BaseEmailService } from './BaseEmailService.mjs';    
+import { BaseEmailService } from './BaseEmailService.mjs';
+import { EmailSubscription } from '../../models/index.mjs';
+    
 /**
  * Authentication Email Service Class
  * Handles all authentication-related emails (password reset, welcome emails)
@@ -15,10 +17,23 @@ export class AuthEmailService extends BaseEmailService {
      * @returns {Object} Result object with success status
      */
     async sendWelcomeEmail(email, states) {
-        const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?email=${encodeURIComponent(email)}`;
-        
         // Handle both single state (string) and multiple states (array) for backward compatibility
         const stateArray = Array.isArray(states) ? states : [states];
+        
+        // Get the subscription record to retrieve the unsubscribe token
+        const subscription = await EmailSubscription.findOne({
+            where: { email: email }
+        });
+        
+        if (!subscription) {
+            console.error(`No subscription found for email: ${email}`);
+            return {
+                success: false,
+                message: 'Subscription not found for welcome email'
+            };
+        }
+        
+        const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?token=${subscription.unsubscribeToken}`;
         
         let stateText;
         switch (stateArray.length) {
@@ -39,7 +54,10 @@ export class AuthEmailService extends BaseEmailService {
             html: this._buildWelcomeEmailHtml(stateText, stateArray, unsubscribeUrl)
         };
 
-        return await this.sendEmail(mailOptions, 'Welcome');
+        // Add unsubscribe headers
+        const enhancedMailOptions = this._addUnsubscribeHeaders(mailOptions, subscription.unsubscribeToken);
+
+        return await this.sendEmail(enhancedMailOptions, 'Welcome');
     }
 
     /**

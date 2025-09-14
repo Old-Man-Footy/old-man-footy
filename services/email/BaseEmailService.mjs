@@ -211,6 +211,51 @@ export class BaseEmailService {
     }
 
     /**
+     * Add standard unsubscribe headers to mail options
+     * @param {Object} mailOptions - Nodemailer mail options
+     * @param {string} unsubscribeToken - Unsubscribe token for the recipient
+     * @returns {Object} Enhanced mail options with unsubscribe headers
+     */
+    _addUnsubscribeHeaders(mailOptions, unsubscribeToken) {
+        if (!unsubscribeToken) {
+            return mailOptions;
+        }
+
+        const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?token=${unsubscribeToken}`;
+        
+        // Add List-Unsubscribe header for email clients
+        mailOptions.headers = {
+            ...mailOptions.headers,
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+        };
+
+        return mailOptions;
+    }
+
+    /**
+     * Get the base URL for the application
+     * @returns {string} Base URL
+     * @private
+     */
+    _getBaseUrl() {
+        const { NODE_ENV, BASE_URL } = process.env;
+        
+        if (BASE_URL) {
+            return BASE_URL;
+        }
+        
+        // Fallback URLs based on environment
+        if (NODE_ENV === 'production') {
+            return 'https://oldmanfooty.com';
+        } else if (NODE_ENV === 'test' || NODE_ENV === 'e2e') {
+            return 'http://localhost:3055';
+        } else {
+            return 'http://localhost:3000';
+        }
+    }
+
+    /**
      * Send an email with mode checking
      * @param {Object} mailOptions - Nodemailer mail options
      * @param {string} emailType - Type of email for logging

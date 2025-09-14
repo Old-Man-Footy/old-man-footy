@@ -55,7 +55,10 @@ export class CarnivalEmailService extends BaseEmailService {
                     html: this._buildCarnivalNotificationHtml(carnival, type, headerText, carnivalUrl, unsubscribeUrl)
                 };
 
-                return this.transporter.sendMail(mailOptions);
+                // Add standard unsubscribe headers
+                const enhancedMailOptions = this._addUnsubscribeHeaders(mailOptions, subscription.unsubscribeToken);
+
+                return this.transporter.sendMail(enhancedMailOptions);
             });
 
             const results = await Promise.allSettled(promises);
@@ -103,13 +106,18 @@ export class CarnivalEmailService extends BaseEmailService {
 
             const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
             
-            const promises = attendeeClubs.map(club => {
+            const promises = attendeeClubs.map(async club => {
                 const recipient = this._getRecipientDetails(club);
                 if (!recipient.email) {
                     console.warn(`No email found for club: ${club.clubName}`);
                     // Return a rejected promise for Promise.allSettled to correctly handle failures
                     return Promise.reject({ status: 'rejected', reason: 'No email address' });
                 }
+
+                // Get unsubscribe token for this email
+                const subscription = await EmailSubscription.findOne({
+                    where: { email: recipient.email }
+                });
 
                 const mailOptions = {
                     from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
@@ -118,7 +126,12 @@ export class CarnivalEmailService extends BaseEmailService {
                     html: this._buildCarnivalInfoToAttendeesHtml(carnival, club, senderName, customMessage, carnivalUrl, recipient.name)
                 };
 
-                return this.transporter.sendMail(mailOptions);
+                // Add unsubscribe headers if subscription exists
+                const enhancedMailOptions = subscription 
+                    ? this._addUnsubscribeHeaders(mailOptions, subscription.unsubscribeToken)
+                    : mailOptions;
+
+                return this.transporter.sendMail(enhancedMailOptions);
             });
 
             const results = await Promise.allSettled(promises);
