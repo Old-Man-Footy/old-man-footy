@@ -69,16 +69,6 @@
                          alt="<%= carnival.title %>" style="height: 300px; object-fit: cover;">
                 <% } %>
                 
-                <!-- Gallery Link -->
-                <% if (carnival.promotionalImageURL) { %>
-                    <div class="card-img-overlay d-flex align-items-end justify-content-end">
-                        <a href="/carnivals/<%= carnival.id %>/gallery" class="btn btn-tertiary btn-sm shadow">
-                            <i class="fas fa-images me-1"></i>
-                            View Gallery
-                        </a>
-                    </div>
-                <% } %>
-                
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
@@ -104,21 +94,29 @@
                                 <% } %>
                             </div>
                         </div>
-                        <% if (carnival.clubLogoURL) { %>
-                            <% 
-                            // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
-                            const carnivalLogoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
-                            %>
-                            <img src="<%= carnivalLogoUrl %>" alt="Club Logo" 
-                                 style="width: 80px; height: 80px; object-fit: contain;">
-                        <% } else { %>
-                            <% 
-                            // No carnival logo, check for club logo, otherwise use missing.svg
-                            const fallbackLogoUrl = (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
-                            %>
-                            <img src="<%= fallbackLogoUrl %>" alt="Club Logo" 
-                                 style="width: 80px; height: 80px; object-fit: contain;">
-                        <% } %>
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- View Gallery Button -->
+                            <a href="/carnivals/<%= carnival.id %>/gallery" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-images me-1"></i>
+                                View Gallery
+                            </a>
+                            <!-- Logo -->
+                            <% if (carnival.clubLogoURL) { %>
+                                <% 
+                                // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
+                                const carnivalLogoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                                %>
+                                <img src="<%= carnivalLogoUrl %>" alt="Club Logo" 
+                                     style="width: 80px; height: 80px; object-fit: contain;">
+                            <% } else { %>
+                                <% 
+                                // No carnival logo, check for club logo, otherwise use missing.svg
+                                const fallbackLogoUrl = (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                                %>
+                                <img src="<%= fallbackLogoUrl %>" alt="Club Logo" 
+                                     style="width: 80px; height: 80px; object-fit: contain;">
+                            <% } %>
+                        </div>
                     </div>
 
                     <!-- Admin Actions Section -->
@@ -242,13 +240,7 @@
                         </div>
                     <% } %>
 
-                    <!-- Public Actions -->
-                    <div class="mb-4">
-                        <a href="/carnivals/<%= carnival.id %>/gallery" class="btn btn-outline-primary btn-sm me-2">
-                            <i class="fas fa-images me-1"></i>
-                            View Gallery
-                        </a>
-                    </div>
+                    <!-- Public Actions section removed - View Gallery moved to header -->
 
                     <!-- Key Information -->
                     <div class="row mb-4">
@@ -892,7 +884,7 @@
                             </button>
                         <% } else { %>
                             <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-tertiary" target="_blank">
-                                <i class="bi bi-person-plus"></i> Register
+                                <i class="bi bi-person-plus"></i> Player Registration
                             </a>
                         <% } %>
                     <% } %>
