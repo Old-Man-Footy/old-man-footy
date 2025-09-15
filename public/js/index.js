@@ -12,100 +12,14 @@ export const indexPageManager = {
         this.cacheElements();
         this.injectStyles();
         this.bindEvents();
-        // Read carousel images and expose globally (legacy compatibility)
-        const container = document.querySelector('[data-carousel-images]');
-        try {
-            window.carouselImages = container ? JSON.parse(container.dataset.carouselImages || '[]') : [];
-        } catch {
-            window.carouselImages = [];
-        }
-        if (Array.isArray(window.carouselImages) && window.carouselImages.length > 0) {
-            this.initializeCarousel();
-        }
         this.initializeSubscriptionForm();
     },
 
     cacheElements() {
-        this.elements.carousel = document.getElementById('imageCarousel');
-        this.elements.track = document.querySelector('.carousel-track');
-        this.elements.slides = this.elements.track ? Array.from(this.elements.track.children) : [];
-        this.elements.nextButton = document.getElementById('carouselNext');
-        this.elements.prevButton = document.getElementById('carouselPrev');
-        this.elements.dotsNav = document.querySelector('.carousel-nav');
-        this.elements.dots = this.elements.dotsNav ? Array.from(this.elements.dotsNav.children) : [];
         this.elements.subscribeForm = document.getElementById('subscribeForm');
         this.elements.timestampField = document.getElementById('main_form_timestamp');
     },
 
-    bindEvents() {
-        // Carousel controls
-        if (this.elements.nextButton) {
-            this.elements.nextButton.addEventListener('click', () => this.moveToSlide(this.nextIndex()));
-        }
-        if (this.elements.prevButton) {
-            this.elements.prevButton.addEventListener('click', () => this.moveToSlide(this.prevIndex()));
-        }
-        if (this.elements.dotsNav) {
-            this.elements.dotsNav.addEventListener('click', (e) => {
-                const dot = e.target.closest('.carousel-indicator');
-                if (!dot) return;
-                const idx = parseInt(dot.dataset.slide);
-                this.moveToSlide(idx);
-            });
-        }
-    },
-
-    injectStyles() {
-        if (document.getElementById('index-page-animations')) return;
-        const style = document.createElement('style');
-        style.id = 'index-page-animations';
-        style.textContent = `
-            @keyframes slideInFromTop { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-            @keyframes slideOutToTop { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }
-        `;
-        document.head.appendChild(style);
-    },
-
-    initializeCarousel() {
-        const slides = this.elements.slides;
-        if (!slides || slides.length === 0) return;
-        
-        // Set initial classes for opacity-based transitions
-        slides.forEach((s) => s.classList.remove('current-slide'));
-        this.elements.dots.forEach((d) => d.classList.remove('current-slide'));
-        slides[0]?.classList.add('current-slide');
-        this.elements.dots[0]?.classList.add('current-slide');
-        this.currentSlide = 0;
-        this.startAutoAdvance();
-    },
-
-    nextIndex() {
-        const total = this.elements.slides.length;
-        return this.currentSlide === total - 1 ? 0 : this.currentSlide + 1;
-    },
-
-    prevIndex() {
-        const total = this.elements.slides.length;
-        return this.currentSlide === 0 ? total - 1 : this.currentSlide - 1;
-    },
-
-    moveToSlide(targetIndex) {
-        const slides = this.elements.slides;
-        if (!slides || targetIndex < 0 || targetIndex >= slides.length) return;
-        
-        // Update slide visibility using opacity-based transitions
-        slides.forEach((s) => s.classList.remove('current-slide'));
-        this.elements.dots.forEach((d) => d.classList.remove('current-slide'));
-        
-        slides[targetIndex]?.classList.add('current-slide');
-        this.elements.dots[targetIndex]?.classList.add('current-slide');
-        this.currentSlide = targetIndex;
-    },
-
-    startAutoAdvance() {
-        if (this.autoAdvanceTimer) clearInterval(this.autoAdvanceTimer);
-        this.autoAdvanceTimer = setInterval(() => this.moveToSlide(this.nextIndex()), 30000);
-    },
 
     initializeSubscriptionForm() {
         const form = this.elements.subscribeForm;
