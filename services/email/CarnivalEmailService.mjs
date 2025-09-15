@@ -45,7 +45,7 @@ export class CarnivalEmailService extends BaseEmailService {
             const { subject, headerText } = this._getCarnivalNotificationContent(type, carnival.title);
             const carnivalUrl = `${this._getBaseUrl()}/carnivals/${carnival.id}`;
 
-            const promises = subscriptions.map(subscription => {
+            const promises = subscriptions.map(async subscription => {
                 const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?token=${subscription.unsubscribeToken}`;
                 
                 const mailOptions = {
@@ -58,7 +58,7 @@ export class CarnivalEmailService extends BaseEmailService {
                 // Add standard unsubscribe headers
                 const enhancedMailOptions = this._addUnsubscribeHeaders(mailOptions, subscription.unsubscribeToken);
 
-                return this.transporter.sendMail(enhancedMailOptions);
+                return await this.sendEmail(enhancedMailOptions, 'Carnival Notification');
             });
 
             const results = await Promise.allSettled(promises);
@@ -131,7 +131,7 @@ export class CarnivalEmailService extends BaseEmailService {
                     ? this._addUnsubscribeHeaders(mailOptions, subscription.unsubscribeToken)
                     : mailOptions;
 
-                return this.transporter.sendMail(enhancedMailOptions);
+                return await this.sendEmail(enhancedMailOptions, 'Carnival Info to Attendees');
             });
 
             const results = await Promise.allSettled(promises);

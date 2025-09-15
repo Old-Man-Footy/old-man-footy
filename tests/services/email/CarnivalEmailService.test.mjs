@@ -8,22 +8,20 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CarnivalEmailService } from '../../../services/email/CarnivalEmailService.mjs';
-import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
 import { EmailSubscription } from '../../../models/index.mjs';
 import { Op } from 'sequelize';
 
 // Mock dependencies
-vi.mock('/services/email/BaseEmailService.mjs');
-vi.mock('/models/index.mjs', () => ({
+vi.mock('../../../models/index.mjs', () => ({
   EmailSubscription: {
-    findAll: vi.fn()
+    findAll: vi.fn(),
+    findOne: vi.fn()
   }
 }));
 
 describe('CarnivalEmailService', () => {
   let carnivalEmailService;
   let sendEmailMock;
-  let sendMailMock;
 
   // Mock data
   const mockCarnival = {
@@ -51,25 +49,21 @@ describe('CarnivalEmailService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    sendEmailMock = vi.fn().mockResolvedValue({ success: true });
-    sendMailMock = vi.fn().mockResolvedValue({ messageId: 'mock-id' });
-
-    BaseEmailService.prototype.sendEmail = sendEmailMock;
-    BaseEmailService.prototype.transporter = { sendMail: sendMailMock };
-    BaseEmailService.prototype._getBaseUrl = vi.fn().mockReturnValue('http://localhost:3050');
-    BaseEmailService.prototype._getEmailHeader = vi.fn().mockReturnValue('<div>Header</div>');
-    BaseEmailService.prototype._getEmailFooter = vi.fn((content = '') => `<div>Footer ${content}</div>`);
-    BaseEmailService.prototype._createButton = vi.fn((url, text) => `<a href="${url}">${text}</a>`);
-    BaseEmailService.prototype._createInfoBox = vi.fn(content => `<div>${content}</div>`);
-    BaseEmailService.prototype._createSuccessBox = vi.fn(content => `<div>${content}</div>`);
-    BaseEmailService.prototype._createWarningBox = vi.fn(content => `<div>${content}</div>`);
-    BaseEmailService.prototype._getEmailContainerStyles = vi.fn().mockReturnValue('');
-    BaseEmailService.prototype._getEmailContentStyles = vi.fn().mockReturnValue('');
-    BaseEmailService.prototype._formatDate = vi.fn(date => new Date(date).toLocaleDateString());
-    BaseEmailService.prototype._canSendEmails = vi.fn().mockReturnValue(true);
-    BaseEmailService.prototype._logBlockedEmail = vi.fn();
-
     carnivalEmailService = new CarnivalEmailService();
+    
+    // Create spy for sendEmail method
+    sendEmailMock = vi.spyOn(carnivalEmailService, 'sendEmail').mockResolvedValue({ success: true });
+    
+    // Mock other methods that are used in the service
+    vi.spyOn(carnivalEmailService, '_canSendEmails').mockReturnValue(true);
+    vi.spyOn(carnivalEmailService, '_logBlockedEmail').mockImplementation(() => {});
+    vi.spyOn(carnivalEmailService, '_getBaseUrl').mockReturnValue('http://localhost:3050');
+    vi.spyOn(carnivalEmailService, '_addUnsubscribeHeaders').mockImplementation(mailOptions => mailOptions);
+    vi.spyOn(carnivalEmailService, '_formatDate').mockImplementation(date => {
+      if (typeof date === 'string') return new Date(date).toLocaleDateString();
+      if (date && typeof date.toLocaleDateString === 'function') return date.toLocaleDateString();
+      return 'Invalid Date';
+    });
   });
 
   describe('sendCarnivalNotification', () => {
@@ -85,10 +79,10 @@ describe('CarnivalEmailService', () => {
       expect(EmailSubscription.findAll).toHaveBeenCalledWith({
         where: { states: { [Op.contains]: ['NSW'] }, isActive: true }
       });
-      expect(sendMailMock).toHaveBeenCalledTimes(2);
-      expect(sendMailMock.mock.calls[0][0].to).toBe('sub1@test.com');
-      expect(sendMailMock.mock.calls[1][0].to).toBe('sub2@test.com');
-      expect(sendMailMock.mock.calls[0][0].subject).toContain('New Masters Rugby League Carnival');
+      expect(sendEmailMock).toHaveBeenCalledTimes(2);
+      expect(sendEmailMock.mock.calls[0][0].to).toBe('sub1@test.com');
+      expect(sendEmailMock.mock.calls[1][0].to).toBe('sub2@test.com');
+      expect(sendEmailMock.mock.calls[0][0].subject).toContain('New Masters Rugby League Carnival');
       expect(result).toEqual({
         success: true,
         emailsSent: 2,
@@ -100,14 +94,14 @@ describe('CarnivalEmailService', () => {
     it('should return success with 0 emails sent if no subscribers are found', async () => {
       EmailSubscription.findAll.mockResolvedValue([]);
       const result = await carnivalEmailService.sendCarnivalNotification(mockCarnival);
-      expect(sendMailMock).not.toHaveBeenCalled();
+      expect(sendEmailMock).not.toHaveBeenCalled();
       expect(result).toEqual({ success: true, emailsSent: 0 });
     });
 
     it('should not send emails if _canSendEmails returns false', async () => {
         carnivalEmailService._canSendEmails.mockReturnValue(false);
         const result = await carnivalEmailService.sendCarnivalNotification(mockCarnival);
-        expect(sendMailMock).not.toHaveBeenCalled();
+        expect(sendEmailMock).not.toHaveBeenCalled();
         expect(carnivalEmailService._logBlockedEmail).toHaveBeenCalled();
         expect(result).toEqual({
             success: false,
@@ -120,10 +114,10 @@ describe('CarnivalEmailService', () => {
         EmailSubscription.findAll.mockResolvedValue([{ email: 'a@b.com', unsubscribeToken: 't' }]);
         
         await carnivalEmailService.sendCarnivalNotification(mockCarnival, 'updated');
-        expect(sendMailMock.mock.calls[0][0].subject).toContain('Carnival Updated');
+        expect(sendEmailMock.mock.calls[0][0].subject).toContain('Carnival Updated');
 
         await carnivalEmailService.sendCarnivalNotification(mockCarnival, 'merged');
-        expect(sendMailMock.mock.calls[1][0].subject).toContain('Carnival Enhanced');
+        expect(sendEmailMock.mock.calls[1][0].subject).toContain('Carnival Enhanced');
     });
   });
 
@@ -136,9 +130,9 @@ describe('CarnivalEmailService', () => {
 
     it('should send info to all attendee clubs with an email', async () => {
         const result = await carnivalEmailService.sendCarnivalInfoToAttendees(mockCarnival, attendeeClubs, 'Host Club');
-        expect(sendMailMock).toHaveBeenCalledTimes(2);
-        expect(sendMailMock.mock.calls[0][0].to).toBe('a@club.com');
-        expect(sendMailMock.mock.calls[1][0].to).toBe('b@club.com');
+        expect(sendEmailMock).toHaveBeenCalledTimes(2);
+        expect(sendEmailMock.mock.calls[0][0].to).toBe('a@club.com');
+        expect(sendEmailMock.mock.calls[1][0].to).toBe('b@club.com');
         expect(result.emailsSent).toBe(2);
         expect(result.emailsFailed).toBe(1);
     });
@@ -146,8 +140,8 @@ describe('CarnivalEmailService', () => {
     it('should include the custom message in the email', async () => {
         const customMessage = 'Please bring your own water bottles.';
         await carnivalEmailService.sendCarnivalInfoToAttendees(mockCarnival, [attendeeClubs[0]], 'Host Club', customMessage);
-        expect(sendMailMock).toHaveBeenCalledOnce();
-        const html = sendMailMock.mock.calls[0][0].html;
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        const html = sendEmailMock.mock.calls[0][0].html;
         expect(html).toContain(customMessage);
     });
 

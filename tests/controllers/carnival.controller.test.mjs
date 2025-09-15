@@ -992,14 +992,15 @@ describe('Carnival Controller', () => {
       );
     });
 
-    it('should handle email attendees placeholder', async () => {
+    it('should handle email attendees validation errors', async () => {
       req.params.id = '1';
+      // Don't provide subject and customMessage to trigger validation error
 
       await sendEmailToAttendees(req, res);
 
       expect(req.flash).toHaveBeenCalledWith(
         'error_msg',
-        'Email attendees functionality not yet implemented.'
+        'Subject and message are required.'
       );
       expect(res.redirect).toHaveBeenCalledWith('/carnivals/1');
     });
