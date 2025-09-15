@@ -388,7 +388,7 @@
                         <div class="row g-3">
                             <% carnival.attendingClubs.forEach((club, index) => { %>
                                 <div class="col-lg-6 col-md-12">
-                                    <div class="d-flex align-items-center p-3 border rounded bg-light h-100">
+                                    <div class="d-flex align-items-start p-3 border rounded bg-light h-100">
                                         <% if (club.logoUrl) { %>
                                             <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
                                                  class="me-3 flex-shrink-0" style="height: 50px; width: auto; max-width: 70px; object-fit: contain;">
@@ -400,26 +400,28 @@
                                         <% } %>
                                         <div class="flex-grow-1 min-width-0">
                                             <% if (club.isPubliclyListed && club.isActive) { %>
-                                                <a href="/clubs/<%= club.id %>" class="text-decoration-none fw-bold h6 mb-1 d-block text-truncate">
+                                                <a href="/clubs/<%= club.id %>" class="text-decoration-none fw-bold h6 mb-1 d-block" title="<%= club.clubName %>">
                                                     <%= club.clubName %>
                                                 </a>
                                             <% } else { %>
-                                                <span class="fw-bold h6 mb-1 d-block text-truncate">
-                                                    <%= club.clubName %>
+                                                <div class="fw-bold h6 mb-1 d-flex align-items-start">
+                                                    <span class="flex-grow-1 me-2" title="<%= club.clubName %>">
+                                                        <%= club.clubName %>
+                                                    </span>
                                                     <% if (!club.isActive) { %>
-                                                        <span class="badge bg-secondary ms-2">Inactive</span>
+                                                        <span class="badge bg-secondary flex-shrink-0">Inactive</span>
                                                     <% } %>
-                                                </span>
+                                                </div>
                                             <% } %>
-                                            <div class="text-muted small">
+                                            <div class="text-muted small d-flex align-items-center flex-wrap">
                                                 <% if (club.state) { %>
-                                                    <span><%= club.state %></span>
-                                                <% } %>
-                                                <% if (club.location && club.state) { %>
-                                                    <span> • </span>
+                                                    <span class="me-2"><%= club.state %></span>
                                                 <% } %>
                                                 <% if (club.location) { %>
-                                                    <span class="text-truncate d-inline-block" style="max-width: 150px;"><%= club.location %></span>
+                                                    <% if (club.state) { %>
+                                                        <span class="me-2">•</span>
+                                                    <% } %>
+                                                    <span class="flex-grow-1" title="<%= club.location %>"><%= club.location %></span>
                                                 <% } %>
                                             </div>
                                         </div>
