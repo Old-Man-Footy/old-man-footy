@@ -44,15 +44,6 @@
     opacity: 1;
 }
 
-.gallery-image-caption {
-    padding: 12px;
-    font-size: 0.875rem;
-    color: var(--light);
-    text-align: center;
-    border-top: 1px solid #e9ecef;
-    background-color: var(--rugby-green);
-}
-
 /* Upload Modal Styles */
 #imagePreviewContainer {
     max-height: 400px;
@@ -220,12 +211,9 @@
         height: 180px;
     }
     
-    .gallery-image-caption {
-        padding: 8px;
-        font-size: 0.8rem;
-    }
-    
-    .btn-group {
+    #modalImage {
+        max-height: 60vh;
+    }    .btn-group {
         flex-direction: column;
         width: 100%;
     }

@@ -1710,16 +1710,16 @@ const viewClubGalleryHandler = async (req, res) => {
     const images = await ImageUpload.getClubImages(id);
 
     // Check if user can manage images (for showing upload button)
-    let canManage = false;
+    let canUpload = false;
     if (req.user) {
-      canManage = ImageUpload.canUserUploadForClub(req.user, parseInt(id));
+      canUpload = ImageUpload.canUserUploadForClub(req.user, parseInt(id));
     }
 
     res.render('clubs/gallery', {
       title: `${club.clubName} - Gallery`,
       club,
       images: images || [],
-      canManage,
+      canUpload,
       user: req.user || null
     });
   } catch (error) {
