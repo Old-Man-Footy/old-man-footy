@@ -3,7 +3,7 @@ import MySidelineCarnivalParserService from './mySidelineCarnivalParserService.m
 
 /**
  * MySideline Web Scraper Service
- * Handles all web scraping functionality for MySideline events using API interception
+ * Handles all web scraping functionality for MySideline carnivals using API interception
  */
 class MySidelineScraperService {
     constructor() {
@@ -18,7 +18,7 @@ class MySidelineScraperService {
     }
 
     /**
-     * Main method to scrape MySideline events
+     * Main method to scrape MySideline carnivals
      * @returns {Promise<Array>} Array of scraped carnival objects
      */
     async scrapeCarnivals() {
@@ -29,25 +29,25 @@ class MySidelineScraperService {
                 return [];
             }
 
-            console.log('Fetching MySideline Masters events via API interception...');
+            console.log('Fetching MySideline Masters carnivals via API interception...');
             
-            const events = await this.fetchCarnivalsWithApiInterception();
+            const carnivals = await this.fetchCarnivalsWithApiInterception();
             
-            if (events && events.length > 0) {
-                console.log(`Found ${events.length} Masters events from MySideline API`);
-                return events;
+            if (carnivals && carnivals.length > 0) {
+                console.log(`Found ${carnivals.length} Masters carnivals from MySideline API`);
+                return carnivals;
             } else {
-                console.log('No events found via API interception');
+                console.log('No carnivals found via API interception');
                 return [];
             }
         } catch (error) {
-            console.error('Failed to fetch MySideline events:', error.message);
+            console.error('Failed to fetch MySideline carnivals:', error.message);
             return [];
         }
     }
 
     /**
-     * Fetch events using browser automation with API interception
+     * Fetch carnivals using browser automation with API interception
      * @returns {Promise<Array>} Array of fetched carnival objects
      */
     async fetchCarnivalsWithApiInterception() {
@@ -82,7 +82,7 @@ class MySidelineScraperService {
                     if (response.ok()) {
                         try {
                             jsonData = await response.json();
-                            console.log(`✅ Successfully intercepted API response with ${jsonData?.data?.length || 0} events`);
+                            console.log(`✅ Successfully intercepted API response with ${jsonData?.data?.length || 0} carnivals`);
                         } catch (e) {
                             console.error('Failed to parse JSON response:', e);
                         }
@@ -105,7 +105,7 @@ class MySidelineScraperService {
 
             if (jsonData && jsonData.data) {
                 const processedCarnivals = await this.processApiResponse(jsonData, imgDictionary);
-                console.log(`✅ Processed ${processedCarnivals.length} events from API response`);
+                console.log(`✅ Processed ${processedCarnivals.length} carnivals from API response`);
                 return processedCarnivals;
             } else {
                 console.log('⚠️ No JSON data captured from API. Using fallback mock data.');                
@@ -128,7 +128,7 @@ class MySidelineScraperService {
     /**
      * Process the API response and convert to our internal format
      * @param {Object} apiResponse - The raw API response
-     * @returns {Array} Array of processed events
+     * @returns {Array} Array of processed carnivals
      */
     processApiResponse(apiResponse, imgDictionary) {
         if (!apiResponse || !apiResponse.data || !Array.isArray(apiResponse.data)) {
@@ -146,7 +146,7 @@ class MySidelineScraperService {
                     continue;
                 }
 
-                // Skip non-Masters events and Touch events
+                // Skip non-Masters carnivals and Touch carnivals
                 if (!this.isRelevantMastersCarnival(item)) {
                     continue;
                 }
@@ -188,7 +188,7 @@ class MySidelineScraperService {
         const competition = (item.competition?.name || '').toLowerCase();
         const club = (item.club?.name || '').toLowerCase(); 
         
-        // Skip Touch events
+        // Skip Touch carnivals
         if (association.includes('touch') || competition.includes('touch') || ageLvl.includes('all ages')) {
             return false;
         }
@@ -406,7 +406,7 @@ class MySidelineScraperService {
                 timeout: 45000 
             });
             
-            // Step 3: Wait for meaningful content with Masters events
+            // Step 3: Wait for meaningful content with Masters carnivals
             await page.waitForFunction(() => {
                 const cards = document.querySelectorAll('.el-card.is-always-shadow, [id^="clubsearch_"]');
                 let mastersContent = 0;
@@ -540,7 +540,7 @@ class MySidelineScraperService {
                                 console.log(`  - Converted relative URL to: ${srcUrl}`);
                             }
 
-                            // For MySideline events, use the full alt text as the carnival key
+                            // For MySideline carnivals, use the full alt text as the carnival key
                             // Alt text format: "Team A vs Team B - Date" or just "Carnival Name"
                             // We want to use this as the key to match against mySidelineTitle
                             const eventKey = altText;

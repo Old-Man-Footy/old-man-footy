@@ -30,8 +30,8 @@ async function captureMySidelineData(outputDir) {
         
         const scraperService = new MySidelineScraperService();
         
-        // Capture live events
-        console.log('📡 Fetching live events from MySideline...');
+        // Capture live carnivals
+        console.log('📡 Fetching live carnivals from MySideline...');
         const liveCarnivals = await scraperService.scrapeCarnivals();
         
         // Also capture the raw HTML if possible
@@ -49,7 +49,7 @@ async function captureMySidelineData(outputDir) {
         }
         
         if (liveCarnivals && liveCarnivals.length > 0) {
-            console.log(`✅ Captured ${liveCarnivals.length} live events`);
+            console.log(`✅ Captured ${liveCarnivals.length} live carnivals`);
             
             // Generate test fixtures content with real data
             const fixtureContent = generateFixtureFile(liveCarnivals, rawHTML);
@@ -71,8 +71,8 @@ async function captureMySidelineData(outputDir) {
             console.log(`   Date: ${liveCarnivals[0].date}`);
             
         } else {
-            console.log('⚠️  No events found on MySideline');
-            console.log('📝 This could be normal if no events are currently listed');
+            console.log('⚠️  No carnivals found on MySideline');
+            console.log('📝 This could be normal if no carnivals are currently listed');
             
             // Still create a fixture file with empty data for testing
             const fixtureContent = generateEmptyFixtureFile();
@@ -98,7 +98,7 @@ async function captureMySidelineData(outputDir) {
 
 /**
  * Generates the fixture file content with real captured data
- * @param {Array} capturedCarnivals - Real events captured from MySideline
+ * @param {Array} capturedCarnivals - Real carnivals captured from MySideline
  * @param {string|null} rawHTML - Raw HTML captured from MySideline (if available)
  * @returns {string} File content for the fixture
  */
@@ -124,8 +124,8 @@ import { vi } from 'vitest';
 // Real HTML structure captured from MySideline
 export const MYSIDELINE_CAPTURED_HTML = \`${sanitizedHTML}\`;
 
-// Real events captured from MySideline
-export const MYSIDELINE_CAPTURED_EVENTS = ${JSON.stringify(capturedCarnivals, null, 4)};
+// Real carnivals captured from MySideline
+export const MYSIDELINE_CAPTURED_CARNIVALS = ${JSON.stringify(capturedCarnivals, null, 4)};
 
 // Mock responses using real captured data
 export const MYSIDELINE_CAPTURED_RESPONSES = {
@@ -133,7 +133,7 @@ export const MYSIDELINE_CAPTURED_RESPONSES = {
         status: 200,
         ok: true,
         text: () => Promise.resolve(MYSIDELINE_CAPTURED_HTML),
-        json: () => Promise.resolve({ events: MYSIDELINE_CAPTURED_EVENTS })
+        json: () => Promise.resolve({ carnivals: MYSIDELINE_CAPTURED_CARNIVALS })
     },
     
     NETWORK_ERROR: {
@@ -163,22 +163,22 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
 }
 
 /**
- * Helper function to get captured events with custom modifications
+ * Helper function to get captured carnivals with custom modifications
  * @param {Object} overrides - Properties to override in the captured data
- * @returns {Array} Modified captured events
+ * @returns {Array} Modified captured carnivals
  */
 export function getCapturedCarnivals(overrides = {}) {
-    return MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+    return MYSIDELINE_CAPTURED_CARNIVALS.map(carnival => ({
         ...carnival,
         ...overrides
     }));
 }
 
 /**
- * Database test data derived from captured events
+ * Database test data derived from captured carnivals
  */
 export const MYSIDELINE_DB_TEST_DATA = {
-    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_CARNIVALS.map(carnival => ({
         title: carnival.title,
         mySidelineId: carnival.mySidelineId,
         mySidelineTitle: carnival.mySidelineTitle,
@@ -196,7 +196,7 @@ export const MYSIDELINE_DB_TEST_DATA = {
 
 export default {
     MYSIDELINE_CAPTURED_HTML,
-    MYSIDELINE_CAPTURED_EVENTS,
+    MYSIDELINE_CAPTURED_CARNIVALS,
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,
@@ -206,7 +206,7 @@ export default {
 }
 
 /**
- * Generates an empty fixture file when no events are found
+ * Generates an empty fixture file when no carnivals are found
  * @returns {string} Empty fixture file content
  */
 function generateEmptyFixtureFile() {
@@ -215,7 +215,7 @@ function generateEmptyFixtureFile() {
     return `/**
  * MySideline Captured Test Data - EMPTY RESULT
  * 
- * No events were found on MySideline when data was captured.
+ * No carnivals were found on MySideline when data was captured.
  * 
  * Data captured on: ${timestamp}
  * Source: MySideline website (live data)
@@ -225,14 +225,14 @@ function generateEmptyFixtureFile() {
 import { vi } from 'vitest';
 
 export const MYSIDELINE_CAPTURED_HTML = '<html><body><div class="carnival-list"></div></body></html>';
-export const MYSIDELINE_CAPTURED_EVENTS = [];
+export const MYSIDELINE_CAPTURED_CARNIVALS = [];
 
 export const MYSIDELINE_CAPTURED_RESPONSES = {
     SUCCESS: {
         status: 200,
         ok: true,
         text: () => Promise.resolve(MYSIDELINE_CAPTURED_HTML),
-        json: () => Promise.resolve({ events: MYSIDELINE_CAPTURED_EVENTS })
+        json: () => Promise.resolve({ carnivals: MYSIDELINE_CAPTURED_CARNIVALS })
     },
     NETWORK_ERROR: {
         status: 500,
@@ -256,7 +256,7 @@ export const MYSIDELINE_DB_TEST_DATA = {
 
 export default {
     MYSIDELINE_CAPTURED_HTML,
-    MYSIDELINE_CAPTURED_EVENTS,
+    MYSIDELINE_CAPTURED_CARNIVALS,
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,
@@ -285,14 +285,14 @@ function generateFallbackFixtureFile(error) {
 import { vi } from 'vitest';
 
 export const MYSIDELINE_CAPTURED_HTML = '<html><body><!-- Capture failed --></body></html>';
-export const MYSIDELINE_CAPTURED_EVENTS = [];
+export const MYSIDELINE_CAPTURED_CARNIVALS = [];
 
 export const MYSIDELINE_CAPTURED_RESPONSES = {
     SUCCESS: {
         status: 200,
         ok: true,
         text: () => Promise.resolve(MYSIDELINE_CAPTURED_HTML),
-        json: () => Promise.resolve({ events: MYSIDELINE_CAPTURED_EVENTS })
+        json: () => Promise.resolve({ carnivals: MYSIDELINE_CAPTURED_CARNIVALS })
     },
     NETWORK_ERROR: {
         status: 500,
@@ -316,7 +316,7 @@ export const MYSIDELINE_DB_TEST_DATA = {
 
 export default {
     MYSIDELINE_CAPTURED_HTML,
-    MYSIDELINE_CAPTURED_EVENTS,
+    MYSIDELINE_CAPTURED_CARNIVALS,
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,

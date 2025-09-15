@@ -28,5 +28,5 @@ Download the full player list for offline use.
 
 ## Tips & Best Practices
 - Use filters to quickly narrow down large lists.
-- Export the roster before events for backup.
+- Export the roster before  for backup.
 - Review player details for eligibility and accuracy.

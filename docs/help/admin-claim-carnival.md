@@ -4,7 +4,7 @@ title: Admin Claim Carnival Help
 ---
 
 ## Overview
-The Claim Carnival page allows admins to take ownership of carnivals imported from MySideline. This enables direct management and updates for those events.
+The Claim Carnival page allows admins to take ownership of carnivals imported from MySideline. This enables direct management and updates for those .
 
 ## Key Features Explained
 ### Carnival Details

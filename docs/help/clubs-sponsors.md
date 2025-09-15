@@ -30,4 +30,4 @@ Click a sponsor to see more information and partnership opportunities.
 ## Tips & Best Practices
 - Keep sponsor info up to date for accurate records.
 - Use sponsor details to track partnerships and support.
-- Review sponsor information before events for recognition.
+- Review sponsor information before  for recognition.

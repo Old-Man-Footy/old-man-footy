@@ -4,7 +4,7 @@ import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 /**
  * MySideline Data Processing Service
- * Handles database operations and data processing for MySideline events
+ * Handles database operations and data processing for MySideline carnivals
  */
 class MySidelineDataService {
     constructor() {
@@ -31,7 +31,7 @@ class MySidelineDataService {
             }
         }
 
-        // Strategy 2: Fall back to MySideline-specific matching fields (for legacy events)
+        // Strategy 2: Fall back to MySideline-specific matching fields (for legacy carnivals)
         if (eventData.mySidelineTitle) {
             const whereConditions = {
                 mySidelineTitle: eventData.mySidelineTitle,
@@ -89,14 +89,14 @@ class MySidelineDataService {
     }
 
     /**
-     * Process scraped events and save to database
+     * Process scraped carnivals and save to database
      * @param {Array} scrapedCarnivals - Array of scraped carnival objects
      * @returns {Promise<Array>} Array of processed carnival objects
      */
     async processScrapedCarnivals(scrapedCarnivals) {
-        console.log(`Processing ${scrapedCarnivals.length} scraped MySideline events...`);
+        console.log(`Processing ${scrapedCarnivals.length} scraped MySideline carnivals...`);
         
-        // Set the sync timestamp for all events processed in this batch
+        // Set the sync timestamp for all carnivals processed in this batch
         const lastMySidelineSync = new Date();
         
         const processedCarnivals = [];        
@@ -289,7 +289,7 @@ class MySidelineDataService {
             }
         }
         
-        console.log(`Successfully processed ${processedCarnivals.length} MySideline events`);
+        console.log(`Successfully processed ${processedCarnivals.length} MySideline carnivals`);
         return processedCarnivals;
     }
 
@@ -299,7 +299,7 @@ class MySidelineDataService {
      */
     async shouldRunInitialSync() {
         try {
-            // Use the new SyncLog-based approach instead of checking individual events
+            // Use the new SyncLog-based approach instead of checking individual carnivals
             const shouldSync = await SyncLog.shouldRunSync('mysideline', 24);
             
             if (shouldSync) {

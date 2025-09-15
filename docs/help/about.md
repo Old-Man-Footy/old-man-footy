@@ -8,7 +8,7 @@ The About page explains what Old Man Footy is, its mission, and how it supports 
 
 ## Key Features Explained
 ### Platform Purpose
-Learn how Old Man Footy connects clubs, players, and fans, making events discoverable and accessible.
+Learn how Old Man Footy connects clubs, players, and fans, making carnivals discoverable and accessible.
 
 ### How It Works
 Find out how to browse carnivals and clubs, register as a delegate, and stay informed about new activities.
@@ -27,11 +27,11 @@ See how carnivals are created, managed, and promoted on the platform.
 
 **How to Learn More About Carnivals:**
 1. Visit the Carnivals section.
-2. Browse upcoming and past events.
+2. Browse upcoming and past carnivals.
 3. Click any carnival for full details and registration options.
 
 ## Tips & Best Practices
 - Read the About page to understand the platform’s values and community focus.
-- Delegates are key to club and carnival success—consider becoming one if you want to help organize events.
+- Delegates are key to club and carnival success—consider becoming one if you want to help organize carnivals.
 - Use the navigation menu to explore all features.
 - Contact support if you have questions about getting involved.

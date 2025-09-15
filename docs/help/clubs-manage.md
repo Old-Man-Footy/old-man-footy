@@ -4,14 +4,14 @@ title: Manage Club Help
 ---
 
 ## Overview
-The Manage Club page lets club managers oversee all aspects of their club, including members, events, and sponsors. It’s the main dashboard for club administration.
+The Manage Club page lets club managers oversee all aspects of their club, including members, , and sponsors. It’s the main dashboard for club administration.
 
 ## Key Features Explained
 ### Member Management
 View, add, or edit club members.
 
 ### Carnival Management
-Manage club participation in carnivals and other events.
+Manage club participation in carnivals and other .
 
 ### Sponsor Management
 Add or update sponsors supporting the club.

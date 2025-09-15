@@ -1,7 +1,7 @@
 /**
  * Carnival Model - SQLite/Sequelize Implementation
  * 
- * Manages rugby league carnival events, including MySideline integration
+ * Manages rugby league carnival carnivals, including MySideline integration
  * and comprehensive carnival management for the Old Man Footy platform.
  */
 
@@ -295,8 +295,8 @@ class Carnival extends Model {
   }
 
   /**
-   * Find MySideline imported events
-   * @returns {Promise<Array>} Array of MySideline events
+   * Find MySideline imported carnivals
+   * @returns {Promise<Array>} Array of MySideline carnivals
    */
   static async findMySidelineCarnivals() {
     return await this.findAll({
@@ -310,7 +310,7 @@ class Carnival extends Model {
 
   /**
    * Take ownership of a MySideline carnival
-   * This method handles the business logic for claiming unclaimed MySideline events
+   * This method handles the business logic for claiming unclaimed MySideline carnivals
    * @param {number} carnivalId - ID of the carnival to claim
    * @param {number} userId - ID of the user claiming ownership
    * @returns {Promise<Object>} Result object with success status and message
@@ -352,14 +352,14 @@ class Carnival extends Model {
         throw new Error('Your club must be active to claim carnival ownership');
       }
 
-      // State-based restriction: delegates can only claim events in their club's state or events with no state
+      // State-based restriction: delegates can only claim carnivals in their club's state or carnivals with no state
       if (carnival.state && user.club.state && carnival.state !== user.club.state) {
-        throw new Error(`You can only claim events in your club's state (${user.club.state}) or events with no specific state. This carnival is in ${carnival.state}.`);
+        throw new Error(`You can only claim carnivals in your club's state (${user.club.state}) or carnivals with no specific state. This carnival is in ${carnival.state}.`);
       }
 
       // Business rule checks
       if (carnival.isManuallyEntered) {
-        throw new Error('Can only claim ownership of MySideline imported events');
+        throw new Error('Can only claim ownership of MySideline imported carnivals');
       }
 
       if (!carnival.lastMySidelineSync) {
@@ -475,7 +475,7 @@ class Carnival extends Model {
 
       // Business rule checks
       if (!carnival.lastMySidelineSync) {
-        throw new Error('Can only release ownership of MySideline imported events');
+        throw new Error('Can only release ownership of MySideline imported carnivals');
       }
 
       // Check if there are registered clubs - warn but allow
@@ -599,7 +599,7 @@ class Carnival extends Model {
 
       // Business rule checks
       if (carnival.isManuallyEntered) {
-        throw new Error('Can only claim ownership of MySideline imported events');
+        throw new Error('Can only claim ownership of MySideline imported carnivals');
       }
 
       if (!carnival.lastMySidelineSync) {

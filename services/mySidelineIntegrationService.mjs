@@ -8,7 +8,7 @@ import { Carnival, SyncLog } from '../models/index.mjs';
 
 /**
  * MySideline Integration Service (Main Orchestrator)
- * Coordinates the scraping, parsing, and data processing of MySideline events
+ * Coordinates the scraping, parsing, and data processing of MySideline carnivals
  * This is the refactored main service that delegates to specialized services
  */
 class MySidelineIntegrationService {
@@ -85,7 +85,7 @@ class MySidelineIntegrationService {
             console.log('MySideline sync is disabled via MYSIDELINE_SYNC_ENABLED configuration');
             return {
                 success: true,
-                eventsProcessed: 0,
+                carnivalsProcessed: 0,
                 message: 'Sync disabled via configuration'
             };
         }
@@ -113,23 +113,23 @@ class MySidelineIntegrationService {
                 console.log(`✅ Deactivated ${deactivationResult.deactivatedCount} past carnivals`);
             }
 
-            // Step 1: Scrape events using the scraper service
+            // Step 1: Scrape carnivals using the scraper service
             const scrapedCarnivals = await this.scraperService.scrapeCarnivals();
             
             if (!scrapedCarnivals || scrapedCarnivals.length === 0) {
-                console.log('No events found from MySideline scraper');
+                console.log('No carnivals found from MySideline scraper');
                 
-                // Mark sync as completed even when no events found - this prevents endless retries
+                // Mark sync as completed even when no carnivals found - this prcarnivals endless retries
                 await syncLog.markCompleted({
-                    eventsProcessed: 0,
-                    eventsCreated: 0,
-                    eventsUpdated: 0
+                    carnivalsProcessed: 0,
+                    carnivalsCreated: 0,
+                    carnivalsUpdated: 0
                 });
                 
                 return {
                     success: true,
-                    eventsProcessed: 0,
-                    message: 'No events found'
+                    carnivalsProcessed: 0,
+                    message: 'No carnivals found'
                 };
             }
 
@@ -144,33 +144,33 @@ class MySidelineIntegrationService {
                 }
             }).filter(carnival => carnival !== null); // Remove failed validations
 
-            console.log(`${cleanedCarnivals.length}/${scrapedCarnivals.length} events passed validation`);
+            console.log(`${cleanedCarnivals.length}/${scrapedCarnivals.length} carnivals passed validation`);
 
             if (cleanedCarnivals.length === 0) {
-                console.log('No events passed validation checks');
+                console.log('No carnivals passed validation checks');
                 
-                // Mark sync as completed even when no events pass validation
+                // Mark sync as completed even when no carnivals pass validation
                 await syncLog.markCompleted({
-                    eventsProcessed: 0,
-                    eventsCreated: 0,
-                    eventsUpdated: 0
+                    carnivalsProcessed: 0,
+                    carnivalsCreated: 0,
+                    carnivalsUpdated: 0
                 });
                 
                 return {
                     success: true,
-                    eventsProcessed: 0,
-                    message: 'No events passed validation'
+                    carnivalsProcessed: 0,
+                    message: 'No carnivals passed validation'
                 };
             }
 
-            // Step 2: Process validated events using the data service
+            // Step 2: Process validated carnivals using the data service
             const processedCarnivals = await this.dataService.processScrapedCarnivals(cleanedCarnivals);
             
-            // Count new vs updated events for logging
-            const eventsCreated = processedCarnivals.filter(carnival => 
+            // Count new vs updated carnivals for logging
+            const carnivalsCreated = processedCarnivals.filter(carnival => 
                 carnival.createdAt && new Date(carnival.createdAt) > new Date(Date.now() - 60000) // Created in last minute
             ).length;
-            const eventsUpdated = processedCarnivals.length - eventsCreated;
+            const carnivalsUpdated = processedCarnivals.length - carnivalsCreated;
             
             // For each processed carnival where clubImageUrl starts with http
             const imageDownloadPromises = processedCarnivals
@@ -185,13 +185,13 @@ class MySidelineIntegrationService {
 
             let results = [];
             if (imageDownloadPromises.length > 0) {
-                console.log(`Downloading logos for ${imageDownloadPromises.length} events...`);
+                console.log(`Downloading logos for ${imageDownloadPromises.length} carnivals...`);
                 results = await this.logoDownloadService.downloadLogos(imageDownloadPromises);
             }
 
             // Process the results of logo downloads
             if (results && results.length > 0) {
-                console.log(`Downloaded logos for ${results.length} events.`);
+                console.log(`Downloaded logos for ${results.length} carnivals.`);
                 results.forEach(async result => {
                     // Update the carnival with the public URL
                     const carnival = processedCarnivals.find(e => e.id === result.entityId);
@@ -208,7 +208,7 @@ class MySidelineIntegrationService {
                                 console.error(`❌ Failed to update carnival ${carnival.id} logo URL:`, updateError.message);
                             }
                         } else {
-                            console.warn(`Carnival with ID ${result.entityId} not found in processed events.`);
+                            console.warn(`Carnival with ID ${result.entityId} not found in processed carnivals.`);
                         }
                     } else {
                         console.warn(`Failed to download logo for carnival ${result.entityId}: ${result.error}`);
@@ -227,21 +227,21 @@ class MySidelineIntegrationService {
                 })
             };
 
-            console.log(`MySideline sync completed. Processed ${processedCarnivals.length} events (${eventsCreated} new, ${eventsUpdated} updated).`);
+            console.log(`MySideline sync completed. Processed ${processedCarnivals.length} carnivals (${carnivalsCreated} new, ${carnivalsUpdated} updated).`);
             this.lastSyncDate = new Date();
             
             // Mark sync as completed with detailed results
             await syncLog.markCompleted({
-                eventsProcessed: processedCarnivals.length,
-                eventsCreated: eventsCreated,
-                eventsUpdated: eventsUpdated
+                carnivalsProcessed: processedCarnivals.length,
+                carnivalsCreated: carnivalsCreated,
+                carnivalsUpdated: carnivalsUpdated
             });
             
             return {
                 success: true,
-                eventsProcessed: processedCarnivals.length,
-                eventsCreated: eventsCreated,
-                eventsUpdated: eventsUpdated,
+                carnivalsProcessed: processedCarnivals.length,
+                carnivalsCreated: carnivalsCreated,
+                carnivalsUpdated: carnivalsUpdated,
                 lastSync: this.lastSyncDate
             };
         } catch (error) {
@@ -268,10 +268,10 @@ class MySidelineIntegrationService {
             const result = await this.syncMySidelineCarnivals();
             
             if (result && result.success) {
-                console.log(`Manual MySideline sync completed successfully. Found ${result.eventsProcessed} events.`);
-                return result.eventsProcessed > 0 ? result.eventsProcessed : [];
+                console.log(`Manual MySideline sync completed successfully. Found ${result.carnivalsProcessed} carnivals.`);
+                return result.carnivalsProcessed > 0 ? result.carnivalsProcessed : [];
             } else {
-                console.log('Manual MySideline sync completed but no events found.');
+                console.log('Manual MySideline sync completed but no carnivals found.');
                 return [];
             }
         } catch (error) {

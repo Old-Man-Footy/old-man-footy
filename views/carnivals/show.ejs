@@ -184,7 +184,7 @@
                                     </strong>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <!-- Claim button for unclaimed MySideline events -->
+                                    <!-- Claim button for unclaimed MySideline carnivals -->
                                     <% if (canTakeOwnership) { %>
                                         <button type="button" class="btn btn-tertiary btn-sm" 
                                                 data-bs-toggle="modal" 
@@ -218,7 +218,7 @@
                                         <% } %>
                                     <% } %>
 
-                                    <!-- Release ownership button for MySideline events owned by the user -->
+                                    <!-- Release ownership button for MySideline carnivals owned by the user -->
                                     <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId && carnival.lastMySidelineSync) { %>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 data-bs-toggle="modal" 
@@ -227,7 +227,7 @@
                                         </button>
                                     <% } %>
 
-                                    <!-- Merge carnival button for MySideline events owned by the user -->
+                                    <!-- Merge carnival button for MySideline carnivals owned by the user -->
                                     <% if (canMergeCarnival) { %>
                                         <button type="button" class="btn btn-outline-tertiary btn-sm" 
                                                 data-bs-toggle="modal" 
@@ -295,7 +295,7 @@
                                 const shouldDisableRegistration = !carnival.isActive || isPastCarnival;
                                 %>
                                 <% if (shouldDisableRegistration) { %>
-                                    <!-- Disabled registration for inactive carnivals or past events -->
+                                    <!-- Disabled registration for inactive carnivals or past carnivals -->
                                     <button class="btn btn-secondary" disabled>
                                         <i class="bi bi-x-circle"></i> Registration Closed
                                     </button>
@@ -930,7 +930,7 @@
                     <div class="mt-3">
                         <h6 class="text-muted mb-2">Admin Actions</h6>
                         <div class="d-flex flex-wrap gap-2">
-                            <!-- Take Ownership button for unclaimed MySideline events -->
+                            <!-- Take Ownership button for unclaimed MySideline carnivals -->
                             <% if (canTakeOwnership) { %>
                                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-tertiary" 
@@ -1294,7 +1294,7 @@
                             <small>
                                 <i class="bi bi-gear me-1"></i>
                                 <strong>What to expect:</strong> Our system attempts automatic matching, but manual review 
-                                may be required for events with different naming, dates, or locations. You'll be notified 
+                                may be required for carnivals with different naming, dates, or locations. You'll be notified 
                                 if merge options become available.
                             </small>
                         </div>

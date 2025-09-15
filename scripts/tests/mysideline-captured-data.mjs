@@ -35,8 +35,8 @@ export const MYSIDELINE_CAPTURED_HTML = `
 </html>
 `;
 
-// Real events captured from MySideline
-export const MYSIDELINE_CAPTURED_EVENTS = [
+// Real carnivals captured from MySideline
+export const MYSIDELINE_CAPTURED_CARNIVALS = [
     {
         "title": "Masters Rugby League Carnival 2025",
         "mySidelineId": "123456789",
@@ -77,7 +77,7 @@ export const MYSIDELINE_CAPTURED_RESPONSES = {
         status: 200,
         ok: true,
         text: () => Promise.resolve(MYSIDELINE_CAPTURED_HTML),
-        json: () => Promise.resolve({ events: MYSIDELINE_CAPTURED_EVENTS })
+        json: () => Promise.resolve({ carnivals: MYSIDELINE_CAPTURED_CARNIVALS })
     },
     
     NETWORK_ERROR: {
@@ -107,22 +107,22 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
 }
 
 /**
- * Helper function to get captured events with custom modifications
+ * Helper function to get captured carnivals with custom modifications
  * @param {Object} overrides - Properties to override in the captured data
- * @returns {Array} Modified captured events
+ * @returns {Array} Modified captured carnivals
  */
 export function getCapturedCarnivals(overrides = {}) {
-    return MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+    return MYSIDELINE_CAPTURED_CARNIVALS.map(carnival => ({
         ...carnival,
         ...overrides
     }));
 }
 
 /**
- * Database test data derived from captured events
+ * Database test data derived from captured carnivals
  */
 export const MYSIDELINE_DB_TEST_DATA = {
-    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_EVENTS.map(carnival => ({
+    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_CARNIVALS.map(carnival => ({
         title: carnival.title,
         mySidelineId: carnival.mySidelineId,
         mySidelineTitle: carnival.mySidelineTitle,
@@ -140,7 +140,7 @@ export const MYSIDELINE_DB_TEST_DATA = {
 
 export default {
     MYSIDELINE_CAPTURED_HTML,
-    MYSIDELINE_CAPTURED_EVENTS,
+    MYSIDELINE_CAPTURED_CARNIVALS,
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,

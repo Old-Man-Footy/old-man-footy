@@ -37,7 +37,7 @@ const listCarnivalsHandler = async (req, res) => {
   // Set default for upcoming only if no form has been submitted and no explicit filters are applied
   let upcomingFilter = upcoming;
   if (upcomingFilter === undefined && !_submitted && !search && (!state || state === 'all')) {
-    upcomingFilter = 'true'; // Default to showing upcoming events only on first page load
+    upcomingFilter = 'true'; // Default to showing upcoming carnivals only on first page load
   }
 
   // State filter
@@ -214,7 +214,7 @@ const listCarnivalsHandler = async (req, res) => {
     const publicData = carnival.getPublicDisplayData();
 
     // Check if this carnival can be claimed by the current user
-    // Allow events that either have a MySideline ID or have a MySideline sync timestamp
+    // Allow carnivals that either have a MySideline ID or have a MySideline sync timestamp
     const hasMySidelineMarker = carnival.mySidelineId || carnival.lastMySidelineSync;
     const canTakeOwnership =
       carnival.isActive &&
@@ -222,7 +222,7 @@ const listCarnivalsHandler = async (req, res) => {
       !carnival.createdByUserId &&
       userWithClub &&
       userWithClub.clubId &&
-      // State-based restriction: can only claim events in club's state or events with no state
+      // State-based restriction: can only claim carnivals in club's state or carnivals with no state
       (!carnival.state || !userWithClub.club.state || carnival.state === userWithClub.club.state);
 
     return {
@@ -364,7 +364,7 @@ const showCarnivalHandler = async (req, res) => {
     !carnival.createdByUserId &&
     userWithClub &&
     userWithClub.clubId &&
-    // State-based restriction: can only claim events in your club's state or events with no state
+    // State-based restriction: can only claim carnivals in your club's state or carnivals with no state
     (!carnival.state || !userWithClub.club.state || carnival.state === userWithClub.club.state);
 
   // Check if user's club is already registered for this carnival (only for active carnivals)
@@ -785,7 +785,7 @@ export async function createOrMergeCarnival(carnivalData, userId) {
             ]
           },
           { date: carnivalData.date },
-          { claimedAt: null } // Only consider unclaimed events for merging
+          { claimedAt: null } // Only consider unclaimed carnivals for merging
         ]
       }
     });
@@ -1057,7 +1057,7 @@ const syncMySidelineHandler = async (req, res) => {
 
   const result = await mySidelineService.syncCarnivals();
 
-  req.flash('success_msg', `MySideline sync completed. ${result.newCarnivals} new events imported.`);
+  req.flash('success_msg', `MySideline sync completed. ${result.newCarnivals} new carnivals imported.`);
   return res.redirect('/dashboard');
 };
 

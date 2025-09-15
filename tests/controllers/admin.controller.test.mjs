@@ -237,9 +237,9 @@ vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   default: {
     syncMySidelineCarnivals: vi.fn().mockResolvedValue({
       success: true,
-      eventsProcessed: 10,
-      eventsCreated: 5,
-      eventsUpdated: 3
+      carnivalsProcessed: 10,
+      carnivalsCreated: 5,
+      carnivalsUpdated: 3
     })
   }
 }));
@@ -384,9 +384,9 @@ describe('Admin Controller', () => {
     AuthEmailService.sendPasswordResetEmail.mockResolvedValue(true);
     mySidelineService.syncMySidelineCarnivals.mockResolvedValue({
       success: true,
-      eventsProcessed: 10,
-      eventsCreated: 5,
-      eventsUpdated: 3
+      carnivalsProcessed: 10,
+      carnivalsCreated: 5,
+      carnivalsUpdated: 3
     });
 
     // Mock crypto
@@ -1120,7 +1120,7 @@ describe('Admin Controller', () => {
       });
     });
 
-    it('should show claim carnival form for MySideline events', async () => {
+    it('should show claim carnival form for MySideline carnivals', async () => {
       const mockCarnival = createMockCarnival({
         id: 1,
         title: 'MySideline Carnival',
@@ -1276,9 +1276,9 @@ describe('Admin Controller', () => {
     it('should trigger MySideline sync manually', async () => {
       mySidelineService.syncMySidelineCarnivals.mockResolvedValue({
         success: true,
-        eventsProcessed: 15,
-        eventsCreated: 8,
-        eventsUpdated: 4
+        carnivalsProcessed: 15,
+        carnivalsCreated: 8,
+        carnivalsUpdated: 4
       });
 
       await syncMySideline(req, res);
@@ -1294,9 +1294,9 @@ describe('Admin Controller', () => {
             adminAction: 'Manual MySideline sync triggered',
             syncResult: expect.objectContaining({
               success: true,
-              eventsProcessed: 15,
-              eventsCreated: 8,
-              eventsUpdated: 4
+              carnivalsProcessed: 15,
+              carnivalsCreated: 8,
+              carnivalsUpdated: 4
             })
           })
         })
@@ -1304,7 +1304,7 @@ describe('Admin Controller', () => {
 
       expect(req.flash).toHaveBeenCalledWith(
         'success_msg',
-        'MySideline sync completed successfully! Processed 15 events (8 new, 4 updated)'
+        'MySideline sync completed successfully! Processed 15 carnivals (8 new, 4 updated)'
       );
       expect(res.redirect).toHaveBeenCalledWith('/admin/dashboard');
     });
@@ -1601,7 +1601,7 @@ describe('Admin Controller', () => {
 
       await showClaimCarnivalForm(req, res);
 
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Can only claim ownership of MySideline imported events');
+      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Can only claim ownership of MySideline imported carnivals');
       expect(res.redirect).toHaveBeenCalledWith('/admin/carnivals');
     });
   });

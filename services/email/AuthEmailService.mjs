@@ -113,7 +113,7 @@ export class AuthEmailService extends BaseEmailService {
                     
                     <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <h3 style="color: #006837; margin-top: 0;">What's Next?</h3>
-                        <p>Keep an eye on your inbox for upcoming carnival announcements. You can also visit our website anytime to browse current events and get the latest information.</p>
+                        <p>Keep an eye on your inbox for upcoming carnival announcements. You can also visit our website anytime to browse current carnivals and get the latest information.</p>
                         
                         <p><strong>Your subscription covers:</strong> ${stateArray.join(', ')}</p>
                     </div>

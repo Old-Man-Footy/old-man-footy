@@ -646,7 +646,7 @@ export class CarnivalEmailService extends BaseEmailService {
                     </p>
                     
                     <p style="font-size: 14px; color: #666; text-align: center;">
-                        We appreciate your interest and hope to see you at future events! 🏉
+                        We appreciate your interest and hope to see you at future carnivals! 🏉
                     </p>
                 </div>
                 
@@ -711,11 +711,11 @@ export class CarnivalEmailService extends BaseEmailService {
                     
                     <p style="font-size: 14px; color: #666;">
                         <strong>About Old Man Footy:</strong> We're a platform dedicated to connecting masters rugby league clubs across Australia. 
-                        Your carnival is now part of a network that makes it easier for teams to find and register for events.
+                        Your carnival is now part of a network that makes it easier for teams to find and register for carnivals.
                     </p>
                     
                     <p style="font-size: 14px; color: #666; text-align: center;">
-                        Thank you for organizing masters rugby league events! 🏉
+                        Thank you for organizing masters rugby league carnivals! 🏉
                     </p>
                 </div>
                 

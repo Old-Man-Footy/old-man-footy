@@ -5,7 +5,7 @@ The database seeding system provides a comprehensive way to populate your local 
 
 ## Features
 - **Realistic Test Data**: Australian Rugby League club names and locations
-- **MySideline Integration**: Automatically imports real events from MySideline
+- **MySideline Integration**: Automatically imports real carnivals from MySideline
 - **Complete User System**: Admin users, primary delegates, and secondary delegates
 - **Sample Carnivals**: Manual test carnivals across all Australian states
 - **Email Subscriptions**: Test email subscriptions for notification testing
@@ -65,11 +65,11 @@ Example delegate emails:
 ### Database Tables Populated
 - `Users` - Admin and delegate accounts
 - `Clubs` - Rugby League clubs across Australia
-- `Carnivals` - Manual and MySideline imported events
+- `Carnivals` - Manual and MySideline imported carnivals
 - `EmailSubscriptions` - Test email subscriptions
 
 ### MySideline Integration
-The seeder automatically attempts to import real events from MySideline.com.au for each Australian state. If MySideline is unavailable, it gracefully falls back to mock data.
+The seeder automatically attempts to import real carnivals from MySideline.com.au for each Australian state. If MySideline is unavailable, it gracefully falls back to mock data.
 
 ### Data Cleanup
 The seeder automatically clears all existing data before creating new test data, ensuring a clean development environment.

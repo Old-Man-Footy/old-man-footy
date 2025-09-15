@@ -12,9 +12,9 @@ A comprehensive web application for managing Rugby League Masters carnivals acro
 - **Multi-State Support:** Support for all Australian states (NSW, QLD, VIC, WA, SA, TAS, NT, ACT)
 - **File Uploads:** Club logos, promotional images, and draw files with organized storage
 - **Social Media Integration:** Facebook, Instagram, Twitter, and website links
-- **Advanced Search & Filtering:** Filter by state, search terms, and upcoming events
+- **Advanced Search & Filtering:** Filter by state, search terms, and upcoming carnivals
 - **Email Subscriptions:** State-based email notifications for carnival updates
-- **MySideline Integration:** Automated import and synchronization of events from MySideline platform
+- **MySideline Integration:** Automated import and synchronization of carnivals from MySideline platform
 
 ### User Management
 
@@ -298,12 +298,12 @@ npm run test:coverage
 3. **Manage Carnivals:** Edit, update, or delete your carnivals
 4. **Player Management:** Add and manage club players
 5. **Upload Files:** Add club logos, promotional images, and draw files
-6. **Claim MySideline Carnivals:** Take ownership of imported events
+6. **Claim MySideline Carnivals:** Take ownership of imported carnivals
 7. **Sponsor Management:** Add and manage carnival/club sponsors
 
 ### For Players and Fans
 
-1. **Browse Carnivals:** View all upcoming events with detailed information
+1. **Browse Carnivals:** View all upcoming carnivals with detailed information
 2. **Filter Carnivals:** Search by state, location, or keywords
 3. **Subscribe to Updates:** Get email notifications for specific states
 4. **View Details:** Access complete carnival information and contact details

@@ -45,7 +45,7 @@ export const unsubscribeManager = {
     handleFormSubmit: (e) => {
         const confirmed = confirm(
             'Are you sure you want to unsubscribe from all email notifications?\n\n' +
-            'This action cannot be undone and you will miss important updates about carnivals and events.'
+            'This action cannot be undone and you will miss important updates about carnivals.'
         );
         
         if (!confirmed) {

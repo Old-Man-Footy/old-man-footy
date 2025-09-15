@@ -11,7 +11,7 @@ The Edit Club page lets admins update club details, assign delegates, and manage
 Edit the club’s name, location, and other info.
 
 ### Assign Delegates
-Select users to manage the club profile and events.
+Select users to manage the club profile and .
 
 ### Manage Sponsors
 Add or update sponsors linked to the club.

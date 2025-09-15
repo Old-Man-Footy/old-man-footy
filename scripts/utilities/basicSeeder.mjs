@@ -226,7 +226,7 @@ class BasicSeeder {
             for (const state of states) {
                 try {
                     const stateCarnivals = await MySidelineService.getCarnivalsForState(state);
-                    console.log(`Found ${stateCarnivals.length} events for ${state}`);
+                    console.log(`Found ${stateCarnivals.length} carnivals for ${state}`);
                     
                     for (const carnival of stateCarnivals) {
                         try {
@@ -246,11 +246,11 @@ class BasicSeeder {
                         }
                     }
                 } catch (stateError) {
-                    console.error(`Failed to fetch ${state} events:`, stateError.message);
+                    console.error(`Failed to fetch ${state} carnivals:`, stateError.message);
                 }
             }
             
-            console.log(`✅ Imported ${totalImported} MySideline events`);
+            console.log(`✅ Imported ${totalImported} MySideline carnivals`);
         } catch (error) {
             console.log(`⚠️  MySideline import failed (using manual data only): ${error.message}`);
         }

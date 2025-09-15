@@ -251,7 +251,7 @@ describe('Carnival Model', () => {
       expect(carnivals[0].state).toBe('NSW');
     });
 
-    it('should find MySideline events', async () => {
+    it('should find MySideline carnivals', async () => {
       // Arrange
       await Carnival.create({
         title: 'MySideline Carnival',

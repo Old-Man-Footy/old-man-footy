@@ -73,7 +73,7 @@ export const carnivalEditManager = {
         if (input) input.click();
     },
 
-    // Sets up event listeners and logic for multi-day events.
+    // Sets up event listeners and logic for multi-day carnivals.
     initializeMultiDayCarnivalFunctionality() {
         const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
         if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;

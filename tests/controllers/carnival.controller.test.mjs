@@ -820,7 +820,7 @@ describe('Carnival Controller', () => {
       expect(mySidelineService.syncCarnivals).toHaveBeenCalled();
       expect(req.flash).toHaveBeenCalledWith(
         'success_msg',
-        'MySideline sync completed. 5 new events imported.'
+        'MySideline sync completed. 5 new carnivals imported.'
       );
       expect(res.redirect).toHaveBeenCalledWith('/dashboard');
     });

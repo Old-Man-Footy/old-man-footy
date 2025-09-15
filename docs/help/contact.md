@@ -17,7 +17,7 @@ Choose the topic that best matches your question (e.g., General Inquiry, Club Su
 If your question relates to a specific club, include its name for faster support.
 
 ### Newsletter Signup
-Subscribe to receive updates and news about Masters Rugby League events and platform changes.
+Subscribe to receive updates and news about Masters Rugby League  and platform changes.
 
 ## Step-by-Step Guides
 **How to Send a Message:**
@@ -36,4 +36,4 @@ Subscribe to receive updates and news about Masters Rugby League events and plat
 - Be specific in your message for faster, more accurate support.
 - Always include your club name if your question is club-related.
 - Use the subject dropdown to route your inquiry correctly.
-- Subscribe to the newsletter to stay informed about new features and events.
+- Subscribe to the newsletter to stay informed about new features and .

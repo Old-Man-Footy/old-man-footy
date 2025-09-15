@@ -14,7 +14,7 @@ Edit the user’s name, email, and other info.
 Select roles for the user (e.g., delegate, admin).
 
 ### Link to Clubs/Carnivals
-Connect users to specific clubs or events for management.
+Connect users to specific clubs or  for management.
 
 ## Step-by-Step Guides
 **How to Edit User Details:**

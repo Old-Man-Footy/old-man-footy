@@ -79,7 +79,7 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
     const result = await service.syncMySidelineCarnivals();
     expect(result).toEqual({
       success: true,
-      eventsProcessed: 0,
+      carnivalsProcessed: 0,
       message: 'Sync disabled via configuration',
     });
   });
@@ -90,23 +90,23 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
     expect(result).toBeUndefined();
   });
 
-  it('handles no events found from scraper', async () => {
+  it('handles no carnivals found from scraper', async () => {
     dataService.deactivatePastCarnivals.mockResolvedValue({ success: true, deactivatedCount: 0 });
     scraperService.scrapeCarnivals.mockResolvedValue([]);
     const result = await service.syncMySidelineCarnivals();
     expect(syncLogMock.markCompleted).toHaveBeenCalledWith({
-      eventsProcessed: 0,
-      eventsCreated: 0,
-      eventsUpdated: 0,
+      carnivalsProcessed: 0,
+      carnivalsCreated: 0,
+      carnivalsUpdated: 0,
     });
     expect(result).toEqual({
       success: true,
-      eventsProcessed: 0,
-      message: 'No events found',
+      carnivalsProcessed: 0,
+      message: 'No carnivals found',
     });
   });
 
-  it('handles all events failing validation', async () => {
+  it('handles all carnivals failing validation', async () => {
     dataService.deactivatePastCarnivals.mockResolvedValue({ success: true, deactivatedCount: 0 });
     scraperService.scrapeCarnivals.mockResolvedValue([{ title: 'Carnival1' }]);
     scraperService.validateAndCleanData.mockImplementation(() => {
@@ -114,18 +114,18 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
     });
     const result = await service.syncMySidelineCarnivals();
     expect(syncLogMock.markCompleted).toHaveBeenCalledWith({
-      eventsProcessed: 0,
-      eventsCreated: 0,
-      eventsUpdated: 0,
+      carnivalsProcessed: 0,
+      carnivalsCreated: 0,
+      carnivalsUpdated: 0,
     });
     expect(result).toEqual({
       success: true,
-      eventsProcessed: 0,
-      message: 'No events passed validation',
+      carnivalsProcessed: 0,
+      message: 'No carnivals passed validation',
     });
   });
 
-  it('processes events and downloads logos', async () => {
+  it('processes carnivals and downloads logos', async () => {
     dataService.deactivatePastCarnivals.mockResolvedValue({ success: true, deactivatedCount: 1 });
     scraperService.scrapeCarnivals.mockResolvedValue([
       { title: 'Carnival1', clubLogoURL: 'http://logo.com/1', id: 1 },
@@ -159,14 +159,14 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
       { where: { id: 1 } }
     );
     expect(syncLogMock.markCompleted).toHaveBeenCalledWith({
-      eventsProcessed: 2,
-      eventsCreated: 2,
-      eventsUpdated: 0,
+      carnivalsProcessed: 2,
+      carnivalsCreated: 2,
+      carnivalsUpdated: 0,
     });
     expect(result.success).toBe(true);
-    expect(result.eventsProcessed).toBe(2);
-    expect(result.eventsCreated).toBe(2);
-    expect(result.eventsUpdated).toBe(0);
+    expect(result.carnivalsProcessed).toBe(2);
+    expect(result.carnivalsCreated).toBe(2);
+    expect(result.carnivalsUpdated).toBe(0);
     expect(result.lastSync).toBeInstanceOf(Date);
   });
 
@@ -192,7 +192,7 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
       { where: { id: 1 } }
     );
     expect(result.success).toBe(true);
-    expect(result.eventsProcessed).toBe(1);
+    expect(result.carnivalsProcessed).toBe(1);
   });
 
   it('handles errors and marks sync as failed', async () => {

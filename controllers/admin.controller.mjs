@@ -1247,7 +1247,7 @@ const showClaimCarnivalFormHandler = async (req, res) => {
 
     // Check if carnival can be claimed (MySideline import with no owner)
     if (carnival.isManuallyEntered) {
-        req.flash('error_msg', 'Can only claim ownership of MySideline imported events');
+        req.flash('error_msg', 'Can only claim ownership of MySideline imported carnivals');
         return res.redirect('/admin/carnivals');
     }
 
@@ -1855,9 +1855,9 @@ const syncMySidelineHandler = async (req, res) => {
                     adminAction: 'Manual MySideline sync triggered',
                     syncResult: result ? {
                         success: result.success,
-                        eventsProcessed: result.eventsProcessed || 0,
-                        eventsCreated: result.eventsCreated || 0,
-                        eventsUpdated: result.eventsUpdated || 0
+                        carnivalsProcessed: result.carnivalsProcessed || 0,
+                        carnivalsCreated: result.carnivalsCreated || 0,
+                        carnivalsUpdated: result.carnivalsUpdated || 0
                     } : { success: false, error: 'No result returned' }
                 }
             }
@@ -1865,13 +1865,13 @@ const syncMySidelineHandler = async (req, res) => {
         
         if (result && result.success) {
             const message = `MySideline sync completed successfully! ` +
-                `Processed ${result.eventsProcessed || 0} events ` +
-                `(${result.eventsCreated || 0} new, ${result.eventsUpdated || 0} updated)`;
+                `Processed ${result.carnivalsProcessed || 0} carnivals ` +
+                `(${result.carnivalsCreated || 0} new, ${result.carnivalsUpdated || 0} updated)`;
             
             req.flash('success_msg', message);
-            console.log(`✅ Manual MySideline sync completed: ${result.eventsProcessed || 0} events processed`);
+            console.log(`✅ Manual MySideline sync completed: ${result.carnivalsProcessed || 0} carnivals processed`);
         } else {
-            const errorMessage = result?.error || 'Sync completed but no events were processed';
+            const errorMessage = result?.error || 'Sync completed but no carnivals were processed';
             req.flash('warning_msg', `MySideline sync completed with issues: ${errorMessage}`);
             console.log(`⚠️ MySideline sync completed with issues: ${errorMessage}`);
         }

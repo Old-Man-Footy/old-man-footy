@@ -189,7 +189,7 @@ class DatabaseSeeder {
         
         let totalLinks = 0;
         
-        // Focus on major carnivals and upcoming events
+        // Focus on major and upcoming carnivals
         const majorCarnivals = this.createdEntities.carnivals.filter(carnival => 
             carnival.title.includes('Grand Final') || 
             carnival.title.includes('Championship') || 
@@ -198,7 +198,7 @@ class DatabaseSeeder {
         );
         
         for (const carnival of majorCarnivals) {
-            // Major carnivals get 2-6 sponsors, regular events get 0-3
+            // Major carnivals get 2-6 sponsors, regular carnivals get 0-3
             const isMajorCarnival = carnival.title.includes('Grand Final') || 
                                 carnival.title.includes('Championship');
             const maxSponsors = isMajorCarnival ? 6 : 3;
@@ -220,7 +220,7 @@ class DatabaseSeeder {
             for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
                 let sponsorPool;
                 
-                // First sponsor for major events: 50% chance of national sponsor
+                // First sponsor for major carnivals: 50% chance of national sponsor
                 if (i === 0 && isMajorCarnival && Math.random() < 0.5 && nationalSponsors.length > 0) {
                     sponsorPool = nationalSponsors.filter(s => availableSponsors.includes(s));
                 }
@@ -313,7 +313,7 @@ class DatabaseSeeder {
         
         // Process each carnival to add realistic club attendance
         for (const carnival of this.createdEntities.carnivals) {
-            // Skip past events (older than 3 months ago) - limited attendees for historical data
+            // Skip past carnivals (older than 3 months ago) - limited attendees for historical data
             const threeMonthsAgo = new Date();
             threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
             
@@ -348,7 +348,7 @@ class DatabaseSeeder {
             
             const selectedClubs = [];
             
-            // 75% local clubs, 25% interstate for major events
+            // 75% local clubs, 25% interstate for major carnivals
             const localCount = Math.ceil(numAttendees * 0.75);
             const interstateCount = numAttendees - localCount;
             
@@ -360,7 +360,7 @@ class DatabaseSeeder {
                 selectedClubs.push(selectedClub);
             }
             
-            // Select interstate clubs for major events
+            // Select interstate clubs for major carnivals
             const availableInterstateClubs = [...interstateClubs];
             for (let i = 0; i < interstateCount && availableInterstateClubs.length > 0; i++) {
                 const randomIndex = Math.floor(Math.random() * availableInterstateClubs.length);
@@ -422,16 +422,16 @@ class DatabaseSeeder {
                 
                 const paymentAmount = Math.floor(Math.random() * (feeRange.max - feeRange.min + 1)) + feeRange.min;
                 
-                // Payment status - past events are mostly paid, future events have mixed status
+                // Payment status - past carnivals are mostly paid, future carnivals have mixed status
                 let isPaid;
                 let paymentDate = null;
                 
                 if (isPastCarnival) {
-                    isPaid = Math.random() < 0.95; // 95% of past events are paid
+                    isPaid = Math.random() < 0.95; // 95% of past carnivals are paid
                 } else if (isUpcomingCarnival) {
-                    isPaid = Math.random() < 0.6; // 60% of future events are already paid
+                    isPaid = Math.random() < 0.6; // 60% of future carnivals are already paid
                 } else {
-                    isPaid = Math.random() < 0.8; // 80% of recent events are paid
+                    isPaid = Math.random() < 0.8; // 80% of recent carnivals are paid
                 }
                 
                 if (isPaid) {

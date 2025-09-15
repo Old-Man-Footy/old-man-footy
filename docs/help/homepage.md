@@ -4,7 +4,7 @@ title: Homepage Help
 ---
 
 ## Overview
-Welcome to Old Man Footy! This is your starting point for exploring Masters Rugby League carnivals and clubs across Australia. The homepage helps you discover upcoming events, find clubs, and get started as a delegate or participant.
+Welcome to Old Man Footy! This is your starting point for exploring Masters Rugby League carnivals and clubs across Australia. The homepage helps you discover upcoming , find clubs, and get started as a delegate or participant.
 
 ## Key Features Explained
 ### Hero Section

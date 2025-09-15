@@ -14,7 +14,7 @@ Shows all clubs, including their names, locations, and delegates.
 Button to update club information and assign new delegates.
 
 ### Assign Delegates
-Lets you select users to manage club profiles and events.
+Lets you select users to manage club profiles and .
 
 ## Step-by-Step Guides
 **How to Edit a Club:**
