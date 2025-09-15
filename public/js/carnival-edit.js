@@ -185,7 +185,7 @@ export const carnivalEditManager = {
                     mySidelineIdInput.value = extractedId;
                 }
             } else {
-                this.updateRegistrationLink(url, '✓ Custom registration link', 'text-info');
+                this.updateRegistrationLink(url, '✓ Custom registration link', 'text-dark');
             }
         } else {
             this.updateRegistrationLink(url, '⚠ Please enter a valid URL', 'text-warning');

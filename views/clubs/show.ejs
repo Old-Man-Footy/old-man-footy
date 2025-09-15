@@ -73,7 +73,7 @@
                                                 <h4 class="text-warning"><%= new Date().getFullYear() - club.establishedYear %></h4>
                                                 <p class="text-muted mb-0 small">Years Active</p>
                                             <% } else { %>
-                                                <h4 class="text-info">-</h4>
+                                                <h4 class="text-dark">-</h4>
                                                 <p class="text-muted mb-0 small">Years Active</p>
                                             <% } %>
                                         </div>
@@ -290,7 +290,7 @@
                     <h5 class="mb-0">
                         <i class="fas fa-users me-2"></i>Carnivals Attended by <%= club.clubName %>
                     </h5>
-                    <span class="badge bg-tertiary text-info"><%= attendingCarnivals.length %> Total</span>
+                    <span class="badge bg-tertiary text-dark"><%= attendingCarnivals.length %> Total</span>
                 </div>
                 <div class="card-body">
                     <% if (attendingCarnivals.length > 0) { %>

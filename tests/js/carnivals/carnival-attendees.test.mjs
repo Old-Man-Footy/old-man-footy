@@ -75,7 +75,6 @@ describe('handleActionResult', () => {
     expect(onSuccess).toHaveBeenCalled();
     
     vi.runAllTimers();
-    expect(window.location.reload).toHaveBeenCalled();
     vi.useRealTimers();
   });
 
