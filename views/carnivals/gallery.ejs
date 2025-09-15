@@ -50,14 +50,14 @@
                         <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                             <div class="gallery-item" data-image-id="<%= image.id %>">
                                 <div class="gallery-image-container">
-                                    <img src="/uploads/gallery/<%= image.filename %>" 
-                                         alt="<%= image.altText || 'Carnival gallery image' %>"
+                                    <img src="<%= image.url %>" 
+                                         alt="<%= image.attribution || 'Carnival gallery image' %>"
                                          class="gallery-image"
                                          loading="lazy"
                                          data-bs-toggle="modal" 
                                          data-bs-target="#imageModal"
-                                         data-image-src="/uploads/gallery/<%= image.filename %>"
-                                         data-image-alt="<%= image.altText || 'Carnival gallery image' %>"
+                                         data-image-src="<%= image.url %>"
+                                         data-image-alt="<%= image.attribution || 'Carnival gallery image' %>"
                                          data-image-index="<%= index %>">
                                     
                                     <% if (user && canUpload) { %>
@@ -72,9 +72,9 @@
                                     <% } %>
                                 </div>
                                 
-                                <% if (image.altText) { %>
+                                <% if (image.attribution) { %>
                                     <div class="gallery-image-caption">
-                                        <%= image.altText %>
+                                        <%= image.attribution %>
                                     </div>
                                 <% } %>
                             </div>
