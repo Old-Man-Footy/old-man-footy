@@ -59,14 +59,14 @@ vi.mock('../../models/index.mjs', () => {
     alternateNames: [],
     toJSON: vi.fn().mockImplementation(function () {
       // Return all properties except methods
-      const { toJSON, update, addSponsor, removeSponsor, getCarnivalCount, getSponsors, isUnclaimed, canUserClaim, getProxyCreator, ...rest } = this;
+      const { toJSON, update, addSponsor, removeSponsor, getCarnivalCount, getClubSponsors, isUnclaimed, canUserClaim, getProxyCreator, ...rest } = this;
       return { ...rest, ...overrides };
     }),
     update: vi.fn().mockResolvedValue(true),
     addSponsor: vi.fn().mockResolvedValue(true),
     removeSponsor: vi.fn().mockResolvedValue(true),
     getCarnivalCount: vi.fn().mockResolvedValue(5),
-    getSponsors: vi.fn().mockResolvedValue([]),
+    getClubSponsors: vi.fn().mockResolvedValue([]),
     isUnclaimed: vi.fn().mockReturnValue(false),
     canUserClaim: vi.fn().mockReturnValue(true),
     getProxyCreator: vi.fn().mockResolvedValue({ firstName: 'Proxy', lastName: 'Creator' }),
@@ -1048,7 +1048,7 @@ describe('Club Controller', () => {
           update: vi.fn().mockResolvedValue(true)
         };
         Sponsor.findByPk.mockResolvedValue(mockSponsor);
-        mockClub.getSponsors = vi.fn().mockResolvedValue([]); // Mock existing sponsors for displayOrder calculation
+        mockClub.getClubSponsors = vi.fn().mockResolvedValue([]); // Mock existing sponsors for displayOrder calculation
         Club.findByPk.mockResolvedValue(mockClub); // Ensure controller uses the correct club instance
 
         // Act

@@ -730,7 +730,7 @@ const addSponsorToClubHandler = async (req, res) => {
   }
 
   // Set display order for the sponsor
-  const currentSponsors = await club.getSponsors();
+  const currentSponsors = await club.getClubSponsors();
   const displayOrder = currentSponsors.length + 1;
 
   // Update the sponsor's display order
