@@ -107,44 +107,6 @@
                         </div>
                     <% }); %>
                 </div>
-
-                <!-- Sponsor Reordering Section -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-sort me-2"></i>
-                            Sponsor Display Order
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-3">
-                            Drag and drop sponsors to change their display order on your club page.
-                        </p>
-                        <div id="sponsor-order-list" class="list-group">
-                            <% sponsors.forEach(sponsor => { %>
-                                <div class="list-group-item d-flex justify-content-between align-items-center" 
-                                     data-sponsor-id="<%= sponsor.id %>">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-grip-vertical text-muted me-3" style="cursor: grab;"></i>
-                                        <div>
-                                            <strong><%= sponsor.sponsorName %></strong>
-                                            <% if (sponsor.sponsorshipLevel) { %>
-                                                <span class="badge bg-secondary ms-2"><%= sponsor.sponsorshipLevel %></span>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <small class="text-muted">
-                                        Priority: #<%= sponsor.displayOrder || '?' %>
-                                    </small>
-                                </div>
-                            <% }); %>
-                        </div>
-                        <button id="save-sponsor-order" class="btn btn-tertiary mt-3" style="display: none;">
-                            <i class="fas fa-save me-1"></i>Save New Order
-                        </button>
-                    </div>
-                </div>
-
             <% } else { %>
                 <!-- Empty State -->
                 <div class="text-center py-5">
