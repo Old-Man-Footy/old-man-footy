@@ -18,15 +18,19 @@ function setupDOM() {
     <input type="checkbox" name="upcoming" />
     <div class="alert-dismissible alert-success"><button class="btn-close"></button></div>
     <div id="imageCarousel">
-      <div class="carousel-track">
-        <div class="slide current-slide"></div>
-        <div class="slide"></div>
+      <div class="carousel-track-container">
+        <div class="carousel-track">
+          <div class="carousel-slide current-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+        </div>
       </div>
-      <button class="carousel-button--right"></button>
-      <button class="carousel-button--left"></button>
+      <button class="carousel-button carousel-button--right"></button>
+      <button class="carousel-button carousel-button--left"></button>
       <div class="carousel-nav">
-        <button class="dot current-slide"></button>
-        <button class="dot"></button>
+        <button class="carousel-indicator current-slide"></button>
+        <button class="carousel-indicator"></button>
+        <button class="carousel-indicator"></button>
       </div>
     </div>
   `;
@@ -171,21 +175,22 @@ describe('Image Carousel', () => {
 
   it('should move to next slide on next button click', () => {
     const nextButton = document.querySelector('.carousel-button--right');
-    const slides = document.querySelectorAll('.carousel-track .slide');
+    const slides = document.querySelectorAll('.carousel-slide');
     nextButton.click();
     expect(slides[1].classList.contains('current-slide')).toBe(true);
   });
 
   it('should move to previous slide on prev button click', () => {
     const prevButton = document.querySelector('.carousel-button--left');
-    const slides = document.querySelectorAll('.carousel-track .slide');
+    const slides = document.querySelectorAll('.carousel-slide');
     prevButton.click();
-    expect(slides[1].classList.contains('current-slide')).toBe(true);
+    // Previous from first slide should go to last slide (index 2)
+    expect(slides[2].classList.contains('current-slide')).toBe(true);
   });
 
   it('should auto-play slides', () => {
-    const slides = document.querySelectorAll('.carousel-track .slide');
-    vi.advanceTimersByTime(4000);
+    const slides = document.querySelectorAll('.carousel-slide');
+    vi.advanceTimersByTime(20000); // Match actual auto-play timing
     expect(slides[1].classList.contains('current-slide')).toBe(true);
   });
 });
