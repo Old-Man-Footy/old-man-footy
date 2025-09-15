@@ -18,11 +18,6 @@ export function sortSponsorsHierarchically(sponsors, context = 'default') {
     return [];
   }
 
-  // For carnival context, use display order with level fallback
-  if (context === 'carnival') {
-    return SponsorSortingService.sortByDisplayOrder(sponsors);
-  }
-  
   // For other contexts, use level-based sorting
   return SponsorSortingService.sortByLevel(sponsors);
 }
@@ -47,19 +42,11 @@ class SponsorSortingService {
       }
       
       // Secondary sort: sponsor name alphabetically
-      return a.sponsorName.localeCompare(b.sponsorName);
+      return (a.sponsorName || '').localeCompare(b.sponsorName || '');
     });
   }
 
-  /**
-   * Sort sponsors by sponsorship level and sponsor name (legacy method for backwards compatibility)
-   * @param {Array} sponsors - Array of sponsor objects
-   * @returns {Array} Sorted array of sponsors
-   */
-  static sortByDisplayOrder(sponsors) {
-    // Since displayOrder is being removed, use level-based sorting
-    return this.sortByLevel(sponsors);
-  }
+
 
   /**
    * Sort sponsors by value (highest first)
