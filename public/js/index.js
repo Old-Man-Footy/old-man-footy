@@ -10,8 +10,6 @@ export const indexPageManager = {
 
     initialize() {
         this.cacheElements();
-        this.injectStyles();
-        this.bindEvents();
         this.initializeSubscriptionForm();
     },
 
