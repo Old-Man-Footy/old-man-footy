@@ -69,11 +69,8 @@ export const indexPageManager = {
     initializeCarousel() {
         const slides = this.elements.slides;
         if (!slides || slides.length === 0) return;
-        const slideWidth = slides[0].getBoundingClientRect().width || slides[0].offsetWidth || 0;
-        slides.forEach((slide, index) => {
-            slide.style.left = `${slideWidth * index}px`;
-        });
-        // Set initial classes
+        
+        // Set initial classes for opacity-based transitions
         slides.forEach((s) => s.classList.remove('current-slide'));
         this.elements.dots.forEach((d) => d.classList.remove('current-slide'));
         slides[0]?.classList.add('current-slide');
@@ -94,20 +91,20 @@ export const indexPageManager = {
 
     moveToSlide(targetIndex) {
         const slides = this.elements.slides;
-        const track = this.elements.track;
-        if (!slides || !track || targetIndex < 0 || targetIndex >= slides.length) return;
-        const targetSlide = slides[targetIndex];
-        track.style.transform = `translateX(-${targetSlide.style.left})`;
+        if (!slides || targetIndex < 0 || targetIndex >= slides.length) return;
+        
+        // Update slide visibility using opacity-based transitions
         slides.forEach((s) => s.classList.remove('current-slide'));
         this.elements.dots.forEach((d) => d.classList.remove('current-slide'));
-        targetSlide.classList.add('current-slide');
+        
+        slides[targetIndex]?.classList.add('current-slide');
         this.elements.dots[targetIndex]?.classList.add('current-slide');
         this.currentSlide = targetIndex;
     },
 
     startAutoAdvance() {
         if (this.autoAdvanceTimer) clearInterval(this.autoAdvanceTimer);
-        this.autoAdvanceTimer = setInterval(() => this.moveToSlide(this.nextIndex()), 5000);
+        this.autoAdvanceTimer = setInterval(() => this.moveToSlide(this.nextIndex()), 30000);
     },
 
     initializeSubscriptionForm() {

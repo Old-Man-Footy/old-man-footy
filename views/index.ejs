@@ -155,20 +155,21 @@
             <div class="image-carousel" id="imageCarousel">
                 <div class="carousel-track-container">
                     <div class="carousel-track">
-                        <% carouselImages.forEach((image, index) => { %>
-                            <div class="carousel-slide <%= index === 0 ? 'current-slide' : '' %>" data-source="<%= image.source %>" data-type="<%= image.type %>">
-                                <div class="carousel-image-wrapper">
-                                    <img src="<%= image.url %>" alt="<%= image.source %> photo" class="carousel-image" loading="lazy">
-                                    <div class="carousel-image-overlay">
-                                        <div class="carousel-image-info">
-                                            <span class="badge bg-primary"><%= image.source %></span>
-                                            <% if (image.type === 'gallery') { %>
-                                                <span class="badge bg-secondary">Gallery</span>
-                                            <% } else if (image.type === 'promotional') { %>
-                                                <span class="badge bg-tertiary">Promo</span>
-                                            <% } %>
+                        <% 
+                        // Group images into sets of 3 for the carousel
+                        const imageGroups = [];
+                        for (let i = 0; i < carouselImages.length; i += 3) {
+                            imageGroups.push(carouselImages.slice(i, i + 3));
+                        }
+                        %>
+                        <% imageGroups.forEach((group, groupIndex) => { %>
+                            <div class="carousel-slide <%= groupIndex === 0 ? 'current-slide' : '' %>" data-group="<%= groupIndex %>">
+                                <div class="carousel-images-group">
+                                    <% group.forEach((image, imageIndex) => { %>
+                                        <div class="carousel-image-wrapper">
+                                            <img src="<%= image.url %>" alt="<%= image.source %> photo" class="carousel-image" loading="lazy">
                                         </div>
-                                    </div>
+                                    <% }) %>
                                 </div>
                             </div>
                         <% }) %>
@@ -185,16 +186,18 @@
                 
                 <!-- Dots indicator -->
                 <div class="carousel-nav">
-                    <% carouselImages.forEach((image, index) => { %>
-                        <button class="carousel-indicator <%= index === 0 ? 'current-slide' : '' %>" data-slide="<%= index %>"></button>
-                    <% }) %>
+                    <% 
+                    const totalGroups = Math.ceil(carouselImages.length / 3);
+                    for (let i = 0; i < totalGroups; i++) { %>
+                        <button class="carousel-indicator <%= i === 0 ? 'current-slide' : '' %>" data-slide="<%= i %>"></button>
+                    <% } %>
                 </div>
             </div>
         </div>
         
         <div class="text-center mt-3">
             <small class="text-muted">
-                Showing recent photos from carnivals, clubs, and sponsors • 
+                Showing   photos from recent carnivals • 
                 <span id="carouselStats"><%= carouselImages.length %> images</span>
             </small>
         </div>
