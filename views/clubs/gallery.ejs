@@ -40,136 +40,14 @@
                 <% } %>
             </div>
 
-            <!-- Gallery Grid -->
-            <div id="galleryContainer" class="row g-3">
-                <% if (images && images.length > 0) { %>
-                    <% images.forEach((image, index) => { %>
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                            <div class="gallery-item" data-image-id="<%= image.id %>">
-                                <div class="gallery-image-container">
-                                    <img src="<%= image.url %>" 
-                                         alt="<%= image.attribution || 'Club gallery image' %>"
-                                         class="gallery-image"
-                                         loading="lazy"
-                                         data-bs-toggle="modal" 
-                                         data-bs-target="#imageModal"
-                                         data-image-src="<%= image.url %>"
-                                         data-image-alt="<%= image.attribution || 'Club gallery image' %>"
-                                         data-image-index="<%= index %>">
-                                    
-                                    <% if (user && canUpload) { %>
-                                        <div class="gallery-image-overlay">
-                                            <button type="button" 
-                                                    class="btn btn-danger btn-sm delete-image-btn"
-                                                    data-image-id="<%= image.id %>"
-                                                    title="Delete Image">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    <% } %>
-                                </div>
-                            </div>
-                        </div>
-                    <% }) %>
-                <% } else { %>
-                    <div class="col-12">
-                        <div class="text-center py-5">
-                            <i class="fas fa-images fa-3x text-muted mb-3"></i>
-                            <h3 class="text-muted">No Images Yet</h3>
-                            <p class="text-muted">
-                                <% if (user && canUpload) { %>
-                                    Start building the club gallery by uploading some images.
-                                <% } else { %>
-                                    Images will appear here once they are uploaded by club delegates.
-                                <% } %>
-                            </p>
-                            <% if (user && canUpload) { %>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                                    <i class="fas fa-upload me-1"></i>
-                                    Upload First Images
-                                </button>
-                            <% } %>
-                        </div>
-                    </div>
-                <% } %>
-            </div>
+            <%- include('../partials/gallery', { 
+                images: images, 
+                user: user, 
+                canUpload: canUpload, 
+                entity: club, 
+                entityType: 'club',
+                entityId: 'clubId'
+            }) %>
         </div>
     </div>
 </div>
-
-<% if (user && canUpload) { %>
-<!-- Upload Modal -->
-<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="uploadModalLabel">Upload Images to Gallery</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <input type="hidden" id="clubId" value="<%= club.id %>">
-                    
-                    <div class="mb-3">
-                        <label for="images" class="form-label">Select Images</label>
-                        <input type="file" 
-                               class="form-control" 
-                               id="images" 
-                               name="images" 
-                               multiple 
-                               accept="image/jpeg,image/png,image/gif,image/webp"
-                               required>
-                        <div class="form-text">
-                            Select up to 10 images. Maximum 5MB each. Supported formats: JPEG, PNG, GIF, WebP.
-                        </div>
-                    </div>
-                    
-                    <div id="imagePreviewContainer" class="row g-2 mb-3" style="display: none;">
-                        <!-- Image previews will be inserted here -->
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="progress" style="display: none;">
-                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="uploadBtn" disabled>
-                    <i class="fas fa-upload me-1"></i>
-                    Upload Images
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<% } %>
-
-<!-- Image Viewer Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalLabel">Gallery Image</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" alt="" class="img-fluid">
-                <div id="imageNavigation" class="mt-3">
-                    <button type="button" class="btn btn-outline-primary me-2" id="prevImageBtn">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </button>
-                    <span id="imageCounter" class="mx-3"></span>
-                    <button type="button" class="btn btn-outline-primary ms-2" id="nextImageBtn">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<link rel="stylesheet" href="/styles/gallery.styles.css">
-<script type="module" src="/js/gallery-manager.js"></script>
