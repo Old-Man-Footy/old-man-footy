@@ -157,10 +157,14 @@ Sponsor.init({
     onDelete: 'CASCADE',
     comment: 'The club that owns this sponsor'
   },
-  displayOrder: {
-    type: DataTypes.INTEGER,
+  sponsorshipLevel: {
+    type: DataTypes.STRING(20),
     allowNull: true,
-    comment: 'Display order for sponsor listing within a club'
+    defaultValue: 'Supporting',
+    validate: {
+      isIn: [['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind']]
+    },
+    comment: 'Sponsorship level (Gold, Silver, Bronze, Supporting, In-Kind)'
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -178,7 +182,8 @@ Sponsor.init({
   indexes: [
     {
       unique: true,
-      fields: ['sponsorName']
+      fields: ['sponsorName', 'clubId', 'state', 'location'],
+      name: 'sponsors_composite_unique'
     },
     {
       fields: ['state']
@@ -188,6 +193,9 @@ Sponsor.init({
     },
     {
       fields: ['clubId']
+    },
+    {
+      fields: ['sponsorshipLevel']
     }
   ]
 });

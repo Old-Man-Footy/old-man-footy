@@ -497,18 +497,13 @@ const showClubSponsorsHandler = async (req, res, next) => {
       req.flash('error_msg', 'Club not found.');
       return res.redirect('/dashboard');
     }
-    // Sort sponsors by displayOrder
-    const sponsors = club.clubSponsors
-      ? club.clubSponsors.sort((a, b) => {
-          const priorityA = a.displayOrder || 999;
-          const priorityB = b.displayOrder || 999;
-          return priorityA - priorityB;
-        })
-      : [];
+    // Sort sponsors using the hierarchical sorting service
+    const sortedSponsors = sortSponsorsHierarchically(club.clubSponsors, 'club');
+    
     return res.render('clubs/sponsors', {
       title: 'Manage Club Sponsors',
       club,
-      sponsors,
+      sponsors: sortedSponsors,
       additionalCSS: ['/styles/club.styles.css'],
     });
   } catch (err) {

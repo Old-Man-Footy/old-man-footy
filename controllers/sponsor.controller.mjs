@@ -43,7 +43,22 @@ export const showSponsorListings = asyncHandler(async (req, res) => {
 
   const sponsors = await Sponsor.findAll({
     where: whereClause,
-    order: [['sponsorName', 'ASC']],
+    order: [
+      [
+        { 
+          raw: `CASE 
+            WHEN sponsorshipLevel = 'Gold' THEN 1
+            WHEN sponsorshipLevel = 'Silver' THEN 2
+            WHEN sponsorshipLevel = 'Bronze' THEN 3
+            WHEN sponsorshipLevel = 'Supporting' THEN 4
+            WHEN sponsorshipLevel = 'In-Kind' THEN 5
+            ELSE 6
+          END`
+        }, 
+        'ASC'
+      ],
+      ['sponsorName', 'ASC']
+    ],
     include: [
       {
         model: Club,

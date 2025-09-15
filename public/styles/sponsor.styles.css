@@ -11,11 +11,67 @@
    BASE & LAYOUT
    ================================ */
 
-   .sponsor-grid {
+.sponsor-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
     margin-top: 1rem;
+}
+
+/* ================================
+   SPONSORSHIP LEVEL BADGES
+   ================================ */
+
+.sponsorship-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.sponsorship-badge.gold {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #8B4513;
+    box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+}
+
+.sponsorship-badge.silver {
+    background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+    color: #2C2C2C;
+    box-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
+}
+
+.sponsorship-badge.bronze {
+    background: linear-gradient(135deg, #CD7F32, #B8860B);
+    color: #FFFFFF;
+    box-shadow: 0 2px 4px rgba(205, 127, 50, 0.3);
+}
+
+.sponsorship-badge.supporting {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: #FFFFFF;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.sponsorship-badge.in-kind {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    color: #FFFFFF;
+    box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
+}
+
+/* Dark mode sponsorship badge adjustments */
+[data-bs-theme="dark"] .sponsorship-badge.gold {
+    background: linear-gradient(135deg, #B8860B, #DAA520);
+    color: #000000;
+}
+
+[data-bs-theme="dark"] .sponsorship-badge.silver {
+    background: linear-gradient(135deg, #A8A8A8, #909090);
+    color: #FFFFFF;
 }
 
 .search-filters {
@@ -184,11 +240,11 @@
     margin-bottom: 0.5rem;
 }
 
-.sponsor-tier-platinum { background: #e5e4e2; color: #333; }
 .sponsor-tier-gold { background: #ffd700; color: #333; }
 .sponsor-tier-silver { background: #c0c0c0; color: #333; }
 .sponsor-tier-bronze { background: #cd7f32; color: white; }
-.sponsor-tier-community { background: #28a745; color: white; }
+.sponsor-tier-supporting { background: #28a745; color: white; }
+.sponsor-tier-in-kind { background: #6f42c1; color: white; }
 
 .sponsor-description {
     color: #495057;
@@ -492,9 +548,11 @@
     color: var(--rugby-light-green) !important;
 }
 
-[data-theme="dark"] .sponsor-tier-platinum { background: #b8b8b8 !important; color: #1a1a1a !important; }
 [data-theme="dark"] .sponsor-tier-gold { background: #d4af37 !important; color: #1a1a1a !important; }
 [data-theme="dark"] .sponsor-tier-silver { background: #a0a0a0 !important; color: #1a1a1a !important; }
+[data-theme="dark"] .sponsor-tier-bronze { background: #b8860b !important; color: #1a1a1a !important; }
+[data-theme="dark"] .sponsor-tier-supporting { background: #32cd32 !important; color: #1a1a1a !important; }
+[data-theme="dark"] .sponsor-tier-in-kind { background: #9370db !important; color: white !important; }
 
 /* Dark Mode Form Controls */
 [data-theme="dark"] .form-control,

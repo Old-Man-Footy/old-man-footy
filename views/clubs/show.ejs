@@ -532,7 +532,9 @@
                                                 </a>
                                             </h6>
                                             <% if (sponsor.sponsorshipLevel) { %>
-                                                <span class="badge bg-secondary small"><%= sponsor.sponsorshipLevel %></span>
+                                                <span class="sponsorship-badge <%= sponsor.sponsorshipLevel.toLowerCase().replace(/\s+/g, '-') %> small">
+                                                    <%= sponsor.sponsorshipLevel %>
+                                                </span>
                                             <% } %>
                                             <% if (sponsor.businessType) { %>
                                                 <div class="text-muted small"><%= sponsor.businessType %></div>

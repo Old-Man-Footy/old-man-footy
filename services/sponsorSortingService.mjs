@@ -32,7 +32,7 @@ export function sortSponsorsHierarchically(sponsors, context = 'default') {
  */
 class SponsorSortingService {
   /**
-   * Sort sponsors by sponsorship level and creation date
+   * Sort sponsors by sponsorship level and sponsor name
    * @param {Array} sponsors - Array of sponsor objects
    * @returns {Array} Sorted array of sponsors
    */
@@ -46,40 +46,19 @@ class SponsorSortingService {
         return levelA - levelB;
       }
       
-      // Secondary sort: creation date (newest first within same level)
-      return new Date(b.createdAt) - new Date(a.createdAt);
+      // Secondary sort: sponsor name alphabetically
+      return a.sponsorName.localeCompare(b.sponsorName);
     });
   }
 
   /**
-   * Sort sponsors by display order if available, fallback to level sorting
+   * Sort sponsors by sponsorship level and sponsor name (legacy method for backwards compatibility)
    * @param {Array} sponsors - Array of sponsor objects
    * @returns {Array} Sorted array of sponsors
    */
   static sortByDisplayOrder(sponsors) {
-    return sponsors.sort((a, b) => {
-      // Primary sort: displayOrder (if both have it)
-      if (a.displayOrder !== null && b.displayOrder !== null) {
-        if (a.displayOrder !== b.displayOrder) {
-          return a.displayOrder - b.displayOrder;
-        }
-      }
-      
-      // If one has displayOrder and other doesn't, prioritize the one with displayOrder
-      if (a.displayOrder !== null && b.displayOrder === null) return -1;
-      if (a.displayOrder === null && b.displayOrder !== null) return 1;
-      
-      // Fallback to level-based sorting
-      const levelA = SPONSORSHIP_LEVEL_ORDER[a.sponsorshipLevel] || 999;
-      const levelB = SPONSORSHIP_LEVEL_ORDER[b.sponsorshipLevel] || 999;
-      
-      if (levelA !== levelB) {
-        return levelA - levelB;
-      }
-      
-      // Final fallback: creation date
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
+    // Since displayOrder is being removed, use level-based sorting
+    return this.sortByLevel(sponsors);
   }
 
   /**

@@ -90,8 +90,8 @@
                             <div class="sponsor-info">
                                 <div class="sponsor-name"><%= sponsor.sponsorName %></div>
                                 
-                                <span class="sponsor-tier tier-<%= sponsor.sponsorshipLevel ? sponsor.sponsorshipLevel.toLowerCase() : 'bronze' %>">
-                                    <%= sponsor.sponsorshipLevel || 'Bronze' %>
+                                <span class="sponsor-tier sponsor-tier-<%= sponsor.sponsorshipLevel ? sponsor.sponsorshipLevel.toLowerCase().replace(/\s+/g, '-') : 'supporting' %>">
+                                    <%= sponsor.sponsorshipLevel || 'Supporting' %>
                                 </span>
                                 
                                 <% if (sponsor.businessType) { %>
