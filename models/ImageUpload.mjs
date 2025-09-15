@@ -65,33 +65,77 @@ class ImageUpload extends Model {
   /**
    * Get images for a specific carnival
    * @param {number} carnivalId - Carnival ID
-   * @returns {Promise<Array>} Array of carnival images
+   * @param {Object} options - Pagination options
+   * @param {number} options.page - Page number (1-based)
+   * @param {number} options.limit - Images per page (default: 12)
+   * @returns {Promise<Object>} Object with images array and pagination info
    */
-  static async getCarnivalImages(carnivalId) {
-    if (!carnivalId) return [];
+  static async getCarnivalImages(carnivalId, options = {}) {
+    if (!carnivalId) return { images: [], pagination: { page: 1, limit: 12, total: 0, totalPages: 0 } };
     
-    return await this.findAll({
+    const { page = 1, limit = 12 } = options;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await this.findAndCountAll({
       where: {
         carnivalId: carnivalId
       },
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit: limit,
+      offset: offset
     });
+
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      images: rows,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: count,
+        totalPages: totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    };
   }
 
   /**
    * Get images for a specific club
    * @param {number} clubId - Club ID
-   * @returns {Promise<Array>} Array of club images
+   * @param {Object} options - Pagination options
+   * @param {number} options.page - Page number (1-based)
+   * @param {number} options.limit - Images per page (default: 12)
+   * @returns {Promise<Object>} Object with images array and pagination info
    */
-  static async getClubImages(clubId) {
-    if (!clubId) return [];
+  static async getClubImages(clubId, options = {}) {
+    if (!clubId) return { images: [], pagination: { page: 1, limit: 12, total: 0, totalPages: 0 } };
     
-    return await this.findAll({
+    const { page = 1, limit = 12 } = options;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await this.findAndCountAll({
       where: {
         clubId: clubId
       },
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit: limit,
+      offset: offset
     });
+
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      images: rows,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: count,
+        totalPages: totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    };
   }
 
   /**

@@ -1392,6 +1392,8 @@ export const showAllPlayers = asyncHandler(async (req, res) => {
  */
 const viewCarnivalGalleryHandler = asyncHandler(async (req, res) => {
   const carnivalId = parseInt(req.params.id);
+  const page = parseInt(req.query.page) || 1;
+  const limit = 12; // 12 images per page
   
   if (!carnivalId) {
     req.flash('error', 'Invalid carnival ID');
@@ -1405,9 +1407,9 @@ const viewCarnivalGalleryHandler = asyncHandler(async (req, res) => {
     return res.redirect('/carnivals');
   }
 
-  // Get gallery images for this carnival
-  const { ImageUpload } = await import('../models/index.mjs');
-  const images = await ImageUpload.getCarnivalImages(carnivalId);
+  // Get gallery images for this carnival with pagination
+  const ImageUpload = (await import('../models/ImageUpload.mjs')).default;
+  const result = await ImageUpload.getCarnivalImages(carnivalId, { page, limit });
 
   // Check if user can upload images for this carnival
   let canUpload = false;
@@ -1418,7 +1420,8 @@ const viewCarnivalGalleryHandler = asyncHandler(async (req, res) => {
   res.render('carnivals/gallery', {
     title: `Gallery - ${carnival.title}`,
     carnival: carnival,
-    images: images,
+    images: result.images,
+    pagination: result.pagination,
     canUpload: canUpload,
     additionalCSS: ['/styles/gallery.styles.css'],
     additionalJS: ['/js/gallery-manager.js']

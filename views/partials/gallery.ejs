@@ -52,6 +52,91 @@
     <% } %>
 </div>
 
+<!-- Pagination Controls -->
+<% if (pagination && pagination.totalPages > 1) { %>
+<nav aria-label="Gallery pagination" class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="pagination-info text-muted">
+            Showing <%= ((pagination.page - 1) * pagination.limit) + 1 %> - 
+            <%= Math.min(pagination.page * pagination.limit, pagination.total) %> 
+            of <%= pagination.total %> images
+        </div>
+    </div>
+    
+    <ul class="pagination justify-content-center">
+        <!-- Previous Button -->
+        <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+            <% if (pagination.hasPrev) { %>
+                <a class="page-link" href="?page=<%= pagination.page - 1 %>" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                    <span class="sr-only">Previous</span>
+                </a>
+            <% } else { %>
+                <span class="page-link" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                    <span class="sr-only">Previous</span>
+                </span>
+            <% } %>
+        </li>
+
+        <!-- Page Numbers -->
+        <% 
+        const startPage = Math.max(1, pagination.page - 2);
+        const endPage = Math.min(pagination.totalPages, pagination.page + 2);
+        
+        // Show first page if we're not near the beginning
+        if (startPage > 1) { %>
+            <li class="page-item">
+                <a class="page-link" href="?page=1">1</a>
+            </li>
+            <% if (startPage > 2) { %>
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            <% } %>
+        <% } %>
+
+        <!-- Current range of pages -->
+        <% for (let i = startPage; i <= endPage; i++) { %>
+            <li class="page-item <%= i === pagination.page ? 'active' : '' %>">
+                <% if (i === pagination.page) { %>
+                    <span class="page-link" aria-current="page"><%= i %></span>
+                <% } else { %>
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                <% } %>
+            </li>
+        <% } %>
+
+        <!-- Show last page if we're not near the end -->
+        <% if (endPage < pagination.totalPages) { %>
+            <% if (endPage < pagination.totalPages - 1) { %>
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            <% } %>
+            <li class="page-item">
+                <a class="page-link" href="?page=<%= pagination.totalPages %>"><%= pagination.totalPages %></a>
+            </li>
+        <% } %>
+
+        <!-- Next Button -->
+        <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+            <% if (pagination.hasNext) { %>
+                <a class="page-link" href="?page=<%= pagination.page + 1 %>" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                    <span class="sr-only">Next</span>
+                </a>
+            <% } else { %>
+                <span class="page-link" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                    <span class="sr-only">Next</span>
+                </span>
+            <% } %>
+        </li>
+    </ul>
+</nav>
+<% } %>
+
 <% if (user && canUpload) { %>
 <!-- Upload Modal -->
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">

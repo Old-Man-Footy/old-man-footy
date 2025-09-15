@@ -1688,6 +1688,8 @@ const searchClubsHandler = async (req, res) => {
  */
 const viewClubGalleryHandler = async (req, res) => {
   const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = 12; // 12 images per page
 
   try {
     // Get club details
@@ -1705,9 +1707,9 @@ const viewClubGalleryHandler = async (req, res) => {
       return res.redirect('/clubs');
     }
 
-    // Get gallery images
+    // Get gallery images with pagination
     const ImageUpload = (await import('../models/ImageUpload.mjs')).default;
-    const images = await ImageUpload.getClubImages(id);
+    const result = await ImageUpload.getClubImages(id, { page, limit });
 
     // Check if user can manage images (for showing upload button)
     let canUpload = false;
@@ -1718,7 +1720,8 @@ const viewClubGalleryHandler = async (req, res) => {
     res.render('clubs/gallery', {
       title: `${club.clubName} - Gallery`,
       club,
-      images: images || [],
+      images: result.images || [],
+      pagination: result.pagination,
       canUpload,
       user: req.user || null,
       additionalCSS: ['/styles/club.styles.css', '/styles/gallery.styles.css']
