@@ -157,17 +157,6 @@
                                                             <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
                                                     </div>
-                                                    <div class="card-footer bg-transparent">
-                                                        <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
-                                                            <i class="fas fa-eye me-1"></i>View Details
-                                                        </a>
-                                                        <% if (carnival.registrationLink) { %>
-                                                            <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                               class="btn btn-tertiary btn-sm">
-                                                                <i class="fas fa-user-plus me-1"></i>Register
-                                                            </a>
-                                                        <% } %>
-                                                    </div>
                                                 </div>
                                             </div>
                                         <% }); %>
@@ -277,17 +266,6 @@
                                                         <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                     </div>
                                                 </div>
-                                                <div class="card-footer bg-transparent">
-                                                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-eye me-1"></i>View Details
-                                                    </a>
-                                                    <% if (new Date(carnival.date) >= new Date() && carnival.registrationLink) { %>
-                                                        <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                           class="btn btn-tertiary btn-sm">
-                                                            <i class="fas fa-user-plus me-1"></i>Register
-                                                        </a>
-                                                    <% } %>
-                                                </div>
                                             </div>
                                         </div>
                                     <% }); %>
@@ -388,17 +366,6 @@
                                                             <span class="badge bg-info text-dark me-1">Attending</span>
                                                             <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                         </div>
-                                                    </div>
-                                                    <div class="card-footer bg-transparent">
-                                                        <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
-                                                            <i class="fas fa-eye me-1"></i>View Details
-                                                        </a>
-                                                        <% if (carnival.registrationLink) { %>
-                                                            <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                               class="btn btn-tertiary btn-sm">
-                                                                <i class="fas fa-user-plus me-1"></i>Register
-                                                            </a>
-                                                        <% } %>
                                                     </div>
                                                 </div>
                                             </div>
@@ -520,17 +487,6 @@
                                                         <% } %>
                                                         <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
                                                     </div>
-                                                </div>
-                                                <div class="card-footer bg-transparent">
-                                                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-eye me-1"></i>View Details
-                                                    </a>
-                                                    <% if (new Date(carnival.date) >= new Date() && carnival.registrationLink) { %>
-                                                        <a href="<%= carnival.registrationLink %>" target="_blank" 
-                                                           class="btn btn-tertiary btn-sm">
-                                                            <i class="fas fa-user-plus me-1"></i>Register
-                                                        </a>
-                                                    <% } %>
                                                 </div>
                                             </div>
                                         </div>

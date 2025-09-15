@@ -1,4 +1,4 @@
-<%- include('partials/header') %>
+<%- include('../partials/header') %>
 
 <div class="container">
     <div class="row">
@@ -28,7 +28,7 @@
                     </p>
                 </div>
                 
-                <% if (user && canManageClub) { %>
+                <% if (user && canManage) { %>
                     <div class="btn-group">
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
                             <i class="fas fa-upload me-1"></i>
@@ -59,7 +59,7 @@
                                          data-image-alt="<%= image.altText || 'Club gallery image' %>"
                                          data-image-index="<%= index %>">
                                     
-                                    <% if (user && canManageClub) { %>
+                                    <% if (user && canManage) { %>
                                         <div class="gallery-image-overlay">
                                             <button type="button" 
                                                     class="btn btn-danger btn-sm delete-image-btn"
@@ -85,13 +85,13 @@
                             <i class="fas fa-images fa-3x text-muted mb-3"></i>
                             <h3 class="text-muted">No Images Yet</h3>
                             <p class="text-muted">
-                                <% if (user && canManageClub) { %>
+                                <% if (user && canManage) { %>
                                     Start building your club gallery by uploading some images.
                                 <% } else { %>
                                     Images will appear here once they are uploaded by the club delegates.
                                 <% } %>
                             </p>
-                            <% if (user && canManageClub) { %>
+                            <% if (user && canManage) { %>
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
                                     <i class="fas fa-upload me-1"></i>
                                     Upload First Images
@@ -105,7 +105,7 @@
     </div>
 </div>
 
-<% if (user && canManageClub) { %>
+<% if (user && canManage) { %>
 <!-- Upload Modal -->
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -182,4 +182,4 @@
 <link rel="stylesheet" href="/styles/gallery.styles.css">
 <script type="module" src="/js/gallery-manager.js"></script>
 
-<%- include('partials/footer') %>
+<%- include('../partials/footer') %>
