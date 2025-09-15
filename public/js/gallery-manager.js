@@ -300,6 +300,27 @@ export const galleryManager = {
     initializeImageModal() {
         // Collect all gallery images
         this.updateImageList();
+        
+        // Initialize modal instance once
+        if (this.elements.imageModal && !this.modalInstance) {
+            this.modalInstance = new bootstrap.Modal(this.elements.imageModal, {
+                backdrop: true,
+                keyboard: true,
+                focus: true
+            });
+            
+            // Add event listeners to ensure proper cleanup
+            this.elements.imageModal.addEventListener('hidden.bs.modal', () => {
+                // Force remove any lingering backdrops
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+                
+                // Ensure body classes are cleaned up
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            });
+        }
     },
 
     updateImageList() {
@@ -311,7 +332,7 @@ export const galleryManager = {
     },
 
     openImageModal(imageSrc, imageAlt, imageIndex) {
-        if (!this.elements.modalImage) return;
+        if (!this.elements.modalImage || !this.modalInstance) return;
 
         this.currentImageIndex = imageIndex;
         this.elements.modalImage.src = imageSrc;
@@ -319,8 +340,7 @@ export const galleryManager = {
 
         this.updateModalNavigation();
 
-        const modal = new bootstrap.Modal(this.elements.imageModal);
-        modal.show();
+        this.modalInstance.show();
     },
 
     showPrevImage: () => {
@@ -375,8 +395,9 @@ export const galleryManager = {
                 galleryManager.showNextImage();
                 break;
             case 'Escape':
-                const modal = bootstrap.Modal.getInstance(galleryManager.elements.imageModal);
-                if (modal) modal.hide();
+                if (galleryManager.modalInstance) {
+                    galleryManager.modalInstance.hide();
+                }
                 break;
         }
     },
