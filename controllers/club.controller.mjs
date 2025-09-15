@@ -1706,13 +1706,13 @@ const viewClubGalleryHandler = async (req, res) => {
     }
 
     // Get gallery images
-    const { ImageUpload } = await import('../models/ImageUpload.mjs');
-    const images = await ImageUpload.getImagesByEntity('club', id);
+    const ImageUpload = (await import('../models/ImageUpload.mjs')).default;
+    const images = await ImageUpload.getClubImages(id);
 
     // Check if user can manage images (for showing upload button)
     let canManage = false;
     if (req.user) {
-      canManage = await ImageUpload.canUserManageImage(req.user.id, 'club', id);
+      canManage = ImageUpload.canUserUploadForClub(req.user, parseInt(id));
     }
 
     res.render('clubs/gallery', {
