@@ -47,9 +47,10 @@
 .gallery-image-caption {
     padding: 12px;
     font-size: 0.875rem;
-    color: #6c757d;
+    color: var(--light);
     text-align: center;
     border-top: 1px solid #e9ecef;
+    background-color: var(--rugby-green);
 }
 
 /* Upload Modal Styles */
@@ -238,7 +239,7 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     .gallery-item {
-        background: #2d3748;
+        background: var(--rugby-green);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     
@@ -246,18 +247,13 @@
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
     
-    .gallery-image-caption {
-        color: #a0aec0;
-        border-top-color: #4a5568;
-    }
-    
     .image-preview {
-        background: #2d3748;
-        border-color: #4a5568;
+        background: var(--rugby-green);
+        border-color: var(--rugby-dark-green);
     }
     
     .empty-gallery i {
-        color: #4a5568;
+        color: var(--rugby-dark-green);
     }
     
     .empty-gallery h3 {
