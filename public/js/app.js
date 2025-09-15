@@ -483,6 +483,12 @@ const oldmanfooty = {
                 window.themeManager.setupSystemThemeListener();
             }
 
+            // Initialize carousel
+            initializeImageCarousel();
+
+            // Handle window resize
+            window.addEventListener('resize', handleCarouselResize);
+
             if (this.utils) {
                 console.log('Old Man Footy app initialized');
             }
@@ -500,53 +506,75 @@ window.oldmanfooty = oldmanfooty;
 
 /**
  * Initialize image carousel functionality
+ * CSS-driven carousel with smooth transitions
  */
 function initializeImageCarousel() {
     const carousel = document.getElementById('imageCarousel');
     if (!carousel) return;
 
-    const track = carousel.querySelector('.carousel-track');
-    const slides = Array.from(track.children);
+    const slides = Array.from(carousel.querySelectorAll('.carousel-slide'));
     const nextButton = carousel.querySelector('.carousel-button--right');
     const prevButton = carousel.querySelector('.carousel-button--left');
     const dotsNav = carousel.querySelector('.carousel-nav');
-    const dots = Array.from(dotsNav.children);
+    const dots = Array.from(dotsNav?.children || []);
 
     if (slides.length === 0) return;
 
     let currentSlide = 0;
     let isAutoPlaying = true;
     let autoPlayInterval;
+    let isTransitioning = false;
 
-    // Set initial slide positions
-    const setSlidePosition = (slide, index) => {
-        slide.style.left = `${index * 100}%`;
+    // Initialize carousel
+    const init = () => {
+        // Set initial slide as active
+        slides.forEach((slide, index) => {
+            slide.classList.toggle('current-slide', index === 0);
+        });
+        
+        // Set initial dot as active
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('current-slide', index === 0);
+        });
+        
+        console.log(`✅ Image carousel initialized with ${slides.length} slides`);
     };
-    slides.forEach(setSlidePosition);
 
-    // Move to target slide
+    // Move to target slide with smooth CSS transition
     const moveToSlide = (targetIndex) => {
-        // Update slides
+        if (isTransitioning || targetIndex === currentSlide) return;
+        
+        isTransitioning = true;
+        
+        // Update slides with CSS classes (opacity transition handled by CSS)
         slides[currentSlide].classList.remove('current-slide');
         slides[targetIndex].classList.add('current-slide');
 
         // Update dots
-        dots[currentSlide].classList.remove('current-slide');
-        dots[targetIndex].classList.add('current-slide');
+        if (dots.length > 0) {
+            dots[currentSlide].classList.remove('current-slide');
+            dots[targetIndex].classList.add('current-slide');
+        }
 
         currentSlide = targetIndex;
+        
+        // Reset transition flag after CSS transition completes
+        setTimeout(() => {
+            isTransitioning = false;
+        }, 600); // Match CSS transition duration
     };
 
     // Auto-play functionality
     const startAutoPlay = () => {
         if (slides.length <= 1) return;
         
+        stopAutoPlay(); // Clear any existing interval
         autoPlayInterval = setInterval(() => {
-            if (isAutoPlaying) {
+            if (isAutoPlaying && !isTransitioning) {
                 const nextIndex = currentSlide === slides.length - 1 ? 0 : currentSlide + 1;
                 moveToSlide(nextIndex);
             }
-        }, 4000); // Change slide every 4 seconds
+        }, 5000); // Change slide every 5 seconds
     };
 
     const stopAutoPlay = () => {
@@ -560,24 +588,29 @@ function initializeImageCarousel() {
         isAutoPlaying = false;
         setTimeout(() => {
             isAutoPlaying = true;
-        }, 10000); // Resume after 10 seconds
+        }, 8000); // Resume after 8 seconds
     };
 
-    // Navigation button handlers
+    // Navigation handlers
+    const goNext = () => {
+        pauseAutoPlay();
+        const nextIndex = currentSlide === slides.length - 1 ? 0 : currentSlide + 1;
+        moveToSlide(nextIndex);
+    };
+
+    const goPrev = () => {
+        pauseAutoPlay();
+        const prevIndex = currentSlide === 0 ? slides.length - 1 : currentSlide - 1;
+        moveToSlide(prevIndex);
+    };
+
+    // Event listeners
     if (nextButton) {
-        nextButton.addEventListener('click', () => {
-            pauseAutoPlay();
-            const nextIndex = currentSlide === slides.length - 1 ? 0 : currentSlide + 1;
-            moveToSlide(nextIndex);
-        });
+        nextButton.addEventListener('click', goNext);
     }
 
     if (prevButton) {
-        prevButton.addEventListener('click', () => {
-            pauseAutoPlay();
-            const prevIndex = currentSlide === 0 ? slides.length - 1 : currentSlide - 1;
-            moveToSlide(prevIndex);
-        });
+        prevButton.addEventListener('click', goPrev);
     }
 
     // Dot navigation
@@ -588,54 +621,50 @@ function initializeImageCarousel() {
         });
     });
 
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-        if (!carousel.matches(':hover')) return;
-        
+    // Keyboard navigation (only when carousel is focused or hovered)
+    carousel.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight') {
             e.preventDefault();
-            nextButton.click();
+            goNext();
         } else if (e.key === 'ArrowLeft') {
             e.preventDefault();
-            prevButton.click();
+            goPrev();
         }
     });
 
     // Touch/swipe support for mobile
     let startX = 0;
+    let startY = 0;
     let isDragging = false;
 
     carousel.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
         isDragging = true;
         pauseAutoPlay();
     }, { passive: true });
-
-    carousel.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-    }, { passive: false });
 
     carousel.addEventListener('touchend', (e) => {
         if (!isDragging) return;
         isDragging = false;
 
         const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
         const diffX = startX - endX;
+        const diffY = startY - endY;
         const threshold = 50;
 
-        if (Math.abs(diffX) > threshold) {
+        // Only handle horizontal swipes (avoid interfering with vertical scrolling)
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > threshold) {
             if (diffX > 0) {
-                // Swipe left - next slide
-                nextButton.click();
+                goNext(); // Swipe left - next slide
             } else {
-                // Swipe right - previous slide
-                prevButton.click();
+                goPrev(); // Swipe right - previous slide  
             }
         }
     }, { passive: true });
 
-    // Pause auto-play on hover
+    // Pause auto-play on hover/focus
     carousel.addEventListener('mouseenter', () => {
         isAutoPlaying = false;
     });
@@ -644,22 +673,29 @@ function initializeImageCarousel() {
         isAutoPlaying = true;
     });
 
-    // Start auto-play
-    startAutoPlay();
+    carousel.addEventListener('focusin', () => {
+        isAutoPlaying = false;
+    });
 
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', stopAutoPlay);
+    carousel.addEventListener('focusout', () => {
+        isAutoPlaying = true;
+    });
 
     // Handle visibility change (pause when tab is not active)
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             stopAutoPlay();
-        } else {
+        } else if (isAutoPlaying) {
             startAutoPlay();
         }
     });
 
-    console.log(`✅ Image carousel initialized with ${slides.length} slides`);
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', stopAutoPlay);
+
+    // Initialize and start auto-play
+    init();
+    startAutoPlay();
 }
 
 /**
@@ -669,20 +705,9 @@ function handleCarouselResize() {
     const carousel = document.getElementById('imageCarousel');
     if (!carousel) return;
 
-    // Recalculate positions on resize
-    const track = carousel.querySelector('.carousel-track');
-    const slides = Array.from(track.children);
-    
-    slides.forEach((slide, index) => {
-        slide.style.left = `${index * 100}%`;
-    });
+    // No position recalculation needed since we're using CSS-only positioning
+    console.log('🔄 Carousel responsive layout updated');
 }
-
-// Initialize carousel when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializeImageCarousel);
-
-// Handle window resize
-window.addEventListener('resize', handleCarouselResize);
 
 // Quick Start Checklist functionality
 function dismissChecklist() {
