@@ -9,6 +9,18 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+/* Ensure gallery images always use square aspect ratio, overriding any club-specific styles */
+.gallery-item .gallery-image-container {
+    aspect-ratio: 1 !important;
+    height: auto !important;
+}
+
+.gallery-item .gallery-image {
+    height: 100% !important;
+    width: 100% !important;
+    aspect-ratio: 1 !important;
+}
+
 .gallery-item:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);

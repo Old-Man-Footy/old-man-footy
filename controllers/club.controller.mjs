@@ -1720,7 +1720,8 @@ const viewClubGalleryHandler = async (req, res) => {
       club,
       images: images || [],
       canUpload,
-      user: req.user || null
+      user: req.user || null,
+      additionalCSS: ['/styles/club.styles.css', '/styles/gallery.styles.css']
     });
   } catch (error) {
     console.error('Error loading club gallery:', error);
