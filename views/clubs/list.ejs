@@ -86,22 +86,6 @@
                                 <% } %>
 
                                 <div class="mt-auto">
-                                    <!-- Club Stats -->
-                                    <div class="row text-center mb-3">
-                                        <div class="col-6">
-                                            <div class="stat-item-small">
-                                                <span class="stat-number-small text-primary"><%= club.carnivalCount || 0 %></span>
-                                                <span class="stat-label-small">Carnivals</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="stat-item-small">
-                                                <span class="stat-number-small text-success"><%= club.delegates ? club.delegates.length : 0 %></span>
-                                                <span class="stat-label-small">Delegates</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Contact Info -->
                                     <% if (club.contactEmail || club.contactPhone || club.website) { %>
                                         <div class="mb-3">
