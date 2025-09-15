@@ -574,7 +574,7 @@ function initializeImageCarousel() {
                 const nextIndex = currentSlide === slides.length - 1 ? 0 : currentSlide + 1;
                 moveToSlide(nextIndex);
             }
-        }, 5000); // Change slide every 5 seconds
+        }, 20000); // Change slide every 20 seconds
     };
 
     const stopAutoPlay = () => {
