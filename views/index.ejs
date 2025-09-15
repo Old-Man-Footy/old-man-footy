@@ -167,7 +167,23 @@
                                 <div class="carousel-images-group">
                                     <% group.forEach((image, imageIndex) => { %>
                                         <div class="carousel-image-wrapper">
-                                            <img src="<%= image.url %>" alt="<%= image.source %> photo" class="carousel-image" loading="lazy">
+                                            <% 
+                                            // Determine gallery URL based on image entity type
+                                            let galleryUrl = '#';
+                                            if (image.entityType === 'carnival' && image.entityId) {
+                                                galleryUrl = `/carnivals/${image.entityId}/gallery`;
+                                            } else if (image.entityType === 'club' && image.entityId) {
+                                                galleryUrl = `/clubs/${image.entityId}/gallery`;
+                                            } else if (image.carnivalId) {
+                                                galleryUrl = `/carnivals/${image.carnivalId}/gallery`;
+                                            }
+                                            
+                                            // Use attribution for alt text with fallback
+                                            const altText = image.attribution || image.displayAttribution || 'Community gallery image';
+                                            %>
+                                            <a href="<%= galleryUrl %>" class="carousel-image-link">
+                                                <img src="<%= image.url %>" alt="<%= altText %>" class="carousel-image" loading="lazy">
+                                            </a>
                                         </div>
                                     <% }) %>
                                 </div>
