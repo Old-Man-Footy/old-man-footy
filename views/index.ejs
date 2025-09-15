@@ -22,7 +22,7 @@
                             <i class="bi bi-calendar-carnival"></i> View All Carnivals
                         </a>
                         <% if (!user) { %>
-                            <a href="/auth/register" class="btn btn-outline-light btn-lg hero-btn">
+                            <a href="/auth/register" class="btn btn-outline-tertiary btn-lg hero-btn">
                                 <i class="bi bi-person-plus"></i> Register as Club Delegate
                             </a>
                         <% } %>
@@ -108,7 +108,7 @@
                                                         <i class="bi bi-eye"></i> View
                                                     </a>
                                                     <% if (carnival.registrationLink) { %>
-                                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-light btn-sm" target="_blank">
+                                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-tertiary btn-sm" target="_blank">
                                                             <i class="bi bi-person-plus"></i> Register
                                                         </a>
                                                     <% } %>

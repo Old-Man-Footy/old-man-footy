@@ -229,7 +229,7 @@
                                                     const primaryDelegate = club.delegates ? club.delegates.find(d => d.isPrimaryDelegate) : null;
                                                     %>
                                                     <% if (primaryDelegate) { %>
-                                                        <button class="btn btn-outline-light btn-sm contact-delegate-btn" 
+                                                        <button class="btn btn-outline-tertiary btn-sm contact-delegate-btn" 
                                                                 data-club-name="<%= club.clubName %>"
                                                                 data-delegate-name="<%= primaryDelegate.firstName %> <%= primaryDelegate.lastName %>">
                                                             <i class="bi bi-envelope"></i> Contact
@@ -251,7 +251,7 @@
                             </div>
 
                             <div class="text-center">
-                                <a href="/clubs" class="btn btn-outline-light">
+                                <a href="/clubs" class="btn btn-outline-tertiary">
                                     <i class="bi bi-list"></i> View All Clubs
                                 </a>
                             </div>

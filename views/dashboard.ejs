@@ -323,7 +323,7 @@
                                                 <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-secondary btn-sm">
                                                     Edit
                                                 </a>
-                                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-light btn-sm">
+                                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-tertiary btn-sm">
                                                     Attendees
                                                 </a>
                                             </div>
@@ -496,7 +496,7 @@
                                 <a href="/carnivals" class="btn btn-outline-primary btn-lg">
                                     <i class="bi bi-search"></i> Browse Carnivals
                                 </a>
-                                <a href="/carnivals/new" class="btn btn-outline-light btn-lg">
+                                <a href="/carnivals/new" class="btn btn-outline-tertiary btn-lg">
                                     <i class="bi bi-plus-circle"></i> Create New Carnival
                                 </a>
                             </div>
@@ -536,7 +536,7 @@
                                 </a>
                             </div>
                             <div class="col-lg-3 col-md-6 mb-3">
-                                <a href="/admin/clubs" class="btn btn-outline-light w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                                <a href="/admin/clubs" class="btn btn-outline-tertiary w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
                                     <i class="bi bi-building fs-3 mb-2"></i>
                                     <strong>Club Management</strong>
                                     <small class="text-muted">Manage club details and status</small>
@@ -593,11 +593,11 @@
                                 <i class="bi bi-envelope"></i> Invite New Delegate
                             </button>
                             <% if (eligibleDelegates && eligibleDelegates.length > 0) { %>
-                                <button class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#transferRoleModal">
+                                <button class="btn btn-outline-tertiary" data-bs-toggle="modal" data-bs-target="#transferRoleModal">
                                     <i class="bi bi-arrow-right-circle"></i> Transfer Primary Role
                                 </button>
                             <% } %>
-                            <button type="button" class="btn btn-outline-light" data-action="navigate" data-target="/clubs/manage">
+                            <button type="button" class="btn btn-outline-tertiary" data-action="navigate" data-target="/clubs/manage">
                                 <i class="bi bi-gear"></i> Manage Club Settings
                             </button>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
@@ -670,7 +670,7 @@
                                 <strong>Add sponsors to your club</strong>
                                 <small class="d-block text-muted mt-1">Showcase your club's supporters and partners</small>
                             </label>
-                            <a href="/sponsors" class="btn btn-outline-light btn-sm ms-3">
+                            <a href="/sponsors" class="btn btn-outline-tertiary btn-sm ms-3">
                                 <i class="bi bi-building"></i> Sponsors
                             </a>
                         </div>
