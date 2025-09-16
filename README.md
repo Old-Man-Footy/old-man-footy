@@ -120,7 +120,7 @@ This codebase is shared publicly to:
 │   ├── upload.mjs                              # File upload middleware
 │   └── validation.mjs                          # Input validation middleware
 ├── migrations/                              # Sequelize database migrations
-│   └── *.js                                    # Database schema migration files
+│   └── *.mjs                                    # Database schema migration files
 ├── models/                                  # MVC Models - Database schemas and logic
 │   ├── AuditLog.mjs                            # Audit logging model
 │   ├── Carnival.mjs                            # Carnival management model
