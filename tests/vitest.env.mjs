@@ -42,9 +42,6 @@ process.env.FEATURE_MYSIDELINE_SYNC = process.env.FEATURE_MYSIDELINE_SYNC || 'fa
 // Set default MySideline URL for testing (used by capture script tests)
 process.env.MYSIDELINE_URL = process.env.MYSIDELINE_URL || 'https://mysideline.com.au';
 
-// Set encryption key for testing
-process.env.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'test-encryption-key-32-characters-min';
-
 // Console log configuration for tests
 console.log('🧪 Vitest environment configuration loaded');
 console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);

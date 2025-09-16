@@ -95,7 +95,7 @@ router.get('/unsubscribe', mainController.getUnsubscribe);
 router.post('/unsubscribe', mainController.postUnsubscribe);
 
 // Health check endpoint for container monitoring
-router.get('/health', (req, res) => {
+router.get(process.env.HEALTH_CHECK_PATH, (req, res) => {
     res.status(200).json({
         status: 'ok',
         timestamp: new Date().toISOString(),

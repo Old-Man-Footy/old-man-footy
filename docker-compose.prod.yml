@@ -16,23 +16,17 @@ services:
       - APP_NAME="Old Man Footy"
       - APP_URL=https://oldmanfooty.au
       - COMPRESSION_ENABLED=${COMPRESSION_ENABLED:-true} # Enable compression by default
-      - CSRF_SECRET=${CSRF_SECRET}
       - EMAIL_FROM_NAME="Old Man Footy"
       - EMAIL_FROM=${EMAIL_FROM:-noreply@oldmanfooty.au}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
       - EMAIL_USER=${EMAIL_USER}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - FEATURE_ADMIN_STATS=${FEATURE_ADMIN_STATS:-true}
       - FEATURE_COMING_SOON_MODE=${FEATURE_COMING_SOON_MODE:-false}
       - FEATURE_EMAIL_NOTIFICATIONS=${FEATURE_EMAIL_NOTIFICATIONS:-true}
       - FEATURE_FILE_UPLOADS=${FEATURE_FILE_UPLOADS:-true}
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
-      - HEALTH_CHECK_ENABLED=${HEALTH_CHECK_ENABLED:-true} # Enable health checks by default
       - HEALTH_CHECK_PATH=${HEALTH_CHECK_PATH:-/health} # Default health check path
-      - JWT_SECRET=${JWT_SECRET}
-      - LOG_FORMAT=${LOG_FORMAT:-json} # Default to JSON format for structured logging
-      - LOG_LEVEL=${LOG_LEVEL:-info} # Default to info level logging
       - MAX_FILE_SIZE=${MAX_FILE_SIZE:-10485760} # Default 10MB
       - MYSIDELINE_ENABLE_SCRAPING=${MYSIDELINE_ENABLE_SCRAPING:-true}
       - MYSIDELINE_EVENT_URL=${MYSIDELINE_EVENT_URL:-https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=}
@@ -43,9 +37,8 @@ services:
       - NODE_ENV=production
       - PORT=3060
       - PLAYNRL_REGISTRATION_URL=${PLAYNRL_REGISTRATION_URL:-https://www.playrugbyleague.com/play/masters/host-application-form/}
-      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100} # Default 100 requests per window
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-150} # Default 100 requests per window
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-900000} # Default 15 minutes
-      - READY_CHECK_PATH=${READY_CHECK_PATH:-/ready} # Default readiness check path
       - SESSION_SECRET=${SESSION_SECRET}
       - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - TZ=${TZ:-Australia/Sydney} # Default timezone
@@ -105,9 +98,7 @@ services:
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_SERVICE=${EMAIL_SERVICE}
       - EMAIL_USER=${EMAIL_USER}
-      - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
-      # Encryption for sensitive data
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}      
       
     volumes:
       # Share the same data volume for database access

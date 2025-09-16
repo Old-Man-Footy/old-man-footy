@@ -17,78 +17,85 @@
 
 import helmet from 'helmet';
 import crypto from 'crypto';
+import { getCurrentConfig } from '../config/config.mjs';
 
 /**
  * Security configuration object
  */
-const SECURITY_CONFIG = {
-  rateLimit: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 150, // Increased from 100 to 150 for normal browsing
-    message: {
-      error: {
-        status: 429,
-        message: 'You\'re browsing a bit too quickly! Please wait a few minutes before continuing.'
-      }
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests: false,
-    skipFailedRequests: false
-  },
+const getSecurityConfig = () => {
+  const config = getCurrentConfig();
   
-  authRateLimit: {
-    windowMs: 10 * 60 * 1000, // 10 minutes (reduced from 15)
-    max: 8, // Increased from 5 to 8 attempts - allows for legitimate typos
-    message: {
-      error: {
-        status: 429,
-        message: 'Multiple login attempts detected. For your security, please wait 10 minutes before trying again.'
-      }
+  return {
+    rateLimit: {
+      windowMs: config.rateLimit.windowMs,
+      max: config.rateLimit.max,
+      message: {
+        error: {
+          status: 429,
+          message: 'You\'re browsing a bit too quickly! Please wait a few minutes before continuing.'
+        }
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+      skipSuccessfulRequests: false,
+      skipFailedRequests: false
     },
-    skipSuccessfulRequests: true
-  },
+    
+    authRateLimit: {
+      windowMs: 10 * 60 * 1000, // 10 minutes (reduced from 15)
+      max: 8, // Increased from 5 to 8 attempts - allows for legitimate typos
+      message: {
+        error: {
+          status: 429,
+          message: 'Multiple login attempts detected. For your security, please wait 10 minutes before trying again.'
+        }
+      },
+      skipSuccessfulRequests: true
+    },
 
-  formSubmissionRateLimit: {
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 10, // Allow 10 form submissions per 5 minutes (registration, contact forms, etc.)
-    message: {
-      error: {
-        status: 429,
-        message: 'You\'re submitting forms quite frequently. Please wait a few minutes before trying again.'
-      }
+    formSubmissionRateLimit: {
+      windowMs: 5 * 60 * 1000, // 5 minutes
+      max: 10, // Allow 10 form submissions per 5 minutes (registration, contact forms, etc.)
+      message: {
+        error: {
+          status: 429,
+          message: 'You\'re submitting forms quite frequently. Please wait a few minutes before trying again.'
+        }
+      },
+      skipSuccessfulRequests: false
     },
-    skipSuccessfulRequests: false
-  },
 
-  helmet: {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
-        frameSrc: ["'none'"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        workerSrc: ["'none'"],
-        childSrc: ["'none'"],
-        formAction: ["'self'"],
-        frameAncestors: ["'none'"],
-        baseUri: ["'self'"],
-        manifestSrc: ["'self'"]
+    helmet: {
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
+          fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          workerSrc: ["'none'"],
+          childSrc: ["'none'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          baseUri: ["'self'"],
+          manifestSrc: ["'self'"]
+        }
+      },
+      crossOriginEmbedderPolicy: false, // Disabled for compatibility
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
       }
-    },
-    crossOriginEmbedderPolicy: false, // Disabled for compatibility
-    hsts: {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true
     }
-  }
+  };
 };
+
+const SECURITY_CONFIG = getSecurityConfig();
 
 /**
  * Create rate limiter with custom configuration
@@ -578,6 +585,7 @@ export const applyAdminSecurity = [
 // Export individual components for testing
 export {
   SECURITY_CONFIG,
+  getSecurityConfig,
   createRateLimiter,
   sanitizeString,
   validateInputSecurity

@@ -19,6 +19,7 @@
     "test:js": "vitest run --config vitest.config.js.mjs",
     "test:all": "npm run test && npm run test:js",
     "seed": "node scripts/seed-database.mjs",
+    "generate:secret": "node scripts/generate-secret.mjs",
     "playwright:install": "playwright install",
     "docker:build:test": "docker build -t old-man-footy:test --target test .",
     "docker:run:test": "docker run --rm -d -e NODE_ENV=test -e SESSION_SECRET=local-secret -p 3055:3055 --name omf-test old-man-footy:test",

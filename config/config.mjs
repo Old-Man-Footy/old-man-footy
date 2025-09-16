@@ -106,12 +106,9 @@ export const getCurrentConfig = () => {
     // Security Settings
     security: {
       sessionSecret: getEnvVar('SESSION_SECRET', 
-        env === 'test' ? 'test-session-secret-32-characters-min' : 'dev-session-secret-change-in-production-min-32-chars',
+        env === 'development' ? 'dev-session-secret-change-in-production-min-32-chars' : 'test-session-secret-32-characters-min',
         true
-      ),
-      csrfSecret: getEnvVar('CSRF_SECRET', null, false),
-      encryptionKey: getEnvVar('ENCRYPTION_KEY', null, false),
-      jwtSecret: getEnvVar('JWT_SECRET', null, false)
+      )
     },
     
     // Database Settings
@@ -123,10 +120,9 @@ export const getCurrentConfig = () => {
     
     // Email Settings
     email: {
-      serviceUser: getEnvVar('EMAIL_USER', null, false),
+      serviceUser: getEnvVar('EMAIL_USER', null, false),                                                                             
       servicePassword: getEnvVar('EMAIL_PASSWORD', null, false),
-      serviceFrom: getEnvVar('EMAIL_FROM', null, false),
-      serviceApiKey: getEnvVar('EMAIL_API_KEY', null, false)
+      serviceFrom: getEnvVar('EMAIL_FROM', null, false)
     },
 
     // MySideline Integration
@@ -162,12 +158,6 @@ export const getCurrentConfig = () => {
       ).split(',').map(type => type.trim())
     },
 
-    // Logging Configuration
-    logging: {
-      level: getEnvVar('LOG_LEVEL', env === 'production' ? 'info' : 'debug'),
-      format: getEnvVar('LOG_FORMAT', env === 'production' ? 'json' : 'combined')
-    },
-
     // Rate Limiting
     rateLimit: {
       windowMs: getIntEnv('RATE_LIMIT_WINDOW', 900000), // 15 minutes
@@ -183,7 +173,6 @@ export const getCurrentConfig = () => {
     healthCheck: {
       enabled: getBooleanEnv('HEALTH_CHECK_ENABLED', true),
       path: getEnvVar('HEALTH_CHECK_PATH', '/health'),
-      readyPath: getEnvVar('READY_CHECK_PATH', '/ready')
     },
 
     // Timezone
