@@ -15,7 +15,7 @@ const HELP_DIR = path.resolve(process.cwd(), 'docs', 'help');
  */
 export function parseMarkdown(fileContent) {
   const headerMatch = fileContent.match(/---([\s\S]*?)---/);
-  if (!headerMatch) throw new Error('Missing header section');
+  if (!headerMatch) throw new Error('Missing YAML front matter header (expected format: ---\\nkey: value\\n---)');
   const header = headerMatch[1].trim();
   const content = fileContent.slice(headerMatch[0].length).trim();
   let pageIdentifier = '', title = '';
