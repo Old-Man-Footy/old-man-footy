@@ -63,19 +63,54 @@ describe('ImageUploadService', () => {
     test('should have correct max file size (5MB)', () => {
       expect(ImageUploadService.MAX_FILE_SIZE).toBe(5 * 1024 * 1024);
     });
+  });
 
-    test('should have correct upload directory', () => {
-      expect(ImageUploadService.UPLOAD_DIR).toBe('public/uploads/gallery');
+  describe('getUploadDirectory', () => {
+    test('should return club gallery directory for club gallery images', () => {
+      const uploadData = { clubId: 1, imageType: 'gallery' };
+      const result = ImageUploadService.getUploadDirectory(uploadData);
+      expect(result).toBe('public/uploads/images/club/gallery');
+    });
+
+    test('should return club promo directory for club promo images', () => {
+      const uploadData = { clubId: 1, imageType: 'promo' };
+      const result = ImageUploadService.getUploadDirectory(uploadData);
+      expect(result).toBe('public/uploads/images/club/promo');
+    });
+
+    test('should return carnival gallery directory for carnival gallery images', () => {
+      const uploadData = { carnivalId: 1, imageType: 'gallery' };
+      const result = ImageUploadService.getUploadDirectory(uploadData);
+      expect(result).toBe('public/uploads/images/carnival/gallery');
+    });
+
+    test('should return carnival promo directory for carnival promo images', () => {
+      const uploadData = { carnivalId: 1, imageType: 'promo' };
+      const result = ImageUploadService.getUploadDirectory(uploadData);
+      expect(result).toBe('public/uploads/images/carnival/promo');
+    });
+
+    test('should default to club gallery for images without imageType', () => {
+      const uploadData = { clubId: 1 };
+      const result = ImageUploadService.getUploadDirectory(uploadData);
+      expect(result).toBe('public/uploads/images/club/gallery');
+    });
+
+    test('should default to carnival gallery for images without specific entity', () => {
+      const uploadData = { imageType: 'gallery' };
+      const result = ImageUploadService.getUploadDirectory(uploadData);
+      expect(result).toBe('public/uploads/images/carnival/gallery');
     });
   });
 
   describe('ensureUploadDir', () => {
     test('should return existing directory path when directory exists', async () => {
       const mockCwd = path.normalize('/mock/project/root');
-      const expectedPath = path.join(mockCwd, 'public/uploads/gallery');
+      const uploadDir = 'public/uploads/clubs/gallery';
+      const expectedPath = path.join(mockCwd, uploadDir);
       fs.access.mockResolvedValue();
       
-      const result = await ImageUploadService.ensureUploadDir();
+      const result = await ImageUploadService.ensureUploadDir(uploadDir);
       
       expect(result).toBe(expectedPath);
       expect(fs.access).toHaveBeenCalledWith(expectedPath);
@@ -84,11 +119,12 @@ describe('ImageUploadService', () => {
 
     test('should create directory when it does not exist', async () => {
       const mockCwd = path.normalize('/mock/project/root');
-      const expectedPath = path.join(mockCwd, 'public/uploads/gallery');
+      const uploadDir = 'public/uploads/carnivals/promo';
+      const expectedPath = path.join(mockCwd, uploadDir);
       fs.access.mockRejectedValue(new Error('Directory not found'));
       fs.mkdir.mockResolvedValue();
       
-      const result = await ImageUploadService.ensureUploadDir();
+      const result = await ImageUploadService.ensureUploadDir(uploadDir);
       
       expect(result).toBe(expectedPath);
       expect(fs.access).toHaveBeenCalledWith(expectedPath);
@@ -212,7 +248,8 @@ describe('ImageUploadService', () => {
     const mockUploadData = {
       carnivalId: 1,
       clubId: null,
-      attribution: 'Test attribution'
+      attribution: 'Test attribution',
+      imageType: 'gallery'
     };
     
     const mockUser = {
@@ -234,15 +271,15 @@ describe('ImageUploadService', () => {
       });
     });
 
-    test('should process valid upload successfully', async () => {
+    test('should process valid carnival gallery upload successfully', async () => {
       const mockCwd = path.normalize('/mock/project/root');
-      const expectedPath = path.join(mockCwd, 'public/uploads/gallery');
+      const expectedPath = path.join(mockCwd, 'public/uploads/carnivals/gallery');
       fs.access.mockResolvedValue();
       fs.writeFile.mockResolvedValue();
       
       ImageUpload.createImageUpload.mockResolvedValue({
         success: true,
-        image: { id: 1, url: '/uploads/gallery/gallery_123_abc.jpg' }
+        image: { id: 1, url: '/uploads/images/carnival/gallery/gallery_123_abc.jpg' }
       });
       
       const result = await ImageUploadService.processUpload(mockFile, mockUploadData, mockUser);
@@ -250,8 +287,32 @@ describe('ImageUploadService', () => {
       expect(result.success).toBe(true);
       expect(result.message).toBe('Image uploaded successfully');
       expect(result.image).toBeDefined();
-      expect(result.url).toMatch(/^\/uploads\/gallery\/gallery_\d+_[a-f0-9]{16}\.jpg$/);
+      expect(result.url).toMatch(/^\/uploads\/images\/carnival\/gallery\/gallery_\d+_[a-f0-9]{16}\.jpg$/);
       expect(fs.writeFile).toHaveBeenCalled();
+    });
+
+    test('should process valid club promo upload successfully', async () => {
+      const clubUploadData = {
+        clubId: 2,
+        carnivalId: null,
+        attribution: 'Club promo',
+        imageType: 'promo'
+      };
+      
+      const mockCwd = path.normalize('/mock/project/root');
+      const expectedPath = path.join(mockCwd, 'public/uploads/images/club/promo');
+      fs.access.mockResolvedValue();
+      fs.writeFile.mockResolvedValue();
+      
+      ImageUpload.createImageUpload.mockResolvedValue({
+        success: true,
+        image: { id: 2, url: '/uploads/images/club/promo/gallery_456_def.jpg' }
+      });
+      
+      const result = await ImageUploadService.processUpload(mockFile, clubUploadData, mockUser);
+      
+      expect(result.success).toBe(true);
+      expect(result.url).toMatch(/^\/uploads\/images\/club\/promo\/gallery_\d+_[a-f0-9]{16}\.jpg$/);
     });
 
     test('should cleanup file when database creation fails', async () => {
@@ -285,14 +346,14 @@ describe('ImageUploadService', () => {
 
     test('should handle directory creation during upload', async () => {
       const mockCwd = path.normalize('/mock/project/root');
-      const expectedPath = path.join(mockCwd, 'public/uploads/gallery');
+      const expectedPath = path.join(mockCwd, 'public/uploads/images/carnival/gallery');
       fs.access.mockRejectedValue(new Error('Directory not found'));
       fs.mkdir.mockResolvedValue();
       fs.writeFile.mockResolvedValue();
       
       ImageUpload.createImageUpload.mockResolvedValue({
         success: true,
-        image: { id: 1, url: '/uploads/gallery/gallery_123_abc.jpg' }
+        image: { id: 1, url: '/uploads/images/carnival/gallery/gallery_123_abc.jpg' }
       });
       
       const result = await ImageUploadService.processUpload(mockFile, mockUploadData, mockUser);

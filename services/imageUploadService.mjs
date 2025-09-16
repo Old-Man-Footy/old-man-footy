@@ -9,6 +9,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import ImageUpload from '../models/ImageUpload.mjs';
+import { UPLOAD_DIRECTORIES } from '../config/constants.mjs';
 
 class ImageUploadService {
   /**
@@ -28,15 +29,35 @@ class ImageUploadService {
   static MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   /**
-   * Upload directory relative to project root
+   * Determine the appropriate upload directory based on upload data
+   * @param {Object} uploadData - Upload metadata (carnivalId, clubId, imageType)
+   * @returns {string} Directory path from UPLOAD_DIRECTORIES
    */
-  static UPLOAD_DIR = 'public/uploads/gallery';
+  static getUploadDirectory(uploadData) {
+    const { carnivalId, clubId, imageType = 'gallery' } = uploadData;
+    
+    if (carnivalId && !clubId) {
+      // Carnival image
+      return imageType === 'promo' 
+        ? UPLOAD_DIRECTORIES.CARNIVAL_PROMO 
+        : UPLOAD_DIRECTORIES.CARNIVAL_GALLERY;
+    } else if (clubId) {
+      // Club image  
+      return imageType === 'promo'
+        ? UPLOAD_DIRECTORIES.CLUB_PROMO
+        : UPLOAD_DIRECTORIES.CLUB_GALLERY;
+    }
+    
+    // Default to carnival gallery if unclear
+    return UPLOAD_DIRECTORIES.CARNIVAL_GALLERY;
+  }
 
   /**
    * Ensure upload directory exists
+   * @param {string} uploadDir - Directory path to ensure exists
    */
-  static async ensureUploadDir() {
-    const uploadPath = path.join(process.cwd(), this.UPLOAD_DIR);
+  static async ensureUploadDir(uploadDir) {
+    const uploadPath = path.join(process.cwd(), uploadDir);
     
     try {
       await fs.access(uploadPath);
@@ -99,7 +120,7 @@ class ImageUploadService {
   /**
    * Process and save uploaded image
    * @param {Object} file - Uploaded file object
-   * @param {Object} uploadData - Upload metadata (carnivalId, clubId, attribution)
+   * @param {Object} uploadData - Upload metadata (carnivalId, clubId, attribution, imageType)
    * @param {Object} user - User uploading the image
    * @returns {Promise<Object>} Upload result
    */
@@ -114,8 +135,11 @@ class ImageUploadService {
         };
       }
 
+      // Determine the appropriate upload directory
+      const uploadDirectory = this.getUploadDirectory(uploadData);
+
       // Ensure upload directory exists
-      const uploadDir = await this.ensureUploadDir();
+      const uploadDir = await this.ensureUploadDir(uploadDirectory);
 
       // Generate unique filename
       const uniqueFilename = this.generateUniqueFilename(file.originalname);
@@ -124,8 +148,9 @@ class ImageUploadService {
       // Save file to disk
       await fs.writeFile(filePath, file.buffer);
 
-      // Generate URL for the uploaded file
-      const fileUrl = `/uploads/gallery/${uniqueFilename}`;
+      // Generate URL for the uploaded file - need to remove 'public/' prefix
+      const urlPath = uploadDirectory.replace('public/', '');
+      const fileUrl = `/${urlPath}/${uniqueFilename}`;
 
       // Create database record
       const imageUploadResult = await ImageUpload.createImageUpload({
@@ -146,7 +171,7 @@ class ImageUploadService {
         return imageUploadResult;
       }
 
-      console.log(`✅ Image uploaded successfully: ${uniqueFilename} by user ${user.id}`);
+      console.log(`✅ Image uploaded successfully: ${uniqueFilename} to ${uploadDirectory} by user ${user.id}`);
 
       return {
         success: true,
