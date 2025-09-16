@@ -125,7 +125,15 @@ class CarnivalClub extends Model {
         carnivalId,
         isActive: true,
         approvalStatus: 'approved'
-      }
+      },
+      include: [
+        {
+          model: this.sequelize.models.Club,
+          as: 'participatingClub',
+          where: { isActive: true },
+          attributes: []
+        }
+      ]
     });
 
     const pending = await this.count({
@@ -133,7 +141,15 @@ class CarnivalClub extends Model {
         carnivalId,
         isActive: true,
         approvalStatus: 'pending'
-      }
+      },
+      include: [
+        {
+          model: this.sequelize.models.Club,
+          as: 'participatingClub',
+          where: { isActive: true },
+          attributes: []
+        }
+      ]
     });
 
     return { approved, pending, total: approved + pending };
