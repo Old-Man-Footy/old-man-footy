@@ -20,8 +20,12 @@ const testPage = {
 };
 
 describe('GET /api/help/:pageIdentifier', () => {
-  beforeEach(async () => {
+  beforeAll(async () => {
     await sequelize.sync({ force: true });
+  });
+
+  beforeEach(async () => {
+    await HelpContent.destroy({ where: {}, truncate: true });
     await HelpContent.create(testPage);
   });
 
