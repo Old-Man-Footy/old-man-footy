@@ -58,7 +58,7 @@ services:
       - SQLITE_IDLE_TIMEOUT=${SQLITE_IDLE_TIMEOUT:-10000} # Default SQLite idle timeout
       - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - TZ=${TZ:-Australia/Sydney} # Default timezone
-      - UPLOAD_PATH=/uploads
+      - UPLOAD_PATH=./uploads
     volumes:
       # Persist database and uploads to host directories only
       - /volume2/docker/old-man-footy-prod/data:/app/data
