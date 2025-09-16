@@ -100,9 +100,10 @@ const SECURITY_CONFIG = getSecurityConfig();
 /**
  * Create rate limiter with custom configuration
  * @param {Object} config - Rate limit configuration
+ * @param {boolean} perUser - Whether to track per-user instead of per-IP
  * @returns {Function} Express middleware
  */
-const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
+const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false) => {
   // Disable rate limiting only in development environment
   // Keep enabled in test environment so we can verify it works for users
   if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
@@ -113,13 +114,24 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
     };
   }
 
-  console.log(`🔒 Rate limiting enabled for ${process.env.NODE_ENV} environment`);
+  console.log(`🔒 Rate limiting enabled for ${process.env.NODE_ENV} environment (${perUser ? 'per-user' : 'per-IP'})`);
 
-  // Simple in-memory rate limiter for production only
+  // Simple in-memory rate limiter
   const requests = new Map();
   
   return (req, res, next) => {
-    const key = req.ip || req.connection?.remoteAddress || 'unknown';
+    // Generate key based on configuration
+    let key;
+    if (perUser && req.user && req.user.id) {
+      key = `user:${req.user.id}`;
+    } else if (perUser && req.body && req.body.email) {
+      // For login attempts where user isn't authenticated yet, use email
+      key = `email:${req.body.email}`;
+    } else {
+      // Fall back to IP-based tracking
+      key = `ip:${req.ip || req.connection?.remoteAddress || 'unknown'}`;
+    }
+    
     const now = Date.now();
     const windowStart = now - config.windowMs;
     
@@ -127,14 +139,17 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
     const isLoginPage = req.path === '/auth/login';
     const isHomePage = req.path === '/';
     const isStaticAsset = req.path.startsWith('/styles') || 
-                         req.path.startsWith('/public');
+                         req.path.startsWith('/public') ||
+                         req.path.startsWith('/js') ||
+                         req.path.startsWith('/icons') ||
+                         req.path.startsWith('/logos');
     
     // Always allow access to login page and static assets to prevent loops
     if (isLoginPage || isHomePage || isStaticAsset) {
       return next();
     }
     
-    // Get or create request log for this IP
+    // Get or create request log for this key
     if (!requests.has(key)) {
       requests.set(key, []);
     }
@@ -147,24 +162,26 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
     
     // Check if limit exceeded
     if (validRequests.length >= config.max) {
-      // Check if this is an API request (JSON expected) or web request (HTML expected)
-      const acceptsJson = req.accepts && req.accepts(['json', 'html']) === 'json';
-      const isApiRoute = req.path && req.path.startsWith('/api/');
+      console.log(`🚫 Rate limit exceeded for ${key}: ${validRequests.length}/${config.max} requests in ${config.windowMs}ms window`);
       
-      // Also check if this is a test environment with mock objects
-      const hasRedirectMethod = res.redirect && typeof res.redirect === 'function';
-      const hasFlashMethod = req.flash && typeof req.flash === 'function';
+      // For web requests, always redirect with flash message to maintain user experience
+      // Only return JSON for explicit API requests
+      const isExplicitApiRequest = req.path && req.path.startsWith('/api/');
+      const isAjaxRequest = req.headers['x-requested-with'] === 'XMLHttpRequest';
+      const acceptsOnlyJson = req.accepts && req.accepts(['json', 'html']) === 'json' && !req.accepts('html');
       
-      if (acceptsJson || isApiRoute || !hasRedirectMethod) {
-        // API request or test environment - return JSON
+      if (isExplicitApiRequest || (isAjaxRequest && acceptsOnlyJson)) {
+        // Explicit API request or AJAX request that only accepts JSON
         return res.status(429).json(config.message);
       } else {
-        // Web request - redirect with flash message
-        if (hasFlashMethod) {
+        // Web request - redirect with flash message for better UX
+        if (req.flash && typeof req.flash === 'function') {
           req.flash('error_msg', config.message.error.message);
         }
         
-        return res.redirect('/');
+        // Redirect to appropriate page based on context
+        const redirectPath = req.path.startsWith('/auth/') ? '/auth/login' : '/';
+        return res.redirect(redirectPath);
       }
     }
     
@@ -184,7 +201,7 @@ export const generalRateLimit = createRateLimiter();
 /**
  * Authentication-specific rate limiting
  */
-export const authRateLimit = createRateLimiter(SECURITY_CONFIG.authRateLimit);
+export const authRateLimit = createRateLimiter(SECURITY_CONFIG.authRateLimit, false);
 
 /**
  * Form submission rate limiting (for registration, contact forms, etc.)
