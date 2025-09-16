@@ -123,7 +123,7 @@ This codebase is shared publicly to:
 │   └── *.mjs                                    # Database schema migration files
 ├── models/                                  # MVC Models - Database schemas and logic
 │   ├── AuditLog.mjs                            # Audit logging model
-│   ├── Carnival.mjs                            # Carnival management model
+│   ├── Carnival.mjs                            # Carnival data model
 │   ├── CarnivalClub.mjs                        # Carnival-club relationship model
 │   ├── CarnivalClubPlayer.mjs                  # Carnival club player model
 │   ├── CarnivalSponsor.mjs                     # Carnival sponsorship model
