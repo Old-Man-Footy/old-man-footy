@@ -6,7 +6,6 @@ services:
     build:
       context: .
       target: test
-    image: ghcr.io/old-man-footy/old-man-footy:latest
     container_name: old-man-footy-test
     ports:
       - "3055:3055"
