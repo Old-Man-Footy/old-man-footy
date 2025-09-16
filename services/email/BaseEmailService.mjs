@@ -69,14 +69,6 @@ export class BaseEmailService {
     }
 
     /**
-     * Get the base URL for the application
-     * @returns {string} Base URL
-     */
-    _getBaseUrl() {
-        return process.env.APP_URL || 'http://localhost:3050';
-    }
-
-    /**
      * Get the standard email header HTML
      * @returns {string} HTML for email header
      */
