@@ -240,6 +240,26 @@ a[class*="btn"]:focus,
     border-top-color: var(--theme-text-primary) !important;
 }
 
+/* Dark mode button overrides */
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] a.btn-primary,
+[data-theme="dark"] .btn.btn-primary {
+    background-color: var(--rugby-green) !important;
+    border-color: var(--rugby-green) !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .btn-primary:hover,
+[data-theme="dark"] .btn-primary:focus,
+[data-theme="dark"] .btn-primary:active,
+[data-theme="dark"] a.btn-primary:hover,
+[data-theme="dark"] a.btn-primary:focus,
+[data-theme="dark"] a.btn-primary:active {
+    background-color: var(--rugby-dark-green) !important;
+    border-color: var(--rugby-dark-green) !important;
+    color: white !important;
+}
+
 /* Info Section Enhancements */
 .bg-info,
 .card-header.bg-info {
