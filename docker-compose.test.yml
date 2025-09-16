@@ -6,6 +6,7 @@ services:
     build:
       context: .
       target: test
+    image: ghcr.io/old-man-footy/old-man-footy:latest
     container_name: old-man-footy-test
     ports:
       - "3055:3055"
@@ -15,7 +16,7 @@ services:
       - APP_DESCRIPTION="A community platform for Rugby League Masters players and fans"
       - APP_NAME="Old Man Footy - Test Environment"
       - APP_URL=https://test.oldmanfooty.au
-      - APP_VERSION=1.0.6
+      - APP_VERSION=1.0.7
       - APPINSIGHTS_INSTRUMENTATIONKEY=${APPINSIGHTS_INSTRUMENTATIONKEY}      
       - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
       - COMPRESSION_ENABLED=${COMPRESSION_ENABLED:-true} # Enable compression by default
@@ -58,7 +59,6 @@ services:
       - SQLITE_IDLE_TIMEOUT=${SQLITE_IDLE_TIMEOUT:-10000} # Default SQLite idle timeout
       - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - TZ=${TZ:-Australia/Sydney} # Default timezone
-      - UPLOAD_PATH=./uploads
     volumes:
       # Only persist data and uploads
       - /volume2/docker/old-man-footy-test/data:/app/data

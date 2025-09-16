@@ -156,7 +156,6 @@ export const getCurrentConfig = () => {
 
     // File Upload Configuration
     upload: {
-      path: getEnvVar('UPLOAD_PATH', './uploads'),
       maxFileSize: getIntEnv('MAX_FILE_SIZE', 5242880), // 5MB default
       allowedFileTypes: getEnvVar('ALLOWED_FILE_TYPES', 
         'image/jpeg,image/png,image/gif,image/svg+xml,image/webp,application/pdf'
