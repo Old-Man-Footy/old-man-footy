@@ -2,7 +2,7 @@
  * @file help.controller.test.mjs
  * @description Unit tests for help.controller API endpoint.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { getHelpContent, getHelpContentValidators } from '../../controllers/help.controller.mjs';
