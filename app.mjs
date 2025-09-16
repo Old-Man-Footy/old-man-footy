@@ -28,6 +28,9 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
+// Trust proxy to get correct client IP behind Docker/Nginx
+app.set('trust proxy', true);
+
 // Configure session store with proper ES Module import
 const SequelizeStore = connectSessionSequelize(session.Store);
 
