@@ -13,12 +13,8 @@ services:
 
     environment:
       - ALLOWED_FILE_TYPES=${ALLOWED_FILE_TYPES:-image/jpeg,image/png,image/gif,image/svg+xml,image/webp,application/pdf}
-      - APP_DESCRIPTION="A community platform for Rugby League Masters players and fans"
       - APP_NAME="Old Man Footy"
       - APP_URL=https://oldmanfooty.au
-      - APP_VERSION=1.0.7
-      - APPINSIGHTS_INSTRUMENTATIONKEY=${APPINSIGHTS_INSTRUMENTATIONKEY}
-      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
       - COMPRESSION_ENABLED=${COMPRESSION_ENABLED:-true} # Enable compression by default
       - CSRF_SECRET=${CSRF_SECRET}
       - EMAIL_FROM_NAME="Old Man Footy"
@@ -32,7 +28,6 @@ services:
       - FEATURE_EMAIL_NOTIFICATIONS=${FEATURE_EMAIL_NOTIFICATIONS:-true}
       - FEATURE_FILE_UPLOADS=${FEATURE_FILE_UPLOADS:-true}
       - FEATURE_MAINTENANCE_MODE=${FEATURE_MAINTENANCE_MODE:-false}
-      - GA_TRACKING_ID=${GA_TRACKING_ID}
       - HEALTH_CHECK_ENABLED=${HEALTH_CHECK_ENABLED:-true} # Enable health checks by default
       - HEALTH_CHECK_PATH=${HEALTH_CHECK_PATH:-/health} # Default health check path
       - JWT_SECRET=${JWT_SECRET}
@@ -51,12 +46,7 @@ services:
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100} # Default 100 requests per window
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-900000} # Default 15 minutes
       - READY_CHECK_PATH=${READY_CHECK_PATH:-/ready} # Default readiness check path
-      - SENTRY_DSN=${SENTRY_DSN}
       - SESSION_SECRET=${SESSION_SECRET}
-      - SQLITE_MAX_POOL_SIZE=${SQLITE_MAX_POOL_SIZE:-10} # Default SQLite connection pool size
-      - SQLITE_MIN_POOL_SIZE=${SQLITE_MIN_POOL_SIZE:-1} # Default SQLite minimum connection pool size
-      - SQLITE_ACQUIRE_TIMEOUT=${SQLITE_ACQUIRE_TIMEOUT:-30000} # Default SQLite acquire timeout
-      - SQLITE_IDLE_TIMEOUT=${SQLITE_IDLE_TIMEOUT:-10000} # Default SQLite idle timeout
       - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - TZ=${TZ:-Australia/Sydney} # Default timezone
     volumes:
@@ -103,19 +93,12 @@ services:
     build:
       context: .
       target: production
-    image: ghcr.io/old-man-footy/old-man-footy:latest
     container_name: old-man-footy-maintenance
     
     environment:
       # Inherit most environment variables from the main app
       - NODE_ENV=production
       - TZ=${TZ:-Australia/Sydney}
-      # Database and backup settings
-      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
-      - SQLITE_MAX_POOL_SIZE=${SQLITE_MAX_POOL_SIZE:-10}
-      - SQLITE_MIN_POOL_SIZE=${SQLITE_MIN_POOL_SIZE:-1}
-      - SQLITE_ACQUIRE_TIMEOUT=${SQLITE_ACQUIRE_TIMEOUT:-30000}
-      - SQLITE_IDLE_TIMEOUT=${SQLITE_IDLE_TIMEOUT:-10000}
       # Email settings for maintenance notifications
       - EMAIL_FROM_NAME="Old Man Footy Maintenance"
       - EMAIL_FROM=${EMAIL_FROM:-noreply@oldmanfooty.au}
