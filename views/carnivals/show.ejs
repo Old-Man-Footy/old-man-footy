@@ -373,7 +373,7 @@
             <!-- Attending Clubs Section -->
             <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-info text-dark">
+                    <div class="card-header bg-info text-primary">
                         <h5 class="mb-0"><i class="bi bi-people-fill"></i> Attending Clubs</h5>
                     </div>
                     <div class="card-body">
@@ -433,7 +433,7 @@
             <% } else if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                 <!-- Show empty state for carnival owners -->
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-info text-dark">
+                    <div class="card-header bg-info text-primary">
                         <h5 class="mb-0"><i class="bi bi-people-fill"></i> Attending Clubs</h5>
                     </div>
                     <div class="card-body text-center">
@@ -689,7 +689,7 @@
             <% } else if (user && userClubRegistration && carnival.isActive) { %>
                 <!-- Show registration status for already registered clubs -->
                 <div class="card shadow mb-4 border-info">
-                    <div class="card-header bg-info text-dark">
+                    <div class="card-header bg-info text-primary">
                         <h5 class="mb-0">
                             <% if (userClubRegistration.approvalStatus === 'approved') { %>
                                 <i class="bi bi-check-circle bg-success"></i> Your Club is Registered
@@ -1258,7 +1258,7 @@
                         </p>
                         
                         <div class="d-grid gap-2 mb-3">
-                            <a href="https://www.playrugbyleague.com/play/masters/host-application-form/" 
+                            <a href="<%= process.env.PLAYNRL_REGISTRATION_URL || '#' %>" 
                                class="btn btn-tertiary" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-box-arrow-up-right me-2"></i>
                                 Register Carnival with NRL Masters
@@ -1277,7 +1277,7 @@
 
                 <!-- MySideline Integration Notice -->
                 <div class="card border-info mb-4">
-                    <div class="card-header bg-info text-dark">
+                    <div class="card-header bg-info text-primary">
                         <h6 class="mb-0">
                             <i class="bi bi-info-circle me-2"></i>
                             2. MySideline Integration Notice

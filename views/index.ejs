@@ -284,19 +284,30 @@
 <!-- MySideline Integration Section -->
 <section class="py-5">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
+        <div class="row mb-4">
+            <div class="col-lg-8 mx-auto text-center">
                 <h2 class="h3 mb-4">Official Registration</h2>
                 <p class="mb-4">
-                    All official Masters Rugby League registrations are processed through MySideline. 
-                    Find and register for Masters carnivals across Australia.
+                    All official Masters Rugby League player and carnival registrations are processed through MySideline and PlayNRL respectively. Find and register for Masters carnivals across Australia.
                 </p>
-                <a href="<%= process.env.MYSIDELINE_URL || '#' %>" class="btn btn-tertiary btn-lg" target="_blank">
-                    <i class="bi bi-box-arrow-up-right"></i> Register on MySideline
-                </a>
             </div>
-            <div class="col-lg-6 text-center">
-                <i class="bi bi-person-check display-1 text-success"></i>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="<%= process.env.MYSIDELINE_URL || '#' %>" class="btn btn-tertiary btn-lg" target="_blank">
+                        <i class="bi bi-box-arrow-up-right"></i> Player Registration
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="<%= process.env.PLAYNRL_REGISTRATION_URL || '#' %>" class="btn btn-tertiary btn-lg" target="_blank">
+                        <i class="bi bi-box-arrow-up-right"></i> Carnival Registration
+                    </a>
+                </div>
             </div>
         </div>
     </div>

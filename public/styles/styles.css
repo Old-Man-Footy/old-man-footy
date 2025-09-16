@@ -428,7 +428,7 @@ a.btn-outline-tertiary:active,
 .btn-outline-tertiary:active {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
-    color: var(--rugby-dark-green);
+    color: var(--rugby-dark-green) !important;
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
@@ -1178,7 +1178,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 .hero-btn.btn-outline-tertiary:hover {
     background: var(--rugby-gold);
     border-color: var(--rugby-gold);
-    color: var(--rugby-dark-green);
+    color: var(--rugby-dark-green) !important;
 }
 
 /* Animation Keyframes */
