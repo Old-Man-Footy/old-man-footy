@@ -52,7 +52,7 @@ A comprehensive web application for managing Rugby League Masters carnivals acro
 - **Web Scraping:** Playwright for MySideline integration
 - **Task Scheduling:** node-cron for automated data synchronization
 
-## � About This Repository
+## 📖 About This Repository
 
 This codebase is shared publicly to:
 
