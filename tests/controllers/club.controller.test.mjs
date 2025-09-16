@@ -950,21 +950,31 @@ describe('Club Controller', () => {
         req.params.id = '1';
 
         const unsortedSponsors = [
-          { id: 2, sponsorName: 'B', displayOrder: 3 },
-          { id: 1, sponsorName: 'A', displayOrder: 1 },
-          { id: 3, sponsorName: 'C' } // no order -> treated as 999
+          { id: 2, sponsorName: 'B Sponsor', sponsorshipLevel: 'Silver' },
+          { id: 1, sponsorName: 'A Sponsor', sponsorshipLevel: 'Gold' },
+          { id: 3, sponsorName: 'C Sponsor', sponsorshipLevel: 'Bronze' }
+        ];
+        const sortedSponsors = [
+          { id: 1, sponsorName: 'A Sponsor', sponsorshipLevel: 'Gold' },
+          { id: 2, sponsorName: 'B Sponsor', sponsorshipLevel: 'Silver' },
+          { id: 3, sponsorName: 'C Sponsor', sponsorshipLevel: 'Bronze' }
         ];
         const clubWithSponsors = { ...mockClub, clubSponsors: [...unsortedSponsors] };
         Club.findByPk.mockResolvedValue(clubWithSponsors);
+        
+        // Clear the default mock and set the specific return value for this test
+        sortSponsorsHierarchically.mockClear();
+        sortSponsorsHierarchically.mockReturnValue(sortedSponsors);
 
         await showClubSponsors(req, res, next);
 
         expect(Club.findByPk).toHaveBeenCalledWith(1, expect.objectContaining({ include: expect.any(Array) }));
+        expect(sortSponsorsHierarchically).toHaveBeenCalledWith(unsortedSponsors, 'club');
         expect(res.render).toHaveBeenCalled();
         const [view, ctx] = res.render.mock.calls[0];
         expect(view).toBe('clubs/sponsors');
         expect(ctx.title).toBe('Manage Club Sponsors');
-        // Sponsors should be sorted: displayOrder 1, then 3, then undefined
+        // Sponsors should be sorted by sponsorship level: Gold (1), Silver (2), Bronze (3)
         expect(ctx.sponsors.map(s => s.id)).toEqual([1, 2, 3]);
       });
 

@@ -214,21 +214,34 @@ describe('Sponsor Controller', () => {
 
       await showSponsorListings(req, res);
 
-      expect(Sponsor.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          isActive: true,
-          isPubliclyVisible: true,
-          state: 'NSW',
-          [Op.or]: expect.any(Array)
-        }),
-        include: expect.arrayContaining([
-          expect.objectContaining({
-            model: Club,
-            as: 'club'
-          })
-        ]),
-        order: [['sponsorName', 'ASC']]
-      }));
+      // Verify the basic query structure
+      expect(Sponsor.findAll).toHaveBeenCalled();
+      const callArgs = Sponsor.findAll.mock.calls[0][0];
+      
+      // Check that basic filtering is applied
+      expect(callArgs.where.isActive).toBe(true);
+      expect(callArgs.where.isPubliclyVisible).toBe(true);
+      expect(callArgs.where.state).toBe('NSW');
+      
+      // Check that Op.or condition exists (it will be a Symbol key)
+      const hasOrCondition = Object.getOwnPropertySymbols(callArgs.where).some(
+        symbol => symbol.toString() === 'Symbol(or)'
+      );
+      expect(hasOrCondition).toBe(true);
+      
+      // Check that club inclusion is configured
+      expect(callArgs.include).toBeDefined();
+      expect(Array.isArray(callArgs.include)).toBe(true);
+      expect(callArgs.include.length).toBeGreaterThan(0);
+      expect(callArgs.include[0].as).toBe('club');
+      expect(callArgs.include[0].required).toBe(false);
+      
+      // Check that ordering includes raw SQL CASE statement
+      expect(callArgs.order).toBeDefined();
+      expect(Array.isArray(callArgs.order)).toBe(true);
+      expect(callArgs.order.length).toBeGreaterThan(0);
+      expect(callArgs.order[0][0].raw).toContain('CASE');
+      expect(callArgs.order[0][1]).toBe('ASC');
 
       expect(res.render).toHaveBeenCalledWith('sponsors/list', expect.objectContaining({
         title: 'Find Masters Rugby League Sponsors',
