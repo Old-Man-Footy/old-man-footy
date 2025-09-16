@@ -260,6 +260,13 @@ a[class*="btn"]:focus,
     color: white !important;
 }
 
+/* Ensure text is always visible on primary buttons in dark mode */
+[data-theme="dark"] .btn-primary *,
+[data-theme="dark"] a.btn-primary *,
+[data-theme="dark"] .btn.btn-primary * {
+    color: white !important;
+}
+
 /* Info Section Enhancements */
 .bg-info,
 .card-header.bg-info {
@@ -1557,6 +1564,11 @@ button[type="submit"]:contains("Complete Registration"):focus {
     .image-carousel { height: 250px; }
     .carousel-button { width: 35px; height: 35px; }
     .carousel-button i { font-size: 1rem; }
+}
+
+/* Dark Mode Carousel Styling */
+[data-theme="dark"] .carousel-images-group {
+    background-color: var(--theme-bg-primary);
 }
 
 /* Email Subscription Section */
