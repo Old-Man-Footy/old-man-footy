@@ -63,7 +63,7 @@ services:
     volumes:
       # Persist database and uploads to host directories only
       - /volume2/docker/old-man-footy-prod/data:/app/data
-      - /volume2/docker/old-man-footy-prod/uploads:/app/public/uploads
+      - /volume2/docker/old-man-footy-prod/public/uploads:/app/public/uploads
 
     networks:
       - old-man-footy-network-prod # 5. Use a distinct network name for production

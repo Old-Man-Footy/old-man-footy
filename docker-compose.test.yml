@@ -63,7 +63,7 @@ services:
     volumes:
       # Only persist data and uploads
       - /volume2/docker/old-man-footy-test/data:/app/data
-      - /volume2/docker/old-man-footy-test/uploads:/app/public/uploads
+      - /volume2/docker/old-man-footy-test/public/uploads:/app/public/uploads
     networks:
       - old-man-footy-network-test
     restart: unless-stopped
