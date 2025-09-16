@@ -235,7 +235,7 @@ const showClubProfileHandler = async (req, res) => {
     primaryDelegate,
     sponsors: sortedSponsors,
     user: req.user || null,
-    additionalCSS: ['/styles/club.styles.css'],
+    additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
   });
 };
 
@@ -504,7 +504,7 @@ const showClubSponsorsHandler = async (req, res, next) => {
       title: 'Manage Club Sponsors',
       club,
       sponsors: sortedSponsors,
-      additionalCSS: ['/styles/club.styles.css'],
+      additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
     });
   } catch (err) {
     next(err);
