@@ -166,7 +166,7 @@ export const getCurrentConfig = () => {
     // Rate Limiting
     rateLimit: {
       windowMs: getIntEnv('RATE_LIMIT_WINDOW', 900000), // 15 minutes
-      max: getIntEnv('RATE_LIMIT_MAX', env === 'production' ? 100 : 1000)
+      max: getIntEnv('RATE_LIMIT_MAX', env === 'production' ? 100 : 150)
     },
 
     // Compression

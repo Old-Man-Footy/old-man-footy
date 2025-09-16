@@ -70,7 +70,8 @@ describe('Security Middleware', () => {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
-      type: vi.fn().mockReturnThis()
+      type: vi.fn().mockReturnThis(),
+      redirect: vi.fn().mockReturnThis()
     };
     
     mockNext = vi.fn();
@@ -124,21 +125,20 @@ describe('Security Middleware', () => {
             message: { error: { status: 429, message: 'Rate limit exceeded' } }
           });
 
-          // Create separate request objects to ensure each has consistent identity
-          const req1 = { ...mockReq, ip: '192.168.1.100' };
-          const req2 = { ...mockReq, ip: '192.168.1.100' };
-          const req3 = { ...mockReq, ip: '192.168.1.100' };
+          // Simulate API requests so rate limiter returns 429 status
+          const apiReq1 = { ...mockReq, ip: '192.168.1.100', path: '/api/test', accepts: () => 'json', headers: { 'x-requested-with': 'XMLHttpRequest' } };
+          const apiReq2 = { ...mockReq, ip: '192.168.1.100', path: '/api/test', accepts: () => 'json', headers: { 'x-requested-with': 'XMLHttpRequest' } };
+          const apiReq3 = { ...mockReq, ip: '192.168.1.100', path: '/api/test', accepts: () => 'json', headers: { 'x-requested-with': 'XMLHttpRequest' } };
 
           // First two requests should pass
-          testRateLimit(req1, mockRes, mockNext);
-          testRateLimit(req2, mockRes, mockNext);
+          testRateLimit(apiReq1, mockRes, mockNext);
+          testRateLimit(apiReq2, mockRes, mockNext);
           expect(mockNext).toHaveBeenCalledTimes(2);
 
           // Third request should be blocked
           mockNext.mockClear();
           mockRes.status.mockClear();
-          testRateLimit(req3, mockRes, mockNext);
-          
+          testRateLimit(apiReq3, mockRes, mockNext);
           expect(mockRes.status).toHaveBeenCalledWith(429);
           expect(mockNext).not.toHaveBeenCalled();
         } finally {
@@ -671,11 +671,13 @@ describe('Security Middleware', () => {
       });
 
       it('should not log in test environment', () => {
+        const originalEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'test';
         const middleware = securityAuditLog('test_event');
         middleware(mockReq, mockRes, mockNext);
-        
         expect(console.log).not.toHaveBeenCalled();
         expect(mockNext).toHaveBeenCalledWith();
+        process.env.NODE_ENV = originalEnv;
       });
     });
   });
