@@ -10,7 +10,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { sequelize } from '../../config/database.mjs';
-
 // Import models using default import syntax
 import ImageUpload from '../../models/ImageUpload.mjs';
 import Carnival from '../../models/Carnival.mjs';
@@ -25,6 +24,7 @@ describe('ImageUpload Model', () => {
         // Mock the Sequelize model methods properly
         vi.spyOn(ImageUpload, 'create').mockImplementation(() => Promise.resolve({}));
         vi.spyOn(ImageUpload, 'findAll').mockImplementation(() => Promise.resolve([]));
+        vi.spyOn(ImageUpload, 'findAndCountAll').mockImplementation(() => Promise.resolve({ count: 0, rows: [] }));
         vi.spyOn(ImageUpload, 'findByPk').mockImplementation(() => Promise.resolve({}));
         vi.spyOn(ImageUpload, 'findOne').mockImplementation(() => Promise.resolve({}));
         vi.spyOn(ImageUpload, 'destroy').mockImplementation(() => Promise.resolve(1));
@@ -38,6 +38,42 @@ describe('ImageUpload Model', () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+    });
+
+     describe('getClubImages static method', () => {
+        it('should return images for specific club', async () => {
+            const mockImages = [
+                { id: 3, url: 'https://example.com/3.jpg', clubId: 1 },
+                { id: 4, url: 'https://example.com/4.jpg', clubId: 1 }
+            ];
+
+            ImageUpload.findAndCountAll.mockResolvedValue({
+                count: 2,
+                rows: mockImages
+            });
+
+            const result = await ImageUpload.getClubImages(1);
+
+            expect(ImageUpload.findAndCountAll).toHaveBeenCalledWith({
+                where: {
+                    clubId: 1
+                },
+                order: [['createdAt', 'DESC']],
+                limit: 12,
+                offset: 0
+            });
+            expect(result).toEqual({
+                images: mockImages,
+                pagination: {
+                    page: 1,
+                    limit: 12,
+                    total: 2,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            });
+        });
     });
 
     describe('Model Validation', () => {
@@ -340,22 +376,37 @@ describe('ImageUpload Model', () => {
                 { id: 2, url: 'https://example.com/2.jpg', carnivalId: 1 }
             ];
 
-            ImageUpload.findAll.mockResolvedValue(mockImages);
+            ImageUpload.findAndCountAll.mockResolvedValue({
+                count: 2,
+                rows: mockImages
+            });
 
             const result = await ImageUpload.getCarnivalImages(1);
 
-            expect(ImageUpload.findAll).toHaveBeenCalledWith({
+            expect(ImageUpload.findAndCountAll).toHaveBeenCalledWith({
                 where: {
                     carnivalId: 1
                 },
-                order: [['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']],
+                limit: 12,
+                offset: 0
             });
-            expect(result).toEqual(mockImages);
+            expect(result).toEqual({
+                images: mockImages,
+                pagination: {
+                    page: 1,
+                    limit: 12,
+                    total: 2,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            });
         });
 
-        it('should return empty array for invalid carnivalId', async () => {
+        it('should return empty pagination object for invalid carnivalId', async () => {
             const result = await ImageUpload.getCarnivalImages(null);
-            expect(result).toEqual([]);
+            expect(result).toEqual({ images: [], pagination: { page: 1, limit: 12, total: 0, totalPages: 0 } });
         });
     });
 
@@ -366,22 +417,37 @@ describe('ImageUpload Model', () => {
                 { id: 2, url: 'https://example.com/2.jpg', clubId: 1 }
             ];
 
-            ImageUpload.findAll.mockResolvedValue(mockImages);
+            ImageUpload.findAndCountAll.mockResolvedValue({
+                count: 2,
+                rows: mockImages
+            });
 
             const result = await ImageUpload.getClubImages(1);
 
-            expect(ImageUpload.findAll).toHaveBeenCalledWith({
+            expect(ImageUpload.findAndCountAll).toHaveBeenCalledWith({
                 where: {
                     clubId: 1
                 },
-                order: [['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']],
+                limit: 12,
+                offset: 0
             });
-            expect(result).toEqual(mockImages);
+            expect(result).toEqual({
+                images: mockImages,
+                pagination: {
+                    page: 1,
+                    limit: 12,
+                    total: 2,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            });
         });
 
-        it('should return empty array for invalid clubId', async () => {
+        it('should return empty pagination object for invalid clubId', async () => {
             const result = await ImageUpload.getClubImages(null);
-            expect(result).toEqual([]);
+            expect(result).toEqual({ images: [], pagination: { page: 1, limit: 12, total: 0, totalPages: 0 } });
         });
     });
 
