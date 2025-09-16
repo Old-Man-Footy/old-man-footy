@@ -26,7 +26,12 @@ export const setEnvironmentVariables = async () => {
     const result = config({ path: envFile });
     
     if (result.error) {
-      console.log(`📝 No ${envFile} file found - using system environment variables`);
+      console.log(`📝 No ${envFile} file found - falling back to .env`);
+      envFile = `.env`
+      result = config({ path: envFile });
+      if (result.error) {
+        console.log(`📝 No .env file found - using system environment variables`);
+      }
     } else {
       console.log(`✅ Configuration loaded from ${envFile}`);
     }
