@@ -1,62 +1,97 @@
-Old Man Footy - Custom Software License
+Old Man Footy - Transparency License (No Replication Permitted)
 
 Copyright (c) 2025 Old Man Footy. All rights reserved.
 
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+TERMS AND CONDITIONS FOR TRANSPARENCY AND COMMUNITY ENGAGEMENT
 
 1. DEFINITIONS
    "Software" refers to the Old Man Footy Rugby League Masters Carnival Management Platform
    and all associated source code, documentation, and assets in this repository.
    
-   "You" refers to any individual or entity accessing or using this Software.
+   "You" refers to any individual or entity accessing this repository.
+   
+   "Official Platform" refers to the live commercial service at oldmanfooty.au
 
-2. PERMITTED USES
-   You are granted permission to:
-   - View and study the source code for educational purposes
-   - Submit bug reports and feature requests
-   - Fork the repository for the purpose of contributing improvements
-   - Submit pull requests with bug fixes or enhancements
+2. PURPOSE OF PUBLIC REPOSITORY
+   This repository is made publicly available solely for:
+   - Transparency in how the Official Platform operates
+   - Community oversight of data handling and security practices
+   - Enabling community contributions and improvements
+   - Educational purposes and code review
+   - Security auditing by qualified researchers
 
-3. PROHIBITED USES
-   You are NOT permitted to:
-   - Use this Software for commercial purposes
-   - Redistribute, sell, or sublicense the Software
-   - Create derivative works for commercial use
-   - Deploy this Software for production use without explicit written permission
-   - Remove or modify copyright notices or this license
-   - Use the "Old Man Footy" name, branding, or trademarks
+3. STRICTLY PROHIBITED USES
+   You are EXPRESSLY FORBIDDEN from:
+   - Deploying this Software on any server or hosting platform
+   - Creating your own version or instance of this platform
+   - Using this Software for any commercial purposes whatsoever
+   - Redistributing, selling, sublicensing, or offering this Software to others
+   - Creating competing services based on this codebase
+   - Removing or modifying copyright notices, branding, or this license
+   - Using the "Old Man Footy" name, logos, branding, or trademarks
+   - Reverse engineering for competitive purposes
+   - Creating derivative works for independent deployment
 
-4. CONTRIBUTIONS
-   By submitting contributions (pull requests, issues, etc.), you:
-   - Grant Old Man Footy perpetual, worldwide rights to use your contributions
-   - Confirm that you have the right to make such contributions
-   - Agree that your contributions may be incorporated into the commercial service
+4. LIMITED PERMITTED USES
+   You are granted permission ONLY to:
+   - View and study the source code for educational and transparency purposes
+   - Submit bug reports and security vulnerability reports
+   - Fork the repository solely for contributing improvements back to the Official Platform
+   - Submit pull requests with bug fixes, security improvements, or enhancements
+   - Conduct security audits with responsible disclosure
+   - Reference coding practices and architecture for educational purposes
 
-5. TRANSPARENCY COMMITMENT
-   This repository is made public to demonstrate transparency in our platform
-   development and to allow the rugby league community to understand how their
-   data is managed and to contribute improvements.
+5. CONTRIBUTIONS AND COMMUNITY ENGAGEMENT
+   By submitting contributions (pull requests, issues, security reports), you:
+   - Grant Old Man Footy perpetual, worldwide, royalty-free rights to use your contributions
+   - Confirm that you have the legal right to make such contributions
+   - Agree that your contributions may be incorporated into the Official Platform
+   - Waive any rights to compensation for your contributions
+   - Acknowledge that all contributions become part of this licensed Software
 
-6. NO WARRANTY
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+6. TRANSPARENCY AND COMMUNITY BENEFITS
+   This repository demonstrates our commitment to:
+   - Open source transparency while maintaining commercial viability
+   - Community involvement in improving rugby league masters services
+   - Security through community review and expert auditing
+   - Educational sharing of modern web development practices
+   - Building trust through openness about our platform operations
 
-7. LIMITATION OF LIABILITY
-   IN NO EVENT SHALL OLD MAN FOOTY BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
+7. NO WARRANTY AND LIMITATION OF LIABILITY
+   THE SOFTWARE IS PROVIDED "AS IS" FOR TRANSPARENCY PURPOSES ONLY, WITHOUT WARRANTY 
+   OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
-8. COMMERCIAL LICENSING
-   For commercial licensing opportunities or to discuss permitted uses beyond
-   this license, contact: support@oldmanfooty.au
+   IN NO EVENT SHALL OLD MAN FOOTY BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-9. ENFORCEMENT
-   This license is governed by Australian law. Any violations may result in
-   legal action to protect our intellectual property rights.
+   You acknowledge that any attempt to deploy or use this Software outside of the 
+   permitted uses is at your own risk and may result in legal consequences.
+
+8. ENFORCEMENT AND LEGAL PROTECTION
+   This license is governed by Australian law. Old Man Footy actively monitors for:
+   - Unauthorized deployments or commercial use of this Software
+   - Trademark and copyright infringement
+   - Violation of these license terms
+
+   Violations WILL result in immediate legal action including but not limited to:
+   - Cease and desist orders
+   - Claims for damages and lost profits
+   - Injunctive relief to prevent continued violations
+   - Legal costs and attorney fees
+
+9. COMMERCIAL LICENSING AND LEGITIMATE USE
+   The ONLY authorized version of this platform is available at: https://oldmanfooty.au
+   
+   For any legitimate commercial licensing inquiries or questions about permitted uses 
+   beyond this license, contact: support@oldmanfooty.au
+   
+   We are committed to supporting the rugby league masters community through our 
+   Official Platform and welcome discussions about how we can better serve your needs.
 
 ---
 
-For questions about this license, contact: support@oldmanfooty.au
-For the live platform, visit: https://oldmanfooty.au
+Questions about this license: support@oldmanfooty.au
+Official Platform: https://oldmanfooty.au
+Security Issues: support@oldmanfooty.au (responsible disclosure)
