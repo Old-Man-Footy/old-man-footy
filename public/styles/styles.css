@@ -432,6 +432,26 @@ a.btn-outline-tertiary:active,
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
+a.btn-outline-danger,
+.btn-outline-danger {
+    color: red;
+    border-color: red;
+}
+
+a.btn-outline-danger:hover,
+.btn-outline-danger:hover,
+a.btn-outline-danger:focus,
+.btn-outline-danger:focus,
+a.btn-outline-danger:active,
+.btn-outline-danger:active {
+    background-color: red;
+    border-color: red;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+}
+    color: red
+}
+
 a.btn-group-sm,
 .btn-group-sm .btn {
     padding: 0.25rem 0.5rem;
