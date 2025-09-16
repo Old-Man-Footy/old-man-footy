@@ -20,6 +20,7 @@ router.get('/:carnivalId/attendees/add', ensureAuthenticated, carnivalClubContro
 router.post('/:carnivalId/attendees/add', ensureAuthenticated, [
     body('clubId').isInt({ min: 1 }).withMessage('Valid club selection required'),
     body('playerCount').optional().isInt({ min: 0, max: 100 }).withMessage('Player count must be between 0 and 100'),
+    body('numberOfTeams').optional().isInt({ min: 1, max: 10 }).withMessage('Number of teams must be between 1 and 10'),
     body('teamName').optional().isLength({ max: 100 }).withMessage('Team name must be 100 characters or less'),
     body('contactPerson').optional().isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
     body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
@@ -35,6 +36,7 @@ router.get('/:carnivalId/attendees/:registrationId/edit', ensureAuthenticated, c
 // Update club registration
 router.post('/:carnivalId/attendees/:registrationId/edit', ensureAuthenticated, [
     body('playerCount').optional().isInt({ min: 0, max: 100 }).withMessage('Player count must be between 0 and 100'),
+    body('numberOfTeams').optional().isInt({ min: 1, max: 10 }).withMessage('Number of teams must be between 1 and 10'),
     body('teamName').optional().isLength({ max: 100 }).withMessage('Team name must be 100 characters or less'),
     body('contactPerson').optional().isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
     body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
@@ -84,6 +86,7 @@ router.post('/:carnivalId/attendees/:registrationId/players/:assignmentId/status
 // Register delegate's own club for a carnival
 router.post('/:carnivalId/register', ensureAuthenticated, [
     body('playerCount').optional().isInt({ min: 0, max: 100 }).withMessage('Player count must be between 0 and 100'),
+    body('numberOfTeams').optional().isInt({ min: 1, max: 10 }).withMessage('Number of teams must be between 1 and 10'),
     body('teamName').optional().isLength({ max: 100 }).withMessage('Team name must be 100 characters or less'),
     body('contactPerson').optional().isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
     body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
@@ -97,8 +100,18 @@ router.get('/:carnivalId/register/players', ensureAuthenticated, carnivalClubCon
 // Add players to delegate's own club registration
 router.post('/:carnivalId/register/players', ensureAuthenticated, [
     body('playerIds').isArray({ min: 1 }).withMessage('At least one player must be selected'),
-    body('playerIds.*').isInt({ min: 1 }).withMessage('Valid player selection required')
+    body('playerIds.*').isInt({ min: 1 }).withMessage('Valid player selection required'),
+    body('teamNumber').optional().isInt({ min: 1, max: 10 }).withMessage('Team number must be between 1 and 10')
 ], carnivalClubController.addPlayersToMyClubRegistration);
+
+// Team assignment routes for multi-team functionality
+// Assign player to team
+router.post('/:carnivalId/register/players/:assignmentId/team', ensureAuthenticated, [
+    body('teamNumber').optional().isInt({ min: 1, max: 10 }).withMessage('Team number must be between 1 and 10')
+], carnivalClubController.assignPlayerToTeam);
+
+// Unassign player from team
+router.delete('/:carnivalId/register/players/:assignmentId/team', ensureAuthenticated, carnivalClubController.unassignPlayerFromTeam);
 
 // Unregister delegate's own club from a carnival (API endpoint)
 router.delete('/:carnivalId/register', ensureAuthenticated, carnivalClubController.unregisterMyClubFromCarnival);

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { maintenanceMode } from '/middleware/maintenance.mjs';
+import { maintenanceMode } from '../../middleware/maintenance.mjs';
 
 describe('Maintenance Middleware', () => {
     let req, res, next;

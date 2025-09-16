@@ -99,8 +99,8 @@ export const clubManageManager = {
         const files = dt && dt.files ? dt.files : [];
         if (files.length > 0 && el.fileInput) {
             try { el.fileInput.files = files; } catch (_) {}
-            const event = new Event('change', { bubbles: true });
-            el.fileInput.dispatchEvent(event);
+            const carnival = new Event('change', { bubbles: true });
+            el.fileInput.dispatchEvent(carnival);
         }
     },
 };

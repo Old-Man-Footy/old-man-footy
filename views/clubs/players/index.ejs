@@ -1,4 +1,4 @@
-<div class="container py-4">
+<div class="container py-4" data-page-id="clubs-players-index">
   <!-- Page Header -->
   <div class="row mb-4">
     <div class="col-md-12">
@@ -31,7 +31,7 @@
               </li>
             </ul>
           </div>
-          <a href="/clubs/players/add" class="btn btn-success">
+          <a href="/clubs/players/add" class="btn btn-tertiary">
             <i class="bi bi-person-plus me-2"></i>Add New Player
           </a>
         </div>
@@ -178,28 +178,22 @@
                       <td>
                         <% if (player.shorts) { %>
                           <% 
-                            // Define color mapping for badges
-                            const shortsColorMap = {
-                              'Unrestricted': { bg: 'bg-secondary', text: 'text-white' },
-                              'Red': { bg: 'bg-danger', text: 'text-white' },
-                              'Yellow': { bg: 'bg-warning', text: 'text-dark' },
-                              'Blue': { bg: 'bg-primary', text: 'text-white' },
-                              'Green': { bg: 'bg-success', text: 'text-white' }
-                            };
-                            const colorStyle = shortsColorMap[player.shorts] || shortsColorMap['Unrestricted'];
+                            const shortsColor = player.shorts.toLowerCase();
+                            const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                            const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
                           %>
-                          <span class="badge <%= colorStyle.bg %> <%= colorStyle.text %>">
+                          <span class="badge <%= cssClass %>">
                             <%= player.shorts %>
                           </span>
                         <% } else { %>
-                          <span class="badge bg-secondary">
+                          <span class="badge badge-shorts-unrestricted">
                             Unrestricted
                           </span>
                         <% } %>
                       </td>
                       <td>
                         <% if (player.isMastersEligible()) { %>
-                          <span class="badge bg-success">
+                          <span class="badge bg-primary">
                             <i class="bi bi-check-circle me-1"></i>Yes
                           </span>
                         <% } else { %>
@@ -301,7 +295,7 @@
                   <br>Players must be at least 16 years old to register.
                 </p>
               <% } %>
-              <a href="/clubs/players/add" class="btn btn-success">
+              <a href="/clubs/players/add" class="btn btn-tertiary">
                 <i class="bi bi-person-plus me-2"></i>Add Your First Player
               </a>
             </div>
@@ -373,21 +367,15 @@
                       <td>
                         <% if (player.shorts) { %>
                           <% 
-                            // Define color mapping for badges
-                            const shortsColorMap = {
-                              'Unrestricted': { bg: 'bg-secondary', text: 'text-white' },
-                              'Red': { bg: 'bg-danger', text: 'text-white' },
-                              'Yellow': { bg: 'bg-warning', text: 'text-dark' },
-                              'Blue': { bg: 'bg-primary', text: 'text-white' },
-                              'Green': { bg: 'bg-success', text: 'text-white' }
-                            };
-                            const colorStyle = shortsColorMap[player.shorts] || shortsColorMap['Unrestricted'];
+                            const shortsColor = player.shorts.toLowerCase();
+                            const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                            const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
                           %>
-                          <span class="badge <%= colorStyle.bg %> <%= colorStyle.text %>">
+                          <span class="badge <%= cssClass %>">
                             <%= player.shorts %>
                           </span>
                         <% } else { %>
-                          <span class="badge bg-secondary">
+                          <span class="badge badge-shorts-unrestricted">
                             Unrestricted
                           </span>
                         <% } %>
@@ -401,7 +389,7 @@
                         <form method="POST" action="/clubs/players/<%= player.id %>/reactivate" class="d-inline">
                           <button 
                             type="submit" 
-                            class="btn btn-outline-success btn-sm"
+                            class="btn btn-outline-tertiary btn-sm"
                             data-bs-toggle="tooltip"
                             title="Reactivate Player"
                             onclick="return confirm('Are you sure you want to reactivate <%= player.getFullName() %>? They will be added back to your active player roster.')"

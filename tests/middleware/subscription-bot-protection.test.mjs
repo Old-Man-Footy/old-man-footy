@@ -5,8 +5,8 @@
 
 import request from 'supertest';
 import express from 'express';
-import { EmailSubscription } from '/models/index.mjs';
-import { sequelize } from '/config/database.mjs';
+import { EmailSubscription } from '../../models/index.mjs';
+import { sequelize } from '../../config/database.mjs';
 import { describe, test, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
 
 // Mock asyncHandler first
@@ -27,7 +27,7 @@ vi.mock('/services/email/AuthEmailService.mjs', () => ({
 }));
 
 // Import controller directly instead of full app
-import { postSubscribe } from '/controllers/main.controller.mjs';
+import { postSubscribe } from '../../controllers/main.controller.mjs';
 
 // Create minimal test app
 const createTestApp = () => {

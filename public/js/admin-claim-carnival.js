@@ -43,7 +43,7 @@ export const adminClaimCarnivalManager = {
     },
 
     /**
-     * Handles the 'change' event on the club select dropdown.
+     * Handles the 'change' carnival on the club select dropdown.
      */
     handleClubChange() {
         const { clubSelect } = this.elements;

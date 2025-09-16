@@ -30,30 +30,48 @@ import asyncHandler from '../middleware/asyncHandler.mjs';
  * @returns {Promise<void>}
  */
 export const getIndex = asyncHandler(async (req, res) => {
-  const upcomingCarnivals = await Carnival.findAll({
+  // Get all upcoming carnivals for homepage display
+  // First, try to get 4 carnivals with confirmed dates
+  let upcomingCarnivals = await Carnival.findAll({
     where: {
-      date: { [Op.gte]: new Date() },
       isActive: true,
+      date: { [Op.gte]: new Date() }
     },
-    include: [
-      {
-        model: User,
-        as: 'creator',
-        attributes: ['firstName', 'lastName'],
-      },
-    ],
     order: [['date', 'ASC']],
     limit: 4,
+    include: [
+      { model: User, as:'creator', attributes: ['firstName', 'lastName'] }
+    ]
   });
+
+  // If we don't have 4 carnivals with dates, fill remainder with undated carnivals
+  if (upcomingCarnivals.length < 4) {
+    const undatedCarnivals = await Carnival.findAll({
+      where: {
+        isActive: true,
+        date: null
+      },
+      order: [['createdAt', 'DESC']], // Show most recently created undated carnivals first
+      limit: 4 - upcomingCarnivals.length,
+      include: [
+        { model: User, as:'creator', attributes: ['firstName', 'lastName'] }
+      ]
+    });
+    
+    upcomingCarnivals = [...upcomingCarnivals, ...undatedCarnivals];
+  }
 
   // Get statistics for the stats runner
   const stats = {
     totalCarnivals: await Carnival.count({ where: { isActive: true } }),
     upcomingCount: await Carnival.count({
       where: {
-        date: { [Op.gte]: new Date() },
         isActive: true,
-      },
+        [Op.or]: [
+          { date: { [Op.gte]: new Date() } },
+          { date: null }
+        ]
+      }
     }),
     clubsCount: await Club.count({
       where: {
@@ -104,10 +122,11 @@ export const getDashboard = asyncHandler(async (req, res) => {
   // Get user's carnivals (carnivals they've created)
   const userCarnivals = await Carnival.findAll({
     where: {
-      createdByUserId: req.user.id,
-      isActive: true,
+      createdByUserId: userWithClub.id,
+      isActive: true
     },
     order: [['date', 'DESC']],
+    limit: 5
   });
 
   // Get player count for user's club
@@ -159,14 +178,20 @@ export const getDashboard = asyncHandler(async (req, res) => {
     }));
   }
 
-  // Get upcoming carnivals
-  const upcomingCarnivals = await Carnival.findAll({
+  // Get upcoming carnivals for dashboard display
+  const dashboardUpcomingCarnivals = await Carnival.findAll({
     where: {
-      date: { [Op.gte]: new Date() },
       isActive: true,
+      [Op.or]: [
+        { date: { [Op.gte]: new Date() } },
+        { date: null }
+      ]
     },
     order: [['date', 'ASC']],
-    limit: 4,
+    limit: 5,
+    include: [
+      { model: User, as: 'creator', attributes: ['firstName', 'lastName'] }
+    ]
   });
 
   // Get user's clubs (if they have any associated)
@@ -204,7 +229,7 @@ export const getDashboard = asyncHandler(async (req, res) => {
     user: enrichedUser,
     userCarnivals,
     attendingCarnivals, // New: carnivals the user's club is attending
-    upcomingCarnivals,
+    upcomingCarnivals: dashboardUpcomingCarnivals,
     clubs, // Add clubs variable for the dashboard checklist
     carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
     eligibleDelegates,
@@ -423,15 +448,22 @@ export const postSubscribe = async (req, res) => {
  * Display unsubscribe page
  */
 export const getUnsubscribe = asyncHandler(async (req, res) => {
-  const { token } = req.params;
+  const { token } = req.query;
 
-  // Decrypt token to get email
-  const decipher = crypto.createDecipher('aes192', process.env.ENCRYPTION_KEY || 'default-key');
-  let email = decipher.update(token, 'hex', 'utf8');
-  email += decipher.final('utf8');
+  if (!token) {
+    return res.status(400).render('error', {
+      title: 'Invalid Link',
+      message: 'This unsubscribe link is missing required information.',
+      error: null,
+      additionalCSS: [],
+    });
+  }
 
   const subscription = await EmailSubscription.findOne({
-    where: { email, isActive: true },
+    where: { 
+      unsubscribeToken: token,
+      isActive: true 
+    },
   });
 
   if (!subscription) {
@@ -444,9 +476,10 @@ export const getUnsubscribe = asyncHandler(async (req, res) => {
   }
 
   return res.render('unsubscribe', {
-    title: 'Unsubscribe',
-    email: subscription.email,
-    additionalCSS: [],
+    title: 'Unsubscribe from Email Notifications',
+    subscription,
+    token,
+    additionalCSS: ['/styles/forms.css'],
   });
 });
 
@@ -454,23 +487,44 @@ export const getUnsubscribe = asyncHandler(async (req, res) => {
  * Process unsubscribe request
  */
 export const postUnsubscribe = asyncHandler(async (req, res) => {
-  const { email } = req.body;
+  const { token } = req.body;
 
-  const subscription = await EmailSubscription.findOne({
-    where: { email },
-  });
-
-  if (subscription) {
-    await subscription.update({
-      isActive: false,
-      // unsubscribedAt is now automatically set by the model hook
+  if (!token) {
+    return res.status(400).render('error', {
+      title: 'Invalid Request',
+      message: 'Missing required information to process unsubscribe request.',
+      error: null,
+      additionalCSS: [],
     });
   }
 
-  return res.render('success', {
-    title: 'Unsubscribed',
-    message: 'You have been successfully unsubscribed from our newsletter.',
-    additionalCSS: [],
+  const subscription = await EmailSubscription.findOne({
+    where: { 
+      unsubscribeToken: token,
+      isActive: true
+    },
+  });
+
+  if (!subscription) {
+    return res.status(400).render('error', {
+      title: 'Invalid Link',
+      message: 'This unsubscribe link is invalid or has already been used.',
+      error: null,
+      additionalCSS: [],
+    });
+  }
+
+  // Update subscription to inactive (this will trigger the beforeUpdate hook)
+  await subscription.update({
+    isActive: false,
+    // unsubscribedAt is automatically set by the model hook
+  });
+
+  return res.render('unsubscribe-success', {
+    title: 'Successfully Unsubscribed',
+    message: 'You have been successfully unsubscribed from our email notifications.',
+    email: subscription.email,
+    additionalCSS: ['/styles/forms.css'],
   });
 });
 
@@ -480,7 +534,7 @@ export const postUnsubscribe = asyncHandler(async (req, res) => {
 export const getStats = asyncHandler(async (_req, res) => {
   const stats = {
     totalUsers: await User.count(),
-    totalCarnivals: await Carnival.count(),
+    totalCarnivals: await Carnival.count({ where: { isActive: true } }),
     totalClubs: await Club.count(),
     totalSubscriptions: await EmailSubscription.count({ where: { isActive: true } }),
   };
@@ -574,18 +628,28 @@ export const postContact = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, phone, subject, clubName, message, newsletter } = req.body;
 
   // Send contact email using the email service
-  await ContactEmailService.sendContactFormEmail({
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    email: email.trim().toLowerCase(),
-    phone: phone?.trim(),
-    subject,
-    clubName: clubName?.trim(),
-    message: message.trim(),
-    newsletter: newsletter === 'on',
-    userAgent: req.get('User-Agent'),
-    ipAddress: req.ip,
-  });
+  try {
+    const emailResult = await ContactEmailService.sendContactFormEmail({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone?.trim(),
+      subject,
+      clubName: clubName?.trim(),
+      message: message.trim(),
+      newsletter: newsletter === 'on',
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip,
+    });
+
+    // Log if email was blocked (E2E/test environments)
+    if (emailResult && emailResult.blocked) {
+      console.log('📧 Contact form email blocked (E2E/test environment)');
+    }
+  } catch (error) {
+    console.error('Contact form email error:', error);
+    // Continue with form processing even if email fails
+  }
 
   // If user wants newsletter and isn't already subscribed, add them
   if (newsletter === 'on') {

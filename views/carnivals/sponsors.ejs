@@ -1,4 +1,4 @@
-<div class="container-fluid mt-4">
+<div class="container mt-4" data-page-id="carnivals-sponsors">
     <div class="row">
         <div class="col-md-12">
             <!-- Page Header -->
@@ -23,7 +23,7 @@
             </div>
 
             <!-- Flash Messages -->
-            <%- include('/partials/flash-messages') %>
+            <%- include('../partials/flash-messages') %>
 
             <!-- Current Carnival Sponsors -->
             <div class="card mb-4">
@@ -42,10 +42,10 @@
                                         <!-- Sponsor Logo -->
                                         <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 120px;">
                                             <% if (sponsor.logoUrl) { %>
-                                                <img src="/<%= sponsor.logoUrl %>" 
-                                                     alt="<%= sponsor.sponsorName %> Logo" 
-                                                     class="img-fluid" 
-                                                     style="max-height: 100px; max-width: 100%; object-fit: contain;">
+                                       <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>" 
+                                           alt="<%= sponsor.sponsorName %> Logo" 
+                                           class="img-fluid" 
+                                           style="max-height: 100px; max-width: 100%; object-fit: contain;">
                                             <% } else { %>
                                                 <div class="text-center text-muted">
                                                     <i class="fas fa-building fa-2x mb-2"></i>
@@ -131,10 +131,10 @@
                                             <!-- Sponsor Logo -->
                                             <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 100px;">
                                                 <% if (sponsor.logoUrl) { %>
-                                                    <img src="/<%= sponsor.logoUrl %>" 
-                                                         alt="<%= sponsor.sponsorName %> Logo" 
-                                                         class="img-fluid" 
-                                                         style="max-height: 80px; max-width: 100%; object-fit: contain;">
+                                                    <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>" 
+                                                        alt="<%= sponsor.sponsorName %> Logo" 
+                                                        class="img-fluid" 
+                                                        style="max-height: 80px; max-width: 100%; object-fit: contain;">
                                                 <% } else { %>
                                                     <div class="text-center text-muted">
                                                         <i class="fas fa-building fa-2x"></i>
@@ -160,7 +160,7 @@
                                                 <div class="mt-auto">
                                                     <form method="POST" action="/carnivals/<%= carnival.id %>/sponsors/add" class="w-100">
                                                         <input type="hidden" name="sponsorId" value="<%= sponsor.id %>">
-                                                        <button type="submit" class="btn btn-success btn-sm w-100">
+                                                        <button type="submit" class="btn btn-tertiary btn-sm w-100">
                                                             <i class="fas fa-plus me-1"></i>Add to Carnival
                                                         </button>
                                                     </form>

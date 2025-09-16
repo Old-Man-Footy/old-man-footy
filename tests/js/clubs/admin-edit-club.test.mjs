@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Import the manager object directly
-import { adminEditClubManager } from '/public/js/admin-edit-club.js';
+import { adminEditClubManager } from '../../../public/js/admin-edit-club.js';
 
 /**
  * @file admin-edit-club.test.js
@@ -65,11 +65,11 @@ describe('adminEditClubManager', () => {
     it('should prevent form submission if a required field is empty', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitEvent = new Event('submit', { cancelable: true });
-        const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
+        const submitCarnival = new Event('submit', { cancelable: true });
+        const preventDefaultSpy = vi.spyOn(submitCarnival, 'preventDefault');
 
         nameInput.value = '   '; // Empty value
-        form.dispatchEvent(submitEvent);
+        form.dispatchEvent(submitCarnival);
 
         expect(preventDefaultSpy).toHaveBeenCalled();
         expect(alert).toHaveBeenCalledWith('Please fill in all required fields.');
@@ -79,11 +79,11 @@ describe('adminEditClubManager', () => {
     it('should allow form submission if required fields are filled', () => {
         const form = document.querySelector('form');
         const nameInput = form.querySelector('[name="name"]');
-        const submitEvent = new Event('submit', { cancelable: true });
-        const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
+        const submitCarnival = new Event('submit', { cancelable: true });
+        const preventDefaultSpy = vi.spyOn(submitCarnival, 'preventDefault');
 
         nameInput.value = 'Valid Club Name';
-        form.dispatchEvent(submitEvent);
+        form.dispatchEvent(submitCarnival);
 
         expect(preventDefaultSpy).not.toHaveBeenCalled();
         expect(nameInput.classList.contains('is-invalid')).toBe(false);

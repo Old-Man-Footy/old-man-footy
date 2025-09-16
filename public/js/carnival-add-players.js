@@ -24,6 +24,17 @@ export const carnivalAddPlayersManager = {
         this.elements.checkboxes = document.querySelectorAll('.player-checkbox');
         this.elements.submitBtn = document.getElementById('submitBtn');
         this.elements.form = document.getElementById('addPlayersForm');
+        this.elements.selectAllBtn = document.getElementById('selectAllBtn');
+        this.elements.selectNoneBtn = document.getElementById('selectNoneBtn');
+        
+        // Log cache results for debugging
+        console.log('Cached elements:', {
+            checkboxCount: this.elements.checkboxes.length,
+            hasSubmitBtn: !!this.elements.submitBtn,
+            hasForm: !!this.elements.form,
+            hasSelectAllBtn: !!this.elements.selectAllBtn,
+            hasSelectNoneBtn: !!this.elements.selectNoneBtn
+        });
     },
 
     /**
@@ -39,8 +50,21 @@ export const carnivalAddPlayersManager = {
             this.elements.form.addEventListener('submit', this.handleFormSubmit.bind(this));
         }
 
-        window.selectAll = this.selectAll.bind(this);
-        window.selectNone = this.selectNone.bind(this);
+        // Bind click event listeners to the select buttons
+        if (this.elements.selectAllBtn) {
+            this.elements.selectAllBtn.addEventListener('click', this.selectAll.bind(this));
+        }
+        
+        if (this.elements.selectNoneBtn) {
+            this.elements.selectNoneBtn.addEventListener('click', this.selectNone.bind(this));
+        }
+        
+        // Debug logging to verify event listeners are bound
+        console.log('event listeners bound:', {
+            selectAllBtn: !!this.elements.selectAllBtn,
+            selectNoneBtn: !!this.elements.selectNoneBtn,
+            checkboxCount: this.elements.checkboxes.length
+        });
     },
 
     /**
@@ -49,9 +73,10 @@ export const carnivalAddPlayersManager = {
      */
     updateSubmitButton() {
         const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
-        if (this.elements.submitBtn) {
-            this.elements.submitBtn.disabled = selectedCount === 0;
-            this.elements.submitBtn.innerHTML = selectedCount > 0
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = selectedCount === 0;
+            submitBtn.innerHTML = selectedCount > 0
                 ? `<i class="bi bi-plus-circle"></i> Add ${selectedCount} Selected Player${selectedCount > 1 ? 's' : ''}`
                 : '<i class="bi bi-plus-circle"></i> Add Selected Players';
         }
@@ -62,8 +87,15 @@ export const carnivalAddPlayersManager = {
      * @function
      */
     selectAll() {
-        this.elements.checkboxes.forEach(checkbox => {
+        console.log('selectAll() function called!');
+        // Re-cache checkboxes in case they weren't available during initial caching
+        const checkboxes = document.querySelectorAll('.player-checkbox');
+        console.log('Found checkboxes:', checkboxes.length);
+        checkboxes.forEach(checkbox => {
+            console.log('Setting checkbox checked to true:', checkbox);
             checkbox.checked = true;
+            // Trigger change carnival to ensure UI updates properly
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
         });
         this.updateSubmitButton();
     },
@@ -73,8 +105,12 @@ export const carnivalAddPlayersManager = {
      * @function
      */
     selectNone() {
-        this.elements.checkboxes.forEach(checkbox => {
+        // Re-cache checkboxes in case they weren't available during initial caching
+        const checkboxes = document.querySelectorAll('.player-checkbox');
+        checkboxes.forEach(checkbox => {
             checkbox.checked = false;
+            // Trigger change carnival to ensure UI updates properly
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
         });
         this.updateSubmitButton();
     },
@@ -82,18 +118,24 @@ export const carnivalAddPlayersManager = {
     /**
      * Handles form submission, ensuring at least one player is selected.
      * @function
-     * @param {Event} event - The submit event.
+     * @param {Carnival} carnival - The submit carnival.
      */
-    handleFormSubmit(event) {
+    handleFormSubmit(carnival) {
         const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
         if (selectedCount === 0) {
-            event.preventDefault();
+            carnival.preventDefault();
             alert('Please select at least one player to add.');
         }
     }
 };
 
+// Expose selectAll and selectNone functions globally for template use
+window.selectAll = () => carnivalAddPlayersManager.selectAll();
+window.selectNone = () => carnivalAddPlayersManager.selectNone();
+
 // At the bottom of the file
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded carnival fired, initializing carnivalAddPlayersManager');
     carnivalAddPlayersManager.initialize();
+    console.log('carnivalAddPlayersManager initialized');
 });

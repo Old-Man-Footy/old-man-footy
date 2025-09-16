@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../../config/database.mjs';
 import { Op } from 'sequelize';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
@@ -235,11 +235,11 @@ vi.mock('/services/auditService.mjs', () => ({
 
 vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   default: {
-    syncMySidelineEvents: vi.fn().mockResolvedValue({
+    syncMySidelineCarnivals: vi.fn().mockResolvedValue({
       success: true,
-      eventsProcessed: 10,
-      eventsCreated: 5,
-      eventsUpdated: 3
+      carnivalsProcessed: 10,
+      carnivalsCreated: 5,
+      carnivalsUpdated: 3
     })
   }
 }));
@@ -283,7 +283,7 @@ import {
   getAuditStatistics,
   exportAuditLogs,
   syncMySideline
-} from '/controllers/admin.controller.mjs';
+} from '../../controllers/admin.controller.mjs';
 
 import {
   User,
@@ -303,11 +303,11 @@ import {
   createMockAuditLog,
   Op,
   fn
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
-import AuditService from '/services/auditService.mjs';
-import AuthEmailService from '/services/email/AuthEmailService.mjs';
-import mySidelineService from '/services/mySidelineIntegrationService.mjs';
+import AuditService from '../../services/auditService.mjs';
+import AuthEmailService from '../../services/email/AuthEmailService.mjs';
+import mySidelineService from '../../services/mySidelineIntegrationService.mjs';
 import crypto from 'crypto';
 import { validationResult } from 'express-validator';
 
@@ -382,11 +382,11 @@ describe('Admin Controller', () => {
     // Mock services
     AuditService.logAdminAction.mockResolvedValue(true);
     AuthEmailService.sendPasswordResetEmail.mockResolvedValue(true);
-    mySidelineService.syncMySidelineEvents.mockResolvedValue({
+    mySidelineService.syncMySidelineCarnivals.mockResolvedValue({
       success: true,
-      eventsProcessed: 10,
-      eventsCreated: 5,
-      eventsUpdated: 3
+      carnivalsProcessed: 10,
+      carnivalsCreated: 5,
+      carnivalsUpdated: 3
     });
 
     // Mock crypto
@@ -1120,7 +1120,7 @@ describe('Admin Controller', () => {
       });
     });
 
-    it('should show claim carnival form for MySideline events', async () => {
+    it('should show claim carnival form for MySideline carnivals', async () => {
       const mockCarnival = createMockCarnival({
         id: 1,
         title: 'MySideline Carnival',
@@ -1174,8 +1174,8 @@ describe('Admin Controller', () => {
 
       const mockRegistrations = [
         {
-          club: { id: 1, clubName: 'Club A', state: 'NSW' },
-          players: [
+          participatingClub: { id: 1, clubName: 'Club A', state: 'NSW' },
+          playerAssignments: [
             {
               attendanceStatus: 'confirmed',
               clubPlayer: {
@@ -1248,31 +1248,42 @@ describe('Admin Controller', () => {
             active: 140,
             inactive: 10,
             admins: 5,
-            primaryDelegates: 30
+            primaryDelegates: 30,
+            loggedInLast30Days: expect.any(Number),
+            loggedInLast7Days: expect.any(Number),
+            neverLoggedIn: expect.any(Number)
           }),
           clubs: expect.objectContaining({
             total: 45,
             byState: expect.any(Array)
           }),
           carnivals: expect.objectContaining({
-            total: 30,
+            total: expect.any(Number),
+            upcoming: expect.any(Number),
+            past: expect.any(Number),
             byState: expect.any(Array)
+          }),
+          sponsors: expect.objectContaining({
+            total: expect.any(Number)
+          }),
+          subscriptions: expect.objectContaining({
+            total: expect.any(Number)
           })
         })
       }));
     });
 
     it('should trigger MySideline sync manually', async () => {
-      mySidelineService.syncMySidelineEvents.mockResolvedValue({
+      mySidelineService.syncMySidelineCarnivals.mockResolvedValue({
         success: true,
-        eventsProcessed: 15,
-        eventsCreated: 8,
-        eventsUpdated: 4
+        carnivalsProcessed: 15,
+        carnivalsCreated: 8,
+        carnivalsUpdated: 4
       });
 
       await syncMySideline(req, res);
 
-      expect(mySidelineService.syncMySidelineEvents).toHaveBeenCalled();
+      expect(mySidelineService.syncMySidelineCarnivals).toHaveBeenCalled();
       expect(AuditService.logAdminAction).toHaveBeenCalledWith(
         AuditService.ACTIONS.ADMIN_SYSTEM_SYNC,
         req,
@@ -1283,9 +1294,9 @@ describe('Admin Controller', () => {
             adminAction: 'Manual MySideline sync triggered',
             syncResult: expect.objectContaining({
               success: true,
-              eventsProcessed: 15,
-              eventsCreated: 8,
-              eventsUpdated: 4
+              carnivalsProcessed: 15,
+              carnivalsCreated: 8,
+              carnivalsUpdated: 4
             })
           })
         })
@@ -1293,14 +1304,14 @@ describe('Admin Controller', () => {
 
       expect(req.flash).toHaveBeenCalledWith(
         'success_msg',
-        'MySideline sync completed successfully! Processed 15 events (8 new, 4 updated)'
+        'MySideline sync completed successfully! Processed 15 carnivals (8 new, 4 updated)'
       );
       expect(res.redirect).toHaveBeenCalledWith('/admin/dashboard');
     });
 
     it('should handle MySideline sync failures', async () => {
       const syncError = new Error('Sync service unavailable');
-      mySidelineService.syncMySidelineEvents.mockRejectedValue(syncError);
+      mySidelineService.syncMySidelineCarnivals.mockRejectedValue(syncError);
 
       await syncMySideline(req, res);
 
@@ -1353,7 +1364,7 @@ describe('Admin Controller', () => {
         include: expect.arrayContaining([
           expect.objectContaining({
             model: Club,
-            as: 'clubs'
+            as: 'club'
           })
         ])
       }));
@@ -1394,10 +1405,7 @@ describe('Admin Controller', () => {
         id: 1,
         sponsorName: 'Test Sponsor',
         isActive: true,
-        clubs: [
-          createMockClub({ id: 1, clubName: 'Club A' }),
-          createMockClub({ id: 2, clubName: 'Club B' })
-        ]
+        club: createMockClub({ id: 1, clubName: 'Club A' })
       });
 
       req.params.id = '1';
@@ -1413,7 +1421,7 @@ describe('Admin Controller', () => {
 
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: expect.stringContaining('2 club(s)'),
+        message: expect.stringContaining('Sponsor "Test Sponsor" has been deactivated successfully'),
         action: 'deactivated'
       });
     });
@@ -1593,7 +1601,7 @@ describe('Admin Controller', () => {
 
       await showClaimCarnivalForm(req, res);
 
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Can only claim ownership of MySideline imported events');
+      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Can only claim ownership of MySideline imported carnivals');
       expect(res.redirect).toHaveBeenCalledWith('/admin/carnivals');
     });
   });

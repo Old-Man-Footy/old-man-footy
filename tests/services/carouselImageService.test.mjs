@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import CarouselImageService from '/services/carouselImageService.mjs';
+import CarouselImageService from '../../services/carouselImageService.mjs';
 import { promises as fs } from 'fs';
 
 /**
@@ -205,6 +205,8 @@ describe('CarouselImageService', () => {
         byType: {},
         recentCount: 0,
         totalSize: 0,
+        dbImages: 0,
+        legacyImages: 0,
       });
     });
   });

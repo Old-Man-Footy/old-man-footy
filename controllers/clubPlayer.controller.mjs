@@ -63,7 +63,7 @@ export async function showClubPlayers(req, res, next) {
       offset,
       include: [{
         model: Club,
-        as: 'club',
+        as: 'playerClub',
         attributes: ['id', 'clubName']
       }]
     });
@@ -79,7 +79,7 @@ export async function showClubPlayers(req, res, next) {
       order: [['updatedAt', 'DESC']], // Most recently deactivated first
       include: [{
         model: Club,
-        as: 'club',
+        as: 'playerClub',
         attributes: ['id', 'clubName']
       }]
     });
@@ -256,7 +256,7 @@ export async function showEditPlayerForm(req, res, next) {
       },
       include: [{
         model: Club,
-        as: 'club',
+        as: 'playerClub',
         attributes: ['id', 'clubName']
       }]
     });
@@ -266,10 +266,23 @@ export async function showEditPlayerForm(req, res, next) {
       return res.redirect('/clubs/players');
     }
 
+    // Ensure club data is available - fallback to fetching it separately if needed
+    let club = player.playerClub;
+    if (!club) {
+      club = await Club.findByPk(req.user.clubId, {
+        attributes: ['id', 'clubName']
+      });
+      
+      if (!club) {
+        req.flash('error', 'Club not found.');
+        return res.redirect('/clubs/players');
+      }
+    }
+
     return res.render('clubs/players/edit', {
       title: `Edit Player - ${player.getFullName()}`,
       player,
-      club: player.club,
+      club,
       formData: player.toJSON()
     });
   } catch (error) {
@@ -300,7 +313,7 @@ export async function updatePlayer(req, res, next) {
         },
         include: [{
           model: Club,
-          as: 'club',
+          as: 'playerClub',
           attributes: ['id', 'clubName']
         }]
       });
@@ -310,10 +323,23 @@ export async function updatePlayer(req, res, next) {
         return res.redirect('/clubs/players');
       }
 
+      // Ensure club data is available - fallback to fetching it separately if needed
+      let club = player.playerClub;
+      if (!club) {
+        club = await Club.findByPk(req.user.clubId, {
+          attributes: ['id', 'clubName']
+        });
+        
+        if (!club) {
+          req.flash('error', 'Club not found.');
+          return res.redirect('/clubs/players');
+        }
+      }
+
       return res.render('clubs/players/edit', {
         title: `Edit Player - ${player.getFullName()}`,
         player,
-        club: player.club,
+        club,
         formData: req.body,
         errors: errors.array()
       });

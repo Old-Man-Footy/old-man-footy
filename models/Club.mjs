@@ -277,6 +277,4 @@ Club.init({
   ]
 });
 
-Club.hasMany(Sponsor, { foreignKey: 'clubId', as: 'sponsors' });
-
 export default Club;

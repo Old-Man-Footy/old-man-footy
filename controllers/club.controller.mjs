@@ -18,7 +18,7 @@ import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import ImageNamingService from '../services/imageNamingService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
 import path from 'path';
 import fs from 'fs/promises';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
@@ -135,10 +135,9 @@ const showClubProfileHandler = async (req, res) => {
       },
       {
         model: Sponsor,
-        as: 'sponsors',
+        as: 'clubSponsors',
         where: { isActive: true },
         required: false,
-        through: { attributes: ['displayOrder'] },
       },
     ],
   });
@@ -203,12 +202,12 @@ const showClubProfileHandler = async (req, res) => {
 
   // Calculate upcoming carnivals count
   const upcomingCarnivals = carnivals.filter(
-    (carnival) => new Date(carnival.date) >= new Date()
+    (carnival) => !carnival.date || new Date(carnival.date) >= new Date()
   ).length;
 
   // Calculate upcoming attending carnivals count
   const upcomingAttendingCarnivals = attendingCarnivalsList.filter(
-    (carnival) => new Date(carnival.date) >= new Date()
+    (carnival) => !carnival.date || new Date(carnival.date) >= new Date()
   ).length;
 
   // Get full delegate information
@@ -223,7 +222,7 @@ const showClubProfileHandler = async (req, res) => {
   const primaryDelegate = delegates_full.find((delegate) => delegate.isPrimaryDelegate);
 
   // Sort sponsors using the hierarchical sorting service
-  const sortedSponsors = sortSponsorsHierarchically(club.sponsors, 'club');
+  const sortedSponsors = sortSponsorsHierarchically(club.clubSponsors, 'club');
 
   return res.render('clubs/show', {
     title: `${club.clubName} - Masters Rugby League Club`,
@@ -236,7 +235,7 @@ const showClubProfileHandler = async (req, res) => {
     primaryDelegate,
     sponsors: sortedSponsors,
     user: req.user || null,
-    additionalCSS: ['/styles/club.styles.css'],
+    additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
   });
 };
 
@@ -488,7 +487,7 @@ const showClubSponsorsHandler = async (req, res, next) => {
       include: [
         {
           model: Sponsor,
-          as: 'sponsors',
+          as: 'clubSponsors',
           where: { isActive: true },
           required: false,
         },
@@ -498,19 +497,14 @@ const showClubSponsorsHandler = async (req, res, next) => {
       req.flash('error_msg', 'Club not found.');
       return res.redirect('/dashboard');
     }
-    // Sort sponsors by displayOrder
-    const sponsors = club.sponsors
-      ? club.sponsors.sort((a, b) => {
-          const priorityA = a.displayOrder || 999;
-          const priorityB = b.displayOrder || 999;
-          return priorityA - priorityB;
-        })
-      : [];
+    // Sort sponsors using the hierarchical sorting service
+    const sortedSponsors = sortSponsorsHierarchically(club.clubSponsors, 'club');
+    
     return res.render('clubs/sponsors', {
       title: 'Manage Club Sponsors',
       club,
-      sponsors,
-      additionalCSS: ['/styles/club.styles.css'],
+      sponsors: sortedSponsors,
+      additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
     });
   } catch (err) {
     next(err);
@@ -610,7 +604,7 @@ const showAddSponsorHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'clubs',
+        as: 'club',
         where: { id: { [Op.ne]: club.id } },
         required: false,
       },
@@ -631,7 +625,7 @@ const showAddSponsorHandler = async (req, res) => {
     club,
     availableSponsors,
     states: AUSTRALIAN_STATES,
-    sponsorshipLevels: SPONSORSHIP_LEVELS,
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
     additionalCSS: ['/styles/club.styles.css'],
   });
 };
@@ -675,6 +669,9 @@ const addSponsorToClubHandler = async (req, res) => {
       req.flash('error_msg', 'This sponsor is already linked to your club.');
       return res.redirect('/clubs/manage/sponsors');
     }
+
+    // Link the sponsor to the club
+    await sponsor.update({ clubId: club.id });
   } else if (sponsorType === 'new') {
     // Create new sponsor
     const {
@@ -709,6 +706,7 @@ const addSponsorToClubHandler = async (req, res) => {
       twitterUrl: twitterUrl?.trim(),
       linkedinUrl: linkedinUrl?.trim(),
       sponsorshipLevel,
+      clubId: club.id,
       isPubliclyVisible: true,
     };
 
@@ -726,13 +724,12 @@ const addSponsorToClubHandler = async (req, res) => {
     return res.redirect('/clubs/manage/sponsors/add');
   }
 
-  // Link sponsor to club with displayOrder
-  const currentSponsors = await club.getSponsors();
+  // Set display order for the sponsor
+  const currentSponsors = await club.getClubSponsors();
   const displayOrder = currentSponsors.length + 1;
 
-  await club.addSponsor(sponsor, {
-    through: { displayOrder },
-  });
+  // Update the sponsor's display order
+  await sponsor.update({ displayOrder });
 
   req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club!`);
   return res.redirect('/clubs/manage/sponsors');
@@ -778,6 +775,143 @@ const removeSponsorFromClubHandler = async (req, res) => {
 
   req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been removed from your club.`);
   return res.redirect('/clubs/manage/sponsors');
+};
+
+/**
+ * Show edit sponsor form for club delegates
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showEditClubSponsorHandler = async (req, res) => {
+  const user = req.user;
+  const { sponsorId } = req.params;
+
+  if (!user.clubId) {
+    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
+    return res.redirect('/dashboard');
+  }
+
+  const club = await Club.findByPk(user.clubId);
+
+  if (!club) {
+    req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      clubId: club.id // Ensure sponsor belongs to this club
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    return res.redirect('/clubs/manage/sponsors');
+  }
+
+  return res.render('clubs/edit-sponsor', {
+    title: 'Edit Sponsor',
+    sponsor,
+    club,
+    states: AUSTRALIAN_STATES,
+    sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
+    additionalCSS: ['/styles/sponsor.styles.css'],
+  });
+};
+
+/**
+ * Update sponsor information for club delegates
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updateClubSponsorHandler = async (req, res) => {
+  const user = req.user;
+  const { sponsorId } = req.params;
+
+  if (!user.clubId) {
+    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
+    return res.redirect('/dashboard');
+  }
+
+  const club = await Club.findByPk(user.clubId);
+
+  if (!club) {
+    req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      clubId: club.id // Ensure sponsor belongs to this club
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    return res.redirect('/clubs/manage/sponsors');
+  }
+
+  // Validate request
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', 'Please correct the validation errors.');
+    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+  }
+
+  const {
+    sponsorName,
+    businessType,
+    sponsorshipLevel,
+    contactPerson,
+    contactEmail,
+    contactPhone,
+    website,
+    facebookUrl,
+    instagramUrl,
+    twitterUrl,
+    location,
+    state,
+    description,
+    isPubliclyVisible,
+  } = req.body;
+
+  try {
+    // Handle file upload if provided
+    let logoFilename = sponsor.logoFilename;
+    if (req.file) {
+      logoFilename = req.file.filename;
+    }
+
+    // Update sponsor
+    await sponsor.update({
+      sponsorName: sponsorName.trim(),
+      businessType: businessType ? businessType.trim() : null,
+      sponsorshipLevel,
+      contactPerson: contactPerson ? contactPerson.trim() : null,
+      contactEmail: contactEmail ? contactEmail.trim() : null,
+      contactPhone: contactPhone ? contactPhone.trim() : null,
+      website: website ? website.trim() : null,
+      facebookUrl: facebookUrl ? facebookUrl.trim() : null,
+      instagramUrl: instagramUrl ? instagramUrl.trim() : null,
+      twitterUrl: twitterUrl ? twitterUrl.trim() : null,
+      location: location ? location.trim() : null,
+      state,
+      description: description ? description.trim() : null,
+      logoFilename,
+      isPubliclyVisible: isPubliclyVisible === 'true',
+    });
+
+    req.flash('success_msg', `Sponsor "${sponsorName}" has been updated successfully.`);
+    return res.redirect('/clubs/manage/sponsors');
+  } catch (error) {
+    console.error('Error updating sponsor:', error);
+    req.flash('error_msg', 'An error occurred while updating the sponsor.');
+    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+  }
 };
 
 /**
@@ -1012,19 +1146,18 @@ const reorderClubSponsorsHandler = async (req, res) => {
     });
   }
 
-  // // Update display orders
-  // TODO: ORDER SPONSORS NEEDS UPDATING AS ClubSponsor TABLE IS NOW DEPRECATED
-  // for (let i = 0; i < sponsorOrder.length; i++) {
-  //   await ClubSponsor.update(
-  //     { displayOrder: i + 1 },
-  //     {
-  //       where: {
-  //         clubId: user.clubId,
-  //         sponsorId: sponsorOrder[i],
-  //       },
-  //     }
-  //   );
-  // }
+  // Update display orders
+  for (let i = 0; i < sponsorOrder.length; i++) {
+    await Sponsor.update(
+      { displayOrder: i + 1 },
+      {
+        where: {
+          id: sponsorOrder[i],
+          clubId: user.clubId,
+        },
+      }
+    );
+  }
 
   return res.json({
     success: true,
@@ -1545,6 +1678,56 @@ const searchClubsHandler = async (req, res) => {
   });
 };
 
+/**
+ * View club gallery page
+ */
+const viewClubGalleryHandler = async (req, res) => {
+  const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = 12; // 12 images per page
+
+  try {
+    // Get club details
+    const club = await Club.findByPk(id, {
+      attributes: ['id', 'clubName', 'location', 'state', 'isActive']
+    });
+
+    if (!club) {
+      req.flash('error_msg', 'Club not found.');
+      return res.redirect('/clubs');
+    }
+
+    if (!club.isActive) {
+      req.flash('error_msg', 'This club is not currently active.');
+      return res.redirect('/clubs');
+    }
+
+    // Get gallery images with pagination
+    const ImageUpload = (await import('../models/ImageUpload.mjs')).default;
+    const result = await ImageUpload.getClubImages(id, { page, limit });
+
+    // Check if user can manage images (for showing upload button)
+    let canUpload = false;
+    if (req.user) {
+      canUpload = ImageUpload.canUserUploadForClub(req.user, parseInt(id));
+    }
+
+    res.render('clubs/gallery', {
+      title: `${club.clubName} - Gallery`,
+      club,
+      images: result.images || [],
+      pagination: result.pagination,
+      canUpload,
+      user: req.user || null,
+      additionalCSS: ['/styles/club.styles.css', '/styles/gallery.styles.css']
+    });
+  } catch (error) {
+    console.error('Error loading club gallery:', error);
+    req.flash('error_msg', 'Error loading gallery. Please try again.');
+    res.redirect(`/clubs/${id}`);
+  }
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
   showClubListingsHandler,
@@ -1558,6 +1741,8 @@ const rawControllers = {
   showAddSponsorHandler,
   addSponsorToClubHandler,
   removeSponsorFromClubHandler,
+  showEditClubSponsorHandler,
+  updateClubSponsorHandler,
   showClubAlternateNamesHandler,
   addAlternateNameHandler,
   updateAlternateNameHandler,
@@ -1570,6 +1755,7 @@ const rawControllers = {
   joinClubHandler,
   leaveClubHandler,
   searchClubsHandler,
+  viewClubGalleryHandler,
 };
 
 // Export wrapped versions using the wrapControllers utility
@@ -1585,6 +1771,8 @@ export const {
   showAddSponsorHandler: showAddSponsor,
   addSponsorToClubHandler: addSponsorToClub,
   removeSponsorFromClubHandler: removeSponsorFromClub,
+  showEditClubSponsorHandler: showEditClubSponsor,
+  updateClubSponsorHandler: updateClubSponsor,
   showClubAlternateNamesHandler: showClubAlternateNames,
   addAlternateNameHandler: addAlternateName,
   updateAlternateNameHandler: updateAlternateName,
@@ -1597,6 +1785,7 @@ export const {
   joinClubHandler: joinClub,
   leaveClubHandler: leaveClub,
   searchClubsHandler: searchClubs,
+  viewClubGalleryHandler: viewClubGallery,
 } = wrapControllers(rawControllers);
 
 rawControllers.showClubSponsorsHandler = showClubSponsorsHandler;

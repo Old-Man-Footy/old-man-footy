@@ -18,6 +18,9 @@ import {
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+
+// Import recalculation function from carnivalClub controller
+import { recalculateRegistrationFees } from './carnivalClub.controller.mjs';
 import mySidelineService from '../services/mySidelineIntegrationService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
@@ -34,7 +37,7 @@ const listCarnivalsHandler = async (req, res) => {
   // Set default for upcoming only if no form has been submitted and no explicit filters are applied
   let upcomingFilter = upcoming;
   if (upcomingFilter === undefined && !_submitted && !search && (!state || state === 'all')) {
-    upcomingFilter = 'true'; // Default to showing upcoming events only on first page load
+    upcomingFilter = 'true'; // Default to showing upcoming carnivals only on first page load
   }
 
   // State filter
@@ -44,9 +47,17 @@ const listCarnivalsHandler = async (req, res) => {
 
   // Date filter - only apply if upcomingFilter is explicitly 'true'
   if (upcomingFilter === 'true') {
-    whereClause.date = { [Op.gte]: new Date() };
-    // When filtering for upcoming only, also filter to active carnivals
-    whereClause.isActive = true;
+    // Include both upcoming carnivals (with dates >= today) AND active carnivals with no date
+    whereClause[Op.or] = [
+      {
+        date: { [Op.gte]: new Date() },
+        isActive: true
+      },
+      {
+        date: null,
+        isActive: true
+      }
+    ];
   }
 
   // MySideline filter
@@ -56,9 +67,9 @@ const listCarnivalsHandler = async (req, res) => {
     whereClause.lastMySidelineSync = null;
   }
 
-  // Search filter
+  // Search filter - handle both search and date filters properly
   if (search) {
-    whereClause[Op.or] = [
+    const searchConditions = [
       // Use UPPER() function for case-insensitive comparison in SQLite
       sequelize.where(
         sequelize.fn('UPPER', sequelize.col('title')),
@@ -76,6 +87,43 @@ const listCarnivalsHandler = async (req, res) => {
         `%${search.toUpperCase()}%`
       ),
     ];
+
+    // If we also have upcoming filter, combine them properly
+    if (upcomingFilter === 'true') {
+      whereClause[Op.and] = [
+        {
+          [Op.or]: [
+            {
+              date: { [Op.gte]: new Date() },
+              isActive: true
+            },
+            {
+              date: null,
+              isActive: true
+            }
+          ]
+        },
+        {
+          [Op.or]: searchConditions
+        }
+      ];
+      // Remove the original [Op.or] since we're restructuring
+      delete whereClause[Op.or];
+    } else {
+      whereClause[Op.or] = searchConditions;
+    }
+  } else if (upcomingFilter === 'true' && !whereClause[Op.or]) {
+    // Handle upcoming filter without search - ensure we don't overwrite existing Op.or
+    whereClause[Op.or] = [
+      {
+        date: { [Op.gte]: new Date() },
+        isActive: true
+      },
+      {
+        date: null,
+        isActive: true
+      }
+    ];
   }
 
   const carnivals = await Carnival.findAll({
@@ -87,7 +135,54 @@ const listCarnivalsHandler = async (req, res) => {
         attributes: ['firstName', 'lastName'],
       },
     ],
-    order: [['date', 'DESC']], // Show newest first so inactive/past carnivals appear after active ones
+    // Remove database ordering - we'll sort in JavaScript for complex prioritization
+  });
+
+  // Custom sorting: Upcoming first, then active no-date, then past/inactive
+  const sortedCarnivals = carnivals.sort((a, b) => {
+    const now = new Date();
+    const aDate = a.date ? new Date(a.date) : null;
+    const bDate = b.date ? new Date(b.date) : null;
+    
+    // Determine category for each carnival
+    // Category 1: Upcoming (has date >= today AND is active)
+    // Category 2: No date but active
+    // Category 3: Past date or inactive
+    const getCategory = (carnival, date) => {
+      if (!carnival.isActive) return 3; // Inactive always goes to category 3
+      if (!date) return 2; // No date but active
+      if (date >= now) return 1; // Upcoming
+      return 3; // Past date
+    };
+    
+    const aCat = getCategory(a, aDate);
+    const bCat = getCategory(b, bDate);
+    
+    // Sort by category first
+    if (aCat !== bCat) {
+      return aCat - bCat;
+    }
+    
+    // Within same category, apply specific sorting
+    if (aCat === 1) {
+      // Category 1: Upcoming - sort by date ascending (soonest first)
+      return aDate - bDate;
+    } else if (aCat === 2) {
+      // Category 2: No date but active - sort alphabetically by title
+      return (a.title || '').localeCompare(b.title || '');
+    } else {
+      // Category 3: Past/inactive - sort by date ascending, then alphabetically
+      if (aDate && bDate) {
+        return aDate - bDate;
+      } else if (aDate && !bDate) {
+        return -1; // Items with dates come before items without dates
+      } else if (!aDate && bDate) {
+        return 1;
+      } else {
+        // Both have no date, sort alphabetically
+        return (a.title || '').localeCompare(b.title || '');
+      }
+    }
   });
 
   // Fetch full user data with club information for ownership checking
@@ -115,17 +210,19 @@ const listCarnivalsHandler = async (req, res) => {
   }
 
   // Process carnivals through getPublicDisplayData and add ownership information
-  const processedCarnivals = carnivals.map((carnival) => {
+  const processedCarnivals = sortedCarnivals.map((carnival) => {
     const publicData = carnival.getPublicDisplayData();
 
     // Check if this carnival can be claimed by the current user
+    // Allow carnivals that either have a MySideline ID or have a MySideline sync timestamp
+    const hasMySidelineMarker = carnival.mySidelineId || carnival.lastMySidelineSync;
     const canTakeOwnership =
       carnival.isActive &&
-      carnival.lastMySidelineSync &&
+      hasMySidelineMarker &&
       !carnival.createdByUserId &&
       userWithClub &&
       userWithClub.clubId &&
-      // State-based restriction: can only claim events in club's state or events with no state
+      // State-based restriction: can only claim carnivals in club's state or carnivals with no state
       (!carnival.state || !userWithClub.club.state || carnival.state === userWithClub.club.state);
 
     return {
@@ -260,14 +357,14 @@ const showCarnivalHandler = async (req, res) => {
     });
   }
 
-  // Check if this is a MySideline event that can be claimed (only for active carnivals)
+  // Check if this is a MySideline carnival that can be claimed (only for active carnivals)
   const canTakeOwnership =
     carnival.isActive &&
-    carnival.lastMySidelineSync &&
+    carnival.mySidelineId &&
     !carnival.createdByUserId &&
     userWithClub &&
     userWithClub.clubId &&
-    // State-based restriction: can only claim events in club's state or events with no state
+    // State-based restriction: can only claim carnivals in your club's state or carnivals with no state
     (!carnival.state || !userWithClub.club.state || carnival.state === userWithClub.club.state);
 
   // Check if user's club is already registered for this carnival (only for active carnivals)
@@ -362,6 +459,9 @@ const showCarnivalHandler = async (req, res) => {
     }
   }
 
+  // Check if registration is currently active (includes deadline check)
+  const isRegistrationActive = await carnival.isRegistrationActiveAsync();
+
   // Sort sponsors hierarchically using the sorting service
   const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
 
@@ -377,7 +477,8 @@ const showCarnivalHandler = async (req, res) => {
     canMergeCarnival, // Pass merge option availability
     availableMergeTargets, // Pass available merge targets
     isInactiveCarnival: !carnival.isActive,
-    isMySidelineEvent: !!carnival.mySidelineId,
+    isMySidelineCarnival: !!carnival.mySidelineId,
+    isRegistrationActive, // Pass registration status including deadline check
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
     additionalCSS: ['/styles/carnival.styles.css'],
     hostClub,
@@ -491,6 +592,9 @@ const createCarnivalHandler = async (req, res) => {
     socialMediaInstagram: req.body.socialMediaInstagram || '',
     socialMediaTwitter: req.body.socialMediaTwitter || '',
     socialMediaWebsite: req.body.socialMediaWebsite || '',
+    // Fee structure
+    teamRegistrationFee: req.body.teamRegistrationFee ? parseFloat(req.body.teamRegistrationFee) : 0,
+    perPlayerFee: req.body.perPlayerFee ? parseFloat(req.body.perPlayerFee) : 0,
   };
 
   // Use the duplicate detection and merging service
@@ -504,7 +608,7 @@ const createCarnivalHandler = async (req, res) => {
       carnival = await Carnival.create(carnivalData);
     } else {
       // Use duplicate detection and merging
-      carnival = await createOrMergeEvent(carnivalData, req.user.id);
+      carnival = await createOrMergeCarnival(carnivalData, req.user.id);
     }
 
     // Handle structured file uploads after carnival creation
@@ -617,7 +721,7 @@ const createCarnivalHandler = async (req, res) => {
   if (wasMerged) {
     req.flash(
       'success_msg',
-      `Carnival successfully merged with existing MySideline event! Your data has been combined with the imported event: "${carnival.title}"`
+      `Carnival successfully merged with existing MySideline carnival! Your data has been combined with the imported carnival: "${carnival.title}"`
     );
     return res.redirect(`/carnivals/${carnival.id}`);
   } else {
@@ -658,14 +762,14 @@ const showEditFormHandler = async (req, res) => {
 
 
 /**
- * Create or merge a carnival event, preventing duplicates.
- * If a matching MySideline event exists (by title/mySidelineTitle and date),
- * update it with any new data from the user-created event, otherwise create a new one.
+ * Create or merge a carnival carnival, preventing duplicates.
+ * If a matching MySideline carnival exists (by title/mySidelineTitle and date),
+ * update it with any new data from the user-created carnival, otherwise create a new one.
  * @param {Object} carnivalData - The carnival data to create.
- * @param {number} userId - The user ID creating the event.
+ * @param {number} userId - The user ID creating the carnival.
  * @returns {Promise<Carnival>} The created or merged carnival instance.
  */
-export async function createOrMergeEvent(carnivalData, userId) {
+export async function createOrMergeCarnival(carnivalData, userId) {
     if (!carnivalData.title || !carnivalData.date) {
       throw new Error('Carnival title and date are required for duplicate detection.');
     }
@@ -681,15 +785,15 @@ export async function createOrMergeEvent(carnivalData, userId) {
             ]
           },
           { date: carnivalData.date },
-          { claimedAt: null } // Only consider unclaimed events for merging
+          { claimedAt: null } // Only consider unclaimed carnivals for merging
         ]
       }
     });
   
     if (existing) {
-      // Only merge if the existing event is a MySideline import
+      // Only merge if the existing carnival is a MySideline import
       if (!existing.isManuallyEntered) {
-        // Merge user-provided data into the MySideline event (prefer user data if present)
+        // Merge user-provided data into the MySideline carnival (prefer user data if present)
         await existing.update({
           ...carnivalData,
           isManuallyEntered: false, // preserve MySideline status
@@ -699,10 +803,10 @@ export async function createOrMergeEvent(carnivalData, userId) {
         });
         return existing;
       } else if (existing.clubId === carnivalData.clubId) {
-        // If the existing event is manually entered but belongs to the same club, merge data
+        // If the existing carnival is manually entered but belongs to the same club, merge data
         throw new Error('A similar manually created carnival already exists for this date. Please check for duplicates.');
       }
-      // If the existing event is manually entered and belongs to a different club, allow creation.    
+      // If the existing carnival is manually entered and belongs to a different club, allow creation.    
     }
   
     // No duplicate found, create new carnival
@@ -790,6 +894,9 @@ const updateCarnivalHandler = async (req, res) => {
     socialMediaInstagram: req.body.socialMediaInstagram || '',
     socialMediaTwitter: req.body.socialMediaTwitter || '',
     socialMediaWebsite: req.body.socialMediaWebsite || '',
+    // Update fee structure
+    teamRegistrationFee: req.body.teamRegistrationFee ? parseFloat(req.body.teamRegistrationFee) : 0,
+    perPlayerFee: req.body.perPlayerFee ? parseFloat(req.body.perPlayerFee) : 0,
   };
 
   // Handle structured file uploads (including draw documents)
@@ -835,7 +942,39 @@ const updateCarnivalHandler = async (req, res) => {
     }
   }
 
+  // Check if fee structure changed before updating
+  const oldTeamFee = parseFloat(carnival.teamRegistrationFee) || 0;
+  const oldPerPlayerFee = parseFloat(carnival.perPlayerFee) || 0;
+  const newTeamFee = parseFloat(updateData.teamRegistrationFee) || 0;
+  const newPerPlayerFee = parseFloat(updateData.perPlayerFee) || 0;
+  
+  const feeStructureChanged = (oldTeamFee !== newTeamFee) || (oldPerPlayerFee !== newPerPlayerFee);
+
   await carnival.update(updateData);
+
+  // If fee structure changed, recalculate fees for all existing registrations
+  if (feeStructureChanged) {
+    const registrations = await CarnivalClub.findAll({
+      where: {
+        carnivalId: carnival.id,
+        isActive: true
+      },
+      attributes: ['id']
+    });
+
+    // Recalculate fees for each registration
+    for (const registration of registrations) {
+      try {
+        await recalculateRegistrationFees(registration.id);
+      } catch (error) {
+        console.error(`Failed to recalculate fees for registration ${registration.id}:`, error);
+      }
+    }
+    
+    if (registrations.length > 0) {
+      req.flash('info_msg', `Fee structure updated. Registration fees have been automatically recalculated for ${registrations.length} existing registration(s).`);
+    }
+  }
 
   req.flash('success_msg', 'Carnival updated successfully!');
   return res.redirect(`/carnivals/${carnival.id}`);
@@ -869,7 +1008,7 @@ const deleteCarnivalHandler = async (req, res) => {
 };
 
 /**
- * Take ownership of MySideline event
+ * Take ownership of MySideline carnival
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -887,7 +1026,7 @@ const takeOwnershipHandler = async (req, res) => {
 };
 
 /**
- * Release ownership of MySideline event
+ * Release ownership of MySideline carnival
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -916,9 +1055,9 @@ const syncMySidelineHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  const result = await mySidelineService.syncEvents();
+  const result = await mySidelineService.syncCarnivals();
 
-  req.flash('success_msg', `MySideline sync completed. ${result.newEvents} new events imported.`);
+  req.flash('success_msg', `MySideline sync completed. ${result.newCarnivals} new carnivals imported.`);
   return res.redirect('/dashboard');
 };
 
@@ -960,9 +1099,95 @@ export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
 });
 
 export const sendEmailToAttendees = asyncHandler(async (req, res) => {
-  // Placeholder for email attendees functionality
-  req.flash('error_msg', 'Email attendees functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}`);
+  try {
+    const { id } = req.params;
+    const { subject, customMessage } = req.body;
+    const user = req.user;
+
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessage = errors.array().map(error => error.msg).join(', ');
+      req.flash('error_msg', errorMessage);
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Validate required fields
+    if (!subject || !customMessage) {
+      req.flash('error_msg', 'Subject and message are required.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Fetch carnival with attending clubs and their contact information
+    const carnival = await Carnival.findByPk(id, {
+      include: [
+        {
+          model: Club,
+          as: 'attendingClubs',
+          attributes: ['id', 'clubName', 'state', 'location', 'contactEmail', 'contactPerson'],
+          through: {
+            attributes: ['approvalStatus', 'contactEmail', 'contactPerson'],
+            where: { isActive: true, approvalStatus: 'approved' },
+          },
+          required: false,
+        },
+      ],
+    });
+
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found.');
+      return res.redirect('/carnivals');
+    }
+
+    // Check if user has permission to send emails
+    const isCreator = user.id === carnival.createdByUserId;
+    const isAttendingClub = user.clubId && carnival.attendingClubs.some(club => club.id === user.clubId);
+    
+    if (!isCreator && !isAttendingClub) {
+      req.flash('error_msg', 'You do not have permission to send emails for this carnival.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Filter attending clubs to only approved ones
+    const approvedClubs = carnival.attendingClubs.filter(club => 
+      club.CarnivalClub?.approvalStatus === 'approved'
+    );
+
+    if (approvedClubs.length === 0) {
+      req.flash('error_msg', 'No approved attending clubs to email.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Import and use the CarnivalEmailService
+    const { CarnivalEmailService } = await import('../services/email/CarnivalEmailService.mjs');
+    const emailService = new CarnivalEmailService();
+    
+    // Get sender name
+    const senderName = `${user.firstName} ${user.lastName}`;
+    
+    // Send emails to attendee clubs
+    const result = await emailService.sendCarnivalInfoToAttendees(
+      carnival, 
+      approvedClubs, 
+      senderName, 
+      customMessage
+    );
+
+    if (result.success) {
+      req.flash('success_msg', 
+        `Email successfully sent to ${result.emailsSent} attending club${result.emailsSent !== 1 ? 's' : ''}.`
+      );
+    } else {
+      req.flash('error_msg', result.message || 'Failed to send emails to attending clubs.');
+    }
+
+    return res.redirect(`/carnivals/${id}`);
+
+  } catch (error) {
+    console.error('Error sending email to attendees:', error);
+    req.flash('error_msg', 'An error occurred while sending emails. Please try again.');
+    return res.redirect(`/carnivals/${req.params.id}`);
+  }
 });
 
 export const showAllPlayers = asyncHandler(async (req, res) => {
@@ -1159,3 +1384,48 @@ export const showAllPlayers = asyncHandler(async (req, res) => {
     additionalCSS: ['/styles/carnival.styles.css'],
   });
 });
+
+/**
+ * Display carnival gallery page
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const viewCarnivalGalleryHandler = asyncHandler(async (req, res) => {
+  const carnivalId = parseInt(req.params.id);
+  const page = parseInt(req.query.page) || 1;
+  const limit = 12; // 12 images per page
+  
+  if (!carnivalId) {
+    req.flash('error', 'Invalid carnival ID');
+    return res.redirect('/carnivals');
+  }
+
+  // Find the carnival
+  const carnival = await Carnival.findByPk(carnivalId);
+  if (!carnival) {
+    req.flash('error', 'Carnival not found');
+    return res.redirect('/carnivals');
+  }
+
+  // Get gallery images for this carnival with pagination
+  const ImageUpload = (await import('../models/ImageUpload.mjs')).default;
+  const result = await ImageUpload.getCarnivalImages(carnivalId, { page, limit });
+
+  // Check if user can upload images for this carnival
+  let canUpload = false;
+  if (req.user) {
+    canUpload = await ImageUpload.canUserUploadForCarnival(req.user, carnivalId);
+  }
+
+  res.render('carnivals/gallery', {
+    title: `Gallery - ${carnival.title}`,
+    carnival: carnival,
+    images: result.images,
+    pagination: result.pagination,
+    canUpload: canUpload,
+    additionalCSS: ['/styles/gallery.styles.css'],
+    additionalJS: ['/js/gallery-manager.js']
+  });
+});
+
+export const viewGallery = viewCarnivalGalleryHandler;

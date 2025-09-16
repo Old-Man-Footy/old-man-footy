@@ -11,8 +11,8 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
-import { SPONSORSHIP_LEVELS } from '/config/constants.mjs';    
+import { sequelize } from '../../config/database.mjs';
+import { SPONSORSHIP_LEVELS } from '../../config/constants.mjs';    
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -62,7 +62,7 @@ vi.mock('/models/index.mjs', () => {
     startDate: new Date('2024-06-01'),
     endDate: new Date('2024-06-03'),
     location: 'Sydney Olympic Park',
-    description: 'Annual carnival event',
+    description: 'Annual carnival carnival',
     registrationOpenDate: new Date('2024-01-01'),
     registrationCloseDate: new Date('2024-05-01'),
     isActive: true,
@@ -134,7 +134,7 @@ import {
   getCarnivalsForSponsor,
   getCarnivalSponsorshipSummary,
   reorderCarnivalSponsors
-} from '/controllers/carnivalSponsor.controller.mjs';
+} from '../../controllers/carnivalSponsor.controller.mjs';
 
 import {
   CarnivalSponsor,
@@ -144,7 +144,7 @@ import {
   createMockCarnival,
   createMockSponsor,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
 describe('Carnival Sponsor Controller', () => {
   let req, res, next;

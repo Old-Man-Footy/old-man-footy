@@ -47,6 +47,22 @@
     margin-top: 2rem;
 }
 
+/* ================================
+   CARNIVAL ATTENDEES APPROVAL BUTTONS
+   ================================ */
+
+/* Ensure approval buttons are always visible when their parent card is visible */
+.carnival-attendee-card:not(.d-none) .approve-registration,
+.carnival-attendee-card:not(.d-none) .reject-registration {
+    display: inline-block !important;
+}
+
+/* Prevent inheritance of d-none class on approval buttons */
+.approve-registration,
+.reject-registration {
+    display: inline-block;
+}
+
 .carnival-status-badge {
     font-size: 0.875rem;
     padding: 0.5rem 1rem;
@@ -152,6 +168,45 @@
     object-fit: contain;
     border-radius: 8px;
     border: 1px solid #dee2e6;
+}
+
+/* ================================
+   CARNIVAL ATTENDEE CARD LAYOUT FIXES
+   ================================ */
+
+/* Ensure proper positioning for approval status badges */
+.carnival-attendee-card {
+    position: relative;
+    min-height: 180px; /* Ensure enough height for content and badge */
+}
+
+.carnival-attendee-card .card-body {
+    padding-top: 3.5rem; /* Make room for the absolutely positioned badge */
+}
+
+/* Style the approval status badge */
+.carnival-attendee-card .position-absolute.top-0.end-0 {
+    z-index: 10; /* Ensure badge is above other content */
+    margin-top: 0.75rem;
+    margin-right: 0.75rem;
+}
+
+/* Style the button group to avoid conflicts */
+.carnival-btn-group-sm {
+    z-index: 5; /* Lower than the badge but above normal content */
+    margin-top: -0.5rem; /* Slight adjustment to avoid badge overlap */
+}
+
+.carnival-btn-group-sm .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    line-height: 1.2;
+}
+
+/* Ensure proper spacing in the flex layout */
+.carnival-attendee-card .d-flex.justify-content-between.align-items-start {
+    margin-bottom: 1rem;
+    margin-top: 0.5rem; /* Add some top margin to create space */
 }
 
 

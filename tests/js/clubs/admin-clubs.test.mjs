@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Import the manager object directly
-import { adminClubsManager } from '/public/js/admin-clubs.js';
+import { adminClubsManager } from '../../../public/js/admin-clubs.js';
 
 /**
  * @file admin-clubs.test.js
@@ -18,8 +18,8 @@ function setupDOM() {
                     <td>...</td>
                     <td>...</td>
                     <td>...</td>
-                    <td><span class="badge bg-success status-badge">Active</span></td>
-                    <td><span class="badge bg-info visibility-badge">Listed</span></td>
+                    <td><span class="badge bg-primary status-badge">Active</span></td>
+                    <td><span class="badge bg-info text-primary visibility-badge">Listed</span></td>
                     <td>
                         <button 
                             data-action="toggle-club-status"
@@ -79,7 +79,7 @@ describe('adminClubsManager', () => {
         const showToastSpy = vi.spyOn(adminClubsManager, 'showToast');
         const updateUISpy = vi.spyOn(adminClubsManager, 'updateStatusUI');
 
-        // Initialize the manager to set up event listeners
+        // Initialize the manager to set up carnival listeners
         adminClubsManager.initialize();
         
         const statusButton = document.querySelector('[data-action="toggle-club-status"]');

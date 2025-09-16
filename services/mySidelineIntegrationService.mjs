@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import MySidelineScraperService from './mySidelineScraperService.mjs';
-import MySidelineEventParserService from './mySidelineEventParserService.mjs';
+import MySidelineCarnivalParserService from './mySidelineCarnivalParserService.mjs';
 import MySidelineDataService from './mySidelineDataService.mjs';
 import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
 import ImageNamingService from './imageNamingService.mjs';
@@ -8,13 +8,13 @@ import { Carnival, SyncLog } from '../models/index.mjs';
 
 /**
  * MySideline Integration Service (Main Orchestrator)
- * Coordinates the scraping, parsing, and data processing of MySideline events
+ * Coordinates the scraping, parsing, and data processing of MySideline carnivals
  * This is the refactored main service that delegates to specialized services
  */
 class MySidelineIntegrationService {
     constructor() {
         this.scraperService = new MySidelineScraperService();
-        this.parserService = new MySidelineEventParserService();
+        this.parserService = new MySidelineCarnivalParserService();
         this.dataService = new MySidelineDataService();
         this.logoDownloadService = new MySidelineLogoDownloadService();
         
@@ -36,7 +36,7 @@ class MySidelineIntegrationService {
         // Run every day at 3 AM
         cron.schedule('0 3 * * *', async () => {
             console.log('Starting scheduled MySideline sync...');
-            await this.syncMySidelineEvents();
+            await this.syncMySidelineCarnivals();
         });
 
         // Also run on startup if needed - with delay to ensure DB is ready
@@ -57,7 +57,7 @@ class MySidelineIntegrationService {
                 try {
                     const shouldSync = await this.dataService.shouldRunInitialSync();
                     if (shouldSync) {
-                        await this.syncMySidelineEvents();
+                        await this.syncMySidelineCarnivals();
                     }
                     return; // Success, exit retry loop
                 } catch (dbError) {
@@ -80,12 +80,12 @@ class MySidelineIntegrationService {
     /**
      * Main sync function - orchestrates the entire process with proper sync logging
      */
-    async syncMySidelineEvents() {
+    async syncMySidelineCarnivals() {
         if (!this.syncEnabled) {
             console.log('MySideline sync is disabled via MYSIDELINE_SYNC_ENABLED configuration');
             return {
                 success: true,
-                eventsProcessed: 0,
+                carnivalsProcessed: 0,
                 message: 'Sync disabled via configuration'
             };
         }
@@ -96,7 +96,7 @@ class MySidelineIntegrationService {
         }
 
         this.isRunning = true;
-        console.log('Starting MySideline event synchronization...');
+        console.log('Starting MySideline carnival synchronization...');
 
         // Create sync log entry at the start - this ensures we always track sync attempts
         const syncLog = await SyncLog.startSync('mysideline', {
@@ -113,135 +113,135 @@ class MySidelineIntegrationService {
                 console.log(`✅ Deactivated ${deactivationResult.deactivatedCount} past carnivals`);
             }
 
-            // Step 1: Scrape events using the scraper service
-            const scrapedEvents = await this.scraperService.scrapeEvents();
+            // Step 1: Scrape carnivals using the scraper service
+            const scrapedCarnivals = await this.scraperService.scrapeCarnivals();
             
-            if (!scrapedEvents || scrapedEvents.length === 0) {
-                console.log('No events found from MySideline scraper');
+            if (!scrapedCarnivals || scrapedCarnivals.length === 0) {
+                console.log('No carnivals found from MySideline scraper');
                 
-                // Mark sync as completed even when no events found - this prevents endless retries
+                // Mark sync as completed even when no carnivals found - this prcarnivals endless retries
                 await syncLog.markCompleted({
-                    eventsProcessed: 0,
-                    eventsCreated: 0,
-                    eventsUpdated: 0
+                    carnivalsProcessed: 0,
+                    carnivalsCreated: 0,
+                    carnivalsUpdated: 0
                 });
                 
                 return {
                     success: true,
-                    eventsProcessed: 0,
-                    message: 'No events found'
+                    carnivalsProcessed: 0,
+                    message: 'No carnivals found'
                 };
             }
 
             // Step 1.5: Validate and clean the scraped data
-            console.log('Validating and cleaning scraped event data...');
-            const cleanedEvents = scrapedEvents.map(event => {
+            console.log('Validating and cleaning scraped carnival data...');
+            const cleanedCarnivals = scrapedCarnivals.map(carnival => {
                 try {
-                    return this.scraperService.validateAndCleanData(event);
+                    return this.scraperService.validateAndCleanData(carnival);
                 } catch (validationError) {
-                    console.warn(`Failed to validate event "${event.title}": ${validationError.message}`);
+                    console.warn(`Failed to validate carnival "${carnival.title}": ${validationError.message}`);
                     return null; // Mark for filtering out
                 }
-            }).filter(event => event !== null); // Remove failed validations
+            }).filter(carnival => carnival !== null); // Remove failed validations
 
-            console.log(`${cleanedEvents.length}/${scrapedEvents.length} events passed validation`);
+            console.log(`${cleanedCarnivals.length}/${scrapedCarnivals.length} carnivals passed validation`);
 
-            if (cleanedEvents.length === 0) {
-                console.log('No events passed validation checks');
+            if (cleanedCarnivals.length === 0) {
+                console.log('No carnivals passed validation checks');
                 
-                // Mark sync as completed even when no events pass validation
+                // Mark sync as completed even when no carnivals pass validation
                 await syncLog.markCompleted({
-                    eventsProcessed: 0,
-                    eventsCreated: 0,
-                    eventsUpdated: 0
+                    carnivalsProcessed: 0,
+                    carnivalsCreated: 0,
+                    carnivalsUpdated: 0
                 });
                 
                 return {
                     success: true,
-                    eventsProcessed: 0,
-                    message: 'No events passed validation'
+                    carnivalsProcessed: 0,
+                    message: 'No carnivals passed validation'
                 };
             }
 
-            // Step 2: Process validated events using the data service
-            const processedEvents = await this.dataService.processScrapedEvents(cleanedEvents);
+            // Step 2: Process validated carnivals using the data service
+            const processedCarnivals = await this.dataService.processScrapedCarnivals(cleanedCarnivals);
             
-            // Count new vs updated events for logging
-            const eventsCreated = processedEvents.filter(event => 
-                event.createdAt && new Date(event.createdAt) > new Date(Date.now() - 60000) // Created in last minute
+            // Count new vs updated carnivals for logging
+            const carnivalsCreated = processedCarnivals.filter(carnival => 
+                carnival.createdAt && new Date(carnival.createdAt) > new Date(Date.now() - 60000) // Created in last minute
             ).length;
-            const eventsUpdated = processedEvents.length - eventsCreated;
+            const carnivalsUpdated = processedCarnivals.length - carnivalsCreated;
             
-            // For each processed event where clubImageUrl starts with http
-            const imageDownloadPromises = processedEvents
-                .filter(event => event.clubLogoURL 
-                    && event.clubLogoURL.startsWith('http')).map(event => {
-                        const logoUrl = event.clubLogoURL;
+            // For each processed carnival where clubImageUrl starts with http
+            const imageDownloadPromises = processedCarnivals
+                .filter(carnival => carnival.clubLogoURL 
+                    && carnival.clubLogoURL.startsWith('http')).map(carnival => {
+                        const logoUrl = carnival.clubLogoURL;
                         const entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL; // Use constant instead of string
-                        const entityId = event.id;
+                        const entityId = carnival.id;
                         const imageType = ImageNamingService.IMAGE_TYPES.LOGO;
                         return { logoUrl, entityType, entityId, imageType };                
             });
 
             let results = [];
             if (imageDownloadPromises.length > 0) {
-                console.log(`Downloading logos for ${imageDownloadPromises.length} events...`);
+                console.log(`Downloading logos for ${imageDownloadPromises.length} carnivals...`);
                 results = await this.logoDownloadService.downloadLogos(imageDownloadPromises);
             }
 
             // Process the results of logo downloads
             if (results && results.length > 0) {
-                console.log(`Downloaded logos for ${results.length} events.`);
+                console.log(`Downloaded logos for ${results.length} carnivals.`);
                 results.forEach(async result => {
-                    // Update the event with the public URL
-                    const event = processedEvents.find(e => e.id === result.entityId);
+                    // Update the carnival with the public URL
+                    const carnival = processedCarnivals.find(e => e.id === result.entityId);
                     if (result.success) {
-                        console.log(`Logo downloaded successfully for event ${result.entityId}: ${result.publicUrl}`);
-                        if (event) {
+                        console.log(`Logo downloaded successfully for carnival ${result.entityId}: ${result.publicUrl}`);
+                        if (carnival) {
                             try {
                                 await Carnival.update(
                                     { clubLogoURL: result.publicUrl },
-                                    { where: { id: event.id } }
+                                    { where: { id: carnival.id } }
                                 );
-                                console.log(`✅ Updated event ${event.id} with new logo URL`);
+                                console.log(`✅ Updated carnival ${carnival.id} with new logo URL`);
                             } catch (updateError) {
-                                console.error(`❌ Failed to update event ${event.id} logo URL:`, updateError.message);
+                                console.error(`❌ Failed to update carnival ${carnival.id} logo URL:`, updateError.message);
                             }
                         } else {
-                            console.warn(`Event with ID ${result.entityId} not found in processed events.`);
+                            console.warn(`Carnival with ID ${result.entityId} not found in processed carnivals.`);
                         }
                     } else {
-                        console.warn(`Failed to download logo for event ${result.entityId}: ${result.error}`);
-                        if (event) {
+                        console.warn(`Failed to download logo for carnival ${result.entityId}: ${result.error}`);
+                        if (carnival) {
                             try {
                                 await Carnival.update(
                                     { clubLogoURL: null },
-                                    { where: { id: event.id } }
+                                    { where: { id: carnival.id } }
                                 );
-                                console.log(`✅ Cleared external logo from event ${event.id}`);
+                                console.log(`✅ Cleared external logo from carnival ${carnival.id}`);
                             } catch (updateError) {
-                                console.error(`❌ Failed to clear logo from ${event.id}:`, updateError.message);
+                                console.error(`❌ Failed to clear logo from ${carnival.id}:`, updateError.message);
                             }
                         }
                     }
                 })
             };
 
-            console.log(`MySideline sync completed. Processed ${processedEvents.length} events (${eventsCreated} new, ${eventsUpdated} updated).`);
+            console.log(`MySideline sync completed. Processed ${processedCarnivals.length} carnivals (${carnivalsCreated} new, ${carnivalsUpdated} updated).`);
             this.lastSyncDate = new Date();
             
             // Mark sync as completed with detailed results
             await syncLog.markCompleted({
-                eventsProcessed: processedEvents.length,
-                eventsCreated: eventsCreated,
-                eventsUpdated: eventsUpdated
+                carnivalsProcessed: processedCarnivals.length,
+                carnivalsCreated: carnivalsCreated,
+                carnivalsUpdated: carnivalsUpdated
             });
             
             return {
                 success: true,
-                eventsProcessed: processedEvents.length,
-                eventsCreated: eventsCreated,
-                eventsUpdated: eventsUpdated,
+                carnivalsProcessed: processedCarnivals.length,
+                carnivalsCreated: carnivalsCreated,
+                carnivalsUpdated: carnivalsUpdated,
                 lastSync: this.lastSyncDate
             };
         } catch (error) {
@@ -262,16 +262,16 @@ class MySidelineIntegrationService {
     /**
      * Public method for manual sync (called from admin panel)
      */
-    async fetchEvents() {
+    async fetchCarnivals() {
         try {
-            console.log('Starting manual MySideline event sync...');
-            const result = await this.syncMySidelineEvents();
+            console.log('Starting manual MySideline carnival sync...');
+            const result = await this.syncMySidelineCarnivals();
             
             if (result && result.success) {
-                console.log(`Manual MySideline sync completed successfully. Found ${result.eventsProcessed} events.`);
-                return result.eventsProcessed > 0 ? result.eventsProcessed : [];
+                console.log(`Manual MySideline sync completed successfully. Found ${result.carnivalsProcessed} carnivals.`);
+                return result.carnivalsProcessed > 0 ? result.carnivalsProcessed : [];
             } else {
-                console.log('Manual MySideline sync completed but no events found.');
+                console.log('Manual MySideline sync completed but no carnivals found.');
                 return [];
             }
         } catch (error) {
@@ -300,7 +300,7 @@ class MySidelineIntegrationService {
             syncEnabled: this.syncEnabled,
             services: {
                 scraper: 'MySidelineScraperService',
-                parser: 'MySidelineEventParserService',
+                parser: 'MySidelineCarnivalParserService',
                 data: 'MySidelineDataService'
             }
         };

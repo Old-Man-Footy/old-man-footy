@@ -1,4 +1,4 @@
-<div class="container py-4">
+<div class="container py-4" data-page-id="carnivals-show">
     <div class="row">
         <div class="col-lg-8">
             <!-- Hosting Club Banner -->
@@ -68,6 +68,7 @@
                     <img src="<%= carnival.promotionalImageURL %>" class="card-img-top" 
                          alt="<%= carnival.title %>" style="height: 300px; object-fit: cover;">
                 <% } %>
+                
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
@@ -78,9 +79,9 @@
                                     <span class="badge bg-danger">Inactive</span>
                                 <% } else if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
                                     <% if (carnival.date >= new Date()) { %>
-                                        <span class="badge bg-success">Upcoming</span>
+                                        <span class="badge bg-primary">Upcoming</span>
                                     <% } else { %>
-                                        <span class="badge bg-secondary">Past Event</span>
+                                        <span class="badge bg-secondary">Past Carnival</span>
                                     <% } %>
                                 <% } else { %>
                                     <span class="badge bg-warning text-dark">Date TBA</span>
@@ -93,21 +94,29 @@
                                 <% } %>
                             </div>
                         </div>
-                        <% if (carnival.clubLogoURL) { %>
-                            <% 
-                            // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
-                            const carnivalLogoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
-                            %>
-                            <img src="<%= carnivalLogoUrl %>" alt="Club Logo" 
-                                 style="width: 80px; height: 80px; object-fit: contain;">
-                        <% } else { %>
-                            <% 
-                            // No carnival logo, check for club logo, otherwise use missing.svg
-                            const fallbackLogoUrl = (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
-                            %>
-                            <img src="<%= fallbackLogoUrl %>" alt="Club Logo" 
-                                 style="width: 80px; height: 80px; object-fit: contain;">
-                        <% } %>
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- View Gallery Button -->
+                            <a href="/carnivals/<%= carnival.id %>/gallery" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-images me-1"></i>
+                                View Gallery
+                            </a>
+                            <!-- Logo -->
+                            <% if (carnival.clubLogoURL) { %>
+                                <% 
+                                // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
+                                const carnivalLogoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                                %>
+                                <img src="<%= carnivalLogoUrl %>" alt="Club Logo" 
+                                     style="width: 80px; height: 80px; object-fit: contain;">
+                            <% } else { %>
+                                <% 
+                                // No carnival logo, check for club logo, otherwise use missing.svg
+                                const fallbackLogoUrl = (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
+                                %>
+                                <img src="<%= fallbackLogoUrl %>" alt="Club Logo" 
+                                     style="width: 80px; height: 80px; object-fit: contain;">
+                            <% } %>
+                        </div>
                     </div>
 
                     <!-- Admin Actions Section -->
@@ -123,7 +132,7 @@
                                 </div>
                                 <div class="d-flex gap-2 flex-wrap">
                                     <!-- Admin Edit Button -->
-                                    <a href="/admin/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-warning btn-sm">
+                                    <a href="/admin/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-tertiary btn-sm">
                                         <i class="bi bi-gear"></i> Admin Edit
                                     </a>
                                     
@@ -136,7 +145,7 @@
                                             <i class="bi bi-eye-slash"></i> Deactivate
                                         </button>
                                     <% } else { %>
-                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                        <button type="button" class="btn btn-outline-tertiary btn-sm" 
                                                 data-toggle-carnival-status="<%= carnival.id %>"
                                                 data-carnival-title="<%= carnival.title %>"
                                                 data-current-status="false">
@@ -151,7 +160,7 @@
                                     
                                     <!-- Admin Claim Button (if not already owned by someone) -->
                                     <% if (!carnival.createdByUserId || carnival.createdByUserId === null) { %>
-                                        <a href="/admin/carnivals/<%= carnival.id %>/claim" class="btn btn-outline-success btn-sm">
+                                        <a href="/admin/carnivals/<%= carnival.id %>/claim" class="btn btn-outline-tertiary btn-sm">
                                             <i class="bi bi-hand-thumbs-up"></i> Admin Claim
                                         </a>
                                     <% } %>
@@ -168,19 +177,19 @@
                                     <i class="bi bi-gear-fill me-2"></i>
                                     <strong>
                                         <% if (canTakeOwnership) { %>
-                                            You can claim ownership of this MySideline event
+                                            You can claim ownership of this MySideline carnival
                                         <% } else { %>
-                                            You are the organizer of this event
+                                            You are the organizer of this carnival
                                         <% } %>
                                     </strong>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <!-- Claim button for unclaimed MySideline events -->
+                                    <!-- Claim button for unclaimed MySideline carnivals -->
                                     <% if (canTakeOwnership) { %>
-                                        <button type="button" class="btn btn-warning btn-sm" 
+                                        <button type="button" class="btn btn-tertiary btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#claimOwnershipModal">
-                                            <i class="bi bi-hand-thumbs-up"></i> Claim Event
+                                            <i class="bi bi-hand-thumbs-up"></i> Claim Carnival
                                         </button>
                                     <% } %>
 
@@ -193,14 +202,13 @@
 
                                         <!-- View All Players button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
-                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-success btn-sm">
+                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-list-ul"></i> View All Players
                                             </a>
                                         <% } %>
                                         
-                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-success btn-sm">
-                                            <i class="bi bi-pencil"></i> Edit Event
-                                        </a>
+                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil"></i> Edit Carnival                                        </a>
 
                                         <!-- Email Attendees button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
@@ -210,7 +218,7 @@
                                         <% } %>
                                     <% } %>
 
-                                    <!-- Release ownership button for MySideline events owned by the user -->
+                                    <!-- Release ownership button for MySideline carnivals owned by the user -->
                                     <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId && carnival.lastMySidelineSync) { %>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 data-bs-toggle="modal" 
@@ -219,9 +227,9 @@
                                         </button>
                                     <% } %>
 
-                                    <!-- Merge carnival button for MySideline events owned by the user -->
+                                    <!-- Merge carnival button for MySideline carnivals owned by the user -->
                                     <% if (canMergeCarnival) { %>
-                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                        <button type="button" class="btn btn-outline-tertiary btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#mergeCarnivalModal">
                                             <i class="bi bi-arrow-down-up"></i> Merge Carnival
@@ -232,12 +240,19 @@
                         </div>
                     <% } %>
 
+                    <!-- Public Actions section removed - View Gallery moved to header -->
+
                     <!-- Key Information -->
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <h5><i class="bi bi-calendar3 text-primary"></i> Date & Time</h5>
+                            <h5>
+                                <i class="bi bi-calendar3 text-primary"></i> Date & Time
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="date" data-help-modal="help-carnival-show" aria-label="Help: Date & Time">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
+                            </h5>
                             <p class="mb-3">
-                                <%- include('/partials/carnival-date', { 
+                                <%- include('../partials/carnival-date', { 
                                     carnival: carnival, 
                                     format: 'full',
                                     showIcon: false,
@@ -246,8 +261,13 @@
                             </p>
                         </div>
                         <div class="col-md-6">
-                            <h5><i class="bi bi-geo-alt text-primary"></i> Location</h5>
-                            <%- include('/partials/carnival-address', { 
+                            <h5>
+                                <i class="bi bi-geo-alt text-primary"></i> Location
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="location" data-help-modal="help-carnival-show" aria-label="Help: Location">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
+                            </h5>
+                            <%- include('../partials/carnival-address', { 
                                 carnival: carnival, 
                                 addressClass: 'text-primary fw-semibold',
                                 showIcon: false
@@ -268,14 +288,14 @@
                         <!-- Registration Section - Full Width -->
                         <% if (carnival.registrationLink) { %>
                             <div class="mb-4">
-                                <h5><i class="bi bi-person-plus text-success"></i> Registration</h5>
+                                <h5><i class="bi bi-person-plus text-success"></i> Player Registration</h5>
                                 <% 
-                                // Check if carnival is inactive OR if the event date is in the past
-                                const isPastEvent = carnival.date && carnival.date instanceof Date && !isNaN(carnival.date) && carnival.date < new Date();
-                                const shouldDisableRegistration = !carnival.isActive || isPastEvent;
+                                // Check if carnival is inactive OR if the carnival date is in the past
+                                const isPastCarnival = carnival.date && carnival.date instanceof Date && !isNaN(carnival.date) && carnival.date < new Date();
+                                const shouldDisableRegistration = !carnival.isActive || isPastCarnival;
                                 %>
                                 <% if (shouldDisableRegistration) { %>
-                                    <!-- Disabled registration for inactive carnivals or past events -->
+                                    <!-- Disabled registration for inactive carnivals or past carnivals -->
                                     <button class="btn btn-secondary" disabled>
                                         <i class="bi bi-x-circle"></i> Registration Closed
                                     </button>
@@ -284,21 +304,21 @@
                                             <i class="bi bi-info-circle me-1"></i>
                                             <% if (!carnival.isActive) { %>
                                                 Registration is no longer available for this carnival.
-                                            <% } else if (isPastEvent) { %>
-                                                Registration is closed - this event has already taken place.
+                                            <% } else if (isPastCarnival) { %>
+                                                Registration is closed - this carnival has already taken place.
                                             <% } %>
                                         </small>
                                     </div>
                                 <% } else { %>
                                     <a href="<%= carnival.registrationLink %>" 
-                                       class="btn btn-success" 
+                                       class="btn btn-tertiary" 
                                        target="_blank">
                                         <i class="bi bi-box-arrow-up-right"></i> Register Now
-                                        <% if (isMySidelineEvent) { %>
+                                        <% if (isMySidelineCarnival) { %>
                                             <i class="bi bi-info-circle ms-1" style="font-size: 0.875rem;"></i>
                                         <% } %>
                                     </a>
-                                    <% if (isMySidelineEvent) { %>
+                                    <% if (isMySidelineCarnival) { %>
                                         <div class="mt-2">
                                             <small class="text-warning">
                                                 <i class="bi bi-exclamation-triangle me-1"></i>
@@ -339,7 +359,7 @@
                             <% if (carnival.drawDescription) { %>
                                 <p><%= carnival.drawDescription %></p>
                             <% } %>
-                            <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-success" target="_blank">
+                            <a href="<%= carnival.drawFileURL %>" class="btn btn-outline-tertiary" target="_blank">
                                 <i class="bi bi-download"></i> Download Draw
                                 <% if (carnival.drawFileName) { %>
                                     (<%= carnival.drawFileName %>)
@@ -353,14 +373,14 @@
             <!-- Attending Clubs Section -->
             <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-info">
+                    <div class="card-header bg-info text-primary">
                         <h5 class="mb-0"><i class="bi bi-people-fill"></i> Attending Clubs</h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <% carnival.attendingClubs.forEach((club, index) => { %>
                                 <div class="col-lg-6 col-md-12">
-                                    <div class="d-flex align-items-center p-3 border rounded bg-light h-100">
+                                    <div class="d-flex align-items-start p-3 border rounded bg-light h-100">
                                         <% if (club.logoUrl) { %>
                                             <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
                                                  class="me-3 flex-shrink-0" style="height: 50px; width: auto; max-width: 70px; object-fit: contain;">
@@ -372,26 +392,28 @@
                                         <% } %>
                                         <div class="flex-grow-1 min-width-0">
                                             <% if (club.isPubliclyListed && club.isActive) { %>
-                                                <a href="/clubs/<%= club.id %>" class="text-decoration-none fw-bold h6 mb-1 d-block text-truncate">
+                                                <a href="/clubs/<%= club.id %>" class="text-decoration-none fw-bold h6 mb-1 d-block" title="<%= club.clubName %>">
                                                     <%= club.clubName %>
                                                 </a>
                                             <% } else { %>
-                                                <span class="fw-bold h6 mb-1 d-block text-truncate">
-                                                    <%= club.clubName %>
+                                                <div class="fw-bold h6 mb-1 d-flex align-items-start">
+                                                    <span class="flex-grow-1 me-2" title="<%= club.clubName %>">
+                                                        <%= club.clubName %>
+                                                    </span>
                                                     <% if (!club.isActive) { %>
-                                                        <span class="badge bg-secondary ms-2">Inactive</span>
+                                                        <span class="badge bg-secondary flex-shrink-0">Inactive</span>
                                                     <% } %>
-                                                </span>
+                                                </div>
                                             <% } %>
-                                            <div class="text-muted small">
+                                            <div class="text-muted small d-flex align-items-center flex-wrap">
                                                 <% if (club.state) { %>
-                                                    <span><%= club.state %></span>
-                                                <% } %>
-                                                <% if (club.location && club.state) { %>
-                                                    <span> • </span>
+                                                    <span class="me-2"><%= club.state %></span>
                                                 <% } %>
                                                 <% if (club.location) { %>
-                                                    <span class="text-truncate d-inline-block" style="max-width: 150px;"><%= club.location %></span>
+                                                    <% if (club.state) { %>
+                                                        <span class="me-2">•</span>
+                                                    <% } %>
+                                                    <span class="flex-grow-1" title="<%= club.location %>"><%= club.location %></span>
                                                 <% } %>
                                             </div>
                                         </div>
@@ -401,7 +423,7 @@
                         </div>
                         <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                             <div class="text-center mt-4">
-                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-success">
+                                <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-tertiary">
                                     <i class="bi bi-list-ul"></i> Manage Attendees
                                 </a>
                             </div>
@@ -411,7 +433,7 @@
             <% } else if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                 <!-- Show empty state for carnival owners -->
                 <div class="card shadow mb-4">
-                    <div class="card-header bg-info">
+                    <div class="card-header bg-info text-primary">
                         <h5 class="mb-0"><i class="bi bi-people-fill"></i> Attending Clubs</h5>
                     </div>
                     <div class="card-body text-center">
@@ -434,7 +456,7 @@
             <% if (sponsors && sponsors.length > 0) { %>
                 <div class="card shadow mb-4">
                     <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="bi bi-star-fill"></i> Event Sponsors</h5>
+                        <h5 class="mb-0"><i class="bi bi-star-fill"></i> Carnival Sponsors</h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -547,76 +569,132 @@
             </div>
             <!-- Club Registration Section (for delegates) -->
             <% if (user && canRegisterClub && carnival.isActive) { %>
-                <div class="card shadow mb-4 border-success">
-                    <div class="card-header bg-success">
-                        <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Register Interest</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-3">Express your club's interest in attending this carnival. Your registration will be reviewed by the hosting club.</p>
-                        
-                        <!-- Registration Form -->
-                        <form action="/carnivals/<%= carnival.id %>/register" method="POST" id="clubRegistrationForm">
-                            <div class="mb-3">
-                                <label for="playerCount" class="form-label">Expected Player Count</label>
-                                <input type="number" class="form-control" id="playerCount" name="playerCount" 
-                                       min="1" max="100" placeholder="e.g. 15">
-                                <div class="form-text">Approximate number of players who might attend</div>
-                            </div>
+                <% if (isRegistrationActive) { %>
+                    <!-- Show registration form when registration is open -->
+                    <div class="card shadow mb-4 border-success">
+                        <div class="card-header bg-tertiary">
+                            <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Register Club Interest</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">Express your club's interest in attending this carnival. Your registration will be reviewed by the hosting club.</p>
                             
-                            <div class="mb-3">
-                                <label for="teamName" class="form-label">Team Name</label>
-                                <input type="text" class="form-control" id="teamName" name="teamName" 
-                                       value="<%= user && user.club ? user.club.clubName : '' %>" 
-                                       maxlength="100" placeholder="Optional team name">
-                            </div>
+                            <!-- Registration Deadline Notice -->
+                            <% if (carnival.registrationDeadline) { %>
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-calendar-check text-info"></i>
+                                    <strong>Registration Deadline:</strong> <%= new Date(carnival.registrationDeadline).toLocaleDateString('en-AU', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    }) %>
+                                </div>
+                            <% } %>
                             
-                            <div class="mb-3">
-                                <label for="contactPerson" class="form-label">Contact Person</label>
-                                <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
-                                       value="<%= user.firstName %> <%= user.lastName %>" maxlength="100">
-                            </div>
+                            <!-- Registration Form -->
+                            <form action="/carnivals/<%= carnival.id %>/register" method="POST" id="clubRegistrationForm">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="playerCount" class="form-label">Expected Player Count</label>
+                                            <input type="number" class="form-control" id="playerCount" name="playerCount" 
+                                                   min="1" max="100" placeholder="e.g. 15">
+                                            <div class="form-text">Approximate number of players who might attend</div>
+                                            <span class="text-muted">This is total number of players across all teams</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="numberOfTeams" class="form-label">Number of Teams</label>
+                                            <input type="number" class="form-control" id="numberOfTeams" name="numberOfTeams" 
+                                                   min="1" max="10" value="1" required>
+                                            <div class="form-text">How many teams to register</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="teamName" class="form-label">Team Name</label>
+                                    <input type="text" class="form-control" id="teamName" name="teamName" 
+                                           value="<%= user && user.club ? user.club.clubName : '' %>" 
+                                           maxlength="100" placeholder="Optional team name">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contactPerson" class="form-label">Contact Person</label>
+                                    <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                           value="<%= user.firstName %> <%= user.lastName %>" maxlength="100">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contactEmail" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                           value="<%= user.email %>">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contactPhone" class="form-label">Contact Phone</label>
+                                    <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                           value="<%= user.phoneNumber || '' %>" 
+                                           maxlength="20" placeholder="Optional phone number">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="specialRequirements" class="form-label">Special Requirements</label>
+                                    <textarea class="form-control" id="specialRequirements" name="specialRequirements" 
+                                              rows="3" maxlength="500" placeholder="Any special requirements or notes..."></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-tertiary w-100">
+                                    <i class="bi bi-hand-thumbs-up"></i> Register Interest
+                                </button>
+                            </form>
                             
-                            <div class="mb-3">
-                                <label for="contactEmail" class="form-label">Contact Email</label>
-                                <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
-                                       value="<%= user.email %>">
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Your interest registration will be reviewed by the hosting club. You'll be notified of their decision via email.
+                                </small>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="contactPhone" class="form-label">Contact Phone</label>
-                                <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
-                                       value="<%= user.phoneNumber || '' %>" 
-                                       maxlength="20" placeholder="Optional phone number">
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="specialRequirements" class="form-label">Special Requirements</label>
-                                <textarea class="form-control" id="specialRequirements" name="specialRequirements" 
-                                          rows="3" maxlength="500" placeholder="Any special requirements or notes..."></textarea>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="bi bi-hand-thumbs-up"></i> Register Interest
-                            </button>
-                        </form>
-                        
-                        <div class="mt-3">
-                            <small class="text-muted">
-                                <i class="bi bi-info-circle"></i> 
-                                Your interest registration will be reviewed by the hosting club. You'll be notified of their decision via email.
-                            </small>
                         </div>
                     </div>
-                </div>
+                <% } else { %>
+                    <!-- Show deadline closure message when registration is closed -->
+                    <div class="card shadow mb-4 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-clock"></i> Club Registration Closed</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">
+                                <strong>Club registration for this carnival is now closed.</strong>
+                            </p>
+                            <% if (carnival.registrationDeadline) { %>
+                                <p class="mb-0">
+                                    <i class="bi bi-calendar-x text-warning"></i>
+                                    Registration deadline was: <strong><%= new Date(carnival.registrationDeadline).toLocaleDateString('en-AU', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    }) %></strong>
+                                </p>
+                            <% } %>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i>
+                                    If you need to register your club, please contact the carnival organiser directly.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
             <% } else if (user && userClubRegistration && carnival.isActive) { %>
                 <!-- Show registration status for already registered clubs -->
                 <div class="card shadow mb-4 border-info">
-                    <div class="card-header bg-info">
+                    <div class="card-header bg-info text-primary">
                         <h5 class="mb-0">
                             <% if (userClubRegistration.approvalStatus === 'approved') { %>
-                                <i class="bi bi-check-circle"></i> Your Club is Registered
+                                <i class="bi bi-check-circle bg-success"></i> Your Club is Registered
                             <% } else if (userClubRegistration.approvalStatus === 'pending') { %>
-                                <i class="bi bi-clock"></i> Interest Registered
+                                <i class="bi bi-clock  bg-warning"></i> Interest Registered
                             <% } else { %>
                                 <i class="bi bi-x-circle"></i> Registration Status
                             <% } %>
@@ -630,7 +708,7 @@
                                     <i class="bi bi-check-circle"></i> Approved
                                 </span>
                                 <% if (userClubRegistration.isPaid) { %>
-                                    <span class="badge bg-info ms-1">Paid</span>
+                                    <span class="badge bg-success text-dark ms-1">Paid</span>
                                 <% } else { %>
                                     <span class="badge bg-warning text-dark ms-1">Payment Pending</span>
                                 <% } %>
@@ -738,9 +816,9 @@
                                 </small>
                             </div>
                         <% } else if (userClubRegistration.approvalStatus === 'approved' && userClubRegistration.isPaid) { %>
-                            <div class="alert alert-info mb-0">
+                            <div class="alert alert-success mb-0">
                                 <small>
-                                    <i class="bi bi-info-circle"></i> 
+                                    <i class="bi bi-success-circle"></i> 
                                     Contact the organiser to make changes after payment.
                                 </small>
                             </div>
@@ -775,7 +853,7 @@
     <div class="container py-4">
         <div class="row">
             <div class="col-md-6">
-                <h5 class="text-primary mb-3">Event Summary</h5>
+                <h5 class="text-primary mb-3">Carnival Summary</h5>
                 <div class="d-flex align-items-center mb-2">
                     <i class="bi bi-calendar3 text-primary me-2"></i>
                     <span>
@@ -798,15 +876,15 @@
             <div class="col-md-6">
                 <h5 class="text-primary mb-3">Quick Actions</h5>
                 <div class="d-flex flex-wrap gap-2">
-                    <% if (carnival.registrationLink) { %>
+                    <% if (carnival.registrationLink && isRegistrationActive) { %>
                         <% if (!carnival.isActive && !canManage) { %>
                             <!-- Disabled registration button for inactive carnivals -->
                             <button class="btn btn-sm btn-secondary" disabled>
                                 <i class="bi bi-x-circle"></i> Registration Closed
                             </button>
                         <% } else { %>
-                            <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-success" target="_blank">
-                                <i class="bi bi-person-plus"></i> Register
+                            <a href="<%= carnival.registrationLink %>" class="btn btn-sm btn-tertiary" target="_blank">
+                                <i class="bi bi-person-plus"></i> Player Registration
                             </a>
                         <% } %>
                     <% } %>
@@ -847,16 +925,16 @@
                     <% } %>
                 </div>
 
-                <!-- Admin Actions for Event Owners -->
+                <!-- Admin Actions for Carnival Owners -->
                 <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
                     <div class="mt-3">
                         <h6 class="text-muted mb-2">Admin Actions</h6>
                         <div class="d-flex flex-wrap gap-2">
-                            <!-- Take Ownership button for unclaimed MySideline events -->
+                            <!-- Take Ownership button for unclaimed MySideline carnivals -->
                             <% if (canTakeOwnership) { %>
                                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-warning" 
-                                            data-confirm="Are you sure you want to take ownership of this event for your club? This will allow you to manage and edit the event details.">
+                                    <button type="submit" class="btn btn-sm btn-tertiary" 
+                                            data-confirm="Are you sure you want to take ownership of this carnival for your club? This will allow you to manage and edit the carnival details.">
                                         <i class="bi bi-hand-thumbs-up"></i> Take Ownership
                                     </button>
                                 </form>
@@ -870,19 +948,19 @@
                                 
                                 <!-- View All Players button (only if there are attendee clubs) -->
                                 <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
-                                    <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-sm btn-info">
+                                    <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-sm btn-primary">
                                         <i class="bi bi-list-ul"></i> View All Players
                                     </a>
                                 <% } %>
                                 
                                 <!-- Email Attendees button (only if there are attendee clubs) -->
                                 <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
-                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
                                         <i class="bi bi-envelope"></i> Email Attendees
                                     </button>
                                 <% } %>
                                 
-                                <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-sm btn-outline-warning">
+                                <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-sm btn-outline-tertiary">
                                     <i class="bi bi-pencil"></i> Edit
                                 </a>
                             <% } %>
@@ -897,9 +975,9 @@
         <div class="row">
             <div class="col-12 text-center text-muted">
                 <small>
-                    Event details are provided by the hosting club. For questions or corrections, please contact the organiser.
+                    Carnival details are provided by the hosting club. For questions or corrections, please contact the organiser.
                     <br>
-                    <strong>Event ID:</strong> <%= carnival.id %> | 
+                    <strong>Carnival ID:</strong> <%= carnival.id %> | 
                     <strong>Last Updated:</strong> <%= new Date(carnival.updatedAt).toLocaleDateString('en-AU') %>
                 </small>
             </div>
@@ -914,7 +992,7 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="claimOwnershipModalLabel">
                     <i class="bi bi-hand-thumbs-up text-warning me-2"></i>
-                    Claim Event Ownership
+                    Claim Carnival Ownership
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -924,23 +1002,23 @@
                     <strong>What does claiming ownership mean?</strong>
                 </div>
                 
-                <p>By claiming ownership of this MySideline event, you will:</p>
+                <p>By claiming ownership of this MySideline carnival, you will:</p>
                 
                 <ul class="mb-3">
-                    <li><strong>Gain full control</strong> - Edit event details, contact information, and scheduling</li>
+                    <li><strong>Gain full control</strong> - Edit carnival details, contact information, and scheduling</li>
                     <li><strong>Manage attendees</strong> - Add, remove, and communicate with registered clubs</li>
-                    <li><strong>Update information</strong> - Keep event details current and accurate</li>
-                    <li><strong>Handle registrations</strong> - Manage the registration process for your event</li>
+                    <li><strong>Update information</strong> - Keep carnival details current and accurate</li>
+                    <li><strong>Handle registrations</strong> - Manage the registration process for your carnival</li>
                 </ul>
                 
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Important:</strong> Once you claim ownership, you become responsible for managing this event. 
+                    <strong>Important:</strong> Once you claim ownership, you become responsible for managing this carnival. 
                     This action cannot be undone without administrator assistance.
                 </div>
                 
                 <p class="mb-0">
-                    <strong>Current Event:</strong> <%= carnival.title %><br>
+                    <strong>Current Carnival:</strong> <%= carnival.title %><br>
                     <strong>Your Club:</strong> <%= user && user.club ? user.club.clubName : 'Your Club' %>
                 </p>
             </div>
@@ -949,8 +1027,8 @@
                     <i class="bi bi-x-circle"></i> Cancel
                 </button>
                 <form method="POST" action="/carnivals/<%= carnival.id %>/take-ownership" class="d-inline">
-                    <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-hand-thumbs-up"></i> Yes, Claim This Event
+                    <button type="submit" class="btn btn-tertiary">
+                        <i class="bi bi-hand-thumbs-up"></i> Yes, Claim This Carnival
                     </button>
                 </form>
             </div>
@@ -965,18 +1043,18 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="releaseOwnershipModalLabel">
                     <i class="bi bi-unlock text-danger me-2"></i>
-                    Release Event Ownership
+                    Release Carnival Ownership
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Warning:</strong> Releasing ownership will remove your access to manage this event.
+                    <strong>Warning:</strong> Releasing ownership will remove your access to manage this carnival.
                 </div>
                 
                 <p class="mb-0">
-                    <strong>Event:</strong> <%= carnival.title %><br>
+                    <strong>Carnival:</strong> <%= carnival.title %><br>
                     <strong>Your Club:</strong> <%= user && user.club ? user.club.clubName : 'Your Club' %>
                 </p>
             </div>
@@ -1016,7 +1094,7 @@
                 
                 <ul class="mb-3">
                     <li><strong>Copy MySideline data</strong> - Registration link and MySideline fields will be copied to your selected carnival</li>
-                    <li><strong>Fill empty fields</strong> - Any empty fields in your target carnival will be populated from this MySideline event</li>
+                    <li><strong>Fill empty fields</strong> - Any empty fields in your target carnival will be populated from this MySideline carnival</li>
                     <li><strong>Deactivate this carnival</strong> - This MySideline carnival will be marked as inactive</li>
                     <li><strong>Preserve your data</strong> - Existing data in your target carnival will not be overwritten</li>
                 </ul>
@@ -1048,9 +1126,9 @@
                         </select>
                         <div class="form-text">
                             <% if (user && user.isAdmin) { %>
-                                As an administrator, you can merge this MySideline event into any active carnival on the platform.
+                                As an administrator, you can merge this MySideline carnival into any active carnival on the platform.
                             <% } else { %>
-                                Select which of your existing carnivals you want to merge this MySideline event into.
+                                Select which of your existing carnivals you want to merge this MySideline carnival into.
                             <% } %>
                         </div>
                     </div>
@@ -1065,7 +1143,7 @@
                     
                     <div class="mb-3">
                         <p><strong>Source (MySideline):</strong> <%= carnival.title %></p>
-                        <p><strong>Action:</strong> Data from this event will be merged into your selected carnival above, then this event will be deactivated.</p>
+                        <p><strong>Action:</strong> Data from this carnival will be merged into your selected carnival above, then this carnival will be deactivated.</p>
                     </div>
                 </form>
             </div>
@@ -1131,12 +1209,15 @@
 <script type="module" src="/js/common-utils.js"></script>
 <script type="module" src="/js/carnival-show.js"></script>
 
+<!-- Help modal partial for carnival show page -->
+<%- include('../partials/help-modal.ejs', { modalId: 'help-carnival-show' }) %>
+
 <!-- Post-Creation Important Notices Modal -->
 <% if (showPostCreationModal) { %>
 <div class="modal fade" id="postCreationModal" tabindex="-1" aria-labelledby="postCreationModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
+            <div class="modal-header bg-tertiary text-white">
                 <h5 class="modal-title" id="postCreationModalLabel">
                     <i class="bi bi-check-circle-fill me-2"></i>
                     Carnival Created Successfully!
@@ -1172,15 +1253,15 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-3">
-                            <strong>For all official NRL Masters competitions</strong>, you must also register your event 
+                            <strong>For all official NRL Masters competitions</strong>, you must also register your carnival 
                             with the National Rugby League through their official portal:
                         </p>
                         
                         <div class="d-grid gap-2 mb-3">
-                            <a href="https://www.playrugbyleague.com/play/masters/host-application-form/" 
-                               class="btn btn-warning" target="_blank" rel="noopener noreferrer">
+                            <a href="<%= process.env.PLAYNRL_REGISTRATION_URL || '#' %>" 
+                               class="btn btn-tertiary" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-box-arrow-up-right me-2"></i>
-                                Register Event with NRL Masters
+                                Register Carnival with NRL Masters
                             </a>
                         </div>
                         
@@ -1196,7 +1277,7 @@
 
                 <!-- MySideline Integration Notice -->
                 <div class="card border-info mb-4">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header bg-info text-primary">
                         <h6 class="mb-0">
                             <i class="bi bi-info-circle me-2"></i>
                             2. MySideline Integration Notice
@@ -1204,55 +1285,135 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-3">
-                            <strong>Potential Duplicate Events:</strong> MySideline may import a similar event that didn't 
+                            <strong>Potential Duplicate Carnivals:</strong> MySideline may import a similar carnival that didn't 
                             automatically merge with your carnival. If this happens, you may need to manually merge the 
-                            MySideline carnival with your event to avoid duplicates.
+                            MySideline carnival with your carnival to avoid duplicates.
                         </p>
                         
                         <div class="alert alert-warning border-0 mb-0">
                             <small>
                                 <i class="bi bi-gear me-1"></i>
                                 <strong>What to expect:</strong> Our system attempts automatic matching, but manual review 
-                                may be required for events with different naming, dates, or locations. You'll be notified 
+                                may be required for carnivals with different naming, dates, or locations. You'll be notified 
                                 if merge options become available.
                             </small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Acknowledgment Checkboxes -->
-                <div class="card border-secondary">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">
-                            <i class="bi bi-check-square me-2"></i>
-                            Please Acknowledge
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="nrlAcknowledge" required>
-                            <label class="form-check-label" for="nrlAcknowledge">
-                                <strong>I understand</strong> that I need to register my official NRL Masters event 
-                                through the NRL portal if this is an official competition.
-                            </label>
-                        </div>
-                        
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="checkbox" id="mysidelineAcknowledge" required>
-                            <label class="form-check-label" for="mysidelineAcknowledge">
-                                <strong>I acknowledge</strong> that MySideline may import a similar event, and I may 
-                                need to manually merge it with my carnival to avoid duplicates.
-                            </label>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" id="acknowledgeButton" disabled>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
                     <i class="bi bi-check-circle me-2"></i>
-                    I Understand - Continue
+                    Continue
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<!-- Email Attendees Modal -->
+<% if (user && carnival.attendingClubs && carnival.attendingClubs.length > 0 && 
+       ((user.id === carnival.createdByUserId) || 
+        (user.clubId && carnival.attendingClubs.some(club => club.id === user.clubId)))) { %>
+<div class="modal fade" id="emailAttendeesModal" tabindex="-1" aria-labelledby="emailAttendeesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailAttendeesModalLabel">
+                    <i class="bi bi-envelope me-2"></i>
+                    Email Attendee Clubs
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="emailAttendeesForm" action="/carnivals/<%= carnival.id %>/email-attendees" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <p class="text-muted">
+                            Send a custom message to all attending clubs for "<%= carnival.title %>". 
+                            This email will be sent to the primary contact for each club.
+                        </p>
+                    </div>
+
+                    <!-- Recipients Info -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-people me-1"></i>
+                            Recipients (<%= carnival.attendingClubs.length %> clubs)
+                        </label>
+                        <div class="border rounded p-2 bg-light">
+                            <% carnival.attendingClubs.forEach((club, index) => { %>
+                                <%= club.clubName %><% if (index < carnival.attendingClubs.length - 1) { %>, <% } %>
+                            <% }); %>
+                        </div>
+                    </div>
+
+                    <!-- Subject Field -->
+                    <div class="mb-3">
+                        <label for="emailSubject" class="form-label">
+                            <i class="bi bi-tag me-1"></i>
+                            Subject <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="emailSubject" 
+                               name="subject" 
+                               value="Update regarding <%= carnival.title %>"
+                               required 
+                               maxlength="200">
+                        <div class="form-text">
+                            Maximum 200 characters
+                        </div>
+                    </div>
+
+                    <!-- Custom Message Field -->
+                    <div class="mb-3">
+                        <label for="customMessage" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Your Message <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" 
+                                  id="customMessage" 
+                                  name="customMessage" 
+                                  rows="6" 
+                                  required 
+                                  maxlength="2000"
+                                  placeholder="Enter your message to all attending clubs..."></textarea>
+                        <div class="form-text d-flex justify-content-between">
+                            <span>Maximum 2000 characters. This will be included in the email along with carnival details.</span>
+                            <span class="char-counter text-muted">0/2000</span>
+                        </div>
+                    </div>
+
+                    <!-- Preview Info -->
+                    <div class="alert alert-info border-0">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Email Preview
+                        </h6>
+                        <p class="mb-1">
+                            Your custom message will be included in a professional email template that also contains:
+                        </p>
+                        <ul class="mb-0">
+                            <li>Carnival details (title, date, location)</li>
+                            <li>Your contact information as the sender</li>
+                            <li>Link to the carnival page</li>
+                            <li>Standard email footer</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="sendEmailBtn">
+                        <i class="bi bi-send me-1"></i>
+                        Send Email to All Clubs
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

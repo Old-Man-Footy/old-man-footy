@@ -9,7 +9,6 @@ export default defineConfig({
     ],
     exclude: [
       '**/node_modules/**',
-      '**/e2e/**',
       '**/test-results/**',
       '**/tests/jest.env.mjs',
       '**/scripts/fix-jest-globals.mjs'
@@ -24,7 +23,6 @@ export default defineConfig({
       exclude: [
         '**/tests/**',
         '**/node_modules/**',
-        '**/e2e/**',
         '**/test-results/**',
       ]
     }

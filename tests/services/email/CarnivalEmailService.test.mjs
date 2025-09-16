@@ -7,23 +7,21 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CarnivalEmailService } from '/services/email/CarnivalEmailService.mjs';
-import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
-import { EmailSubscription } from '/models/index.mjs';
+import { CarnivalEmailService } from '../../../services/email/CarnivalEmailService.mjs';
+import { EmailSubscription } from '../../../models/index.mjs';
 import { Op } from 'sequelize';
 
 // Mock dependencies
-vi.mock('/services/email/BaseEmailService.mjs');
-vi.mock('/models/index.mjs', () => ({
+vi.mock('../../../models/index.mjs', () => ({
   EmailSubscription: {
-    findAll: vi.fn()
+    findAll: vi.fn(),
+    findOne: vi.fn()
   }
 }));
 
 describe('CarnivalEmailService', () => {
   let carnivalEmailService;
   let sendEmailMock;
-  let sendMailMock;
 
   // Mock data
   const mockCarnival = {
@@ -51,25 +49,21 @@ describe('CarnivalEmailService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    sendEmailMock = vi.fn().mockResolvedValue({ success: true });
-    sendMailMock = vi.fn().mockResolvedValue({ messageId: 'mock-id' });
-
-    BaseEmailService.prototype.sendEmail = sendEmailMock;
-    BaseEmailService.prototype.transporter = { sendMail: sendMailMock };
-    BaseEmailService.prototype._getBaseUrl = vi.fn().mockReturnValue('http://localhost:3050');
-    BaseEmailService.prototype._getEmailHeader = vi.fn().mockReturnValue('<div>Header</div>');
-    BaseEmailService.prototype._getEmailFooter = vi.fn((content = '') => `<div>Footer ${content}</div>`);
-    BaseEmailService.prototype._createButton = vi.fn((url, text) => `<a href="${url}">${text}</a>`);
-    BaseEmailService.prototype._createInfoBox = vi.fn(content => `<div>${content}</div>`);
-    BaseEmailService.prototype._createSuccessBox = vi.fn(content => `<div>${content}</div>`);
-    BaseEmailService.prototype._createWarningBox = vi.fn(content => `<div>${content}</div>`);
-    BaseEmailService.prototype._getEmailContainerStyles = vi.fn().mockReturnValue('');
-    BaseEmailService.prototype._getEmailContentStyles = vi.fn().mockReturnValue('');
-    BaseEmailService.prototype._formatDate = vi.fn(date => new Date(date).toLocaleDateString());
-    BaseEmailService.prototype._canSendEmails = vi.fn().mockReturnValue(true);
-    BaseEmailService.prototype._logBlockedEmail = vi.fn();
-
     carnivalEmailService = new CarnivalEmailService();
+    
+    // Create spy for sendEmail method
+    sendEmailMock = vi.spyOn(carnivalEmailService, 'sendEmail').mockResolvedValue({ success: true });
+    
+    // Mock other methods that are used in the service
+    vi.spyOn(carnivalEmailService, '_canSendEmails').mockReturnValue(true);
+    vi.spyOn(carnivalEmailService, '_logBlockedEmail').mockImplementation(() => {});
+    vi.spyOn(carnivalEmailService, '_getBaseUrl').mockReturnValue('http://localhost:3050');
+    vi.spyOn(carnivalEmailService, '_addUnsubscribeHeaders').mockImplementation(mailOptions => mailOptions);
+    vi.spyOn(carnivalEmailService, '_formatDate').mockImplementation(date => {
+      if (typeof date === 'string') return new Date(date).toLocaleDateString();
+      if (date && typeof date.toLocaleDateString === 'function') return date.toLocaleDateString();
+      return 'Invalid Date';
+    });
   });
 
   describe('sendCarnivalNotification', () => {
@@ -85,10 +79,10 @@ describe('CarnivalEmailService', () => {
       expect(EmailSubscription.findAll).toHaveBeenCalledWith({
         where: { states: { [Op.contains]: ['NSW'] }, isActive: true }
       });
-      expect(sendMailMock).toHaveBeenCalledTimes(2);
-      expect(sendMailMock.mock.calls[0][0].to).toBe('sub1@test.com');
-      expect(sendMailMock.mock.calls[1][0].to).toBe('sub2@test.com');
-      expect(sendMailMock.mock.calls[0][0].subject).toContain('New Masters Rugby League Carnival');
+      expect(sendEmailMock).toHaveBeenCalledTimes(2);
+      expect(sendEmailMock.mock.calls[0][0].to).toBe('sub1@test.com');
+      expect(sendEmailMock.mock.calls[1][0].to).toBe('sub2@test.com');
+      expect(sendEmailMock.mock.calls[0][0].subject).toContain('New Masters Rugby League Carnival');
       expect(result).toEqual({
         success: true,
         emailsSent: 2,
@@ -100,14 +94,14 @@ describe('CarnivalEmailService', () => {
     it('should return success with 0 emails sent if no subscribers are found', async () => {
       EmailSubscription.findAll.mockResolvedValue([]);
       const result = await carnivalEmailService.sendCarnivalNotification(mockCarnival);
-      expect(sendMailMock).not.toHaveBeenCalled();
+      expect(sendEmailMock).not.toHaveBeenCalled();
       expect(result).toEqual({ success: true, emailsSent: 0 });
     });
 
     it('should not send emails if _canSendEmails returns false', async () => {
         carnivalEmailService._canSendEmails.mockReturnValue(false);
         const result = await carnivalEmailService.sendCarnivalNotification(mockCarnival);
-        expect(sendMailMock).not.toHaveBeenCalled();
+        expect(sendEmailMock).not.toHaveBeenCalled();
         expect(carnivalEmailService._logBlockedEmail).toHaveBeenCalled();
         expect(result).toEqual({
             success: false,
@@ -120,10 +114,10 @@ describe('CarnivalEmailService', () => {
         EmailSubscription.findAll.mockResolvedValue([{ email: 'a@b.com', unsubscribeToken: 't' }]);
         
         await carnivalEmailService.sendCarnivalNotification(mockCarnival, 'updated');
-        expect(sendMailMock.mock.calls[0][0].subject).toContain('Carnival Updated');
+        expect(sendEmailMock.mock.calls[0][0].subject).toContain('Carnival Updated');
 
         await carnivalEmailService.sendCarnivalNotification(mockCarnival, 'merged');
-        expect(sendMailMock.mock.calls[1][0].subject).toContain('Carnival Enhanced');
+        expect(sendEmailMock.mock.calls[1][0].subject).toContain('Carnival Enhanced');
     });
   });
 
@@ -136,9 +130,9 @@ describe('CarnivalEmailService', () => {
 
     it('should send info to all attendee clubs with an email', async () => {
         const result = await carnivalEmailService.sendCarnivalInfoToAttendees(mockCarnival, attendeeClubs, 'Host Club');
-        expect(sendMailMock).toHaveBeenCalledTimes(2);
-        expect(sendMailMock.mock.calls[0][0].to).toBe('a@club.com');
-        expect(sendMailMock.mock.calls[1][0].to).toBe('b@club.com');
+        expect(sendEmailMock).toHaveBeenCalledTimes(2);
+        expect(sendEmailMock.mock.calls[0][0].to).toBe('a@club.com');
+        expect(sendEmailMock.mock.calls[1][0].to).toBe('b@club.com');
         expect(result.emailsSent).toBe(2);
         expect(result.emailsFailed).toBe(1);
     });
@@ -146,8 +140,8 @@ describe('CarnivalEmailService', () => {
     it('should include the custom message in the email', async () => {
         const customMessage = 'Please bring your own water bottles.';
         await carnivalEmailService.sendCarnivalInfoToAttendees(mockCarnival, [attendeeClubs[0]], 'Host Club', customMessage);
-        expect(sendMailMock).toHaveBeenCalledOnce();
-        const html = sendMailMock.mock.calls[0][0].html;
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        const html = sendEmailMock.mock.calls[0][0].html;
         expect(html).toContain(customMessage);
     });
 
@@ -206,6 +200,127 @@ describe('CarnivalEmailService', () => {
         const result = await carnivalEmailService.sendRegistrationRejection(mockCarnival, clubNoEmail, 'Admin', 'Full');
         expect(sendEmailMock).not.toHaveBeenCalled();
         expect(result).toEqual({ success: false, message: 'No email address available' });
+    });
+  });
+
+  describe('sendCarnivalClaimNotification', () => {
+    const mockClaimingUser = {
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john.smith@newclub.com'
+    };
+
+    const mockClaimingClub = {
+        clubName: 'New Club FC',
+        location: 'Brisbane, QLD'
+    };
+
+    it('should send claim notification to original MySideline contact', async () => {
+        const originalEmail = 'original@mysideline.com';
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        const mailOptions = sendEmailMock.mock.calls[0][0];
+        expect(mailOptions.to).toBe(originalEmail);
+        expect(mailOptions.subject).toContain('Your carnival "Test Carnival 2025" has been claimed');
+        expect(mailOptions.html).toContain('🏉 Your Carnival Has Been Claimed');
+        expect(mailOptions.html).toContain('John Smith');
+        expect(mailOptions.html).toContain('New Club FC');
+        expect(result).toEqual({ success: true });
+    });
+
+    it('should return failure if no original email is provided', async () => {
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            null
+        );
+        
+        expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(result).toEqual({ success: false, message: 'No original email address available' });
+    });
+
+    it('should not send email if claiming user has same email as original contact', async () => {
+        const originalEmail = 'john.smith@newclub.com'; // Same as mockClaimingUser.email
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(result).toEqual({ 
+            success: false, 
+            message: 'No notification sent - claiming user is the original contact' 
+        });
+    });
+
+    it('should not send email if claiming user has same email as original contact (case insensitive)', async () => {
+        const originalEmail = 'JOHN.SMITH@NEWCLUB.COM'; // Same as mockClaimingUser.email but different case
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).not.toHaveBeenCalled();
+        expect(result).toEqual({ 
+            success: false, 
+            message: 'No notification sent - claiming user is the original contact' 
+        });
+    });
+
+    it('should include claiming club location in email if available', async () => {
+        const originalEmail = 'original@mysideline.com';
+        await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        const html = sendEmailMock.mock.calls[0][0].html;
+        expect(html).toContain('Brisbane, QLD');
+    });
+
+    it('should handle missing club location gracefully', async () => {
+        const originalEmail = 'original@mysideline.com';
+        const clubWithoutLocation = { ...mockClaimingClub, location: null };
+        
+        await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            mockClaimingUser, 
+            clubWithoutLocation, 
+            originalEmail
+        );
+        
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        const html = sendEmailMock.mock.calls[0][0].html;
+        expect(html).toContain('New Club FC');
+    });
+
+    it('should handle missing claiming user email gracefully', async () => {
+        const originalEmail = 'original@mysideline.com';
+        const userWithoutEmail = { ...mockClaimingUser, email: null };
+        
+        const result = await carnivalEmailService.sendCarnivalClaimNotification(
+            mockCarnival, 
+            userWithoutEmail, 
+            mockClaimingClub, 
+            originalEmail
+        );
+        
+        // Should still send email since we can't compare emails
+        expect(sendEmailMock).toHaveBeenCalledOnce();
+        expect(result).toEqual({ success: true });
     });
   });
 });

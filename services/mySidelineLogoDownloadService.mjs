@@ -90,7 +90,7 @@ class MySidelineLogoDownloadService {
             });
 
             // Follow same pattern as upload middleware - create temp file first, then move to final location
-            const tempDir = path.join('uploads', 'temp');
+            const tempDir = path.join('public/uploads', 'temp');
             await fs.mkdir(tempDir, { recursive: true });
             
             // Write to temp location first (same as upload middleware)
@@ -98,7 +98,7 @@ class MySidelineLogoDownloadService {
             await fs.writeFile(tempFilePath, downloadResult.data);
 
             // Ensure final upload directory exists
-            const finalUploadPath = path.join('uploads', namingResult.relativePath);
+            const finalUploadPath = path.join('public/uploads', namingResult.relativePath);
             await fs.mkdir(finalUploadPath, { recursive: true });
 
             // Move from temp to final location (same as processStructuredUpload middleware)

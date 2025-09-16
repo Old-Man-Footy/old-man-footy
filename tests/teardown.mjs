@@ -5,7 +5,7 @@
  * Handles final cleanup and database connection closure.
  */
 
-import { sequelize } from '../models/index.mjs';
+import { sequelize } from '../config/database.mjs';
 
 /**
  * Global teardown function for Vitest

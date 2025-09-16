@@ -47,6 +47,7 @@ services:
       - MYSIDELINE_URL=${MYSIDELINE_URL:-https://profile.mysideline.com.au/register/clubsearch/?criteria=Masters&source=rugby-league}
       - NODE_ENV=production
       - PORT=3060
+      - PLAYNRL_REGISTRATION_URL=${PLAYNRL_REGISTRATION_URL:-https://www.playrugbyleague.com/play/masters/host-application-form/}
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100} # Default 100 requests per window
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-900000} # Default 15 minutes
       - READY_CHECK_PATH=${READY_CHECK_PATH:-/ready} # Default readiness check path
@@ -97,6 +98,76 @@ services:
       - /var/cache   # Often used for caching
       - /var/log     # For internal application logs (if not using logging driver for all logs)
       # Note: /app/public/uploads is handled by volume mount, not tmpfs
+
+  # Scheduled maintenance service for database optimization and backups
+  maintenance:
+    build:
+      context: .
+      target: production
+    image: ghcr.io/old-man-footy/old-man-footy:latest
+    container_name: old-man-footy-maintenance
+    
+    environment:
+      # Inherit most environment variables from the main app
+      - NODE_ENV=production
+      - TZ=${TZ:-Australia/Sydney}
+      # Database and backup settings
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
+      - SQLITE_MAX_POOL_SIZE=${SQLITE_MAX_POOL_SIZE:-10}
+      - SQLITE_MIN_POOL_SIZE=${SQLITE_MIN_POOL_SIZE:-1}
+      - SQLITE_ACQUIRE_TIMEOUT=${SQLITE_ACQUIRE_TIMEOUT:-30000}
+      - SQLITE_IDLE_TIMEOUT=${SQLITE_IDLE_TIMEOUT:-10000}
+      # Email settings for maintenance notifications
+      - EMAIL_FROM_NAME="Old Man Footy Maintenance"
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@oldmanfooty.au}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_SERVICE=${EMAIL_SERVICE}
+      - EMAIL_USER=${EMAIL_USER}
+      - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
+      # Encryption for sensitive data
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      
+    volumes:
+      # Share the same data volume for database access
+      - /volume2/docker/old-man-footy-prod/data:/app/data
+      # Separate backup volume (optional - could use same data volume)
+      - /volume2/docker/old-man-footy-prod/backups:/app/backups
+
+    networks:
+      - old-man-footy-network-prod
+      
+    restart: unless-stopped
+    
+    # Override the default command to run maintenance script
+    command: ["node", "scripts/scheduled-maintenance.mjs"]
+    
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    
+    # Health check to ensure maintenance service is running
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "scheduled-maintenance.mjs"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+        
+    security_opt:
+      - no-new-privileges:true
+      
+    # Ensure maintenance starts after the main app
+    depends_on:
+      - app
 
 networks:
   old-man-footy-network-prod: # Distinct production network

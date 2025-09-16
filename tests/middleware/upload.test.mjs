@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
-import { extractUploadContext, fileFilter, handleUploadError } from '/middleware/upload.mjs';
+import { extractUploadContext, fileFilter, handleUploadError } from '../../middleware/upload.mjs';
 
 // Mock dependencies
 vi.mock('/services/imageNamingService.mjs', () => ({

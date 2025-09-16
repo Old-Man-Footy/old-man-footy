@@ -31,15 +31,15 @@ const validateCarnival = [
         })
         .isISO8601().withMessage('Valid end date is required'),
     body('locationAddress').trim().isLength({ min: 5, max: 500 }).withMessage('Location must be between 5 and 500 characters'),
-    body('contactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
-    body('contactEmail').custom((email) => {
+    body('organiserContactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
+    body('organiserContactEmail').custom((email) => {
         const result = validateSecureEmail(email);
         if (!result.isValid) {
             throw new Error(result.errors[0]);
         }
         return true;
     }),
-    body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('organiserContactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
     body('registrationFee').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Registration fee must be a valid amount'),
     body('feesDescription').optional().trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
     body('callForVolunteers').optional().trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),
@@ -60,6 +60,9 @@ router.get('/', carnivalController.list);
 // Create carnival form
 router.get('/new', ensureAuthenticated, carnivalController.getNew);
 
+// Carnival gallery (public) - MUST come before /:id route
+router.get('/:id/gallery', carnivalController.viewGallery);
+
 // Show individual carnival
 router.get('/:id', carnivalController.show);
 
@@ -75,10 +78,10 @@ router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError,
 // Delete carnival
 router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);
 
-// Take ownership of MySideline event
+// Take ownership of MySideline carnival
 router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeOwnership);
 
-// Release ownership of MySideline event
+// Release ownership of MySideline carnival
 router.post('/:id/release-ownership', ensureAuthenticated, carnivalController.releaseOwnership);
 
 // Merge MySideline carnival with existing carnival
@@ -98,7 +101,16 @@ router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, carnivalCont
 
 // Send email to attendee clubs
 router.post('/:id/email-attendees', ensureAuthenticated, [
-    body('message').optional().trim().isLength({ max: 2000 }).withMessage('Message must be 2000 characters or less')
+    body('subject')
+        .notEmpty()
+        .withMessage('Subject is required')
+        .isLength({ max: 200 })
+        .withMessage('Subject must be 200 characters or less'),
+    body('customMessage')
+        .notEmpty()
+        .withMessage('Message is required')
+        .isLength({ max: 2000 })
+        .withMessage('Message must be 2000 characters or less')
 ], carnivalController.sendEmailToAttendees);
 
 // Show comprehensive player list for all clubs attending a carnival

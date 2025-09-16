@@ -1,6 +1,6 @@
 /**
  * Carnival Edit JavaScript
- * Handles file upload area interactions and multi-day event functionality for the carnival edit page.
+ * Handles file upload area interactions and multi-day carnival functionality for the carnival edit page.
  * Refactored into a testable object pattern.
  */
 
@@ -13,7 +13,7 @@ export const carnivalEditManager = {
         this.cacheDOMElements();
         this.initializePageStyling();
         this.initializeFileUploads();
-        this.initializeMultiDayEventFunctionality();
+        this.initializeMultiDayCarnivalFunctionality();
         this.initializeMySidelineIntegration();
     },
 
@@ -33,7 +33,7 @@ export const carnivalEditManager = {
             registrationLinkInput: document.getElementById('registrationLink'),
             linkStatusElement: document.getElementById('linkStatus'),
             testLinkBtn: document.getElementById('testLinkBtn'),
-            form: document.querySelector('form[data-mysideline-event-url]'),
+            form: document.querySelector('form[data-mysideline-carnival-url]'),
         };
     },
 
@@ -67,14 +67,14 @@ export const carnivalEditManager = {
 
     // Handle click on a file upload area using an arrow function for proper scoping.
     // Handle click on a file upload area using a regular function for proper `this` binding.
-    handleFileAreaClick: function(event) {
-        const area = event.currentTarget;
+    handleFileAreaClick: function(carnival) {
+        const area = carnival.currentTarget;
         const input = area?.querySelector('input[type="file"]');
         if (input) input.click();
     },
 
-    // Sets up event listeners and logic for multi-day events.
-    initializeMultiDayEventFunctionality() {
+    // Sets up event listeners and logic for multi-day carnivals.
+    initializeMultiDayCarnivalFunctionality() {
         const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
         if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;
 
@@ -95,7 +95,7 @@ export const carnivalEditManager = {
         const isChecked = isMultiDayCheckbox.checked;
 
         endDateContainer.style.display = isChecked ? 'block' : 'none';
-        dateLabel.textContent = isChecked ? 'Event Start Date *' : 'Date *';
+        dateLabel.textContent = isChecked ? 'Carnival Start Date *' : 'Date *';
         endDateInput.required = isChecked;
 
         if (isChecked) {
@@ -158,14 +158,14 @@ export const carnivalEditManager = {
         }
         const cleanId = eventId.replace(/\D/g, '');
         if (!cleanId) {
-            this.updateRegistrationLink('', 'Please enter a valid numeric MySideline event ID', 'text-warning');
+            this.updateRegistrationLink('', 'Please enter a valid numeric MySideline carnival ID', 'text-warning');
             return;
         }
         if (cleanId !== eventId) {
             mySidelineIdInput.value = cleanId;
         }
         const mySidelineUrl = this.generateMySidelineUrl(cleanId);
-        this.updateRegistrationLink(mySidelineUrl, `✓ Registration link auto-generated from MySideline event ${cleanId}`, 'text-success');
+        this.updateRegistrationLink(mySidelineUrl, `✓ Registration link auto-generated from MySideline carnival ${cleanId}`, 'text-success');
     },
 
     // Handles changes to the registration link input.
@@ -180,22 +180,22 @@ export const carnivalEditManager = {
             const mySidelineMatch = url.match(/mysideline\.com\/register\/(\d+)/);
             if (mySidelineMatch) {
                 const extractedId = mySidelineMatch[1];
-                this.updateRegistrationLink(url, `✓ MySideline registration link (Event ID: ${extractedId})`, 'text-success');
+                this.updateRegistrationLink(url, `✓ MySideline registration link (Carnival ID: ${extractedId})`, 'text-success');
                 if (!mySidelineIdInput.value || mySidelineIdInput.value !== extractedId) {
                     mySidelineIdInput.value = extractedId;
                 }
             } else {
-                this.updateRegistrationLink(url, '✓ Custom registration link', 'text-info');
+                this.updateRegistrationLink(url, '✓ Custom registration link', 'text-dark');
             }
         } else {
             this.updateRegistrationLink(url, '⚠ Please enter a valid URL', 'text-warning');
         }
     },
 
-    // Generates a MySideline URL from an event ID.
+    // Generates a MySideline URL from an carnival ID.
     generateMySidelineUrl(eventId) {
         const { form } = this.elements;
-        const mySidelineBaseUrl = form ? form.dataset.mysidelineEventUrl : '';
+        const mySidelineBaseUrl = form ? form.dataset.mysidelineCarnivalUrl : '';
         if (!eventId || !mySidelineBaseUrl) return '';
         return `${mySidelineBaseUrl}${eventId}`;
     },
@@ -203,15 +203,23 @@ export const carnivalEditManager = {
     // Updates the registration link field and its status message.
     updateRegistrationLink(url, status, statusClass = 'text-muted') {
         const { registrationLinkInput, linkStatusElement, testLinkBtn } = this.elements;
-        registrationLinkInput.value = url;
-        linkStatusElement.textContent = status;
-        linkStatusElement.className = `form-text ${statusClass}`;
         
-        if (url && this.isValidUrl(url)) {
-            testLinkBtn.style.display = 'block';
-            testLinkBtn.onclick = () => window.open(url, '_blank');
-        } else {
-            testLinkBtn.style.display = 'none';
+        if (registrationLinkInput) {
+            registrationLinkInput.value = url;
+        }
+        
+        if (linkStatusElement) {
+            linkStatusElement.textContent = status;
+            linkStatusElement.className = `form-text ${statusClass}`;
+        }
+        
+        if (testLinkBtn) {
+            if (url && this.isValidUrl(url)) {
+                testLinkBtn.style.display = 'block';
+                testLinkBtn.onclick = () => window.open(url, '_blank');
+            } else {
+                testLinkBtn.style.display = 'none';
+            }
         }
     },
 

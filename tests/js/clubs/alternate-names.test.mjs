@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
-import { AlternateNamesManager } from '/public/js/alternate-names.js';
+import { alternateNamesManager } from '../../../public/js/alternate-names.js';
 
 // Mock global fetch and location
 global.fetch = vi.fn();
@@ -52,13 +52,15 @@ describe('AlternateNamesManager', () => {
     beforeEach(() => {
         setupDOM();
         container = document.getElementById('container');
-        manager = new AlternateNamesManager(container, mockProvider);
-        manager.init();
+        // Initialize the singleton manager with the mock provider
+        alternateNamesManager.initialize(mockProvider);
         vi.resetAllMocks();
     });
 
     afterEach(() => {
-        document.body.innerHTML = '';
+    // Destroy carnival listeners added by the manager to clean up between tests
+    alternateNamesManager.destroy();
+    document.body.innerHTML = '';
     });
 
     describe('Add Name', () => {

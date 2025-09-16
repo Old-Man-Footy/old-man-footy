@@ -12,9 +12,9 @@ A comprehensive web application for managing Rugby League Masters carnivals acro
 - **Multi-State Support:** Support for all Australian states (NSW, QLD, VIC, WA, SA, TAS, NT, ACT)
 - **File Uploads:** Club logos, promotional images, and draw files with organized storage
 - **Social Media Integration:** Facebook, Instagram, Twitter, and website links
-- **Advanced Search & Filtering:** Filter by state, search terms, and upcoming events
+- **Advanced Search & Filtering:** Filter by state, search terms, and upcoming carnivals
 - **Email Subscriptions:** State-based email notifications for carnival updates
-- **MySideline Integration:** Automated import and synchronization of events from MySideline platform
+- **MySideline Integration:** Automated import and synchronization of carnivals from MySideline platform
 
 ### User Management
 
@@ -166,7 +166,6 @@ npm run test:coverage
 │   ├── main.controller.mjs                     # Main application routes
 │   ├── maintenance.controller.mjs              # Maintenance mode handling
 │   ├── sponsor.controller.mjs                  # Sponsor management operations
-│   └── userGuide.controller.mjs                # User guide functionality
 ├── data/                                    # Database files
 │   ├── dev-old-man-footy.db                    # Development SQLite database
 │   └── test-old-man-footy.db                   # Test SQLite database
@@ -183,7 +182,7 @@ npm run test:coverage
 │   └── *.mjs                                   # Database schema migration files
 ├── models/                                  # MVC Models - Database schemas and logic
 │   ├── AuditLog.mjs                            # Audit logging model
-│   ├── Carnival.mjs                            # Carnival event model
+│   ├── Carnival.mjs                            # Carnival carnival model
 │   ├── CarnivalClub.mjs                        # Carnival-club relationship model
 │   ├── CarnivalClubPlayer.mjs                  # Carnival club player model
 │   ├── CarnivalSponsor.mjs                     # Carnival sponsorship model
@@ -220,7 +219,7 @@ npm run test:coverage
 │   ├── emailService.mjs                        # Email notification service
 │   ├── imageNamingService.mjs                  # Image file naming utilities
 │   ├── mySidelineDataService.mjs               # MySideline data processing
-│   ├── mySidelineEventParserService.mjs        # Event parsing
+│   ├── mySidelineCarnivalParserService.mjs        # Carnival parsing
 │   ├── mySidelineIntegrationService.mjs        # Main integration service
 │   ├── mySidelineLogoDownloadService.mjs       # Logo downloading
 │   ├── mySidelineScraperService.mjs            # Web scraping service
@@ -236,7 +235,6 @@ npm run test:coverage
     ├── index.ejs                               # Homepage template
     ├── layout.ejs                              # Main layout template
     ├── maintenance.ejs                         # Maintenance mode template
-    ├── user-guide.ejs                          # User guide template
     ├── admin/                                  # Admin panel view templates
     │   ├── audit-logs.ejs                         # Audit logs management
     │   ├── carnival-players.ejs                   # Carnival player management
@@ -297,16 +295,16 @@ npm run test:coverage
 
 1. **Register an Account:** Sign up with your club details
 2. **Create Carnivals:** Add new carnivals with complete information
-3. **Manage Events:** Edit, update, or delete your carnivals
+3. **Manage Carnivals:** Edit, update, or delete your carnivals
 4. **Player Management:** Add and manage club players
 5. **Upload Files:** Add club logos, promotional images, and draw files
-6. **Claim MySideline Events:** Take ownership of imported events
+6. **Claim MySideline Carnivals:** Take ownership of imported carnivals
 7. **Sponsor Management:** Add and manage carnival/club sponsors
 
 ### For Players and Fans
 
-1. **Browse Carnivals:** View all upcoming events with detailed information
-2. **Filter Events:** Search by state, location, or keywords
+1. **Browse Carnivals:** View all upcoming carnivals with detailed information
+2. **Filter Carnivals:** Search by state, location, or keywords
 3. **Subscribe to Updates:** Get email notifications for specific states
 4. **View Details:** Access complete carnival information and contact details
 5. **Club Information:** Browse club details and player rosters
@@ -337,7 +335,7 @@ npm run test:coverage
 - `GET /carnivals/:id/edit` - Edit carnival form (owner only)
 - `POST /carnivals/:id/edit` - Update carnival (owner only)
 - `POST /carnivals/:id/delete` - Delete carnival (owner only)
-- `POST /carnivals/:id/take-ownership` - Claim MySideline event
+- `POST /carnivals/:id/take-ownership` - Claim MySideline carnival
 
 ### Clubs & Players
 
@@ -401,14 +399,46 @@ npm run test:coverage
 
 ### Docker Deployment
 
-The project includes Docker support:
+The project includes Docker support with separate services for the web application and scheduled maintenance:
 
 ```bash
-# Build and run with Docker Compose
+# Build and run production services (web app + maintenance)
 docker-compose -f docker-compose.prod.yml up -d
 
 # For testing
 docker-compose -f docker-compose.test.yml up
+```
+
+#### Production Services
+
+The production deployment includes two services:
+
+1. **Web Application Service (`app`):**
+   - Main Express.js application serving web requests
+   - Handles user authentication, carnival management, and web interface
+   - Port 3050 exposed for web traffic
+
+2. **Maintenance Service (`maintenance`):**
+   - Scheduled database maintenance using node-cron
+   - Runs daily at 2:00 AM server time (Australia/Sydney)
+   - Performs database optimization, backups, and performance analysis
+   - Shares database volume with main application
+   - Creates backups in `/volume2/docker/old-man-footy-prod/backups`
+
+#### Environment Variables for Production
+
+Additional environment variables for maintenance service:
+
+```env
+# Backup and maintenance settings
+BACKUP_RETENTION_DAYS=30
+TZ=Australia/Sydney
+
+# Database performance tuning
+SQLITE_MAX_POOL_SIZE=10
+SQLITE_MIN_POOL_SIZE=1
+SQLITE_ACQUIRE_TIMEOUT=30000
+SQLITE_IDLE_TIMEOUT=10000
 ```
 
 ## 🤝 Contributing

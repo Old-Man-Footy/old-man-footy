@@ -23,7 +23,7 @@ export const clubClaimOwnershipManager = {
         });
     },
 
-    // Event handler (arrow function preserves lexical scope)
+    // Carnival handler (arrow function preserves lexical scope)
     handleCheckboxChange: () => {
         clubClaimOwnershipManager.updateButtonState();
     },

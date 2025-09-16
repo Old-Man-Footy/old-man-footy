@@ -1,8 +1,8 @@
 /**
  * Carnival Model - SQLite/Sequelize Implementation
  * 
- * Manages rugby league carnival events, including MySideline integration
- * and comprehensive event management for the Old Man Footy platform.
+ * Manages rugby league carnival carnivals, including MySideline integration
+ * and comprehensive carnival management for the Old Man Footy platform.
  */
 
 import { DataTypes, Model, Op } from 'sequelize';
@@ -24,25 +24,18 @@ class Carnival extends Model {
   }
 
   /**
-   * Update currentRegistrations to reflect only approved teams
-   * @returns {Promise<number>} Number of approved registrations
+   * Update currentRegistrations to reflect approved teams count
+   * @returns {Promise<number>} Number of approved teams
    */
   async updateCurrentRegistrations() {
-    const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
-    const approvedCount = await CarnivalClub.count({
-      where: {
-        carnivalId: this.id,
-        isActive: true,
-        approvalStatus: 'approved'
-      }
-    });
+    const approvedTeamsCount = await this.getApprovedTeamsCount();
     
-    // Update the currentRegistrations field
-    await this.update({ currentRegistrations: approvedCount }, { 
+    // Update the currentRegistrations field to store team count
+    await this.update({ currentRegistrations: approvedTeamsCount }, { 
       silent: true // Prevent triggering hooks to avoid recursion
     });
     
-    return approvedCount;
+    return approvedTeamsCount;
   }
 
   /**
@@ -61,6 +54,27 @@ class Carnival extends Model {
   }
 
   /**
+   * Get current approved teams count (real-time) - sum of numberOfTeams
+   * @returns {Promise<number>}
+   */
+  async getApprovedTeamsCount() {
+    const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
+    const { Op } = await import('sequelize');
+    
+    const result = await CarnivalClub.findAll({
+      attributes: [[CarnivalClub.sequelize.fn('SUM', CarnivalClub.sequelize.col('numberOfTeams')), 'totalTeams']],
+      where: {
+        carnivalId: this.id,
+        isActive: true,
+        approvalStatus: 'approved'
+      },
+      raw: true
+    });
+    
+    return parseInt(result[0]?.totalTeams) || 0;
+  }
+
+  /**
    * Check if registration is currently active (async version with real-time count)
    * @returns {Promise<boolean>} Registration status
    */
@@ -69,8 +83,8 @@ class Carnival extends Model {
     if (this.registrationDeadline && new Date() > this.registrationDeadline) return false;
     
     if (this.maxTeams) {
-      const approvedCount = await this.getApprovedRegistrationsCount();
-      if (approvedCount >= this.maxTeams) return false;
+      const approvedTeamsCount = await this.getApprovedTeamsCount();
+      if (approvedTeamsCount >= this.maxTeams) return false;
     }
     
     return true;
@@ -103,10 +117,10 @@ class Carnival extends Model {
   }
 
   /**
-   * Check if this is a MySideline imported event
-   * @returns {boolean} MySideline event status
+   * Check if this is a MySideline imported carnival
+   * @returns {boolean} MySideline carnival status
    */
-  get isMySidelineEvent() {
+  get isMySidelineCarnival() {
     return !this.isManuallyEntered;
   }
 
@@ -281,10 +295,10 @@ class Carnival extends Model {
   }
 
   /**
-   * Find MySideline imported events
-   * @returns {Promise<Array>} Array of MySideline events
+   * Find MySideline imported carnivals
+   * @returns {Promise<Array>} Array of MySideline carnivals
    */
-  static async findMySidelineEvents() {
+  static async findMySidelineCarnivals() {
     return await this.findAll({
       where: {
         isActive: true,
@@ -296,7 +310,7 @@ class Carnival extends Model {
 
   /**
    * Take ownership of a MySideline carnival
-   * This method handles the business logic for claiming unclaimed MySideline events
+   * This method handles the business logic for claiming unclaimed MySideline carnivals
    * @param {number} carnivalId - ID of the carnival to claim
    * @param {number} userId - ID of the user claiming ownership
    * @returns {Promise<Object>} Result object with success status and message
@@ -338,14 +352,14 @@ class Carnival extends Model {
         throw new Error('Your club must be active to claim carnival ownership');
       }
 
-      // State-based restriction: delegates can only claim events in their club's state or events with no state
+      // State-based restriction: delegates can only claim carnivals in their club's state or carnivals with no state
       if (carnival.state && user.club.state && carnival.state !== user.club.state) {
-        throw new Error(`You can only claim events in your club's state (${user.club.state}) or events with no specific state. This event is in ${carnival.state}.`);
+        throw new Error(`You can only claim carnivals in your club's state (${user.club.state}) or carnivals with no specific state. This carnival is in ${carnival.state}.`);
       }
 
       // Business rule checks
       if (carnival.isManuallyEntered) {
-        throw new Error('Can only claim ownership of MySideline imported events');
+        throw new Error('Can only claim ownership of MySideline imported carnivals');
       }
 
       if (!carnival.lastMySidelineSync) {
@@ -356,11 +370,16 @@ class Carnival extends Model {
         throw new Error('This carnival already has an owner');
       }
 
-      // All checks passed - update the carnival with user's clubId and contact details (do NOT set createdByUserId)
+      // All checks passed - preserve original MySideline contact email before updating
+      const originalMySidelineContactEmail = carnival.organiserContactEmail;
+
+      // Update the carnival with user's clubId and contact details (do NOT set createdByUserId)
       const updateData = {
         clubId: user.clubId, // Set clubId on claim
         claimedAt: new Date(),
         updatedAt: new Date(),
+        // Preserve original MySideline contact email
+        originalMySidelineContactEmail: originalMySidelineContactEmail,
         // Auto-populate contact details with the claiming user's information
         organiserContactName: `${user.firstName} ${user.lastName}`,
         organiserContactEmail: user.email,
@@ -368,6 +387,23 @@ class Carnival extends Model {
       };
 
       await carnival.update(updateData);
+
+      // Send notification to original MySideline contact if email exists
+      if (originalMySidelineContactEmail) {
+        try {
+          const CarnivalEmailService = (await import('../services/email/CarnivalEmailService.mjs')).default;
+          await CarnivalEmailService.sendCarnivalClaimNotification(
+            carnival, 
+            user, 
+            user.club, 
+            originalMySidelineContactEmail
+          );
+          console.log(`📧 Claim notification sent to original organiser: ${originalMySidelineContactEmail}`);
+        } catch (emailError) {
+          console.warn(`⚠️ Failed to send claim notification email to ${originalMySidelineContactEmail}:`, emailError.message);
+          // Don't fail the claiming process if email fails
+        }
+      }
 
       // Log the ownership claim for audit purposes
       console.log(`🏆 Carnival ownership claimed: "${carnival.title}" (ID: ${carnivalId}) claimed by user ${userId} (${user.club.clubName})`);
@@ -439,7 +475,7 @@ class Carnival extends Model {
 
       // Business rule checks
       if (!carnival.lastMySidelineSync) {
-        throw new Error('Can only release ownership of MySideline imported events');
+        throw new Error('Can only release ownership of MySideline imported carnivals');
       }
 
       // Check if there are registered clubs - warn but allow
@@ -472,7 +508,7 @@ class Carnival extends Model {
 
       return {
         success: true,
-        message: `You have successfully released ownership of "${carnival.title}". The event is now available for the correct organizer to claim.${warningMessage}`,
+        message: `You have successfully released ownership of "${carnival.title}". The carnival is now available for the correct organizer to claim.${warningMessage}`,
         carnival: carnival,
         releasedBy: {
           userId: user.id,
@@ -563,7 +599,7 @@ class Carnival extends Model {
 
       // Business rule checks
       if (carnival.isManuallyEntered) {
-        throw new Error('Can only claim ownership of MySideline imported events');
+        throw new Error('Can only claim ownership of MySideline imported carnivals');
       }
 
       if (!carnival.lastMySidelineSync) {
@@ -580,11 +616,16 @@ class Carnival extends Model {
         stateWarning = ` Note: This carnival is in ${carnival.state} but the club is based in ${targetClub.state}.`;
       }
 
-      // All checks passed - update the carnival with primary delegate's contact details
+      // All checks passed - preserve original MySideline contact email before updating
+      const originalMySidelineContactEmail = carnival.organiserContactEmail;
+
+      // Update the carnival with primary delegate's contact details
       const updateData = {
         createdByUserId: primaryDelegate.id,
         claimedAt: new Date(),
         updatedAt: new Date(),
+        // Preserve original MySideline contact email
+        originalMySidelineContactEmail: originalMySidelineContactEmail,
         // Auto-populate contact details with the primary delegate's information
         organiserContactName: `${primaryDelegate.firstName} ${primaryDelegate.lastName}`,
         organiserContactEmail: primaryDelegate.email,
@@ -592,6 +633,23 @@ class Carnival extends Model {
       };
 
       await carnival.update(updateData);
+
+      // Send notification to original MySideline contact if email exists
+      if (originalMySidelineContactEmail) {
+        try {
+          const CarnivalEmailService = (await import('../services/email/CarnivalEmailService.mjs')).default;
+          await CarnivalEmailService.sendCarnivalClaimNotification(
+            carnival, 
+            primaryDelegate, 
+            targetClub, 
+            originalMySidelineContactEmail
+          );
+          console.log(`📧 Admin claim notification sent to original organiser: ${originalMySidelineContactEmail}`);
+        } catch (emailError) {
+          console.warn(`⚠️ Failed to send admin claim notification email to ${originalMySidelineContactEmail}:`, emailError.message);
+          // Don't fail the claiming process if email fails
+        }
+      }
 
       // Log the admin claim for audit purposes
       console.log(`🏆 Admin claim: "${carnival.title}" (ID: ${carnivalId}) claimed by admin ${adminUser.email} for club ${targetClub.clubName} (Primary delegate: ${primaryDelegate.email})`);
@@ -640,7 +698,7 @@ class Carnival extends Model {
     const endDate = this.endDate ? new Date(this.endDate) : null;
     
     if (!endDate || startDate.toDateString() === endDate.toDateString()) {
-      // Single day event
+      // Single day carnival
       return startDate.toLocaleDateString('en-AU', { 
         weekday: 'long', 
         year: 'numeric', 
@@ -649,7 +707,7 @@ class Carnival extends Model {
       });
     }
     
-    // Multi-day event
+    // Multi-day carnival
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
     const startMonth = startDate.getMonth();
@@ -678,14 +736,14 @@ class Carnival extends Model {
     const endDate = this.endDate ? new Date(this.endDate) : null;
     
     if (!endDate || startDate.toDateString() === endDate.toDateString()) {
-      // Single day event
+      // Single day carnival
       return startDate.toLocaleDateString('en-AU', { 
         month: 'short', 
         day: 'numeric' 
       });
     }
     
-    // Multi-day event
+    // Multi-day carnival
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
     const startMonth = startDate.getMonth();
@@ -725,7 +783,7 @@ Carnival.init({
   mySidelineId: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    comment: 'Unique MySideline event identifier (numeric) for reliable duplicate detection'
+    comment: 'Unique MySideline carnival identifier (numeric) for reliable duplicate detection'
   },
   mySidelineAddress: {
     type: DataTypes.TEXT,
@@ -744,7 +802,7 @@ Carnival.init({
   endDate: {
     type: DataTypes.DATE,
     allowNull: true,
-    comment: 'End date for multi-day carnivals. If null, carnival is a single day event.'
+    comment: 'End date for multi-day carnivals. If null, carnival is a single day carnival.'
   },
   locationAddress: {
     type: DataTypes.TEXT,
@@ -757,17 +815,17 @@ Carnival.init({
   locationLatitude: {
     type: DataTypes.DECIMAL(10, 8),
     allowNull: true,
-    comment: 'Latitude coordinate for the event location'
+    comment: 'Latitude coordinate for the carnival location'
   },
   locationLongitude: {
     type: DataTypes.DECIMAL(11, 8),
     allowNull: true,
-    comment: 'Longitude coordinate for the event location'
+    comment: 'Longitude coordinate for the carnival location'
   },
   locationSuburb: {
     type: DataTypes.STRING(100),
     allowNull: true,
-    comment: 'Suburb/city name for the event location',
+    comment: 'Suburb/city name for the carnival location',
     set(value) {
       this.setDataValue('locationSuburb', value ? value.trim() : value);
     }
@@ -775,7 +833,7 @@ Carnival.init({
   locationPostcode: {
     type: DataTypes.STRING(10),
     allowNull: true,
-    comment: 'Postcode for the event location',
+    comment: 'Postcode for the carnival location',
     set(value) {
       this.setDataValue('locationPostcode', value ? value.trim() : value);
     }
@@ -784,7 +842,7 @@ Carnival.init({
     type: DataTypes.STRING(50),
     allowNull: true,
     defaultValue: 'Australia',
-    comment: 'Country for the event location',
+    comment: 'Country for the carnival location',
     set(value) {
       this.setDataValue('locationCountry', value ? value.trim() : value);
     }
@@ -963,6 +1021,12 @@ Carnival.init({
     type: DataTypes.DATE,
     allowNull: true
   },
+  // Original MySideline contact email (preserved before claiming)
+  originalMySidelineContactEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Original organiser contact email from MySideline import, preserved when carnival is claimed'
+  },
   // Enhanced fields for better carnival management
   maxTeams: {
     type: DataTypes.INTEGER,
@@ -981,6 +1045,19 @@ Carnival.init({
   registrationDeadline: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  // Registration fee fields
+  teamRegistrationFee: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0.00,
+    comment: 'Standard team registration fee for this carnival'
+  },
+  perPlayerFee: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0.00,
+    comment: 'Fee charged per player participating in this carnival'
   },
   // Admin notes (only visible to carnival owner and primary delegates)
   adminNotes: {

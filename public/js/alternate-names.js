@@ -1,7 +1,7 @@
 /**
  * Alternate Names Management (Refactored)
  * Handles adding, editing, and deleting alternate names for clubs using a modular,
- * event-driven approach.
+ * carnival-driven approach.
  */
 
 /**
@@ -23,48 +23,90 @@ async function apiRequest(url, options) {
 /**
  * Manages all UI interactions for alternate club names.
  */
-export class AlternateNamesManager {
-    /**
-     * @param {HTMLElement} container - The main containing element for the UI.
-     * @param {object} provider - An object to handle interactions like modals and alerts.
-     * @param {function} provider.confirm - An async function that returns a boolean.
-     * @param {function} provider.alert - An async function to show a message.
-     * @param {function} provider.showEditModal - A function to display the edit modal.
-     */
-    constructor(container, provider) {
-        if (!container) throw new Error('A container element must be provided.');
-        if (!provider) throw new Error('A provider for UI interactions is required.');
-
-        this.container = container;
-        this.provider = provider;
-        this.addForm = this.container.querySelector('#addAlternateNameForm');
-        this.editForm = this.container.querySelector('#editAlternateNameForm');
-    }
+export const alternateNamesManager = {
+    elements: {},
+    provider: null,
+    _bound: {
+        containerClick: null,
+        addSubmit: null,
+        editSubmit: null,
+    },
 
     /**
-     * Initializes the manager by attaching event listeners.
+     * Initialize the manager.
+     * @param {object} provider Optional provider override for confirm/alert/modal (useful for tests)
      */
-    init() {
-        this.container.addEventListener('click', this.handleContainerClick.bind(this));
+    initialize(provider) {
+        // Allow tests to provide a mock provider
+        this.provider = provider || this.provider || this._defaultProvider();
+        this.cacheElements();
+        this.bindEvents();
+    },
 
-        if (this.addForm) {
-            this.addForm.addEventListener('submit', this.handleAddSubmit.bind(this));
+    cacheElements() {
+        // Prefer to scope delegated clicks to a surrounding '.container' when present.
+        // Fall back to an element with id 'container' (used in tests) or document.body.
+        const addForm = document.getElementById('addAlternateNameForm');
+        if (addForm) {
+            this.elements.container = addForm.closest('.container') || document.getElementById('container') || document.body;
+        } else {
+            this.elements.container = document.getElementById('container') || document.body;
         }
 
-        if (this.editForm) {
-            this.editForm.addEventListener('submit', this.handleEditSubmit.bind(this));
-        }
-    }
+        this.elements.addForm = addForm;
+        this.elements.editForm = document.getElementById('editAlternateNameForm');
+    },
 
-    /**
-     * Handles all clicks within the container using event delegation.
-     * @param {Event} e - The click event.
-     */
+    bindEvents() {
+        if (this.elements.container) {
+            // use named bound functions so we can remove listeners on destroy
+            this._bound.containerClick = this.handleContainerClick.bind(this);
+            this.elements.container.addEventListener('click', this._bound.containerClick);
+        }
+
+        if (this.elements.addForm) {
+            this._bound.addSubmit = this.handleAddSubmit.bind(this);
+            this.elements.addForm.addEventListener('submit', this._bound.addSubmit);
+        }
+
+        if (this.elements.editForm) {
+            this._bound.editSubmit = this.handleEditSubmit.bind(this);
+            this.elements.editForm.addEventListener('submit', this._bound.editSubmit);
+        }
+    },
+
+    destroy() {
+        if (this.elements && this.elements.container && this._bound.containerClick) {
+            this.elements.container.removeEventListener('click', this._bound.containerClick);
+        }
+        if (this.elements && this.elements.addForm && this._bound.addSubmit) {
+            this.elements.addForm.removeEventListener('submit', this._bound.addSubmit);
+        }
+        if (this.elements && this.elements.editForm && this._bound.editSubmit) {
+            this.elements.editForm.removeEventListener('submit', this._bound.editSubmit);
+        }
+        // Clear bound references
+        this._bound.containerClick = null;
+        this._bound.addSubmit = null;
+        this._bound.editSubmit = null;
+    },
+
     async handleContainerClick(e) {
-        const button = e.target.closest('button[data-action]');
+        // Support both data-action attributes and legacy class-based buttons
+        // (some templates render buttons with classes like 'edit-alternate-name'
+        // and 'delete-alternate-name' instead of data-action attributes).
+        let button = e.target.closest('button[data-action]');
+        if (!button) {
+            button = e.target.closest('button.edit-alternate-name, button.delete-alternate-name');
+        }
         if (!button || button.disabled) return;
 
-        const { action } = button.dataset;
+        // Determine the action from data-action if present, otherwise from classes
+        let { action } = button.dataset;
+        if (!action) {
+            if (button.classList.contains('edit-alternate-name')) action = 'edit-alternate-name';
+            else if (button.classList.contains('delete-alternate-name')) action = 'delete-alternate-name';
+        }
         button.disabled = true;
 
         try {
@@ -76,15 +118,12 @@ export class AlternateNamesManager {
         } finally {
             button.disabled = false;
         }
-    }
+    },
 
-    /**
-     * Handles the submission of the "add new name" form.
-     * @param {Event} e - The submit event.
-     */
     async handleAddSubmit(e) {
         e.preventDefault();
-        const formData = new FormData(this.addForm);
+        const form = this.elements.addForm;
+        const formData = new FormData(form);
         const alternateName = formData.get('alternateName');
 
         try {
@@ -101,25 +140,17 @@ export class AlternateNamesManager {
         } catch (error) {
             await this.provider.alert(`Error adding alternate name: ${error.message}`);
         }
-    }
+    },
 
-    /**
-     * Handles the click on an "edit" button, triggering the modal.
-     * @param {HTMLElement} button - The edit button that was clicked.
-     */
     handleEditClick(button) {
         const { id, name } = button.dataset;
-        this.provider.showEditModal(id, name);
-    }
+        if (this.provider && this.provider.showEditModal) this.provider.showEditModal(id, name);
+    },
 
-    /**
-     * Handles the submission of the "edit name" form from the modal.
-     * @param {Event} e - The submit event.
-     */
     async handleEditSubmit(e) {
         e.preventDefault();
-        const id = this.editForm.querySelector('#editAlternateNameId').value;
-        const alternateName = this.editForm.querySelector('#editAlternateName').value;
+        const id = this.elements.editForm.querySelector('#editAlternateNameId').value;
+        const alternateName = this.elements.editForm.querySelector('#editAlternateName').value;
 
         try {
             const result = await apiRequest(`/clubs/manage/alternate-names/${id}`, {
@@ -135,12 +166,8 @@ export class AlternateNamesManager {
         } catch (error) {
             await this.provider.alert(`Error updating alternate name: ${error.message}`);
         }
-    }
+    },
 
-    /**
-     * Handles the click on a "delete" button.
-     * @param {HTMLElement} button - The delete button that was clicked.
-     */
     async handleDeleteClick(button) {
         const { id, name } = button.dataset;
         const confirmed = await this.provider.confirm(`Are you sure you want to delete the alternate name "${name}"?`);
@@ -158,5 +185,42 @@ export class AlternateNamesManager {
         } catch (error) {
             await this.provider.alert(`Error deleting alternate name: ${error.message}`);
         }
+    },
+
+    _defaultProvider() {
+        const editModalEl = document.getElementById('editAlternateNameModal');
+        const bootstrapModal = (typeof bootstrap !== 'undefined' && editModalEl) ? new bootstrap.Modal(editModalEl) : null;
+        return {
+            confirm: async (msg) => confirm(msg),
+            alert: async (msg) => alert(msg),
+            showEditModal: (id, name) => {
+                const idInput = document.getElementById('editAlternateNameId');
+                const nameInput = document.getElementById('editAlternateName');
+                if (idInput) idInput.value = id;
+                if (nameInput) nameInput.value = name;
+                if (bootstrapModal) bootstrapModal.show();
+            }
+        };
     }
+};
+
+// Auto-initialize in browser pages that include the alternate-names UI.
+// This is guarded so it only runs in real browser environments and only when
+// the expected DOM exists. It will not run during server-side tests which
+// import this module before the DOM is available.
+// Per project client scripting standards, initialize on DOMContentLoaded
+// so that templates don't contain inline script. Tests may call
+// `alternateNamesManager.initialize(provider)` directly.
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            // Only auto-init when the add form exists
+            if (document.getElementById('addAlternateNameForm')) {
+                alternateNamesManager.initialize();
+            }
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to auto-initialize alternateNamesManager', err);
+        }
+    });
 }

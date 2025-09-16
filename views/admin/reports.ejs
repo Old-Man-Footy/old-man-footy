@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" data-page-id="admin-reports">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -40,7 +40,7 @@
                             </p>
                         </div>
                         <div class="text-end">
-                            <span class="badge bg-info fs-6">Administrator Report</span>
+                            <span class="badge bg-info text-primary fs-6">Administrator Report</span>
                         </div>
                     </div>
                 </div>
@@ -158,7 +158,7 @@
                                 <% if (report.users.neverLoggedIn > 0) { %>
                                     <div class="alert alert-warning">
                                         <i class="bi bi-exclamation-triangle"></i>
-                                        <strong>Attention Needed:</strong> 
+                                        <strong>Attention:</strong> 
                                         <%= report.users.neverLoggedIn %> active users have never logged in
                                     </div>
                                 <% } else { %>
@@ -292,7 +292,7 @@
                             <div class="p-3">
                                 <i class="bi bi-calendar-check fs-3 text-secondary"></i>
                                 <h4 class="mt-2"><%= report.carnivals.past %></h4>
-                                <p class="text-muted mb-0">Past Events</p>
+                                <p class="text-muted mb-0">Past Carnivals</p>
                             </div>
                         </div>
                     </div>
@@ -338,10 +338,10 @@
                         <a href="/admin/users" class="btn btn-outline-primary">
                             <i class="bi bi-people"></i> Manage Users
                         </a>
-                        <a href="/admin/clubs" class="btn btn-outline-success">
+                        <a href="/admin/clubs" class="btn btn-outline-tertiary">
                             <i class="bi bi-building"></i> Manage Clubs
                         </a>
-                        <a href="/admin/carnivals" class="btn btn-outline-success">
+                        <a href="/admin/carnivals" class="btn btn-outline-tertiary">
                             <i class="bi bi-calendar-event"></i> Manage Carnivals
                         </a>
                         <button class="btn btn-outline-secondary" data-action="export-report">
@@ -379,7 +379,7 @@
                                 </li>
                                 <li class="mb-2">
                                     <i class="bi bi-check-circle text-success"></i>
-                                    <strong>Future Events:</strong> 
+                                    <strong>Future Carnivals:</strong> 
                                     <%= report.carnivals.upcoming %> upcoming carnivals
                                 </li>
                                 <li class="mb-2">
@@ -400,7 +400,7 @@
                                 </small>
                             </div>
                             <div class="text-center">
-                                <button class="btn btn-sm btn-outline-success" data-action="refresh-report">
+                                <button class="btn btn-sm btn-outline-tertiary" data-action="refresh-report">
                                     <i class="bi bi-arrow-clockwise"></i> Refresh Report
                                 </button>
                             </div>

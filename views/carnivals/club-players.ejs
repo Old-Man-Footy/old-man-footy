@@ -1,11 +1,11 @@
-<div class="container mt-4">
+<div class="container mt-4" data-page-id="carnivals-club-players">
     <!-- Breadcrumb Navigation -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
             <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>"><%= carnival.title %></a></li>
             <li class="breadcrumb-item"><a href="/carnivals/<%= carnival.id %>/attendees">Attendees</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Players - <%= registration.club.clubName %></li>
+            <li class="breadcrumb-item active" aria-current="page">Players - <%= registration.participatingClub.clubName %></li>
         </ol>
     </nav>
 
@@ -14,7 +14,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h2><i class="bi bi-people-fill"></i> Players - <%= registration.club.clubName %></h2>
+                    <h2><i class="bi bi-people-fill"></i> Players - <%= registration.participatingClub.clubName %></h2>
                     <p class="text-muted mb-0">Manage player assignments for carnival attendance</p>
                 </div>
                 <div class="btn-group">
@@ -77,8 +77,8 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Club:</strong> <%= registration.club.clubName %></p>
-                            <p><strong>Location:</strong> <%= registration.club.state %><% if (registration.club.location) { %>, <%= registration.club.location %><% } %></p>
+                            <p><strong>Club:</strong> <%= registration.participatingClub.clubName %></p>
+                            <p><strong>Location:</strong> <%= registration.participatingClub.state %><% if (registration.participatingClub.location) { %>, <%= registration.participatingClub.location %><% } %></p>
                         </div>
                         <div class="col-md-6">
                             <% if (registration.teamName) { %>
@@ -125,6 +125,7 @@
                                         <th>Player Name</th>
                                         <th>Age</th>
                                         <th>Email</th>
+                                        <th>Shorts</th>
                                         <th>Status</th>
                                         <th>Added</th>
                                         <th>Actions</th>
@@ -145,6 +146,20 @@
                                             </td>
                                             <td>
                                                 <small><%= assignment.clubPlayer.email %></small>
+                                            </td>
+                                            <td>
+                                                <% if (assignment.clubPlayer.shorts) { %>
+                                                    <% 
+                                                        const shortsColor = assignment.clubPlayer.shorts.toLowerCase();
+                                                        const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                                                        const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
+                                                    %>
+                                                    <span class="badge <%= cssClass %>">
+                                                        <%= assignment.clubPlayer.shorts %>
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="text-muted">-</span>
+                                                <% } %>
                                             </td>
                                             <td>
                                                 <span class="badge bg-<%= assignment.attendanceStatus === 'confirmed' ? 'success' : assignment.attendanceStatus === 'tentative' ? 'warning' : 'danger' %>">

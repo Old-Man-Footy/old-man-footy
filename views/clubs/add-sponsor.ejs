@@ -1,4 +1,4 @@
-<div class="container-fluid mt-4">
+<div class="container mt-4" data-page-id="clubs-add-sponsor">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <!-- Page Header -->
@@ -18,7 +18,7 @@
             </div>
 
             <!-- Flash Messages -->
-            <%- include('/partials/flash-messages') %>
+            <%- include('../partials/flash-messages') %>
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
@@ -170,14 +170,13 @@
                         <h6 class="mb-3 mt-4 text-primary">
                             <i class="bi bi-image me-2"></i>Logo
                         </h6>
-                        <div class="mb-3">
-                            <label for="logo" class="form-label">Sponsor Logo</label>
-                            <input type="file" class="form-control" name="logo" id="logo" 
-                                   accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
-                            <div class="form-text">
-                                Upload a logo image for the sponsor. Supported formats: JPG, PNG, SVG, GIF, WebP. Max size: 10MB.
-                            </div>
-                        </div>
+                        <%- include('../partials/logo-uploader', {
+                            fieldName: 'logo',
+                            uploadText: 'Click or drag to upload sponsor logo',
+                            maxFileSize: 'Max 10MB',
+                            acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                            helpText: 'Upload a logo image for the sponsor. Supported formats: JPG, PNG, SVG, GIF, WebP. Max size: 10MB.'
+                        }) %>
 
                         <!-- Submit Buttons -->
                         <div class="d-flex gap-2 pt-3 border-top">

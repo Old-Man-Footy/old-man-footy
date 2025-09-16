@@ -23,7 +23,7 @@ export class SecurityEmailService extends BaseEmailService {
         const clubUrl = `${this._getBaseUrl()}/clubs/${encodeURIComponent(clubName)}`;
 
         const mailOptions = {
-            from: `"Old Man Footy Security" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy Security" <${process.env.EMAIL_FROM}>`,
             to: originalDelegateEmail,
             subject: `🚨 SECURITY ALERT: ${clubName} has been reactivated`,
             html: this._buildClubReactivationAlertHtml(

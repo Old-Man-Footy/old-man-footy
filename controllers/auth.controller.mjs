@@ -216,6 +216,10 @@ const registerUser = async (req, res) => {
     });
   }
 
+  // Check if this is the first user (admin bootstrap)
+  const userCount = await User.count();
+  const isFirstUser = userCount === 0;
+
   // Create user without club association
   const newUser = await User.create({
     firstName: firstName.trim(),
@@ -225,6 +229,7 @@ const registerUser = async (req, res) => {
     phoneNumber: phoneNumber?.trim() || null,
     clubId: null, // No club association initially
     isPrimaryDelegate: false, // Will be set when they create/join a club
+    isAdmin: isFirstUser, // First user becomes admin automatically
     isActive: true,
   });
 
@@ -239,14 +244,33 @@ const registerUser = async (req, res) => {
       lastName: newUser.lastName,
       email: newUser.email,
       phoneNumber: newUser.phoneNumber,
+      isAdmin: newUser.isAdmin,
     }),
+    metadata: isFirstUser ? { adminBootstrap: true, reason: 'First user automatically promoted to admin' } : {},
   });
 
-  console.log(`✅ New user registered: ${newUser.email} (ID: ${newUser.id})`);
+  console.log(`✅ New user registered: ${newUser.email} (ID: ${newUser.id})${isFirstUser ? ' [ADMIN - First User]' : ''}`);
+
+  // Additional audit log for admin promotion if this is the first user
+  if (isFirstUser) {
+    await AuditService.logUserAction(AuditService.ACTIONS.USER_UPDATE, {
+      req,
+      entityType: AuditService.ENTITIES.USER,
+      entityId: newUser.id,
+      newValues: { isAdmin: true },
+      metadata: { 
+        adminBootstrap: true, 
+        reason: 'First registered user automatically promoted to admin',
+        userCount: 1
+      },
+    });
+  }
 
   req.flash(
     'success_msg',
-    'Registration successful! You can now log in and create or join a club from your dashboard.'
+    isFirstUser 
+      ? 'Registration successful! As the first user, you have been granted administrator privileges. You can now log in and manage the system.'
+      : 'Registration successful! You can now log in and create or join a club from your dashboard.'
   );
   return res.redirect('/auth/login');
 };

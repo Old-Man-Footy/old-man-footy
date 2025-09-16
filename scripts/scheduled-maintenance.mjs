@@ -29,3 +29,23 @@ cron.schedule('0 2 * * *', async () => {
 });
 
 console.log('⏰ [Maintenance] Scheduled database maintenance task set for daily at 2:00 AM.');
+
+// Graceful shutdown handling for Docker
+process.on('SIGTERM', async () => {
+  console.log('🛑 [Maintenance] Received SIGTERM signal, shutting down gracefully...');
+  await closeConnection();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('🛑 [Maintenance] Received SIGINT signal, shutting down gracefully...');
+  await closeConnection();
+  process.exit(0);
+});
+
+// Keep the process alive
+process.on('exit', () => {
+  console.log('🔌 [Maintenance] Process exiting...');
+});
+
+console.log('🚀 [Maintenance] Scheduled maintenance service is now running...');

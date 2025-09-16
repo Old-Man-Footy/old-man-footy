@@ -1,4 +1,4 @@
-<div class="container-fluid mt-4" data-user-email="<%= user ? user.email : '' %>" data-states='<%= JSON.stringify(states) %>'>
+<div class="container mt-4"  data-page-id="clubs-create-on-behalf" data-user-email="<%= user ? user.email : '' %>" data-states='<%= JSON.stringify(states) %>'>
     <div class="row justify-content-center">
         <div class="col-md-8">
             <!-- Page Header -->
@@ -13,7 +13,7 @@
             </div>
 
             <div class="card shadow">
-                <div class="card-header bg-success">
+                <div class="card-header bg-tertiary">
                     <h3 class="mb-0">
                         <i class="fas fa-users"></i> Create Club on Behalf of Others
                     </h3>
@@ -60,6 +60,20 @@
                                            placeholder="e.g., Parramatta Eels Old Boys"
                                            required>
                                     <small class="form-text text-muted">The official name of the club</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                 <div class="form-group">
+                                <label for="location" class="form-label">
+                                <strong>Location/Suburb</strong>
+                                    </label>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        id="location" 
+                                        name="location" 
+                                        value="<%= formData.location || '' %>"
+                                        placeholder="e.g., Parramatta, NSW">
+                                    <small class="form-text text-muted">City, suburb, or general location</small>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -173,7 +187,7 @@
                                               id="customMessage" 
                                               name="customMessage" 
                                               rows="4"
-                                              placeholder="Hi [Name], I've created a profile for your club on Old Man Footy. This platform helps connect Masters Rugby League clubs across Australia for carnivals and events. Would you like to take ownership of your club's profile?"><%= formData.customMessage || '' %></textarea>
+                                              placeholder="Hi [Name], I've created a profile for your club on Old Man Footy. This platform helps connect Masters Rugby League clubs across Australia for carnivals. Would you like to take ownership of your club's profile?"><%= formData.customMessage || '' %></textarea>
                                     <small class="form-text text-muted">Add a personal message explaining why you're creating this club profile (max 2000 characters)</small>
                                 </div>
                             </div>
@@ -184,7 +198,7 @@
                             <a href="/clubs" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="submit" class="btn btn-tertiary btn-lg">
                                 <i class="fas fa-plus-circle"></i> Create Club & Send Invitation
                             </button>
                         </div>
@@ -194,7 +208,7 @@
 
             <!-- Help Information -->
             <div class="card mt-4 border-info">
-                <div class="card-header bg-info">
+                <div class="card-header bg-info text-primary">
                     <h5 class="mb-0"><i class="fas fa-question-circle"></i> Why Create Clubs on Behalf of Others?</h5>
                 </div>
                 <div class="card-body">

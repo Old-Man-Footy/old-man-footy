@@ -18,11 +18,6 @@ export function sortSponsorsHierarchically(sponsors, context = 'default') {
     return [];
   }
 
-  // For carnival context, use display order with level fallback
-  if (context === 'carnival') {
-    return SponsorSortingService.sortByDisplayOrder(sponsors);
-  }
-  
   // For other contexts, use level-based sorting
   return SponsorSortingService.sortByLevel(sponsors);
 }
@@ -32,7 +27,7 @@ export function sortSponsorsHierarchically(sponsors, context = 'default') {
  */
 class SponsorSortingService {
   /**
-   * Sort sponsors by sponsorship level and creation date
+   * Sort sponsors by sponsorship level and sponsor name
    * @param {Array} sponsors - Array of sponsor objects
    * @returns {Array} Sorted array of sponsors
    */
@@ -46,41 +41,12 @@ class SponsorSortingService {
         return levelA - levelB;
       }
       
-      // Secondary sort: creation date (newest first within same level)
-      return new Date(b.createdAt) - new Date(a.createdAt);
+      // Secondary sort: sponsor name alphabetically
+      return (a.sponsorName || '').localeCompare(b.sponsorName || '');
     });
   }
 
-  /**
-   * Sort sponsors by display order if available, fallback to level sorting
-   * @param {Array} sponsors - Array of sponsor objects
-   * @returns {Array} Sorted array of sponsors
-   */
-  static sortByDisplayOrder(sponsors) {
-    return sponsors.sort((a, b) => {
-      // Primary sort: displayOrder (if both have it)
-      if (a.displayOrder !== null && b.displayOrder !== null) {
-        if (a.displayOrder !== b.displayOrder) {
-          return a.displayOrder - b.displayOrder;
-        }
-      }
-      
-      // If one has displayOrder and other doesn't, prioritize the one with displayOrder
-      if (a.displayOrder !== null && b.displayOrder === null) return -1;
-      if (a.displayOrder === null && b.displayOrder !== null) return 1;
-      
-      // Fallback to level-based sorting
-      const levelA = SPONSORSHIP_LEVEL_ORDER[a.sponsorshipLevel] || 999;
-      const levelB = SPONSORSHIP_LEVEL_ORDER[b.sponsorshipLevel] || 999;
-      
-      if (levelA !== levelB) {
-        return levelA - levelB;
-      }
-      
-      // Final fallback: creation date
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-  }
+
 
   /**
    * Sort sponsors by value (highest first)

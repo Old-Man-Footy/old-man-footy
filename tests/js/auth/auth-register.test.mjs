@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
-import { RegistrationFormValidator } from '/public/js/auth-register.js';
+import { RegistrationFormValidator } from '../../../public/js/auth-register.js';
 
 describe('RegistrationFormValidator', () => {
     let form, passwordField, confirmPasswordField, validator;
@@ -38,7 +38,7 @@ describe('RegistrationFormValidator', () => {
         passwordField.value = 'password123';
         confirmPasswordField.value = 'password321';
 
-        // Simulate an input event on the confirmation field
+        // Simulate an input carnival on the confirmation field
         confirmPasswordField.dispatchEvent(new Event('input'));
 
         expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('Passwords do not match');
@@ -48,7 +48,7 @@ describe('RegistrationFormValidator', () => {
         passwordField.value = 'password123';
         confirmPasswordField.value = 'password123';
 
-        // Simulate an input event on the confirmation field
+        // Simulate an input carnival on the confirmation field
         confirmPasswordField.dispatchEvent(new Event('input'));
 
         expect(confirmPasswordField.setCustomValidity).toHaveBeenCalledWith('');

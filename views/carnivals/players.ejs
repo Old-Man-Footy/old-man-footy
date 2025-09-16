@@ -1,6 +1,5 @@
-<%- include('/partials/header', { title: `All Players - ${carnival.title}` }) %>
-
-<div class="container-fluid py-4">
+<%- { title: `All Players - ${carnival.title}` } %>
+<div class="container py-4" data-page-id="carnivals-players">
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -19,7 +18,7 @@
                 </div>
                 <div class="text-end">
                     <div class="btn-group mb-2" role="group">
-                        <button type="button" class="btn btn-outline-success btn-sm" id="exportToCSV">
+                        <button type="button" class="btn btn-outline-tertiary btn-sm" id="exportToCSV">
                             <i class="bi bi-download"></i> Export CSV
                         </button>
                         <button type="button" class="btn btn-outline-primary btn-sm" id="printList">
@@ -27,8 +26,8 @@
                         </button>
                     </div>
                     <br>
-                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i> Back to Event
+                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-outlinesecondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Back to Carnival
                     </a>
                 </div>
             </div>
@@ -50,7 +49,7 @@
                                             <img src="<%= club.logoUrl %>" alt="<%= club.clubName %> Logo" 
                                                  class="me-2" style="height: 30px; width: auto; max-width: 40px; object-fit: contain;">
                                         <% } else { %>
-                                            <div class="me-2 d-flex align-items-center justify-content-center bg-light border rounded" 
+                                            <div class="me-2 d-flex align-items-center justify-content-center bg-tertiary border rounded" 
                                                  style="height: 30px; width: 40px; min-width: 40px;">
                                                 <i class="bi bi-shield text-muted" style="font-size: 0.8rem;"></i>
                                             </div>
@@ -63,18 +62,12 @@
                                         </div>
                                     </div>
                                     <div class="row text-center">
-                                        <div class="col-6">
-                                            <div class="fw-bold text-primary" style="font-size: 1.1rem;"><%= club.totalPlayers %></div>
-                                            <small class="text-muted">Total</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="fw-bold text-success" style="font-size: 1.1rem;"><%= club.mastersPlayers %></div>
-                                            <small class="text-muted">Masters</small>
-                                        </div>
+                                        <div class="fw-bold text-success" style="font-size: 1.1rem;"><%= club.mastersPlayers %></div>
+                                        <small class="text-muted">Total Eligible Players</small>                                        
                                     </div>
                                     <% if (club.attendingPlayers > 0) { %>
                                         <div class="mt-2 text-center">
-                                            <span class="badge bg-success">
+                                            <span class="badge bg-tertiary">
                                                 <i class="bi bi-check-circle"></i> <%= club.attendingPlayers %> Attending
                                             </span>
                                         </div>
@@ -213,8 +206,8 @@
                                 <td>
                                     <div class="fw-semibold">
                                         <%= player.firstName %> <%= player.lastName %>
-                                        <% if (isMasters) { %>
-                                            <span class="badge bg-success ms-1" style="font-size: 0.7rem;">Masters</span>
+                                        <% if (!isMasters) { %>
+                                            <span class="badge bg-danger ms-1" style="font-size: 0.7rem;">Ineligible</span>
                                         <% } %>
                                     </div>
                                     <% if (player.Club?.location) { %>
@@ -223,7 +216,7 @@
                                 </td>
                                 <td>
                                     <% if (player.age) { %>
-                                        <span class="<%= isMasters ? 'text-success fw-semibold' : '' %>">
+                                        <span class="<%= isMasters ? 'fw-semibold' : '' %>">
                                             <%= player.age %>
                                         </span>
                                     <% } else { %>
@@ -239,14 +232,19 @@
                                 </td>
                                 <td>
                                     <% if (player.shortsColour && player.shortsColour.trim()) { %>
-                                        <span class="badge bg-secondary"><%= player.shortsColour %></span>
+                                        <% 
+                                            const shortsColor = player.shortsColour.toLowerCase();
+                                            const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                                            const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
+                                        %>
+                                        <span class="badge <%= cssClass %>"><%= player.shortsColour %></span>
                                     <% } else { %>
                                         <span class="text-muted">Not specified</span>
                                     <% } %>
                                 </td>
                                 <td>
                                     <% if (attendanceStatus === 'Attending') { %>
-                                        <span class="badge bg-success">
+                                        <span class="badge bg-tertiary">
                                             <i class="bi bi-check-circle"></i> Attending
                                         </span>
                                     <% } else if (attendanceStatus === 'Maybe') { %>
@@ -301,6 +299,4 @@
 </div>
 
 <!-- Include JavaScript -->
-<script mode="module" src="/js/carnival-players.js"></script>
-
-<%- include('/partials/footer') %>
+<script type="module" src="/js/carnival-players.js"></script>

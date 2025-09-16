@@ -1,5 +1,5 @@
 <!-- Page Header -->
-<div class="bg-primary py-4 mb-4">
+<div class="bg-primary py-4 mb-4" data-page-id="clubs-manage">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
@@ -7,7 +7,7 @@
                 <p class="lead mb-0">Update your club's public listing and contact information</p>
             </div>
             <div class="col-lg-4 text-end">
-                <a href="/dashboard" class="btn btn-outline-light">
+                <a href="/dashboard" class="btn btn-outline-tertiary">
                     <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
             </div>
@@ -21,7 +21,7 @@
         <div class="row">
             <div class="col-lg-8">
                 <div class="card shadow-sm">
-                    <div class="card-header bg-success">
+                    <div class="card-header bg-tertiary">
                         <h5 class="mb-0"><i class="bi bi-gear"></i> Club Profile Settings</h5>
                     </div>
                     <div class="card-body">
@@ -33,44 +33,16 @@
                                         <h6 class="text-primary mb-3">
                                             <i class="bi bi-image"></i> Club Logo
                                         </h6>
-                                        <div class="row align-items-center">
-                                            <div class="col-md-3">
-                                                <% if (club.logoUrl) { %>
-                                                    <div class="card">
-                                                        <img src="<%= club.logoUrl %>" class="card-img-top" alt="Current Club Logo" 
-                                                             style="height: 150px; object-fit: contain; background: #f8f9fa;">
-                                                        <div class="card-body text-center p-2">
-                                                            <small class="text-muted">Current Logo</small>
-                                                        </div>
-                                                    </div>
-                                                <% } else { %>
-                                                    <div class="card bg-light">
-                                                        <div class="card-body text-center" style="height: 150px; display: flex; align-items: center; justify-content: center;">
-                                                            <div>
-                                                                <i class="bi bi-image display-6 text-muted"></i>
-                                                                <div class="mt-2">
-                                                                    <small class="text-muted">No logo uploaded</small>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                <% } %>
-                                            </div>
-                                            <div class="col-md-9">
-                                                <label for="logo" class="form-label">Upload New Logo</label>
-                                                <div class="file-upload-area mb-3">
-                                                    <input type="file" class="form-control" id="logo" name="logo" 
-                                                           accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp" 
-                                                           style="display: none;">
-                                                    <i class="bi bi-cloud-upload display-6 text-muted"></i>
-                                                    <p class="upload-text mt-2">Click or drag to upload club logo</p>
-                                                    <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
-                                                </div>
-                                                <div class="form-text">
-                                                    Upload a logo for your club. Recommended size: 200x200 pixels or larger, square format.
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <%- include('../partials/logo-uploader', { 
+                                            fieldName: 'logo',
+                                            inputId: 'logo',
+                                            uploadText: 'Click or drag to upload club logo',
+                                            maxFileSize: 'Max 10MB',
+                                            acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                                            helpText: 'Upload a logo for your club. Recommended size: 200x200 pixels or larger, square format.',
+                                            currentLogoUrl: club.logoUrl,
+                                            currentLogoAlt: 'Current Club Logo'
+                                        }) %>
                                     </div>
                                 </div>
                             <% } %>
@@ -99,6 +71,13 @@
                                     <% } %>
                                 </div>
                                 <div class="col-md-6">
+                                    <label for="location" class="form-label">Location/Suburb</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           placeholder="e.g., Parramatta, Sydney" value="<%= club.location || '' %>"
+                                           maxlength="100">
+                                    <div class="form-text">Specify your club's home location or suburb</div>
+                                </div>
+                                <div class="col-md-6">
                                     <label for="state" class="form-label">State *</label>
                                     <% if (user.isPrimaryDelegate) { %>
                                         <select class="form-select" id="state" name="state" required>
@@ -119,17 +98,7 @@
                                     <% } %>
                                 </div>
                             </div>
-
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <label for="location" class="form-label">Location/Suburb</label>
-                                    <input type="text" class="form-control" id="location" name="location" 
-                                           placeholder="e.g., Parramatta, Sydney" value="<%= club.location || '' %>"
-                                           maxlength="100">
-                                    <div class="form-text">Specify your club's home location or suburb</div>
-                                </div>
-                            </div>
-
+                            
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <label for="description" class="form-label">Club Description</label>
@@ -235,7 +204,7 @@
 
                             <!-- Form Actions -->
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" class="btn btn-tertiary">
                                     <i class="bi bi-check-circle"></i> Update Club Profile
                                 </button>
                             </div>
@@ -263,7 +232,7 @@
                                 <i class="bi bi-people"></i> Manage Players
                             </a>
                             <% if (club.isPubliclyListed) { %>
-                                <a href="/clubs/<%= club.id %>" target="_blank" class="btn btn-outline-success">
+                                <a href="/clubs/<%= club.id %>" target="_blank" class="btn btn-outline-tertiary">
                                     <i class="bi bi-eye"></i> View Public Profile
                                 </a>
                             <% } %>
@@ -276,7 +245,7 @@
                 </div>
 
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-info">
+                    <div class="card-header bg-info text-primary">
                         <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Tips for Success</h5>
                     </div>
                     <div class="card-body">
@@ -314,7 +283,7 @@
                         <div class="mb-3">
                             <strong>Club Status:</strong>
                             <% if (club.isActive) { %>
-                                <span class="badge bg-success ms-2">Active</span>
+                                <span class="badge bg-primary ms-2">Active</span>
                                 <div class="form-text">Your club is currently active and operational</div>
                             <% } else { %>
                                 <span class="badge bg-danger ms-2">Inactive</span>
@@ -324,7 +293,7 @@
                         <div class="mb-3">
                             <strong>Public Listing:</strong>
                             <% if (club.isPubliclyListed) { %>
-                                <span class="badge bg-success ms-2">Active</span>
+                                <span class="badge bg-primary ms-2">Active</span>
                                 <div class="form-text">Your club is visible to the public</div>
                             <% } else { %>
                                 <span class="badge bg-secondary ms-2">Hidden</span>
@@ -339,3 +308,4 @@
 </section>
 
 <script type="module" src="/js/club-manage.js"></script>
+<%- include('../partials/help-modal.ejs', { modalId: 'help-clubs-manage' }) %>

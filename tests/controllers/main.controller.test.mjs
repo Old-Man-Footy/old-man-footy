@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../../config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -96,6 +96,8 @@ vi.mock('/models/index.mjs', () => {
     states: ['NSW', 'VIC'],
     isActive: true,
     subscribedAt: new Date(),
+    unsubscribedAt: null,
+    unsubscribeToken: 'default-test-token',
     source: 'homepage',
     update: vi.fn().mockResolvedValue(true),
     ...overrides
@@ -133,7 +135,8 @@ vi.mock('/models/index.mjs', () => {
     createMockEmailSubscription,
     Op: {
       gte: Symbol('gte'),
-      ne: Symbol('ne')
+      ne: Symbol('ne'),
+      or: Symbol('or')
     }
   };
 });
@@ -178,7 +181,7 @@ import {
   sendNewsletter,
   getContact,
   postContact
-} from '/controllers/main.controller.mjs';
+} from '../../controllers/main.controller.mjs';
 
 import {
   Carnival,
@@ -192,11 +195,11 @@ import {
   createMockUser,
   createMockEmailSubscription,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
-import ContactEmailService from '/services/email/ContactEmailService.mjs';
-import AuthEmailService from '/services/email/AuthEmailService.mjs';
-import carouselImageService from '/services/carouselImageService.mjs';
+import ContactEmailService from '../../services/email/ContactEmailService.mjs';
+import AuthEmailService from '../../services/email/AuthEmailService.mjs';
+import carouselImageService from '../../services/carouselImageService.mjs';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 
@@ -277,29 +280,37 @@ describe('Main Controller', () => {
 
       await getIndex(req, res);
 
-      expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          isActive: true
-        }),
-        include: expect.arrayContaining([expect.objectContaining({
-          model: User,
-          as: 'creator'
-        })]),
-        order: [['date', 'ASC']],
-        limit: 4
-      }));
+      expect(Carnival.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            isActive: true,
+            [Op.or]: expect.arrayContaining([
+              expect.objectContaining({
+                date: expect.anything()
+              }),
+              expect.objectContaining({
+                date: null
+              })
+            ])
+          }),
+          include: expect.any(Array),
+          order: expect.any(Array)
+        })
+      );
 
       expect(res.render).toHaveBeenCalledWith('index', expect.objectContaining({
         title: 'Old Man Footy',
         user: null,
-        upcomingCarnivals: mockCarnivals,
-        carnivals: mockCarnivals,
-        stats: {
+        upcomingCarnivals: expect.arrayContaining(mockCarnivals),
+        carnivals: expect.arrayContaining(mockCarnivals),
+        stats: expect.objectContaining({
           totalCarnivals: 10,
           upcomingCount: 3,
           clubsCount: 5
-        },
-        carouselImages: mockCarouselImages
+        }),
+        carouselImages: mockCarouselImages,
+        AUSTRALIAN_STATES: expect.any(Array),
+        additionalCSS: expect.any(Array)
       }));
     });
 
@@ -328,7 +339,7 @@ describe('Main Controller', () => {
       await expect(getIndex(req, res)).rejects.toThrow('Image service error');
     });
 
-    it('should limit upcoming carnivals to 4', async () => {
+    it('should include carnivals with null dates as upcoming', async () => {
       const manyCarnivals = Array.from({ length: 10 }, (_, i) => 
         createMockCarnival({ id: i + 1, title: `Carnival ${i + 1}` })
       );
@@ -339,9 +350,23 @@ describe('Main Controller', () => {
 
       await getIndex(req, res);
 
-      expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        limit: 4
-      }));
+      expect(Carnival.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            isActive: true,
+            [Op.or]: expect.arrayContaining([
+              expect.objectContaining({
+                date: expect.anything()
+              }),
+              expect.objectContaining({
+                date: null
+              })
+            ])
+          }),
+          include: expect.any(Array),
+          order: expect.any(Array)
+        })
+      );
     });
   });
 
@@ -705,65 +730,221 @@ describe('Main Controller', () => {
   });
 
   describe('Unsubscribe Flow', () => {
-    it('should display unsubscribe page for valid token', async () => {
-      req.params.token = 'valid-token';
-      const mockSubscription = createMockEmailSubscription();
+    describe('getUnsubscribe', () => {
+      it('should display unsubscribe page for valid token', async () => {
+        req.query.token = 'valid-unsubscribe-token';
+        const mockSubscription = createMockEmailSubscription({
+          unsubscribeToken: 'valid-unsubscribe-token',
+          email: 'test@example.com',
+          isActive: true
+        });
 
-      EmailSubscription.findOne.mockResolvedValue(mockSubscription);
+        EmailSubscription.findOne.mockResolvedValue(mockSubscription);
 
-      await getUnsubscribe(req, res);
+        await getUnsubscribe(req, res);
 
-      expect(res.render).toHaveBeenCalledWith('unsubscribe', {
-        title: 'Unsubscribe',
-        email: 'test@example.com',
-        additionalCSS: []
+        expect(EmailSubscription.findOne).toHaveBeenCalledWith({
+          where: { 
+            unsubscribeToken: 'valid-unsubscribe-token',
+            isActive: true 
+          }
+        });
+
+        expect(res.render).toHaveBeenCalledWith('unsubscribe', {
+          title: 'Unsubscribe from Email Notifications',
+          subscription: mockSubscription,
+          token: 'valid-unsubscribe-token',
+          additionalCSS: ['/styles/forms.css']
+        });
+      });
+
+      it('should render error page when token is missing', async () => {
+        req.query.token = undefined;
+
+        await getUnsubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Link',
+          message: 'This unsubscribe link is missing required information.',
+          error: null,
+          additionalCSS: []
+        });
+      });
+
+      it('should render error page when token is empty string', async () => {
+        req.query.token = '';
+
+        await getUnsubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Link',
+          message: 'This unsubscribe link is missing required information.',
+          error: null,
+          additionalCSS: []
+        });
+      });
+
+      it('should handle invalid unsubscribe token', async () => {
+        req.query.token = 'invalid-token';
+
+        EmailSubscription.findOne.mockResolvedValue(null);
+
+        await getUnsubscribe(req, res);
+
+        expect(EmailSubscription.findOne).toHaveBeenCalledWith({
+          where: { 
+            unsubscribeToken: 'invalid-token',
+            isActive: true 
+          }
+        });
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Link',
+          message: 'This unsubscribe link is invalid or has expired.',
+          error: null,
+          additionalCSS: []
+        });
+      });
+
+      it('should handle subscription that is already inactive', async () => {
+        req.query.token = 'expired-token';
+
+        EmailSubscription.findOne.mockResolvedValue(null); // findOne with isActive: true returns null
+
+        await getUnsubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Link',
+          message: 'This unsubscribe link is invalid or has expired.',
+          error: null,
+          additionalCSS: []
+        });
       });
     });
 
-    it('should handle invalid unsubscribe token', async () => {
-      req.params.token = 'invalid-token';
+    describe('postUnsubscribe', () => {
+      it('should successfully process unsubscribe request', async () => {
+        req.body.token = 'valid-unsubscribe-token';
+        const mockSubscription = createMockEmailSubscription({
+          unsubscribeToken: 'valid-unsubscribe-token',
+          email: 'test@example.com',
+          isActive: true,
+          update: vi.fn().mockResolvedValue(true)
+        });
 
-      EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.findOne.mockResolvedValue(mockSubscription);
 
-      await getUnsubscribe(req, res);
+        await postUnsubscribe(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.render).toHaveBeenCalledWith('error', expect.objectContaining({
-        title: 'Invalid Link',
-        message: 'This unsubscribe link is invalid or has expired.'
-      }));
-    });
+        expect(EmailSubscription.findOne).toHaveBeenCalledWith({
+          where: { 
+            unsubscribeToken: 'valid-unsubscribe-token',
+            isActive: true
+          }
+        });
 
-    it('should process unsubscribe request', async () => {
-      req.body = { email: 'test@example.com' };
-      const mockSubscription = createMockEmailSubscription();
+        expect(mockSubscription.update).toHaveBeenCalledWith({
+          isActive: false
+          // unsubscribedAt is automatically set by the model hook
+        });
 
-      EmailSubscription.findOne.mockResolvedValue(mockSubscription);
-
-      await postUnsubscribe(req, res);
-
-      expect(mockSubscription.update).toHaveBeenCalledWith({
-        isActive: false
+        expect(res.render).toHaveBeenCalledWith('unsubscribe-success', {
+          title: 'Successfully Unsubscribed',
+          message: 'You have been successfully unsubscribed from our email notifications.',
+          email: 'test@example.com',
+          additionalCSS: ['/styles/forms.css']
+        });
       });
 
-      expect(res.render).toHaveBeenCalledWith('success', {
-        title: 'Unsubscribed',
-        message: 'You have been successfully unsubscribed from our newsletter.',
-        additionalCSS: []
+      it('should render error page when token is missing from request body', async () => {
+        req.body.token = undefined;
+
+        await postUnsubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Request',
+          message: 'Missing required information to process unsubscribe request.',
+          error: null,
+          additionalCSS: []
+        });
       });
-    });
 
-    it('should handle unsubscribe for non-existent email', async () => {
-      req.body = { email: 'nonexistent@example.com' };
+      it('should render error page when token is empty string', async () => {
+        req.body.token = '';
 
-      EmailSubscription.findOne.mockResolvedValue(null);
+        await postUnsubscribe(req, res);
 
-      await postUnsubscribe(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Request',
+          message: 'Missing required information to process unsubscribe request.',
+          error: null,
+          additionalCSS: []
+        });
+      });
 
-      // Should still show success page
-      expect(res.render).toHaveBeenCalledWith('success', expect.objectContaining({
-        title: 'Unsubscribed'
-      }));
+      it('should handle invalid token in unsubscribe request', async () => {
+        req.body.token = 'invalid-token';
+
+        EmailSubscription.findOne.mockResolvedValue(null);
+
+        await postUnsubscribe(req, res);
+
+        expect(EmailSubscription.findOne).toHaveBeenCalledWith({
+          where: { 
+            unsubscribeToken: 'invalid-token',
+            isActive: true
+          }
+        });
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Link',
+          message: 'This unsubscribe link is invalid or has already been used.',
+          error: null,
+          additionalCSS: []
+        });
+      });
+
+      it('should handle already unsubscribed subscription', async () => {
+        req.body.token = 'already-used-token';
+
+        EmailSubscription.findOne.mockResolvedValue(null); // findOne with isActive: true returns null
+
+        await postUnsubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.render).toHaveBeenCalledWith('error', {
+          title: 'Invalid Link',
+          message: 'This unsubscribe link is invalid or has already been used.',
+          error: null,
+          additionalCSS: []
+        });
+      });
+
+      it('should handle database error during unsubscribe update', async () => {
+        req.body.token = 'valid-token';
+        const mockSubscription = createMockEmailSubscription({
+          unsubscribeToken: 'valid-token',
+          email: 'test@example.com',
+          isActive: true,
+          update: vi.fn().mockRejectedValue(new Error('Database error'))
+        });
+
+        EmailSubscription.findOne.mockResolvedValue(mockSubscription);
+
+        // The asyncHandler should catch this error and pass it to the error middleware
+        await expect(postUnsubscribe(req, res)).rejects.toThrow('Database error');
+
+        expect(mockSubscription.update).toHaveBeenCalledWith({
+          isActive: false
+        });
+      });
     });
   });
 

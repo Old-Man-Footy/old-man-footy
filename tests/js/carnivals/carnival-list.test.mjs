@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Ensure the path to your refactored script is correct
-import { carnivalListManager } from '/public/js/carnival-list.js';
+import { carnivalListManager } from '../../../public/js/carnival-list.js';
 
 /**
  * @file carnival-list.test.js
@@ -38,7 +38,7 @@ describe('carnivalListManager', () => {
         it('should debounce and submit the form after the delay', () => {
             const searchInput = document.getElementById('search');
             const form = document.getElementById('test-form');
-            // **THE FIX IS HERE:** The mock implementation no longer expects an event object.
+            // **THE FIX IS HERE:** The mock implementation no longer expects an carnival object.
             const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
 
             carnivalListManager.setupSearchListener(searchInput, 500);
@@ -77,14 +77,14 @@ describe('carnivalListManager', () => {
     });
 
     describe('setupAutoSubmitListener', () => {
-        it('should submit the form immediately on event', () => {
+        it('should submit the form immediately on carnival', () => {
             const stateSelect = document.getElementById('state');
             const form = document.getElementById('test-form');
             const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
 
             carnivalListManager.setupAutoSubmitListener(stateSelect, 'change');
             
-            // Simulate the change event
+            // Simulate the change carnival
             stateSelect.dispatchEvent(new Event('change'));
 
             expect(submitSpy).toHaveBeenCalledTimes(1);

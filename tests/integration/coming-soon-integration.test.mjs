@@ -5,8 +5,8 @@
 
 import request from 'supertest';
 import express from 'express';
-import { EmailSubscription } from '/models/index.mjs';
-import { sequelize } from '/config/database.mjs';
+import { EmailSubscription } from '../../models/index.mjs';
+import { sequelize } from '../../config/database.mjs';
 import { describe, test, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
 
 // Mock services that cause ImageNamingService conflicts
@@ -17,8 +17,8 @@ vi.mock('/services/mySidelineLogoDownloadService.mjs');
 vi.mock('/services/mySidelineScraperService.mjs');
 
 // Import routes and middleware directly
-import mainRoutes from '/routes/index.mjs';
-import { comingSoonMode } from '/middleware/comingSoon.mjs';
+import mainRoutes from '../../routes/index.mjs';
+import { comingSoonMode } from '../../middleware/comingSoon.mjs';
 
 // Create test app with coming soon middleware
 const createTestApp = (enableComingSoon = false) => {

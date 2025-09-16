@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" data-page-id="admin-carnivals">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -7,7 +7,7 @@
                     Carnival Management
                 </h1>
                 <div class="d-flex gap-2">
-                    <a href="/carnivals/new" class="btn btn-success">
+                    <a href="/carnivals/new" class="btn btn-tertiary">
                         <i class="bi bi-plus-circle"></i> Create Carnival
                     </a>
                     <a href="/admin/dashboard" class="btn btn-outline-secondary">
@@ -51,7 +51,7 @@
                         <div class="col-md-3">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
-                                <option value="">All Events</option>
+                                <option value="">All Carnivals</option>
                                 <option value="upcoming" <%= filters.status === 'upcoming' ? 'selected' : '' %>>Upcoming</option>
                                 <option value="past" <%= filters.status === 'past' ? 'selected' : '' %>>Past</option>
                             </select>
@@ -132,13 +132,19 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="fw-medium">
-                                                    <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
-                                                </span>
-                                                <br>
-                                                <small class="text-muted">
-                                                    <%= carnival.date >= new Date() ? 'Upcoming' : 'Past' %>
-                                                </small>
+                                                <% if (carnival.date) { %>
+                                                    <span class="fw-medium">
+                                                        <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
+                                                    </span>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <%= carnival.date >= new Date() ? 'Upcoming' : 'Past' %>
+                                                    </small>
+                                                <% } else { %>
+                                                    <span class="text-muted">
+                                                        No date set
+                                                    </span>
+                                                <% } %>
                                             </td>
                                             <td>
                                                 <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
@@ -165,7 +171,7 @@
                                             </td>
                                             <td>
                                                 <% if (carnival.isActive) { %>
-                                                    <span class="badge bg-success">Active</span>
+                                                    <span class="badge bg-primary">Active</span>
                                                 <% } else { %>
                                                     <span class="badge bg-danger">Inactive</span>
                                                 <% } %>
@@ -177,11 +183,11 @@
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <a href="/admin/carnivals/<%= carnival.id %>/players" 
-                                                       class="btn btn-outline-success" title="View Player Lists">
+                                                       class="btn btn-outline-tertiary" title="View Player Lists">
                                                         <i class="bi bi-people"></i>
                                                     </a>
                                                     <a href="/admin/carnivals/<%= carnival.id %>/edit" 
-                                                       class="btn btn-outline-warning" title="Edit Carnival">
+                                                       class="btn btn-outline-tertiary" title="Edit Carnival">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                     
@@ -202,7 +208,7 @@
                                                             <i class="bi bi-eye-slash"></i>
                                                         </button>
                                                     <% } else { %>
-                                                        <button type="button" class="btn btn-outline-success" 
+                                                        <button type="button" class="btn btn-outline-tertiary" 
                                                                 title="Reactivate Carnival"
                                                                 data-toggle-carnival-status="<%= carnival.id %>"
                                                                 data-carnival-title="<%= carnival.title %>"
@@ -301,7 +307,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="confirmStatusToggle" class="btn btn-warning">
+                <button type="button" id="confirmStatusToggle" class="btn btn-tertiary">
                     <i class="bi bi-eye-slash"></i> <span id="toggleActionText">Deactivate</span> Carnival
                 </button>
             </div>

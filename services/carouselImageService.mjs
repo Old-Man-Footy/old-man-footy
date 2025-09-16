@@ -1,14 +1,16 @@
 /**
  * Carousel Image Service
  * 
- * Manages the selection and retrieval of user-uploaded images for the home page carousel.
- * Prioritizes recent uploads and excludes icons/logos.
+ * Manages the selection and retrieval of gallery images for the home page carousel.
+ * Now integrates with the ImageUpload model for database-driven image management.
+ * Prioritizes carnival images with recent uploads and proper attribution.
  */
 
 import { promises as fs } from 'fs';
 import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { IMAGE_DIRECTORIES_ARRAY, SUPPORTED_IMAGE_EXTENSIONS } from '../config/constants.mjs';
+import ImageUpload from '../models/ImageUpload.mjs';
 
 // ES Module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -19,7 +21,7 @@ class CarouselImageService {
         this.uploadsPath = join(__dirname, '..', 'public', 'uploads');
         this.publicPath = '/uploads';
         
-        // Use constants instead of hardcoded arrays
+        // Use constants instead of hardcoded arrays for legacy directory scanning
         this.imageDirectories = IMAGE_DIRECTORIES_ARRAY;
         this.supportedExtensions = SUPPORTED_IMAGE_EXTENSIONS;
         
@@ -31,6 +33,7 @@ class CarouselImageService {
 
     /**
      * Get carousel images with priority for recent uploads
+     * Now uses the ImageUpload model for database-driven images and falls back to filesystem scanning
      * @param {number} limit - Maximum number of images to return
      * @returns {Promise<Array>} Array of image objects with metadata
      */
@@ -43,7 +46,32 @@ class CarouselImageService {
 
             const allImages = [];
 
-            // Scan all image directories
+            // First, get images from the ImageUpload model (carnival images only for carousel)
+            try {
+                const dbImages = await ImageUpload.getCarouselImages();
+                const formattedDbImages = dbImages.map(image => ({
+                    id: image.id,
+                    filename: this.extractFilename(image.url),
+                    url: image.url,
+                    uploadTime: new Date(image.createdAt).getTime(),
+                    size: 100000, // Default size for DB images
+                    type: 'gallery',
+                    source: 'carnival',
+                    displayType: 'Carnival Gallery',
+                    entityType: 'carnival',
+                    entityId: image.carnivalId,
+                    entityName: image.carnival ? image.carnival.title : 'Carnival Carnival',
+                    uploader: null, // Not tracking uploader in ImageUpload model
+                    attribution: image.displayAttribution,
+                    isPrimary: false
+                }));
+                
+                allImages.push(...formattedDbImages);
+            } catch (dbError) {
+                console.error('Error fetching images from database:', dbError);
+            }
+
+            // Fallback: Scan filesystem directories for legacy images
             for (const directory of this.imageDirectories) {
                 const fullPath = join(this.uploadsPath, directory);
                 
@@ -200,6 +228,15 @@ class CarouselImageService {
     }
 
     /**
+     * Extract filename from URL
+     * @param {string} url - Image URL
+     * @returns {string} Filename
+     */
+    extractFilename(url) {
+        return url.split('/').pop() || 'unknown';
+    }
+
+    /**
      * Get statistics about available images
      * @returns {Promise<Object>} Statistics object
      */
@@ -212,7 +249,9 @@ class CarouselImageService {
                 bySource: {},
                 byType: {},
                 recentCount: 0,
-                totalSize: 0
+                totalSize: 0,
+                dbImages: 0,
+                legacyImages: 0
             };
 
             const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
@@ -231,6 +270,13 @@ class CarouselImageService {
                 
                 // Total size
                 stats.totalSize += image.size;
+
+                // Count DB vs legacy images
+                if (image.id) {
+                    stats.dbImages++;
+                } else {
+                    stats.legacyImages++;
+                }
             });
 
             return stats;
@@ -241,7 +287,9 @@ class CarouselImageService {
                 bySource: {},
                 byType: {},
                 recentCount: 0,
-                totalSize: 0
+                totalSize: 0,
+                dbImages: 0,
+                legacyImages: 0
             };
         }
     }

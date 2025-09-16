@@ -125,7 +125,15 @@ class CarnivalClub extends Model {
         carnivalId,
         isActive: true,
         approvalStatus: 'approved'
-      }
+      },
+      include: [
+        {
+          model: this.sequelize.models.Club,
+          as: 'participatingClub',
+          where: { isActive: true },
+          attributes: []
+        }
+      ]
     });
 
     const pending = await this.count({
@@ -133,7 +141,15 @@ class CarnivalClub extends Model {
         carnivalId,
         isActive: true,
         approvalStatus: 'pending'
-      }
+      },
+      include: [
+        {
+          model: this.sequelize.models.Club,
+          as: 'participatingClub',
+          where: { isActive: true },
+          attributes: []
+        }
+      ]
     });
 
     return { approved, pending, total: approved + pending };
@@ -202,6 +218,16 @@ CarnivalClub.init({
     type: DataTypes.INTEGER,
     allowNull: true
   },
+  numberOfTeams: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    validate: {
+      min: 1,
+      max: 10
+    },
+    comment: 'Number of teams the club wants to register for this carnival'
+  },
   teamName: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -268,9 +294,12 @@ CarnivalClub.init({
     defaultValue: 999
   },
   approvalStatus: {
-    type: DataTypes.ENUM(...APPROVAL_STATUS_ARRAY),
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'pending'
+    defaultValue: 'pending',
+    validate: {
+      isIn: [APPROVAL_STATUS_ARRAY]
+    }
   },
   approvedAt: {
     type: DataTypes.DATE,
@@ -339,8 +368,8 @@ CarnivalClub.init({
      * Update carnival currentRegistrations after updating a registration
      */
     afterUpdate: async (carnivalClub, options) => {
-      // Only update if approval status or isActive changed
-      if (carnivalClub.changed('approvalStatus') || carnivalClub.changed('isActive')) {
+      // Update if approval status, isActive, or numberOfTeams changed
+      if (carnivalClub.changed('approvalStatus') || carnivalClub.changed('isActive') || carnivalClub.changed('numberOfTeams')) {
         await updateCarnivalRegistrationCount(carnivalClub.carnivalId);
       }
     },
@@ -364,15 +393,22 @@ export async function updateCarnivalRegistrationCount(carnivalId) {
   try {
     const { default: Carnival } = await import('./Carnival.mjs');
     const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
-    const approvedCount = await CarnivalClub.count({
+    
+    // Sum numberOfTeams for approved registrations instead of counting clubs
+    const result = await CarnivalClub.findAll({
+      attributes: [[CarnivalClub.sequelize.fn('SUM', CarnivalClub.sequelize.col('numberOfTeams')), 'totalTeams']],
       where: {
         carnivalId,
         isActive: true,
         approvalStatus: 'approved',
       },
+      raw: true
     });
+    
+    const approvedTeamsCount = parseInt(result[0]?.totalTeams) || 0;
+    
     await Carnival.update(
-      { currentRegistrations: approvedCount },
+      { currentRegistrations: approvedTeamsCount },
       { where: { id: carnivalId } }
     );
   } catch (err) {

@@ -7,6 +7,7 @@
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
+import Club from './Club.mjs';
 
 /**
  * Sponsor model class extending Sequelize Model
@@ -19,6 +20,15 @@ class Sponsor extends Model {
    */
   async getClub() {
     return await Club.findByPk(this.clubId);
+  }
+
+  /**
+   * Check if this sponsor is associated with a specific club
+   * @param {number} clubId - The club ID to check association with
+   * @returns {boolean} True if the sponsor is associated with the club
+   */
+  isAssociatedWithClub(clubId) {
+    return this.clubId === clubId;
   }
 }
 
@@ -138,17 +148,23 @@ Sponsor.init({
   },
   clubId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'clubs',
       key: 'id'
     },
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
-    comment: 'The club that owns this sponsor',
+    comment: 'The club that owns this sponsor'
+  },
+  sponsorshipLevel: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    defaultValue: 'Supporting',
     validate: {
-      notNull: { msg: 'Sponsor must be linked to a club.' }
-    }
+      isIn: [['Gold', 'Silver', 'Bronze', 'Supporting', 'In-Kind']]
+    },
+    comment: 'Sponsorship level (Gold, Silver, Bronze, Supporting, In-Kind)'
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -166,7 +182,8 @@ Sponsor.init({
   indexes: [
     {
       unique: true,
-      fields: ['sponsorName']
+      fields: ['sponsorName', 'clubId', 'state', 'location'],
+      name: 'sponsors_composite_unique'
     },
     {
       fields: ['state']
@@ -176,6 +193,9 @@ Sponsor.init({
     },
     {
       fields: ['clubId']
+    },
+    {
+      fields: ['sponsorshipLevel']
     }
   ]
 });

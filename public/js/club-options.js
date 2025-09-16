@@ -106,8 +106,8 @@ export const clubOptionsManager = {
     },
 
     // Contact modal
-    handleContactClick: (event) => {
-        const btn = event.currentTarget;
+    handleContactClick: (carnival) => {
+        const btn = carnival.currentTarget;
         const clubName = btn.dataset.clubName || 'Unknown Club';
         const delegateName = btn.dataset.delegateName || 'Unknown Delegate';
         const clubId = clubOptionsManager.extractClubIdFromButton(btn);
@@ -154,11 +154,11 @@ export const clubOptionsManager = {
         }, 300);
     },
 
-    handleDocumentClick: (event) => {
+    handleDocumentClick: (carnival) => {
         const input = clubOptionsManager.elements.clubNameInput;
         const suggestions = clubOptionsManager.elements.clubSuggestions;
         if (!input || !suggestions) return;
-        if (!input.contains(event.target) && !suggestions.contains(event.target)) {
+        if (!input.contains(carnival.target) && !suggestions.contains(carnival.target)) {
             clubOptionsManager.hideSuggestions();
         }
     },
@@ -245,9 +245,9 @@ export const clubOptionsManager = {
     },
 
     // Form validation
-    handleClubCreationSubmit: (event) => {
-        event.preventDefault();
-        event.stopPropagation();
+    handleClubCreationSubmit: (carnival) => {
+        carnival.preventDefault();
+        carnival.stopPropagation();
         clubOptionsManager.clearValidationErrors();
         const form = clubOptionsManager.elements.clubCreationForm;
         const clubNameInput = document.getElementById('clubName');

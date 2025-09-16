@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { asyncHandler, catchAsync, wrapControllers } from '/middleware/asyncHandler.mjs';
+import { asyncHandler, catchAsync, wrapControllers } from '../../middleware/asyncHandler.mjs';
 
 /**
  * Mocks for Express req, res, next

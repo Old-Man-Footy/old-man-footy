@@ -17,14 +17,29 @@ export class BaseEmailService {
     }
 
     /**
-     * Check if emails should be sent based on site mode
+     * Check if emails should be sent based on site mode and configuration
      * @returns {boolean} True if emails can be sent, false otherwise
      */
     _canSendEmails() {
         // Don't send emails in test environment
         if (process.env.NODE_ENV === 'test') {
-            console.log('📧 Email sending disabled: Test environment');
+            console.log(`📧 Email sending disabled: ${process.env.NODE_ENV} environment`);
             return false;
+        }
+
+        // Check if email notifications feature flag is enabled
+        if (process.env.FEATURE_EMAIL_NOTIFICATIONS !== 'true') {
+            console.log('📧 Email sending disabled: Email notifications feature is off')
+            return false
+        };
+
+        // Check if all required email environment variables are set
+        const requiredEmailVars = ['EMAIL_FROM_NAME', 'EMAIL_FROM', 'EMAIL_PASSWORD', 'EMAIL_SERVICE', 'EMAIL_USER'];
+        for (const varName of requiredEmailVars) {
+            if (!process.env[varName] || process.env[varName].trim() === '') {
+                console.log(`📧 Email sending disabled: Required environment variable ${varName} is not set`);
+                return false;
+            }
         }
 
         // Don't send emails if coming soon mode is enabled
@@ -51,14 +66,6 @@ export class BaseEmailService {
     _logBlockedEmail(type, recipient, subject) {
         const mode = process.env.FEATURE_COMING_SOON_MODE === 'true' ? 'Coming Soon' : 'Maintenance';
         console.log(`📧 ${type} email blocked (${mode} mode): ${recipient} - "${subject}"`);
-    }
-
-    /**
-     * Get the base URL for the application
-     * @returns {string} Base URL
-     */
-    _getBaseUrl() {
-        return process.env.BASE_URL || 'http://localhost:3050';
     }
 
     /**
@@ -193,6 +200,51 @@ export class BaseEmailService {
             minute: '2-digit',
             timeZone: 'Australia/Sydney'
         }) + ' AEDT';
+    }
+
+    /**
+     * Add standard unsubscribe headers to mail options
+     * @param {Object} mailOptions - Nodemailer mail options
+     * @param {string} unsubscribeToken - Unsubscribe token for the recipient
+     * @returns {Object} Enhanced mail options with unsubscribe headers
+     */
+    _addUnsubscribeHeaders(mailOptions, unsubscribeToken) {
+        if (!unsubscribeToken) {
+            return mailOptions;
+        }
+
+        const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?token=${unsubscribeToken}`;
+        
+        // Add List-Unsubscribe header for email clients
+        mailOptions.headers = {
+            ...mailOptions.headers,
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+        };
+
+        return mailOptions;
+    }
+
+    /**
+     * Get the base URL for the application
+     * @returns {string} Base URL
+     * @private
+     */
+    _getBaseUrl() {
+        const { NODE_ENV, BASE_URL } = process.env;
+        
+        if (BASE_URL) {
+            return BASE_URL;
+        }
+        
+        // Fallback URLs based on environment
+        if (NODE_ENV === 'production') {
+            return 'https://oldmanfooty.com';
+        } else if (NODE_ENV === 'test' || NODE_ENV === 'e2e') {
+            return 'http://localhost:3055';
+        } else {
+            return 'http://localhost:3000';
+        }
     }
 
     /**

@@ -5,12 +5,12 @@
  * and their basic relationships
  */
 
-import { Club, User, Carnival, Sponsor, EmailSubscription } from '../models/index.mjs';
+import { Club, User, Carnival, Sponsor, EmailSubscription } from '../../models/index.mjs';
 import { SAMPLE_CLUBS } from '../fixtures/clubFixtures.mjs';
 import { SAMPLE_CARNIVALS } from '../fixtures/carnivalFixtures.mjs';
 import { SAMPLE_SPONSORS, SAMPLE_SUBSCRIPTIONS } from '../fixtures/sponsorFixtures.mjs';
-import MySidelineService from '../services/mySidelineIntegrationService.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import MySidelineService from '../../services/mySidelineIntegrationService.mjs';
+import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
 
 class BasicSeeder {
     constructor() {
@@ -27,7 +27,7 @@ class BasicSeeder {
     async connect() {
         try {
             // Only check connection health, do not run full setup
-            const { getDatabaseConnection } = await import('../config/database.mjs');
+            const { getDatabaseConnection } = await import('../../config/database.mjs');
             const connected = await getDatabaseConnection();
             if (!connected) throw new Error('Failed to establish database connection');
             console.log('✅ SQLite database connection is healthy');
@@ -81,7 +81,7 @@ class BasicSeeder {
             email: 'admin@oldmanfooty.au',
             firstName: 'Admin',
             lastName: 'User',
-            passwordHash: 'admin123', // Will be hashed by model hook
+            passwordHash: 'Admin123!', // Will be hashed by model hook
             isAdmin: true,
             isActive: true
         });
@@ -93,7 +93,7 @@ class BasicSeeder {
                 email: `primary@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`,
                 firstName: 'Primary',
                 lastName: 'Delegate',
-                passwordHash: 'delegate123', // Will be hashed by model hook
+                passwordHash: 'Delegate123!', // Will be hashed by model hook
                 clubId: club.id,
                 isPrimaryDelegate: true,
                 isActive: true
@@ -106,7 +106,7 @@ class BasicSeeder {
                     email: `delegate@${club.clubName.toLowerCase().replace(/\s+/g, '')}.com.au`,
                     firstName: 'Secondary',
                     lastName: 'Delegate',
-                    passwordHash: 'delegate123', // Will be hashed by model hook
+                    passwordHash: 'Delegate123!', // Will be hashed by model hook
                     clubId: club.id,
                     isPrimaryDelegate: false,
                     isActive: true
@@ -157,7 +157,7 @@ class BasicSeeder {
                 organiserContactEmail: carnivalData.organiserContactEmail,
                 organiserContactPhone: carnivalData.organiserContactPhone,
                 
-                // Event details
+                // Carnival details
                 scheduleDetails: carnivalData.scheduleDetails,
                 registrationLink: carnivalData.registrationLink,
                 feesDescription: carnivalData.feesDescription,
@@ -225,13 +225,13 @@ class BasicSeeder {
             
             for (const state of states) {
                 try {
-                    const stateEvents = await MySidelineService.getEventsForState(state);
-                    console.log(`Found ${stateEvents.length} events for ${state}`);
+                    const stateCarnivals = await MySidelineService.getCarnivalsForState(state);
+                    console.log(`Found ${stateCarnivals.length} carnivals for ${state}`);
                     
-                    for (const event of stateEvents) {
+                    for (const carnival of stateCarnivals) {
                         try {
                             const carnival = await Carnival.create({
-                                ...event,
+                                ...carnival,
                                 isManuallyEntered: false,
                                 isActive: true,
                                 createdAt: new Date(),
@@ -242,15 +242,15 @@ class BasicSeeder {
                             totalImported++;
                             console.log(`Created carnival: ${carnival.title}`);
                         } catch (createError) {
-                            console.error(`Failed to create carnival for ${event.title}:`, createError.message);
+                            console.error(`Failed to create carnival for ${carnival.title}:`, createError.message);
                         }
                     }
                 } catch (stateError) {
-                    console.error(`Failed to fetch ${state} events:`, stateError.message);
+                    console.error(`Failed to fetch ${state} carnivals:`, stateError.message);
                 }
             }
             
-            console.log(`✅ Imported ${totalImported} MySideline events`);
+            console.log(`✅ Imported ${totalImported} MySideline carnivals`);
         } catch (error) {
             console.log(`⚠️  MySideline import failed (using manual data only): ${error.message}`);
         }
@@ -263,8 +263,23 @@ class BasicSeeder {
     async createSponsors() {
         console.log('🤝 Creating test sponsors...');
         
+        // Get available clubs to assign sponsors to
+        const availableClubs = this.createdClubs.length > 0 ? this.createdClubs : await Club.findAll();
+        
+        if (availableClubs.length === 0) {
+            console.log('⚠️  No clubs available to assign sponsors to. Skipping sponsor creation.');
+            return this.createdSponsors;
+        }
+        
         for (const sponsorData of SAMPLE_SPONSORS) {
-            const sponsor = await Sponsor.create(sponsorData);
+            // Assign sponsor to a random club
+            const randomClub = availableClubs[Math.floor(Math.random() * availableClubs.length)];
+            const sponsorWithClub = {
+                ...sponsorData,
+                clubId: randomClub.id
+            };
+            
+            const sponsor = await Sponsor.create(sponsorWithClub);
             this.createdSponsors.push(sponsor);
         }
         

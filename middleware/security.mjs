@@ -24,11 +24,11 @@ import crypto from 'crypto';
 const SECURITY_CONFIG = {
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 150, // Increased from 100 to 150 for normal browsing
     message: {
       error: {
         status: 429,
-        message: 'Too many requests from this IP. Please try again later.'
+        message: 'You\'re browsing a bit too quickly! Please wait a few minutes before continuing.'
       }
     },
     standardHeaders: true,
@@ -38,15 +38,27 @@ const SECURITY_CONFIG = {
   },
   
   authRateLimit: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 auth attempts per windowMs
+    windowMs: 10 * 60 * 1000, // 10 minutes (reduced from 15)
+    max: 8, // Increased from 5 to 8 attempts - allows for legitimate typos
     message: {
       error: {
         status: 429,
-        message: 'Too many authentication attempts. Please try again later.'
+        message: 'Multiple login attempts detected. For your security, please wait 10 minutes before trying again.'
       }
     },
     skipSuccessfulRequests: true
+  },
+
+  formSubmissionRateLimit: {
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 10, // Allow 10 form submissions per 5 minutes (registration, contact forms, etc.)
+    message: {
+      error: {
+        status: 429,
+        message: 'You\'re submitting forms quite frequently. Please wait a few minutes before trying again.'
+      }
+    },
+    skipSuccessfulRequests: false
   },
 
   helmet: {
@@ -84,13 +96,36 @@ const SECURITY_CONFIG = {
  * @returns {Function} Express middleware
  */
 const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
-  // Simple in-memory rate limiter for this implementation
+  // Disable rate limiting only in development environment
+  // Keep enabled in test environment so we can verify it works for users
+  if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+    console.log(`🔓 Rate limiting disabled for ${process.env.NODE_ENV || 'development'} environment`);
+    return (req, res, next) => {
+      // Just pass through without any rate limiting in development environment
+      next();
+    };
+  }
+
+  console.log(`🔒 Rate limiting enabled for ${process.env.NODE_ENV} environment`);
+
+  // Simple in-memory rate limiter for production only
   const requests = new Map();
   
   return (req, res, next) => {
     const key = req.ip || req.connection?.remoteAddress || 'unknown';
     const now = Date.now();
     const windowStart = now - config.windowMs;
+    
+    // Skip rate limiting for certain paths to prevent redirect loops
+    const isLoginPage = req.path === '/auth/login';
+    const isHomePage = req.path === '/';
+    const isStaticAsset = req.path.startsWith('/styles') || 
+                         req.path.startsWith('/public');
+    
+    // Always allow access to login page and static assets to prevent loops
+    if (isLoginPage || isHomePage || isStaticAsset) {
+      return next();
+    }
     
     // Get or create request log for this IP
     if (!requests.has(key)) {
@@ -105,7 +140,25 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit) => {
     
     // Check if limit exceeded
     if (validRequests.length >= config.max) {
-      return res.status(429).json(config.message);
+      // Check if this is an API request (JSON expected) or web request (HTML expected)
+      const acceptsJson = req.accepts && req.accepts(['json', 'html']) === 'json';
+      const isApiRoute = req.path && req.path.startsWith('/api/');
+      
+      // Also check if this is a test environment with mock objects
+      const hasRedirectMethod = res.redirect && typeof res.redirect === 'function';
+      const hasFlashMethod = req.flash && typeof req.flash === 'function';
+      
+      if (acceptsJson || isApiRoute || !hasRedirectMethod) {
+        // API request or test environment - return JSON
+        return res.status(429).json(config.message);
+      } else {
+        // Web request - redirect with flash message
+        if (hasFlashMethod) {
+          req.flash('error_msg', config.message.error.message);
+        }
+        
+        return res.redirect('/');
+      }
     }
     
     // Add current request
@@ -125,6 +178,11 @@ export const generalRateLimit = createRateLimiter();
  * Authentication-specific rate limiting
  */
 export const authRateLimit = createRateLimiter(SECURITY_CONFIG.authRateLimit);
+
+/**
+ * Form submission rate limiting (for registration, contact forms, etc.)
+ */
+export const formSubmissionRateLimit = createRateLimiter(SECURITY_CONFIG.formSubmissionRateLimit);
 
 /**
  * Helmet security headers middleware
@@ -334,6 +392,15 @@ export const validatePassword = (password) => {
 export const validateSecureEmail = (email) => {
   const errors = [];
   
+  // Check if email is provided
+  if (!email || typeof email !== 'string') {
+    errors.push('Email address is required');
+    return {
+      isValid: false,
+      errors
+    };
+  }
+  
   // Basic email format validation - more strict
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
@@ -353,7 +420,7 @@ export const validateSecureEmail = (email) => {
   ];
   
   const domain = email.split('@')[1];
-  if (disposableDomains.includes(domain)) {
+  if (domain && disposableDomains.includes(domain)) {
     errors.push('Disposable email addresses are not allowed');
   }
   
@@ -436,11 +503,11 @@ export const apiSecurity = (req, res, next) => {
  * Security audit logging middleware
  * Logs security-relevant events
  */
-export const securityAuditLog = (event, details = {}) => {
+export const securityAuditLog = (carnival, details = {}) => {
   return (req, res, next) => {
     const logData = {
       timestamp: new Date().toISOString(),
-      event,
+      carnival,
       ip: req.ip || req.connection?.remoteAddress,
       userAgent: req.get ? req.get('User-Agent') : 'Unknown',
       userId: req.user?.id || null,
@@ -496,11 +563,11 @@ export const applyAdminSecurity = [
   securityHeaders,
   createRateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200, // Increased from 50 to 200 for normal admin usage
+    max: 300, // Increased from 200 to 300 for active admin usage
     message: {
       error: {
         status: 429,
-        message: 'Too many admin requests. Please try again later.'
+        message: 'Admin activity rate limit reached. Please wait a few minutes before continuing.'
       }
     }
   }),

@@ -4,13 +4,13 @@
  * Comprehensive test suite for the most complex controller in the system following the proven 
  * pattern from club.controller.test.mjs and main.controller.test.mjs with 100% success rate implementation.
  * 
- * Covers event management, file uploads, registration workflows, MySideline integration, and complex business logic.
+ * Covers carnival management, file uploads, registration workflows, MySideline integration, and complex business logic.
  * 
  * @author Old Man Footy System
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { sequelize } from '/config/database.mjs';
+import { sequelize } from '../../config/database.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -74,9 +74,10 @@ vi.mock('/models/index.mjs', () => {
       state: 'NSW'
     }),
     canUserEditAsync: vi.fn().mockResolvedValue(true),
+    isRegistrationActiveAsync: vi.fn().mockResolvedValue(true),
     update: vi.fn().mockResolvedValue(true),
     toJSON: vi.fn().mockImplementation(function () {
-      const { toJSON, getPublicDisplayData, canUserEditAsync, update, ...rest } = this;
+      const { toJSON, getPublicDisplayData, canUserEditAsync, isRegistrationActiveAsync, update, ...rest } = this;
       return { ...rest, ...overrides };
     }),
     ...overrides
@@ -180,13 +181,7 @@ vi.mock('/models/index.mjs', () => {
 // Mock services
 vi.mock('/services/mySidelineIntegrationService.mjs', () => ({
   default: {
-    syncEvents: vi.fn().mockResolvedValue({ newEvents: 5 })
-  }
-}));
-
-vi.mock('/services/emailService.mjs', () => ({
-  default: {
-    notifyNewCarnival: vi.fn().mockResolvedValue(true)
+    syncCarnivals: vi.fn().mockResolvedValue({ newCarnivals: 5 })
   }
 }));
 
@@ -217,8 +212,8 @@ import {
   removeSponsorFromCarnival,
   sendEmailToAttendees,
   showAllPlayers,
-  createOrMergeEvent
-} from '/controllers/carnival.controller.mjs';
+  createOrMergeCarnival
+} from '../../controllers/carnival.controller.mjs';
 
 import {
   Carnival,
@@ -234,11 +229,10 @@ import {
   createMockUser,
   createMockCarnivalClub,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
-import mySidelineService from '/services/mySidelineIntegrationService.mjs';
-import emailService from '/services/emailService.mjs';
-import { sortSponsorsHierarchically } from '/services/sponsorSortingService.mjs';
+import mySidelineService from '../../services/mySidelineIntegrationService.mjs';
+import { sortSponsorsHierarchically } from '../../services/sponsorSortingService.mjs';
 import { validationResult } from 'express-validator';
 
 describe('Carnival Controller', () => {
@@ -294,8 +288,7 @@ describe('Carnival Controller', () => {
 
     // Mock services
     sortSponsorsHierarchically.mockReturnValue([]);
-    mySidelineService.syncEvents.mockResolvedValue({ newEvents: 5 });
-    emailService.notifyNewCarnival.mockResolvedValue(true);
+    mySidelineService.syncCarnivals.mockResolvedValue({ newCarnivals: 5 });
   });
 
   afterEach(() => {
@@ -315,15 +308,24 @@ describe('Carnival Controller', () => {
 
       expect(Carnival.findAll).toHaveBeenCalledWith(expect.objectContaining({
         where: expect.objectContaining({
-          isActive: true
+          [Op.or]: expect.arrayContaining([
+            expect.objectContaining({
+              date: expect.objectContaining({ [Op.gte]: expect.any(Date) }),
+              isActive: true
+            }),
+            expect.objectContaining({
+              date: null,
+              isActive: true
+            })
+          ])
         }),
         include: expect.arrayContaining([
           expect.objectContaining({
             model: User,
             as: 'creator'
           })
-        ]),
-        order: [['date', 'DESC']]
+        ])
+        // Note: No order clause expected - sorting is done in JavaScript
       }));
 
       expect(res.render).toHaveBeenCalledWith('carnivals/list', expect.objectContaining({
@@ -788,7 +790,7 @@ describe('Carnival Controller', () => {
   });
 
   describe('MySideline Integration', () => {
-    it('should take ownership of MySideline event', async () => {
+    it('should take ownership of MySideline carnival', async () => {
       req.params.id = '1';
       req.user = { id: 1 };
 
@@ -799,7 +801,7 @@ describe('Carnival Controller', () => {
       expect(res.redirect).toHaveBeenCalledWith('/carnivals/1');
     });
 
-    it('should release ownership of MySideline event', async () => {
+    it('should release ownership of MySideline carnival', async () => {
       req.params.id = '1';
       req.user = { id: 1 };
 
@@ -815,10 +817,10 @@ describe('Carnival Controller', () => {
 
       await syncMySideline(req, res);
 
-      expect(mySidelineService.syncEvents).toHaveBeenCalled();
+      expect(mySidelineService.syncCarnivals).toHaveBeenCalled();
       expect(req.flash).toHaveBeenCalledWith(
         'success_msg',
-        'MySideline sync completed. 5 new events imported.'
+        'MySideline sync completed. 5 new carnivals imported.'
       );
       expect(res.redirect).toHaveBeenCalledWith('/dashboard');
     });
@@ -902,7 +904,7 @@ describe('Carnival Controller', () => {
       Carnival.findOne.mockResolvedValue(null);
       Carnival.create.mockResolvedValue(createMockCarnival(carnivalData));
 
-      const result = await createOrMergeEvent(carnivalData, 1);
+      const result = await createOrMergeCarnival(carnivalData, 1);
 
       expect(Carnival.create).toHaveBeenCalledWith(expect.objectContaining({
         ...carnivalData,
@@ -911,7 +913,7 @@ describe('Carnival Controller', () => {
       expect(result).toEqual(expect.objectContaining(carnivalData));
     });
 
-    it('should merge with existing MySideline event', async () => {
+    it('should merge with existing MySideline carnival', async () => {
       const carnivalData = {
         title: 'New Carnival',
         date: new Date('2025-12-25'),
@@ -925,7 +927,7 @@ describe('Carnival Controller', () => {
 
       Carnival.findOne.mockResolvedValue(existingCarnival);
 
-      const result = await createOrMergeEvent(carnivalData, 1);
+      const result = await createOrMergeCarnival(carnivalData, 1);
 
       expect(existingCarnival.update).toHaveBeenCalledWith(expect.objectContaining({
         ...carnivalData,
@@ -949,7 +951,7 @@ describe('Carnival Controller', () => {
 
       Carnival.findOne.mockResolvedValue(existingCarnival);
 
-      await expect(createOrMergeEvent(carnivalData, 1)).rejects.toThrow(
+      await expect(createOrMergeCarnival(carnivalData, 1)).rejects.toThrow(
         'A similar manually created carnival already exists for this date'
       );
     });
@@ -990,14 +992,15 @@ describe('Carnival Controller', () => {
       );
     });
 
-    it('should handle email attendees placeholder', async () => {
+    it('should handle email attendees validation errors', async () => {
       req.params.id = '1';
+      // Don't provide subject and customMessage to trigger validation error
 
       await sendEmailToAttendees(req, res);
 
       expect(req.flash).toHaveBeenCalledWith(
         'error_msg',
-        'Email attendees functionality not yet implemented.'
+        'Subject and message are required.'
       );
       expect(res.redirect).toHaveBeenCalledWith('/carnivals/1');
     });
@@ -1040,8 +1043,8 @@ describe('Carnival Controller', () => {
       }));
     });
 
-    it('should handle missing required data in createOrMergeEvent', async () => {
-      await expect(createOrMergeEvent({}, 1)).rejects.toThrow(
+    it('should handle missing required data in createOrMergeCarnival', async () => {
+      await expect(createOrMergeCarnival({}, 1)).rejects.toThrow(
         'Carnival title and date are required for duplicate detection.'
       );
     });

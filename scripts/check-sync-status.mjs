@@ -74,7 +74,7 @@ async function main() {
     
     try {
         console.log('   Importing models...');
-        const modelsModule = await import('/models/index.mjs');
+        const modelsModule = await import('../models/index.mjs');
         sequelize = modelsModule.sequelize;
         SyncLog = modelsModule.SyncLog;
         
@@ -122,9 +122,9 @@ async function main() {
                     console.log(`      Started: ${formatDate(log.startedAt)}`);
                     console.log(`      Completed: ${formatDate(log.completedAt)}`);
                     console.log(`      Duration: ${duration}s`);
-                    console.log(`      Events Processed: ${log.eventsProcessed || 0}`);
-                    console.log(`      Events Created: ${log.eventsCreated || 0}`);
-                    console.log(`      Events Updated: ${log.eventsUpdated || 0}`);
+                    console.log(`      Carnivals Processed: ${log.eventsProcessed || 0}`);
+                    console.log(`      Carnivals Created: ${log.eventsCreated || 0}`);
+                    console.log(`      Carnivals Updated: ${log.eventsUpdated || 0}`);
                     
                     if (log.errorMessage) {
                         console.log(`      Error: ${log.errorMessage}`);
@@ -148,9 +148,9 @@ async function main() {
                         console.log(`   Successful: ${stats.successfulSyncs}`);
                         console.log(`   Failed: ${stats.failedSyncs}`);
                         console.log(`   Success Rate: ${stats.totalSyncs > 0 ? Math.round((stats.successfulSyncs / stats.totalSyncs) * 100) : 0}%`);
-                        console.log(`   Total Events Processed: ${stats.totalEventsProcessed}`);
-                        console.log(`   Total Events Created: ${stats.totalEventsCreated}`);
-                        console.log(`   Total Events Updated: ${stats.totalEventsUpdated}`);
+                        console.log(`   Total Carnivals Processed: ${stats.totalCarnivalsProcessed}`);
+                        console.log(`   Total Carnivals Created: ${stats.totalCarnivalsCreated}`);
+                        console.log(`   Total Carnivals Updated: ${stats.totalCarnivalsUpdated}`);
                         console.log(`   Last Successful Sync: ${formatDate(stats.lastSuccessfulSync)}`);
                         console.log(`   Last Failed Sync: ${formatDate(stats.lastFailedSync)}`);
                     }

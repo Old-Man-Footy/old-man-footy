@@ -1,13 +1,13 @@
 /**
  * Carnival New JavaScript
- * Handles file upload area interactions, MySideline link generation, and multi-day event functionality
+ * Handles file upload area interactions, MySideline link generation, and multi-day carnival functionality
  * Refactored to the Manager Object Pattern per repository standards.
  */
 
 /**
  * Encapsulates all behaviour for the Carnival New page.
  * - Use initialize() to set up the module.
- * - Event handlers are arrow functions and reference carnivalNewManager directly.
+ * - Carnival handlers are arrow functions and reference carnivalNewManager directly.
  */
 export const carnivalNewManager = {
     /** Cached DOM elements */
@@ -29,9 +29,15 @@ export const carnivalNewManager = {
             this.elements.dateLabel
         ) {
             if (this.elements.isMultiDay.checked) {
-                this.elements.dateLabel.textContent = 'Event Start Date *';
+                this.elements.dateLabel.textContent = 'Carnival Start Date *';
                 this.elements.endDateInput.required = true;
+                this.elements.endDateContainer.style.display = 'block';
                 this.updateEndDateMin();
+            } else {
+                // Ensure proper initial state when not a multi-day carnival
+                this.elements.endDateContainer.style.display = 'none';
+                this.elements.dateLabel.textContent = 'Date *';
+                this.elements.endDateInput.required = false;
             }
         }
 
@@ -73,7 +79,7 @@ export const carnivalNewManager = {
             this.elements.title.addEventListener('input', carnivalNewManager.handleTitleInput);
         }
 
-        // Multi-day event interactions
+        // Multi-day carnival interactions
         if (
             this.elements.isMultiDay &&
             this.elements.endDateContainer &&
@@ -91,8 +97,8 @@ export const carnivalNewManager = {
     },
 
     /** File upload area click handler: forwards click to the hidden file input. */
-    handleFileUploadAreaClick: (event) => {
-        const area = event.currentTarget;
+    handleFileUploadAreaClick: (carnival) => {
+        const area = carnival.currentTarget;
         const input = area?.querySelector('input[type="file"]');
         if (input) input.click();
     },
@@ -120,7 +126,7 @@ export const carnivalNewManager = {
         if (!els.endDateContainer || !els.endDateInput || !els.dateLabel || !els.isMultiDay) return;
         if (els.isMultiDay.checked) {
             els.endDateContainer.style.display = 'block';
-            els.dateLabel.textContent = 'Event Start Date *';
+            els.dateLabel.textContent = 'Carnival Start Date *';
             els.endDateInput.required = true;
             carnivalNewManager.updateEndDateMin();
         } else {

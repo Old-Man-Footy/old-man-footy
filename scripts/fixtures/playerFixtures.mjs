@@ -51,7 +51,7 @@ export const PLAYER_NOTES = [
     'Prefers forward positions',
     'Good team player',
     'Former representative player',
-    'Club volunteer - helps with events',
+    'Club volunteer - helps with carnivals',
     'Part-time availability due to work',
     'Reliable attendance record'
 ];

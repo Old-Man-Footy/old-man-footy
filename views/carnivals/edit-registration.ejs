@@ -1,4 +1,4 @@
-<div class="container mt-4">
+<div class="container mt-4" data-page-id="carnivals-edit-registration">
     <div class="row">
         <div class="col-12">
             <!-- Breadcrumb -->
@@ -15,7 +15,7 @@
             <!-- Page Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2>Edit Registration - <%= registration.club.clubName %></h2>
+                    <h2>Edit Registration - <%= registration.participatingClub.clubName %></h2>
                     <p class="text-muted">Update registration details for <%= carnival.carnivalName %></p>
                 </div>
                 <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-secondary">
@@ -45,9 +45,9 @@
                                         <div class="alert alert-light border">
                                             <div class="d-flex align-items-center">
                                                 <div class="me-3">
-                                                    <% if (registration.club.logoUrl) { %>
-                                                        <img src="<%= registration.club.logoUrl %>" 
-                                                             alt="<%= registration.club.clubName %>" 
+                                                    <% if (registration.participatingClub.logoUrl) { %>
+                                                        <img src="<%= registration.participatingClub.logoUrl %>" 
+                                                             alt="<%= registration.participatingClub.clubName %>" 
                                                              class="rounded" 
                                                              style="width: 50px; height: 50px; object-fit: contain;">
                                                     <% } else { %>
@@ -58,10 +58,10 @@
                                                     <% } %>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-1"><%= registration.club.clubName %></h6>
+                                                    <h6 class="mb-1"><%= registration.participatingClub.clubName %></h6>
                                                     <small class="text-muted">
-                                                        <%= registration.club.state %>
-                                                        <% if (registration.club.location) { %> - <%= registration.club.location %><% } %>
+                                                        <%= registration.participatingClub.state %>
+                                                        <% if (registration.participatingClub.location) { %> - <%= registration.participatingClub.location %><% } %>
                                                     </small>
                                                 </div>
                                             </div>
@@ -76,19 +76,26 @@
                                             <i class="bi bi-people"></i> Team Details
                                         </h6>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="teamName" class="form-label">Team Name</label>
                                         <input type="text" class="form-control" id="teamName" name="teamName" 
                                                value="<%= registration.teamName || '' %>"
                                                placeholder="e.g., Warriors A-Team" maxlength="100">
                                         <div class="form-text">Optional team name if different from club name</div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="playerCount" class="form-label">Number of Players</label>
                                         <input type="number" class="form-control" id="playerCount" name="playerCount" 
                                                value="<%= registration.playerCount || '' %>"
                                                min="1" max="100" placeholder="e.g., 15">
                                         <div class="form-text">Expected number of players attending</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="numberOfTeams" class="form-label">Number of Teams</label>
+                                        <input type="number" class="form-control" id="numberOfTeams" name="numberOfTeams" 
+                                               value="<%= registration.numberOfTeams || 1 %>"
+                                               min="1" max="10" required>
+                                        <div class="form-text">How many teams to register</div>
                                     </div>
                                 </div>
 
@@ -149,17 +156,51 @@
                                             <i class="bi bi-credit-card"></i> Payment Information
                                         </h6>
                                     </div>
+                                    
+                                    <!-- Carnival Fee Structure (Read-only) -->
+                                    <div class="col-12 mb-3">
+                                        <div class="alert alert-info">
+                                            <h6 class="mb-2"><i class="bi bi-info-circle"></i> Carnival Fee Structure</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <strong>Team Registration Fee:</strong> $<%= carnival.teamRegistrationFee || '0.00' %>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>Per-Player Fee:</strong> $<%= carnival.perPlayerFee || '0.00' %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Calculated Fee Display -->
                                     <div class="col-md-6">
-                                        <label for="paymentAmount" class="form-label">Registration Fee</label>
+                                        <label class="form-label">Calculated Total Fee</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="text" class="form-control" id="calculatedFee" readonly
+                                                   value="<%= 
+                                                       (parseFloat(carnival.teamRegistrationFee || 0) * (registration.numberOfTeams || 1)) + 
+                                                       (parseFloat(carnival.perPlayerFee || 0) * (registration.playerCount || 0))
+                                                   %>">
+                                        </div>
+                                        <div class="form-text">
+                                            Based on <%= registration.numberOfTeams || 1 %> team(s) and <%= registration.playerCount || 0 %> player(s)
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Manual Payment Amount Override -->
+                                    <div class="col-md-6">
+                                        <label for="paymentAmount" class="form-label">Manual Payment Amount</label>
                                         <div class="input-group">
                                             <span class="input-group-text">$</span>
                                             <input type="number" class="form-control" id="paymentAmount" name="paymentAmount" 
                                                    value="<%= registration.paymentAmount || '' %>"
                                                    step="0.01" min="0" placeholder="0.00">
                                         </div>
-                                        <div class="form-text">Enter the registration fee amount</div>
+                                        <div class="form-text">Override calculated amount if needed</div>
                                     </div>
-                                    <div class="col-md-6 d-flex align-items-end">
+                                    
+                                    <div class="col-12 mt-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="isPaid" name="isPaid" 
                                                    <%= registration.isPaid ? 'checked' : '' %>>
@@ -224,7 +265,7 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <strong>Club:</strong> <%= registration.club.clubName %>
+                                <strong>Club:</strong> <%= registration.participatingClub.clubName %>
                             </div>
                             <div class="mb-3">
                                 <strong>Carnival:</strong> <%= carnival.carnivalName %>
@@ -236,12 +277,12 @@
                             <div class="mb-3">
                                 <strong>Payment Status:</strong>
                                 <% if (registration.isPaid) { %>
-                                    <span class="badge bg-success">Paid</span>
+                                    <span class="badge bg-primary">Paid</span>
                                     <% if (registration.paymentAmount) { %>
                                         ($<%= registration.paymentAmount %>)
                                     <% } %>
                                 <% } else { %>
-                                    <span class="badge bg-warning">Pending</span>
+                                    <span class="badge bg-warning text-dark">Pending</span>
                                 <% } %>
                             </div>
                             <% if (registration.playerCount) { %>
@@ -264,7 +305,7 @@
                                 <button type="button" 
                                         class="btn btn-outline-danger remove-registration"
                                         data-registration-id="<%= registration.id %>"
-                                        data-club-name="<%= registration.club.clubName %>">
+                                        data-club-name="<%= registration.participatingClub.clubName %>">
                                     <i class="bi bi-trash"></i> Remove from Carnival
                                 </button>
                             </div>

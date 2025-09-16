@@ -50,7 +50,7 @@ export const clubCreateOnBehalfManager = {
         if (this.state.userEmail && el.inviteEmailInput && !el.inviteEmailInput.value) {
             el.inviteEmailInput.value = this.state.userEmail;
             if (el.customMessageTextarea && !el.customMessageTextarea.value) {
-                el.customMessageTextarea.value = `Hi, I've created a profile for your club on Old Man Footy. This platform helps connect Masters Rugby League clubs across Australia for carnivals and events. Would you like to take ownership of your club's profile?`;
+                el.customMessageTextarea.value = `Hi, I've created a profile for your club on Old Man Footy. This platform helps connect Masters Rugby League clubs across Australia for carnivals. Would you like to take ownership of your club's profile?`;
             }
         }
     },
@@ -81,10 +81,10 @@ export const clubCreateOnBehalfManager = {
         }
     },
 
-    handleFormSubmit: (event) => {
+    handleFormSubmit: (carnival) => {
         const isValid = clubCreateOnBehalfManager.validateRequiredFields(['clubName', 'state', 'inviteEmail']);
         if (!isValid) {
-            event.preventDefault?.();
+            carnival.preventDefault?.();
             try {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (_) {

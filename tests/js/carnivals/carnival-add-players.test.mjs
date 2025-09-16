@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
-import { carnivalAddPlayersManager } from '/public/js/carnival-add-players.js';
+import { carnivalAddPlayersManager } from '../../../public/js/carnival-add-players.js';
 
 /**
  * @fileoverview Unit tests for carnivalAddPlayersManager in carnival-add-players.js
@@ -75,10 +75,10 @@ describe('carnivalAddPlayersManager', () => {
         const preventDefault = vi.fn();
         const checkboxes = document.querySelectorAll('.player-checkbox');
         checkboxes[0].checked = true;
-        // Simulate submit event
-        const event = new Event('submit', { bubbles: true, cancelable: true });
-        event.preventDefault = preventDefault;
-        form.dispatchEvent(event);
+        // Simulate submit carnival
+        const carnival = new Event('submit', { bubbles: true, cancelable: true });
+        carnival.preventDefault = preventDefault;
+        form.dispatchEvent(carnival);
         expect(preventDefault).not.toHaveBeenCalled();
     });
 

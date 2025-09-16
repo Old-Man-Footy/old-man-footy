@@ -38,7 +38,6 @@ const __dirname = path.dirname(__filename);
 
 // Import modular services
 import { validateEnvironment } from './utilities/environmentValidation.mjs';
-import DatabaseBackup from './utilities/databaseBackup.mjs';
 import DataCleanup from './utilities/dataCleanup.mjs';
 import BasicSeeder from './utilities/basicSeeder.mjs';
 import PlayerSeeder from './utilities/playerSeeder.mjs';
@@ -67,7 +66,6 @@ process.on('uncaughtException', (err) => {
  */
 class DatabaseSeeder {
     constructor() {
-        this.backupService = new DatabaseBackup();
         this.cleanupService = new DataCleanup();
         this.basicSeedingService = new BasicSeeder();
         this.playerSeedingService = new PlayerSeeder();
@@ -182,112 +180,6 @@ class DatabaseSeeder {
         }
     }
 
-    // TODO: SPONSORS ARE NOW CREATED FOR EACH CLUB. THIS NEEDS TO BE REFACTORED
-    // /**
-    //  * Link sponsors to clubs with realistic relationships
-    //  * @returns {Promise<void>}
-    //  */
-    // async linkSponsorsToClubs() {
-    //     console.log('🔗 Linking sponsors to clubs...');
-        
-    //     let totalLinks = 0;
-        
-    //     for (const club of this.createdEntities.clubs) {
-    //         // Each club gets 1-4 sponsors with varying levels
-    //         const numSponsors = Math.floor(Math.random() * 4) + 1;
-    //         const availableSponsors = [...this.createdEntities.sponsors];
-            
-    //         // Prefer local sponsors (same state) with 70% probability
-    //         const localSponsors = availableSponsors.filter(sponsor => sponsor.state === club.state);
-    //         const otherSponsors = availableSponsors.filter(sponsor => sponsor.state !== club.state);
-            
-    //         const selectedSponsors = [];
-            
-    //         for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
-    //             let sponsorPool;
-                
-    //             // 70% chance to pick local sponsor, 30% for national/other state
-    //             if (Math.random() < 0.7 && localSponsors.length > 0) {
-    //                 sponsorPool = localSponsors;
-    //             } else {
-    //                 sponsorPool = otherSponsors.length > 0 ? otherSponsors : localSponsors;
-    //             }
-                
-    //             if (sponsorPool.length === 0) break;
-                
-    //             const randomIndex = Math.floor(Math.random() * sponsorPool.length);
-    //             const selectedSponsor = sponsorPool[randomIndex];
-                
-    //             selectedSponsors.push(selectedSponsor);
-                
-    //             // Remove from both pools to avoid duplicates
-    //             const globalIndex = availableSponsors.indexOf(selectedSponsor);
-    //             availableSponsors.splice(globalIndex, 1);
-    //             localSponsors.splice(localSponsors.indexOf(selectedSponsor), 1);
-    //             if (otherSponsors.includes(selectedSponsor)) {
-    //                 otherSponsors.splice(otherSponsors.indexOf(selectedSponsor), 1);
-    //             }
-    //         }
-            
-    //         // Create relationships with appropriate sponsorship levels
-    //         for (let i = 0; i < selectedSponsors.length; i++) {
-    //             const sponsor = selectedSponsors[i];
-                
-    //             // Assign sponsorship levels
-    //             let sponsorshipLevel;
-    //             if (sponsor.sponsorshipLevel === 'Gold' && i === 0) {
-    //                 sponsorshipLevel = 'Gold';
-    //             } else if (sponsor.sponsorshipLevel === 'Gold' || sponsor.sponsorshipLevel === 'Silver') {
-    //                 sponsorshipLevel = i === 0 ? 'Silver' : (Math.random() < 0.5 ? 'Bronze' : 'Supporting');
-    //             } else {
-    //                 sponsorshipLevel = Math.random() < 0.3 ? 'Bronze' : 'Supporting';
-    //             }
-                
-    //             // Generate realistic sponsorship values
-    //             const sponsorshipValues = {
-    //                 'Gold': { min: 5000, max: 15000 },
-    //                 'Silver': { min: 2000, max: 7000 },
-    //                 'Bronze': { min: 500, max: 2500 },
-    //                 'Supporting': { min: 100, max: 800 }
-    //             };
-                
-    //             const valueRange = sponsorshipValues[sponsorshipLevel];
-    //             const sponsorshipValue = Math.floor(
-    //                 Math.random() * (valueRange.max - valueRange.min) + valueRange.min
-    //             );
-                
-    //             // Generate start date (within last 2 years)
-    //             const startDate = new Date();
-    //             startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 730));
-                
-    //             // 90% get ongoing sponsorship, 10% get end date
-    //             let endDate = null;
-    //             if (Math.random() < 0.1) {
-    //                 endDate = new Date(startDate);
-    //                 endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 365) + 365);
-    //             }
-                
-    //             const contractDetails = this.generateContractDetails(sponsorshipLevel, sponsor.businessType);
-                
-    //             await ClubSponsor.create({
-    //                 clubId: club.id,
-    //                 sponsorId: sponsor.id,
-    //                 sponsorshipLevel: sponsorshipLevel,
-    //                 sponsorshipValue: sponsorshipValue,
-    //                 startDate: startDate,
-    //                 endDate: endDate,
-    //                 contractDetails: contractDetails,
-    //                 isActive: true,
-    //                 notes: `Seeded relationship - ${sponsorshipLevel} level sponsorship`
-    //             });
-                
-    //             totalLinks++;
-    //         }
-    //     }
-        
-    //     console.log(`✅ Created ${totalLinks} club-sponsor relationships`);
-    // }
-
     /**
      * Link sponsors to carnivals with realistic relationships
      * @returns {Promise<void>}
@@ -297,7 +189,7 @@ class DatabaseSeeder {
         
         let totalLinks = 0;
         
-        // Focus on major carnivals and upcoming events
+        // Focus on major and upcoming carnivals
         const majorCarnivals = this.createdEntities.carnivals.filter(carnival => 
             carnival.title.includes('Grand Final') || 
             carnival.title.includes('Championship') || 
@@ -306,11 +198,11 @@ class DatabaseSeeder {
         );
         
         for (const carnival of majorCarnivals) {
-            // Major carnivals get 2-6 sponsors, regular events get 0-3
-            const isMajorEvent = carnival.title.includes('Grand Final') || 
+            // Major carnivals get 2-6 sponsors, regular carnivals get 0-3
+            const isMajorCarnival = carnival.title.includes('Grand Final') || 
                                 carnival.title.includes('Championship');
-            const maxSponsors = isMajorEvent ? 6 : 3;
-            const minSponsors = isMajorEvent ? 2 : 0;
+            const maxSponsors = isMajorCarnival ? 6 : 3;
+            const minSponsors = isMajorCarnival ? 2 : 0;
             
             const numSponsors = Math.floor(Math.random() * (maxSponsors - minSponsors + 1)) + minSponsors;
             
@@ -328,8 +220,8 @@ class DatabaseSeeder {
             for (let i = 0; i < numSponsors && availableSponsors.length > 0; i++) {
                 let sponsorPool;
                 
-                // First sponsor for major events: 50% chance of national sponsor
-                if (i === 0 && isMajorEvent && Math.random() < 0.5 && nationalSponsors.length > 0) {
+                // First sponsor for major carnivals: 50% chance of national sponsor
+                if (i === 0 && isMajorCarnival && Math.random() < 0.5 && nationalSponsors.length > 0) {
                     sponsorPool = nationalSponsors.filter(s => availableSponsors.includes(s));
                 }
                 // 80% chance for local sponsors
@@ -361,13 +253,13 @@ class DatabaseSeeder {
                 let sponsorshipType;
                 let sponsorshipLevel;
                 
-                if (i === 0 && isMajorEvent) {
+                if (i === 0 && isMajorCarnival) {
                     sponsorshipType = Math.random() < 0.7 ? 'Title Sponsor' : 'Presenting Sponsor';
                     sponsorshipLevel = 'Gold';
                 } else if (i === 0) {
                     sponsorshipType = 'Major Sponsor';
                     sponsorshipLevel = Math.random() < 0.6 ? 'Gold' : 'Silver';
-                } else if (i === 1 && isMajorEvent) {
+                } else if (i === 1 && isMajorCarnival) {
                     sponsorshipType = 'Major Sponsor';
                     sponsorshipLevel = Math.random() < 0.5 ? 'Silver' : 'Bronze';
                 } else {
@@ -421,25 +313,25 @@ class DatabaseSeeder {
         
         // Process each carnival to add realistic club attendance
         for (const carnival of this.createdEntities.carnivals) {
-            // Skip past events (older than 3 months ago) - limited attendees for historical data
+            // Skip past carnivals (older than 3 months ago) - limited attendees for historical data
             const threeMonthsAgo = new Date();
             threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
             
-            const isPastEvent = carnival.date < threeMonthsAgo;
-            const isUpcomingEvent = carnival.date > new Date();
+            const isPastCarnival = carnival.date < threeMonthsAgo;
+            const isUpcomingCarnival = carnival.date > new Date();
             
             // Determine number of attending clubs based on carnival type and timing
             let minClubs, maxClubs;
             
             if (carnival.title.includes('Grand Final') || carnival.title.includes('Championship')) {
-                minClubs = isPastEvent ? 4 : 8;
-                maxClubs = isPastEvent ? 8 : 16;
+                minClubs = isPastCarnival ? 4 : 8;
+                maxClubs = isPastCarnival ? 8 : 16;
             } else if (carnival.title.includes('Cup') || carnival.title.includes('Carnival')) {
-                minClubs = isPastEvent ? 3 : 5;
-                maxClubs = isPastEvent ? 6 : 12;
+                minClubs = isPastCarnival ? 3 : 5;
+                maxClubs = isPastCarnival ? 6 : 12;
             } else {
-                minClubs = isPastEvent ? 2 : 3;
-                maxClubs = isPastEvent ? 5 : 8;
+                minClubs = isPastCarnival ? 2 : 3;
+                maxClubs = isPastCarnival ? 5 : 8;
             }
             
             const numAttendees = Math.floor(Math.random() * (maxClubs - minClubs + 1)) + minClubs;
@@ -456,7 +348,7 @@ class DatabaseSeeder {
             
             const selectedClubs = [];
             
-            // 75% local clubs, 25% interstate for major events
+            // 75% local clubs, 25% interstate for major carnivals
             const localCount = Math.ceil(numAttendees * 0.75);
             const interstateCount = numAttendees - localCount;
             
@@ -468,7 +360,7 @@ class DatabaseSeeder {
                 selectedClubs.push(selectedClub);
             }
             
-            // Select interstate clubs for major events
+            // Select interstate clubs for major carnivals
             const availableInterstateClubs = [...interstateClubs];
             for (let i = 0; i < interstateCount && availableInterstateClubs.length > 0; i++) {
                 const randomIndex = Math.floor(Math.random() * availableInterstateClubs.length);
@@ -482,8 +374,8 @@ class DatabaseSeeder {
                 
                 // Generate registration date (1-60 days before carnival)
                 const registrationDate = new Date(carnival.date);
-                const daysBeforeEvent = Math.floor(Math.random() * 60) + 1;
-                registrationDate.setDate(registrationDate.getDate() - daysBeforeEvent);
+                const daysBeforeCarnival = Math.floor(Math.random() * 60) + 1;
+                registrationDate.setDate(registrationDate.getDate() - daysBeforeCarnival);
                 
                 // Team name variations
                 const teamNames = [
@@ -530,16 +422,16 @@ class DatabaseSeeder {
                 
                 const paymentAmount = Math.floor(Math.random() * (feeRange.max - feeRange.min + 1)) + feeRange.min;
                 
-                // Payment status - past events are mostly paid, future events have mixed status
+                // Payment status - past carnivals are mostly paid, future carnivals have mixed status
                 let isPaid;
                 let paymentDate = null;
                 
-                if (isPastEvent) {
-                    isPaid = Math.random() < 0.95; // 95% of past events are paid
-                } else if (isUpcomingEvent) {
-                    isPaid = Math.random() < 0.6; // 60% of future events are already paid
+                if (isPastCarnival) {
+                    isPaid = Math.random() < 0.95; // 95% of past carnivals are paid
+                } else if (isUpcomingCarnival) {
+                    isPaid = Math.random() < 0.6; // 60% of future carnivals are already paid
                 } else {
-                    isPaid = Math.random() < 0.8; // 80% of recent events are paid
+                    isPaid = Math.random() < 0.8; // 80% of recent carnivals are paid
                 }
                 
                 if (isPaid) {
@@ -699,13 +591,13 @@ class DatabaseSeeder {
         const benefits = [];
         
         if (type === 'Title Sponsor') {
-            benefits.push('Event naming rights');
-            benefits.push('Logo on all event materials');
+            benefits.push('Carnival naming rights');
+            benefits.push('Logo on all carnival materials');
             benefits.push('Opening ceremony presentation');
             benefits.push('Trophy presentation rights');
             benefits.push('Premium hospitality package');
         } else if (type === 'Presenting Sponsor') {
-            benefits.push('Logo on event materials');
+            benefits.push('Logo on carnival materials');
             benefits.push('Ground announcements');
             benefits.push('Hospitality package');
             benefits.push('Social media promotion');
@@ -795,11 +687,11 @@ class DatabaseSeeder {
     }
 
     /**
-     * Run the complete seeding process with enhanced safety checks and backup
+     * Run the complete seeding process with enhanced safety checks
      * @returns {Promise<void>}
      */
     async seed() {
-        console.log('🌱 Starting PROTECTED database seeding process...\n');
+        console.log('🌱 Starting database seeding process...\n');
         
         try {
             // Multiple environment validation checkpoints
@@ -808,13 +700,7 @@ class DatabaseSeeder {
             
             await this.connect();
             
-            console.log('🛡️  SECURITY CHECKPOINT 2: Pre-backup validation');
-            await validateEnvironment();
-            
-            // 🆕 CREATE BACKUP BEFORE ANY CHANGES
-            await this.backupService.createBackup();
-            
-            console.log('🛡️  SECURITY CHECKPOINT 3: Pre-clear validation');
+            console.log('🛡️  SECURITY CHECKPOINT 2: Pre-clear validation');
             await validateEnvironment();
             
             // Choose clearing method based on command line flag
@@ -837,7 +723,6 @@ class DatabaseSeeder {
                 this.createdEntities.users = await this.basicSeedingService.createUsers();
                 await this.playerSeedingService.createClubPlayers(this.createdEntities.clubs);
                 this.createdEntities.sponsors = await this.basicSeedingService.createSponsors();
-                await this.linkSponsorsToClubs();
                 this.createdEntities.carnivals = await this.basicSeedingService.createManualCarnivals();
                 await this.linkSponsorsToCarnivals();
                 const carnivalClubs = await this.linkClubsToCarnivals();
@@ -848,29 +733,13 @@ class DatabaseSeeder {
                 // Update summary to include player statistics
                 await this.generateEnhancedSummary();
                 
-                // Clean up old backups after successful seeding
-                await this.backupService.cleanupOldBackups();
-                
                 console.log('\n✅ Database seeding completed successfully');
                 
-                const backupPath = this.backupService.getBackupPath();
-                if (backupPath) {
-                    console.log(`💾 Backup available at: ${path.basename(backupPath)}`);
-                }
-                
                 console.log('\n🔐 Login credentials:');
-                console.log('   Admin: admin@oldmanfooty.au / admin123');
+                console.log('   Admin: admin@oldmanfooty.au / Admin123!');
                 
             } catch (seedingError) {
                 console.error('\n❌ Seeding process failed:', seedingError.message);
-                
-                // Offer to restore from backup
-                const backupPath = this.backupService.getBackupPath();
-                if (backupPath && fs.existsSync(backupPath)) {
-                    console.log('\n🔄 Backup is available for restoration');
-                    console.log(`To restore manually: copy "${backupPath}" over your database file`);
-                }
-                
                 throw seedingError;
             }
             
@@ -890,7 +759,7 @@ const invokedName = process.argv[1] ? path.basename(process.argv[1]) : '';
 if (scriptName === invokedName) {
     // Display safety warning with updated information
     console.log('\n' + '⚠️ '.repeat(20));
-    console.log('🚨 DATABASE SEEDING SCRIPT - MODULAR SELECTIVE OPERATION');
+    console.log('🚨 DATABASE SEEDING SCRIPT - SELECTIVE OPERATION');
     console.log('⚠️ '.repeat(20));
     console.log('DEFAULT: Clears only SEED data, preserves real user data');
     console.log('Only run this on DEVELOPMENT or TEST databases');

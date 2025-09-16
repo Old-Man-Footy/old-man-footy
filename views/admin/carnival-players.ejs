@@ -1,6 +1,6 @@
-<%- { title: `All Players - ${carnival.title} (Admin View)` }) %>
+<%- { title: `All Players - ${carnival.title} (Admin View)` } %>
 
-<div class="container-fluid mt-4">
+<div class="container mt-4" data-page-id="admin-carnival-players">
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -24,7 +24,7 @@
                 </div>
                 <div class="text-end">
                     <div class="btn-group mb-2" role="group">
-                        <button type="button" class="btn btn-outline-success btn-sm" id="exportToCSV">
+                        <button type="button" class="btn btn-outline-tertiary btn-sm" id="exportToCSV">
                             <i class="bi bi-download"></i> Export CSV
                         </button>
                         <button type="button" class="btn btn-outline-primary btn-sm" id="printList">
@@ -32,7 +32,7 @@
                         </button>
                     </div>
                     <br>
-                    <a href="/admin/carnivals" class="btn btn-secondary btn-sm">
+                    <a href="/admin/carnivals" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-arrow-left"></i> Back to Carnival Management
                     </a>
                 </div>
@@ -47,23 +47,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0"><%= totalPlayers %></h4>
-                            <p class="mb-0">Total Players</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-people" style="font-size: 2rem;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
                             <h4 class="mb-0"><%= totalMastersEligible %></h4>
-                            <p class="mb-0">Masters Eligible</p>
+                            <p class="mb-0">Total Players</p>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-trophy" style="font-size: 2rem;"></i>
@@ -73,7 +58,7 @@
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-info text-white h-100">
+            <div class="card bg-info text-primary h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -82,21 +67,6 @@
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-building" style="font-size: 2rem;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-warning text-dark h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-0"><%= Math.round((totalMastersEligible / totalPlayers) * 100) || 0 %>%</h4>
-                            <p class="mb-0">Masters Rate</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="bi bi-percent" style="font-size: 2rem;"></i>
                         </div>
                     </div>
                 </div>
@@ -127,14 +97,8 @@
                                         </div>
                                     </div>
                                     <div class="row text-center">
-                                        <div class="col-6">
-                                            <div class="fw-bold text-primary" style="font-size: 1.1rem;"><%= club.total %></div>
-                                            <small class="text-muted">Total</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="fw-bold text-success" style="font-size: 1.1rem;"><%= club.mastersEligible %></div>
-                                            <small class="text-muted">Masters</small>
-                                        </div>
+                                        <div class="fw-bold text-success" style="font-size: 1.1rem;"><%= club.mastersEligible %></div>
+                                        <small class="text-muted">Total Eligible Players</small>
                                     </div>
                                 </div>
                             </div>
@@ -254,13 +218,13 @@
                                     <div class="fw-semibold">
                                         <%= player.firstName %> <%= player.lastName %>
                                         <% if (player.isMastersEligible) { %>
-                                            <span class="badge bg-success ms-1" style="font-size: 0.7rem;">Masters</span>
+                                            <span class="badge bg-primary ms-1" style="font-size: 0.7rem;">Masters</span>
                                         <% } %>
                                     </div>
                                 </td>
                                 <td>
                                     <% if (player.age) { %>
-                                        <span class="<%= player.isMastersEligible ? 'text-success fw-semibold' : '' %>">
+                                        <span class="<%= player.isMastersEligible ? 'text-primary fw-semibold' : '' %>">
                                             <%= player.age %>
                                         </span>
                                     <% } else { %>
@@ -276,14 +240,19 @@
                                 </td>
                                 <td>
                                     <% if (player.shortsColour && player.shortsColour.trim() && player.shortsColour !== 'Not specified') { %>
-                                        <span class="badge bg-secondary"><%= player.shortsColour %></span>
+                                        <% 
+                                            const shortsColor = player.shortsColour.toLowerCase();
+                                            const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                                            const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
+                                        %>
+                                        <span class="badge <%= cssClass %>"><%= player.shortsColour %></span>
                                     <% } else { %>
                                         <span class="text-muted">Not specified</span>
                                     <% } %>
                                 </td>
                                 <td>
                                     <% if (player.attendanceStatus === 'confirmed') { %>
-                                        <span class="badge bg-success">
+                                        <span class="badge bg-primary">
                                             <i class="bi bi-check-circle"></i> Confirmed
                                         </span>
                                     <% } else if (player.attendanceStatus === 'tentative') { %>
@@ -307,7 +276,7 @@
                                         </a>
                                     <% } %>
                                     <% if (player.phoneNumber) { %>
-                                        <a href="tel:<%= player.phoneNumber %>" class="btn btn-outline-success btn-sm ms-1">
+                                        <a href="tel:<%= player.phoneNumber %>" class="btn btn-outline-tertiary btn-sm ms-1">
                                             <i class="bi bi-telephone"></i>
                                         </a>
                                     <% } %>

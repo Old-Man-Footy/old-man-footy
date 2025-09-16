@@ -23,13 +23,13 @@ const MOCK_CAPTURE_OUTPUT = path.join(MOCK_FIXTURES_DIR, 'mysideline-captured-da
  */
 class MockMySidelineScraperService {
     constructor() {
-        this.mockEvents = [];
+        this.mockCarnivals = [];
         this.shouldThrow = false;
         this.throwMessage = 'Mock error';
     }
 
-    setMockEvents(events) {
-        this.mockEvents = events;
+    setMockCarnivals(carnivals) {
+        this.mockCarnivals = carnivals;
     }
 
     setShouldThrow(shouldThrow, message = 'Mock error') {
@@ -37,16 +37,16 @@ class MockMySidelineScraperService {
         this.throwMessage = message;
     }
 
-    async scrapeEvents() {
+    async scrapeCarnivals() {
         if (this.shouldThrow) {
             throw new Error(this.throwMessage);
         }
-        return this.mockEvents;
+        return this.mockCarnivals;
     }
 }
 
 // Sample test data
-const SAMPLE_MYSIDELINE_EVENTS = [
+const SAMPLE_MYSIDELINE_CARNIVALS = [
     {
         title: 'Masters Rugby League Carnival 2025',
         mySidelineId: '123456789',
@@ -88,12 +88,12 @@ const SAMPLE_HTML_RESPONSE = `
     <title>MySideline - Masters Rugby League</title>
 </head>
 <body>
-    <div class="event-list">
-        <div class="event-item" data-event-id="123456789">
+    <div class="carnival-list">
+        <div class="carnival-item" data-carnival-id="123456789">
             <h3>Masters Rugby League Carnival 2025 - QLD</h3>
             <p>Redcliffe, QLD</p>
         </div>
-        <div class="event-item" data-event-id="987654321">
+        <div class="carnival-item" data-carnival-id="987654321">
             <h3>NSW Masters Championship 2025</h3>
             <p>Sydney, NSW</p>
         </div>
@@ -159,7 +159,7 @@ describe('MySideline Capture Script', () => {
     describe('Successful Data Capture', () => {
         beforeEach(async () => {
             // Mock successful scraper service
-            mockScraperService.setMockEvents(SAMPLE_MYSIDELINE_EVENTS);
+            mockScraperService.setMockCarnivals(SAMPLE_MYSIDELINE_CARNIVALS);
             
             // Mock successful HTML fetch
             mockFetch.mockResolvedValue({
@@ -170,14 +170,14 @@ describe('MySideline Capture Script', () => {
             // Mock the MySidelineScraperService import
             vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
-                    async scrapeEvents() {
-                        return mockScraperService.scrapeEvents();
+                    async scrapeCarnivals() {
+                        return mockScraperService.scrapeCarnivals();
                     }
                 }
             }));
 
             // Import the capture module after mocking
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
         test('should capture MySideline data successfully', async () => {
@@ -199,7 +199,7 @@ describe('MySideline Capture Script', () => {
             // Assert - Read and validate fixture file content
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');
             
-            expect(fixtureContent).toContain('MYSIDELINE_CAPTURED_EVENTS');
+            expect(fixtureContent).toContain('MYSIDELINE_CAPTURED_CARNIVALS');
             expect(fixtureContent).toContain('MYSIDELINE_CAPTURED_HTML');
             expect(fixtureContent).toContain('Masters Rugby League Carnival 2025');
             expect(fixtureContent).toContain('NSW Masters Championship');
@@ -250,35 +250,35 @@ describe('MySideline Capture Script', () => {
         });
     });
 
-    describe('Empty Events Scenario', () => {
+    describe('Empty Carnivals Scenario', () => {
         beforeEach(async () => {
-            // Mock empty events response
-            mockScraperService.setMockEvents([]);
+            // Mock empty carnivals response
+            mockScraperService.setMockCarnivals([]);
             
             // Mock successful HTML fetch
             mockFetch.mockResolvedValue({
                 ok: true,
-                text: () => Promise.resolve('<html><body><div class="event-list"></div></body></html>')
+                text: () => Promise.resolve('<html><body><div class="carnival-list"></div></body></html>')
             });
 
             // Mock the MySidelineScraperService import
             vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
-                    async scrapeEvents() {
-                        return mockScraperService.scrapeEvents();
+                    async scrapeCarnivals() {
+                        return mockScraperService.scrapeCarnivals();
                     }
                 }
             }));
 
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
-        test('should handle empty events gracefully', async () => {
+        test('should handle empty carnivals gracefully', async () => {
             // Act & Assert - Should not throw
             await expect(captureModule.captureMySidelineData(MOCK_FIXTURES_DIR)).resolves.not.toThrow();
         });
 
-        test('should create empty fixture file when no events found', async () => {
+        test('should create empty fixture file when no carnivals found', async () => {
             // Act
             await captureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
 
@@ -292,7 +292,7 @@ describe('MySideline Capture Script', () => {
             // Check content indicates empty result
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');
             expect(fixtureContent).toContain('EMPTY RESULT');
-            expect(fixtureContent).toContain('MYSIDELINE_CAPTURED_EVENTS = []');
+            expect(fixtureContent).toContain('MYSIDELINE_CAPTURED_CARNIVALS = []');
         });
     });
 
@@ -307,13 +307,13 @@ describe('MySideline Capture Script', () => {
             // Mock the MySidelineScraperService import
             vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
-                    async scrapeEvents() {
-                        return mockScraperService.scrapeEvents();
+                    async scrapeCarnivals() {
+                        return mockScraperService.scrapeCarnivals();
                     }
                 }
             }));
 
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
         test('should handle scraper service errors', async () => {
@@ -349,7 +349,7 @@ describe('MySideline Capture Script', () => {
             const customUrl = 'https://custom.mysideline.url/test';
             process.env.MYSIDELINE_URL = customUrl;
             
-            mockScraperService.setMockEvents([]);
+            mockScraperService.setMockCarnivals([]);
             mockFetch.mockResolvedValue({
                 ok: true,
                 text: () => Promise.resolve('<html></html>')
@@ -357,13 +357,13 @@ describe('MySideline Capture Script', () => {
 
             vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
-                    async scrapeEvents() {
-                        return mockScraperService.scrapeEvents();
+                    async scrapeCarnivals() {
+                        return mockScraperService.scrapeCarnivals();
                     }
                 }
             }));
 
-            const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
+            const freshCaptureModule = await import('../../scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
             await freshCaptureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
@@ -376,7 +376,7 @@ describe('MySideline Capture Script', () => {
             // Arrange
             delete process.env.MYSIDELINE_URL;
             
-            mockScraperService.setMockEvents([]);
+            mockScraperService.setMockCarnivals([]);
             mockFetch.mockResolvedValue({
                 ok: true,
                 text: () => Promise.resolve('<html></html>')
@@ -384,13 +384,13 @@ describe('MySideline Capture Script', () => {
 
             vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
-                    async scrapeEvents() {
-                        return mockScraperService.scrapeEvents();
+                    async scrapeCarnivals() {
+                        return mockScraperService.scrapeCarnivals();
                     }
                 }
             }));
 
-            const freshCaptureModule = await import('/scripts/capture-mysideline-data.mjs?t=' + Date.now());
+            const freshCaptureModule = await import('../../scripts/capture-mysideline-data.mjs?t=' + Date.now());
 
             // Act
             await freshCaptureModule.captureMySidelineData(MOCK_FIXTURES_DIR);
@@ -404,7 +404,7 @@ describe('MySideline Capture Script', () => {
 
     describe('Fixture File Structure', () => {
         beforeEach(async () => {
-            mockScraperService.setMockEvents(SAMPLE_MYSIDELINE_EVENTS);
+            mockScraperService.setMockCarnivals(SAMPLE_MYSIDELINE_CARNIVALS);
             mockFetch.mockResolvedValue({
                 ok: true,
                 text: () => Promise.resolve(SAMPLE_HTML_RESPONSE)
@@ -412,13 +412,13 @@ describe('MySideline Capture Script', () => {
 
             vi.doMock('/services/mySidelineScraperService.mjs', () => ({
                 default: class {
-                    async scrapeEvents() {
-                        return mockScraperService.scrapeEvents();
+                    async scrapeCarnivals() {
+                        return mockScraperService.scrapeCarnivals();
                     }
                 }
             }));
 
-            captureModule = await import('/scripts/capture-mysideline-data.mjs');
+            captureModule = await import('../../scripts/capture-mysideline-data.mjs');
         });
 
         test('should generate valid JavaScript module', async () => {
@@ -430,10 +430,10 @@ describe('MySideline Capture Script', () => {
             
             // Check for required exports
             expect(fixtureContent).toContain('export const MYSIDELINE_CAPTURED_HTML');
-            expect(fixtureContent).toContain('export const MYSIDELINE_CAPTURED_EVENTS');
+            expect(fixtureContent).toContain('export const MYSIDELINE_CAPTURED_CARNIVALS');
             expect(fixtureContent).toContain('export const MYSIDELINE_CAPTURED_RESPONSES');
             expect(fixtureContent).toContain('export function createCapturedMockFetch');
-            expect(fixtureContent).toContain('export function getCapturedEvents');
+            expect(fixtureContent).toContain('export function getCapturedCarnivals');
             expect(fixtureContent).toContain('export default');
         });
 
@@ -446,7 +446,7 @@ describe('MySideline Capture Script', () => {
             
             expect(fixtureContent).toContain('REAL DATA');
             expect(fixtureContent).toContain('Data captured on:');
-            expect(fixtureContent).toContain('Events captured: 2');
+            expect(fixtureContent).toContain('Carnivals captured: 2');
             expect(fixtureContent).toContain('Source: MySideline website (live data)');
         });
 
@@ -458,7 +458,7 @@ describe('MySideline Capture Script', () => {
             const fixtureContent = await fs.readFile(MOCK_CAPTURE_OUTPUT, 'utf8');
             
             expect(fixtureContent).toContain('createCapturedMockFetch');
-            expect(fixtureContent).toContain('getCapturedEvents');
+            expect(fixtureContent).toContain('getCapturedCarnivals');
             expect(fixtureContent).toContain('MYSIDELINE_DB_TEST_DATA');
             expect(fixtureContent).toContain('EXPECTED_CARNIVALS');
         });

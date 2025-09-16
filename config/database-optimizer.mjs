@@ -1,8 +1,9 @@
 import { UPLOAD_DIRECTORIES } from './constants.mjs';
-import { sequelize } from '../models/index.mjs';
+// Import sequelize directly from config to avoid pulling all models and creating cycles
+import { sequelize } from './database.mjs';
 import { QueryTypes } from 'sequelize';
 import fs from 'fs/promises';
-import path from 'path';
+import * as path from 'path';
 
 /**
  * DatabaseOptimizer
@@ -240,7 +241,7 @@ class DatabaseOptimizer {
                 }
             }
 
-            // Sequelize connection event monitoring
+            // Sequelize connection carnival monitoring
             if (typeof sequelize.addHook === 'function') {
                 try {
                     await safeAddHook('beforeConnect', () => {
@@ -302,7 +303,8 @@ class DatabaseOptimizer {
         try {
             console.log('Performing database maintenance...');
 
-            // Cleanup expired tokens using User model method
+            // Cleanup expired tokens using User model method (lazy import to avoid cycles)
+            const { default: User } = await import('../models/User.mjs');
             const expiredInvitations = await User.cleanupExpiredInvitations();
             console.log(`Cleaned up ${expiredInvitations} expired invitation tokens`);
 

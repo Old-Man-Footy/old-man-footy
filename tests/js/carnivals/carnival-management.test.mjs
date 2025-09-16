@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
-import { carnivalManagementManager } from '/public/js/carnival-management.js';
+import { carnivalManagementManager } from '../../../public/js/carnival-management.js';
 
 /**
  * @file carnival-management.test.js
@@ -54,9 +54,9 @@ describe('carnivalManagementManager', () => {
 
     it('should prevent form submission if confirmation is cancelled', () => {
         const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-        const event = new Event('submit', { bubbles: true, cancelable: true });
-        const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
-        carnivalManagementManager.elements.confirmForms[0].dispatchEvent(event);
+        const carnival = new Event('submit', { bubbles: true, cancelable: true });
+        const preventDefaultSpy = vi.spyOn(carnival, 'preventDefault');
+        carnivalManagementManager.elements.confirmForms[0].dispatchEvent(carnival);
         expect(confirmSpy).toHaveBeenCalled();
         expect(preventDefaultSpy).toHaveBeenCalled();
     });

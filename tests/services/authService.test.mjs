@@ -92,10 +92,10 @@ vi.mock('/services/email/AuthEmailService.mjs', () => ({
 }));
 
 // Import the authentication service functionality
-const { User } = await import('/models/index.mjs');
-const InvitationEmailService = (await import('/services/email/InvitationEmailService.mjs')).default;
-const AuthEmailService = (await import('/services/email/AuthEmailService.mjs')).default;
-const AuditService = (await import('/services/auditService.mjs')).default;
+const { User } = await import('../../models/index.mjs');
+const InvitationEmailService = (await import('../../services/email/InvitationEmailService.mjs')).default;
+const AuthEmailService = (await import('../../services/email/AuthEmailService.mjs')).default;
+const AuditService = (await import('../../services/auditService.mjs')).default;
 const bcrypt = await import('bcrypt');
 const crypto = await import('crypto');
 
@@ -294,7 +294,7 @@ class AuthService {
     });
 
     // Send password reset email
-    const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.APP_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
     await AuthEmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
     // Log password reset initiation

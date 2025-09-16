@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Import the manager object directly.
-import { adminCarnivalsManager } from '/public/js/admin-carnivals.js';
+import { adminCarnivalsManager } from '../../../public/js/admin-carnivals.js';
 
 /**
  * @file admin-carnivals.test.mjs
@@ -76,7 +76,7 @@ describe('adminCarnivalsManager', () => {
 
         expect(document.getElementById('toggleCarnivalTitle').textContent).toBe('Inactive Carnival');
         expect(document.getElementById('statusToggleMessage').textContent).toContain('reactivate');
-        expect(document.getElementById('confirmStatusToggle').className).toContain('btn-success');
+        expect(document.getElementById('confirmStatusToggle').className).toContain('btn-tertiary');
         expect(bootstrap.Modal).toHaveBeenCalled();
     });
 

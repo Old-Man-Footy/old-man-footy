@@ -59,7 +59,7 @@ export const adminEditClubManager = {
 
     /**
      * Validates the form on submission.
-     * @param {Event} e - The submit event.
+     * @param {Carnival} e - The submit carnival.
      */
     handleFormSubmit(e) {
         const requiredFields = this.elements.form.querySelectorAll('[required]');
@@ -90,7 +90,7 @@ export const adminEditClubManager = {
     },
 
     /**
-     * Handles the file selection event for the file input.
+     * Handles the file selection carnival for the file input.
      */
     handleFileSelect() {
         const file = this.elements.fileInput.files[0];
@@ -127,8 +127,8 @@ export const adminEditClubManager = {
     },
 
     /**
-     * Handles the file drop event.
-     * @param {DragEvent} e - The drop event.
+     * Handles the file drop carnival.
+     * @param {DragEvent} e - The drop carnival.
      */
     handleDrop(e) {
         const files = e.dataTransfer.files;

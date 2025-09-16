@@ -236,7 +236,7 @@ export const SAMPLE_SPONSORS = [
         businessType: 'Security Services',
         location: 'Darwin',
         state: 'NT',
-        description: 'Protecting the Top End. Professional security services for commercial, residential, and event security needs.',
+        description: 'Protecting the Top End. Professional security services for commercial, residential, and carnival security needs.',
         contactPerson: 'Terry Robinson',
         contactEmail: 'terry@crocodilesecurity.com.au',
         contactPhone: '(08) 8922 7890',

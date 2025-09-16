@@ -91,7 +91,7 @@ describe('clubAddSponsorManager', () => {
     fields.forEach(field => {
       if (field.id !== 'sponsorName') {
         expect(field.disabled).toBe(true);
-        expect(field.classList.contains('bg-light')).toBe(true);
+        expect(field.classList.contains('bg-tertiary')).toBe(true);
       }
     });
   });
@@ -102,7 +102,7 @@ describe('clubAddSponsorManager', () => {
     fields.forEach(field => {
       if (field.id !== 'sponsorName') {
         expect(field.disabled).toBe(false);
-        expect(field.classList.contains('bg-light')).toBe(false);
+        expect(field.classList.contains('bg-tertiary')).toBe(false);
       }
     });
   });
@@ -148,7 +148,7 @@ describe('clubAddSponsorManager', () => {
     expect(el.sponsorTypeInput.value).toBe('existing');
     expect(el.existingSponsorIdInput.value).toBe('99');
     expect(el.submitText.textContent).toBe('Link Existing Sponsor');
-    expect(el.submitBtn.className).toContain('btn-success');
+    expect(el.submitBtn.className).toContain('btn-tertiary');
   });
 
   it('should handle create new click', () => {

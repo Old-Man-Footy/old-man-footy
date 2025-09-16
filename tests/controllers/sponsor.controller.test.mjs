@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../../config/constants.mjs';
 
 // Mock the asyncHandler middleware to prevent wrapping issues
 vi.mock('/middleware/asyncHandler.mjs', () => ({
@@ -124,7 +124,7 @@ import {
   updateSponsor,
   deleteSponsor,
   toggleSponsorStatus
-} from '/controllers/sponsor.controller.mjs';
+} from '../../controllers/sponsor.controller.mjs';
 
 import {
   Sponsor,
@@ -134,10 +134,10 @@ import {
   createMockClub,
   createMockUser,
   Op
-} from '/models/index.mjs';
+} from '../../models/index.mjs';
 
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '/config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS } from '../../config/constants.mjs';
 
 describe('Sponsor Controller', () => {
   let req, res, next;
@@ -214,21 +214,34 @@ describe('Sponsor Controller', () => {
 
       await showSponsorListings(req, res);
 
-      expect(Sponsor.findAll).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          isActive: true,
-          isPubliclyVisible: true,
-          state: 'NSW',
-          [Op.or]: expect.any(Array)
-        }),
-        include: expect.arrayContaining([
-          expect.objectContaining({
-            model: Club,
-            as: 'club'
-          })
-        ]),
-        order: [['sponsorName', 'ASC']]
-      }));
+      // Verify the basic query structure
+      expect(Sponsor.findAll).toHaveBeenCalled();
+      const callArgs = Sponsor.findAll.mock.calls[0][0];
+      
+      // Check that basic filtering is applied
+      expect(callArgs.where.isActive).toBe(true);
+      expect(callArgs.where.isPubliclyVisible).toBe(true);
+      expect(callArgs.where.state).toBe('NSW');
+      
+      // Check that Op.or condition exists (it will be a Symbol key)
+      const hasOrCondition = Object.getOwnPropertySymbols(callArgs.where).some(
+        symbol => symbol.toString() === 'Symbol(or)'
+      );
+      expect(hasOrCondition).toBe(true);
+      
+      // Check that club inclusion is configured
+      expect(callArgs.include).toBeDefined();
+      expect(Array.isArray(callArgs.include)).toBe(true);
+      expect(callArgs.include.length).toBeGreaterThan(0);
+      expect(callArgs.include[0].as).toBe('club');
+      expect(callArgs.include[0].required).toBe(false);
+      
+      // Check that ordering includes raw SQL CASE statement
+      expect(callArgs.order).toBeDefined();
+      expect(Array.isArray(callArgs.order)).toBe(true);
+      expect(callArgs.order.length).toBeGreaterThan(0);
+      expect(callArgs.order[0][0].raw).toContain('CASE');
+      expect(callArgs.order[0][1]).toBe('ASC');
 
       expect(res.render).toHaveBeenCalledWith('sponsors/list', expect.objectContaining({
         title: 'Find Masters Rugby League Sponsors',
@@ -300,7 +313,7 @@ describe('Sponsor Controller', () => {
         title: 'Add New Sponsor',
         user: req.user,
         states: AUSTRALIAN_STATES,
-        sponsorshipLevels: SPONSORSHIP_LEVELS
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY
       }));
     });
 
@@ -390,7 +403,7 @@ describe('Sponsor Controller', () => {
         title: 'Edit Sponsor',
         sponsor: mockSponsor,
         states: AUSTRALIAN_STATES,
-        sponsorshipLevels: SPONSORSHIP_LEVELS
+  sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY
       }));
     });
 

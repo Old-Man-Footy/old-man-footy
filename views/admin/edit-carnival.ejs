@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" data-page-id="admin-edit-carnival">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -48,7 +48,7 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <% if (carnival.isActive) { %>
-                                <span class="badge bg-success fs-6">Active</span>
+                                <span class="badge bg-primary fs-6">Active</span>
                             <% } else { %>
                                 <span class="badge bg-danger fs-6">Inactive</span>
                             <% } %>
@@ -76,8 +76,19 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/admin/carnivals/<%= carnival.id %>/edit" 
-                          data-mysideline-event-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=' %>"
+                          data-mysideline-carnival-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=' %>"
                           enctype="multipart/form-data" class="needs-validation" novalidate>
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                Basic Information
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="basic-info" data-help-modal="help-admin-carnival-edit" aria-label="Help: Basic Information">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
+                            </h6>
+                        </div>
+                        
                         <div class="row mb-3">
                             <div class="col-md-8">
                                 <label for="title" class="form-label">Carnival Title *</label>
@@ -104,10 +115,10 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="date" class="form-label">
-                                    <span id="dateLabel">Event Date *</span>
+                                    <span id="dateLabel">Carnival Date *</span>
                                 </label>
                                 <input type="date" class="form-control" id="date" name="date" 
-                                       value="<%= carnival.date.toISOString().split('T')[0] %>" required>
+                                       value="<%= carnival.date ? carnival.date.toISOString().split('T')[0] : '' %>" required>
                             </div>
                             <div class="col-md-6">
                                 <div id="endDateContainer" data-has-end-date="<%= carnival.endDate ? 'true' : 'false' %>">
@@ -125,7 +136,7 @@
                                     <input class="form-check-input" type="checkbox" id="isMultiDay" name="isMultiDay" 
                                            <%= carnival.endDate ? 'checked' : '' %>>
                                     <label class="form-check-label" for="isMultiDay">
-                                        Multi-day event
+                                        Multi-day carnival
                                     </label>
                                 </div>
                             </div>
@@ -240,11 +251,15 @@
                                            placeholder="Australia">
                                     <div class="form-text">Country name</div>
                                 </div>
-                                <div class="col-md-6 mb-3 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
-                                        <i class="bi bi-geo"></i> Get GPS from Address
-                                    </button>
-                                    <small class="text-muted ms-2">Auto-fill coordinates</small>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
+                                            <i class="bi bi-geo"></i> Get GPS from Address
+                                        </button>
+                                        <small class="text-muted ms-2">Auto-fill coordinates</small>
+                                    </div>
+                                    <div class="form-text">&nbsp;</div>
                                 </div>
                             </div>
                         </div>
@@ -253,30 +268,33 @@
                             <label for="scheduleDetails" class="form-label">Schedule Details *</label>
                             <textarea class="form-control" id="scheduleDetails" name="scheduleDetails" 
                                       rows="4" required><%= carnival.scheduleDetails %></textarea>
-                            <div class="form-text">Event schedule, timing, and format details</div>
+                            <div class="form-text">Carnival schedule, timing, and format details</div>
                         </div>
 
                         <!-- MySideline Integration -->
                         <div class="mb-3">
                             <h6 class="text-primary mb-3">
                                 <i class="bi bi-link-45deg"></i> MySideline Integration
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline ms-2 help-trigger" data-help-key="mysideline" data-help-modal="help-admin-carnival-edit" aria-label="Help: MySideline Integration">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                </button>
                             </h6>
                             <div class="alert alert-info mb-3">
                                 <i class="bi bi-info-circle me-2"></i>
                                 <strong>MySideline Integration:</strong> Connect this carnival with MySideline for official player registrations.
-                                Enter the MySideline event ID to automatically generate the registration link.
+                                Enter the MySideline carnival ID to automatically generate the registration link.
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="mySidelineId" class="form-label">
-                                        <i class="bi bi-hash"></i> MySideline Event ID
+                                        <i class="bi bi-hash"></i> MySideline Carnival ID
                                     </label>
                                     <input type="text" class="form-control" id="mySidelineId" name="mySidelineId" 
                                            value="<%= carnival.mySidelineId || '' %>"
                                            placeholder="e.g., 12345">
                                     <div class="form-text">
-                                        The 8+ digit numeric ID from your MySideline event registration page.
+                                        The numeric ID from your MySideline carnival registration page.
                                     </div>
                                 </div>                                
                             </div>
@@ -299,13 +317,6 @@
                                     Player registration link - will auto-update when MySideline ID is entered above
                                 </span>
                             </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="feesDescription" class="form-label">Fees Description</label>
-                            <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
-                                      placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
-                            <div class="form-text">Description of fees and payment information</div>
                         </div>
 
                         <div class="mb-3">
@@ -358,6 +369,43 @@
                                         <% } %>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Fee Structure -->
+                        <div class="mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-currency-dollar"></i> Fee Structure
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="teamRegistrationFee" class="form-label">Team Registration Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="teamRegistrationFee" name="teamRegistrationFee" 
+                                        value="<%= carnival.teamRegistrationFee || '' %>" 
+                                        step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-text">Fee charged per team registration</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="perPlayerFee" class="form-label">Per-Player Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="perPlayerFee" name="perPlayerFee" 
+                                        value="<%= carnival.perPlayerFee || '' %>" 
+                                        step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-text">Fee charged per confirmed player</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="feesDescription" class="form-label">Fees Description</label>
+                                <textarea class="form-control" id="feesDescription" name="feesDescription" rows="2" 
+                                          placeholder="Entry fees, payment methods, etc."><%= carnival.feesDescription || '' %></textarea>
+                                <div class="form-text">Description of fees and payment information</div>
                             </div>
                         </div>
 
@@ -486,18 +534,19 @@
                                 <i class="bi bi-cloud-upload"></i> Upload New Images & Documents
                             </h6>
                             <p class="text-muted mb-3">Upload new files to replace existing ones (optional)</p>
-                            
+                            <div class="col-md-4 mb-3">
+                                <label for="clubLogo" class="form-label">Club Logo</label>
+                                <%- include('../partials/logo-uploader', {
+                                    fieldName: 'logo',
+                                    uploadText: 'Click or drag to upload new club logo',
+                                    maxFileSize: 'Max 10MB',
+                                    acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                                    helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
+                                    currentImageUrl: carnival.clubLogoURL
+                                }) %>
+                            </div>
                             <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="clubLogo" class="form-label">New Club Logo</label>
-                                    <div class="file-upload-area">
-                                        <input type="file" class="form-control admin-file-input-hidden" id="clubLogo" name="logo" 
-                                               accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp">
-                                        <i class="bi bi-cloud-upload display-6 text-muted"></i>
-                                        <p class="upload-text mt-2">Click or drag to upload new club logo</p>
-                                        <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
-                                    </div>
-                                </div>
+                                
                                 <div class="col-md-4 mb-3">
                                     <label for="promotionalImage" class="form-label">New Promotional Image</label>
                                     <div class="file-upload-area">
@@ -524,10 +573,10 @@
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between">
                             <div>
-                                <button type="submit" class="btn btn-warning">
+                                <button type="submit" class="btn btn-tertiary">
                                     <i class="bi bi-check-circle"></i> Update Carnival
                                 </button>
-                                <a href="/admin/carnivals" class="btn btn-secondary ms-2">
+                                <a href="/admin/carnivals" class="btn btn-outline-secondary">
                                     Cancel
                                 </a>
                             </div>
@@ -578,3 +627,6 @@
 
 <!-- Include external JavaScript file for admin carnival functionality -->
 <script type="module" src="/js/admin-carnivals.js"></script>
+
+<!-- Help modal partial for admin carnival edit page -->
+<%- include('../partials/help-modal.ejs', { modalId: 'help-admin-carnival-edit' }) %>

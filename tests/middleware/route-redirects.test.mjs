@@ -15,7 +15,7 @@ vi.mock('/services/mySidelineLogoDownloadService.mjs');
 vi.mock('/services/mySidelineScraperService.mjs');
 
 // Import routes directly instead of full app
-import mainRoutes from '/routes/index.mjs';
+import mainRoutes from '../../routes/index.mjs';
 
 // Create minimal test app
 const createTestApp = () => {

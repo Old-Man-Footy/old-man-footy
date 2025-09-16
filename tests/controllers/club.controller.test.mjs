@@ -59,14 +59,14 @@ vi.mock('../../models/index.mjs', () => {
     alternateNames: [],
     toJSON: vi.fn().mockImplementation(function () {
       // Return all properties except methods
-      const { toJSON, update, addSponsor, removeSponsor, getCarnivalCount, getSponsors, isUnclaimed, canUserClaim, getProxyCreator, ...rest } = this;
+      const { toJSON, update, addSponsor, removeSponsor, getCarnivalCount, getClubSponsors, isUnclaimed, canUserClaim, getProxyCreator, ...rest } = this;
       return { ...rest, ...overrides };
     }),
     update: vi.fn().mockResolvedValue(true),
     addSponsor: vi.fn().mockResolvedValue(true),
     removeSponsor: vi.fn().mockResolvedValue(true),
     getCarnivalCount: vi.fn().mockResolvedValue(5),
-    getSponsors: vi.fn().mockResolvedValue([]),
+    getClubSponsors: vi.fn().mockResolvedValue([]),
     isUnclaimed: vi.fn().mockReturnValue(false),
     canUserClaim: vi.fn().mockReturnValue(true),
     getProxyCreator: vi.fn().mockResolvedValue({ firstName: 'Proxy', lastName: 'Creator' }),
@@ -950,21 +950,31 @@ describe('Club Controller', () => {
         req.params.id = '1';
 
         const unsortedSponsors = [
-          { id: 2, sponsorName: 'B', displayOrder: 3 },
-          { id: 1, sponsorName: 'A', displayOrder: 1 },
-          { id: 3, sponsorName: 'C' } // no order -> treated as 999
+          { id: 2, sponsorName: 'B Sponsor', sponsorshipLevel: 'Silver' },
+          { id: 1, sponsorName: 'A Sponsor', sponsorshipLevel: 'Gold' },
+          { id: 3, sponsorName: 'C Sponsor', sponsorshipLevel: 'Bronze' }
         ];
-        const clubWithSponsors = { ...mockClub, sponsors: [...unsortedSponsors] };
+        const sortedSponsors = [
+          { id: 1, sponsorName: 'A Sponsor', sponsorshipLevel: 'Gold' },
+          { id: 2, sponsorName: 'B Sponsor', sponsorshipLevel: 'Silver' },
+          { id: 3, sponsorName: 'C Sponsor', sponsorshipLevel: 'Bronze' }
+        ];
+        const clubWithSponsors = { ...mockClub, clubSponsors: [...unsortedSponsors] };
         Club.findByPk.mockResolvedValue(clubWithSponsors);
+        
+        // Clear the default mock and set the specific return value for this test
+        sortSponsorsHierarchically.mockClear();
+        sortSponsorsHierarchically.mockReturnValue(sortedSponsors);
 
         await showClubSponsors(req, res, next);
 
         expect(Club.findByPk).toHaveBeenCalledWith(1, expect.objectContaining({ include: expect.any(Array) }));
+        expect(sortSponsorsHierarchically).toHaveBeenCalledWith(unsortedSponsors, 'club');
         expect(res.render).toHaveBeenCalled();
         const [view, ctx] = res.render.mock.calls[0];
         expect(view).toBe('clubs/sponsors');
         expect(ctx.title).toBe('Manage Club Sponsors');
-        // Sponsors should be sorted: displayOrder 1, then 3, then undefined
+        // Sponsors should be sorted by sponsorship level: Gold (1), Silver (2), Bronze (3)
         expect(ctx.sponsors.map(s => s.id)).toEqual([1, 2, 3]);
       });
 
@@ -1043,23 +1053,20 @@ describe('Club Controller', () => {
         const mockSponsor = {
           id: 2,
           sponsorName: 'Test Sponsor',
-          clubId: 1,
-          isAssociatedWithClub: vi.fn().mockResolvedValue(false)
+          clubId: null,
+          isAssociatedWithClub: vi.fn().mockResolvedValue(false),
+          update: vi.fn().mockResolvedValue(true)
         };
         Sponsor.findByPk.mockResolvedValue(mockSponsor);
-        mockClub.getSponsors = vi.fn().mockResolvedValue([]); // Ensure getSponsors is a spy
-        mockClub.addSponsor = vi.fn().mockResolvedValue(true); // Ensure addSponsor is a spy
+        mockClub.getClubSponsors = vi.fn().mockResolvedValue([]); // Mock existing sponsors for displayOrder calculation
         Club.findByPk.mockResolvedValue(mockClub); // Ensure controller uses the correct club instance
 
         // Act
         await addSponsorToClub(req, res);
 
         // Assert
-        expect(mockClub.addSponsor).toHaveBeenCalledWith(mockSponsor, expect.objectContaining({
-          through: expect.objectContaining({
-            displayOrder: 1
-          })
-        }));
+        expect(mockSponsor.update).toHaveBeenNthCalledWith(1, { clubId: 1 });
+        expect(mockSponsor.update).toHaveBeenNthCalledWith(2, { displayOrder: 1 });
         expect(req.flash).toHaveBeenCalledWith(
           'success_msg',
           'Sponsor "Test Sponsor" has been added to your club!'

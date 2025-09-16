@@ -1,5 +1,5 @@
 <!-- Page Header -->
-<div class="bg-primary py-4 mb-4">
+<div class="bg-primary py-4 mb-4" data-page-id="clubs-list">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
@@ -8,7 +8,7 @@
             </div>
             <div class="col-lg-4 text-end">
                 <% if (user && user.clubId) { %>
-                    <a href="/clubs/manage" class="btn btn-outline-light">
+                    <a href="/clubs/manage" class="btn btn-outline-tertiary">
                         <i class="bi bi-gear"></i> Manage Club Profile
                     </a>
                 <% } %>
@@ -86,22 +86,6 @@
                                 <% } %>
 
                                 <div class="mt-auto">
-                                    <!-- Club Stats -->
-                                    <div class="row text-center mb-3">
-                                        <div class="col-6">
-                                            <div class="stat-item-small">
-                                                <span class="stat-number-small text-primary"><%= club.carnivalCount || 0 %></span>
-                                                <span class="stat-label-small">Carnivals</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="stat-item-small">
-                                                <span class="stat-number-small text-success"><%= club.delegates ? club.delegates.length : 0 %></span>
-                                                <span class="stat-label-small">Delegates</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Contact Info -->
                                     <% if (club.contactEmail || club.contactPhone || club.website) { %>
                                         <div class="mb-3">

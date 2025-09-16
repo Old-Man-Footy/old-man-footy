@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" data-page-id="admin-clubs">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -7,7 +7,7 @@
                     Club Management
                 </h1>
                 <div class="d-flex gap-2">
-                    <a href="/clubs/manage" class="btn btn-success">
+                    <a href="/clubs/manage" class="btn btn-tertiary">
                         <i class="bi bi-plus-circle"></i> Create Club
                     </a>
                     <a href="/admin/dashboard" class="btn btn-outline-secondary">
@@ -144,14 +144,14 @@
                                             </td>
                                             <td>
                                                 <% if (club.isActive) { %>
-                                                    <span class="badge bg-success">Active</span>
+                                                    <span class="badge bg-primary">Active</span>
                                                 <% } else { %>
                                                     <span class="badge bg-danger">Inactive</span>
                                                 <% } %>
                                             </td>
                                             <td>
                                                 <% if (club.isPubliclyListed) { %>
-                                                    <span class="badge bg-info">Listed</span>
+                                                    <span class="badge bg-info text-primary">Listed</span>
                                                 <% } else { %>
                                                     <span class="badge bg-secondary">Not Listed</span>
                                                 <% } %>
@@ -163,11 +163,11 @@
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <a href="/admin/clubs/<%= club.id %>/edit" 
-                                                       class="btn btn-outline-warning" title="Edit Club">
+                                                       class="btn btn-outline-tertiary" title="Edit Club">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                     <button type="button" 
-                                                            class="btn <%= club.isPubliclyListed ? 'btn-outline-secondary' : 'btn-outline-success' %>" 
+                                                            class="btn <%= club.isPubliclyListed ? 'btn-outline-secondary' : 'btn-outline-tertiary' %>" 
                                                             title="<%= club.isPubliclyListed ? 'Hide from Public Listing' : 'Show in Public Listing' %>"
                                                             data-action="toggle-club-visibility"
                                                             data-club-id="<%= club.id %>"
@@ -176,7 +176,7 @@
                                                         <i class="bi bi-<%= club.isPubliclyListed ? 'eye-slash' : 'eye' %>"></i>
                                                     </button>
                                                     <button type="button" 
-                                                            class="btn <%= club.isActive ? 'btn-outline-danger' : 'btn-outline-success' %>" 
+                                                            class="btn <%= club.isActive ? 'btn-outline-danger' : 'btn-outline-tertiary' %>" 
                                                             title="<%= club.isActive ? 'Deactivate Club' : 'Reactivate Club' %>"
                                                             data-action="toggle-club-status"
                                                             data-club-id="<%= club.id %>"

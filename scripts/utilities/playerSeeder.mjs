@@ -6,7 +6,7 @@
  */
 
 import { ClubPlayer, CarnivalClubPlayer } from '../../models/index.mjs';
-import { FIRST_NAMES, LAST_NAMES, EMAIL_DOMAINS, PLAYER_NOTES, ATTENDANCE_NOTES } from '../../fixtures/playerFixtures.mjs';
+import { FIRST_NAMES, LAST_NAMES, EMAIL_DOMAINS, PLAYER_NOTES, ATTENDANCE_NOTES } from '../fixtures/playerFixtures.mjs';
 
 class PlayerSeeder {
     /**

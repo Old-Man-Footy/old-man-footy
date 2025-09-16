@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Import the manager object directly
-import { adminStatsManager } from '/public/js/admin-stats.js';
+import { adminStatsManager } from '../../../public/js/admin-stats.js';
 
 /**
  * @file admin-stats.test.js

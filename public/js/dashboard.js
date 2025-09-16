@@ -32,10 +32,10 @@ export const dashboardManager = {
 
     bindEvents() {
         // Delegated filter buttons
-        document.addEventListener('click', (event) => {
-            const filterButton = event.target.closest('[data-filter]');
+        document.addEventListener('click', (carnival) => {
+            const filterButton = carnival.target.closest('[data-filter]');
             if (!filterButton) return;
-            event.preventDefault();
+            carnival.preventDefault();
             const filter = filterButton.dataset.filter;
             const target = filterButton.dataset.target;
             switch (filter) {
@@ -73,8 +73,8 @@ export const dashboardManager = {
 
         // Tab switching
         this.elements.tabButtons?.forEach((tab) => {
-            tab.addEventListener('shown.bs.tab', (event) => {
-                const targetPane = event.target.getAttribute('data-bs-target');
+            tab.addEventListener('shown.bs.tab', (carnival) => {
+                const targetPane = carnival.target.getAttribute('data-bs-target');
                 if (targetPane === '#hosted-carnivals') this.showAll('hosted');
                 else if (targetPane === '#attending-carnivals') this.showAll('attending');
             });
@@ -265,7 +265,7 @@ export const dashboardManager = {
         switch (actionValue) {
             case 'transfer':
                 submitButton.innerHTML = `${icon} Leave & Transfer Role`;
-                submitButton.className = 'btn btn-warning';
+                submitButton.className = 'btn btn-tertiary';
                 break;
             case 'deactivate':
                 submitButton.innerHTML = `${icon} Leave & Deactivate Club`;

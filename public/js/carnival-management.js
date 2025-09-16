@@ -8,17 +8,17 @@
  * Carnival Management Manager Object
  */
 /**
- * Manages carnival-related actions such as unregistering a club, taking ownership of an event,
+ * Manages carnival-related actions such as unregistering a club, taking ownership of an carnival,
  * and handling confirmation dialogs for forms. Provides initialization, element caching,
- * and event binding for carnival management functionality.
+ * and carnival binding for carnival management functionality.
  *
  * @namespace carnivalManagementManager
  * @property {Object} elements - Cached DOM elements used for carnival management actions.
  * @method initialize - Initializes the manager by caching elements and binding events.
  * @method cacheElements - Caches necessary DOM elements for carnival management.
  * @method bindEvents - Binds event listeners for carnival management actions.
- * @method handleUnregisterClick - Handles the unregister button click event.
- * @method handleOwnershipClick - Handles the take ownership button click event.
+ * @method handleUnregisterClick - Handles the unregister button click carnival.
+ * @method handleOwnershipClick - Handles the take ownership button click carnival.
  * @method handleFormConfirm - Handles confirmation dialogs for forms with data-confirm attributes.
  */
 
@@ -65,10 +65,10 @@ export const carnivalManagementManager = {
 
     /**
      * Handles unregister button click.
-     * @param {Event} event
+     * @param {Carnival} carnival
      * @returns {void}
      */
-    handleUnregisterClick: (event) => {
+    handleUnregisterClick: (carnival) => {
         const confirmMessage = 'Are you sure you want to unregister your club from this carnival? This action cannot be undone.';
         if (confirm(confirmMessage)) {
             if (carnivalManagementManager.elements.unregisterForm) {
@@ -79,11 +79,11 @@ export const carnivalManagementManager = {
 
     /**
      * Handles take ownership button click.
-     * @param {Event} event
+     * @param {Carnival} carnival
      * @returns {void}
      */
-    handleOwnershipClick: (event) => {
-        const confirmMessage = 'Are you sure you want to take ownership of this event for your club? This will allow you to manage and edit the event details.';
+    handleOwnershipClick: (carnival) => {
+        const confirmMessage = 'Are you sure you want to take ownership of this carnival for your club? This will allow you to manage and edit the carnival details.';
         if (confirm(confirmMessage)) {
             if (carnivalManagementManager.elements.ownershipForm) {
                 carnivalManagementManager.elements.ownershipForm.submit();
@@ -93,13 +93,13 @@ export const carnivalManagementManager = {
 
     /**
      * Handles confirmation dialogs for forms with data-confirm attributes.
-     * @param {Event} event
+     * @param {Carnival} carnival
      * @returns {void}
      */
-    handleFormConfirm: (event) => {
-        const message = event.target.getAttribute('data-confirm');
+    handleFormConfirm: (carnival) => {
+        const message = carnival.target.getAttribute('data-confirm');
         if (!confirm(message)) {
-            event.preventDefault();
+            carnival.preventDefault();
         }
     }
 };

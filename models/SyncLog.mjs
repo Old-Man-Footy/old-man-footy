@@ -2,7 +2,7 @@
  * SyncLog Model - SQLite/Sequelize Implementation
  * 
  * Tracks MySideline sync operations to provide reliable sync status
- * regardless of whether individual events are updated during sync
+ * regardless of whether individual carnivals are updated during sync
  */
 
 import { DataTypes, Model, Op } from 'sequelize';
@@ -14,15 +14,15 @@ import { sequelize } from '../config/database.mjs';
 class SyncLog extends Model {
   /**
    * Mark sync as completed
-   * @param {Object} results - Sync results containing event counts
+   * @param {Object} results - Sync results containing carnival counts
    */
   async markCompleted(results = {}) {
     return await this.update({
       status: 'completed',
       completedAt: new Date(),
-      eventsProcessed: results.eventsProcessed || 0,
-      eventsCreated: results.eventsCreated || 0,
-      eventsUpdated: results.eventsUpdated || 0
+      carnivalsProcessed: results.carnivalsProcessed || 0,
+      carnivalsCreated: results.carnivalsCreated || 0,
+      carnivalsUpdated: results.carnivalsUpdated || 0
     });
   }
 
@@ -112,9 +112,9 @@ class SyncLog extends Model {
       totalSyncs: syncs.length,
       successfulSyncs: syncs.filter(s => s.status === 'completed').length,
       failedSyncs: syncs.filter(s => s.status === 'failed').length,
-      totalEventsProcessed: syncs.reduce((sum, s) => sum + (s.eventsProcessed || 0), 0),
-      totalEventsCreated: syncs.reduce((sum, s) => sum + (s.eventsCreated || 0), 0),
-      totalEventsUpdated: syncs.reduce((sum, s) => sum + (s.eventsUpdated || 0), 0),
+      totalCarnivalsProcessed: syncs.reduce((sum, s) => sum + (s.carnivalsProcessed || 0), 0),
+      totalCarnivalsCreated: syncs.reduce((sum, s) => sum + (s.carnivalsCreated || 0), 0),
+      totalCarnivalsUpdated: syncs.reduce((sum, s) => sum + (s.carnivalsUpdated || 0), 0),
       lastSuccessfulSync: syncs.find(s => s.status === 'completed')?.completedAt || null,
       lastFailedSync: syncs.find(s => s.status === 'failed')?.completedAt || null
     };
@@ -137,9 +137,12 @@ SyncLog.init({
     allowNull: false
   },
   status: {
-    type: DataTypes.ENUM('started', 'completed', 'failed'),
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'started'
+    defaultValue: 'started',
+    validate: {
+      isIn: [['started', 'completed', 'failed']]
+    }
   },
   startedAt: {
     type: DataTypes.DATE,
@@ -149,17 +152,17 @@ SyncLog.init({
     type: DataTypes.DATE,
     allowNull: true
   },
-  eventsProcessed: {
+  carnivalsProcessed: {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: 0
   },
-  eventsCreated: {
+  carnivalsCreated: {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: 0
   },
-  eventsUpdated: {
+  carnivalsUpdated: {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: 0

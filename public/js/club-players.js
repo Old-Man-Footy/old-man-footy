@@ -29,7 +29,7 @@ export const clubPlayersPageManager = {
         const { removePlayerModal, csvImportModal, csvFileInput, csvForm, templateLink, sortBySelect, sortOrderSelect, searchInput } = this.elements;
 
         if (removePlayerModal) {
-            removePlayerModal.addEventListener('show.bs.modal', (event) => this.handleRemoveModalShow(event));
+            removePlayerModal.addEventListener('show.bs.modal', (carnival) => this.handleRemoveModalShow(carnival));
         }
 
         if (csvImportModal && csvFileInput && csvForm) {
@@ -45,10 +45,10 @@ export const clubPlayersPageManager = {
         }
 
         if (sortBySelect && sortOrderSelect) {
-            const autoSubmitHandler = (event) => {
+            const autoSubmitHandler = (carnival) => {
                 clearTimeout(this.debounceTimeout);
                 this.debounceTimeout = setTimeout(() => {
-                    const form = event.target.closest('form');
+                    const form = carnival.target.closest('form');
                     if (form && typeof form.submit === 'function') form.submit();
                 }, 500);
             };
@@ -76,8 +76,8 @@ export const clubPlayersPageManager = {
         } catch {}
     },
 
-    handleRemoveModalShow(event) {
-        const button = event.relatedTarget;
+    handleRemoveModalShow(carnival) {
+        const button = carnival.relatedTarget;
         if (!button) return;
         const playerId = button.getAttribute('data-player-id');
         const playerName = button.getAttribute('data-player-name');

@@ -24,7 +24,7 @@ export const adminClubsManager = {
     cacheElements() {
         this.elements = {
             searchInput: document.getElementById('search'),
-            document: document, // For event delegation
+            document: document, // For carnival delegation
         };
     },
 

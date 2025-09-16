@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 // Import the manager object directly.
-import { carnivalEditManager } from '/public/js/carnival-edit.js';
+import { carnivalEditManager } from '../../../public/js/carnival-edit.js';
 
 /**
  * @file carnival-edit.test.js
@@ -10,7 +10,7 @@ import { carnivalEditManager } from '/public/js/carnival-edit.js';
 // Helper function to set up the DOM for each test
 function setupDOM() {
     document.body.innerHTML = `
-        <form data-mysideline-event-url="https://mysideline.com/register/">
+        <form data-mysideline-carnival-url="https://mysideline.com/register/">
             <div id="endDateContainer" data-has-end-date="false">
                 <input type="date" id="endDate" name="endDate" />
             </div>
@@ -97,7 +97,7 @@ describe('carnivalEditManager', () => {
         checkbox.dispatchEvent(new Event('change'));
 
         expect(container.style.display).toBe('block');
-        expect(label.textContent).toContain('Event Start Date');
+        expect(label.textContent).toContain('Carnival Start Date');
         expect(endDateInput.required).toBe(true);
     });
 
@@ -175,7 +175,7 @@ describe('carnivalEditManager', () => {
         const mySidelineIdInput = document.getElementById('mySidelineId');
         const registrationLinkInput = document.getElementById('registrationLink');
         
-        mySidelineIdInput.value = 'event-12345';
+        mySidelineIdInput.value = 'carnival-12345';
         mySidelineIdInput.dispatchEvent(new Event('input'));
 
         expect(mySidelineIdInput.value).toBe('12345');
@@ -192,7 +192,7 @@ describe('carnivalEditManager', () => {
         registrationLinkInput.dispatchEvent(new Event('input'));
 
         expect(mySidelineIdInput.value).toBe('98765');
-        expect(document.getElementById('linkStatus').textContent).toContain('Event ID: 98765');
+        expect(document.getElementById('linkStatus').textContent).toContain('Carnival ID: 98765');
     });
 
     it('should handle registration link changes with invalid URL', () => {

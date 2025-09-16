@@ -96,8 +96,8 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * Handle clicks outside dropdown
      */
-    function handleClickOutside(event) {
-        if (!stateToggle.contains(event.target) && !stateMenu.contains(event.target)) {
+    function handleClickOutside(carnival) {
+        if (!stateToggle.contains(carnival.target) && !stateMenu.contains(carnival.target)) {
             closeDropdown();
         }
     }
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectedText();
     }
 
-    // Event listeners
+    // event listeners
     stateToggle.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();

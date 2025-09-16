@@ -18,15 +18,19 @@ function setupDOM() {
     <input type="checkbox" name="upcoming" />
     <div class="alert-dismissible alert-success"><button class="btn-close"></button></div>
     <div id="imageCarousel">
-      <div class="carousel-track">
-        <div class="slide current-slide"></div>
-        <div class="slide"></div>
+      <div class="carousel-track-container">
+        <div class="carousel-track">
+          <div class="carousel-slide current-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+        </div>
       </div>
-      <button class="carousel-button--right"></button>
-      <button class="carousel-button--left"></button>
+      <button class="carousel-button carousel-button--right"></button>
+      <button class="carousel-button carousel-button--left"></button>
       <div class="carousel-nav">
-        <button class="dot current-slide"></button>
-        <button class="dot"></button>
+        <button class="carousel-indicator current-slide"></button>
+        <button class="carousel-indicator"></button>
+        <button class="carousel-indicator"></button>
       </div>
     </div>
   `;
@@ -71,7 +75,7 @@ describe('Theme Manager', () => {
     expect(localStorage.getItem('oldmanfooty-theme')).toBe('dark');
   });
 
-  it('should dispatch themeChanged event', () => {
+  it('should dispatch themeChanged carnival', () => {
     const handler = vi.fn();
     window.addEventListener('themeChanged', handler);
     themeManager.applyTheme('dark');
@@ -98,8 +102,8 @@ describe('OldManFooty App', () => {
   it('should add was-validated class on invalid form submit', () => {
     const form = document.querySelector('.needs-validation');
     form.checkValidity = vi.fn(() => false);
-    const event = new Event('submit', { bubbles: true, cancelable: true });
-    form.dispatchEvent(event);
+    const carnival = new Event('submit', { bubbles: true, cancelable: true });
+    form.dispatchEvent(carnival);
     expect(form.classList.contains('was-validated')).toBe(true);
   });
 
@@ -108,8 +112,8 @@ describe('OldManFooty App', () => {
     const preview = document.querySelector('.upload-preview');
     const file = new File(['dummy'], 'test.png', { type: 'image/png' });
     Object.defineProperty(input, 'files', { value: [file] });
-    const event = new Event('change');
-    input.dispatchEvent(event);
+    const carnival = new Event('change');
+    input.dispatchEvent(carnival);
     await new Promise(r => setTimeout(r, 10));
     expect(preview.innerHTML).toContain('img');
   });
@@ -117,8 +121,8 @@ describe('OldManFooty App', () => {
   it('should auto-expand textarea on input', () => {
     const textarea = document.querySelector('textarea');
     textarea.value = 'Hello\nWorld';
-    const event = new Event('input');
-    textarea.dispatchEvent(event);
+    const carnival = new Event('input');
+    textarea.dispatchEvent(carnival);
     expect(textarea.style.height).not.toBe('');
   });
 
@@ -130,8 +134,8 @@ describe('OldManFooty App', () => {
     document.body.appendChild(form);
     const submitSpy = vi.spyOn(form, 'submit');
     input.value = 'test';
-    const event = new Event('input');
-    input.dispatchEvent(event);
+    const carnival = new Event('input');
+    input.dispatchEvent(carnival);
     await new Promise(r => setTimeout(r, 900));
     expect(submitSpy).toHaveBeenCalled();
   });
@@ -171,21 +175,22 @@ describe('Image Carousel', () => {
 
   it('should move to next slide on next button click', () => {
     const nextButton = document.querySelector('.carousel-button--right');
-    const slides = document.querySelectorAll('.carousel-track .slide');
+    const slides = document.querySelectorAll('.carousel-slide');
     nextButton.click();
     expect(slides[1].classList.contains('current-slide')).toBe(true);
   });
 
   it('should move to previous slide on prev button click', () => {
     const prevButton = document.querySelector('.carousel-button--left');
-    const slides = document.querySelectorAll('.carousel-track .slide');
+    const slides = document.querySelectorAll('.carousel-slide');
     prevButton.click();
-    expect(slides[1].classList.contains('current-slide')).toBe(true);
+    // Previous from first slide should go to last slide (index 2)
+    expect(slides[2].classList.contains('current-slide')).toBe(true);
   });
 
   it('should auto-play slides', () => {
-    const slides = document.querySelectorAll('.carousel-track .slide');
-    vi.advanceTimersByTime(4000);
+    const slides = document.querySelectorAll('.carousel-slide');
+    vi.advanceTimersByTime(20000); // Match actual auto-play timing
     expect(slides[1].classList.contains('current-slide')).toBe(true);
   });
 });

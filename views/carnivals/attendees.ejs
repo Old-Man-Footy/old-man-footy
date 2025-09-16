@@ -1,7 +1,6 @@
-<div class="container mt-4">
+<div class="container mt-4" data-page-id="carnivals-attendees">
     <div class="row">
         <div class="col-12">
-            <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
@@ -11,7 +10,6 @@
                 </ol>
             </nav>
 
-            <!-- Page Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2><%= carnival.title %> - Attendees</h2>
@@ -27,13 +25,20 @@
                 </div>
             </div>
 
-            <!-- Statistics Cards -->
             <div class="row mb-4">
                 <div class="col-md-2">
-                    <div class="card border-0 bg-primary">
+                    <div class="card border-0 bg-light">
                         <div class="card-body text-center">
                             <div class="display-6 fw-bold"><%= totalAttendees %></div>
                             <small>Total Clubs</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-info">
+                        <div class="card-body text-center">
+                            <div class="display-6 fw-bold"><%= totalTeams %></div>
+                            <small>Total Teams</small>
                         </div>
                     </div>
                 </div>
@@ -54,7 +59,7 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <div class="card border-0 bg-info">
+                    <div class="card border-0 bg-success">
                         <div class="card-body text-center">
                             <div class="display-6 fw-bold"><%= paidAttendees %></div>
                             <small>Paid</small>
@@ -62,15 +67,7 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <div class="card border-0 bg-secondary">
-                        <div class="card-body text-center">
-                            <div class="display-6 fw-bold"><%= totalPlayerCount %></div>
-                            <small>Total Players</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="card border-0 bg-light text-dark">
+                    <div class="card border-0 bg-danger text-dark">
                         <div class="card-body text-center">
                             <div class="display-6 fw-bold"><%= totalAttendees - paidAttendees %></div>
                             <small>Unpaid</small>
@@ -79,7 +76,6 @@
                 </div>
             </div>
 
-            <!-- Filters -->
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="row align-items-center">
@@ -109,22 +105,22 @@
                                 <label class="btn btn-outline-success btn-sm" for="payment-paid">Paid</label>
 
                                 <input type="radio" class="btn-check" name="paymentFilter" id="payment-unpaid" value="unpaid">
-                                <label class="btn btn-outline-light btn-sm" for="payment-unpaid">Unpaid</label>
+                                <label class="btn btn-outline-warning btn-sm" for="payment-unpaid">Unpaid</label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Attending Clubs -->
             <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-people"></i> Registered Clubs
-                        <span class="badge bg-secondary ms-2"><%= attendingClubs.length %></span>
-                    </h5>
-                </div>
                 <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-people"></i> Registered Clubs
+                            <span class="badge bg-secondary ms-2"><%= attendingClubs.length %></span>
+                        </h5>
+                    </div>
+                    
                     <% if (attendingClubs.length === 0) { %>
                         <div class="text-center py-5">
                             <div class="mb-3">
@@ -137,185 +133,231 @@
                             </a>
                         </div>
                     <% } else { %>
-                        <!-- Club List -->
-                        <div id="attendeesList" class="row">
+                        <div id="attendeesList" class="row g-4">
                             <% attendingClubs.forEach(registration => { %>
-                                <div class="col-lg-6 mb-3" 
-                                     data-registration-id="<%= registration.id %>"
-                                     data-approval-status="<%= registration.approvalStatus %>"
-                                     data-payment-status="<%= registration.isPaid ? 'paid' : 'unpaid' %>">
-                                    <div class="card carnival-attendee-card">
-                                        <div class="card-body">
-                                            <!-- Approval Status Badge -->
-                                            <div class="position-absolute top-0 end-0 mt-2 me-2">
-                                                <% if (registration.approvalStatus === 'approved') { %>
-                                                    <span class="badge bg-success">
-                                                        <i class="bi bi-check-circle"></i> Approved
-                                                    </span>
-                                                <% } else if (registration.approvalStatus === 'pending') { %>
-                                                    <span class="badge bg-warning text-dark">
-                                                        <i class="bi bi-clock"></i> Pending
-                                                    </span>
-                                                <% } else if (registration.approvalStatus === 'rejected') { %>
-                                                    <span class="badge bg-danger">
-                                                        <i class="bi bi-x-circle"></i> Rejected
-                                                    </span>
-                                                <% } %>
-                                            </div>
+                                <div class="col-lg-6" 
+                                    data-registration-id="<%= registration.id %>"
+                                    data-approval-status="<%= registration.approvalStatus %>"
+                                    data-payment-status="<%= registration.isPaid ? 'paid' : 'unpaid' %>">
+                                        <div class="card h-100 shadow-sm border">
+                                            <div class="card-body p-4">
+                                                <div class="d-flex align-items-start mb-3">
+                                                    <div class="me-3 flex-shrink-0">
+                                                        <% if (registration.participatingClub.logoUrl) { %>
+                                                            <img src="<%= registration.participatingClub.logoUrl %>" 
+                                                                alt="<%= registration.participatingClub.clubName %>" 
+                                                                class="carnival-attendee-logo">
+                                                        <% } else { %>
+                                                            <div class="carnival-attendee-logo-placeholder d-flex align-items-center justify-content-center">
+                                                                <i class="bi bi-shield text-muted"></i>
+                                                            </div>
+                                                        <% } %>
+                                                    </div>
 
-                                            <div class="d-flex align-items-start">
-                                                <!-- Club Logo -->
-                                                <div class="me-3">
-                                                    <% if (registration.club.logoUrl) { %>
-                                                        <img src="<%= registration.club.logoUrl %>" 
-                                                             alt="<%= registration.club.clubName %>" 
-                                                             class="carnival-attendee-logo">
-                                                    <% } else { %>
-                                                        <div class="carnival-attendee-logo-placeholder d-flex align-items-center justify-content-center">
-                                                            <i class="bi bi-shield text-muted"></i>
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <h5 class="card-title mb-1">
+                                                                    <a href="/clubs/<%= registration.participatingClub.id %>" 
+                                                                        class="text-decoration-none text-dark fw-bold">
+                                                                        <%= registration.participatingClub.clubName %>
+                                                                    </a>                                                                     
+                                                                </h5>
+                                                                <p class="text-muted mb-0">
+                                                                    <i class="bi bi-geo-alt me-1"></i>
+                                                                    <%= registration.participatingClub.state %>
+                                                                    <% if (registration.participatingClub.location) { %>
+                                                                        · <%= registration.participatingClub.location %>
+                                                                    <% } %>
+                                                                </p>
+                                                            </div>
+                                                            
+                                                            <div class="ms-3">
+                                                                <% if (registration.approvalStatus === 'approved') { %>
+                                                                    <span class="badge bg-success fs-6">
+                                                                        <i class="bi bi-check-circle me-1"></i>Approved
+                                                                    </span>
+                                                                <% } else if (registration.approvalStatus === 'pending') { %>
+                                                                    <span class="badge bg-warning text-dark fs-6">
+                                                                        <i class="bi bi-clock me-1"></i>Pending
+                                                                    </span>
+                                                                <% } else if (registration.approvalStatus === 'rejected') { %>
+                                                                    <span class="badge bg-danger fs-6">
+                                                                        <i class="bi bi-x-circle me-1"></i>Rejected
+                                                                    </span>
+                                                                <% } %>
+                                                            </div>
                                                         </div>
+                                                    </div>
+                                                </div>
+
+                                                                <div class="border-top pt-3 mb-3">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="d-flex align-items-center mb-2">
+                                                                <i class="bi bi-calendar-check text-primary me-2"></i>
+                                                                <div>
+                                                                    <small class="text-muted d-block">Registered</small>
+                                                                    <span class="fw-medium"><%= new Date(registration.registrationDate).toLocaleDateString() %></span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <% if (registration.contactPerson) { %>
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-person text-primary me-2"></i>
+                                                                <div>
+                                                                    <small class="text-muted d-block">Contact Person</small>
+                                                                    <span class="fw-medium"><%= registration.contactPerson %></span>
+                                                                </div>
+                                                            </div>
+                                                            <% } %>
+                                                        </div>
+                                                        
+                                                        <div class="col-md-6">
+                                                            <div class="d-flex align-items-center mb-2">
+                                                                <i class="bi bi-people-fill text-success me-2"></i>
+                                                                <div>
+                                                                    <small class="text-muted d-block">Teams & Players</small>
+                                                                    <span class="fw-medium">
+                                                                        <%= registration.numberOfTeams || 1 %> team<%= (registration.numberOfTeams || 1) !== 1 ? 's' : '' %>
+                                                                        <% if (registration.playerCount) { %>
+                                                                            · <%= registration.playerCount %> player<%= registration.playerCount !== 1 ? 's' : '' %>
+                                                                        <% } %>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="bg-light rounded p-3 mb-3">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <h6 class="mb-0 text-dark">
+                                                            <i class="bi bi-credit-card me-2"></i>Payment Details
+                                                        </h6>
+                                                        <% if (registration.isPaid) { %>
+                                                            <span class="badge bg-success">
+                                                                <i class="bi bi-check-circle me-1"></i>Paid
+                                                            </span>
+                                                        <% } else { %>
+                                                            <span class="badge bg-warning text-dark">
+                                                                <i class="bi bi-clock me-1"></i>Pending
+                                                            </span>
+                                                        <% } %>
+                                                    </div>
+                                                    
+                                                    <% 
+                                                        const teamFee = parseFloat(carnival.teamRegistrationFee || 0);
+                                                        const perPlayerFee = parseFloat(carnival.perPlayerFee || 0);
+                                                        const teams = registration.numberOfTeams || 1;
+                                                        const players = registration.playerCount || 0;
+                                                        const calculatedTotal = (teamFee * teams) + (perPlayerFee * players);
+                                                        const actualAmount = parseFloat(registration.paymentAmount || 0);
+                                                    %>
+                                                    
+                                                    <% if (actualAmount > 0) { %>
+                                                        <div class="fw-bold text-dark mb-1">
+                                                            Amount: $<%= actualAmount.toFixed(2) %>
+                                                        </div>
+                                                    <% } %>
+                                                    
+                                                    <% if (calculatedTotal > 0) { %>
+                                                        <small class="text-muted">
+                                                            <% if (calculatedTotal !== actualAmount) { %>
+                                                                Calculated: $<%= calculatedTotal.toFixed(2) %> = 
+                                                            <% } %>
+                                                            $<%= teamFee.toFixed(2) %> × <%= teams %> team<%= teams !== 1 ? 's' : '' %>
+                                                            <% if (players > 0) { %>
+                                                                + $<%= perPlayerFee.toFixed(2) %> × <%= players %> player<%= players !== 1 ? 's' : '' %>
+                                                            <% } %>
+                                                        </small>
                                                     <% } %>
                                                 </div>
 
-                                                <!-- Club Details -->
-                                                <div class="flex-grow-1">
-                                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <div>
-                                                            <h6 class="card-title mb-1">
-                                                                <% if (registration.club.isActive && registration.club.isPubliclyListed) { %>
-                                                                    <a href="/clubs/<%= registration.club.id %>" class="text-decoration-none">
-                                                                        <%= registration.club.clubName %>
-                                                                    </a>
-                                                                <% } else { %>
-                                                                    <span class="club-inactive-label">
-                                                                        <%= registration.club.clubName %>
-                                                                        <% if (!registration.club.isActive) { %>
-                                                                            <span class="club-inactive-badge">Inactive</span>
-                                                                        <% } %>
-                                                                    </span>
-                                                                <% } %>
-                                                                <% if (registration.teamName) { %>
-                                                                    <small class="text-muted">(<%= registration.teamName %>)</small>
-                                                                <% } %>
-                                                            </h6>
-                                                            <small class="text-muted">
-                                                                <i class="bi bi-geo-alt"></i> 
-                                                                <%= registration.club.state %>
-                                                                <% if (registration.club.location) { %>
-                                                                    · <%= registration.club.location %>
-                                                                <% } %>
-                                                            </small>
-                                                        </div>
-                                                        <div class="btn-group carnival-btn-group-sm">
-                                                            <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players" 
-                                                               class="btn btn-outline-success btn-sm" title="Manage Players">
-                                                                <i class="bi bi-people"></i>
-                                                            </a>
-                                                            <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/edit" 
-                                                               class="btn btn-outline-primary btn-sm" title="Edit Registration">
-                                                                <i class="bi bi-pencil"></i>
-                                                            </a>
+                                                                <div class="row g-1">
+                                                    <div class="col-4">
+                                                        <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/players" 
+                                                            class="btn btn-outline-tertiary btn-sm w-100 text-truncate" 
+                                                            title="Manage Players">
+                                                            <i class="bi bi-people d-block d-sm-inline me-sm-1"></i>
+                                                            <span class="d-none d-sm-inline">Manage</span>
+                                                            <span class="d-sm-none">Players</span>
+                                                        </a>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <a href="/carnivals/<%= carnival.id %>/attendees/<%= registration.id %>/edit" 
+                                                            class="btn btn-outline-primary btn-sm w-100 text-truncate"
+                                                            title="Edit Registration">
+                                                            <i class="bi bi-pencil d-block d-sm-inline me-sm-1"></i>
+                                                            <span class="d-none d-sm-inline">Edit</span>
+                                                            <span class="d-sm-none">Reg.</span>
+                                                        </a>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <button type="button" 
+                                                                class="btn btn-outline-danger btn-sm w-100 text-truncate remove-attendee"
+                                                                data-registration-id="<%= registration.id %>"
+                                                                data-club-name="<%= registration.participatingClub.clubName %>"
+                                                                title="Remove Club">
+                                                            <i class="bi bi-trash d-block d-sm-inline me-sm-1"></i>
+                                                            <span class="d-none d-sm-inline">Remove</span>
+                                                            <span class="d-sm-none">Club</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <% if (registration.approvalStatus === 'pending') { %>
+                                                    <div class="mt-3 pt-3 border-top">
+                                                        <h6 class="text-muted mb-2">
+                                                            <i class="bi bi-hand-thumbs-up me-1"></i>Approval Required
+                                                        </h6>
+                                                        <div class="d-flex gap-2">
                                                             <button type="button" 
-                                                                    class="btn btn-outline-danger btn-sm remove-attendee"
+                                                                    class="btn btn-success approve-registration"
                                                                     data-registration-id="<%= registration.id %>"
-                                                                    data-club-name="<%= registration.club.clubName %>"
-                                                                    title="Remove Club">
-                                                                <i class="bi bi-trash"></i>
+                                                                    data-club-name="<%= registration.participatingClub.clubName %>">
+                                                                <i class="bi bi-check-circle me-1"></i>Approve
+                                                            </button>
+                                                            <button type="button" 
+                                                                    class="btn btn-danger reject-registration"
+                                                                    data-registration-id="<%= registration.id %>"
+                                                                    data-club-name="<%= registration.participatingClub.clubName %>">
+                                                                <i class="bi bi-x-circle me-1"></i>Reject
                                                             </button>
                                                         </div>
                                                     </div>
+                                                <% } %>
 
-                                                    <!-- Registration Details -->
-                                                    <div class="row g-2 small">
-                                                        <div class="col-6">
-                                                            <strong>Registered:</strong> 
-                                                            <%= new Date(registration.registrationDate).toLocaleDateString() %>
-                                                        </div>
-                                                        <% if (registration.playerCount) { %>
-                                                            <div class="col-6">
-                                                                <strong>Players:</strong> <%= registration.playerCount %>
-                                                            </div>
-                                                        <% } %>
-                                                        <% if (registration.contactPerson) { %>
-                                                            <div class="col-6">
-                                                                <strong>Contact:</strong> <%= registration.contactPerson %>
-                                                            </div>
-                                                        <% } %>
-                                                        <div class="col-6">
-                                                            <strong>Payment:</strong>
-                                                            <% if (registration.isPaid) { %>
-                                                                <span class="badge bg-success">Paid</span>
-                                                                <% if (registration.paymentAmount) { %>
-                                                                    $<%= registration.paymentAmount %>
-                                                                <% } %>
-                                                            <% } else { %>
-                                                                <span class="badge bg-warning">Pending</span>
-                                                            <% } %>
+                                                <% if (registration.approvalStatus === 'rejected' && registration.rejectionReason) { %>
+                                                    <div class="mt-3 pt-3 border-top">
+                                                        <div class="alert alert-danger mb-0" role="alert">
+                                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                                            <strong>Rejection Reason:</strong> <%= registration.rejectionReason %>
                                                         </div>
                                                     </div>
+                                                <% } %>
 
-                                                    <!-- Approval Actions (for pending registrations) -->
-                                                    <% if (registration.approvalStatus === 'pending') { %>
-                                                        <div class="mt-3 pt-2 border-top">
-                                                            <div class="d-flex gap-2">
-                                                                <button type="button" 
-                                                                        class="btn btn-success btn-sm approve-registration"
-                                                                        data-registration-id="<%= registration.id %>"
-                                                                        data-club-name="<%= registration.club.clubName %>">
-                                                                    <i class="bi bi-check-circle"></i> Approve
-                                                                </button>
-                                                                <button type="button" 
-                                                                        class="btn btn-danger btn-sm reject-registration"
-                                                                        data-registration-id="<%= registration.id %>"
-                                                                        data-club-name="<%= registration.club.clubName %>">
-                                                                    <i class="bi bi-x-circle"></i> Reject
-                                                                </button>
-                                                            </div>
+                                                <% if (registration.approvalStatus === 'approved' && registration.approvedAt) { %>
+                                                    <div class="mt-3 pt-3 border-top">
+                                                        <div class="alert alert-success mb-0" role="alert">
+                                                            <i class="bi bi-check-circle me-2"></i>
+                                                            <strong>Approved:</strong> <%= new Date(registration.approvedAt).toLocaleDateString() %>
                                                         </div>
-                                                    <% } %>
+                                                    </div>
+                                                <% } %>
 
-                                                    <!-- Rejection Reason (for rejected registrations) -->
-                                                    <% if (registration.approvalStatus === 'rejected' && registration.rejectionReason) { %>
-                                                        <div class="mt-2">
-                                                            <small class="text-danger">
-                                                                <i class="bi bi-exclamation-triangle"></i> 
-                                                                <strong>Rejection Reason:</strong> <%= registration.rejectionReason %>
-                                                            </small>
+                                                <% if (registration.specialRequirements) { %>
+                                                    <div class="mt-3 pt-3 border-top">
+                                                        <div class="alert alert-info mb-0" role="alert">
+                                                            <i class="bi bi-info-circle me-2"></i>
+                                                            <strong>Special Requirements:</strong> <%= registration.specialRequirements %>
                                                         </div>
-                                                    <% } %>
-
-                                                    <!-- Approval Information (for approved registrations) -->
-                                                    <% if (registration.approvalStatus === 'approved' && registration.approvedAt) { %>
-                                                        <div class="mt-2">
-                                                            <small class="text-success">
-                                                                <i class="bi bi-check-circle"></i> 
-                                                                <strong>Approved:</strong> <%= new Date(registration.approvedAt).toLocaleDateString() %>
-                                                            </small>
-                                                        </div>
-                                                    <% } %>
-
-                                                    <% if (registration.specialRequirements) { %>
-                                                        <div class="mt-2">
-                                                            <small class="text-info">
-                                                                <i class="bi bi-info-circle"></i> 
-                                                                <strong>Special Requirements:</strong> <%= registration.specialRequirements %>
-                                                            </small>
-                                                        </div>
-                                                    <% } %>
-                                                </div>
+                                                    </div>
+                                                <% } %>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                             <% }); %>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="mt-4">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i>
-                                <strong>Tip:</strong> You can drag and drop club cards to reorder them for display purposes.
-                            </div>
                         </div>
                     <% } %>
                 </div>
@@ -324,7 +366,6 @@
     </div>
 </div>
 
-<!-- Rejection Modal -->
 <div class="modal fade" id="rejectionModal" tabindex="-1" aria-labelledby="rejectionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -333,11 +374,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning:</strong> Once a club is rejected, this action cannot be undone without administrator input. Please ensure you want to proceed with the rejection.
+                </div>
                 <p>Are you sure you want to reject <strong id="rejectionClubName"></strong>'s registration?</p>
                 <div class="mb-3">
                     <label for="rejectionReason" class="form-label">Reason for rejection (optional):</label>
                     <textarea class="form-control" id="rejectionReason" rows="3" 
-                              placeholder="e.g., Event is full, club doesn't meet requirements, etc."></textarea>
+                                placeholder="e.g., Carnival is full, club doesn't meet requirements, etc."></textarea>
                     <div class="form-text">This reason will be included in the notification email to the club.</div>
                 </div>
             </div>

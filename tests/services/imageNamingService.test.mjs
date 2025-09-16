@@ -18,7 +18,7 @@ import ImageNamingService, {
   IMAGE_TYPES,
   generateImageName,
   parseImageName
-} from '/services/imageNamingService.mjs';
+} from '../../services/imageNamingService.mjs';
 
 // Mock dependencies
 vi.mock('/models/index.mjs', () => ({
@@ -265,7 +265,7 @@ describe('ImageNamingService', () => {
       const sponsors = [];
       const users = [];
       const orphanFile = 'club-000002-logo-20240607-000123-001.jpg';
-      const { Club, Carnival, Sponsor, User } = await import('/models/index.mjs');
+      const { Club, Carnival, Sponsor, User } = await import('../../models/index.mjs');
       Club.findAll.mockResolvedValue(clubs);
       Carnival.findAll.mockResolvedValue(carnivals);
       Sponsor.findAll.mockResolvedValue(sponsors);
@@ -285,7 +285,7 @@ describe('ImageNamingService', () => {
       expect(result.orphaned[0].entityId).toBe(2);
     });
     it('handles directory errors', async () => {
-      const { Club, Carnival, Sponsor, User } = await import('/models/index.mjs');
+      const { Club, Carnival, Sponsor, User } = await import('../../models/index.mjs');
       Club.findAll.mockResolvedValue([]);
       Carnival.findAll.mockResolvedValue([]);
       Sponsor.findAll.mockResolvedValue([]);

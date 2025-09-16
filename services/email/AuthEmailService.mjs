@@ -1,5 +1,6 @@
 import { BaseEmailService } from './BaseEmailService.mjs';
-
+import { EmailSubscription } from '../../models/index.mjs';
+    
 /**
  * Authentication Email Service Class
  * Handles all authentication-related emails (password reset, welcome emails)
@@ -16,10 +17,23 @@ export class AuthEmailService extends BaseEmailService {
      * @returns {Object} Result object with success status
      */
     async sendWelcomeEmail(email, states) {
-        const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?email=${encodeURIComponent(email)}`;
-        
         // Handle both single state (string) and multiple states (array) for backward compatibility
         const stateArray = Array.isArray(states) ? states : [states];
+        
+        // Get the subscription record to retrieve the unsubscribe token
+        const subscription = await EmailSubscription.findOne({
+            where: { email: email }
+        });
+        
+        if (!subscription) {
+            console.error(`No subscription found for email: ${email}`);
+            return {
+                success: false,
+                message: 'Subscription not found for welcome email'
+            };
+        }
+        
+        const unsubscribeUrl = `${this._getBaseUrl()}/unsubscribe?token=${subscription.unsubscribeToken}`;
         
         let stateText;
         switch (stateArray.length) {
@@ -34,13 +48,16 @@ export class AuthEmailService extends BaseEmailService {
         }
         
         const mailOptions = {
-            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Welcome to Old Man Footy - Masters Carnival Notifications',
             html: this._buildWelcomeEmailHtml(stateText, stateArray, unsubscribeUrl)
         };
 
-        return await this.sendEmail(mailOptions, 'Welcome');
+        // Add unsubscribe headers
+        const enhancedMailOptions = this._addUnsubscribeHeaders(mailOptions, subscription.unsubscribeToken);
+
+        return await this.sendEmail(enhancedMailOptions, 'Welcome');
     }
 
     /**
@@ -54,7 +71,7 @@ export class AuthEmailService extends BaseEmailService {
         const resetUrl = `${this._getBaseUrl()}/auth/reset-password/${resetToken}`;
         
         const mailOptions = {
-            from: `"Old Man Footy" <${process.env.EMAIL_USER}>`,
+            from: `"Old Man Footy" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Password Reset Request - Old Man Footy',
             html: this._buildPasswordResetEmailHtml(firstName, resetUrl)
@@ -89,14 +106,14 @@ export class AuthEmailService extends BaseEmailService {
                     <p>You'll now receive email updates about:</p>
                     <ul>
                         <li>New rugby league carnivals ${stateText}</li>
-                        <li>Event updates and schedule changes</li>
+                        <li>Carnival updates and schedule changes</li>
                         <li>Registration reminders</li>
                         <li>Important announcements</li>
                     </ul>
                     
                     <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <h3 style="color: #006837; margin-top: 0;">What's Next?</h3>
-                        <p>Keep an eye on your inbox for upcoming carnival announcements. You can also visit our website anytime to browse current events and get the latest information.</p>
+                        <p>Keep an eye on your inbox for upcoming carnival announcements. You can also visit our website anytime to browse current carnivals and get the latest information.</p>
                         
                         <p><strong>Your subscription covers:</strong> ${stateArray.join(', ')}</p>
                     </div>

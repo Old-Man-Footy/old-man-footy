@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { editRegistrationManager } from '/public/js/carnival-edit-registration.js';
+import { editRegistrationManager } from '../../../public/js/carnival-edit-registration.js';
 
 describe('editRegistrationManager', () => {
   let originalConfirm;
@@ -43,7 +43,7 @@ describe('editRegistrationManager', () => {
   });
 
   describe('initialize', () => {
-    it('should set carnivalId and add event listener if button exists', () => {
+    it('should set carnivalId and add carnival listener if button exists', () => {
       const addEventListener = vi.fn();
       const querySelector = vi.fn().mockReturnValue({ addEventListener });
       global.document = { querySelector };
@@ -55,7 +55,7 @@ describe('editRegistrationManager', () => {
       expect(addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
     });
 
-    it('should not add event listener if button does not exist', () => {
+    it('should not add carnival listener if button does not exist', () => {
       const querySelector = vi.fn().mockReturnValue(null);
       global.document = { querySelector };
 

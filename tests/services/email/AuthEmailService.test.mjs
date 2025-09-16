@@ -6,11 +6,19 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AuthEmailService } from '/services/email/AuthEmailService.mjs';
-import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
+import { AuthEmailService } from '../../../services/email/AuthEmailService.mjs';
+import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
+import { EmailSubscription } from '../../../models/index.mjs';
 
 // Mock the BaseEmailService to prevent actual email sending
 vi.mock('/services/email/BaseEmailService.mjs');
+
+// Mock the EmailSubscription model
+vi.mock('../../../models/index.mjs', () => ({
+  EmailSubscription: {
+    findOne: vi.fn()
+  }
+}));
 
 describe('AuthEmailService', () => {
   let authEmailService;
@@ -31,7 +39,14 @@ describe('AuthEmailService', () => {
     BaseEmailService.prototype._createWarningBox = vi.fn((content) => `<div>${content}</div>`);
     BaseEmailService.prototype._getEmailContainerStyles = vi.fn().mockReturnValue('');
     BaseEmailService.prototype._getEmailContentStyles = vi.fn().mockReturnValue('');
+    BaseEmailService.prototype._addUnsubscribeHeaders = vi.fn((mailOptions, token) => ({ ...mailOptions, unsubscribeToken: token }));
 
+    // Mock EmailSubscription.findOne to return a subscription
+    EmailSubscription.findOne.mockResolvedValue({
+      email: 'test@example.com',
+      unsubscribeToken: 'mock-token-123',
+      isActive: true
+    });
 
     authEmailService = new AuthEmailService();
   });
@@ -53,7 +68,7 @@ describe('AuthEmailService', () => {
       expect(mailOptions.subject).toBe('Welcome to Old Man Footy - Masters Carnival Notifications');
       expect(mailOptions.html).toContain('Welcome to Old Man Footy!');
       expect(mailOptions.html).toContain('in NSW');
-      expect(mailOptions.html).toContain('href="http://localhost:3050/unsubscribe?email=test%40example.com"');
+      expect(mailOptions.html).toContain('href="http://localhost:3050/unsubscribe?token=mock-token-123"');
     });
 
     it('should send a welcome email with correct content for multiple states', async () => {

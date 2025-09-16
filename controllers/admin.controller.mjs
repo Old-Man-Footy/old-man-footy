@@ -70,7 +70,6 @@ const getAdminDashboardHandler = async (req, res) => {
             include: [{ model: Club, as: 'club' }]
         }),
         carnivals: await Carnival.findAll({
-            where: { isActive: true },
             limit: 5,
             order: [['createdAt', 'DESC']],
             include: [{ model: User, as: 'creator' }]
@@ -333,7 +332,7 @@ const issuePasswordResetHandler = async (req, res) => {
     });
 
     // Send password reset email
-    const resetUrl = `${process.env.BASE_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.APP_URL || 'http://localhost:3050'}/auth/reset-password/${resetToken}`;
     await AuthEmailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
 
     // Log successful password reset initiation
@@ -1080,21 +1079,21 @@ const generateReportHandler = async (req, res) => {
         },
         carnivals: {
             total: await Carnival.count({ where: { isActive: true } }),
-            upcoming: await Carnival.count({ 
-                where: { 
+            upcoming: await Carnival.count({
+                where: {
                     isActive: true,
-                    date: { [Op.gte]: new Date() } 
-                } 
+                    date: { [Op.gte]: new Date() }
+                }
             }),
-            past: await Carnival.count({ 
-                where: { 
+            past: await Carnival.count({
+                where: {
                     isActive: true,
-                    date: { [Op.lt]: new Date() } 
-                } 
+                    date: { [Op.lt]: new Date() }
+                }
             }),
             byState: await Carnival.findAll({
-                where: { isActive: true },
                 attributes: ['state', [fn('COUNT', '*'), 'count']],
+                where: { isActive: true },
                 group: ['state'],
                 raw: true
             })
@@ -1248,7 +1247,7 @@ const showClaimCarnivalFormHandler = async (req, res) => {
 
     // Check if carnival can be claimed (MySideline import with no owner)
     if (carnival.isManuallyEntered) {
-        req.flash('error_msg', 'Can only claim ownership of MySideline imported events');
+        req.flash('error_msg', 'Can only claim ownership of MySideline imported carnivals');
         return res.redirect('/admin/carnivals');
     }
 
@@ -1329,7 +1328,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
     }
 
     // Get all club registrations for this carnival with their players
-    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('/models/index.mjs');
+    const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('../models/index.mjs');
     const clubRegistrations = await CarnivalClub.findAll({
         where: {
             carnivalId: carnival.id,
@@ -1339,26 +1338,26 @@ const showCarnivalPlayersHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'club',
+                as: 'participatingClub',
                 attributes: ['id', 'clubName', 'state', 'location']
             },
             {
                 model: CarnivalClubPlayer,
-                as: 'players',
+                as: 'playerAssignments',
                 where: { isActive: true },
                 required: false,
                 include: [{
                     model: ClubPlayer,
                     as: 'clubPlayer',
                     where: { isActive: true },
-                    attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shortsColour', 'email', 'phoneNumber']
+                    attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'shorts', 'email', 'phoneNumber']
                 }]
             }
         ],
         order: [
-            ['club', 'clubName', 'ASC'],
-            ['players', 'clubPlayer', 'firstName', 'ASC'],
-            ['players', 'clubPlayer', 'lastName', 'ASC']
+            ['participatingClub', 'clubName', 'ASC'],
+            ['playerAssignments', 'clubPlayer', 'firstName', 'ASC'],
+            ['playerAssignments', 'clubPlayer', 'lastName', 'ASC']
         ]
     });
 
@@ -1368,22 +1367,22 @@ const showCarnivalPlayersHandler = async (req, res) => {
     let totalMastersEligible = 0;
 
     clubRegistrations.forEach(registration => {
-        if (registration.players && registration.players.length > 0) {
-            registration.players.forEach(playerAssignment => {
+        if (registration.playerAssignments && registration.playerAssignments.length > 0) {
+            registration.playerAssignments.forEach(playerAssignment => {
                 const player = playerAssignment.clubPlayer;
                 const isMastersEligible = player.dateOfBirth ? 
                     ClubPlayer.calculateAge(player.dateOfBirth) >= 35 : false;
                 
                 allPlayers.push({
                     id: player.id,
-                    clubName: registration.club.clubName,
-                    clubState: registration.club.state,
+                    clubName: registration.participatingClub.clubName,
+                    clubState: registration.participatingClub.state,
                     firstName: player.firstName,
                     lastName: player.lastName,
                     fullName: `${player.firstName} ${player.lastName}`,
                     dateOfBirth: player.dateOfBirth,
                     age: player.dateOfBirth ? ClubPlayer.calculateAge(player.dateOfBirth) : null,
-                    shortsColour: player.shortsColour || 'Not specified',
+                    shortsColour: player.shorts || 'Not specified',
                     attendanceStatus: playerAssignment.attendanceStatus,
                     isMastersEligible,
                     email: player.email,
@@ -1608,7 +1607,7 @@ const exportAuditLogsHandler = async (req, res) => {
 
     const csvRows = auditLogs.map(log => {
         const userName = log.user ? `${log.user.firstName} ${log.user.lastName}` : 'System';
-        const userEmail = log.user?.email || 'system@oldmanfooty.com';
+        const userEmail = log.user?.email || 'support@oldmanfooty.au';
         const hasChanges = !!(log.oldValues || log.newValues);
         
         return [
@@ -1678,7 +1677,7 @@ const getSponsorManagementHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'clubs',
+                as: 'club',
                 where: { isActive: true },
                 required: false,
                 attributes: ['id', 'clubName', 'state'],
@@ -1693,7 +1692,7 @@ const getSponsorManagementHandler = async (req, res) => {
     // Add club count to each sponsor
     const sponsorsWithStats = sponsors.map(sponsor => {
         const sponsorData = sponsor.toJSON();
-        sponsorData.clubCount = sponsorData.clubs ? sponsorData.clubs.length : 0;
+        sponsorData.clubCount = sponsorData.club ? 1 : 0;
         return sponsorData;
     });
 
@@ -1724,7 +1723,7 @@ const showEditSponsorHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'clubs',
+                as: 'club',
                 where: { isActive: true },
                 required: false,
                 attributes: ['id', 'clubName', 'state'],
@@ -1763,7 +1762,7 @@ const deleteSponsorHandler = async (req, res) => {
         include: [
             {
                 model: Club,
-                as: 'clubs',
+                as: 'club',
                 where: { isActive: true },
                 required: false,
                 attributes: ['id', 'clubName']
@@ -1784,7 +1783,7 @@ const deleteSponsorHandler = async (req, res) => {
     }
 
     // Check if sponsor has active club associations
-    const activeClubCount = sponsor.clubs ? sponsor.clubs.length : 0;
+    const activeClubCount = sponsor.club ? 1 : 0;
     let warningMessage = '';
     if (activeClubCount > 0) {
         warningMessage = ` Note: This sponsor is currently associated with ${activeClubCount} club(s). These relationships will be maintained but the sponsor will be hidden from public listings.`;
@@ -1838,12 +1837,12 @@ const deleteSponsorHandler = async (req, res) => {
 const syncMySidelineHandler = async (req, res) => {
     try {
         // Import MySideline service dynamically
-        const { default: mySidelineService } = await import('/services/mySidelineIntegrationService.mjs');
+        const { default: mySidelineService } = await import('../services/mySidelineIntegrationService.mjs');
         
         console.log(`🔄 Admin ${req.user.email} initiated manual MySideline sync`);
         
         // Trigger the sync
-        const result = await mySidelineService.syncMySidelineEvents();
+        const result = await mySidelineService.syncMySidelineCarnivals();
         
         // Log the admin action - using correct action constant
         await AuditService.logAdminAction(
@@ -1856,9 +1855,9 @@ const syncMySidelineHandler = async (req, res) => {
                     adminAction: 'Manual MySideline sync triggered',
                     syncResult: result ? {
                         success: result.success,
-                        eventsProcessed: result.eventsProcessed || 0,
-                        eventsCreated: result.eventsCreated || 0,
-                        eventsUpdated: result.eventsUpdated || 0
+                        carnivalsProcessed: result.carnivalsProcessed || 0,
+                        carnivalsCreated: result.carnivalsCreated || 0,
+                        carnivalsUpdated: result.carnivalsUpdated || 0
                     } : { success: false, error: 'No result returned' }
                 }
             }
@@ -1866,13 +1865,13 @@ const syncMySidelineHandler = async (req, res) => {
         
         if (result && result.success) {
             const message = `MySideline sync completed successfully! ` +
-                `Processed ${result.eventsProcessed || 0} events ` +
-                `(${result.eventsCreated || 0} new, ${result.eventsUpdated || 0} updated)`;
+                `Processed ${result.carnivalsProcessed || 0} carnivals ` +
+                `(${result.carnivalsCreated || 0} new, ${result.carnivalsUpdated || 0} updated)`;
             
             req.flash('success_msg', message);
-            console.log(`✅ Manual MySideline sync completed: ${result.eventsProcessed || 0} events processed`);
+            console.log(`✅ Manual MySideline sync completed: ${result.carnivalsProcessed || 0} carnivals processed`);
         } else {
-            const errorMessage = result?.error || 'Sync completed but no events were processed';
+            const errorMessage = result?.error || 'Sync completed but no carnivals were processed';
             req.flash('warning_msg', `MySideline sync completed with issues: ${errorMessage}`);
             console.log(`⚠️ MySideline sync completed with issues: ${errorMessage}`);
         }

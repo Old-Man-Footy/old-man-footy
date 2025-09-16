@@ -149,6 +149,124 @@ class CarnivalClubPlayer extends Model {
 
     return stats;
   }
+
+  /**
+   * Get players grouped by team for a carnival club registration
+   * @param {number} carnivalClubId - The carnival club registration ID
+   * @returns {Promise<Object>} Object with team numbers as keys and player arrays as values
+   */
+  static async getPlayersByTeam(carnivalClubId) {
+    const assignments = await this.findAll({
+      where: {
+        carnivalClubId: carnivalClubId,
+        isActive: true
+      },
+      include: [
+        {
+          model: ClubPlayer,
+          as: 'clubPlayer',
+          attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'position']
+        }
+      ],
+      order: [['teamNumber', 'ASC'], ['clubPlayer', 'lastName', 'ASC']]
+    });
+
+    const teams = {};
+    const unassigned = [];
+
+    assignments.forEach(assignment => {
+      const teamNumber = assignment.teamNumber;
+      const playerData = {
+        id: assignment.id,
+        clubPlayerId: assignment.clubPlayerId,
+        teamNumber: assignment.teamNumber,
+        attendanceStatus: assignment.attendanceStatus,
+        notes: assignment.notes,
+        player: assignment.clubPlayer
+      };
+
+      if (teamNumber === null || teamNumber === undefined) {
+        unassigned.push(playerData);
+      } else {
+        if (!teams[teamNumber]) {
+          teams[teamNumber] = [];
+        }
+        teams[teamNumber].push(playerData);
+      }
+    });
+
+    return { teams, unassigned };
+  }
+
+  /**
+   * Assign a player to a specific team
+   * @param {number} carnivalClubPlayerId - The carnival club player assignment ID
+   * @param {number} teamNumber - The team number to assign (1-numberOfTeams)
+   * @returns {Promise<CarnivalClubPlayer>} Updated assignment
+   */
+  static async assignToTeam(carnivalClubPlayerId, teamNumber) {
+    const assignment = await this.findByPk(carnivalClubPlayerId);
+    if (!assignment) {
+      throw new Error('Player assignment not found');
+    }
+
+    assignment.teamNumber = teamNumber;
+    await assignment.save();
+    return assignment;
+  }
+
+  /**
+   * Remove a player from their current team (set teamNumber to null)
+   * @param {number} carnivalClubPlayerId - The carnival club player assignment ID
+   * @returns {Promise<CarnivalClubPlayer>} Updated assignment
+   */
+  static async removeFromTeam(carnivalClubPlayerId) {
+    const assignment = await this.findByPk(carnivalClubPlayerId);
+    if (!assignment) {
+      throw new Error('Player assignment not found');
+    }
+
+    assignment.teamNumber = null;
+    await assignment.save();
+    return assignment;
+  }
+
+  /**
+   * Get team count statistics for a carnival club registration
+   * @param {number} carnivalClubId - The carnival club registration ID
+   * @returns {Promise<Object>} Object with team statistics
+   */
+  static async getTeamStats(carnivalClubId) {
+    const assignments = await this.findAll({
+      where: {
+        carnivalClubId: carnivalClubId,
+        isActive: true
+      },
+      attributes: ['teamNumber']
+    });
+
+    const stats = {
+      totalPlayers: assignments.length,
+      assignedPlayers: 0,
+      unassignedPlayers: 0,
+      teamCounts: {}
+    };
+
+    assignments.forEach(assignment => {
+      const teamNumber = assignment.teamNumber;
+      if (teamNumber === null || teamNumber === undefined) {
+        stats.unassignedPlayers++;
+      } else {
+        stats.assignedPlayers++;
+        if (!stats.teamCounts[teamNumber]) {
+          stats.teamCounts[teamNumber] = 0;
+        }
+        stats.teamCounts[teamNumber]++;
+      }
+    });
+
+    return stats;
+  }
 }
 
 /**
@@ -207,7 +325,7 @@ CarnivalClubPlayer.init({
     }
   },
   attendanceStatus: {
-    type: DataTypes.ENUM(...ATTENDANCE_STATUS_ARRAY),
+    type: DataTypes.STRING,
     defaultValue: 'confirmed',
     allowNull: false,
     validate: {
@@ -230,6 +348,37 @@ CarnivalClubPlayer.init({
       // Trim whitespace
       if (value) {
         this.setDataValue('notes', value.trim());
+      }
+    }
+  },
+  teamNumber: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      isInt: {
+        msg: 'Team number must be a valid integer'
+      },
+      min: {
+        args: [1],
+        msg: 'Team number must be at least 1'
+      },
+      async isValidTeamNumber(value) {
+        // Only validate if teamNumber is provided
+        if (value === null || value === undefined) {
+          return; // Allow null values
+        }
+
+        // Get the carnival club registration to check numberOfTeams
+        if (this.carnivalClubId) {
+          const { default: CarnivalClub } = await import('./CarnivalClub.mjs');
+          const carnivalClub = await CarnivalClub.findByPk(this.carnivalClubId);
+          
+          if (carnivalClub && carnivalClub.numberOfTeams) {
+            if (value > carnivalClub.numberOfTeams) {
+              throw new Error(`Team number cannot exceed ${carnivalClub.numberOfTeams} (number of registered teams)`);
+            }
+          }
+        }
       }
     }
   },
@@ -268,6 +417,10 @@ CarnivalClubPlayer.init({
     },
     {
       fields: ['attendanceStatus']
+    },
+    {
+      fields: ['teamNumber'],
+      name: 'idx_carnival_club_players_team_number'
     }
   ],
   hooks: {

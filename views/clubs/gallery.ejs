@@ -1,0 +1,54 @@
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/clubs">Clubs</a></li>
+                    <li class="breadcrumb-item"><a href="/clubs/<%= club.id %>"><%= club.clubName %></a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Gallery</li>
+                </ol>
+            </nav>
+
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-2"><%= club.clubName %> - Gallery</h1>
+                    <p class="text-muted mb-0">
+                        <% if (club.location) { %>
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            <%= club.location %>
+                        <% } %>
+                        <% if (club.state) { %>
+                            <span class="badge bg-secondary ms-2"><%= club.state %></span>
+                        <% } %>
+                    </p>
+                </div>
+                
+                <% if (user && canUpload) { %>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                            <i class="fas fa-upload me-1"></i>
+                            Upload Images
+                        </button>
+                        <a href="/clubs/<%= club.id %>" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Club
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+
+            <%- include('../partials/gallery', { 
+                images: images, 
+                pagination: pagination,
+                user: user, 
+                canUpload: canUpload, 
+                entity: club, 
+                entityType: 'club',
+                entityId: 'clubId'
+            }) %>
+        </div>
+    </div>
+</div>

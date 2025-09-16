@@ -1,4 +1,4 @@
-<div class="sponsor-header">
+<div class="sponsor-header" data-page-id="sponsors-show">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-3 text-center mb-3 mb-md-0">
@@ -23,10 +23,10 @@
                     </div>
                     <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
                         <div class="sponsor-action-buttons">
-                            <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-light">
+                            <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-tertiary">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
-                            <button class="btn btn-outline-light" data-action="delete-sponsor-btn">
+                            <button class="btn btn-outline-tertiary" data-action="delete-sponsor-btn">
                                 <i class="bi bi-trash"></i> Delete
                             </button>
                         </div>
@@ -131,30 +131,28 @@
                 </div>
             </div>
             
-            <!-- Associated Clubs Section -->
-            <% if (associatedClubs && associatedClubs.length > 0) { %>
+            <!-- Associated Club Section -->
+            <% if (club) { %>
                 <div class="sponsor-info-card">
-                    <h3 class="mb-4">Associated Clubs</h3>
+                    <h3 class="mb-4">Associated Club</h3>
                     <div class="row">
-                        <% associatedClubs.forEach(club => { %>
-                            <div class="col-md-6 mb-3">
-                                <a href="/clubs/<%= club.id %>" class="text-decoration-none">
-                                    <div class="card sponsor-club-card-hover">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center">
-                                                <% if (club.logoUrl) { %>
-                                                    <img src="<%= club.logoUrl %>" alt="<%= club.clubName %>" class="me-3 sponsor-club-logo">
-                                                <% } %>
-                                                <div>
-                                                    <h6 class="card-title mb-1 text-primary"><%= club.clubName %></h6>
-                                                    <small class="text-muted"><%= club.state %></small>
-                                                </div>
+                        <div class="col-md-12 mb-3">
+                            <a href="/clubs/<%= club.id %>" class="text-decoration-none">
+                                <div class="card sponsor-club-card-hover">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <% if (club.logoUrl) { %>
+                                                <img src="<%= club.logoUrl %>" alt="<%= club.clubName %>" class="me-3 sponsor-club-logo">
+                                            <% } %>
+                                            <div>
+                                                <h6 class="card-title mb-1 text-primary"><%= club.clubName %></h6>
+                                                <small class="text-muted"><%= club.state %><% if (club.location) { %> - <%= club.location %><% } %></small>
                                             </div>
                                         </div>
                                     </div>
-                                </a>
-                            </div>
-                        <% }); %>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             <% } %>
@@ -209,21 +207,29 @@
                 </div>
             <% } %>
             
-            <!-- Statistics -->
+            <!-- Sponsor Details -->
             <div class="sponsor-info-card">
-                <h4 class="mb-3">Statistics</h4>
+                <h4 class="mb-3 text-center">Sponsor Details</h4>
                 <div class="row text-center">
-                    <div class="col-6">
+                    <div class="col-6 d-flex flex-column align-items-center">
                         <div class="h3 text-primary mb-0">
                             <%= Math.floor((Date.now() - new Date(sponsor.createdAt)) / (1000 * 60 * 60 * 24)) %>
                         </div>
                         <small class="text-muted">Days Active</small>
                     </div>
-                    <div class="col-6">
+                    <div class="col-6 d-flex flex-column align-items-center">
                         <div class="h3 text-success mb-0">
-                            <%= associatedClubs ? associatedClubs.length : 0 %>
+                            <%= sponsor.sponsorshipLevel || 'Supporting' %>
                         </div>
-                        <small class="text-muted">Associated Clubs</small>
+                        <small class="text-muted">Sponsorship Level</small>
+                    </div>
+                </div>
+                <div class="row text-center mt-3">
+                    <div class="col-12">
+                        <span class="badge <%= sponsor.isActive ? 'bg-primary' : 'bg-secondary' %> fs-6">
+                            <i class="bi bi-<%= sponsor.isActive ? 'check-circle' : 'pause-circle' %>"></i>
+                            <%= sponsor.isActive ? 'Active' : 'Inactive' %>
+                        </span>
                     </div>
                 </div>
             </div>

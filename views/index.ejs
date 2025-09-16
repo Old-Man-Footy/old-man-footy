@@ -1,5 +1,5 @@
 <!-- Hero Section -->
-<section class="hero-banner bg-primary py-4">
+<section class="hero-banner bg-primary py-4" data-page-id="homepage">
     <div class="hero-background-pattern"></div>
     <div class="container position-relative">
         <div class="row align-items-center">
@@ -14,15 +14,15 @@
                     <div class="hero-description mb-4">
                         <p class="lead">The 'Old Man Footy' website is your central hub for discovering Masters (Over 35's)
                             Rugby League carnivals and clubs across Australia. find a local club, or explore carnivals 
-                            in local communities nationwide all with comprehensive event details readily available 
+                            in local communities nationwide all with comprehensive carnival details readily available 
                             to help you plan your next Masters trip.</p>
                     </div>
                     <div class="hero-actions d-flex gap-3 flex-wrap">
-                        <a href="/carnivals" class="btn btn-success btn-lg hero-btn">
+                        <a href="/carnivals" class="btn btn-tertiary btn-lg hero-btn">
                             <i class="bi bi-calendar-event"></i> View All Carnivals
                         </a>
                         <% if (!user) { %>
-                            <a href="/auth/register" class="btn btn-outline-success btn-lg hero-btn">
+                            <a href="/auth/register" class="btn btn-outline-tertiary btn-lg hero-btn">
                                 <i class="bi bi-person-plus"></i> Register as Club Delegate
                             </a>
                         <% } %>
@@ -46,7 +46,7 @@
             <div class="<%= stats.clubsCount >= 10 ? 'col-6 col-md-4' : 'col-6' %>">
                 <div class="stat-item-small">
                     <span class="stat-number-small"><%= stats.upcomingCount %></span>
-                    <span class="stat-label-small">Upcoming Events</span>
+                    <span class="stat-label-small">Upcoming Carnivals</span>
                 </div>
             </div>
             <% if (stats.clubsCount >= 10) { %>
@@ -82,10 +82,11 @@
                                                 <h6 class="card-title mb-2"><%= carnival.title %></h6>
                                                 <div class="mb-1">
                                                     <small class="text-muted">
-                                                        <i class="bi bi-calendar3"></i> 
-                                                        <%= carnival.date.toLocaleDateString('en-AU', { 
-                                                            month: 'short', 
-                                                            day: 'numeric' 
+                                                        <%- include('partials/carnival-date', { 
+                                                            carnival: carnival, 
+                                                            format: 'compact',
+                                                            showIcon: true,
+                                                            addClass: ''
                                                         }) %>
                                                     </small>
                                                 </div>
@@ -107,7 +108,7 @@
                                                         <i class="bi bi-eye"></i> View
                                                     </a>
                                                     <% if (carnival.registrationLink) { %>
-                                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-success btn-sm" target="_blank">
+                                                        <a href="<%= carnival.registrationLink %>" class="btn btn-outline-tertiary btn-sm" target="_blank">
                                                             <i class="bi bi-person-plus"></i> Register
                                                         </a>
                                                     <% } %>
@@ -154,20 +155,37 @@
             <div class="image-carousel" id="imageCarousel">
                 <div class="carousel-track-container">
                     <div class="carousel-track">
-                        <% carouselImages.forEach((image, index) => { %>
-                            <div class="carousel-slide <%= index === 0 ? 'current-slide' : '' %>" data-source="<%= image.source %>" data-type="<%= image.type %>">
-                                <div class="carousel-image-wrapper">
-                                    <img src="<%= image.url %>" alt="<%= image.source %> photo" class="carousel-image" loading="lazy">
-                                    <div class="carousel-image-overlay">
-                                        <div class="carousel-image-info">
-                                            <span class="badge bg-primary"><%= image.source %></span>
-                                            <% if (image.type === 'gallery') { %>
-                                                <span class="badge bg-secondary">Gallery</span>
-                                            <% } else if (image.type === 'promotional') { %>
-                                                <span class="badge bg-success">Promo</span>
-                                            <% } %>
+                        <% 
+                        // Group images into sets of 3 for the carousel
+                        const imageGroups = [];
+                        for (let i = 0; i < carouselImages.length; i += 3) {
+                            imageGroups.push(carouselImages.slice(i, i + 3));
+                        }
+                        %>
+                        <% imageGroups.forEach((group, groupIndex) => { %>
+                            <div class="carousel-slide <%= groupIndex === 0 ? 'current-slide' : '' %>" data-group="<%= groupIndex %>">
+                                <div class="carousel-images-group">
+                                    <% group.forEach((image, imageIndex) => { %>
+                                        <div class="carousel-image-wrapper">
+                                            <% 
+                                            // Determine gallery URL based on image entity type
+                                            let galleryUrl = '#';
+                                            if (image.entityType === 'carnival' && image.entityId) {
+                                                galleryUrl = `/carnivals/${image.entityId}/gallery`;
+                                            } else if (image.entityType === 'club' && image.entityId) {
+                                                galleryUrl = `/clubs/${image.entityId}/gallery`;
+                                            } else if (image.carnivalId) {
+                                                galleryUrl = `/carnivals/${image.carnivalId}/gallery`;
+                                            }
+                                            
+                                            // Use attribution for alt text with fallback
+                                            const altText = image.attribution || image.displayAttribution || 'Community gallery image';
+                                            %>
+                                            <a href="<%= galleryUrl %>" class="carousel-image-link">
+                                                <img src="<%= image.url %>" alt="<%= altText %>" class="carousel-image" loading="lazy">
+                                            </a>
                                         </div>
-                                    </div>
+                                    <% }) %>
                                 </div>
                             </div>
                         <% }) %>
@@ -184,16 +202,18 @@
                 
                 <!-- Dots indicator -->
                 <div class="carousel-nav">
-                    <% carouselImages.forEach((image, index) => { %>
-                        <button class="carousel-indicator <%= index === 0 ? 'current-slide' : '' %>" data-slide="<%= index %>"></button>
-                    <% }) %>
+                    <% 
+                    const totalGroups = Math.ceil(carouselImages.length / 3);
+                    for (let i = 0; i < totalGroups; i++) { %>
+                        <button class="carousel-indicator <%= i === 0 ? 'current-slide' : '' %>" data-slide="<%= i %>"></button>
+                    <% } %>
                 </div>
             </div>
         </div>
         
         <div class="text-center mt-3">
             <small class="text-muted">
-                Showing recent photos from carnivals, clubs, and sponsors • 
+                Showing   photos from recent carnivals • 
                 <span id="carouselStats"><%= carouselImages.length %> images</span>
             </small>
         </div>
@@ -264,19 +284,30 @@
 <!-- MySideline Integration Section -->
 <section class="py-5">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
+        <div class="row mb-4">
+            <div class="col-lg-8 mx-auto text-center">
                 <h2 class="h3 mb-4">Official Registration</h2>
                 <p class="mb-4">
-                    All official Masters Rugby League registrations are processed through MySideline. 
-                    Find and register for Masters carnivals across Australia.
+                    All official Masters Rugby League player and carnival registrations are processed through MySideline and PlayNRL respectively. Find and register for Masters carnivals across Australia.
                 </p>
-                <a href="<%= process.env.MYSIDELINE_URL || '#' %>" class="btn btn-success btn-lg" target="_blank">
-                    <i class="bi bi-box-arrow-up-right"></i> Register on MySideline
-                </a>
             </div>
-            <div class="col-lg-6 text-center">
-                <i class="bi bi-person-check display-1 text-success"></i>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="<%= process.env.MYSIDELINE_URL || '#' %>" class="btn btn-tertiary btn-lg" target="_blank">
+                        <i class="bi bi-box-arrow-up-right"></i> Player Registration
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="<%= process.env.PLAYNRL_REGISTRATION_URL || '#' %>" class="btn btn-tertiary btn-lg" target="_blank">
+                        <i class="bi bi-box-arrow-up-right"></i> Carnival Registration
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -284,3 +315,4 @@
 
 <script type="module" src="/js/index.js"></script>
 <script src="/js/state-selector.js"></script>
+<%- include('partials/help-modal.ejs', { modalId: 'help-index' }) %>

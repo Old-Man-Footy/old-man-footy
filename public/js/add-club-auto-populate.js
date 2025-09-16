@@ -33,7 +33,7 @@ export const addClubManager = {
     },
 
     /**
-     * Handles the 'change' event on the club select dropdown.
+     * Handles the 'change' carnival on the club select dropdown.
      * @param {HTMLSelectElement} selectElement - The select element that triggered the change.
      */
     handleClubChange(selectElement) {

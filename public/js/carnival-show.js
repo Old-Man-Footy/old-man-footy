@@ -12,7 +12,6 @@ export const carnivalShowManager = {
         this.bindEvents();
         this.initializeCarnivalShowPage();
         // Back-compat for any inline handlers still in views
-        window.acknowledgeAndClose = () => this.acknowledgeAndClose();
         window.confirmMerge = () => this.confirmMerge();
     },
 
@@ -24,11 +23,14 @@ export const carnivalShowManager = {
         this.elements.messageTextarea = document.getElementById('message');
         this.elements.charCount = document.getElementById('charCount');
 
+        // Email attendees modal elements
+        this.elements.emailAttendeesForm = document.getElementById('emailAttendeesForm');
+        this.elements.emailSubject = document.getElementById('emailSubject');
+        this.elements.customMessage = document.getElementById('customMessage');
+        this.elements.sendEmailBtn = document.getElementById('sendEmailBtn');
+
         // Post-creation modal elements
         this.elements.postCreationModal = document.getElementById('postCreationModal');
-        this.elements.nrlCheckbox = document.getElementById('nrlAcknowledge');
-        this.elements.mysidelineCheckbox = document.getElementById('mysidelineAcknowledge');
-        this.elements.acknowledgeButton = document.getElementById('acknowledgeButton');
 
         // Admin status toggle buttons
         this.elements.statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
@@ -50,6 +52,16 @@ export const carnivalShowManager = {
 
         if (this.elements.emailForm) {
             this.elements.emailForm.addEventListener('submit', this.handleEmailFormSubmit);
+        }
+
+        // Email attendees form
+        if (this.elements.emailAttendeesForm) {
+            this.elements.emailAttendeesForm.addEventListener('submit', this.handleEmailAttendeesSubmit);
+        }
+
+        // Character count for custom message
+        if (this.elements.customMessage) {
+            this.elements.customMessage.addEventListener('input', this.handleCustomMessageInput);
         }
 
         if (this.elements.statusToggleButtons && this.elements.statusToggleButtons.length) {
@@ -175,6 +187,83 @@ export const carnivalShowManager = {
         }
     },
 
+    /** Handle email attendees form submission */
+    handleEmailAttendeesSubmit: (e) => {
+        const form = e.currentTarget;
+        const submitButton = carnivalShowManager.elements.sendEmailBtn;
+        const subject = carnivalShowManager.elements.emailSubject?.value?.trim();
+        const message = carnivalShowManager.elements.customMessage?.value?.trim();
+
+        // Validate required fields
+        if (!subject || !message) {
+            e.preventDefault();
+            alert('Please fill in both the subject and message fields.');
+            return false;
+        }
+
+        // Validate length limits
+        if (subject.length > 200) {
+            e.preventDefault();
+            alert('Subject must be 200 characters or less.');
+            return false;
+        }
+
+        if (message.length > 2000) {
+            e.preventDefault();
+            alert('Message must be 2000 characters or less.');
+            return false;
+        }
+
+        // Update button state during submission
+        if (submitButton) {
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+            submitButton.disabled = true;
+            
+            // Reset button state after timeout (fallback)
+            setTimeout(() => {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }, 15000);
+        }
+
+        return true;
+    },
+
+    /** Handle character count for custom message field */
+    handleCustomMessageInput: (e) => {
+        const textarea = e.currentTarget;
+        const currentLength = textarea.value.length;
+        const maxLength = 2000;
+        
+        // Find existing character counter
+        let counter = textarea.parentNode.querySelector('.char-counter');
+        if (!counter) {
+            // Create counter if it doesn't exist
+            counter = document.createElement('span');
+            counter.className = 'char-counter text-muted';
+            
+            // Try to add it to form-text div
+            const formText = textarea.parentNode.querySelector('.form-text');
+            if (formText) {
+                formText.appendChild(counter);
+            } else {
+                textarea.parentNode.appendChild(counter);
+            }
+        }
+        
+        counter.textContent = `${currentLength}/${maxLength}`;
+        
+        // Update color based on usage
+        if (currentLength > maxLength * 0.95) {
+            counter.className = 'char-counter text-danger';
+        } else if (currentLength > maxLength * 0.8) {
+            counter.className = 'char-counter text-warning';
+        } else {
+            counter.className = 'char-counter text-muted';
+        }
+    },
+
     /** Initialize post-creation modal and acknowledge logic */
     initializePostCreationModal() {
         const modalEl = this.elements.postCreationModal;
@@ -184,17 +273,6 @@ export const carnivalShowManager = {
 
         const modal = new bootstrap.Modal(modalEl);
         modal.show();
-
-        const updateButtonState = () => {
-            if (!this.elements.acknowledgeButton) return;
-            const nrl = !!(this.elements.nrlCheckbox && this.elements.nrlCheckbox.checked);
-            const mys = !!(this.elements.mysidelineCheckbox && this.elements.mysidelineCheckbox.checked);
-            this.elements.acknowledgeButton.disabled = !(nrl && mys);
-        };
-
-        if (this.elements.nrlCheckbox) this.elements.nrlCheckbox.addEventListener('change', updateButtonState);
-        if (this.elements.mysidelineCheckbox) this.elements.mysidelineCheckbox.addEventListener('change', updateButtonState);
-        updateButtonState();
     },
 
     /** Placeholder for future merge confirmation init (kept for parity) */
@@ -251,22 +329,6 @@ export const carnivalShowManager = {
                 button.disabled = false;
             }
         });
-    },
-
-    /** Acknowledge and close post-creation modal */
-    acknowledgeAndClose() {
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const instance = bootstrap.Modal.getInstance(document.getElementById('postCreationModal'));
-            if (instance) instance.hide();
-        }
-
-        const url = new URL(window.location);
-        url.searchParams.delete('showPostCreationModal');
-        try {
-            window.history.replaceState({}, document.title, url.toString());
-        } catch (_) {
-            // ignore in test environments without full URL support
-        }
     },
 
     /** Confirm merge operation flow */

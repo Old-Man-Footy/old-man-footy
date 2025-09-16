@@ -59,10 +59,10 @@ export const clubAutocompleteManager = {
         clubAutocompleteManager.clearValidationErrors();
     },
 
-    handleClickOutside: (event) => {
+    handleClickOutside: (carnival) => {
         const el = clubAutocompleteManager.elements;
         if (!el.clubNameInput || !el.clubSuggestions) return;
-        if (!el.clubNameInput.contains(event.target) && !el.clubSuggestions.contains(event.target)) {
+        if (!el.clubNameInput.contains(carnival.target) && !el.clubSuggestions.contains(carnival.target)) {
             clubAutocompleteManager.hideSuggestions();
         }
     },

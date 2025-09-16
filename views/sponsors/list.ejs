@@ -1,9 +1,4 @@
-<%- contentFor('title') %>
-Sponsors - Old Man Footy
-
-<%- contentFor('styles') %>
-
-<div class="container-fluid">
+<div class="container" data-page-id="sponsors-list">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -12,6 +7,7 @@ Sponsors - Old Man Footy
                 <div>
                     <a href="/sponsors/new" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Add Sponsor
+                <%- include('../partials/help-modal.ejs', { modalId: 'help-sponsors-list' }) %>
                     </a>
                 </div>
                 <% } %>
@@ -94,8 +90,8 @@ Sponsors - Old Man Footy
                             <div class="sponsor-info">
                                 <div class="sponsor-name"><%= sponsor.sponsorName %></div>
                                 
-                                <span class="sponsor-tier tier-<%= sponsor.sponsorshipLevel ? sponsor.sponsorshipLevel.toLowerCase() : 'bronze' %>">
-                                    <%= sponsor.sponsorshipLevel || 'Bronze' %>
+                                <span class="sponsor-tier sponsor-tier-<%= sponsor.sponsorshipLevel ? sponsor.sponsorshipLevel.toLowerCase().replace(/\s+/g, '-') : 'supporting' %>">
+                                    <%= sponsor.sponsorshipLevel || 'Supporting' %>
                                 </span>
                                 
                                 <% if (sponsor.businessType) { %>

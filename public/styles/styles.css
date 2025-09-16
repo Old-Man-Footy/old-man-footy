@@ -240,12 +240,44 @@ a[class*="btn"]:focus,
     border-top-color: var(--theme-text-primary) !important;
 }
 
+/* Dark mode button overrides */
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] a.btn-primary,
+[data-theme="dark"] .btn.btn-primary {
+    background-color: var(--rugby-green) !important;
+    border-color: var(--rugby-green) !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .btn-primary:hover,
+[data-theme="dark"] .btn-primary:focus,
+[data-theme="dark"] .btn-primary:active,
+[data-theme="dark"] a.btn-primary:hover,
+[data-theme="dark"] a.btn-primary:focus,
+[data-theme="dark"] a.btn-primary:active {
+    background-color: var(--rugby-dark-green) !important;
+    border-color: var(--rugby-dark-green) !important;
+    color: white !important;
+}
+
+/* Ensure text is always visible on primary buttons in dark mode */
+[data-theme="dark"] .btn-primary *,
+[data-theme="dark"] a.btn-primary *,
+[data-theme="dark"] .btn.btn-primary * {
+    color: white !important;
+}
+
 /* Info Section Enhancements */
 .bg-info,
 .card-header.bg-info {
     background-color: var(--info) !important;
     border-left-color: var(--rugby-light-green) !important;
     color: var(--rugby-dark-green) !important;
+}
+
+.bg-blue {
+    background-color: blue !important;
+    border-left-color: darkblue !important;
 }
 
 /* Ensure text color is applied with higher specificity */
@@ -272,13 +304,18 @@ a[class*="btn"]:focus,
     box-shadow: var(--shadow);
 }
 
+a.btn-primary,
 .btn.btn-primary,
-.btn-primary {
+.btn-primary,
+.btn-check:checked + .btn-outline-primary {
     background-color: var(--rugby-green);
     border-color: var(--rugby-green);
     color: white;
 }
 
+a.btn-primary:hover,
+a.btn-primary:focus,
+a.btn-primary:active,
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active {
@@ -288,11 +325,36 @@ a[class*="btn"]:focus,
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
 }
 
+a.btn-secondary,
+.btn.btn-secondary,
+.btn-secondary,
+.btn-check:checked + .btn-outline-secondary {
+    background-color: var(--rugby-dark-green);
+    border-color: var(--rugby-dark-green);
+    color: white;
+}
+
+a.btn-primary:hover,
+a.btn-primary:focus,
+a.btn-primary:active,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--rugby-green);
+    border-color: var(--rugby-green);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25);
+}
+
+a.btn-outline-primary,
 .btn-outline-primary {
     color: var(--rugby-green);
     border-color: var(--rugby-green);
 }
 
+a.btn-outline-primary:hover,
+a.btn-outline-primary:focus,
+a.btn-outline-primary:active,
 .btn-outline-primary:hover,
 .btn-outline-primary:focus,
 .btn-outline-primary:active,
@@ -305,46 +367,97 @@ a[class*="btn"]:focus,
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
 }
 
+a.btn-outline-primary:focus,
 .btn-outline-primary:focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
 }
 
-.btn-success {
+a.btn-outline-secondary,
+.btn-outline-secondary {
+    color: var(--rugby-dark-green);
+    border-color: var(--rugby-dark-green);
+}
+
+a.btn-outline-secondary:hover,
+a.btn-outline-secondary:focus,
+a.btn-outline-secondary:active,
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active,
+.btn-outline-secondary:not(:disabled):not(.disabled):active,
+.btn-outline-secondary:not(:disabled):not(.disabled).active,
+.show > .btn-outline-secondary.dropdown-toggle {
+    background-color: var(--rugby-dark-green) !important;
+    border-color: var(--rugby-dark-green) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 104, 55, 0.25) !important;
+}
+
+a.btn-tertiary,
+.btn-tertiary,
+.btn-check:checked + .btn-outline-tertiary {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
     color: var(--rugby-dark-green);
     font-weight: 600;
 }
 
-.btn-success:hover,
-.btn-success:focus,
-.btn-success:active {
+a.btn-tertiary:hover,
+a.btn-tertiary:focus,
+a.btn-tertiary:active,
+.btn-tertiary:hover,
+.btn-tertiary:focus,
+.btn-tertiary:active {
     background-color: #e6c200;
     border-color: #e6c200;
     color: var(--rugby-dark-green);
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
-.btn-outline-success {
+a.btn-outline-tertiary,
+.btn-outline-tertiary {
     color: var(--rugby-gold);
     border-color: var(--rugby-gold);
 }
 
-.btn-outline-success:hover,
-.btn-outline-success:focus,
-.btn-outline-success:active {
+a.btn-outline-tertiary:hover,
+a.btn-outline-tertiary:focus,
+a.btn-outline-tertiary:active,    
+.btn-outline-tertiary:hover,
+.btn-outline-tertiary:focus,
+.btn-outline-tertiary:active {
     background-color: var(--rugby-gold);
     border-color: var(--rugby-gold);
-    color: var(--rugby-dark-green);
+    color: var(--rugby-dark-green) !important;
     box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
 }
 
+a.btn-outline-danger,
+.btn-outline-danger {
+    color: red;
+    border-color: red;
+}
+
+a.btn-outline-danger:hover,
+.btn-outline-danger:hover,
+a.btn-outline-danger:focus,
+.btn-outline-danger:focus,
+a.btn-outline-danger:active,
+.btn-outline-danger:active {
+    background-color: red;
+    border-color: red;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+}
+
+a.btn-group-sm,
 .btn-group-sm .btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
 }
 
 /* Registration Buttons */
+a.btn-register,
 .btn-register,
 .registration-btn,
 a[href*="/auth/register"],
@@ -362,6 +475,9 @@ button[type="submit"]:contains("Complete Registration"),
     border-radius: 0.5rem;
 }
 
+a.btn-register:hover,
+a.btn-register:focus,
+a.btn-register:active,
 .btn-register:hover,
 .btn-register:focus,
 .btn-register:active,
@@ -455,6 +571,40 @@ button[type="submit"]:contains("Complete Registration"):focus {
 
 [data-theme="dark"] .rugby-masters-card:hover {
     box-shadow: 0 0 20px rgba(0, 104, 55, 0.6) !important;
+}
+
+/* Dark mode bg-light styling */
+[data-theme="dark"] .bg-light {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .card-body.bg-light {
+    background-color: var(--theme-bg-secondary) !important;
+    color: var(--theme-text-primary) !important;
+}
+
+/* Ensure proper text colors in dark mode bg-light sections */
+[data-theme="dark"] .bg-light h1,
+[data-theme="dark"] .bg-light h2,
+[data-theme="dark"] .bg-light h3,
+[data-theme="dark"] .bg-light h4,
+[data-theme="dark"] .bg-light h5,
+[data-theme="dark"] .bg-light h6,
+[data-theme="dark"] .card-body.bg-light h1,
+[data-theme="dark"] .card-body.bg-light h2,
+[data-theme="dark"] .card-body.bg-light h3,
+[data-theme="dark"] .card-body.bg-light h4,
+[data-theme="dark"] .card-body.bg-light h5,
+[data-theme="dark"] .card-body.bg-light h6 {
+    color: var(--theme-text-primary) !important;
+}
+
+[data-theme="dark"] .bg-light p,
+[data-theme="dark"] .bg-light .text-muted,
+[data-theme="dark"] .card-body.bg-light p,
+[data-theme="dark"] .card-body.bg-light .text-muted {
+    color: var(--theme-text-secondary) !important;
 }
 
 /* Clickable Dashboard Stat Card Styling */
@@ -660,7 +810,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 [data-theme="dark"] .col-md-6 h5,
 [data-theme="dark"] .col-md-6 .d-flex span,
 [data-theme="dark"] .col-md-6 span:not(.badge):not(.text-primary) {
-    color: var(--theme-text-primary) !important;
+    color: var(--theme-text-primary);
 }
 
 [data-theme="dark"] .social-links .btn {
@@ -680,7 +830,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-tertiary) 100%);
 }
 
-[data-theme="dark"] .py-4.bg-light {
+[data-theme="dark"] .py-4.bg-tertiary {
     background-color: var(--theme-bg-secondary) !important;
 }
 
@@ -720,6 +870,35 @@ button[type="submit"]:contains("Complete Registration"):focus {
     margin: 0;
     color: #6c757d;
     font-weight: 500;
+}
+
+.file-upload-area.file-selected {
+    border-color: var(--rugby-green);
+    background-color: var(--rugby-light-green);
+}
+
+.file-upload-area.file-selected .upload-text {
+    color: var(--rugby-green);
+    font-weight: 600;
+}
+
+/* Logo Uploader Component */
+.logo-preview-image {
+    height: 150px;
+    object-fit: contain;
+    background: #f8f9fa;
+}
+
+.logo-uploader-no-logo {
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Dark theme logo uploader styles */
+[data-theme="dark"] .logo-preview-image {
+    background: var(--theme-bg-tertiary);
 }
 
 /* Form Enhancements */
@@ -841,6 +1020,37 @@ button[type="submit"]:contains("Complete Registration"):focus {
     border-radius: 0 !important;
 }
 
+/* Shorts Color Badge Classes */
+.badge-shorts-red {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.badge-shorts-blue {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+.badge-shorts-green {
+    background-color: #198754 !important;
+    color: white !important;
+}
+
+.badge-shorts-yellow {
+    background-color: #ffc107 !important;
+    color: black !important;
+}
+
+.badge-shorts-unrestricted {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+/* Icon utility classes */
+.icon-large {
+    font-size: 1.2em;
+}
+
 /* Hero Section Enhancements */
 .hero-section,
 .bg-primary {
@@ -848,7 +1058,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: white;
 }
 
-.bg-success {
+.bg-tertiary {
     background: linear-gradient(135deg, var(--rugby-gold) 0%, #e6c200 100%) !important;
 }
 
@@ -947,28 +1157,28 @@ button[type="submit"]:contains("Complete Registration"):focus {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
-.hero-btn.btn-success {
+.hero-btn.btn-tertiary {
     background: linear-gradient(45deg, var(--rugby-gold), #f0c800);
     border: none;
     color: var(--rugby-dark-green);
 }
 
-.hero-btn.btn-success:hover {
+.hero-btn.btn-tertiary:hover {
     background: linear-gradient(45deg, #f0c800, var(--rugby-gold));
     color: var(--rugby-dark-green);
 }
 
-.hero-btn.btn-outline-success {
+.hero-btn.btn-outline-tertiary {
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid var(--rugby-gold);
     color: var(--rugby-gold);
     backdrop-filter: blur(10px);
 }
 
-.hero-btn.btn-outline-success:hover {
+.hero-btn.btn-outline-tertiary:hover {
     background: var(--rugby-gold);
     border-color: var(--rugby-gold);
-    color: var(--rugby-dark-green);
+    color: var(--rugby-dark-green) !important;
 }
 
 /* Animation Keyframes */
@@ -1049,8 +1259,8 @@ button[type="submit"]:contains("Complete Registration"):focus {
 .social-links a {
     margin-right: 12px;
     margin-bottom: 8px;
-    background-color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(0,0,0,0.1);
+    /* background-color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(0,0,0,0.1); */
 }
 
 .social-links a:hover,
@@ -1188,21 +1398,33 @@ button[type="submit"]:contains("Complete Registration"):focus {
     list-style: none;
     position: relative;
     height: 100%;
-    transition: transform 250ms ease-in;
 }
 
 .carousel-slide {
     position: absolute;
     top: 0;
+    left: 0;
     bottom: 0;
+    right: 0;
     width: 100%;
     height: 100%;
     opacity: 0;
-    transition: opacity 250ms ease-in-out;
+    visibility: hidden;
+    transition: opacity 600ms ease-in-out, visibility 600ms ease-in-out;
+    will-change: opacity;
 }
 
 .carousel-slide.current-slide {
     opacity: 1;
+    visibility: visible;
+}
+
+.carousel-images-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    height: 100%;
+    padding: 1rem;
 }
 
 .carousel-image-wrapper {
@@ -1210,6 +1432,16 @@ button[type="submit"]:contains("Complete Registration"):focus {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-image-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
 }
 
 .carousel-image {
@@ -1327,11 +1559,23 @@ button[type="submit"]:contains("Complete Registration"):focus {
 /* Responsive Carousel */
 @media (max-width: 768px) {
     .image-carousel { height: 300px; }
+    .carousel-images-group {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
     .carousel-button { width: 40px; height: 40px; padding: 0.75rem; }
     .carousel-button--left { left: 0.5rem; }
     .carousel-button--right { right: 0.5rem; }
     .carousel-image-overlay { padding: 0.75rem; }
     .carousel-image-info .badge { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+}
+
+@media (max-width: 992px) and (min-width: 769px) {
+    .carousel-images-group {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1340,14 +1584,19 @@ button[type="submit"]:contains("Complete Registration"):focus {
     .carousel-button i { font-size: 1rem; }
 }
 
+/* Dark Mode Carousel Styling */
+[data-theme="dark"] .carousel-images-group {
+    background-color: var(--theme-bg-primary);
+}
+
 /* Email Subscription Section */
 #subscribe,
-.bg-light {
+.bg-tertiary {
     background-color: var(--theme-bg-secondary) !important;
 }
 
 [data-theme="dark"] #subscribe,
-[data-theme="dark"] .bg-light {
+[data-theme="dark"] .bg-tertiary {
     background-color: var(--theme-bg-secondary) !important;
 }
 
@@ -1791,4 +2040,294 @@ button[type="submit"]:contains("Complete Registration"):focus {
         max-height: 60vh;
         border-radius: 0.5rem;
     }
+}
+
+/* ==========================================================================
+   Help Modal Styles
+   ========================================================================== */
+
+/* Help Modal Container */
+#global-help-modal .modal-dialog {
+    max-width: 700px;
+    margin: 2rem auto;
+}
+
+/* Help Modal Content */
+#global-help-modal .modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* Help Modal Header */
+#global-help-modal .modal-header {
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem 2rem;
+    position: relative;
+}
+
+#global-help-modal .modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(135deg, var(--rugby-green) 0%, var(--rugby-dark-green) 100%);
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+}
+
+#global-help-modal .modal-title {
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#global-help-modal .modal-title::before {
+    content: "💡";
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+#global-help-modal .btn-close {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    width: 2.75rem;
+    height: 2.75rem;
+    opacity: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: none;
+    border: none;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+#global-help-modal .btn-close:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.05) rotate(90deg);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+#global-help-modal .btn-close:active {
+    transform: scale(0.95);
+    transition: all 0.1s ease;
+}
+
+#global-help-modal .btn-close::before,
+#global-help-modal .btn-close::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 2px;
+    background: var(--rugby-dark-green);
+    border-radius: 1px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#global-help-modal .btn-close::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+#global-help-modal .btn-close::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+#global-help-modal .btn-close:hover::before,
+#global-help-modal .btn-close:hover::after {
+    background: var(--rugby-green);
+    width: 20px;
+}
+
+/* Help Modal Body */
+#global-help-modal .modal-body {
+    padding: 2rem;
+    background: var(--theme-card-bg);
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--theme-text-primary);
+}
+
+/* Help Content Typography */
+#global-help-modal .modal-body h1,
+#global-help-modal .modal-body h2,
+#global-help-modal .modal-body h3,
+#global-help-modal .modal-body h4,
+#global-help-modal .modal-body h5,
+#global-help-modal .modal-body h6 {
+    color: var(--rugby-dark-green);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+#global-help-modal .modal-body h2 {
+    font-size: 1.4rem;
+    border-bottom: 2px solid var(--rugby-gold);
+    padding-bottom: 0.5rem;
+}
+
+#global-help-modal .modal-body h3 {
+    font-size: 1.25rem;
+    color: var(--rugby-green);
+}
+
+#global-help-modal .modal-body p {
+    margin-bottom: 1.25rem;
+    color: var(--theme-text-primary);
+}
+
+#global-help-modal .modal-body ul,
+#global-help-modal .modal-body ol {
+    margin-bottom: 1.25rem;
+    padding-left: 1.75rem;
+}
+
+#global-help-modal .modal-body li {
+    margin-bottom: 0.5rem;
+    color: var(--theme-text-primary);
+}
+
+#global-help-modal .modal-body li::marker {
+    color: var(--rugby-green);
+}
+
+/* Help Content Code and Pre-formatted Text */
+#global-help-modal .modal-body code {
+    background: rgba(var(--rugby-green), 0.1);
+    color: var(--rugby-dark-green);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.9rem;
+    border: 1px solid rgba(var(--rugby-green), 0.2);
+}
+
+#global-help-modal .modal-body pre {
+    background: var(--theme-bg-tertiary);
+    border: 1px solid var(--theme-border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+
+/* Help Content Links */
+#global-help-modal .modal-body a {
+    color: var(--rugby-link-green);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+#global-help-modal .modal-body a:hover {
+    color: var(--rugby-link-green-hover);
+    border-bottom-color: var(--rugby-gold);
+    text-decoration: none;
+}
+
+/* Help Content Blockquotes */
+#global-help-modal .modal-body blockquote {
+    border-left: 4px solid var(--rugby-gold);
+    background: rgba(var(--rugby-gold), 0.1);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-style: italic;
+}
+
+/* Help Content Tables */
+#global-help-modal .modal-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    background: var(--theme-card-bg);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#global-help-modal .modal-body th,
+#global-help-modal .modal-body td {
+    padding: 0.875rem;
+    text-align: left;
+    border-bottom: 1px solid var(--theme-border-color);
+}
+
+#global-help-modal .modal-body th {
+    background: var(--rugby-green);
+    color: white;
+    font-weight: 600;
+}
+
+#global-help-modal .modal-body tr:last-child td {
+    border-bottom: none;
+}
+
+#global-help-modal .modal-body tr:hover {
+    background: var(--theme-bg-secondary);
+}
+
+/* Help Modal Responsive Design */
+@media (max-width: 768px) {
+    #global-help-modal .modal-dialog {
+        margin: 1rem;
+        max-width: none;
+    }
+    
+    #global-help-modal .modal-header {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    #global-help-modal .modal-title {
+        font-size: 1.25rem;
+    }
+    
+    #global-help-modal .modal-body {
+        padding: 1.5rem;
+        font-size: 0.95rem;
+    }
+}
+
+/* Help Modal Animation */
+#global-help-modal.fade .modal-dialog {
+    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+    transform: translate(0, -50px) scale(0.95);
+}
+
+#global-help-modal.show .modal-dialog {
+    transform: none;
+}
+
+/* Dark Theme Support for Help Modal */
+[data-theme="dark"] #global-help-modal .modal-body {
+    background: var(--theme-card-bg);
+    color: var(--theme-text-primary);
+}
+
+[data-theme="dark"] #global-help-modal .modal-body code {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--rugby-gold);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+[data-theme="dark"] #global-help-modal .modal-body blockquote {
+    background: rgba(255, 215, 0, 0.1);
+}
+
+[data-theme="dark"] #global-help-modal .modal-body th {
+    background: var(--rugby-dark-green);
+}
+
+/* File Input Hidden Utility */
+.file-input-hidden {
+    display: none !important;
 }

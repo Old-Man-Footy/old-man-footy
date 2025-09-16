@@ -5,7 +5,7 @@
  * 
  * Data captured on: 2025-07-18T08:56:09.414Z
  * Source: MySideline website (live data)
- * Events captured: 2
+ * Carnivals captured: 2
  * 
  * ⚠️  This file contains REAL data captured from MySideline.
  * DO NOT modify manually - regenerate using: node scripts/capture-mysideline-data.mjs
@@ -21,12 +21,12 @@ export const MYSIDELINE_CAPTURED_HTML = `
     <title>MySideline - Masters Rugby League</title>
 </head>
 <body>
-    <div class="event-list">
-        <div class="event-item" data-event-id="123456789">
+    <div class="carnival-list">
+        <div class="carnival-item" data-carnival-id="123456789">
             <h3>Masters Rugby League Carnival 2025 - QLD</h3>
             <p>Redcliffe, QLD</p>
         </div>
-        <div class="event-item" data-event-id="987654321">
+        <div class="carnival-item" data-carnival-id="987654321">
             <h3>NSW Masters Championship 2025</h3>
             <p>Sydney, NSW</p>
         </div>
@@ -35,8 +35,8 @@ export const MYSIDELINE_CAPTURED_HTML = `
 </html>
 `;
 
-// Real events captured from MySideline
-export const MYSIDELINE_CAPTURED_EVENTS = [
+// Real carnivals captured from MySideline
+export const MYSIDELINE_CAPTURED_CARNIVALS = [
     {
         "title": "Masters Rugby League Carnival 2025",
         "mySidelineId": "123456789",
@@ -77,7 +77,7 @@ export const MYSIDELINE_CAPTURED_RESPONSES = {
         status: 200,
         ok: true,
         text: () => Promise.resolve(MYSIDELINE_CAPTURED_HTML),
-        json: () => Promise.resolve({ events: MYSIDELINE_CAPTURED_EVENTS })
+        json: () => Promise.resolve({ carnivals: MYSIDELINE_CAPTURED_CARNIVALS })
     },
     
     NETWORK_ERROR: {
@@ -107,32 +107,32 @@ export function createCapturedMockFetch(scenario = 'SUCCESS') {
 }
 
 /**
- * Helper function to get captured events with custom modifications
+ * Helper function to get captured carnivals with custom modifications
  * @param {Object} overrides - Properties to override in the captured data
- * @returns {Array} Modified captured events
+ * @returns {Array} Modified captured carnivals
  */
-export function getCapturedEvents(overrides = {}) {
-    return MYSIDELINE_CAPTURED_EVENTS.map(event => ({
-        ...event,
+export function getCapturedCarnivals(overrides = {}) {
+    return MYSIDELINE_CAPTURED_CARNIVALS.map(carnival => ({
+        ...carnival,
         ...overrides
     }));
 }
 
 /**
- * Database test data derived from captured events
+ * Database test data derived from captured carnivals
  */
 export const MYSIDELINE_DB_TEST_DATA = {
-    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_EVENTS.map(event => ({
-        title: event.title,
-        mySidelineId: event.mySidelineId,
-        mySidelineTitle: event.mySidelineTitle,
-        mySidelineAddress: event.mySidelineAddress,
-        mySidelineDate: event.mySidelineDate,
-        date: event.date,
-        locationAddress: event.locationAddress,
-        state: event.state,
-        organiserContactEmail: event.organiserContactEmail,
-        description: event.description,
+    EXPECTED_CARNIVALS: MYSIDELINE_CAPTURED_CARNIVALS.map(carnival => ({
+        title: carnival.title,
+        mySidelineId: carnival.mySidelineId,
+        mySidelineTitle: carnival.mySidelineTitle,
+        mySidelineAddress: carnival.mySidelineAddress,
+        mySidelineDate: carnival.mySidelineDate,
+        date: carnival.date,
+        locationAddress: carnival.locationAddress,
+        state: carnival.state,
+        organiserContactEmail: carnival.organiserContactEmail,
+        description: carnival.description,
         isActive: true,
         source: 'MySideline'
     }))
@@ -140,9 +140,9 @@ export const MYSIDELINE_DB_TEST_DATA = {
 
 export default {
     MYSIDELINE_CAPTURED_HTML,
-    MYSIDELINE_CAPTURED_EVENTS,
+    MYSIDELINE_CAPTURED_CARNIVALS,
     MYSIDELINE_CAPTURED_RESPONSES,
     MYSIDELINE_DB_TEST_DATA,
     createCapturedMockFetch,
-    getCapturedEvents
+    getCapturedCarnivals
 };

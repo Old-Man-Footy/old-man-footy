@@ -18,7 +18,7 @@ export const editRegistrationManager = {
         }
     },
 
-    // Handles the click event on the remove button.
+    // Handles the click carnival on the remove button.
     handleRemoveClick(button) {
         const { registrationId, clubName } = button.dataset;
         if (confirm(`Are you sure you want to remove "${clubName}" from this carnival?`)) {

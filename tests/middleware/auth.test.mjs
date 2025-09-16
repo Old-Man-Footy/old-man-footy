@@ -34,7 +34,7 @@ const {
   requireAdmin,
   requireAdminOrPrimaryDelegate,
   requireDelegate
-} = await import('/middleware/auth.mjs');
+} = await import('../../middleware/auth.mjs');
 
 describe('Authentication Middleware', () => {
   let mockReq, mockRes, mockNext;

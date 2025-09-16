@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { clubUpload, handleUploadError } from '../middleware/upload.mjs';
+import { clubUpload, sponsorUpload, handleUploadError } from '../middleware/upload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as clubController from '../controllers/club.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
@@ -76,7 +76,53 @@ router.get('/manage/sponsors', ensureAuthenticated, clubController.showClubSpons
 
 // Add new sponsor or link existing sponsor to club
 router.get('/manage/sponsors/add', ensureAuthenticated, clubController.showAddSponsor);
-router.post('/manage/sponsors/add', ensureAuthenticated, clubController.addSponsorToClub);
+router.post('/manage/sponsors/add', ensureAuthenticated, sponsorUpload, handleUploadError, [
+    body('sponsorName').trim().isLength({ min: 2, max: 200 }).withMessage('Sponsor name must be between 2 and 200 characters'),
+    body('businessType').optional().trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
+    body('location').optional().trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
+    body('state').optional().isIn(AUSTRALIAN_STATES).withMessage('Invalid state selection'),
+    body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
+    body('contactPerson').optional().trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
+    body('contactEmail').optional().custom((email) => {
+        if (email && email.trim()) {
+            const result = validateSecureEmail(email);
+            if (!result.isValid) {
+                throw new Error(result.errors[0]);
+            }
+        }
+        return true;
+    }),
+    body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
+    body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
+    body('twitterUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required')
+], clubController.addSponsorToClub);
+
+// Edit sponsor for club
+router.get('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsor);
+router.post('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, sponsorUpload, handleUploadError, [
+    body('sponsorName').trim().isLength({ min: 2, max: 200 }).withMessage('Sponsor name must be between 2 and 200 characters'),
+    body('businessType').optional().trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
+    body('location').optional().trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
+    body('state').optional().isIn(AUSTRALIAN_STATES).withMessage('Invalid state selection'),
+    body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
+    body('contactPerson').optional().trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
+    body('contactEmail').optional().custom((email) => {
+        if (email && email.trim()) {
+            const result = validateSecureEmail(email);
+            if (!result.isValid) {
+                throw new Error(result.errors[0]);
+            }
+        }
+        return true;
+    }),
+    body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
+    body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
+    body('twitterUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required')
+], clubController.updateClubSponsor);
 
 // Remove sponsor from club
 router.post('/manage/sponsors/:sponsorId/remove', ensureAuthenticated, clubController.removeSponsorFromClub);
@@ -111,6 +157,9 @@ router.post('/:id/claim', ensureAuthenticated, clubController.postClaimOwnership
 
 // Public club listings - MUST come before /:id route
 router.get('/', clubController.showClubListings);
+
+// Club gallery (public) - MUST come before /:id route
+router.get('/:id/gallery', clubController.viewClubGallery);
 
 // Individual club profile (public) - MUST come LAST as it catches all /:id patterns
 router.get('/:id', clubController.showClubProfile);

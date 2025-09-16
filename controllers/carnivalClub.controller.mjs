@@ -14,6 +14,89 @@ import CarnivalEmailService from '../services/email/CarnivalEmailService.mjs';
 import { APPROVAL_STATUS } from '../config/constants.mjs';
 
 /**
+ * Calculate total registration fees for a carnival registration
+ * @param {Object} carnival - Carnival instance with fee fields
+ * @param {number} numberOfTeams - Number of teams registering
+ * @param {number} confirmedPlayerCount - Number of confirmed players (optional)
+ * @returns {number} Total calculated fee
+ */
+const calculateRegistrationFees = (carnival, numberOfTeams = 1, confirmedPlayerCount = 0) => {
+  const teamFee = parseFloat(carnival.teamRegistrationFee) || 0;
+  const perPlayerFee = parseFloat(carnival.perPlayerFee) || 0;
+  
+  const totalTeamFees = teamFee * numberOfTeams;
+  const totalPlayerFees = perPlayerFee * confirmedPlayerCount;
+  
+  return totalTeamFees + totalPlayerFees;
+};
+
+/**
+ * Get count of confirmed players for a carnival club registration
+ * @param {number} carnivalClubId - The carnival club registration ID
+ * @returns {Promise<number>} Number of confirmed players
+ */
+const getConfirmedPlayerCount = async (carnivalClubId) => {
+  const confirmedCount = await CarnivalClubPlayer.count({
+    where: {
+      carnivalClubId: carnivalClubId,
+      attendanceStatus: 'confirmed',
+      isActive: true
+    }
+  });
+  
+  return confirmedCount;
+};
+
+/**
+ * Recalculate and update registration fees for a carnival club registration
+ * @param {number} carnivalClubId - The carnival club registration ID
+ * @returns {Promise<void>}
+ */
+const recalculateRegistrationFees = async (carnivalClubId) => {
+  // Get the registration
+  const registration = await CarnivalClub.findByPk(carnivalClubId, {
+    include: [{
+      model: Carnival,
+      as: 'carnival',
+      attributes: ['id', 'teamRegistrationFee', 'perPlayerFee', 'clubId']
+    }]
+  });
+  
+  if (!registration || !registration.carnival) {
+    return;
+  }
+  
+  // Skip fee calculation for hosting clubs (they have exemption)
+  const isHostingClub = registration.carnival.clubId && 
+                       parseInt(registration.clubId) === registration.carnival.clubId;
+  
+  if (isHostingClub) {
+    // Hosting club fees are always 0
+    await registration.update({
+      paymentAmount: 0.00,
+      isPaid: true,
+      paymentDate: registration.isPaid ? registration.paymentDate : new Date()
+    });
+    return;
+  }
+  
+  // Get confirmed player count
+  const confirmedPlayerCount = await getConfirmedPlayerCount(carnivalClubId);
+  
+  // Calculate new fee based on confirmed players only
+  const newPaymentAmount = calculateRegistrationFees(
+    registration.carnival, 
+    registration.numberOfTeams || 1, 
+    confirmedPlayerCount
+  );
+  
+  // Update the registration with new payment amount
+  await registration.update({
+    paymentAmount: newPaymentAmount
+  });
+};
+
+/**
  * Show carnival attendees management page (for carnival organizers)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -53,7 +136,7 @@ const showCarnivalAttendeesHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         where: { isActive: true },
         attributes: ['id', 'clubName', 'state', 'location', 'logoUrl'],
       },
@@ -69,6 +152,9 @@ const showCarnivalAttendeesHandler = async (req, res) => {
   const totalAttendees = attendingClubs.length;
   const paidAttendees = attendingClubs.filter((cc) => cc.isPaid).length;
   const totalPlayerCount = attendingClubs.reduce((sum, cc) => sum + (cc.playerCount || 0), 0);
+  const totalTeams = attendingClubs
+    .filter((cc) => cc.approvalStatus === 'approved')
+    .reduce((sum, cc) => sum + (cc.numberOfTeams || 1), 0);
 
   return res.render('carnivals/attendees', {
     title: `${carnival.title} - Manage Attendees`,
@@ -77,6 +163,7 @@ const showCarnivalAttendeesHandler = async (req, res) => {
     totalAttendees,
     paidAttendees,
     totalPlayerCount,
+    totalTeams,
     attendanceStats,
     additionalCSS: ['/styles/carnival.styles.css'],
   });
@@ -172,6 +259,7 @@ const registerClubForCarnivalHandler = async (req, res) => {
   const {
     clubId,
     playerCount,
+    numberOfTeams,
     teamName,
     contactPerson,
     contactEmail,
@@ -196,6 +284,13 @@ const registerClubForCarnivalHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/attendees`);
   }
 
+  // Validate that the club exists before proceeding
+  const club = await Club.findByPk(clubId);
+  if (!club) {
+    req.flash('error_msg', 'Club not found');
+    return res.redirect(`/carnivals/${carnivalId}/attendees`);
+  }
+
   // Get current count for display order
   const currentCount = await CarnivalClub.count({
     where: {
@@ -204,30 +299,42 @@ const registerClubForCarnivalHandler = async (req, res) => {
     },
   });
 
-  // Create the registration
+  // Create the registration with hosting club fee exemption logic
+  const isHostingClub = carnival.clubId && parseInt(clubId) === carnival.clubId;
+  let finalPaymentAmount = paymentAmount ? parseFloat(paymentAmount) : null;
+  let finalIsPaid = isPaid === 'on';
+  
+  // Apply hosting club fee exemption
+  if (isHostingClub) {
+    finalPaymentAmount = 0.00; // Hosting clubs are exempt from all registration fees
+    finalIsPaid = true; // Auto-mark as paid since there's no fee
+  } else if (!finalPaymentAmount) {
+    // If no payment amount provided, calculate based on carnival fee structure
+    // Note: For new registrations, use total player count as no confirmed players exist yet
+    const teamsCount = numberOfTeams ? parseInt(numberOfTeams) : 1;
+    const playersCount = playerCount ? parseInt(playerCount) : 0;
+    finalPaymentAmount = calculateRegistrationFees(carnival, teamsCount, playersCount);
+  }
+
   const registrationData = {
     carnivalId: parseInt(carnivalId),
     clubId: parseInt(clubId),
     playerCount: playerCount ? parseInt(playerCount) : null,
+    numberOfTeams: numberOfTeams ? parseInt(numberOfTeams) : 1,
     teamName: teamName?.trim() || null,
     contactPerson: contactPerson?.trim() || null,
     contactEmail: contactEmail?.trim() || null,
     contactPhone: contactPhone?.trim() || null,
     specialRequirements: specialRequirements?.trim() || null,
     registrationNotes: registrationNotes?.trim() || null,
-    paymentAmount: paymentAmount ? parseFloat(paymentAmount) : null,
-    isPaid: isPaid === 'on',
-    paymentDate: isPaid === 'on' ? new Date() : null,
+    paymentAmount: finalPaymentAmount,
+    isPaid: finalIsPaid,
+    paymentDate: finalIsPaid ? new Date() : null,
     displayOrder: currentCount + 1,
     approvalStatus: 'approved', // Host club adding clubs directly = auto-approved
   };
 
   const registration = await CarnivalClub.create(registrationData);
-
-  // Get club name for success message
-  const club = await Club.findByPk(clubId, {
-    attributes: ['clubName'],
-  });
 
   req.flash(
     'success_msg',
@@ -269,7 +376,7 @@ const showEditRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -281,7 +388,7 @@ const showEditRegistrationHandler = async (req, res) => {
   }
 
   return res.render('carnivals/edit-registration', {
-    title: `Edit Registration - ${registration.club.clubName}`,
+    title: `Edit Registration - ${registration.participatingClub.clubName}`,
     carnival,
     registration,
     additionalCSS: ['/styles/carnival.styles.css'],
@@ -333,6 +440,7 @@ const updateRegistrationHandler = async (req, res) => {
 
   const {
     playerCount,
+    numberOfTeams,
     teamName,
     contactPerson,
     contactEmail,
@@ -346,6 +454,7 @@ const updateRegistrationHandler = async (req, res) => {
   // Prepare update data
   const updateData = {
     playerCount: playerCount ? parseInt(playerCount) : null,
+    numberOfTeams: numberOfTeams ? parseInt(numberOfTeams) : 1,
     teamName: teamName?.trim() || null,
     contactPerson: contactPerson?.trim() || null,
     contactEmail: contactEmail?.trim() || null,
@@ -404,7 +513,7 @@ const removeClubFromCarnivalHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['clubName'],
       },
     ],
@@ -422,7 +531,7 @@ const removeClubFromCarnivalHandler = async (req, res) => {
 
   return res.json({
     success: true,
-    message: `${registration.club.clubName} has been removed from the carnival.`,
+    message: `${registration.participatingClub.clubName} has been removed from the carnival.`,
   });
 };
 
@@ -549,7 +658,7 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     attributes: ['clubName'],
   });
 
-  const { playerCount, teamName, contactPerson, contactEmail, contactPhone, specialRequirements } =
+  const { playerCount, numberOfTeams, teamName, contactPerson, contactEmail, contactPhone, specialRequirements } =
     req.body;
 
   // Get current count for display order
@@ -560,30 +669,53 @@ const registerMyClubForCarnivalHandler = async (req, res) => {
     },
   });
 
+  // Apply hosting club fee exemption logic for self-registration
+  const isHostingClub = carnival.clubId && user.clubId === carnival.clubId;
+  let finalPaymentAmount = null; // Self-registrations typically have no upfront payment
+  let finalIsPaid = false;
+  let finalApprovalStatus = 'pending';
+  
+  // Hosting club self-registrations get fee exemption
+  if (isHostingClub) {
+    finalPaymentAmount = 0.00; // Hosting clubs are exempt from all registration fees
+    finalIsPaid = true; // Auto-mark as paid since there's no fee
+    finalApprovalStatus = 'approved'; // Hosting club auto-approves their own registration
+  } else {
+    // Calculate fees for non-hosting clubs based on carnival fee structure
+    // Note: For new registrations, use total player count as no confirmed players exist yet
+    const teamsCount = numberOfTeams ? parseInt(numberOfTeams) : 1;
+    const playersCount = playerCount ? parseInt(playerCount) : 0;
+    finalPaymentAmount = calculateRegistrationFees(carnival, teamsCount, playersCount);
+  }
+
   // Create the registration with delegate's information
   const registrationData = {
     carnivalId: parseInt(carnivalId),
     clubId: user.clubId,
     playerCount: playerCount ? parseInt(playerCount) : null,
+    numberOfTeams: numberOfTeams ? parseInt(numberOfTeams) : 1,
     teamName: teamName?.trim() || null,
     contactPerson: contactPerson?.trim() || `${user.firstName} ${user.lastName}`,
     contactEmail: contactEmail?.trim() || user.email,
     contactPhone: contactPhone?.trim() || null,
     specialRequirements: specialRequirements?.trim() || null,
     registrationNotes: `Self-registered by ${user.firstName} ${user.lastName} (${user.email})`,
-    isPaid: false, // Delegates register unpaid by default
-    paymentDate: null,
+    paymentAmount: finalPaymentAmount,
+    isPaid: finalIsPaid, // Delegates register unpaid by default, except hosting clubs
+    paymentDate: finalIsPaid ? new Date() : null,
     displayOrder: currentCount + 1,
     registrationDate: new Date(),
-    approvalStatus: 'pending', // Self-registrations need approval
+    approvalStatus: finalApprovalStatus, // Self-registrations need approval, except hosting clubs
   };
 
   await CarnivalClub.create(registrationData);
 
-  req.flash(
-    'success_msg',
-    `${club.clubName} has registered interest to attend ${carnival.title}! Your registration is pending approval from the hosting club. You'll be notified once approved.`
-  );
+  // Different messages for hosting vs non-hosting clubs
+  const successMessage = isHostingClub 
+    ? `${club.clubName} has been successfully registered for ${carnival.title}! As the hosting club, your registration has been automatically approved.`
+    : `${club.clubName} has registered interest to attend ${carnival.title}! Your registration is pending approval from the hosting club. You'll be notified once approved.`;
+
+  req.flash('success_msg', successMessage);
   return res.redirect(`/carnivals/${carnivalId}`);
 };
 
@@ -691,7 +823,7 @@ const showCarnivalClubPlayersHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -725,12 +857,35 @@ const showCarnivalClubPlayersHandler = async (req, res) => {
   // Get attendance statistics
   const attendanceStats = await CarnivalClubPlayer.getAttendanceStats(registrationId);
 
+  // Get already assigned player IDs
+  const assignedPlayerIds = await CarnivalClubPlayer.findAll({
+    where: {
+      carnivalClubId: registrationId,
+      isActive: true,
+    },
+    attributes: ['clubPlayerId'],
+  }).then((results) => results.map((r) => r.clubPlayerId));
+
+  // Get available players from the club (for determining if Add Players button should be shown)
+  const availablePlayers = await ClubPlayer.findAll({
+    where: {
+      clubId: registration.participatingClub.id,
+      isActive: true,
+      id: { [Op.notIn]: assignedPlayerIds },
+    },
+    order: [
+      ['firstName', 'ASC'],
+      ['lastName', 'ASC'],
+    ],
+  });
+
   return res.render('carnivals/club-players', {
-    title: `Players - ${registration.club.clubName}`,
+    title: `Players - ${registration.participatingClub.clubName}`,
     carnival,
     registration,
     assignedPlayers,
     attendanceStats,
+    availablePlayers,
     additionalCSS: ['/styles/carnival.styles.css'],
   });
 };
@@ -768,7 +923,7 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -791,7 +946,7 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
   // Get available players from the club
   const availablePlayers = await ClubPlayer.findAll({
     where: {
-      clubId: registration.club.id,
+      clubId: registration.participatingClub.id,
       isActive: true,
       id: { [Op.notIn]: assignedPlayerIds },
     },
@@ -802,7 +957,7 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
   });
 
   return res.render('carnivals/add-players', {
-    title: `Add Players - ${registration.club.clubName}`,
+    title: `Add Players - ${registration.participatingClub.clubName}`,
     carnival,
     registration,
     availablePlayers,
@@ -1003,6 +1158,9 @@ const updatePlayerAttendanceStatusHandler = async (req, res) => {
     notes: notes?.trim() || null,
   });
 
+  // Recalculate fees if player status changed to/from confirmed
+  await recalculateRegistrationFees(registrationId);
+
   return res.json({
     success: true,
     message: 'Player attendance status updated successfully.',
@@ -1047,7 +1205,7 @@ const showMyClubPlayersForCarnivalHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['id', 'clubName', 'state', 'location'],
       },
     ],
@@ -1058,7 +1216,10 @@ const showMyClubPlayersForCarnivalHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}`);
   }
 
-  // Get assigned players
+  // Get assigned players organized by teams
+  const { teams, unassigned } = await CarnivalClubPlayer.getPlayersByTeam(registration.id);
+  
+  // Get traditional flat list for backward compatibility
   const assignedPlayers = await CarnivalClubPlayer.findAll({
     where: {
       carnivalClubId: registration.id,
@@ -1092,12 +1253,32 @@ const showMyClubPlayersForCarnivalHandler = async (req, res) => {
     ],
   });
 
+  // Generate team names and structure for multi-team display
+  const teamData = [];
+  const clubName = registration.participatingClub.clubName;
+  
+  if (registration.numberOfTeams > 1) {
+    for (let i = 1; i <= registration.numberOfTeams; i++) {
+      const teamName = `${clubName} ${i}`;
+      const teamPlayers = teams[i] || [];
+      teamData.push({
+        teamNumber: i,
+        teamName: teamName,
+        players: teamPlayers,
+        playerCount: teamPlayers.length
+      });
+    }
+  }
+
   return res.render('carnivals/my-club-players', {
     title: `Manage Players - ${carnival.title}`,
     carnival,
     registration,
     assignedPlayers,
     availablePlayers,
+    teams: teamData,
+    unassignedPlayers: unassigned,
+    isMultiTeam: registration.numberOfTeams > 1,
     additionalCSS: ['/styles/carnival.styles.css'],
   });
 };
@@ -1137,8 +1318,11 @@ const addPlayersToMyClubRegistrationHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}`);
   }
 
-  const { playerIds } = req.body;
+  const { playerIds, teamNumber } = req.body;
   const selectedPlayerIds = Array.isArray(playerIds) ? playerIds : [playerIds];
+
+  // Parse team number for multi-team assignments
+  const assignedTeamNumber = teamNumber && teamNumber !== '' ? parseInt(teamNumber) : null;
 
   // Verify all selected players belong to user's club
   const validPlayers = await ClubPlayer.findAll({
@@ -1154,11 +1338,12 @@ const addPlayersToMyClubRegistrationHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/register/players`);
   }
 
-  // Create player assignments
+  // Create player assignments with team number if specified
   const assignments = selectedPlayerIds.map((playerId) => ({
     carnivalClubId: registration.id,
     clubPlayerId: parseInt(playerId),
     attendanceStatus: 'confirmed',
+    teamNumber: assignedTeamNumber,
     addedAt: new Date(),
   }));
 
@@ -1208,7 +1393,7 @@ const approveClubRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['clubName', 'contactEmail'],
       },
     ],
@@ -1237,16 +1422,20 @@ const approveClubRegistrationHandler = async (req, res) => {
   });
 
   // Send approval notification email
-  
-  await CarnivalEmailService.sendRegistrationApprovalEmail(
-    carnival,
-    registration.club,
-    `${user.firstName} ${user.lastName}`
-  );
+  try {
+    await CarnivalEmailService.sendRegistrationApproval(
+      carnival,
+      registration.participatingClub,
+      `${user.firstName} ${user.lastName}`
+    );
+  } catch (emailError) {
+    console.warn('Failed to send approval email:', emailError.message);
+    // Continue execution - registration was successful even if email failed
+  }
 
   return res.json({
     success: true,
-    message: `${registration.club.clubName} has been approved to attend ${carnival.title}.`,
+    message: `${registration.participatingClub.clubName} has been approved to attend ${carnival.title}.`,
   });
 };
 
@@ -1286,7 +1475,7 @@ const rejectClubRegistrationHandler = async (req, res) => {
     include: [
       {
         model: Club,
-        as: 'club',
+        as: 'participatingClub',
         attributes: ['clubName', 'contactEmail'],
       },
     ],
@@ -1315,16 +1504,21 @@ const rejectClubRegistrationHandler = async (req, res) => {
   });
 
   // Send rejection notification email
-  await CarnivalEmailService.sendRegistrationRejectionEmail(
-    carnival,
-    registration.club,
-    `${user.firstName} ${user.lastName}`,
-    rejectionReason
-  );
+  try {
+    await CarnivalEmailService.sendRegistrationRejection(
+      carnival,
+      registration.participatingClub,
+      `${user.firstName} ${user.lastName}`,
+      rejectionReason
+    );
+  } catch (emailError) {
+    console.warn('Failed to send rejection email:', emailError.message);
+    // Continue execution - registration was successful even if email failed
+  }
 
   return res.json({
     success: true,
-    message: `${registration.club.clubName}'s registration has been rejected.`,
+    message: `${registration.participatingClub.clubName}'s registration has been rejected.`,
   });
 };
 
@@ -1395,6 +1589,125 @@ class CarnivalClubController {
   }
 }
 
+/**
+ * Assign a player to a specific team number
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const assignPlayerToTeamHandler = async (req, res) => {
+  const { carnivalId, assignmentId } = req.params;
+  const { teamNumber } = req.body;
+  const user = req.user;
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid team assignment.',
+      errors: errors.array()
+    });
+  }
+
+  // Ensure user has a club
+  if (!user.clubId) {
+    return res.status(403).json({
+      success: false,
+      message: 'You must be associated with a club to manage players.'
+    });
+  }
+
+  // Get the player assignment and verify ownership
+  const assignment = await CarnivalClubPlayer.findOne({
+    where: { id: assignmentId },
+    include: [
+      {
+        model: CarnivalClub,
+        as: 'carnivalClub',
+        where: {
+          carnivalId: carnivalId,
+          clubId: user.clubId,
+          isActive: true
+        }
+      }
+    ]
+  });
+
+  if (!assignment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Player assignment not found or you do not have permission to modify it.'
+    });
+  }
+
+  // Parse and validate team number (null or empty string means unassigned)
+  const parsedTeamNumber = teamNumber && teamNumber !== '' ? parseInt(teamNumber) : null;
+
+  // Update the team assignment
+  await assignment.update({
+    teamNumber: parsedTeamNumber
+  });
+
+  return res.json({
+    success: true,
+    message: parsedTeamNumber 
+      ? `Player assigned to team ${parsedTeamNumber}.` 
+      : 'Player unassigned from team.',
+    teamNumber: parsedTeamNumber
+  });
+};
+
+/**
+ * Unassign a player from their current team
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const unassignPlayerFromTeamHandler = async (req, res) => {
+  const { carnivalId, assignmentId } = req.params;
+  const user = req.user;
+
+  // Ensure user has a club
+  if (!user.clubId) {
+    return res.status(403).json({
+      success: false,
+      message: 'You must be associated with a club to manage players.'
+    });
+  }
+
+  // Get the player assignment and verify ownership
+  const assignment = await CarnivalClubPlayer.findOne({
+    where: { id: assignmentId },
+    include: [
+      {
+        model: CarnivalClub,
+        as: 'carnivalClub',
+        where: {
+          carnivalId: carnivalId,
+          clubId: user.clubId,
+          isActive: true
+        }
+      }
+    ]
+  });
+
+  if (!assignment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Player assignment not found or you do not have permission to modify it.'
+    });
+  }
+
+  // Unassign from team
+  await assignment.update({
+    teamNumber: null
+  });
+
+  return res.json({
+    success: true,
+    message: 'Player unassigned from team.',
+    teamNumber: null
+  });
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
   showCarnivalAttendeesHandler,
@@ -1413,6 +1726,8 @@ const rawControllers = {
   updatePlayerAttendanceStatusHandler,
   showMyClubPlayersForCarnivalHandler,
   addPlayersToMyClubRegistrationHandler,
+  assignPlayerToTeamHandler,
+  unassignPlayerFromTeamHandler,
   approveClubRegistrationHandler,
   rejectClubRegistrationHandler,
   updateApprovalStatus: CarnivalClubController.prototype.updateApprovalStatus,
@@ -1436,7 +1751,12 @@ export const {
   updatePlayerAttendanceStatusHandler: updatePlayerAttendanceStatus,
   showMyClubPlayersForCarnivalHandler: showMyClubPlayersForCarnival,
   addPlayersToMyClubRegistrationHandler: addPlayersToMyClubRegistration,
+  assignPlayerToTeamHandler: assignPlayerToTeam,
+  unassignPlayerFromTeamHandler: unassignPlayerFromTeam,
   approveClubRegistrationHandler: approveClubRegistration,
   rejectClubRegistrationHandler: rejectClubRegistration,
   updateApprovalStatus: updateApprovalStatus,
 } = wrapControllers(rawControllers);
+
+// Export utility functions for use by other controllers and tests
+export { recalculateRegistrationFees, calculateRegistrationFees, getConfirmedPlayerCount };

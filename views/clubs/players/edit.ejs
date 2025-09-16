@@ -1,4 +1,4 @@
-<div class="container-fluid py-4">
+<div class="container py-4" data-page-id="clubs-players-edit">
   <!-- Page Header -->
   <div class="row mb-4">
     <div class="col-md-12">
@@ -219,7 +219,7 @@
           <div class="mb-3">
             <h6 class="text-primary mb-2">Masters Eligibility</h6>
             <% if (player.isMastersEligible()) { %>
-              <span class="badge bg-success">
+              <span class="badge bg-primary">
                 <i class="bi bi-check-circle me-1"></i>Eligible for Masters
               </span>
             <% } else { %>
@@ -241,13 +241,13 @@
               <strong>Shorts Preference:</strong> 
               <% 
                 const shortsColorMap = {
-                  'Unrestricted': { bg: 'bg-secondary', text: 'text-white' },
+                  'Unrestricted': { bg: 'bg-dark', text: 'text-white' },
                   'Red': { bg: 'bg-danger', text: 'text-white' },
-                  'Yellow': { bg: 'bg-warning', text: 'text-dark' },
-                  'Blue': { bg: 'bg-primary', text: 'text-white' },
-                  'Green': { bg: 'bg-success', text: 'text-white' }
+                  'Yellow': { bg: 'bg-tertiary', text: 'text-dark' },
+                  'Blue': { bg: 'bg-blue', text: 'text-white' },
+                  'Green': { bg: 'bg-primary', text: 'text-white' }
                 };
-                const colorStyle = shortsColorMap[player.shorts || 'Unrestricted'] || shortsColorMap['Unrestricted'];
+                const colorStyle = shortsColorMap[player.shorts || 'Unrestricted'] || shortsColorMap['Unrestricted']  ;
               %>
               <span class="badge <%= colorStyle.bg %> <%= colorStyle.text %>">
                 <%= player.shorts || 'Unrestricted' %>
@@ -255,7 +255,7 @@
             </p>
             <p class="small text-muted mb-0">
               <strong>Status:</strong> 
-              <span class="badge bg-success">Active</span>
+              <span class="badge bg-primary">Active</span>
             </p>
           </div>
 

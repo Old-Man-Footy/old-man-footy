@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { InvitationEmailService } from '/services/email/InvitationEmailService.mjs';
-import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
+import { InvitationEmailService } from '../../../services/email/InvitationEmailService.mjs';
+import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
 
 // Mock dependencies
 vi.mock('/services/email/BaseEmailService.mjs');

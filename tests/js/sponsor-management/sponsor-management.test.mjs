@@ -42,7 +42,7 @@ describe('sponsor-management.js', () => {
     const prevent = vi.fn();
     vi.spyOn(sponsorManagementManager, 'safeConfirm').mockReturnValue(false);
     form.dispatchEvent(new Event('submit', { cancelable: true }));
-    // Since we can't easily capture defaultPrevented with jsdom's Event, we assert safeConfirm was called
+    // Since we can't easily capture defaultPrevented with jsdom's Carnival, we assert safeConfirm was called
     expect(sponsorManagementManager.safeConfirm).toHaveBeenCalled();
   });
 });

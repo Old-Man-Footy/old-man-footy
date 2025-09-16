@@ -1,6 +1,6 @@
 <!-- Uses shared carnival styles in /styles/carnival.styles.css -->
 
-<div class="container py-4">
+<div class="container py-4" data-page-id="carnivals-all-players">
     <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12">
@@ -17,10 +17,10 @@
                     <h1 class="h3 mb-2">All Players</h1>
                     <h4 class="text-muted mb-3"><%= carnival.title %></h4>
                     <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="badge bg-primary fs-6">
+                        <span class="badge bg-tertiary fs-6">
                             <i class="bi bi-people-fill me-1"></i><%= totalPlayers %> Total Players
                         </span>
-                        <span class="badge bg-success fs-6">
+                        <span class="badge bg-primary fs-6">
                             <i class="bi bi-star-fill me-1"></i><%= totalMastersEligible %> Masters Eligible (35+)
                         </span>
                         <span class="badge bg-info fs-6">
@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-success" id="exportToCSV">
+                    <button type="button" class="btn btn-outline-tertiary" id="exportToCSV">
                         <i class="bi bi-download"></i> Export CSV
                     </button>
                     <button type="button" class="btn btn-outline-primary" id="printList">
@@ -104,14 +104,8 @@
                             <span class="badge state-<%= club.state.toLowerCase() %> mb-2"><%= club.state %></span>
                         <% } %>
                         <div class="row text-center">
-                            <div class="col-6">
-                                <div class="fw-bold text-primary"><%= club.total %></div>
-                                <small class="text-muted">Total</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="fw-bold text-success"><%= club.mastersEligible %></div>
-                                <small class="text-muted">Masters</small>
-                            </div>
+                            <div class="fw-bold text-success"><%= club.mastersEligible %></div>
+                            <small class="text-muted">Total Eligible Players</small>
                         </div>
                     </div>
                 </div>
@@ -126,7 +120,7 @@
                 <h5 class="mb-0">
                     <i class="bi bi-list-ul me-2"></i>Complete Player List
                 </h5>
-                <span class="badge bg-light text-dark" id="visibleCount">
+                <span class="badge bg-tertiary bg-tertiary" id="visibleCount">
                     Showing <%= totalPlayers %> of <%= totalPlayers %> players
                 </span>
             </div>
@@ -194,12 +188,11 @@
                                 </td>
                                 <td>
                                     <% if (player.shortsColour && player.shortsColour !== 'Not specified') { 
-                                         const shortsSlug = (player.shortsColour || '')
-                                            .toString()
-                                            .toLowerCase()
-                                            .replace(/[^a-z0-9]+/g, '-');
+                                         const shortsColor = player.shortsColour.toLowerCase();
+                                         const validColors = ['red', 'blue', 'green', 'yellow', 'unrestricted'];
+                                         const cssClass = validColors.includes(shortsColor) ? `badge-shorts-${shortsColor}` : 'badge-shorts-unrestricted';
                                     %>
-                                        <span class="badge shorts-colour-badge shorts-colour--<%= shortsSlug %>">
+                                        <span class="badge <%= cssClass %>">
                                             <%= player.shortsColour %>
                                         </span>
                                     <% } else { %>

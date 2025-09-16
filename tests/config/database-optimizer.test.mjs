@@ -7,17 +7,27 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import DatabaseOptimizer from '../../config/database-optimizer.mjs';
 
-// Mock dependencies at the module level
-vi.mock('../../models/index.mjs', () => ({
+// Mock dependencies at the module level - database-optimizer imports sequelize from database.mjs
+vi.mock('../../config/database.mjs', () => ({
     sequelize: {
         query: vi.fn(),
         addHook: vi.fn(),
-        options: { storage: '/mock/path/to/db.sqlite' }
+        options: { storage: '/mock/path/to/db.sqlite' },
+        Op: { lt: 'lt', ne: 'ne' }  // Mock sequelize operators
     }
 }));
-vi.mock('sequelize', () => ({
-    QueryTypes: { RAW: 'RAW', SELECT: 'SELECT' }
+vi.mock('../../models/User.mjs', () => ({
+    default: {
+        cleanupExpiredInvitations: vi.fn()
+    }
 }));
+vi.mock('sequelize', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    QueryTypes: { RAW: 'RAW', SELECT: 'SELECT' }
+  };
+});
 vi.mock('fs/promises', () => ({
     default: {
         mkdir: vi.fn(),
@@ -27,19 +37,22 @@ vi.mock('fs/promises', () => ({
         unlink: vi.fn()
     }
 }));
-vi.mock('path', () => ({
-    default: {
-        join: (...args) => args.join('/')
-    }
-}));
-// The User model needs to be available for the maintenance task
-vi.stubGlobal('User', { cleanupExpiredInvitations: vi.fn() });
+vi.mock('path', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    join: (...args) => args.join('/'),
+    dirname: vi.fn()
+  };
+});
+// The global upload directories constant for the backup functions
 vi.stubGlobal('UPLOAD_DIRECTORIES', { UPLOADS_ROOT: 'uploads' });
 
 
 // Import the mocked modules to use in tests
-import { sequelize } from '../../models/index.mjs';
+import { sequelize } from '../../config/database.mjs';
 import fs from 'fs/promises';
+import User from '../../models/User.mjs';
 
 
 describe('DatabaseOptimizer', () => {

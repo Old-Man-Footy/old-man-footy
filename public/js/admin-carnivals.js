@@ -11,6 +11,7 @@ export const adminCarnivalsManager = {
       initialize() {
         this.cacheElements();
         this.bindEvents();
+        this.initializeEditPageFunctionality();
         console.log('Admin carnival management functionality initialized successfully');
       },
     
@@ -18,14 +19,30 @@ export const adminCarnivalsManager = {
         this.elements.statusToggleModal = document.getElementById('statusToggleModal');
         this.elements.confirmStatusToggle = document.getElementById('confirmStatusToggle');
         this.elements.toastContainer = document.getElementById('toast-container');
-        // Cache other elements as needed
+        
+        // Cache edit page elements
+        this.elements.endDateContainer = document.getElementById('endDateContainer');
+        this.elements.logoPreviewImages = document.querySelectorAll('.admin-carnival-logo-preview');
+        this.elements.promoPreviewImages = document.querySelectorAll('.admin-carnival-promo-preview');
+        this.elements.fileInputs = document.querySelectorAll('.admin-file-input-hidden');
+        this.elements.fileUploadAreas = document.querySelectorAll('.file-upload-area');
+        this.elements.isMultiDayCheckbox = document.getElementById('isMultiDay');
+        this.elements.endDateInput = document.getElementById('endDate');
+        this.elements.dateLabel = document.getElementById('dateLabel');
+        this.elements.startDateInput = document.getElementById('date');
+        this.elements.mySidelineIdInput = document.getElementById('mySidelineId');
+        this.elements.registrationLinkInput = document.getElementById('registrationLink');
+        this.elements.linkStatusElement = document.getElementById('linkStatus');
+        this.elements.testLinkBtn = document.getElementById('testLinkBtn');
+        this.elements.form = document.querySelector('form[data-mysideline-carnival-url]');
+        this.elements.getLocationBtn = document.getElementById('getLocationBtn');
       },
     
       bindEvents() {
         // Setup status toggle buttons
         const statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
         statusToggleButtons.forEach(button => {
-          button.addEventListener('click', (event) => {
+          button.addEventListener('click', (carnival) => {
             const carnivalId = button.getAttribute('data-toggle-carnival-status');
             const carnivalTitle = button.getAttribute('data-carnival-title');
             const currentStatus = button.getAttribute('data-current-status') === 'true';
@@ -36,6 +53,272 @@ export const adminCarnivalsManager = {
         // Setup confirm button in modal
         if (this.elements.confirmStatusToggle) {
           this.elements.confirmStatusToggle.addEventListener('click', this.confirmStatusToggle.bind(this));
+        }
+
+        // Setup delete carnival functionality
+        const deleteButtons = document.querySelectorAll('[data-delete-carnival]');
+        deleteButtons.forEach(button => {
+          button.addEventListener('click', (e) => {
+            const carnivalId = button.getAttribute('data-delete-carnival');
+            const carnivalTitle = button.getAttribute('data-carnival-title');
+            this.showDeleteModal(carnivalId, carnivalTitle);
+          });
+        });
+      },
+
+      initializeEditPageFunctionality() {
+        // Only initialize if we're on the edit page
+        if (!this.elements.form) return;
+        
+        this.initializePageStyling();
+        this.initializeFileUploads();
+        this.initializeMultiDayCarnivalFunctionality();
+        this.initializeMySidelineIntegration();
+        this.initializeLocationLookup();
+      },
+
+      initializePageStyling() {
+        if (this.elements.endDateContainer) {
+            const hasEndDate = this.elements.endDateContainer.dataset.hasEndDate === 'true';
+            if (!hasEndDate) {
+                this.elements.endDateContainer.style.display = 'none';
+            }
+        }
+        this.elements.logoPreviewImages.forEach(img => {
+            img.style.height = '150px';
+            img.style.objectFit = 'contain';
+        });
+        this.elements.promoPreviewImages.forEach(img => {
+            img.style.height = '150px';
+            img.style.objectFit = 'cover';
+        });
+        this.elements.fileInputs.forEach(input => {
+            input.style.display = 'none';
+        });
+      },
+
+      initializeFileUploads() {
+        this.elements.fileUploadAreas.forEach(area => {
+            area.addEventListener('click', this.handleFileAreaClick);
+        });
+      },
+
+      handleFileAreaClick: function(carnival) {
+        const area = carnival.currentTarget;
+        const input = area?.querySelector('input[type="file"]');
+        if (input) input.click();
+      },
+
+      initializeMultiDayCarnivalFunctionality() {
+        const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
+        if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;
+
+        isMultiDayCheckbox.addEventListener('change', () => this.toggleEndDateVisibility());
+        startDateInput.addEventListener('change', () => {
+            if (isMultiDayCheckbox.checked) this.updateEndDateMin();
+        });
+        endDateInput.addEventListener('change', () => this.validateEndDate());
+
+        if (isMultiDayCheckbox.checked) {
+            this.toggleEndDateVisibility(true);
+        }
+      },
+
+      toggleEndDateVisibility(isInitialLoad = false) {
+        const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel } = this.elements;
+        const isChecked = isMultiDayCheckbox.checked;
+
+        endDateContainer.style.display = isChecked ? 'block' : 'none';
+        dateLabel.textContent = isChecked ? 'Carnival Start Date *' : 'Carnival Date *';
+        endDateInput.required = isChecked;
+
+        if (isChecked) {
+            this.updateEndDateMin();
+        } else if (!isInitialLoad) {
+            endDateInput.value = '';
+        }
+      },
+
+      updateEndDateMin() {
+        const { startDateInput, endDateInput } = this.elements;
+        if (startDateInput.value) {
+            const startDate = new Date(startDateInput.value);
+            startDate.setDate(startDate.getDate() + 1);
+            const minEndDate = startDate.toISOString().split('T')[0];
+            endDateInput.min = minEndDate;
+            if (endDateInput.value && endDateInput.value <= startDateInput.value) {
+                endDateInput.value = minEndDate;
+            }
+        }
+      },
+
+      validateEndDate() {
+        const { startDateInput, endDateInput } = this.elements;
+        if (endDateInput.value && startDateInput.value) {
+            if (endDateInput.value <= startDateInput.value) {
+                endDateInput.setCustomValidity('End date must be after the start date');
+                endDateInput.classList.add('is-invalid');
+            } else {
+                endDateInput.setCustomValidity('');
+                endDateInput.classList.remove('is-invalid');
+            }
+        }
+      },
+
+      initializeMySidelineIntegration() {
+        const { mySidelineIdInput, registrationLinkInput } = this.elements;
+        if (!mySidelineIdInput || !registrationLinkInput) return;
+
+        mySidelineIdInput.addEventListener('input', () => this.handleMySidelineIdChange());
+        registrationLinkInput.addEventListener('input', () => this.handleRegistrationLinkChange());
+
+        if (mySidelineIdInput.value) {
+            this.handleMySidelineIdChange();
+        } else if (registrationLinkInput.value) {
+            this.handleRegistrationLinkChange();
+        }
+      },
+
+      handleMySidelineIdChange() {
+        const { mySidelineIdInput } = this.elements;
+        const eventId = mySidelineIdInput.value.trim();
+        if (!eventId) {
+            this.updateRegistrationLink('', 'Player registration link - will auto-update when MySideline ID is entered');
+            return;
+        }
+        const cleanId = eventId.replace(/\D/g, '');
+        if (!cleanId) {
+            this.updateRegistrationLink('', 'Please enter a valid numeric MySideline carnival ID', 'text-warning');
+            return;
+        }
+        if (cleanId !== eventId) {
+            mySidelineIdInput.value = cleanId;
+        }
+        const mySidelineUrl = this.generateMySidelineUrl(cleanId);
+        this.updateRegistrationLink(mySidelineUrl, `✓ Registration link auto-generated from MySideline carnival ${cleanId}`, 'text-success');
+      },
+
+      handleRegistrationLinkChange() {
+        const { registrationLinkInput, linkStatusElement, testLinkBtn, mySidelineIdInput } = this.elements;
+        const url = registrationLinkInput.value.trim();
+        if (!url) {
+            this.updateRegistrationLink('', 'Player registration link - will auto-update when MySideline ID is entered');
+            return;
+        }
+        if (this.isValidUrl(url)) {
+            const mySidelineMatch = url.match(/mysideline\.com\/register\/(\d+)/);
+            if (mySidelineMatch) {
+                const extractedId = mySidelineMatch[1];
+                this.updateRegistrationLink(url, `✓ MySideline registration link (Carnival ID: ${extractedId})`, 'text-success');
+                if (!mySidelineIdInput.value || mySidelineIdInput.value !== extractedId) {
+                    mySidelineIdInput.value = extractedId;
+                }
+            } else {
+                this.updateRegistrationLink(url, '✓ Custom registration link', 'text-dark');
+            }
+        } else {
+            this.updateRegistrationLink(url, '⚠ Please enter a valid URL', 'text-warning');
+        }
+      },
+
+      generateMySidelineUrl(eventId) {
+        const { form } = this.elements;
+        const mySidelineBaseUrl = form ? form.dataset.mysidelineCarnivalUrl : '';
+        if (!eventId || !mySidelineBaseUrl) return '';
+        return `${mySidelineBaseUrl}${eventId}`;
+      },
+
+      updateRegistrationLink(url, status, statusClass = 'text-muted') {
+        const { registrationLinkInput, linkStatusElement, testLinkBtn } = this.elements;
+        
+        if (registrationLinkInput) {
+            registrationLinkInput.value = url;
+        }
+        
+        if (linkStatusElement) {
+            linkStatusElement.textContent = status;
+            linkStatusElement.className = `form-text ${statusClass}`;
+        }
+        
+        if (testLinkBtn) {
+            if (url && this.isValidUrl(url)) {
+                testLinkBtn.style.display = 'block';
+                testLinkBtn.onclick = () => window.open(url, '_blank');
+            } else {
+                testLinkBtn.style.display = 'none';
+            }
+        }
+      },
+
+      isValidUrl(string) {
+        try {
+            new URL(string);
+            return true;
+        } catch (_) {
+            return false;
+        }
+      },
+
+      initializeLocationLookup() {
+        if (this.elements.getLocationBtn) {
+            this.elements.getLocationBtn.addEventListener('click', () => this.getLocationFromAddress());
+        }
+      },
+
+      async getLocationFromAddress() {
+        const locationAddress = document.getElementById('locationAddress');
+        const locationLatitude = document.getElementById('locationLatitude');
+        const locationLongitude = document.getElementById('locationLongitude');
+        
+        if (!locationAddress || !locationLatitude || !locationLongitude) return;
+        
+        const address = locationAddress.value.trim();
+        if (!address) {
+            this.showToast('error', 'Please enter an address first');
+            return;
+        }
+
+        const btn = this.elements.getLocationBtn;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Looking up...';
+        btn.disabled = true;
+
+        try {
+            // Using a simple geocoding service (you may want to use Google Maps API or similar)
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                
+                locationLatitude.value = lat.toFixed(6);
+                locationLongitude.value = lon.toFixed(6);
+                
+                this.showToast('success', 'GPS coordinates updated successfully');
+            } else {
+                this.showToast('error', 'Could not find coordinates for this address');
+            }
+        } catch (error) {
+            console.error('Error geocoding address:', error);
+            this.showToast('error', 'Error looking up coordinates');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+      },
+
+      showDeleteModal(carnivalId, carnivalTitle) {
+        const modal = document.getElementById('deleteModal');
+        const titleElement = document.getElementById('carnivalTitle');
+        const deleteForm = document.getElementById('deleteForm');
+        
+        if (titleElement) titleElement.textContent = carnivalTitle;
+        if (deleteForm) deleteForm.action = `/admin/carnivals/${carnivalId}/delete`;
+        
+        if (modal && typeof bootstrap !== 'undefined') {
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
         }
       },
     
@@ -63,7 +346,7 @@ export const adminCarnivalsManager = {
           messageElement.textContent = 'Are you sure you want to reactivate this carnival?';
           warningElement.textContent = 'Reactivated carnivals will become visible on the site again';
           actionTextElement.textContent = 'Reactivate';
-          confirmButton.className = 'btn btn-success';
+          confirmButton.className = 'btn btn-tertiary';
           confirmButton.innerHTML = '<i class="bi bi-eye"></i> Reactivate Carnival';
         }
     

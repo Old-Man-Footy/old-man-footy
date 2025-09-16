@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 // Import the manager object directly
-import { adminClaimCarnivalManager } from '/public/js/admin-claim-carnival.js';
+import { adminClaimCarnivalManager } from '../../../public/js/admin-claim-carnival.js';
 
 /**
  * @file admin-claim-carnival.test.js
@@ -90,10 +90,10 @@ describe('adminClaimCarnivalManager', () => {
         // Spy on the method we expect to be called
         const handleChangeSpy = vi.spyOn(adminClaimCarnivalManager, 'handleClubChange');
 
-        // Simulate the user event
+        // Simulate the user carnival
         clubSelect.dispatchEvent(new Event('change'));
 
-        // Assert that the event handler called our method
+        // Assert that the carnival handler called our method
         expect(handleChangeSpy).toHaveBeenCalled();
     });
 

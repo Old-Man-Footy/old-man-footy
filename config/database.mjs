@@ -6,20 +6,26 @@
  */
 
 import { Sequelize } from 'sequelize';
-import path from 'path';
+import * as SequelizeModule from 'sequelize';
+import { Umzug, SequelizeStorage } from 'umzug';
+import * as path from 'path';
+import { pathToFileURL } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import DatabaseOptimizer from './database-optimizer.mjs';
+// Note: Avoid importing DatabaseOptimizer at module top-level to prevent ESM circular deps
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const execAsync = promisify(exec);
 
-// Database file location based on environment
-const getDbPath = () => {
+/**
+ * Get database path for current environment
+ * @returns {string} Database file path
+ */
+export function getDbPath() {
   const env = process.env.NODE_ENV || 'development';
   
   switch (env) {
@@ -31,7 +37,7 @@ const getDbPath = () => {
     default:
       return path.join(__dirname, '..', 'data', 'dev-old-man-footy.db');
   }
-};
+}
 
 const dbPath = getDbPath();
 
@@ -108,12 +114,27 @@ let sequelizeOptions = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  // Use secure, validated production options
-  const prodOpts = await DatabaseOptimizer.configureProduction();
+  // Inline production options to avoid circular imports at module init
+  const maxPoolSize = Number.isInteger(Number(process.env.SQLITE_MAX_POOL_SIZE)) ? Number(process.env.SQLITE_MAX_POOL_SIZE) : 5;
+  const minPoolSize = Number.isInteger(Number(process.env.SQLITE_MIN_POOL_SIZE)) ? Number(process.env.SQLITE_MIN_POOL_SIZE) : 1;
+  const acquireTimeout = Number.isInteger(Number(process.env.SQLITE_ACQUIRE_TIMEOUT)) ? Number(process.env.SQLITE_ACQUIRE_TIMEOUT) : 30000;
+  const idleTimeout = Number.isInteger(Number(process.env.SQLITE_IDLE_TIMEOUT)) ? Number(process.env.SQLITE_IDLE_TIMEOUT) : 10000;
+  const queryTimeout = Number.isInteger(Number(process.env.SQLITE_QUERY_TIMEOUT)) ? Number(process.env.SQLITE_QUERY_TIMEOUT) : 30000;
+
   sequelizeOptions = {
     ...sequelizeOptions,
-    ...prodOpts,
-    storage: dbPath // Always set correct storage path
+    pool: {
+      max: maxPoolSize,
+      min: minPoolSize,
+      acquire: acquireTimeout,
+      idle: idleTimeout
+    },
+    dialectOptions: {
+      options: { enableForeignKeyConstraints: true },
+      timeout: queryTimeout
+    },
+    logging: false,
+    storage: dbPath
   };
 }
 
@@ -141,20 +162,59 @@ export async function testConnection() {
  */
 export async function runMigrations() {
   try {
-    console.log('🔄 Running database migrations...');
-    
-    // Import models to ensure they're registered with Sequelize
+    console.log('🔄 Running database migrations (Umzug)...');
+
+    // Ensure models are loaded/registered (associations may be used by some migrations)
     await import('../models/index.mjs');
-    
-    // Run migrations using Sequelize CLI
-    const { stdout, stderr } = await execAsync('npx sequelize-cli db:migrate');
-    if (stdout) console.log(stdout);
-    if (stderr) console.error(stderr);
-    
+
+  // Use a POSIX-friendly glob and an explicit cwd so Windows path separators don't break fast-glob.
+  const migrationsCwd = path.join(__dirname, '..');
+  const migrationsGlob = 'migrations/*.js';
+
+  const umzug = new Umzug({
+      migrations: {
+        glob: migrationsGlob,
+        cwd: migrationsCwd,
+        // Adapt sequelize-cli style migration signatures (queryInterface, Sequelize)
+        resolve: ({ name, path: migrationPath, context, cwd }) => {
+          // Build absolute path for reliable ESM import
+          const absPath = migrationPath && path.isAbsolute(migrationPath)
+            ? migrationPath
+            : path.join(cwd || migrationsCwd, migrationPath);
+          // Use filename only for migration name to be compatible with existing SequelizeMeta rows
+          const baseName = path.basename(absPath);
+          return {
+            name: baseName,
+            up: async () => {
+              // Ensure ESM import works with absolute paths across platforms (Windows/Linux)
+              const mod = await import(pathToFileURL(absPath).href);
+              if (typeof mod.up !== 'function') throw new Error(`Migration ${name} missing exported up()`);
+              return mod.up(context, SequelizeModule);
+            },
+            down: async () => {
+              const mod = await import(pathToFileURL(absPath).href);
+              if (typeof mod.down !== 'function') throw new Error(`Migration ${name} missing exported down()`);
+              return mod.down(context, SequelizeModule);
+            }
+          };
+        }
+      },
+      context: sequelize.getQueryInterface(),
+      storage: new SequelizeStorage({ sequelize, tableName: 'SequelizeMeta' }),
+      logger: console
+    });
+
+    const pending = await umzug.pending();
+    if (pending.length === 0) {
+      console.log('✅ No pending migrations. Schema is up to date.');
+      return;
+    }
+    console.log(`📦 Pending migrations: ${pending.map(m => m.name).join(', ')}`);
+
+    await umzug.up();
     console.log('✅ Database migrations completed successfully');
-    
   } catch (error) {
-    console.error('❌ Database migration failed:', error.message);
+    console.error('❌ Database migration failed:', error?.stack || error?.message || error);
     throw error;
   }
 }
@@ -172,8 +232,9 @@ export async function setupDatabase() {
     if (!connected) throw new Error('Failed to establish database connection');
     await runMigrations();
     await checkDatabaseSchema();
-    await DatabaseOptimizer.createIndexes();
-    await DatabaseOptimizer.setupMonitoring();
+  const { default: DatabaseOptimizer } = await import('./database-optimizer.mjs');
+  await DatabaseOptimizer.createIndexes();
+  await DatabaseOptimizer.setupMonitoring();
     console.log('✅ Database setup completed successfully');
   } catch (error) {
     console.error('❌ Database setup failed:', error);
@@ -211,10 +272,11 @@ export async function initializeDatabase() {
     await checkDatabaseSchema();
 
     // Create database indexes for optimization
-    await DatabaseOptimizer.createIndexes();
+  const { default: DatabaseOptimizer } = await import('./database-optimizer.mjs');
+  await DatabaseOptimizer.createIndexes();
 
     // Set up database connection and query monitoring hooks
-    await DatabaseOptimizer.setupMonitoring();
+  await DatabaseOptimizer.setupMonitoring();
     
     console.log('✅ Database initialization completed successfully');
     
@@ -264,8 +326,13 @@ export async function checkDatabaseSchema() {
     const actualTables = Array.isArray(results)
       ? results.map(row => row.name)
       : [];
-    const present = expectedTables.filter(t => actualTables.includes(t));
-    const missing = expectedTables.filter(t => !actualTables.includes(t));
+    
+    // Create case-insensitive comparison arrays
+    const actualTablesLower = actualTables.map(t => t.toLowerCase());
+    const expectedTablesLower = expectedTables.map(t => t.toLowerCase());
+    
+    const present = expectedTables.filter(t => actualTablesLower.includes(t.toLowerCase()));
+    const missing = expectedTables.filter(t => !actualTablesLower.includes(t.toLowerCase()));
     if (missing.length > 0) {
       console.warn(`⚠️ Missing tables: ${missing.join(', ')}`);
     } else {

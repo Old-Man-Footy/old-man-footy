@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ContactEmailService } from '/services/email/ContactEmailService.mjs';
-import { BaseEmailService } from '/services/email/BaseEmailService.mjs';
+import { ContactEmailService } from '../../../services/email/ContactEmailService.mjs';
+import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
 
 // Mock dependencies
 vi.mock('/services/email/BaseEmailService.mjs');
@@ -39,6 +39,10 @@ describe('ContactEmailService', () => {
     BaseEmailService.prototype._createButton = vi.fn((url, text) => `<a href="${url}">${text}</a>`);
     BaseEmailService.prototype._getEmailContainerStyles = vi.fn().mockReturnValue('');
     BaseEmailService.prototype._getEmailContentStyles = vi.fn().mockReturnValue('');
+    BaseEmailService.prototype._canSendEmails = vi.fn().mockReturnValue(true);
+    BaseEmailService.prototype.sendEmail = vi.fn().mockImplementation(async (mailOptions, emailType) => {
+      return await BaseEmailService.prototype.transporter.sendMail(mailOptions);
+    });
 
     contactEmailService = new ContactEmailService();
     
