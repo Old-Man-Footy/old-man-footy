@@ -74,7 +74,8 @@ export const getFailureCount = (key) => {
  */
 export const _debug = () => ({ windowMs, store: Array.from(store.entries()) });
 
-export default {
+// Provide a named convenience object to match existing imports in controllers
+export const failureCounter = {
   setWindowMs,
   incrementFailure,
   resetFailures,
