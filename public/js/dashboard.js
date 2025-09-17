@@ -13,8 +13,8 @@ export const dashboardManager = {
         this.showAll('hosted');
         this.showAll('attending');
         // Hide checklist if previously dismissed
-        if (localStorage.getItem('checklistDismissed') === 'true') {
-            const checklistCard = document.querySelector('.card.border-info');
+        if (localStorage.getItem('checklistDismissed') === 'true') {            
+            const checklistCard = document.getElementById('quickStartChecklist');
             if (checklistCard) checklistCard.style.display = 'none';
         }
         // Initialize Leave Club modal helpers
