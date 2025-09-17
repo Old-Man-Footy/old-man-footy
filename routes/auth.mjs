@@ -110,6 +110,18 @@ router.post('/update-email', ensureAuthenticated, [
     body('currentPassword').notEmpty().withMessage('Current password is required for security')
 ], authController.updateEmail);
 
+// Password reset (for logged-in users) - requires authentication
+router.post('/password-reset', ensureAuthenticated, [
+    body('existingPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword').custom((password) => {
+        const result = validatePassword(password);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    })
+], authController.resetPassword);
+
 // Logout
 router.post('/logout', authController.logoutUser);
 

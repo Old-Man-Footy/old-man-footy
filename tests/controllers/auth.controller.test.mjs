@@ -113,6 +113,7 @@ const mockFailureCounter = {
 
 vi.mock('/middleware/failureCounterStore.mjs', () => ({
   default: mockFailureCounter,
+  failureCounter: mockFailureCounter,
   ...mockFailureCounter,
 }));
 
@@ -369,7 +370,7 @@ describe('Authentication Controller', () => {
 
         // Assert
         expect(mockAuditService.logAuthAction).toHaveBeenCalled();
-        expect((await import('../../middleware/failureCounterStore.mjs')).incrementFailure).toHaveBeenCalled();
+        expect(mockFailureCounter.incrementFailure).toHaveBeenCalled();
       });
 
       test('should increment failure counter on invalid password', async () => {
@@ -390,7 +391,7 @@ describe('Authentication Controller', () => {
 
         // Assert
         expect(mockAuditService.logAuthAction).toHaveBeenCalled();
-        expect((await import('../../middleware/failureCounterStore.mjs')).incrementFailure).toHaveBeenCalledWith('test@example.com');
+        expect(mockFailureCounter.incrementFailure).toHaveBeenCalledWith('test@example.com');
       });
 
       test('should reset failures on successful login', async () => {
@@ -413,7 +414,7 @@ describe('Authentication Controller', () => {
 
         // Assert
         expect(mockAuditService.logAuthAction).toHaveBeenCalled();
-        expect((await import('../../middleware/failureCounterStore.mjs')).resetFailures).toHaveBeenCalledWith('test@example.com');
+        expect(mockFailureCounter.resetFailures).toHaveBeenCalledWith('test@example.com');
       });
 
       test('should handle login session creation error', async () => {

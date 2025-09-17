@@ -719,6 +719,123 @@ const updateEmail = async (req, res) => {
   return res.redirect('/dashboard');
 };
 
+/**
+ * Handle password reset for authenticated users
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const resetPassword = async (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const errorMessage = errors.array()[0].msg;
+    
+    // Check if request is AJAX
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.status(400).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+    
+    req.flash('error_msg', errorMessage);
+    return res.redirect('/dashboard');
+  }
+
+  const { existingPassword, newPassword } = req.body;
+
+  try {
+    // Verify current password for security
+    const isPasswordValid = await req.user.checkPassword(existingPassword);
+    if (!isPasswordValid) {
+      const errorMessage = 'Current password is incorrect. Please try again.';
+      
+      // Log failed password reset attempt
+      await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
+        success: false,
+        reason: 'invalid_current_password'
+      });
+
+      if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+        return res.status(401).json({
+          success: false,
+          message: errorMessage
+        });
+      }
+      
+      req.flash('error_msg', errorMessage);
+      return res.redirect('/dashboard');
+    }
+
+    // Check if new password is the same as current password
+    const isSamePassword = await req.user.checkPassword(newPassword);
+    if (isSamePassword) {
+      const errorMessage = 'New password must be different from your current password.';
+      
+      if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+        return res.status(400).json({
+          success: false,
+          message: errorMessage
+        });
+      }
+      
+      req.flash('error_msg', errorMessage);
+      return res.redirect('/dashboard');
+    }
+
+    // Hash the new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update user's password
+    await req.user.update({
+      passwordHash: hashedPassword,
+    });
+
+    // Log successful password reset
+    await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
+      success: true
+    });
+
+    console.log(`✅ Password updated successfully for user: ${req.user.id} (${req.user.email})`);
+
+    const successMessage = 'Password updated successfully!';
+
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.json({
+        success: true,
+        message: successMessage
+      });
+    }
+
+    req.flash('success_msg', successMessage);
+    return res.redirect('/dashboard');
+
+  } catch (error) {
+    console.error('Password reset error:', error);
+    
+    // Log failed password reset attempt
+    await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
+      success: false,
+      reason: 'server_error',
+      error: error.message
+    });
+
+    const errorMessage = 'An error occurred while updating your password. Please try again.';
+
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.status(500).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+
+    req.flash('error_msg', errorMessage);
+    return res.redirect('/dashboard');
+  }
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
   showLoginForm,
@@ -733,6 +850,7 @@ const rawControllers = {
   updatePhoneNumber,
   updateName,
   updateEmail,
+  resetPassword,
 };
 
 // Export wrapped versions using the wrapControllers utility
@@ -749,6 +867,7 @@ export const {
   updatePhoneNumber: wrappedUpdatePhoneNumber,
   updateName: wrappedUpdateName,
   updateEmail: wrappedUpdateEmail,
+  resetPassword: wrappedResetPassword,
 } = wrapControllers(rawControllers);
 
 // Export with original names for route compatibility
@@ -765,4 +884,5 @@ export {
   wrappedUpdatePhoneNumber as updatePhoneNumber,
   wrappedUpdateName as updateName,
   wrappedUpdateEmail as updateEmail,
+  wrappedResetPassword as resetPassword,
 };

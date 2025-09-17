@@ -20,6 +20,8 @@ export const dashboardManager = {
         this.initializeLeaveClubModal();
         // Initialize checklist interactions
         this.initializeChecklist();
+        // Initialize password reset functionality
+        this.initializePasswordReset();
     },
 
     cacheElements() {
@@ -27,6 +29,12 @@ export const dashboardManager = {
         this.elements.dismissChecklistBtn = document.querySelector('[data-action="dismiss-checklist"]');
         this.elements.transferForm = document.querySelector('[data-action="transfer-role"]');
         this.elements.tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+        
+        // Password reset elements
+        this.elements.passwordResetForm = document.getElementById('passwordResetForm');
+        this.elements.submitPasswordReset = document.getElementById('submitPasswordReset');
+        this.elements.passwordResetMessages = document.getElementById('passwordResetMessages');
+        this.elements.updatePasswordModal = document.getElementById('updatePasswordModal');
     },
 
     bindEvents() {
@@ -275,6 +283,138 @@ export const dashboardManager = {
                 submitButton.innerHTML = `${icon} Leave Club`;
                 submitButton.className = 'btn btn-danger';
                 break;
+        }
+    },
+
+    /**
+     * Initialize password reset functionality
+     */
+    initializePasswordReset() {
+        if (!this.elements.passwordResetForm || !this.elements.submitPasswordReset) {
+            return; // Elements not found, skip initialization
+        }
+
+        // Handle password reset form submission
+        this.elements.submitPasswordReset.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.handlePasswordResetSubmission();
+        });
+
+        // Clear messages when modal is opened
+        if (this.elements.updatePasswordModal) {
+            this.elements.updatePasswordModal.addEventListener('show.bs.modal', () => {
+                this.clearPasswordResetMessages();
+                this.clearPasswordResetForm();
+            });
+        }
+    },
+
+    /**
+     * Handle password reset form submission
+     */
+    async handlePasswordResetSubmission() {
+        const currentPassword = document.getElementById('currentPassword')?.value;
+        const newPassword = document.getElementById('newPassword')?.value;
+        const confirmPassword = document.getElementById('confirmPassword')?.value;
+
+        // Clear any existing messages
+        this.clearPasswordResetMessages();
+
+        // Client-side validation
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            this.showPasswordResetMessage('All fields are required.', 'danger');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            this.showPasswordResetMessage('New password and confirmation do not match.', 'danger');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            this.showPasswordResetMessage('New password must be at least 8 characters long.', 'danger');
+            return;
+        }
+
+        // Disable submit button during processing
+        const originalButtonText = this.elements.submitPasswordReset.innerHTML;
+        this.elements.submitPasswordReset.disabled = true;
+        this.elements.submitPasswordReset.innerHTML = '<i class="bi bi-hourglass-split"></i> Updating...';
+
+        try {
+            const response = await fetch('/auth/password-reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    existingPassword: currentPassword,
+                    newPassword: newPassword
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showPasswordResetMessage('Password updated successfully!', 'success');
+                // Clear form after success
+                setTimeout(() => {
+                    this.clearPasswordResetForm();
+                    // Close modal after short delay
+                    const modal = bootstrap.Modal.getInstance(this.elements.updatePasswordModal);
+                    if (modal) {
+                        modal.hide();
+                    }
+                }, 2000);
+            } else {
+                this.showPasswordResetMessage(result.message || 'Failed to update password. Please try again.', 'danger');
+            }
+        } catch (error) {
+            console.error('Password reset error:', error);
+            this.showPasswordResetMessage('An error occurred. Please try again.', 'danger');
+        } finally {
+            // Re-enable submit button
+            this.elements.submitPasswordReset.disabled = false;
+            this.elements.submitPasswordReset.innerHTML = originalButtonText;
+        }
+    },
+
+    /**
+     * Show password reset message
+     */
+    showPasswordResetMessage(message, type = 'info') {
+        if (!this.elements.passwordResetMessages) return;
+
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'danger' ? 'alert-danger' : 'alert-info';
+        
+        const icon = type === 'success' ? 'bi-check-circle' : 
+                    type === 'danger' ? 'bi-exclamation-triangle' : 'bi-info-circle';
+
+        this.elements.passwordResetMessages.innerHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="bi ${icon}"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+    },
+
+    /**
+     * Clear password reset messages
+     */
+    clearPasswordResetMessages() {
+        if (this.elements.passwordResetMessages) {
+            this.elements.passwordResetMessages.innerHTML = '';
+        }
+    },
+
+    /**
+     * Clear password reset form
+     */
+    clearPasswordResetForm() {
+        if (this.elements.passwordResetForm) {
+            this.elements.passwordResetForm.reset();
         }
     },
 
