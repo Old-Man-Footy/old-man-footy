@@ -102,6 +102,20 @@ vi.mock('/services/auditService.mjs', () => ({
   default: mockAuditService,
 }));
 
+// Mock the failureCounter store so we can assert calls
+const mockFailureCounter = {
+  setWindowMs: vi.fn(),
+  incrementFailure: vi.fn(),
+  resetFailures: vi.fn(),
+  getFailureCount: vi.fn().mockReturnValue(0),
+  _debug: vi.fn().mockReturnValue({ windowMs: 600000, store: [] }),
+};
+
+vi.mock('/middleware/failureCounterStore.mjs', () => ({
+  default: mockFailureCounter,
+  ...mockFailureCounter,
+}));
+
 vi.mock('/config/database.mjs', () => ({
   sequelize: mockSequelize,
 }));
@@ -340,6 +354,66 @@ describe('Authentication Controller', () => {
         );
         expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Invalid email or password.');
         expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      });
+
+      test('should increment failure counter on validation error', async () => {
+        // Arrange
+        const validationErrors = [{ msg: 'Email is required' }];
+        mockValidationResult.mockReturnValue({
+          isEmpty: () => false,
+          array: () => validationErrors,
+        });
+
+        // Act
+        await authController.loginUser(mockReq, mockRes, mockNext);
+
+        // Assert
+        expect(mockAuditService.logAuthAction).toHaveBeenCalled();
+        expect((await import('../../middleware/failureCounterStore.mjs')).incrementFailure).toHaveBeenCalled();
+      });
+
+      test('should increment failure counter on invalid password', async () => {
+        // Arrange
+        const mockUserData = {
+          id: 1,
+          email: 'test@example.com',
+          passwordHash: '$2b$12$hashedpassword',
+          isActive: true,
+        };
+
+        mockReq.body = { email: 'test@example.com', password: 'wrongpassword' };
+        mockUser.findOne.mockResolvedValue(mockUserData);
+        mockBcrypt.compare.mockResolvedValue(false);
+
+        // Act
+        await authController.loginUser(mockReq, mockRes, mockNext);
+
+        // Assert
+        expect(mockAuditService.logAuthAction).toHaveBeenCalled();
+        expect((await import('../../middleware/failureCounterStore.mjs')).incrementFailure).toHaveBeenCalledWith('test@example.com');
+      });
+
+      test('should reset failures on successful login', async () => {
+        // Arrange
+        const mockUserData = {
+          id: 1,
+          email: 'test@example.com',
+          passwordHash: '$2b$12$hashedpassword',
+          isActive: true,
+          update: vi.fn().mockResolvedValue(),
+        };
+
+        mockReq.body = { email: 'test@example.com', password: 'password123' };
+        mockUser.findOne.mockResolvedValue(mockUserData);
+        mockBcrypt.compare.mockResolvedValue(true);
+        mockReq.login.mockImplementation((user, callback) => callback(null));
+
+        // Act
+        await authController.loginUser(mockReq, mockRes, mockNext);
+
+        // Assert
+        expect(mockAuditService.logAuthAction).toHaveBeenCalled();
+        expect((await import('../../middleware/failureCounterStore.mjs')).resetFailures).toHaveBeenCalledWith('test@example.com');
       });
 
       test('should handle login session creation error', async () => {

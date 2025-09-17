@@ -13,6 +13,7 @@ import bcrypt from 'bcrypt'; // Fixed: Use bcrypt to match User model
 import crypto from 'crypto';
 import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
 import AuditService from '../services/auditService.mjs';
+import { failureCounter } from '../middleware/failureCounterStore.mjs';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 
 /**
@@ -52,6 +53,14 @@ const loginUser = async (req, res, next) => {
       validationErrors: errors.array(),
     });
 
+    // Increment failure counter for this key (email if present, otherwise IP)
+    try {
+      const key = req.body?.email ? req.body.email.toLowerCase() : req.ip;
+      await failureCounter.incrementFailure(key);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'test') console.error('failureCounter increment error', e);
+    }
+
     req.flash('error_msg', errors.array()[0].msg);
     return res.redirect('/auth/login');
   }
@@ -90,6 +99,13 @@ const loginUser = async (req, res, next) => {
       attemptedEmail: email.toLowerCase(),
     });
 
+    try {
+      const key = email ? email.toLowerCase() : req.ip;
+      await failureCounter.incrementFailure(key);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'test') console.error('failureCounter increment error', e);
+    }
+
     req.flash('error_msg', 'Invalid email or password.');
     return res.redirect('/auth/login');
   }
@@ -115,6 +131,13 @@ const loginUser = async (req, res, next) => {
       result: 'FAILURE',
       reason: 'Invalid password',
     });
+
+    try {
+      const key = email ? email.toLowerCase() : req.ip;
+      await failureCounter.incrementFailure(key);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'test') console.error('failureCounter increment error', e);
+    }
 
     req.flash('error_msg', 'Invalid email or password.');
     return res.redirect('/auth/login');
@@ -152,6 +175,15 @@ const loginUser = async (req, res, next) => {
     if (DEBUG_AUTH) {
       console.log(`[AUTH CONTROLLER DEBUG] req.login() successful, checking user role for redirect`);
     }
+    // On successful login, reset failure counter for this key
+    (async () => {
+      try {
+        const key = req.body?.email ? req.body.email.toLowerCase() : req.ip;
+        await failureCounter.resetFailures(key);
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'test') console.error('failureCounter reset error', e);
+      }
+    })();
     
     // Redirect based on user role
     if (user.isAdmin) {
