@@ -21,6 +21,10 @@ const mockBcrypt = {
 // Mock crypto module
 const mockCrypto = {
   randomBytes: vi.fn(),
+  createHash: vi.fn(() => ({
+    update: vi.fn().mockReturnThis(),
+    digest: vi.fn().mockReturnValue('mocked-hash-value')
+  }))
 };
 
 // Create comprehensive mocks for all dependencies
@@ -41,6 +45,7 @@ const mockValidationResult = vi.fn();
 const mockEmailService = {
   sendInvitationEmail: vi.fn(),
   sendDelegateRoleTransferNotification: vi.fn(),
+  sendPasswordResetEmail: vi.fn(),
 };
 
 const mockAuditService = {
@@ -52,6 +57,7 @@ const mockAuditService = {
     USER_REGISTER: 'USER_REGISTER',
     USER_INVITATION_SEND: 'USER_INVITATION_SEND',
     USER_INVITATION_ACCEPT: 'USER_INVITATION_ACCEPT',
+    USER_PASSWORD_RESET: 'USER_PASSWORD_RESET',
   },
   ENTITIES: {
     USER: 'USER',
@@ -98,8 +104,29 @@ vi.mock('/services/email/InvitationEmailService.mjs', () => ({
   },
 }));
 
+vi.mock('/services/email/AuthEmailService.mjs', () => ({
+  default: {
+    sendPasswordResetEmail: vi.fn().mockResolvedValue({ success: true }),
+  },
+}));
+
 vi.mock('/services/auditService.mjs', () => ({
   default: mockAuditService,
+}));
+
+// Mock the failureCounter store so we can assert calls
+const mockFailureCounter = {
+  setWindowMs: vi.fn(),
+  incrementFailure: vi.fn(),
+  resetFailures: vi.fn(),
+  getFailureCount: vi.fn().mockReturnValue(0),
+  _debug: vi.fn().mockReturnValue({ windowMs: 600000, store: [] }),
+};
+
+vi.mock('/middleware/failureCounterStore.mjs', () => ({
+  default: mockFailureCounter,
+  failureCounter: mockFailureCounter,
+  ...mockFailureCounter,
 }));
 
 vi.mock('/config/database.mjs', () => ({
@@ -124,10 +151,18 @@ const {
   updatePhoneNumber,
   updateName,
   updateEmail,
+  showForgotPasswordForm,
+  initiateForgotPassword,
+  showResetPasswordForm,
+  resetPasswordWithToken,
 } = await import('../../controllers/auth.controller.mjs');
 
 // Import the email service to access the mocked methods
 const InvitationEmailService = (await import('../../services/email/InvitationEmailService.mjs')).default;
+const AuthEmailService = (await import('../../services/email/AuthEmailService.mjs')).default;
+
+// Assign the imported mocked service to our mock object
+Object.assign(mockEmailService, AuthEmailService);
 
 // Create authController object for test compatibility
 const authController = {
@@ -143,6 +178,10 @@ const authController = {
   updatePhoneNumber,
   updateName,
   updateEmail,
+  showForgotPasswordForm,
+  initiateForgotPassword,
+  showResetPasswordForm,
+  resetPasswordWithToken,
 };
 
 describe('Authentication Controller', () => {
@@ -340,6 +379,66 @@ describe('Authentication Controller', () => {
         );
         expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 'Invalid email or password.');
         expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      });
+
+      test('should increment failure counter on validation error', async () => {
+        // Arrange
+        const validationErrors = [{ msg: 'Email is required' }];
+        mockValidationResult.mockReturnValue({
+          isEmpty: () => false,
+          array: () => validationErrors,
+        });
+
+        // Act
+        await authController.loginUser(mockReq, mockRes, mockNext);
+
+        // Assert
+        expect(mockAuditService.logAuthAction).toHaveBeenCalled();
+        expect(mockFailureCounter.incrementFailure).toHaveBeenCalled();
+      });
+
+      test('should increment failure counter on invalid password', async () => {
+        // Arrange
+        const mockUserData = {
+          id: 1,
+          email: 'test@example.com',
+          passwordHash: '$2b$12$hashedpassword',
+          isActive: true,
+        };
+
+        mockReq.body = { email: 'test@example.com', password: 'wrongpassword' };
+        mockUser.findOne.mockResolvedValue(mockUserData);
+        mockBcrypt.compare.mockResolvedValue(false);
+
+        // Act
+        await authController.loginUser(mockReq, mockRes, mockNext);
+
+        // Assert
+        expect(mockAuditService.logAuthAction).toHaveBeenCalled();
+        expect(mockFailureCounter.incrementFailure).toHaveBeenCalledWith('test@example.com');
+      });
+
+      test('should reset failures on successful login', async () => {
+        // Arrange
+        const mockUserData = {
+          id: 1,
+          email: 'test@example.com',
+          passwordHash: '$2b$12$hashedpassword',
+          isActive: true,
+          update: vi.fn().mockResolvedValue(),
+        };
+
+        mockReq.body = { email: 'test@example.com', password: 'password123' };
+        mockUser.findOne.mockResolvedValue(mockUserData);
+        mockBcrypt.compare.mockResolvedValue(true);
+        mockReq.login.mockImplementation((user, callback) => callback(null));
+
+        // Act
+        await authController.loginUser(mockReq, mockRes, mockNext);
+
+        // Assert
+        expect(mockAuditService.logAuthAction).toHaveBeenCalled();
+        expect(mockFailureCounter.resetFailures).toHaveBeenCalledWith('test@example.com');
       });
 
       test('should handle login session creation error', async () => {
@@ -1357,6 +1456,366 @@ describe('Authentication Controller', () => {
         // Act & Assert
         await expect(authController.transferDelegateRole(mockReq, mockRes)).rejects.toThrow('Database error');
         expect(mockTransaction.rollback).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Forgot Password Functionality', () => {
+    describe('showForgotPasswordForm', () => {
+      test('should render forgot password form with CSRF token', async () => {
+        // Arrange
+        mockReq.csrfToken = vi.fn().mockReturnValue('csrf-token-123');
+
+        // Act
+        await authController.showForgotPasswordForm(mockReq, mockRes);
+
+        // Assert
+        expect(mockRes.render).toHaveBeenCalledWith('auth/forgot-password', {
+          title: 'Forgot Password',
+          csrfToken: 'csrf-token-123'
+        });
+      });
+    });
+
+    describe('initiateForgotPassword', () => {
+      beforeEach(() => {
+        mockValidationResult.mockReturnValue({ isEmpty: () => true });
+        mockCrypto.randomBytes.mockReturnValue(Buffer.from('test-token-bytes'));
+        mockReq.csrfToken = vi.fn().mockReturnValue('csrf-token-123');
+      });
+
+      test('should handle validation errors', async () => {
+        // Arrange
+        const validationErrors = [{ msg: 'Invalid email format' }];
+        mockValidationResult.mockReturnValue({
+          isEmpty: () => false,
+          array: () => validationErrors
+        });
+
+        // Act
+        await authController.initiateForgotPassword(mockReq, mockRes);
+
+        // Assert
+        expect(mockRes.render).toHaveBeenCalledWith('auth/forgot-password', {
+          title: 'Forgot Password',
+          errors: validationErrors,
+          formData: mockReq.body,
+          csrfToken: 'csrf-token-123'
+        });
+      });
+
+      test('should successfully initiate password reset for existing user', async () => {
+        // Arrange
+        mockReq.body = { email: 'user@example.com' };
+        const mockUserInstance = {
+          id: 1,
+          email: 'user@example.com',
+          update: vi.fn().mockResolvedValue(),
+          getFullName: vi.fn().mockReturnValue('Test User')
+        };
+        mockUser.findOne.mockResolvedValue(mockUserInstance);
+
+        // Act
+        await authController.initiateForgotPassword(mockReq, mockRes);
+
+        // Assert
+        expect(mockUser.findOne).toHaveBeenCalledWith({
+          where: { 
+            email: 'user@example.com',
+            isActive: true
+          }
+        });
+        expect(mockUserInstance.update).toHaveBeenCalledWith({
+          passwordResetToken: expect.any(String),
+          passwordResetExpires: expect.any(Date)
+        });
+        expect(mockEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+          'user@example.com',
+          expect.any(String),
+          'Test User'
+        );
+        expect(mockReq.flash).toHaveBeenCalledWith('success_msg', 
+          'If an account with that email exists, a password reset link has been sent.');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      });
+
+      test('should handle non-existent user gracefully', async () => {
+        // Arrange
+        mockReq.body = { email: 'nonexistent@example.com' };
+        mockUser.findOne.mockResolvedValue(null);
+
+        // Act
+        await authController.initiateForgotPassword(mockReq, mockRes);
+
+        // Assert
+        expect(mockEmailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+        expect(mockReq.flash).toHaveBeenCalledWith('success_msg', 
+          'If an account with that email exists, a password reset link has been sent.');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      });
+
+      test('should handle email service errors', async () => {
+        // Arrange
+        mockReq.body = { email: 'user@example.com' };
+        const mockUserInstance = {
+          id: 1,
+          email: 'user@example.com',
+          update: vi.fn().mockResolvedValue(),
+          getFullName: vi.fn().mockReturnValue('Test User')
+        };
+        mockUser.findOne.mockResolvedValue(mockUserInstance);
+        mockEmailService.sendPasswordResetEmail.mockRejectedValue(new Error('Email service error'));
+
+        // Act
+        await authController.initiateForgotPassword(mockReq, mockRes);
+
+        // Assert
+        expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 
+          'An error occurred while processing your request. Please try again.');
+        expect(mockRes.render).toHaveBeenCalledWith('auth/forgot-password', {
+          title: 'Forgot Password',
+          formData: mockReq.body,
+        });
+      });
+
+      test('should handle database errors', async () => {
+        // Arrange
+        mockReq.body = { email: 'user@example.com' };
+        mockUser.findOne.mockRejectedValue(new Error('Database error'));
+
+        // Act
+        await authController.initiateForgotPassword(mockReq, mockRes);
+
+        // Assert
+        expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 
+          'An error occurred while processing your request. Please try again.');
+        expect(mockRes.render).toHaveBeenCalledWith('auth/forgot-password', {
+          csrfToken: 'csrf-token-123',
+          title: 'Forgot Password',
+          formData: mockReq.body
+        });
+      });
+    });
+
+    describe('showResetPasswordForm', () => {
+      beforeEach(() => {
+        mockReq.params = { token: 'valid-reset-token' };
+        mockReq.csrfToken = vi.fn().mockReturnValue('csrf-token-123');
+      });
+
+      test('should render reset form for valid token', async () => {
+        // Arrange
+        const mockUserInstance = {
+          id: 1,
+          passwordResetToken: 'valid-reset-token',
+          passwordResetExpires: new Date(Date.now() + 3600000) // 1 hour from now
+        };
+        mockUser.findOne.mockResolvedValue(mockUserInstance);
+
+        // Act
+        await authController.showResetPasswordForm(mockReq, mockRes);
+
+        // Assert
+        expect(mockUser.findOne).toHaveBeenCalledWith({
+          where: {
+            passwordResetToken: 'mocked-hash-value',
+            passwordResetExpires: { [Op.gt]: expect.any(Date) },
+            isActive: true
+          }
+        });
+        expect(mockRes.render).toHaveBeenCalledWith('auth/reset-password', {
+          token: 'valid-reset-token',
+          csrfToken: 'csrf-token-123',
+          title: 'Reset Password'
+        });
+      });
+
+      test('should redirect for invalid or expired token', async () => {
+        // Arrange
+        mockUser.findOne.mockResolvedValue(null);
+
+        // Act
+        await authController.showResetPasswordForm(mockReq, mockRes);
+
+        // Assert
+        expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 
+          'Password reset link is invalid or has expired.');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/forgot-password');
+      });
+
+      test('should handle database errors', async () => {
+        // Arrange
+        mockUser.findOne.mockRejectedValue(new Error('Database error'));
+
+        // Act
+        await authController.showResetPasswordForm(mockReq, mockRes);
+
+        // Assert
+        expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 
+          'An error occurred while processing your request. Please try again.');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/forgot-password');
+      });
+    });
+
+    describe('resetPasswordWithToken', () => {
+      beforeEach(() => {
+        mockReq.params = { token: 'valid-reset-token' };
+        mockReq.body = { password: 'NewPassword123!', confirmPassword: 'NewPassword123!' };
+        mockReq.csrfToken = vi.fn().mockReturnValue('csrf-token-123');
+        mockValidationResult.mockReturnValue({ isEmpty: () => true });
+        mockBcrypt.hash.mockResolvedValue('hashed-new-password');
+      });
+
+      test('should handle validation errors', async () => {
+        // Arrange
+        const validationErrors = [{ msg: 'Password must be at least 8 characters' }];
+        mockValidationResult.mockReturnValue({
+          isEmpty: () => false,
+          array: () => validationErrors
+        });
+
+        // Act
+        await authController.resetPasswordWithToken(mockReq, mockRes);
+
+        // Assert
+        expect(mockRes.render).toHaveBeenCalledWith('auth/reset-password', {
+          token: 'valid-reset-token',
+          errors: validationErrors,
+          csrfToken: 'csrf-token-123',
+          title: 'Reset Password'
+        });
+      });
+
+      test('should successfully reset password with valid token', async () => {
+        // Arrange
+        const mockUserInstance = {
+          id: 1,
+          passwordResetToken: 'valid-reset-token',
+          passwordResetExpires: new Date(Date.now() + 3600000),
+          update: vi.fn().mockResolvedValue()
+        };
+        mockUser.findOne.mockResolvedValue(mockUserInstance);
+
+        // Act
+        await authController.resetPasswordWithToken(mockReq, mockRes);
+
+        // Assert
+        expect(mockUser.findOne).toHaveBeenCalledWith({
+          where: {
+            passwordResetToken: 'mocked-hash-value',
+            passwordResetExpires: { [Op.gt]: expect.any(Date) },
+            isActive: true
+          }
+        });
+        expect(mockBcrypt.hash).toHaveBeenCalledWith('NewPassword123!', 12);
+        expect(mockUserInstance.update).toHaveBeenCalledWith({
+          password: 'hashed-new-password',
+          passwordResetToken: null,
+          passwordResetExpires: null
+        });
+        expect(mockAuditService.logUserAction).toHaveBeenCalledWith(
+          1, 
+          mockAuditService.ACTIONS.USER_PASSWORD_RESET, 
+          mockAuditService.ENTITIES.USER, 
+          1, 
+          { method: 'token_reset' }
+        );
+        expect(mockReq.flash).toHaveBeenCalledWith('success_msg', 
+          'Your password has been successfully reset. You can now log in with your new password.');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/login');
+      });
+
+      test('should handle invalid or expired token', async () => {
+        // Arrange
+        mockUser.findOne.mockResolvedValue(null);
+
+        // Act
+        await authController.resetPasswordWithToken(mockReq, mockRes);
+
+        // Assert
+        expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 
+          'Password reset link is invalid or has expired.');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/forgot-password');
+      });
+
+      test('should handle password confirmation mismatch', async () => {
+        // Arrange
+        mockReq.body.confirmPassword = 'DifferentPassword123!';
+        
+        // Mock validation errors for password confirmation mismatch
+        mockValidationResult.mockReturnValue({
+          isEmpty: () => false,
+          array: () => [{ msg: 'Password confirmation does not match' }]
+        });
+
+        // Act
+        await authController.resetPasswordWithToken(mockReq, mockRes);
+
+        // Assert
+        expect(mockRes.render).toHaveBeenCalledWith('auth/reset-password', {
+          title: 'Reset Password',
+          token: 'valid-reset-token',
+          errors: [{ msg: 'Password confirmation does not match' }],
+          csrfToken: 'csrf-token-123'
+        });
+        expect(mockBcrypt.hash).not.toHaveBeenCalled();
+      });
+
+      test('should handle database errors during user lookup', async () => {
+        // Arrange
+        mockUser.findOne.mockRejectedValue(new Error('Database error'));
+
+        // Act
+        await authController.resetPasswordWithToken(mockReq, mockRes);
+
+        // Assert
+        expect(mockReq.flash).toHaveBeenCalledWith('error_msg', 
+          'An error occurred while processing your request. Please try again.');
+        expect(mockRes.redirect).toHaveBeenCalledWith('/auth/forgot-password');
+      });
+
+      test('should handle password hashing errors', async () => {
+        // Arrange
+        const mockUserInstance = {
+          id: 1,
+          passwordResetToken: 'valid-reset-token',
+          passwordResetExpires: new Date(Date.now() + 3600000)
+        };
+        mockUser.findOne.mockResolvedValue(mockUserInstance);
+        mockBcrypt.hash.mockRejectedValue(new Error('Hashing error'));
+
+        // Act
+        await authController.resetPasswordWithToken(mockReq, mockRes);
+
+        // Assert
+        expect(mockRes.render).toHaveBeenCalledWith('auth/reset-password', {
+          token: 'valid-reset-token',
+          error: 'An error occurred while resetting your password. Please try again.',
+          csrfToken: 'csrf-token-123',
+          title: 'Reset Password'
+        });
+      });
+
+      test('should handle database update errors', async () => {
+        // Arrange
+        const mockUserInstance = {
+          id: 1,
+          passwordResetToken: 'valid-reset-token',
+          passwordResetExpires: new Date(Date.now() + 3600000),
+          update: vi.fn().mockRejectedValue(new Error('Update error'))
+        };
+        mockUser.findOne.mockResolvedValue(mockUserInstance);
+
+        // Act
+        await authController.resetPasswordWithToken(mockReq, mockRes);
+
+        // Assert
+        expect(mockRes.render).toHaveBeenCalledWith('auth/reset-password', {
+          token: 'valid-reset-token',
+          error: 'An error occurred while resetting your password. Please try again.',
+          csrfToken: 'csrf-token-123',
+          title: 'Reset Password'
+        });
       });
     });
   });

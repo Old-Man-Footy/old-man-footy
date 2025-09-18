@@ -18,6 +18,7 @@
 import helmet from 'helmet';
 import crypto from 'crypto';
 import { getCurrentConfig } from '../config/config.mjs';
+import { setWindowMs, getFailureCount } from './failureCounterStore.mjs';
 
 /**
  * Security configuration object
@@ -103,7 +104,7 @@ const SECURITY_CONFIG = getSecurityConfig();
  * @param {boolean} perUser - Whether to track per-user instead of per-IP
  * @returns {Function} Express middleware
  */
-const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false) => {
+const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false, useFailureCounter = false) => {
   // Disable rate limiting only in development environment
   // Keep enabled in test environment so we can verify it works for users
   if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
@@ -116,7 +117,62 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false) 
 
   console.log(`🔒 Rate limiting enabled for ${process.env.NODE_ENV} environment (${perUser ? 'per-user' : 'per-IP'})`);
 
-  // Simple in-memory rate limiter
+  // If configured, use the failure-only counter store (process-local by default).
+  if (useFailureCounter) {
+    // Ensure failure counter prunes using the configured window
+    try {
+      setWindowMs(config.windowMs);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'test') console.error('failureCounter setWindowMs error', e);
+    }
+
+    return (req, res, next) => {
+      // Skip rate limiting for certain paths to prevent redirect loops
+      const isLoginPage = req.path === '/auth/login';
+      const isHomePage = req.path === '/';
+      const isStaticAsset = req.path.startsWith('/styles') ||
+                           req.path.startsWith('/public') ||
+                           req.path.startsWith('/js') ||
+                           req.path.startsWith('/icons') ||
+                           req.path.startsWith('/logos');
+
+      if (isLoginPage || isHomePage || isStaticAsset) {
+        return next();
+      }
+
+      // Derive key consistent with controller usage: prefer email.toLowerCase(), fallback to IP
+      const key = req.body?.email ? String(req.body.email).toLowerCase() : (req.ip || req.connection?.remoteAddress || 'unknown');
+
+      let failureCount = 0;
+      try {
+        failureCount = getFailureCount(key);
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'test') console.error('failureCounter getFailureCount error', e);
+      }
+
+      if (failureCount >= config.max) {
+        if (process.env.NODE_ENV !== 'test') console.log(`🚫 Auth rate limit exceeded for ${key}: ${failureCount}/${config.max} failures in ${config.windowMs}ms window`);
+
+        const isExplicitApiRequest = req.path && req.path.startsWith('/api/');
+        const isAjaxRequest = req.headers['x-requested-with'] === 'XMLHttpRequest';
+        const acceptsOnlyJson = req.accepts && req.accepts(['json', 'html']) === 'json' && !req.accepts('html');
+
+        if (isExplicitApiRequest || (isAjaxRequest && acceptsOnlyJson)) {
+          return res.status(429).json(config.message);
+        } else {
+          if (req.flash && typeof req.flash === 'function') {
+            req.flash('error_msg', config.message.error.message);
+          }
+          const redirectPath = req.path.startsWith('/auth/') ? '/auth/login' : '/';
+          return res.redirect(redirectPath);
+        }
+      }
+
+      return next();
+    };
+  }
+
+  // Simple in-memory rate limiter (fallback behaviour)
   const requests = new Map();
   
   return (req, res, next) => {
@@ -162,7 +218,7 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false) 
     
     // Check if limit exceeded
     if (validRequests.length >= config.max) {
-      console.log(`🚫 Rate limit exceeded for ${key}: ${validRequests.length}/${config.max} requests in ${config.windowMs}ms window`);
+      if (process.env.NODE_ENV !== 'test') console.log(`🚫 Rate limit exceeded for ${key}: ${validRequests.length}/${config.max} requests in ${config.windowMs}ms window`);
       
       // For web requests, always redirect with flash message to maintain user experience
       // Only return JSON for explicit API requests
@@ -201,7 +257,7 @@ export const generalRateLimit = createRateLimiter();
 /**
  * Authentication-specific rate limiting
  */
-export const authRateLimit = createRateLimiter(SECURITY_CONFIG.authRateLimit, false);
+export const authRateLimit = createRateLimiter(SECURITY_CONFIG.authRateLimit, false, true);
 
 /**
  * Form submission rate limiting (for registration, contact forms, etc.)

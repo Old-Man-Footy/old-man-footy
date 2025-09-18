@@ -12,7 +12,9 @@ import { sequelize } from '../config/database.mjs';
 import bcrypt from 'bcrypt'; // Fixed: Use bcrypt to match User model
 import crypto from 'crypto';
 import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
+import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import AuditService from '../services/auditService.mjs';
+import { failureCounter } from '../middleware/failureCounterStore.mjs';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 
 /**
@@ -52,6 +54,14 @@ const loginUser = async (req, res, next) => {
       validationErrors: errors.array(),
     });
 
+    // Increment failure counter for this key (email if present, otherwise IP)
+    try {
+      const key = req.body?.email ? req.body.email.toLowerCase() : req.ip;
+      await failureCounter.incrementFailure(key);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'test') console.error('failureCounter increment error', e);
+    }
+
     req.flash('error_msg', errors.array()[0].msg);
     return res.redirect('/auth/login');
   }
@@ -90,6 +100,13 @@ const loginUser = async (req, res, next) => {
       attemptedEmail: email.toLowerCase(),
     });
 
+    try {
+      const key = email ? email.toLowerCase() : req.ip;
+      await failureCounter.incrementFailure(key);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'test') console.error('failureCounter increment error', e);
+    }
+
     req.flash('error_msg', 'Invalid email or password.');
     return res.redirect('/auth/login');
   }
@@ -115,6 +132,13 @@ const loginUser = async (req, res, next) => {
       result: 'FAILURE',
       reason: 'Invalid password',
     });
+
+    try {
+      const key = email ? email.toLowerCase() : req.ip;
+      await failureCounter.incrementFailure(key);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'test') console.error('failureCounter increment error', e);
+    }
 
     req.flash('error_msg', 'Invalid email or password.');
     return res.redirect('/auth/login');
@@ -152,6 +176,15 @@ const loginUser = async (req, res, next) => {
     if (DEBUG_AUTH) {
       console.log(`[AUTH CONTROLLER DEBUG] req.login() successful, checking user role for redirect`);
     }
+    // On successful login, reset failure counter for this key
+    (async () => {
+      try {
+        const key = req.body?.email ? req.body.email.toLowerCase() : req.ip;
+        await failureCounter.resetFailures(key);
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'test') console.error('failureCounter reset error', e);
+      }
+    })();
     
     // Redirect based on user role
     if (user.isAdmin) {
@@ -687,6 +720,373 @@ const updateEmail = async (req, res) => {
   return res.redirect('/dashboard');
 };
 
+/**
+ * Display forgot password form
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showForgotPasswordForm = (req, res) => {
+  return res.render('auth/forgot-password', {
+    title: 'Forgot Password',
+    csrfToken: req.csrfToken(),
+  });
+};
+
+/**
+ * Handle forgot password request
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const initiateForgotPassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('auth/forgot-password', {
+      title: 'Forgot Password',
+      errors: errors.array(),
+      formData: req.body,
+      csrfToken: req.csrfToken(),
+    });
+  }
+
+  const { email } = req.body;
+
+  try {
+    // Find user by email (if exists)
+    const user = await User.findOne({ 
+      where: { 
+        email: email.toLowerCase(),
+        isActive: true
+      } 
+    });
+
+    // Always show success message to prevent user enumeration
+    const successMessage = 'If an account with that email exists, a password reset link has been sent.';
+
+    if (user) {
+      // Generate secure reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+      const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Save hashed token to database
+      await user.update({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: resetExpires,
+      });
+
+      // Send password reset email with unhashed token
+      await AuthEmailService.sendPasswordResetEmail(
+        user.email,
+        resetToken,
+        user.getFullName()
+      );
+
+      // Log successful forgot password request
+      await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, user.id, {
+        action: 'forgot_password_initiated',
+        success: true
+      });
+
+      console.log(`✅ Password reset email sent to: ${user.email} (ID: ${user.id})`);
+    } else {
+      // Log failed forgot password attempt (invalid email)
+      await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, null, {
+        action: 'forgot_password_initiated',
+        success: false,
+        reason: 'invalid_email',
+        attemptedEmail: email.toLowerCase()
+      });
+    }
+
+    req.flash('success_msg', successMessage);
+    return res.redirect('/auth/login');
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    
+    req.flash('error_msg', 'An error occurred while processing your request. Please try again.');
+    
+    // Check if error is from email service (no csrfToken) vs database error (with csrfToken)
+    const isEmailServiceError = error.message && error.message.includes('Email service');
+    
+    const renderData = {
+      title: 'Forgot Password',
+      formData: req.body,
+    };
+    
+    // Only include csrfToken for database errors, not email service errors
+    if (!isEmailServiceError) {
+      renderData.csrfToken = req.csrfToken();
+    }
+    
+    return res.render('auth/forgot-password', renderData);
+  }
+};
+
+/**
+ * Display reset password form with token
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showResetPasswordForm = async (req, res) => {
+  const { token } = req.params;
+
+  if (!token) {
+    req.flash('error_msg', 'Invalid password reset link.');
+    return res.redirect('/auth/login');
+  }
+
+  try {
+    // Hash the token to compare with database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      where: {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { [Op.gt]: new Date() },
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      req.flash('error_msg', 'Password reset link is invalid or has expired.');
+      return res.redirect('/auth/forgot-password');
+    }
+
+    return res.render('auth/reset-password', {
+      title: 'Reset Password',
+      token,
+      csrfToken: req.csrfToken(),
+    });
+
+  } catch (error) {
+    console.error('Reset password form error:', error);
+    req.flash('error_msg', 'An error occurred while processing your request. Please try again.');
+    return res.redirect('/auth/forgot-password');
+  }
+};
+
+/**
+ * Handle password reset with token
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const resetPasswordWithToken = async (req, res) => {
+  const { token } = req.params;
+  const errors = validationResult(req);
+
+  if (!token) {
+    req.flash('error_msg', 'Invalid password reset link.');
+    return res.redirect('/auth/login');
+  }
+
+  if (!errors.isEmpty()) {
+    return res.render('auth/reset-password', {
+      title: 'Reset Password',
+      token,
+      errors: errors.array(),
+      csrfToken: req.csrfToken(),
+    });
+  }
+
+  const { password } = req.body;
+
+  try {
+    // Hash the token to compare with database
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      where: {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { [Op.gt]: new Date() },
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, null, {
+        action: 'password_reset_with_token',
+        success: false,
+        reason: 'invalid_or_expired_token'
+      });
+
+      req.flash('error_msg', 'Password reset link is invalid or has expired.');
+      return res.redirect('/auth/forgot-password');
+    }
+
+    // Hash the new password
+    const saltRounds = 12;
+    let hashedPassword;
+    try {
+      hashedPassword = await bcrypt.hash(password, saltRounds);
+    } catch (hashError) {
+      console.error('Password hashing error:', hashError);
+      return res.render('auth/reset-password', {
+        token,
+        error: 'An error occurred while resetting your password. Please try again.',
+        csrfToken: req.csrfToken(),
+        title: 'Reset Password'
+      });
+    }
+
+    // Update user's password and clear reset token
+    try {
+      await user.update({
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      });
+    } catch (updateError) {
+      console.error('Database update error:', updateError);
+      return res.render('auth/reset-password', {
+        token,
+        error: 'An error occurred while resetting your password. Please try again.',
+        csrfToken: req.csrfToken(),
+        title: 'Reset Password'
+      });
+    }
+
+    // Log successful password reset
+    await AuditService.logUserAction(
+      user.id, 
+      AuditService.ACTIONS.USER_PASSWORD_RESET, 
+      AuditService.ENTITIES.USER, 
+      user.id, 
+      { method: 'token_reset' }
+    );
+
+    console.log(`✅ Password reset successful for user: ${user.email} (ID: ${user.id})`);
+
+    req.flash('success_msg', 'Your password has been successfully reset. You can now log in with your new password.');
+    return res.redirect('/auth/login');
+
+  } catch (error) {
+    console.error('Password reset with token error:', error);
+    
+    req.flash('error_msg', 'An error occurred while processing your request. Please try again.');
+    return res.redirect('/auth/forgot-password');
+  }
+};
+
+/**
+ * Handle password reset for authenticated users
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const resetPassword = async (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const errorMessage = errors.array()[0].msg;
+    
+    // Check if request is AJAX
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.status(400).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+    
+    req.flash('error_msg', errorMessage);
+    return res.redirect('/dashboard');
+  }
+
+  const { existingPassword, newPassword } = req.body;
+
+  try {
+    // Verify current password for security
+    const isPasswordValid = await req.user.checkPassword(existingPassword);
+    if (!isPasswordValid) {
+      const errorMessage = 'Current password is incorrect. Please try again.';
+      
+      // Log failed password reset attempt
+      await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
+        success: false,
+        reason: 'invalid_current_password'
+      });
+
+      if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+        return res.status(401).json({
+          success: false,
+          message: errorMessage
+        });
+      }
+      
+      req.flash('error_msg', errorMessage);
+      return res.redirect('/dashboard');
+    }
+
+    // Check if new password is the same as current password
+    const isSamePassword = await req.user.checkPassword(newPassword);
+    if (isSamePassword) {
+      const errorMessage = 'New password must be different from your current password.';
+      
+      if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+        return res.status(400).json({
+          success: false,
+          message: errorMessage
+        });
+      }
+      
+      req.flash('error_msg', errorMessage);
+      return res.redirect('/dashboard');
+    }
+
+    // Hash the new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update user's password
+    await req.user.update({
+      passwordHash: hashedPassword,
+    });
+
+    // Log successful password reset
+    await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
+      success: true
+    });
+
+    console.log(`✅ Password updated successfully for user: ${req.user.id} (${req.user.email})`);
+
+    const successMessage = 'Password updated successfully!';
+
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.json({
+        success: true,
+        message: successMessage
+      });
+    }
+
+    req.flash('success_msg', successMessage);
+    return res.redirect('/dashboard');
+
+  } catch (error) {
+    console.error('Password reset error:', error);
+    
+    // Log failed password reset attempt
+    await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
+      success: false,
+      reason: 'server_error',
+      error: error.message
+    });
+
+    const errorMessage = 'An error occurred while updating your password. Please try again.';
+
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.status(500).json({
+        success: false,
+        message: errorMessage
+      });
+    }
+
+    req.flash('error_msg', errorMessage);
+    return res.redirect('/dashboard');
+  }
+};
+
 // Raw controller functions object for wrapping
 const rawControllers = {
   showLoginForm,
@@ -701,6 +1101,11 @@ const rawControllers = {
   updatePhoneNumber,
   updateName,
   updateEmail,
+  showForgotPasswordForm,
+  initiateForgotPassword,
+  showResetPasswordForm,
+  resetPasswordWithToken,
+  resetPassword,
 };
 
 // Export wrapped versions using the wrapControllers utility
@@ -717,6 +1122,11 @@ export const {
   updatePhoneNumber: wrappedUpdatePhoneNumber,
   updateName: wrappedUpdateName,
   updateEmail: wrappedUpdateEmail,
+  showForgotPasswordForm: wrappedShowForgotPasswordForm,
+  initiateForgotPassword: wrappedInitiateForgotPassword,
+  showResetPasswordForm: wrappedShowResetPasswordForm,
+  resetPasswordWithToken: wrappedResetPasswordWithToken,
+  resetPassword: wrappedResetPassword,
 } = wrapControllers(rawControllers);
 
 // Export with original names for route compatibility
@@ -733,4 +1143,9 @@ export {
   wrappedUpdatePhoneNumber as updatePhoneNumber,
   wrappedUpdateName as updateName,
   wrappedUpdateEmail as updateEmail,
+  wrappedShowForgotPasswordForm as showForgotPasswordForm,
+  wrappedInitiateForgotPassword as initiateForgotPassword,
+  wrappedShowResetPasswordForm as showResetPasswordForm,
+  wrappedResetPasswordWithToken as resetPasswordWithToken,
+  wrappedResetPassword as resetPassword,
 };
