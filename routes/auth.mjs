@@ -1,7 +1,7 @@
 import express from 'express';
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { applyAuthSecurity, validatePassword, validateSecureEmail } from '../middleware/security.mjs';
+import { applyAuthSecurity, validatePassword, validateSecureEmail, formSubmissionRateLimit, csrfProtection } from '../middleware/security.mjs';
 import * as authController from '../controllers/auth.controller.mjs';
 
 const router = express.Router();
@@ -44,6 +44,40 @@ router.post('/register', [
         return true;
     })
 ], authController.registerUser);
+
+// Forgot password routes
+router.get('/forgot-password', authController.showForgotPasswordForm);
+
+router.post('/forgot-password', formSubmissionRateLimit, csrfProtection, [
+    body('email').custom((email) => {
+        const result = validateSecureEmail(email);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    })
+], authController.initiateForgotPassword);
+
+router.get('/reset-password/:token', [
+    param('token').isLength({ min: 64, max: 64 }).isAlphanumeric().withMessage('Invalid reset token format')
+], authController.showResetPasswordForm);
+
+router.post('/reset-password/:token', formSubmissionRateLimit, csrfProtection, [
+    param('token').isLength({ min: 64, max: 64 }).isAlphanumeric().withMessage('Invalid reset token format'),
+    body('password').custom((password) => {
+        const result = validatePassword(password);
+        if (!result.isValid) {
+            throw new Error(result.errors[0]);
+        }
+        return true;
+    }),
+    body('confirmPassword').custom((value, { req }) => {
+        if (value !== req.body.password) {
+            throw new Error('Password confirmation does not match');
+        }
+        return true;
+    })
+], authController.resetPasswordWithToken);
 
 // Invitation routes
 router.get('/invite/:token', authController.showInvitationForm);
