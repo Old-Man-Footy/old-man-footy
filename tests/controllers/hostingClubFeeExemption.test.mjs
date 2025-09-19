@@ -282,7 +282,7 @@ describe('Hosting Club Fee Exemption Tests', () => {
           clubId: 2,
           paymentAmount: 100.00, // Regular fee should be maintained
           isPaid: false, // Should not be automatically paid
-          approvalStatus: 'approved' // Carnival organizer adding clubs directly = auto-approved
+          approvalStatus: 'approved' // Carnival organiser adding clubs directly = auto-approved
         }));
       });
 
@@ -353,7 +353,7 @@ describe('Hosting Club Fee Exemption Tests', () => {
         expect(CarnivalClub.create).toHaveBeenCalledWith(expect.objectContaining({
           paymentAmount: 100.00, // Regular fee should apply
           isPaid: false,
-          approvalStatus: 'approved' // Auto-approved when carnival organizer adds club
+          approvalStatus: 'approved' // Auto-approved when carnival organiser adds club
         }));
       });
 
@@ -387,7 +387,7 @@ describe('Hosting Club Fee Exemption Tests', () => {
         expect(CarnivalClub.create).toHaveBeenCalledWith(expect.objectContaining({
           paymentAmount: 0.00,
           isPaid: false, // Should not auto-pay for non-hosting even with 0 amount
-          approvalStatus: 'approved' // Auto-approved when carnival organizer adds club
+          approvalStatus: 'approved' // Auto-approved when carnival organiser adds club
         }));
       });
 

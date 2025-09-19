@@ -97,7 +97,7 @@ const recalculateRegistrationFees = async (carnivalClubId) => {
 };
 
 /**
- * Show carnival attendees management page (for carnival organizers)
+ * Show carnival attendees management page (for carnival organisers)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */

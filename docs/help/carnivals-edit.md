@@ -4,7 +4,7 @@ title: Edit Carnival Help
 ---
 
 ## Overview
-The Edit Carnival page lets organizers update information about a specific carnival. It’s used to correct details, change dates, or update locations.
+The Edit Carnival page lets organisers update information about a specific carnival. It’s used to correct details, change dates, or update locations.
 
 ## Key Features Explained
 ### Edit Form

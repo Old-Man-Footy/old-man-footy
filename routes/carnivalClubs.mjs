@@ -9,7 +9,7 @@ const router = express.Router();
 // Apply centralized security to all routes
 router.use(applySecurity);
 
-// Carnival attendees management routes (for carnival organizers)
+// Carnival attendees management routes (for carnival organisers)
 // View attendees for a carnival
 router.get('/:carnivalId/attendees', ensureAuthenticated, carnivalClubController.showCarnivalAttendees);
 

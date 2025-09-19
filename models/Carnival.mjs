@@ -508,7 +508,7 @@ class Carnival extends Model {
 
       return {
         success: true,
-        message: `You have successfully released ownership of "${carnival.title}". The carnival is now available for the correct organizer to claim.${warningMessage}`,
+        message: `You have successfully released ownership of "${carnival.title}". The carnival is now available for the correct organiser to claim.${warningMessage}`,
         carnival: carnival,
         releasedBy: {
           userId: user.id,

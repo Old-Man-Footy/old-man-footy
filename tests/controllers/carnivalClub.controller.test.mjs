@@ -337,7 +337,7 @@ describe('Carnival Club Controller', () => {
   });
 
   describe('Carnival Attendee Management', () => {
-    it('should display carnival attendees for authorized carnival organizer', async () => {
+    it('should display carnival attendees for authorized carnival organiser', async () => {
       const mockCarnival = createMockCarnival({ id: 1, createdByUserId: 1 });
       const mockAttendingClubs = [
         createMockCarnivalClub({ id: 1, isPaid: true, playerCount: 15, approvalStatus: 'approved', numberOfTeams: 2 }),
@@ -378,7 +378,7 @@ describe('Carnival Club Controller', () => {
       expect(res.redirect).toHaveBeenCalledWith('/carnivals');
     });
 
-    it('should show add club to carnival form for authorized organizer', async () => {
+    it('should show add club to carnival form for authorized organiser', async () => {
       const mockCarnival = createMockCarnival();
       const mockAvailableClubs = [
         createMockClub({ id: 2, clubName: 'Available Club 1' }),
@@ -632,7 +632,7 @@ describe('Carnival Club Controller', () => {
   });
 
   describe('Player Management', () => {
-    it('should show carnival club players for organizer', async () => {
+    it('should show carnival club players for organiser', async () => {
       const mockCarnival = createMockCarnival();
       const mockRegistration = createMockCarnivalClub();
       const mockAssignedPlayers = [
