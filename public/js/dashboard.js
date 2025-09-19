@@ -475,9 +475,8 @@ export const dashboardManager = {
     async loadSubscriptionData() {
         try {
             const response = await fetch('/api/subscriptions/me', {
-                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
 
