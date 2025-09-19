@@ -122,7 +122,7 @@ class DataCleanup {
                 [Op.or]: [
                     { title: { [Op.in]: seedCarnivalTitles } },
                     { clubLogoURL: '/icons/seed.svg' }, // Seed marker
-                    { organiserContactEmail: { [Op.like]: '%@%masters.com.au' } }, // Test organizer emails
+                    { organiserContactEmail: { [Op.like]: '%@%masters.com.au' } }, // Test organiser emails
                     { 
                         // MySideline imported data (if we want to clear it too)
                         isManuallyEntered: false,

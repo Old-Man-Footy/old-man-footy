@@ -4,7 +4,7 @@ title: Add Players to Carnival Help
 ---
 
 ## Overview
-The Add Players to Carnival page lets organizers add players to a carnival’s roster. This is crucial for tracking participation and eligibility.
+The Add Players to Carnival page lets organisers add players to a carnival’s roster. This is crucial for tracking participation and eligibility.
 
 ## Key Features Explained
 ### Player Selection
