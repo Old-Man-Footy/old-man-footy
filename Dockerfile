@@ -64,6 +64,7 @@ COPY --chown=appuser:nodejs views/ ./views/
 COPY --chown=appuser:nodejs public/ ./public/
 COPY --chown=appuser:nodejs migrations/ ./migrations/
 COPY --chown=appuser:nodejs scripts/ ./scripts/
+COPY --chown=appuser:nodejs docs/help/ ./docs/help/
 
 # Prune any development dependencies
 RUN npm prune --production
