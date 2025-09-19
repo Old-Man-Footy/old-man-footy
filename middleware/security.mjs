@@ -379,6 +379,27 @@ export const sanitizeInput = (req, res, next) => {
 };
 
 /**
+ * CSRF token generator middleware
+ * Provides req.csrfToken() function to get or generate CSRF tokens
+ */
+export const csrfTokenProvider = (req, res, next) => {
+  // Add csrfToken function to request object
+  req.csrfToken = () => {
+    if (!req.session) {
+      throw new Error('Session is required for CSRF protection');
+    }
+    
+    if (!req.session.csrfToken) {
+      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    }
+    
+    return req.session.csrfToken;
+  };
+  
+  next();
+};
+
+/**
  * CSRF protection middleware
  * Validates CSRF tokens for state-changing operations
  */
@@ -613,6 +634,7 @@ export const applySecurity = [
   securityHeaders,
   generalRateLimit,
   sessionSecurity,
+  csrfTokenProvider,
   sanitizeInput
 ];
 
