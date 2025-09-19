@@ -22,6 +22,8 @@ export const dashboardManager = {
         this.initializeChecklist();
         // Initialize password reset functionality
         this.initializePasswordReset();
+        // Initialize email subscription functionality
+        this.initializeEmailSubscription();
     },
 
     cacheElements() {
@@ -35,6 +37,18 @@ export const dashboardManager = {
         this.elements.submitPasswordReset = document.getElementById('submitPasswordReset');
         this.elements.passwordResetMessages = document.getElementById('passwordResetMessages');
         this.elements.updatePasswordModal = document.getElementById('updatePasswordModal');
+        
+        // Email subscription elements
+        this.elements.emailSubscriptionModal = document.getElementById('emailSubscriptionModal');
+        this.elements.subscriptionToggle = document.getElementById('subscriptionToggle');
+        this.elements.stateSelection = document.getElementById('stateSelection');
+        this.elements.stateCheckboxes = document.querySelectorAll('.state-checkbox');
+        this.elements.selectAllStatesBtn = document.getElementById('selectAllStates');
+        this.elements.clearAllStatesBtn = document.getElementById('clearAllStates');
+        this.elements.unsubscribeSection = document.getElementById('unsubscribeSection');
+        this.elements.unsubscribeBtn = document.getElementById('unsubscribeBtn');
+        this.elements.saveSubscriptionBtn = document.getElementById('saveSubscriptionBtn');
+        this.elements.subscriptionAlert = document.getElementById('subscriptionAlert');
     },
 
     bindEvents() {
@@ -415,6 +429,235 @@ export const dashboardManager = {
     clearPasswordResetForm() {
         if (this.elements.passwordResetForm) {
             this.elements.passwordResetForm.reset();
+        }
+    },
+
+    /**
+     * Initialize email subscription functionality
+     */
+    initializeEmailSubscription() {
+        if (!this.elements.emailSubscriptionModal) return;
+
+        // Load subscription data when modal opens
+        this.elements.emailSubscriptionModal.addEventListener('shown.bs.modal', () => {
+            this.loadSubscriptionData();
+        });
+
+        // Handle subscription toggle
+        this.elements.subscriptionToggle?.addEventListener('change', () => {
+            this.toggleSubscriptionState();
+        });
+
+        // Handle select all states
+        this.elements.selectAllStatesBtn?.addEventListener('click', () => {
+            this.selectAllStates();
+        });
+
+        // Handle clear all states
+        this.elements.clearAllStatesBtn?.addEventListener('click', () => {
+            this.clearAllStates();
+        });
+
+        // Handle unsubscribe
+        this.elements.unsubscribeBtn?.addEventListener('click', () => {
+            this.handleUnsubscribe();
+        });
+
+        // Handle save subscription
+        this.elements.saveSubscriptionBtn?.addEventListener('click', () => {
+            this.saveSubscription();
+        });
+    },
+
+    /**
+     * Load subscription data from API
+     */
+    async loadSubscriptionData() {
+        try {
+            const response = await fetch('/api/subscriptions/me', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load subscription data');
+            }
+
+            const data = await response.json();
+            this.populateSubscriptionForm(data.subscription);
+        } catch (error) {
+            console.error('Error loading subscription data:', error);
+            this.showSubscriptionAlert('Error loading subscription data', 'danger');
+        }
+    },
+
+    /**
+     * Populate the subscription form with data
+     */
+    populateSubscriptionForm(subscription) {
+        const isSubscribed = subscription && subscription.isActive;
+        
+        // Set subscription toggle
+        if (this.elements.subscriptionToggle) {
+            this.elements.subscriptionToggle.checked = isSubscribed;
+        }
+
+        // Show/hide sections based on subscription status
+        this.toggleSubscriptionState();
+
+        // Set state checkboxes
+        if (subscription && subscription.states) {
+            this.elements.stateCheckboxes.forEach(checkbox => {
+                checkbox.checked = subscription.states.includes(checkbox.value);
+            });
+        }
+    },
+
+    /**
+     * Toggle subscription state sections
+     */
+    toggleSubscriptionState() {
+        const isChecked = this.elements.subscriptionToggle?.checked;
+        
+        if (this.elements.stateSelection) {
+            this.elements.stateSelection.style.display = isChecked ? 'block' : 'none';
+        }
+        
+        if (this.elements.unsubscribeSection) {
+            this.elements.unsubscribeSection.style.display = isChecked ? 'block' : 'none';
+        }
+    },
+
+    /**
+     * Select all states
+     */
+    selectAllStates() {
+        this.elements.stateCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+    },
+
+    /**
+     * Clear all states
+     */
+    clearAllStates() {
+        this.elements.stateCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    },
+
+    /**
+     * Handle unsubscribe action
+     */
+    async handleUnsubscribe() {
+        if (!confirm('Are you sure you want to unsubscribe from all email notifications?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/subscriptions/me', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to unsubscribe');
+            }
+
+            this.showSubscriptionAlert('Successfully unsubscribed from all email notifications', 'success');
+            
+            // Reset form
+            this.elements.subscriptionToggle.checked = false;
+            this.toggleSubscriptionState();
+            this.clearAllStates();
+            
+            // Close modal after delay
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(this.elements.emailSubscriptionModal)?.hide();
+                // Refresh page to update subscription status in dashboard
+                window.location.reload();
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error unsubscribing:', error);
+            this.showSubscriptionAlert('Error unsubscribing. Please try again.', 'danger');
+        }
+    },
+
+    /**
+     * Save subscription preferences
+     */
+    async saveSubscription() {
+        const isSubscribed = this.elements.subscriptionToggle?.checked;
+        
+        if (!isSubscribed) {
+            this.showSubscriptionAlert('Please enable email notifications first', 'warning');
+            return;
+        }
+
+        // Get selected states
+        const selectedStates = Array.from(this.elements.stateCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+
+        if (selectedStates.length === 0) {
+            this.showSubscriptionAlert('Please select at least one state/territory', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/subscriptions/me', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    isActive: true,
+                    states: selectedStates
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save subscription');
+            }
+
+            this.showSubscriptionAlert('Email preferences saved successfully!', 'success');
+            
+            // Close modal after delay
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(this.elements.emailSubscriptionModal)?.hide();
+                // Refresh page to update subscription status in dashboard
+                window.location.reload();
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error saving subscription:', error);
+            this.showSubscriptionAlert('Error saving preferences. Please try again.', 'danger');
+        }
+    },
+
+    /**
+     * Show subscription alert message
+     */
+    showSubscriptionAlert(message, type = 'info') {
+        if (!this.elements.subscriptionAlert) return;
+
+        this.elements.subscriptionAlert.className = `alert alert-${type}`;
+        this.elements.subscriptionAlert.innerHTML = `
+            <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'}"></i>
+            ${message}
+        `;
+        this.elements.subscriptionAlert.style.display = 'block';
+
+        // Auto-hide success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                this.elements.subscriptionAlert.style.display = 'none';
+            }, 3000);
         }
     },
 

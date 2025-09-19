@@ -218,6 +218,17 @@ export const getDashboard = asyncHandler(async (req, res) => {
     });
   }
 
+  // Get user's email subscription status
+  let emailSubscription = null;
+  try {
+    emailSubscription = await EmailSubscription.findOne({
+      where: { email: userWithClub.email }
+    });
+  } catch (error) {
+    console.error('Error fetching email subscription:', error);
+    // Continue without subscription data
+  }
+
   // Update the user object to include club information for template
   const enrichedUser = {
     ...userWithClub.toJSON(),
@@ -234,6 +245,8 @@ export const getDashboard = asyncHandler(async (req, res) => {
     carnivals: userCarnivals, // Add carnivals variable as alias for userCarnivals
     eligibleDelegates,
     playerCount, // New: player count for user's club
+    emailSubscription, // New: user's email subscription status
+    AUSTRALIAN_STATES, // New: available states for subscription management
     additionalCSS: [],
   });
 });

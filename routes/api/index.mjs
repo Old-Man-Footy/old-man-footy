@@ -3,6 +3,7 @@ import { applyApiSecurity } from '../../middleware/security.mjs';
 import sponsorApiRoutes from './sponsors.mjs';
 import imageApiRoutes from './images.mjs';
 import helpApiRoutes from './help.mjs';
+import subscriptionApiRoutes from './subscriptions.mjs';
 import * as maintenanceController from '../../controllers/maintenance.controller.mjs';
 
 const router = express.Router();
@@ -14,6 +15,7 @@ router.use(applyApiSecurity);
 router.use('/sponsors', sponsorApiRoutes);
 router.use('/images', imageApiRoutes);
 router.use('/help', helpApiRoutes);
+router.use('/subscriptions', subscriptionApiRoutes);
 
 // Maintenance API routes
 router.get('/maintenance/status', maintenanceController.getMaintenanceStatus);

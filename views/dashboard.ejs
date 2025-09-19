@@ -157,6 +157,55 @@
         </div>
     </div>
 
+    <!-- Email Subscription Management Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info py-2">
+                    <h6 class="mb-0">
+                        <i class="bi bi-envelope-at"></i> Email Notifications
+                    </h6>
+                </div>
+                <div class="card-body py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-bell text-info me-3" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h6 class="mb-1">Newsletter & Event Notifications</h6>
+                                    <p class="mb-0 text-muted">
+                                        <% if (emailSubscription && emailSubscription.isActive) { %>
+                                            <span class="badge bg-success me-2">
+                                                <i class="bi bi-check-circle"></i> Subscribed
+                                            </span>
+                                            Receiving updates for 
+                                            <% if (emailSubscription.states && emailSubscription.states.length > 0) { %>
+                                                <%= emailSubscription.states.join(', ') %>
+                                                (<%= emailSubscription.states.length %> state<%= emailSubscription.states.length !== 1 ? 's' : '' %>)
+                                            <% } else { %>
+                                                all states
+                                            <% } %>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary me-2">
+                                                <i class="bi bi-x-circle"></i> Not subscribed
+                                            </span>
+                                            You're not receiving email notifications
+                                        <% } %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailSubscriptionModal">
+                                <i class="bi bi-gear"></i> Manage Preferences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Stats Cards -->
     <div class="row mb-4 dashboard-stats">
         <div class="col-md-6 mb-3">
@@ -349,11 +398,11 @@
                     <% } else { %>
                         <div class="text-center py-5">
                             <i class="bi bi-calendar-event display-4 text-muted mb-3"></i>
-                            <h4 class="text-muted">Ready to host a Masters carnival?</h4>
+                            <h4 class="text-muted">Ready to host a Masters carnival?</h4> 
                             <p class="text-muted mb-4">
-                                Start by creating your carnival details on our platform first.
-                                <br>
-                                <small>You can then register it officially with the NRL after saving your carnival.</small>
+                                For NRL-affiliated carnivals, register via PlayNRL and then claim the imported event here. 
+                                <br/>
+                                All other carnivals can be created manually.
                             </p>
                             <% if (user.clubId) { %>
                                 <a href="/carnivals/new" class="btn btn-tertiary btn-lg">
@@ -362,7 +411,7 @@
                             <% } else { %>
                                 <div class="alert alert-info d-inline-block">
                                     <i class="bi bi-info-circle"></i>
-                                    <strong>Join a club first:</strong> You need to be associated with a club to create carnivals.
+                                    <strong>Join a club first:</strong> You need to be associated with a club to create, or claim carnivals.
                                     <div class="mt-2">
                                         <a href="/clubs/manage" class="btn btn-primary btn-sm">
                                             <i class="bi bi-building"></i> Join or Create Club
@@ -991,8 +1040,8 @@
                     </p>
                     
                     <div class="mb-3">
-                        <label for="currentPassword" class="form-label">Current Password</label>
-                        <input type="password" class="form-control" id="currentPassword" name="current-password" required>
+                        <label for="currentPasswordEmail" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPasswordEmail" name="current-password" required>
                         <div class="form-text">
                             For security, please confirm your current password to change your email.
                         </div>
@@ -1115,14 +1164,6 @@
                     </div>
                     
                     <div class="alert alert-warning">
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="confirmLeave" name="confirmed" value="true" required>
-                        <label class="form-check-label" for="confirmLeave">
-                            <strong>I confirm that I want to leave <%= user.clubId.clubName %></strong>
-                        </label>
-                    </div>
-                    
-                    <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i>
                         <strong>This action cannot be undone.</strong> 
                         <% if (user.isPrimaryDelegate) { %>
@@ -1143,5 +1184,93 @@
     </div>
 </div>
 <% } %>
+
+<!-- Email Subscription Modal -->
+<div class="modal fade" id="emailSubscriptionModal" tabindex="-1" aria-labelledby="emailSubscriptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailSubscriptionModalLabel">
+                    <i class="bi bi-envelope-plus"></i> Email Notification Preferences
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="subscriptionAlert" class="alert" style="display: none;"></div>
+                
+                <p class="text-muted mb-4">
+                    Manage your email notifications for carnivals and events in different states.
+                </p>
+                
+                <!-- Subscription Toggle -->
+                <div class="mb-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="subscriptionToggle">
+                        <label class="form-check-label" for="subscriptionToggle">
+                            <strong>Receive email notifications</strong>
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        Turn on to receive notifications about carnivals and events
+                    </div>
+                </div>
+                
+                <!-- State Selection -->
+                <div id="stateSelection" style="display: none;">
+                    <h6 class="mb-3">
+                        <i class="bi bi-geo-alt"></i> Select States/Territories
+                    </h6>
+                    <p class="text-muted small mb-3">
+                        Choose which states and territories you'd like to receive notifications for:
+                    </p>
+                    
+                    <div class="row">
+                        <% AUSTRALIAN_STATES.forEach((state, index) => { %>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input state-checkbox" type="checkbox" 
+                                       id="state_<%= state %>" value="<%= state %>">
+                                <label class="form-check-label" for="state_<%= state %>">
+                                    <%= state %>
+                                </label>
+                            </div>
+                        </div>
+                        <% }) %>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllStates">
+                            <i class="bi bi-check-all"></i> Select All
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllStates">
+                            <i class="bi bi-x-circle"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Unsubscribe Section -->
+                <div id="unsubscribeSection" class="mt-4" style="display: none;">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Unsubscribe from all notifications</strong>
+                        <p class="mb-0 mt-2">
+                            You can opt out of all email notifications. You can re-subscribe at any time.
+                        </p>
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-danger" id="unsubscribeBtn">
+                        <i class="bi bi-envelope-slash"></i> Unsubscribe from All Emails
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSubscriptionBtn">
+                    <i class="bi bi-check"></i> Save Preferences
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script type="module" src="/js/dashboard.js"></script>
