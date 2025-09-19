@@ -111,7 +111,7 @@ app.use(flashTemplateVariables);
  */
 async function initializeMySidelineSync() {
     // Skip initialization in test environment
-    if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+    if (process.env.NODE_ENV === 'test' && process.env.JEST_WORKER_ID) {
         console.log('🧪 Skipping MySideline sync in test environment');
         return;
     }
