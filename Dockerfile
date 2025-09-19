@@ -51,20 +51,20 @@ WORKDIR /app
 
 # Copy dependencies and application files
 COPY --from=deps --chown=appuser:nodejs /app/node_modules ./node_modules
-COPY --chown=appuser:nodejs package*.json ./
 COPY --chown=appuser:nodejs .sequelizerc ./
 COPY --chown=appuser:nodejs app.mjs ./
 COPY --chown=appuser:nodejs config/ ./config/
 COPY --chown=appuser:nodejs controllers/ ./controllers/
+COPY --chown=appuser:nodejs docs/help/ ./docs/help/
 COPY --chown=appuser:nodejs middleware/ ./middleware/
+COPY --chown=appuser:nodejs migrations/ ./migrations/
 COPY --chown=appuser:nodejs models/ ./models/
+COPY --chown=appuser:nodejs package*.json ./
+COPY --chown=appuser:nodejs public/ ./public/
 COPY --chown=appuser:nodejs routes/ ./routes/
+COPY --chown=appuser:nodejs scripts/ ./scripts/
 COPY --chown=appuser:nodejs services/ ./services/
 COPY --chown=appuser:nodejs views/ ./views/
-COPY --chown=appuser:nodejs public/ ./public/
-COPY --chown=appuser:nodejs migrations/ ./migrations/
-COPY --chown=appuser:nodejs scripts/ ./scripts/
-COPY --chown=appuser:nodejs docs/help/ ./docs/help/
 
 # Prune any development dependencies
 RUN npm prune --production
