@@ -94,7 +94,8 @@ tests/
 *.spec.js
 
 # Documentation
-docs/
+docs/*
+!docs/help
 
 # Development files
 debug-*.png
