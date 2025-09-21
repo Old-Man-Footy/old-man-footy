@@ -18,16 +18,16 @@ router.get('/:carnivalId/attendees/add', ensureAuthenticated, carnivalClubContro
 
 // Register club for carnival
 router.post('/:carnivalId/attendees/add', ensureAuthenticated, [
-    body('clubId').isInt({ min: 1 }).withMessage('Valid club selection required'),
-    body('playerCount').optional().isInt({ min: 0, max: 100 }).withMessage('Player count must be between 0 and 100'),
-    body('numberOfTeams').optional().isInt({ min: 1, max: 10 }).withMessage('Number of teams must be between 1 and 10'),
-    body('teamName').optional().isLength({ max: 100 }).withMessage('Team name must be 100 characters or less'),
-    body('contactPerson').optional().isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
-    body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
-    body('contactPhone').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('specialRequirements').optional().isLength({ max: 500 }).withMessage('Special requirements must be 500 characters or less'),
-    body('registrationNotes').optional().isLength({ max: 1000 }).withMessage('Registration notes must be 1000 characters or less'),
-    body('paymentAmount').optional().isFloat({ min: 0 }).withMessage('Payment amount must be a positive number')
+    body('clubId').isInt({ min: 1 }).withMessage('Valid club selection required').toInt(),
+    body('playerCount').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0, max: 100 }).withMessage('Player count must be between 0 and 100').toInt(),
+    body('numberOfTeams').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1, max: 10 }).withMessage('Number of teams must be between 1 and 10').toInt(),
+    body('teamName').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Team name must be 100 characters or less'),
+    body('contactPerson').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
+    body('contactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid email address required'),
+    body('contactPhone').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('specialRequirements').optional({ nullable: true, checkFalsy: true }).isLength({ max: 500 }).withMessage('Special requirements must be 500 characters or less'),
+    body('registrationNotes').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Registration notes must be 1000 characters or less'),
+    body('paymentAmount').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('Payment amount must be a positive number').toFloat()
 ], carnivalClubController.registerClubForCarnival);
 
 // Edit club registration form
@@ -35,15 +35,15 @@ router.get('/:carnivalId/attendees/:registrationId/edit', ensureAuthenticated, c
 
 // Update club registration
 router.post('/:carnivalId/attendees/:registrationId/edit', ensureAuthenticated, [
-    body('playerCount').optional().isInt({ min: 0, max: 100 }).withMessage('Player count must be between 0 and 100'),
-    body('numberOfTeams').optional().isInt({ min: 1, max: 10 }).withMessage('Number of teams must be between 1 and 10'),
-    body('teamName').optional().isLength({ max: 100 }).withMessage('Team name must be 100 characters or less'),
-    body('contactPerson').optional().isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
-    body('contactEmail').optional().isEmail().withMessage('Valid email address required'),
-    body('contactPhone').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('specialRequirements').optional().isLength({ max: 500 }).withMessage('Special requirements must be 500 characters or less'),
-    body('registrationNotes').optional().isLength({ max: 1000 }).withMessage('Registration notes must be 1000 characters or less'),
-    body('paymentAmount').optional().isFloat({ min: 0 }).withMessage('Payment amount must be a positive number')
+    body('playerCount').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0, max: 100 }).withMessage('Player count must be between 0 and 100').toInt(),
+    body('numberOfTeams').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1, max: 10 }).withMessage('Number of teams must be between 1 and 10').toInt(),
+    body('teamName').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Team name must be 100 characters or less'),
+    body('contactPerson').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
+    body('contactEmail').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Valid email address required'),
+    body('contactPhone').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('specialRequirements').optional({ nullable: true, checkFalsy: true }).isLength({ max: 500 }).withMessage('Special requirements must be 500 characters or less'),
+    body('registrationNotes').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Registration notes must be 1000 characters or less'),
+    body('paymentAmount').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 0 }).withMessage('Payment amount must be a positive number').toFloat()
 ], carnivalClubController.updateRegistration);
 
 // Remove club from carnival (API endpoint)

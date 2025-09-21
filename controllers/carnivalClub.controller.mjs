@@ -238,7 +238,10 @@ const registerClubForCarnivalHandler = async (req, res) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash('error_msg', 'Please correct the validation errors.');
+    // Flash specific validation errors
+    errors.array().forEach(error => {
+      req.flash('error_msg', `${error.path}: ${error.msg}`);
+    });
     return res.redirect(`/carnivals/${carnivalId}/attendees/add`);
   }
 
