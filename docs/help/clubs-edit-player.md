@@ -8,7 +8,7 @@ The Edit Club Player page lets you update information for a specific player. Itâ
 
 ## Key Features Explained
 ### Edit Form
-Fields for name, position, registration date, and other details.
+Fields for name, registration date, and other details.
 
 ### Save Changes
 Button to save updates to the playerâ€™s record.

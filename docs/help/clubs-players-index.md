@@ -11,14 +11,14 @@ The Club Players Index page lists all players registered with a club. It’s the
 Shows all players, including names, positions, and registration status.
 
 ### Search & Filter
-Find players by name, position, or status using search and filter options.
+Find players by name, or status using search and filter options.
 
 ### Export Roster
 Download the full player list for offline use.
 
 ## Step-by-Step Guides
 **How to Find a Player:**
-1. Use the search bar to enter a player name or position.
+1. Use the search bar to enter a player name.
 2. Apply filters for registration status or other criteria.
 3. Browse the results and click a player for details.
 

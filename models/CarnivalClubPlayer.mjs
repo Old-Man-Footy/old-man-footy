@@ -165,7 +165,7 @@ class CarnivalClubPlayer extends Model {
         {
           model: ClubPlayer,
           as: 'clubPlayer',
-          attributes: ['id', 'firstName', 'lastName', 'dateOfBirth', 'position']
+          attributes: ['id', 'firstName', 'lastName', 'dateOfBirth']
         }
       ],
       order: [['teamNumber', 'ASC'], ['clubPlayer', 'lastName', 'ASC']]

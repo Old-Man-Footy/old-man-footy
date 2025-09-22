@@ -8,7 +8,7 @@ The Add Club Player page lets club managers add new players to their club. This 
 
 ## Key Features Explained
 ### Add Form
-Fields for player name, position, and registration date.
+Fields for player name, and registration date.
 
 ### Save Player
 Button to save the new player to the club.
