@@ -30,15 +30,15 @@ router.get('/me', subscriptionController.getUserSubscription);
  */
 router.put('/me', [
     body('states')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .isArray()
         .withMessage('States must be an array'),
     body('states.*')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .isIn(AUSTRALIAN_STATES)
         .withMessage('Invalid state code'),
     body('isActive')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .isBoolean()
         .withMessage('isActive must be a boolean')
 ], subscriptionController.updateUserSubscription);

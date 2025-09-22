@@ -19,10 +19,10 @@ router.get('/:id', carnivalSponsorController.getCarnivalSponsor);
 router.post('/', ensureAuthenticated, [
     body('carnivalId').isInt({ min: 1 }).withMessage('Valid carnival ID is required'),
     body('sponsorId').isInt({ min: 1 }).withMessage('Valid sponsor ID is required'),
-    body('sponsorshipLevel').optional().isIn(['Platinum', 'Gold', 'Silver', 'Bronze', 'Supporting']).withMessage('Invalid sponsorship level'),
-    body('sponsorshipValue').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Sponsorship value must be a valid amount'),
-    body('description').optional().trim().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
-    body('contactEmail').optional().custom((email) => {
+    body('sponsorshipLevel').optional({ nullable: true, checkFalsy: true }).isIn(['Platinum', 'Gold', 'Silver', 'Bronze', 'Supporting']).withMessage('Invalid sponsorship level'),
+    body('sponsorshipValue').optional({ nullable: true, checkFalsy: true }).isDecimal({ decimal_digits: '0,2' }).withMessage('Sponsorship value must be a valid amount'),
+    body('description').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
+    body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
         if (email && email.trim()) {
             const result = validateSecureEmail(email);
             if (!result.isValid) {
@@ -33,17 +33,17 @@ router.post('/', ensureAuthenticated, [
     }),
     body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('logoUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid logo URL required'),
-    body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a non-negative integer')
+    body('displayOrder').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0 }).withMessage('Display order must be a non-negative integer')
 ], carnivalSponsorController.createCarnivalSponsor);
 
 // Update a carnival-sponsor relationship
 router.put('/:id', ensureAuthenticated, [
-    body('sponsorshipLevel').optional().isIn(['Platinum', 'Gold', 'Silver', 'Bronze', 'Supporting']).withMessage('Invalid sponsorship level'),
-    body('sponsorshipValue').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Sponsorship value must be a valid amount'),
-    body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a non-negative integer'),
-    body('logoDisplaySize').optional().isIn(['Small', 'Medium', 'Large']).withMessage('Invalid logo display size'),
-    body('includeInProgram').optional().isBoolean().withMessage('Include in program must be true or false'),
-    body('includeOnWebsite').optional().isBoolean().withMessage('Include on website must be true or false')
+    body('sponsorshipLevel').optional({ nullable: true, checkFalsy: true }).isIn(['Platinum', 'Gold', 'Silver', 'Bronze', 'Supporting']).withMessage('Invalid sponsorship level'),
+    body('sponsorshipValue').optional({ nullable: true, checkFalsy: true }).isDecimal({ decimal_digits: '0,2' }).withMessage('Sponsorship value must be a valid amount'),
+    body('displayOrder').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0 }).withMessage('Display order must be a non-negative integer'),
+    body('logoDisplaySize').optional({ nullable: true, checkFalsy: true }).isIn(['Small', 'Medium', 'Large']).withMessage('Invalid logo display size'),
+    body('includeInProgram').optional({ nullable: true, checkFalsy: true }).isBoolean().withMessage('Include in program must be true or false'),
+    body('includeOnWebsite').optional({ nullable: true, checkFalsy: true }).isBoolean().withMessage('Include on website must be true or false')
 ], carnivalSponsorController.updateCarnivalSponsor);
 
 // Delete/deactivate a carnival-sponsor relationship

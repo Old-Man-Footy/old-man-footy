@@ -67,7 +67,7 @@ router.post('/contact', [
         return true;
     }),
     body('phone')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .trim()
         .isLength({ max: 20 })
         .withMessage('Phone number must be less than 20 characters'),
@@ -75,7 +75,7 @@ router.post('/contact', [
         .isIn(['general', 'technical', 'carnival', 'delegate', 'registration', 'feedback', 'other'])
         .withMessage('Please select a valid subject'),
     body('clubName')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .trim()
         .isLength({ max: 100 })
         .withMessage('Club name must be less than 100 characters'),
@@ -84,7 +84,7 @@ router.post('/contact', [
         .isLength({ min: 10, max: 2000 })
         .withMessage('Message is required and must be between 10-2000 characters'),
     body('newsletter')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .isIn(['on'])
         .withMessage('Invalid newsletter subscription value')
 ], mainController.postContact);

@@ -39,10 +39,10 @@ const validateCarnival = [
         }
         return true;
     }),
-    body('organiserContactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('registrationFee').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Registration fee must be a valid amount'),
-    body('feesDescription').optional().trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
-    body('callForVolunteers').optional().trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),
+    body('organiserContactPhone').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('registrationFee').optional({ nullable: true, checkFalsy: true }).isDecimal({ decimal_digits: '0,2' }).withMessage('Registration fee must be a valid amount'),
+    body('feesDescription').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
+    body('callForVolunteers').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),
     body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state is required'),
     body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
     body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),

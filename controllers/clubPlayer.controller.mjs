@@ -765,13 +765,13 @@ export const validatePlayer = [
     .normalizeEmail(),
 
   body('notes')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .trim()
     .isLength({ max: 1000 })
     .withMessage('Notes cannot exceed 1000 characters'),
 
   body('shorts')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isIn(['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'])
     .withMessage('Shorts must be one of: Unrestricted, Red, Yellow, Blue, Green')
 ];
@@ -790,15 +790,15 @@ export const validatePlayerId = [
  */
 export const validateCsvImport = [
   body('shortsColor')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isIn(['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'])
     .withMessage('Invalid shorts color selection'),
   body('updateExisting')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isBoolean()
     .withMessage('Update existing must be boolean'),
   body('notes')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isLength({ max: 1000 })
     .withMessage('Notes cannot exceed 1000 characters')
 ];

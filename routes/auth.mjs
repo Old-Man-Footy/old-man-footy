@@ -25,7 +25,7 @@ router.post('/register', [
         }
         return true;
     }),
-    body('phoneNumber').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
+    body('phoneNumber').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
         .custom((value) => {
             if (value && value.trim()) {
                 // Allow common Australian phone number formats: +61, 04, (02), etc.
@@ -111,7 +111,7 @@ router.post('/transfer-delegate-role', ensureAuthenticated, [
 
 // Update phone number (for logged-in users) - requires authentication
 router.post('/update-phone', ensureAuthenticated, [
-    body('phoneNumber').optional().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
+    body('phoneNumber').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
         .custom((value) => {
             if (value && value.trim()) {
                 // Allow common Australian phone number formats: +61, 04, (02), etc.

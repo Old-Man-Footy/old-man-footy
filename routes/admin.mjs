@@ -83,7 +83,7 @@ const clubUpdateValidation = [
         return true;
     }),
     body('contactPhone')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .isLength({ max: 20 })
         .withMessage('Contact phone must be 20 characters or less')
 ];

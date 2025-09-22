@@ -155,13 +155,13 @@ const validatePlayer = [
   playerEmail('email'),
 
   body('notes')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .trim()
     .isLength({ max: 1000 })
     .withMessage('Notes cannot exceed 1000 characters'),
 
   body('shorts')
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isIn(['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'])
     .withMessage('Shorts must be one of: Unrestricted, Red, Yellow, Blue, Green')
 ];

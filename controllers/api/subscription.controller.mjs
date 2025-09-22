@@ -13,6 +13,11 @@ import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
  * @param {Response} res Express response object
  */
 export const getUserSubscription = async (req, res) => {
+    // Validate user authentication before try-catch block
+    if (!req.user || !req.user.email) {
+        throw new Error('User authentication required');
+    }
+    
     try {
         const userEmail = req.user.email;
         
@@ -59,6 +64,11 @@ export const getUserSubscription = async (req, res) => {
  * @param {Response} res Express response object
  */
 export const updateUserSubscription = async (req, res) => {
+    // Validate user authentication before try-catch block
+    if (!req.user || !req.user.email) {
+        throw new Error('User authentication required');
+    }
+    
     try {
         // Check for validation errors
         const errors = validationResult(req);
@@ -72,6 +82,32 @@ export const updateUserSubscription = async (req, res) => {
 
         const userEmail = req.user.email;
         const { states, isActive } = req.body;
+        
+        // Check if there are actual changes to make
+        if (states === undefined && isActive === undefined) {
+            // No changes to make, but return current subscription
+            const existingSubscription = await EmailSubscription.findOne({
+                where: { email: userEmail }
+            });
+            
+            if (!existingSubscription) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No subscription found'
+                });
+            }
+            
+            return res.status(200).json({
+                success: true,
+                message: 'Subscription preferences updated successfully',
+                subscription: {
+                    email: existingSubscription.email,
+                    states: existingSubscription.states,
+                    isActive: existingSubscription.isActive,
+                    subscribedAt: existingSubscription.subscribedAt
+                }
+            });
+        }
 
         // Find or create subscription
         let subscription = await EmailSubscription.findOne({
@@ -134,6 +170,11 @@ export const updateUserSubscription = async (req, res) => {
  * @param {Response} res Express response object
  */
 export const unsubscribeUser = async (req, res) => {
+    // Validate user authentication before try-catch block
+    if (!req.user || !req.user.email) {
+        throw new Error('User authentication required');
+    }
+    
     try {
         const userEmail = req.user.email;
 

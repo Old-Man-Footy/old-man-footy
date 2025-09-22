@@ -58,18 +58,24 @@ export const carnivalMyClubPlayersManager = {
       btn.addEventListener('click', this.handleMovePlayerClick);
     });
 
-    if (this.elements.modalCheckboxes.length > 0) {
-      this.elements.modalCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', this.updateModalSubmitButton);
-      });
-      if (this.elements.modalForm) {
-        this.elements.modalForm.addEventListener('submit', this.handleModalFormSubmit);
-      }
-      // Expose selectAllModal/selectNoneModal for modal controls
-      window.selectAllModal = this.selectAllModal;
-      window.selectNoneModal = this.selectNoneModal;
-      this.updateModalSubmitButton();
+    // Always expose selectAllModal/selectNoneModal for modal controls
+    window.selectAllModal = this.selectAllModal;
+    window.selectNoneModal = this.selectNoneModal;
+
+    // Set up modal form submission handler if modal exists
+    if (this.elements.modalForm) {
+      this.elements.modalForm.addEventListener('submit', this.handleModalFormSubmit);
     }
+
+    // Use event delegation for modal checkboxes since they might be rendered dynamically
+    document.addEventListener('change', (event) => {
+      if (event.target.classList.contains('modal-player-checkbox')) {
+        carnivalMyClubPlayersManager.updateModalSubmitButton();
+      }
+    });
+
+    // Initialize modal submit button state
+    this.updateModalSubmitButton();
   },
 
   /**
@@ -219,7 +225,9 @@ export const carnivalMyClubPlayersManager = {
    * Selects all modal player checkboxes.
    */
   selectAllModal: () => {
-    carnivalMyClubPlayersManager.elements.modalCheckboxes.forEach(checkbox => {
+    // Query DOM directly to get current modal checkboxes
+    const modalCheckboxes = document.querySelectorAll('.modal-player-checkbox');
+    modalCheckboxes.forEach(checkbox => {
       checkbox.checked = true;
     });
     carnivalMyClubPlayersManager.updateModalSubmitButton();
@@ -229,7 +237,9 @@ export const carnivalMyClubPlayersManager = {
    * Deselects all modal player checkboxes.
    */
   selectNoneModal: () => {
-    carnivalMyClubPlayersManager.elements.modalCheckboxes.forEach(checkbox => {
+    // Query DOM directly to get current modal checkboxes
+    const modalCheckboxes = document.querySelectorAll('.modal-player-checkbox');
+    modalCheckboxes.forEach(checkbox => {
       checkbox.checked = false;
     });
     carnivalMyClubPlayersManager.updateModalSubmitButton();

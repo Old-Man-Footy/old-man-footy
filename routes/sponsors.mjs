@@ -14,12 +14,12 @@ router.use(applySecurity);
 // Validation middleware for sponsor creation and updates
 const validateSponsor = [
     body('sponsorName').trim().isLength({ min: 2, max: 200 }).withMessage('Sponsor name must be between 2 and 200 characters'),
-    body('businessType').optional().trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
-    body('location').optional().trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
-    body('state').optional().isIn(AUSTRALIAN_STATES).withMessage('Invalid state selection'),
-    body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
-    body('contactPerson').optional().trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
-    body('contactEmail').optional().custom((email) => {
+    body('businessType').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
+    body('location').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
+    body('state').optional({ nullable: true, checkFalsy: true }).isIn(AUSTRALIAN_STATES).withMessage('Invalid state selection'),
+    body('description').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
+    body('contactPerson').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
+    body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
         if (email && email.trim()) {
             const result = validateSecureEmail(email);
             if (!result.isValid) {
@@ -28,7 +28,7 @@ const validateSponsor = [
         }
         return true;
     }),
-    body('contactPhone').optional().trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
+    body('contactPhone').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
     body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
     body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
