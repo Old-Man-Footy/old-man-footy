@@ -97,7 +97,49 @@ const recalculateRegistrationFees = async (carnivalClubId) => {
 };
 
 /**
- * Show carnival attendees management page (for carnival organisers)
+ * Get carnival with authorization based on user role
+ * @param {string} carnivalId - The carnival ID
+ * @param {Object} user - The authenticated user object
+ * @param {boolean} includeHostClub - Whether to include host club details (default: true)
+ * @returns {Promise<Object|null>} The carnival object or null if not found/authorized
+ */
+const getCarnivalWithAuth = async (carnivalId, user, includeHostClub = true) => {
+  let whereClause;
+  if (user.isAdmin) {
+    // Admins can access any active carnival
+    whereClause = {
+      id: carnivalId,
+      isActive: true,
+    };
+  } else {
+    // Regular users can only access carnivals they created
+    whereClause = {
+      id: carnivalId,
+      createdByUserId: user.id,
+      isActive: true,
+    };
+  }
+
+  const queryOptions = {
+    where: whereClause,
+  };
+
+  if (includeHostClub) {
+    queryOptions.include = [
+      {
+        model: Club,
+        as: 'hostClub',
+        attributes: ['id', 'clubName', 'isActive', 'state', 'location', 'logoUrl'],
+        required: false,
+      },
+    ];
+  }
+
+  return await Carnival.findOne(queryOptions);
+};
+
+/**
+ * Show carnival attendees management page (for carnival organisers and admins)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -105,22 +147,8 @@ const showCarnivalAttendeesHandler = async (req, res) => {
   const { carnivalId } = req.params;
   const user = req.user;
 
-  // Get carnival and verify user has permission to manage it
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-    include: [
-      {
-        model: Club,
-        as: 'hostClub',
-        attributes: ['id', 'clubName', 'isActive', 'state', 'location', 'logoUrl'],
-        required: false,
-      },
-    ],
-  });
+  // Get carnival with authorization check
+  const carnival = await getCarnivalWithAuth(carnivalId, user);
 
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
@@ -178,14 +206,8 @@ const showAddClubToCarnivalHandler = async (req, res) => {
   const { carnivalId } = req.params;
   const user = req.user;
 
-  // Get carnival and verify permissions
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Get carnival with authorization check
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
@@ -245,15 +267,8 @@ const registerClubForCarnivalHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/attendees/add`);
   }
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
-
+  // Get carnival with authorization check
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
     return res.redirect('/carnivals');
@@ -355,14 +370,8 @@ const showEditRegistrationHandler = async (req, res) => {
   const { carnivalId, registrationId } = req.params;
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access - admins can access any carnival, others only their own
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
@@ -413,15 +422,8 @@ const updateRegistrationHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/attendees/${registrationId}/edit`);
   }
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
-
+  // Get carnival with authorization check
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
     return res.redirect('/carnivals');
@@ -490,15 +492,8 @@ const removeClubFromCarnivalHandler = async (req, res) => {
   const { carnivalId, registrationId } = req.params;
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
-
+  // Get carnival with authorization check
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
   if (!carnival) {
     return res.status(403).json({
       success: false,
@@ -548,15 +543,8 @@ const reorderAttendingClubsHandler = async (req, res) => {
   const { clubOrder } = req.body; // Array of registration IDs in new order
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
-
+  // Get carnival with authorization check
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
   if (!carnival) {
     return res.status(403).json({
       success: false,
@@ -802,14 +790,8 @@ const showCarnivalClubPlayersHandler = async (req, res) => {
   const { carnivalId, registrationId } = req.params;
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access using the centralized utility function
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
@@ -902,14 +884,8 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
   const { carnivalId, registrationId } = req.params;
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access using the centralized utility function
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
@@ -983,14 +959,8 @@ const addPlayersToRegistrationHandler = async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/attendees/${registrationId}/players/add`);
   }
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access using the centralized utility function
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found or you do not have permission to manage it.');
@@ -1056,14 +1026,8 @@ const removePlayerFromRegistrationHandler = async (req, res) => {
   const { carnivalId, registrationId, assignmentId } = req.params;
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access using the centralized utility function
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     return res.status(403).json({
@@ -1121,14 +1085,8 @@ const updatePlayerAttendanceStatusHandler = async (req, res) => {
     });
   }
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access using the centralized utility function
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     return res.status(403).json({
@@ -1370,14 +1328,8 @@ const approveClubRegistrationHandler = async (req, res) => {
   const { carnivalId, registrationId } = req.params;
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access using the centralized utility function
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     return res.status(403).json({
@@ -1452,14 +1404,8 @@ const rejectClubRegistrationHandler = async (req, res) => {
   const { rejectionReason } = req.body;
   const user = req.user;
 
-  // Verify carnival ownership
-  const carnival = await Carnival.findOne({
-    where: {
-      id: carnivalId,
-      createdByUserId: user.id,
-      isActive: true,
-    },
-  });
+  // Verify carnival access using the centralized utility function
+  const carnival = await getCarnivalWithAuth(carnivalId, user, false);
 
   if (!carnival) {
     return res.status(403).json({
@@ -1762,4 +1708,4 @@ export const {
 } = wrapControllers(rawControllers);
 
 // Export utility functions for use by other controllers and tests
-export { recalculateRegistrationFees, calculateRegistrationFees, getConfirmedPlayerCount };
+export { recalculateRegistrationFees, calculateRegistrationFees, getConfirmedPlayerCount, getCarnivalWithAuth };

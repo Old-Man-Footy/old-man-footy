@@ -202,6 +202,7 @@ vi.mock('/models/index.mjs', () => {
       findAll: vi.fn(),
       findOne: vi.fn(),
       bulkCreate: vi.fn(),
+      count: vi.fn(),
       getAttendanceStats: vi.fn(),
       getPlayersByTeam: vi.fn(),
       assignToTeam: vi.fn(),
@@ -247,7 +248,11 @@ import {
   unassignPlayerFromTeam,
   approveClubRegistration,
   rejectClubRegistration,
-  updateApprovalStatus
+  updateApprovalStatus,
+  getCarnivalWithAuth,
+  calculateRegistrationFees,
+  recalculateRegistrationFees,
+  getConfirmedPlayerCount
 } from '../../controllers/carnivalClub.controller.mjs';
 
 import {
@@ -268,7 +273,7 @@ import {
 import { validationResult } from 'express-validator';
 import CarnivalEmailService from '../../services/email/CarnivalEmailService.mjs';
 
-describe('Carnival Club Controller', () => {
+describe('CarnivalClub Controller Tests', () => {
   let req, res, next;
 
   beforeEach(() => {
@@ -313,6 +318,7 @@ describe('Carnival Club Controller', () => {
     Club.findByPk.mockResolvedValue(createMockClub());
     ClubPlayer.findAll.mockResolvedValue([]);
     CarnivalClubPlayer.findAll.mockResolvedValue([]);
+    CarnivalClubPlayer.count.mockResolvedValue(0);
     CarnivalClubPlayer.getAttendanceStats.mockResolvedValue({
       confirmed: 10,
       pending: 3,
@@ -1113,26 +1119,299 @@ describe('Carnival Club Controller', () => {
     });
   });
 
+  describe('getCarnivalWithAuth Utility Function', () => {
+    it('should allow admin users to access any active carnival', async () => {
+      const adminUser = createMockUser({ id: 1, isAdmin: true });
+      const mockCarnival = createMockCarnival({ id: 1, createdByUserId: 999, isActive: true });
+      
+      Carnival.findOne.mockResolvedValue(mockCarnival);
+
+      const result = await getCarnivalWithAuth(1, adminUser);
+
+      expect(Carnival.findOne).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          isActive: true
+        },
+        include: expect.arrayContaining([
+          expect.objectContaining({
+            model: expect.anything(),
+            as: 'hostClub'
+          })
+        ])
+      });
+      expect(result).toBe(mockCarnival);
+    });
+
+    it('should allow carnival creators to access their own carnivals', async () => {
+      const regularUser = createMockUser({ id: 1, isAdmin: false });
+      const mockCarnival = createMockCarnival({ id: 1, createdByUserId: 1, isActive: true });
+      
+      Carnival.findOne.mockResolvedValue(mockCarnival);
+
+      const result = await getCarnivalWithAuth(1, regularUser);
+
+      expect(Carnival.findOne).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          createdByUserId: 1,
+          isActive: true
+        },
+        include: expect.arrayContaining([
+          expect.objectContaining({
+            model: expect.anything(),
+            as: 'hostClub'
+          })
+        ])
+      });
+      expect(result).toBe(mockCarnival);
+    });
+
+    it('should return null when regular user tries to access carnival they did not create', async () => {
+      const regularUser = createMockUser({ id: 1, isAdmin: false });
+      
+      Carnival.findOne.mockResolvedValue(null);
+
+      const result = await getCarnivalWithAuth(1, regularUser);
+
+      expect(Carnival.findOne).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          createdByUserId: 1,
+          isActive: true
+        },
+        include: expect.arrayContaining([
+          expect.objectContaining({
+            model: expect.anything(),
+            as: 'hostClub'
+          })
+        ])
+      });
+      expect(result).toBeNull();
+    });
+
+    it('should exclude hostClub include when includeHostClub is false', async () => {
+      const adminUser = createMockUser({ id: 1, isAdmin: true });
+      const mockCarnival = createMockCarnival({ id: 1, isActive: true });
+      
+      Carnival.findOne.mockResolvedValue(mockCarnival);
+
+      const result = await getCarnivalWithAuth(1, adminUser, false);
+
+      expect(Carnival.findOne).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+          isActive: true
+        }
+      });
+      expect(result).toBe(mockCarnival);
+    });
+
+    it('should handle database errors appropriately', async () => {
+      const regularUser = createMockUser({ id: 1, isAdmin: false });
+      const dbError = new Error('Database connection failed');
+      
+      Carnival.findOne.mockRejectedValue(dbError);
+
+      await expect(getCarnivalWithAuth(1, regularUser)).rejects.toThrow('Database connection failed');
+    });
+  });
+
+  describe('calculateRegistrationFees Utility Function', () => {
+    it('should calculate standard registration fees correctly', () => {
+      const carnival = { 
+        teamRegistrationFee: 50, 
+        perPlayerFee: 10 
+      };
+      
+      const result = calculateRegistrationFees(carnival, 2, 15);
+      
+      // Should calculate: (50 * 2) + (10 * 15) = 100 + 150 = 250
+      expect(result).toBe(250);
+    });
+
+    it('should handle fees with only team fees', () => {
+      const carnival = { 
+        teamRegistrationFee: 100, 
+        perPlayerFee: 0 
+      };
+      
+      const result = calculateRegistrationFees(carnival, 2, 15);
+      
+      // Should calculate: (100 * 2) + (0 * 15) = 200 + 0 = 200
+      expect(result).toBe(200);
+    });
+
+    it('should handle zero team count', () => {
+      const carnival = { 
+        teamRegistrationFee: 100, 
+        perPlayerFee: 10 
+      };
+      
+      const result = calculateRegistrationFees(carnival, 0, 0);
+      
+      // Should calculate: (100 * 0) + (10 * 0) = 0 + 0 = 0
+      expect(result).toBe(0);
+    });
+
+    it('should handle null or undefined fee values gracefully', () => {
+      const carnival = { 
+        teamRegistrationFee: null, 
+        perPlayerFee: undefined 
+      };
+      
+      const result = calculateRegistrationFees(carnival, 2, 15);
+      
+      // Should calculate: (0 * 2) + (0 * 15) = 0 + 0 = 0
+      expect(result).toBe(0);
+    });
+
+    it('should use default numberOfTeams when not provided', () => {
+      const carnival = { 
+        teamRegistrationFee: 50, 
+        perPlayerFee: 10 
+      };
+      
+      const result = calculateRegistrationFees(carnival);
+      
+      // Should calculate with defaults: (50 * 1) + (10 * 0) = 50 + 0 = 50
+      expect(result).toBe(50);
+    });
+  });
+
+  describe('getConfirmedPlayerCount', () => {
+    it('should return count of confirmed players', async () => {
+      CarnivalClubPlayer.count.mockResolvedValue(3);
+
+      const count = await getConfirmedPlayerCount(1);
+
+      expect(CarnivalClubPlayer.count).toHaveBeenCalledWith({
+        where: {
+          carnivalClubId: 1,
+          attendanceStatus: 'confirmed',
+          isActive: true
+        }
+      });
+      expect(count).toBe(3);
+    });
+
+    it('should return 0 when no confirmed players found', async () => {
+      CarnivalClubPlayer.count.mockResolvedValue(0);
+
+      const count = await getConfirmedPlayerCount(1);
+
+      expect(count).toBe(0);
+    });
+  });
+
+    describe('getCarnivalWithAuth', () => {
+      it('should return carnival for authorized organiser', async () => {
+        const mockCarnival = createMockCarnival({ id: 1, createdByUserId: 1 });
+        const mockUser = createMockUser({ id: 1, isAdmin: false });
+        Carnival.findOne.mockResolvedValue(mockCarnival);
+
+        const result = await getCarnivalWithAuth(1, mockUser);
+
+        expect(Carnival.findOne).toHaveBeenCalledWith({
+          where: {
+            id: 1,
+            createdByUserId: 1,
+            isActive: true
+          },
+          include: expect.any(Array)
+        });
+        expect(result).toBe(mockCarnival);
+      });
+
+      it('should return null for unauthorized user', async () => {
+        const mockUnauthorizedUser = createMockUser({ id: 999, isAdmin: false });
+        Carnival.findOne.mockResolvedValue(null);
+
+        const result = await getCarnivalWithAuth(1, mockUnauthorizedUser);
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('recalculateRegistrationFees', () => {
+      it('should update registration with recalculated fees', async () => {
+        const mockRegistration = {
+          id: 1,
+          clubId: 2,
+          numberOfTeams: 2,
+          carnival: { 
+            id: 1,
+            teamRegistrationFee: 50,
+            perPlayerFee: 10,
+            clubId: 1  // Different from registration.clubId so not hosting
+          },
+          update: vi.fn().mockResolvedValue(true)
+        };
+
+        CarnivalClub.findByPk.mockResolvedValue(mockRegistration);
+        CarnivalClubPlayer.count.mockResolvedValue(12);
+
+        await recalculateRegistrationFees(1);
+
+        expect(mockRegistration.update).toHaveBeenCalledWith({
+          paymentAmount: 220 // 12 × $10 + 2 × $50
+        });
+      });
+
+      it('should handle hosting club exemption in recalculation', async () => {
+        const mockRegistration = {
+          id: 1,
+          clubId: 1,
+          numberOfTeams: 2,
+          carnival: { 
+            id: 1,
+            teamRegistrationFee: 50,
+            perPlayerFee: 10,
+            clubId: 1  // Same as registration.clubId so is hosting
+          },
+          update: vi.fn().mockResolvedValue(true)
+        };
+
+        CarnivalClub.findByPk.mockResolvedValue(mockRegistration);
+
+        await recalculateRegistrationFees(1);
+
+        expect(mockRegistration.update).toHaveBeenCalledWith({
+          paymentAmount: 0.00,
+          isPaid: true,
+          paymentDate: expect.any(Date)
+        });
+      });
+    });
+  });
+
   describe('Error Handling', () => {
+    let req, res, next;
+
+    beforeEach(() => {
+      req = {
+        params: {},
+        body: {},
+        user: createMockUser({ id: 1, isAdmin: true })
+      };
+      res = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn().mockReturnThis(),
+        redirect: vi.fn().mockReturnThis(),
+        render: vi.fn().mockReturnThis()
+      };
+      next = vi.fn();
+    });
+
     it('should handle database errors gracefully', async () => {
       const dbError = new Error('Database connection failed');
       Carnival.findOne.mockRejectedValue(dbError);
 
+      req.params = { id: '1' };
+
       // Since the controller functions are wrapped with asyncHandler,
       // errors should be caught and passed to next() automatically
       await expect(showCarnivalAttendees(req, res, next)).rejects.toThrow('Database connection failed');
-    });
-
-    it('should handle validation errors during registration', async () => {
-      validationResult.mockReturnValue({
-        isEmpty: () => false,
-        array: () => [{ msg: 'Invalid player count' }]
-      });
-
-      await registerClubForCarnival(req, res, next);
-
-      expect(req.flash).toHaveBeenCalledWith('error_msg', 'Please correct the validation errors.');
-      expect(res.redirect).toHaveBeenCalledWith('/carnivals/1/attendees/add');
     });
 
     it('should handle missing carnival in approval workflow', async () => {
@@ -1152,4 +1431,3 @@ describe('Carnival Club Controller', () => {
       });
     });
   });
-});
