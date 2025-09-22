@@ -8,6 +8,7 @@
 import { body, validationResult, param } from 'express-validator';
 import { ClubPlayer, Club } from '../models/index.mjs';
 import { Op } from 'sequelize';
+import { validateBirthDate } from '../utils/dateUtils.mjs';
 
 /**
  * Display club players list for the authenticated user's club
@@ -644,19 +645,22 @@ export async function importPlayersFromCsv(req, res, next) {
         continue;
       }
 
-      // Validate date format
-      const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dobRegex.test(playerData.dateofbirth)) {
-        results.errors.push(`Row ${i + 1}: Invalid date format. Use YYYY-MM-DD`);
+      // Validate and parse date of birth using flexible date parsing
+      const dobValidation = validateBirthDate(playerData.dateofbirth);
+      if (!dobValidation.success) {
+        results.errors.push(`Row ${i + 1}: ${dobValidation.error}`);
         continue;
       }
+
+      // Use the formatted date for database storage
+      const formattedDob = dobValidation.formattedDate;
 
       // Check if player already exists - based on name and DOB within user's club
       const existingPlayer = await ClubPlayer.findOne({
         where: {
           firstName: playerData.firstname,
           lastName: playerData.lastname,
-          dateOfBirth: playerData.dateofbirth,
+          dateOfBirth: formattedDob,
           clubId: req.user.clubId, // SECURITY: Only check within user's club
           isActive: true
         }
@@ -669,7 +673,7 @@ export async function importPlayersFromCsv(req, res, next) {
           await existingPlayer.update({
             firstName: playerData.firstname,
             lastName: playerData.lastname,
-            dateOfBirth: playerData.dateofbirth,
+            dateOfBirth: formattedDob,
             notes: playerData.notes || notes || null,
             shorts: playerData.shorts || shortsColor
           });
@@ -686,7 +690,7 @@ export async function importPlayersFromCsv(req, res, next) {
         firstName: playerData.firstname,
         lastName: playerData.lastname,
         email: playerData.email.toLowerCase(),
-        dateOfBirth: playerData.dateofbirth,
+        dateOfBirth: formattedDob,
         notes: playerData.notes || notes || null,
         shorts: playerData.shorts || shortsColor
       });
