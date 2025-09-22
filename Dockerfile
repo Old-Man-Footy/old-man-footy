@@ -64,6 +64,7 @@ COPY --chown=appuser:nodejs public/ ./public/
 COPY --chown=appuser:nodejs routes/ ./routes/
 COPY --chown=appuser:nodejs scripts/ ./scripts/
 COPY --chown=appuser:nodejs services/ ./services/
+COPY --chown=appuser:nodejs utils/ ./utils/
 COPY --chown=appuser:nodejs views/ ./views/
 
 # Prune any development dependencies
