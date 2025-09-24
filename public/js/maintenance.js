@@ -25,7 +25,7 @@ function updateCurrentTime() {
     if (timeElement) {
         const now = new Date();
         const timeString = now.toLocaleString('en-AU', {
-            timeZone: 'Australia/Sydney',
+            timeZone: process.env.TZ || 'Australia/Sydney',
             year: 'numeric',
             month: 'short',
             day: 'numeric',

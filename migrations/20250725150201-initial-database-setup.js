@@ -22,8 +22,8 @@ export const up = async (queryInterface, Sequelize) => {
     instagramUrl: { type: Sequelize.STRING, allowNull: true },
     twitterUrl: { type: Sequelize.STRING, allowNull: true },
     logoUrl: { type: Sequelize.STRING, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- User Table ---
@@ -44,8 +44,8 @@ export const up = async (queryInterface, Sequelize) => {
     passwordResetExpires: { type: Sequelize.DATE, allowNull: true },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     lastLoginAt: { type: Sequelize.DATE, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- ClubAlternateName Table ---
@@ -54,8 +54,8 @@ export const up = async (queryInterface, Sequelize) => {
     clubId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'clubs', key: 'id' }, onUpdate: 'CASCADE', onDelete: 'CASCADE' },
     alternateName: { type: Sequelize.STRING, allowNull: false },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- ClubPlayer Table ---
@@ -71,8 +71,8 @@ export const up = async (queryInterface, Sequelize) => {
     shorts: { type: Sequelize.STRING, allowNull: false, defaultValue: 'Unrestricted' },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     registeredAt: { type: Sequelize.DATE, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- Carnival Table ---
@@ -126,8 +126,8 @@ export const up = async (queryInterface, Sequelize) => {
     drawFileName: { type: Sequelize.STRING, allowNull: true },
     drawTitle: { type: Sequelize.STRING, allowNull: true },
     drawDescription: { type: Sequelize.TEXT, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- Sponsor Table ---
@@ -150,8 +150,8 @@ export const up = async (queryInterface, Sequelize) => {
     clubId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'clubs', key: 'id' } },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     isPubliclyVisible: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- CarnivalClub Table ---
@@ -176,8 +176,8 @@ export const up = async (queryInterface, Sequelize) => {
     displayOrder: { type: Sequelize.INTEGER, allowNull: true },
     approvedAt: { type: Sequelize.DATE, allowNull: true },
     approvedByUserId: { type: Sequelize.INTEGER, allowNull: true, references: { model: 'users', key: 'id' } },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- CarnivalClubPlayer Table ---
@@ -189,8 +189,8 @@ export const up = async (queryInterface, Sequelize) => {
     attendanceStatus: { type: Sequelize.STRING, allowNull: false, defaultValue: 'confirmed' },
     notes: { type: Sequelize.TEXT, allowNull: true },
     addedAt: { type: Sequelize.DATE, defaultValue: Sequelize.NOW, allowNull: false },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- CarnivalSponsor Table ---
@@ -207,8 +207,8 @@ export const up = async (queryInterface, Sequelize) => {
     includeOnWebsite: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     isActive: { type: Sequelize.BOOLEAN, defaultValue: true, allowNull: false },
     notes: { type: Sequelize.TEXT, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- EmailSubscription Table ---
@@ -220,8 +220,8 @@ export const up = async (queryInterface, Sequelize) => {
     unsubscribeToken: { type: Sequelize.STRING, allowNull: true, unique: true },
     source: { type: Sequelize.STRING, allowNull: true, defaultValue: 'homepage' },
     unsubscribedAt: { type: Sequelize.DATE, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- AuditLog Table ---
@@ -239,8 +239,8 @@ export const up = async (queryInterface, Sequelize) => {
     result: { type: Sequelize.STRING, allowNull: false, defaultValue: 'SUCCESS' },
     errorMessage: { type: Sequelize.TEXT, allowNull: true },
     metadata: { type: Sequelize.JSON, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- SyncLog Table ---
@@ -255,8 +255,8 @@ export const up = async (queryInterface, Sequelize) => {
     carnivalsUpdated: { type: Sequelize.INTEGER, allowNull: true, defaultValue: 0 },
     errorMessage: { type: Sequelize.TEXT, allowNull: true },
     metadata: { type: Sequelize.JSON, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 
   // --- Help Content Table ---
@@ -265,8 +265,8 @@ export const up = async (queryInterface, Sequelize) => {
     pageIdentifier: { type: Sequelize.STRING(100), allowNull: false, unique: true },
     title: { type: Sequelize.STRING(255), allowNull: false },
     content: { type: Sequelize.TEXT, allowNull: false },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
   });
   
   // Add index for help_content table
@@ -280,8 +280,8 @@ export const up = async (queryInterface, Sequelize) => {
     sid: { type: Sequelize.STRING(32), primaryKey: true, allowNull: false },
     expires: { type: Sequelize.DATE, allowNull: true },
     data: { type: Sequelize.TEXT, allowNull: true },
-    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
-    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
+    createdAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") },
+    updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal("datetime('now', 'localtime')") }
   });
 };
 

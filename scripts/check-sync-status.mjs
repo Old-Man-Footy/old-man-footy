@@ -37,7 +37,7 @@ function checkSyncConfiguration() {
 function formatDate(date) {
     if (!date) return 'Never';
     return new Date(date).toLocaleString('en-AU', {
-        timeZone: 'Australia/Sydney',
+        timeZone: process.env.TZ || 'Australia/Sydney',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',

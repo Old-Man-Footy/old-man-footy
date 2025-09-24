@@ -52,12 +52,12 @@ export const up = async (queryInterface, Sequelize) => {
     createdAt: {
       type: Sequelize.DATE,
       allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      defaultValue: Sequelize.literal("datetime('now', 'localtime')")
     },
     updatedAt: {
       type: Sequelize.DATE,
       allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      defaultValue: Sequelize.literal("datetime('now', 'localtime')")
     }
   });
 
