@@ -9,6 +9,8 @@ services:
     container_name: old-man-footy-prod
     ports:
       - "3060:3060" # Maps host port 3060 to container port 3060
+    env_file:
+      - ./.env
 
     environment:
       - ALLOWED_FILE_TYPES=${ALLOWED_FILE_TYPES:-image/jpeg,image/png,image/gif,image/svg+xml,image/webp,application/pdf}
