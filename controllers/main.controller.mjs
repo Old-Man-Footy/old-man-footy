@@ -267,13 +267,24 @@ export const getAbout = (_req, res) => {
  */
 export const postSubscribe = async (req, res) => {
     try {
+        // Detect if this is an AJAX request
+        const isAjax = req.xhr || 
+                       req.headers.accept?.includes('application/json') || 
+                       req.headers['content-type']?.includes('application/x-www-form-urlencoded') ||
+                       req.headers['x-requested-with']?.toLowerCase() === 'xmlhttprequest';
+        
         // Add defensive check for req.body
         if (!req.body) {
             console.error('Subscription error: req.body is undefined');
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request data'
-            });
+            if (isAjax) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid request data'
+                });
+            } else {
+                req.flash('error', 'Invalid request data');
+                return res.redirect('/#newsletter');
+            }
         }
 
         // Extract form data with proper handling for multiple state values
@@ -289,19 +300,29 @@ export const postSubscribe = async (req, res) => {
         // Bot protection: Check honeypot field
         if (website && website.trim() !== '') {
             console.log('Bot detected: honeypot field filled');
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request'
-            });
+            if (isAjax) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid request'
+                });
+            } else {
+                req.flash('error', 'Invalid request');
+                return res.redirect('/#newsletter');
+            }
         }
 
         // Bot protection: Also check if honeypot field exists but contains only whitespace
         if (website !== undefined && website !== null && website !== '') {
             console.log('Bot detected: honeypot field contains whitespace');
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request'
-            });
+            if (isAjax) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid request'
+                });
+            } else {
+                req.flash('error', 'Invalid request');
+                return res.redirect('/#newsletter');
+            }
         }
 
         // Bot protection: Check form timing (minimum 2 seconds to fill form, but more lenient)
@@ -317,26 +338,41 @@ export const postSubscribe = async (req, res) => {
             // Check if timestamp is in the future (suspicious)
             if (submittedTimestamp > currentTime + 5000) { // Allow 5 second clock drift
                 console.log(`Bot detected: timestamp in future (${submittedTimestamp} > ${currentTime})`);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid form timestamp'
-                });
+                if (isAjax) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Invalid form timestamp'
+                    });
+                } else {
+                    req.flash('error', 'Invalid form timestamp');
+                    return res.redirect('/#newsletter');
+                }
             }
             
             if (timeDiff < minimumTime) {
                 console.log(`Bot detected: form submitted too quickly (${timeDiff}ms)`);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please wait a moment before submitting'
-                });
+                if (isAjax) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Please wait a moment before submitting'
+                    });
+                } else {
+                    req.flash('error', 'Please wait a moment before submitting');
+                    return res.redirect('/#newsletter');
+                }
             }
             
             if (timeDiff > maximumTime) {
                 console.log(`Form session timeout: form submitted after ${timeDiff}ms`);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Form session expired, please refresh and try again'
-                });
+                if (isAjax) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Form session expired, please refresh and try again'
+                    });
+                } else {
+                    req.flash('error', 'Form session expired, please refresh and try again');
+                    return res.redirect('/#newsletter');
+                }
             }
         } else {
             // If no timestamp is provided, allow it but log for monitoring
@@ -345,18 +381,28 @@ export const postSubscribe = async (req, res) => {
 
         // Validate email
         if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email address is required'
-            });
+            if (isAjax) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email address is required'
+                });
+            } else {
+                req.flash('error', 'Email address is required');
+                return res.redirect('/#newsletter');
+            }
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.toLowerCase())) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid email address'
-            });
+            if (isAjax) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid email address'
+                });
+            } else {
+                req.flash('error', 'Invalid email address');
+                return res.redirect('/#newsletter');
+            }
         }
 
         // Handle both single state (string) and multiple states (array) submissions
@@ -392,10 +438,15 @@ export const postSubscribe = async (req, res) => {
         const lastAttempt = global.subscriptionAttempts.get(userIP);
         if (lastAttempt && (Date.now() - lastAttempt) < recentSubmissionTime) {
             console.log(`Rate limit exceeded for IP: ${userIP}`);
-            return res.status(429).json({
-                success: false,
-                message: 'Too many requests. Please wait a moment before trying again.'
-            });
+            if (isAjax) {
+                return res.status(429).json({
+                    success: false,
+                    message: 'Too many requests. Please wait a moment before trying again.'
+                });
+            } else {
+                req.flash('error', 'Too many requests. Please wait a moment before trying again.');
+                return res.redirect('/#newsletter');
+            }
         }
         
         // Record this attempt
@@ -408,10 +459,15 @@ export const postSubscribe = async (req, res) => {
 
         if (existingSubscription && existingSubscription.isActive) {
             console.log(`Attempted resubscription for already active email: ${email.toLowerCase()}`);
-            return res.status(400).json({
-                success: false,
-                message: 'This email is already subscribed to our newsletter!'
-            });
+            if (isAjax) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'This email is already subscribed to our newsletter!'
+                });
+            } else {
+                req.flash('error', 'This email is already subscribed to our newsletter!');
+                return res.redirect('/#newsletter');
+            }
         }
 
         if (existingSubscription && !existingSubscription.isActive) {
@@ -442,18 +498,34 @@ export const postSubscribe = async (req, res) => {
             // Continue - don't fail the subscription just because email failed
         }
 
-        return res.json({
-            success: true,
-            message: 'Successfully subscribed to newsletter!'
-        });
+        if (isAjax) {
+            return res.json({
+                success: true,
+                message: 'Successfully subscribed to newsletter!'
+            });
+        } else {
+            req.flash('success', 'Successfully subscribed to newsletter!');
+            return res.redirect('/#newsletter');
+        }
 
     } catch (error) {
-        // Ensure we always return JSON even if an unexpected error occurs
+        // Ensure we handle both AJAX and regular form errors appropriately
         console.error('Subscription controller error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'An unexpected error occurred. Please try again.'
-        });
+        
+        const isAjax = req.xhr || 
+                       req.headers.accept?.includes('application/json') || 
+                       req.headers['content-type']?.includes('application/x-www-form-urlencoded') ||
+                       req.headers['x-requested-with']?.toLowerCase() === 'xmlhttprequest';
+        
+        if (isAjax) {
+            return res.status(500).json({
+                success: false,
+                message: 'An unexpected error occurred. Please try again.'
+            });
+        } else {
+            req.flash('error', 'An unexpected error occurred. Please try again.');
+            return res.redirect('/#newsletter');
+        }
     }
 };
 

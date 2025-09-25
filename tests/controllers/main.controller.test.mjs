@@ -515,216 +515,419 @@ describe('Main Controller', () => {
   });
 
   describe('Email Subscription', () => {
-    it('should successfully create subscription with valid data', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: ['NSW', 'VIC'],
-        website: '', // honeypot
-        form_timestamp: Date.now() - 5000 // 5 seconds ago
-      };
-
-      EmailSubscription.findOne.mockResolvedValue(null);
-      EmailSubscription.create.mockResolvedValue({});
-
-      await postSubscribe(req, res);
-
-      expect(EmailSubscription.create).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        isActive: true,
-        subscribedAt: expect.any(Date),
-        states: ['NSW', 'VIC'],
-        source: 'homepage'
+    describe('AJAX Requests', () => {
+      beforeEach(() => {
+        // Mock AJAX request indicators
+        req.xhr = true;
+        req.headers = {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'x-requested-with': 'XMLHttpRequest'
+        };
       });
 
-      expect(AuthEmailService.sendWelcomeEmail).toHaveBeenCalledWith('test@example.com', ['NSW', 'VIC']);
+      it('should successfully create subscription with valid data', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW', 'VIC'],
+          website: '', // honeypot
+          form_timestamp: Date.now() - 5000 // 5 seconds ago
+        };
 
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        message: 'Successfully subscribed to newsletter!'
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+
+        await postSubscribe(req, res);
+
+        expect(EmailSubscription.create).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          isActive: true,
+          subscribedAt: expect.any(Date),
+          states: ['NSW', 'VIC'],
+          source: 'homepage'
+        });
+
+        expect(AuthEmailService.sendWelcomeEmail).toHaveBeenCalledWith('test@example.com', ['NSW', 'VIC']);
+
+        expect(res.json).toHaveBeenCalledWith({
+          success: true,
+          message: 'Successfully subscribed to newsletter!'
+        });
+      });
+
+      it('should handle single state selection', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: 'NSW', // Single state as string
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+
+        await postSubscribe(req, res);
+
+        expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
+          states: ['NSW'] // Should convert string to array
+        }));
+      });
+
+      it('should default to all states when none provided', async () => {
+        req.body = {
+          email: 'test@example.com',
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+
+        await postSubscribe(req, res);
+
+        expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
+          states: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
+        }));
+      });
+
+      it('should detect bot via honeypot field', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: 'http://spam.com', // Bot filled honeypot
+          form_timestamp: Date.now() - 5000
+        };
+
+        await postSubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+          success: false,
+          message: 'Invalid request'
+        });
+        expect(EmailSubscription.create).not.toHaveBeenCalled();
+      });
+
+      it('should detect bot via timing protection', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 500 // Too fast (500ms)
+        };
+
+        await postSubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+          success: false,
+          message: 'Please wait a moment before submitting'
+        });
+      });
+
+      it('should enforce rate limiting', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        // First request should succeed
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+
+        await postSubscribe(req, res);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+
+        // Reset mocks for second request
+        vi.clearAllMocks();
+        res.json = vi.fn();
+        res.status = vi.fn().mockReturnThis();
+
+        // Second request from same IP should be rate limited
+        await postSubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(429);
+        expect(res.json).toHaveBeenCalledWith({
+          success: false,
+          message: 'Too many requests. Please wait a moment before trying again.'
+        });
+      });
+
+      it('should handle invalid email format', async () => {
+        req.body = {
+          email: 'invalid-email',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        await postSubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+          success: false,
+          message: 'Invalid email address'
+        });
+      });
+
+      it('should handle existing active subscription', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        EmailSubscription.findOne.mockResolvedValue(
+          createMockEmailSubscription({ isActive: true })
+        );
+
+        await postSubscribe(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+          success: false,
+          message: 'This email is already subscribed to our newsletter!'
+        });
+      });
+
+      it('should reactivate inactive subscription', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW', 'QLD'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        const mockSubscription = createMockEmailSubscription({ isActive: false });
+        EmailSubscription.findOne.mockResolvedValue(mockSubscription);
+
+        await postSubscribe(req, res);
+
+        expect(mockSubscription.update).toHaveBeenCalledWith({
+          isActive: true,
+          subscribedAt: expect.any(Date),
+          states: ['NSW', 'QLD']
+        });
+
+        expect(res.json).toHaveBeenCalledWith({
+          success: true,
+          message: 'Successfully subscribed to newsletter!'
+        });
+      });
+
+      it('should handle welcome email failure gracefully', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+        AuthEmailService.sendWelcomeEmail.mockRejectedValue(new Error('Email service error'));
+
+        await postSubscribe(req, res);
+
+        // Should still succeed even if welcome email fails
+        expect(res.json).toHaveBeenCalledWith({
+          success: true,
+          message: 'Successfully subscribed to newsletter!'
+        });
       });
     });
 
-    it('should handle single state selection', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: 'NSW', // Single state as string
-        website: '',
-        form_timestamp: Date.now() - 5000
-      };
-
-      EmailSubscription.findOne.mockResolvedValue(null);
-      EmailSubscription.create.mockResolvedValue({});
-
-      await postSubscribe(req, res);
-
-      expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
-        states: ['NSW'] // Should convert string to array
-      }));
-    });
-
-    it('should default to all states when none provided', async () => {
-      req.body = {
-        email: 'test@example.com',
-        website: '',
-        form_timestamp: Date.now() - 5000
-      };
-
-      EmailSubscription.findOne.mockResolvedValue(null);
-      EmailSubscription.create.mockResolvedValue({});
-
-      await postSubscribe(req, res);
-
-      expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
-        states: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
-      }));
-    });
-
-    it('should detect bot via honeypot field', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: ['NSW'],
-        website: 'http://spam.com', // Bot filled honeypot
-        form_timestamp: Date.now() - 5000
-      };
-
-      await postSubscribe(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Invalid request'
-      });
-      expect(EmailSubscription.create).not.toHaveBeenCalled();
-    });
-
-    it('should detect bot via timing protection', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: ['NSW'],
-        website: '',
-        form_timestamp: Date.now() - 500 // Too fast (500ms)
-      };
-
-      await postSubscribe(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Please wait a moment before submitting'
-      });
-    });
-
-    it('should enforce rate limiting', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: ['NSW'],
-        website: '',
-        form_timestamp: Date.now() - 5000
-      };
-
-      // First request should succeed
-      EmailSubscription.findOne.mockResolvedValue(null);
-      EmailSubscription.create.mockResolvedValue({});
-
-      await postSubscribe(req, res);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
-
-      // Reset mocks for second request
-      vi.clearAllMocks();
-      res.json = vi.fn();
-      res.status = vi.fn().mockReturnThis();
-
-      // Second request from same IP should be rate limited
-      await postSubscribe(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(429);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Too many requests. Please wait a moment before trying again.'
-      });
-    });
-
-    it('should handle invalid email format', async () => {
-      req.body = {
-        email: 'invalid-email',
-        state: ['NSW'],
-        website: '',
-        form_timestamp: Date.now() - 5000
-      };
-
-      await postSubscribe(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'Invalid email address'
-      });
-    });
-
-    it('should handle existing active subscription', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: ['NSW'],
-        website: '',
-        form_timestamp: Date.now() - 5000
-      };
-
-      EmailSubscription.findOne.mockResolvedValue(
-        createMockEmailSubscription({ isActive: true })
-      );
-
-      await postSubscribe(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        message: 'This email is already subscribed to our newsletter!'
-      });
-    });
-
-    it('should reactivate inactive subscription', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: ['NSW', 'QLD'],
-        website: '',
-        form_timestamp: Date.now() - 5000
-      };
-
-      const mockSubscription = createMockEmailSubscription({ isActive: false });
-      EmailSubscription.findOne.mockResolvedValue(mockSubscription);
-
-      await postSubscribe(req, res);
-
-      expect(mockSubscription.update).toHaveBeenCalledWith({
-        isActive: true,
-        subscribedAt: expect.any(Date),
-        states: ['NSW', 'QLD']
+    describe('Form Submissions', () => {
+      beforeEach(() => {
+        // Mock regular form submission (not AJAX)
+        req.xhr = false;
+        req.headers = {
+          'accept': 'text/html,application/xhtml+xml,application/xml',
+          'content-type': 'application/x-www-form-urlencoded'
+        };
+        req.flash = vi.fn();
       });
 
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        message: 'Successfully subscribed to newsletter!'
+      it('should successfully create subscription and redirect with flash message', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW', 'VIC'],
+          website: '', // honeypot
+          form_timestamp: Date.now() - 5000 // 5 seconds ago
+        };
+
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+
+        await postSubscribe(req, res);
+
+        expect(EmailSubscription.create).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          isActive: true,
+          subscribedAt: expect.any(Date),
+          states: ['NSW', 'VIC'],
+          source: 'homepage'
+        });
+
+        expect(AuthEmailService.sendWelcomeEmail).toHaveBeenCalledWith('test@example.com', ['NSW', 'VIC']);
+
+        expect(req.flash).toHaveBeenCalledWith('success', 'Successfully subscribed to newsletter!');
+        expect(res.redirect).toHaveBeenCalledWith('/');
       });
-    });
 
-    it('should handle welcome email failure gracefully', async () => {
-      req.body = {
-        email: 'test@example.com',
-        state: ['NSW'],
-        website: '',
-        form_timestamp: Date.now() - 5000
-      };
+      it('should handle single state selection and redirect', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: 'NSW', // Single state as string
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
 
-      EmailSubscription.findOne.mockResolvedValue(null);
-      EmailSubscription.create.mockResolvedValue({});
-      AuthEmailService.sendWelcomeEmail.mockRejectedValue(new Error('Email service error'));
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
 
-      await postSubscribe(req, res);
+        await postSubscribe(req, res);
 
-      // Should still succeed even if welcome email fails
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        message: 'Successfully subscribed to newsletter!'
+        expect(EmailSubscription.create).toHaveBeenCalledWith(expect.objectContaining({
+          states: ['NSW'] // Should convert string to array
+        }));
+
+        expect(req.flash).toHaveBeenCalledWith('success', 'Successfully subscribed to newsletter!');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+      });
+
+      it('should detect bot via honeypot field and redirect with error flash', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: 'http://spam.com', // Bot filled honeypot
+          form_timestamp: Date.now() - 5000
+        };
+
+        await postSubscribe(req, res);
+
+        expect(req.flash).toHaveBeenCalledWith('error', 'Invalid request');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+        expect(EmailSubscription.create).not.toHaveBeenCalled();
+      });
+
+      it('should detect bot via timing protection and redirect with error flash', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 500 // Too fast (500ms)
+        };
+
+        await postSubscribe(req, res);
+
+        expect(req.flash).toHaveBeenCalledWith('error', 'Please wait a moment before submitting');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+      });
+
+      it('should enforce rate limiting and redirect with error flash', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        // First request should succeed
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+
+        await postSubscribe(req, res);
+        expect(req.flash).toHaveBeenCalledWith('success', 'Successfully subscribed to newsletter!');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+
+        // Reset mocks for second request
+        vi.clearAllMocks();
+        req.flash = vi.fn();
+        res.redirect = vi.fn();
+
+        // Second request from same IP should be rate limited
+        await postSubscribe(req, res);
+
+        expect(req.flash).toHaveBeenCalledWith('error', 'Too many requests. Please wait a moment before trying again.');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+      });
+
+      it('should handle invalid email format and redirect with error flash', async () => {
+        req.body = {
+          email: 'invalid-email',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        await postSubscribe(req, res);
+
+        expect(req.flash).toHaveBeenCalledWith('error', 'Invalid email address');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+      });
+
+      it('should handle existing active subscription and redirect with error flash', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        EmailSubscription.findOne.mockResolvedValue(
+          createMockEmailSubscription({ isActive: true })
+        );
+
+        await postSubscribe(req, res);
+
+        expect(req.flash).toHaveBeenCalledWith('error', 'This email is already subscribed to our newsletter!');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+      });
+
+      it('should reactivate inactive subscription and redirect with success flash', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW', 'QLD'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        const mockSubscription = createMockEmailSubscription({ isActive: false });
+        EmailSubscription.findOne.mockResolvedValue(mockSubscription);
+
+        await postSubscribe(req, res);
+
+        expect(mockSubscription.update).toHaveBeenCalledWith({
+          isActive: true,
+          subscribedAt: expect.any(Date),
+          states: ['NSW', 'QLD']
+        });
+
+        expect(req.flash).toHaveBeenCalledWith('success', 'Successfully subscribed to newsletter!');
+        expect(res.redirect).toHaveBeenCalledWith('/');
+      });
+
+      it('should handle welcome email failure gracefully and redirect with success flash', async () => {
+        req.body = {
+          email: 'test@example.com',
+          state: ['NSW'],
+          website: '',
+          form_timestamp: Date.now() - 5000
+        };
+
+        EmailSubscription.findOne.mockResolvedValue(null);
+        EmailSubscription.create.mockResolvedValue({});
+        AuthEmailService.sendWelcomeEmail.mockRejectedValue(new Error('Email service error'));
+
+        await postSubscribe(req, res);
+
+        // Should still succeed even if welcome email fails
+        expect(req.flash).toHaveBeenCalledWith('success', 'Successfully subscribed to newsletter!');
+        expect(res.redirect).toHaveBeenCalledWith('/');
       });
     });
   });

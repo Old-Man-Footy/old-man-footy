@@ -80,6 +80,12 @@ export const indexPageManager = {
         if (data && data.success) {
             indexPageManager.showMessage("Thanks! You'll receive carnival notifications for the selected states.", 'success');
             form?.reset?.();
+            // Clear Bootstrap validation classes after successful submission
+            if (form) {
+                form.classList.remove('was-validated');
+                form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                form.querySelectorAll('.is-valid').forEach(el => el.classList.remove('is-valid'));
+            }
             if (timestampField) timestampField.value = Date.now();
         } else {
             indexPageManager.showMessage((data && data.message) || 'Something went wrong. Please try again.', 'error');
