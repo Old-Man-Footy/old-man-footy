@@ -593,11 +593,50 @@ export const dashboardManager = {
     async saveSubscription() {
         const isSubscribed = this.elements.subscriptionToggle?.checked;
         
+        // Handle unsubscription when toggle is unchecked
         if (!isSubscribed) {
-            this.showSubscriptionAlert('Please enable email notifications first', 'warning');
+            // Show confirmation dialog
+            if (!confirm('Are you sure you want to unsubscribe from all email notifications?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/subscriptions/me', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        isActive: false,
+                        states: []
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to unsubscribe');
+                }
+
+                this.showSubscriptionAlert('Successfully unsubscribed from all email notifications', 'success');
+                
+                // Reset form state
+                this.toggleSubscriptionState();
+                this.clearAllStates();
+                
+                // Close modal after delay
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(this.elements.emailSubscriptionModal)?.hide();
+                    // Refresh page to update subscription status in dashboard
+                    window.location.reload();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error unsubscribing:', error);
+                this.showSubscriptionAlert('Error unsubscribing. Please try again.', 'danger');
+            }
             return;
         }
 
+        // Handle subscription when toggle is checked
         // Get selected states
         const selectedStates = Array.from(this.elements.stateCheckboxes)
             .filter(checkbox => checkbox.checked)
