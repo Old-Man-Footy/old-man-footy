@@ -248,3 +248,26 @@ export const FLASH_MESSAGE_TYPES = {
     WARNING: 'warning_msg',
     INFO: 'info_msg'
 };
+
+/**
+ * Email notification types
+ * Used for managing user subscription preferences
+ */
+export const NOTIFICATION_TYPES = {
+    CARNIVAL_NOTIFICATIONS: 'Carnival_Notifications',
+    DELEGATE_ALERTS: 'Delegate_Alerts',
+    WEBSITE_UPDATES: 'Website_Updates',
+    PROGRAM_CHANGES: 'Program_Changes',
+    SPECIAL_OFFERS: 'Special_Offers',
+    COMMUNITY_NEWS: 'Community_News'
+};
+
+/**
+ * Array of all notification types for iteration and validation
+ */
+export const NOTIFICATION_TYPES_ARRAY = Object.values(NOTIFICATION_TYPES);
+
+/**
+ * Default notification preferences for new user registrations
+ */
+export const DEFAULT_NOTIFICATION_PREFERENCES = NOTIFICATION_TYPES_ARRAY;

@@ -8,6 +8,7 @@
 import { DataTypes, Model, Op } from 'sequelize';
 import crypto from 'crypto';
 import { sequelize } from '../config/database.mjs';
+import { DEFAULT_NOTIFICATION_PREFERENCES, NOTIFICATION_TYPES_ARRAY } from '../config/constants.mjs';
 
 /**
  * EmailSubscription model class extending Sequelize Model
@@ -23,7 +24,70 @@ class EmailSubscription extends Model {
   }
 
   /**
-   * Check if subscription includes a specific state
+   * Generate secure verification token
+   * @returns {string} Generated verification token
+   */
+  generateVerificationToken() {
+    this.verificationToken = crypto.randomBytes(32).toString('hex');
+    // Set expiry to 7 days from now
+    this.verificationTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    return this.verificationToken;
+  }
+
+  /**
+   * Check if verification token is valid and not expired
+   * @returns {boolean} Whether verification token is valid
+   */
+  isVerificationTokenValid() {
+    return this.verificationToken && 
+           this.verificationTokenExpiresAt && 
+           new Date() < this.verificationTokenExpiresAt;
+  }
+
+  /**
+   * Mark subscription as verified
+   */
+  verify() {
+    this.isActive = true;
+    this.verificationToken = null;
+    this.verificationTokenExpiresAt = null;
+  }
+
+  /**
+   * Check if subscription includes a specific notification type
+   * @param {string} notificationType - Notification type to check
+   * @returns {boolean} Whether subscription includes the notification type
+   */
+  includesNotification(notificationType) {
+    return this.notificationPreferences && this.notificationPreferences.includes(notificationType);
+  }
+
+  /**
+   * Add notification type to subscription
+   * @param {string} notificationType - Notification type to add
+   */
+  addNotification(notificationType) {
+    if (!NOTIFICATION_TYPES_ARRAY.includes(notificationType)) {
+      throw new Error(`Invalid notification type: ${notificationType}`);
+    }
+    if (!this.notificationPreferences) this.notificationPreferences = [];
+    if (!this.notificationPreferences.includes(notificationType)) {
+      this.notificationPreferences.push(notificationType);
+    }
+  }
+
+  /**
+   * Remove notification type from subscription
+   * @param {string} notificationType - Notification type to remove
+   */
+  removeNotification(notificationType) {
+    if (this.notificationPreferences) {
+      this.notificationPreferences = this.notificationPreferences.filter(n => n !== notificationType);
+    }
+  }
+
+  /**
+   * Check if subscription includes a specific state (legacy method for backwards compatibility)
    * @param {string} state - State to check
    * @returns {boolean} Whether subscription includes the state
    */
@@ -32,7 +96,7 @@ class EmailSubscription extends Model {
   }
 
   /**
-   * Add state to subscription
+   * Add state to subscription (legacy method for backwards compatibility)
    * @param {string} state - State to add
    */
   addState(state) {
@@ -43,7 +107,7 @@ class EmailSubscription extends Model {
   }
 
   /**
-   * Remove state from subscription
+   * Remove state from subscription (legacy method for backwards compatibility)
    * @param {string} state - State to remove
    */
   removeState(state) {
@@ -53,7 +117,21 @@ class EmailSubscription extends Model {
   }
 
   /**
-   * Find active subscriptions for a specific state
+   * Find active subscriptions for a specific notification type
+   * @param {string} notificationType - Notification type to find subscriptions for
+   * @returns {Promise<Array>} Array of active subscriptions
+   */
+  static async findByNotificationType(notificationType) {
+    // Fetch all active subscriptions, then filter in JS for SQLite compatibility
+    const allActive = await this.findAll({ where: { isActive: true } });
+    return allActive.filter(sub => 
+      Array.isArray(sub.notificationPreferences) && 
+      sub.notificationPreferences.includes(notificationType)
+    );
+  }
+
+  /**
+   * Find active subscriptions for a specific state (legacy method for backwards compatibility)
    * @param {string} state - State to find subscriptions for
    * @returns {Promise<Array>} Array of active subscriptions
    */
@@ -61,6 +139,38 @@ class EmailSubscription extends Model {
     // Fetch all active subscriptions, then filter in JS for SQLite compatibility
     const allActive = await this.findAll({ where: { isActive: true } });
     return allActive.filter(sub => Array.isArray(sub.states) && sub.states.includes(state));
+  }
+
+  /**
+   * Clean up expired verification tokens
+   * @returns {Promise<number>} Number of expired tokens cleaned up
+   */
+  static async cleanupExpiredTokens() {
+    const result = await this.destroy({
+      where: {
+        isActive: false,
+        verificationTokenExpiresAt: {
+          [Op.lt]: new Date()
+        }
+      }
+    });
+    return result;
+  }
+
+  /**
+   * Find subscription by verification token
+   * @param {string} token - Verification token
+   * @returns {Promise<EmailSubscription|null>} Found subscription or null
+   */
+  static async findByVerificationToken(token) {
+    return await this.findOne({
+      where: {
+        verificationToken: token,
+        verificationTokenExpiresAt: {
+          [Op.gt]: new Date()
+        }
+      }
+    });
   }
 }
 
@@ -84,12 +194,47 @@ EmailSubscription.init({
   states: {
     type: DataTypes.JSON,
     allowNull: true,
-    defaultValue: []
+    defaultValue: [],
+    comment: 'Legacy field for Australian states (backwards compatibility)'
   },
   isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true,
-    allowNull: false
+    defaultValue: false,
+    allowNull: false,
+    comment: 'Whether the email subscription is active (verified)'
+  },
+  notificationPreferences: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'JSON array of selected notification types',
+    get() {
+      const value = this.getDataValue('notificationPreferences');
+      if (!value) return DEFAULT_NOTIFICATION_PREFERENCES;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return DEFAULT_NOTIFICATION_PREFERENCES;
+      }
+    },
+    set(value) {
+      if (Array.isArray(value)) {
+        // Validate notification types
+        const validTypes = value.filter(type => NOTIFICATION_TYPES_ARRAY.includes(type));
+        this.setDataValue('notificationPreferences', JSON.stringify(validTypes));
+      } else {
+        this.setDataValue('notificationPreferences', JSON.stringify(DEFAULT_NOTIFICATION_PREFERENCES));
+      }
+    }
+  },
+  verificationToken: {
+    type: DataTypes.STRING(256),
+    allowNull: true,
+    comment: 'Token used for email verification'
+  },
+  verificationTokenExpiresAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'Expiry date for the verification token'
   },
   unsubscribeToken: {
     type: DataTypes.STRING,

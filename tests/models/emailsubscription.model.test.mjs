@@ -2,6 +2,7 @@
  * Unit tests for EmailSubscription model (Mocked)
  *
  * Uses Vitest and in-memory mock data. No database.
+ * Tests enhanced EmailSubscription model with verification tokens and notification preferences.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 
@@ -12,16 +13,35 @@ function randomToken() {
   return Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 }
 
+function generateVerificationToken() {
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
+
 function createMockSubscription(data) {
   // Normalize email
   const email = data.email ? data.email.trim().toLowerCase() : null;
   if (!email) throw new Error('Email is required');
   if (subStore.some(s => s.email === email)) throw new Error('Email must be unique');
+  
   // States
   let states = Array.isArray(data.states) ? [...data.states] : [];
+  
   // Default values
   const isActive = data.isActive !== undefined ? data.isActive : true;
   let unsubscribedAt = data.unsubscribedAt || (isActive ? null : new Date());
+  
+  // New enhanced fields
+  const notificationPreferences = data.notificationPreferences || {
+    carnival_announcements: true,
+    club_updates: true,
+    sponsor_highlights: false,
+    general_news: true
+  };
+  
+  const verificationToken = data.verificationToken || generateVerificationToken();
+  const verificationTokenExpiresAt = data.verificationTokenExpiresAt || new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  const verifiedAt = data.verifiedAt || null;
+  
   // Mocked instance
   const sub = {
     ...data,
@@ -31,6 +51,12 @@ function createMockSubscription(data) {
     unsubscribeToken: randomToken(),
     source: data.source || 'homepage',
     unsubscribedAt,
+    notificationPreferences,
+    verificationToken,
+    verificationTokenExpiresAt,
+    verifiedAt,
+    
+    // Existing methods
     addState: function(state) {
       if (!this.states.includes(state)) this.states.push(state);
     },
@@ -44,12 +70,53 @@ function createMockSubscription(data) {
       this.unsubscribeToken = randomToken();
       return this.unsubscribeToken;
     },
+    
+    // New enhanced methods
+    generateVerificationToken: function() {
+      this.verificationToken = generateVerificationToken();
+      this.verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      return this.verificationToken;
+    },
+    
+    isVerificationTokenValid: function() {
+      return this.verificationToken && this.verificationTokenExpiresAt && this.verificationTokenExpiresAt > new Date();
+    },
+    
+    verify: function() {
+      this.verifiedAt = new Date();
+      this.verificationToken = null;
+      this.verificationTokenExpiresAt = null;
+      return true;
+    },
+    
+    isVerified: function() {
+      return this.verifiedAt !== null;
+    },
+    
+    updateNotificationPreferences: function(preferences) {
+      this.notificationPreferences = { ...this.notificationPreferences, ...preferences };
+      return this.notificationPreferences;
+    },
+    
+    hasNotificationEnabled: function(type) {
+      return this.notificationPreferences[type] === true;
+    },
+    
+    enableNotification: function(type) {
+      this.notificationPreferences[type] = true;
+    },
+    
+    disableNotification: function(type) {
+      this.notificationPreferences[type] = false;
+    },
+    
     save: async function() {
       if (this.isActive && this.unsubscribedAt) this.unsubscribedAt = null;
       if (!this.isActive && !this.unsubscribedAt) this.unsubscribedAt = new Date();
       return this;
     }
   };
+  
   subStore.push(sub);
   return sub;
 }

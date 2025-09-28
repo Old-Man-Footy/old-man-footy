@@ -140,6 +140,7 @@ const clubPlayerRoutes = await import('./routes/clubPlayers.mjs');
 const sponsorRoutes = await import('./routes/sponsors.mjs');
 const adminRoutes = await import('./routes/admin.mjs');
 const apiRoutes = await import('./routes/api/index.mjs');
+const subscriptionRoutes = await import('./routes/subscription.mjs');
 
 // Mount routes
 app.use('/', indexRoutes.default);
@@ -151,6 +152,7 @@ app.use('/clubs', clubRoutes.default);
 app.use('/sponsors', sponsorRoutes.default);
 app.use('/admin', adminRoutes.default);
 app.use('/api', apiRoutes.default);
+app.use('/api/subscribe', subscriptionRoutes.default);
 
 // Error handling middleware
 app.use((req, res, next) => {

@@ -269,9 +269,8 @@ export const postSubscribe = async (req, res) => {
     try {
         // Detect if this is an AJAX request
         const isAjax = req.xhr || 
-                       req.headers.accept?.includes('application/json') || 
-                       req.headers['content-type']?.includes('application/x-www-form-urlencoded') ||
-                       req.headers['x-requested-with']?.toLowerCase() === 'xmlhttprequest';
+                       req.headers?.accept?.includes('application/json') || 
+                       req.headers?.['x-requested-with']?.toLowerCase() === 'xmlhttprequest';
         
         // Add defensive check for req.body
         if (!req.body) {
@@ -513,9 +512,8 @@ export const postSubscribe = async (req, res) => {
         console.error('Subscription controller error:', error);
         
         const isAjax = req.xhr || 
-                       req.headers.accept?.includes('application/json') || 
-                       req.headers['content-type']?.includes('application/x-www-form-urlencoded') ||
-                       req.headers['x-requested-with']?.toLowerCase() === 'xmlhttprequest';
+                       req.headers?.accept?.includes('application/json') || 
+                       req.headers?.['x-requested-with']?.toLowerCase() === 'xmlhttprequest';
         
         if (isAjax) {
             return res.status(500).json({

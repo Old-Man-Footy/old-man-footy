@@ -92,6 +92,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'test@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -121,6 +122,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'inactive@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -144,6 +146,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'bot@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -166,6 +169,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'bot2@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -184,6 +188,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'fast@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -206,6 +211,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'old@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -228,6 +234,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'timing@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -245,6 +252,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'first@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -261,6 +269,7 @@ describe('POST /subscribe - Bot Protection', () => {
             // First submission should succeed
             await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'rate1@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -270,6 +279,7 @@ describe('POST /subscribe - Bot Protection', () => {
             // Second submission immediately after should be rate limited
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'rate2@example.com',
                     form_timestamp: (Date.now() - 5000).toString(),
@@ -294,6 +304,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     form_timestamp: formTimestamp.toString(),
                     website: ''
@@ -309,6 +320,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'invalid-email',
                     form_timestamp: formTimestamp.toString(),
@@ -331,6 +343,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'duplicate@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -347,6 +360,7 @@ describe('POST /subscribe - Bot Protection', () => {
         test('should handle missing timestamp gracefully', async () => {
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'notimestamp@example.com',
                     website: ''
@@ -360,6 +374,7 @@ describe('POST /subscribe - Bot Protection', () => {
         test('should handle invalid timestamp format', async () => {
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'invalidtime@example.com',
                     form_timestamp: 'not-a-number',
@@ -375,6 +390,7 @@ describe('POST /subscribe - Bot Protection', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'UPPERCASE@EXAMPLE.COM',
                     form_timestamp: formTimestamp.toString(),

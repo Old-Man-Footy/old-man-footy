@@ -111,6 +111,7 @@ describe('Coming Soon Mode - Subscription Integration', () => {
             
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'comingsoon@example.com',
                     form_timestamp: formTimestamp.toString(),
@@ -133,6 +134,7 @@ describe('Coming Soon Mode - Subscription Integration', () => {
         test('should still apply bot protection when coming soon mode is enabled', async () => {
             const response = await request(app)
                 .post('/subscribe')
+                .set('Accept', 'application/json')
                 .send({
                     email: 'bot@example.com',
                     form_timestamp: (Date.now() - 5000).toString(),
