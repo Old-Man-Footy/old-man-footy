@@ -1,70 +1,40 @@
 /**
- * Critical Theme Initialization Script
- * 
- * This script MUST run immediately when loaded to prevent theme flash.
- * It applies the user's preferred theme before any content renders.
- * 
- * @fileoverview Handles theme detection, application, and flash prevention
- * @author Old Man Footy Development Team
- * @since 1.0.0
+ * Critical theme initialization script
+ * This runs immediately (not as a module) to prevent theme flashing
  */
-
-/**
- * Initializes the theme immediately to prevent flash of unstyled content.
- * @returns {void}
- */
-export function initTheme() {
+(function() {
     'use strict';
-
-    /**
-     * Apply theme-loading class immediately to prevent flash of unstyled content
-     */
+    
+    // Apply theme-loading class immediately to prevent flash
     document.documentElement.className = 'theme-loading';
-
-    /**
-     * Check localStorage for saved theme preference
-     * @type {string|null}
-     */
+    
+    // Check localStorage for saved theme preference
     const savedTheme = localStorage.getItem('oldmanfooty-theme');
-
-    /**
-     * Determine the appropriate theme to apply
-     * Priority: saved preference > system preference > default light
-     * @type {string}
-     */
+    
+    // Determine theme: saved preference > system preference > default light
     let theme = 'light';
-
+    
     if (savedTheme === 'dark' || savedTheme === 'light') {
         theme = savedTheme;
     } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         theme = 'dark';
     }
-
-    /**
-     * Apply theme immediately to prevent flash
-     */
+    
+    // Apply theme immediately to prevent flash
     if (theme === 'dark') {
-        // Apply both our custom theme attribute and Bootstrap's color mode attribute
         document.documentElement.setAttribute('data-theme', 'dark');
         document.documentElement.setAttribute('data-bs-theme', 'dark');
     } else {
-        // Ensure Bootstrap is reset to light when not in dark mode
         document.documentElement.removeAttribute('data-bs-theme');
         document.documentElement.removeAttribute('data-theme');
     }
-
-    /**
-     * Store the theme for the main app to pick up later
-     * This allows other scripts to access the initial theme without re-checking
-     */
+    
+    // Store theme for main app to use later
     window.__INITIAL_THEME__ = theme;
-
-    /**
-     * Remove loading class and show content with proper theme applied
-     */
+    
+    // Remove loading class after DOM content is loaded
     function showContent() {
         try {
-            if (typeof document === 'undefined') return;
             if (document.documentElement) {
                 document.documentElement.classList.remove('theme-loading');
             }
@@ -72,29 +42,14 @@ export function initTheme() {
                 document.body.classList.add('theme-applied');
             }
         } catch (_) {
-            // Ignore if environment (e.g., jsdom) has been torn down
+            // Ignore errors if environment has been torn down
         }
     }
-
-    /**
-     * Show content after DOM is ready but before full load
-     * Uses a small delay to ensure CSS is fully applied
-     */
+    
+    // Show content when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            // Small delay to ensure CSS is applied
-            const id = setTimeout(showContent, 50);
-            // Best-effort cleanup if needed
-            try { window.addEventListener && window.addEventListener('beforeunload', () => clearTimeout(id)); } catch {}
-        });
+        document.addEventListener('DOMContentLoaded', showContent);
     } else {
-        // Document is already loaded
-        const id = setTimeout(showContent, 50);
-        try { window.addEventListener && window.addEventListener('beforeunload', () => clearTimeout(id)); } catch {}
+        showContent();
     }
-}
-
-// Optionally, auto-run if this script is loaded directly in the browser
-if (typeof window !== 'undefined') {
-    initTheme();
-}
+})();

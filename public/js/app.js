@@ -20,12 +20,12 @@ const themeManager = {
      * Initialize theme system
      */
     init: function() {
-        // Use the theme that was already applied by the inline script
+        // Use the theme that was already applied by the theme-init.js script
         if (window.__INITIAL_THEME__) {
             this.currentTheme = window.__INITIAL_THEME__;
             console.log(`🎨 Using initial theme: ${this.currentTheme}`);
         } else {
-            // Fallback to the old method if inline script didn't run
+            // Fallback to the old method if theme-init.js didn't run
             this.loadSavedTheme();
         }
         
