@@ -135,18 +135,8 @@ class Carnival extends Model {
     // Admin users can edit any carnival
     if (user.isAdmin) return true;
     
-    // Primary delegates can edit any carnival
-    if (user.isPrimaryDelegate) return true;
-    
-    // Users can edit their own carnivals
-    if (this.createdByUserId && this.createdByUserId === user.id) return true;
-    
-    // Allow any delegate from the hosting club to edit carnivals their club is hosting
-    if (user.clubId && this.createdByUserId) {
-      // We need to check if the carnival creator belongs to the same club as the current user
-      // This requires a database lookup, so we'll need to handle this asynchronously
-      return 'async_check_needed';
-    }
+    // User can edit their own carnivals
+    if (this.clubId && this.clubId === user.clubId) return true;
     
     return false;
   }
@@ -162,24 +152,8 @@ class Carnival extends Model {
     // Admin users can edit any carnival
     if (user.isAdmin) return true;
     
-    // Primary delegates can edit any carnival
-    if (user.isPrimaryDelegate) return true;
-    
     // Users can edit their own carnivals
-    if (this.createdByUserId && this.createdByUserId === user.id) return true;
-    
-    // Allow any delegate from the hosting club to edit carnivals their club is hosting
-    if (user.clubId && this.createdByUserId) {
-      const User = (await import('./User.mjs')).default;
-      const carnivalCreator = await User.findByPk(this.createdByUserId, {
-        attributes: ['clubId']
-      });
-      
-      // If the carnival creator and current user belong to the same club, allow editing
-      if (carnivalCreator && carnivalCreator.clubId === user.clubId) {
-        return true;
-      }
-    }
+    if (this.clubId && this.clubId === user.clubId) return true;
     
     return false;
   }
@@ -366,14 +340,14 @@ class Carnival extends Model {
         throw new Error('This carnival was not imported from MySideline');
       }
 
-      if (carnival.createdByUserId) {
+      if (carnival.clubId) {
         throw new Error('This carnival already has an owner');
       }
 
       // All checks passed - preserve original MySideline contact email before updating
       const originalMySidelineContactEmail = carnival.organiserContactEmail;
 
-      // Update the carnival with user's clubId and contact details (do NOT set createdByUserId)
+      // Update the carnival with user's clubId and contact details
       const updateData = {
         clubId: user.clubId, // Set clubId on claim
         claimedAt: new Date(),
@@ -488,11 +462,11 @@ class Carnival extends Model {
       }
 
       // Authorization checks
-      if (!carnival.createdByUserId) {
+      if (!carnival.clubId) {
         throw new Error('This carnival is not currently owned by anyone');
       }
 
-      if (carnival.createdByUserId !== userId) {
+      if (carnival.clubId !== user.club.id) {
         throw new Error('You can only release ownership of carnivals you own');
       }
 
@@ -512,7 +486,7 @@ class Carnival extends Model {
 
       // Release ownership - revert to MySideline import state
       await carnival.update({
-        createdByUserId: null,
+        clubId: null,
         claimedAt: null,
         updatedAt: new Date(),
         // Clear contact details when releasing ownership
@@ -629,7 +603,7 @@ class Carnival extends Model {
         throw new Error('This carnival was not imported from MySideline');
       }
 
-      if (carnival.createdByUserId) {
+      if (carnival.clubId) {
         throw new Error('This carnival already has an owner');
       }
 
@@ -644,7 +618,7 @@ class Carnival extends Model {
 
       // Update the carnival with primary delegate's contact details
       const updateData = {
-        createdByUserId: primaryDelegate.id,
+        clubId: targetClub.id,
         claimedAt: new Date(),
         updatedAt: new Date(),
         // Preserve original MySideline contact email
