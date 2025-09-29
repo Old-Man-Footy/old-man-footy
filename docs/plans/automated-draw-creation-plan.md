@@ -83,12 +83,11 @@ class RandomDrawGenerator {
 **Implementation:** Color-aware team distribution
 
 ```javascript
-class ColorMatchingDrawGenerator {
+class ShortsMatchingDrawGenerator {
   generateDraw(teams, configuration) {
-    // Group teams by similar colors
-    // Distribute to avoid color clashes
-    // Maintain competitive balance
-    // Fall back to random if no solution
+    // Group teams by number of coloured shorts players. 
+    // Match teams who have similar number of yellow/red/etc short players.
+    // Maintain competitive balance, avoiding teams with lots of yellow playing teams with very few.
   }
 }
 ```
@@ -177,7 +176,7 @@ class IntelligentDrawGenerator {
 **Priority:** MEDIUM
 
 #### Intelligent Matching Algorithms
-- [ ] Implement `ColorMatchingDrawGenerator.mjs`
+- [ ] Implement `ShortsMatchingDrawGenerator.mjs`
   - [ ] Club strip color database integration
   - [ ] Color conflict detection and resolution
   - [ ] Visual color matching using color theory
