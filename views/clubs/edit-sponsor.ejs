@@ -192,14 +192,13 @@
                             </div>
                         <% } %>
 
-                        <!-- Logo Upload -->
-                        <%- include('../partials/logo-uploader', {
-                            entityType: 'sponsor',
-                            existingLogoUrl: sponsor.logoUrl,
-                            existingLogoName: sponsor.name + ' Logo'
-                        }) %>
-
-                        <!-- Description -->
+        <!-- Logo Upload -->
+        <%- include('../partials/logo-uploader', {
+            fieldName: 'logo',
+            uploadText: 'Upload Sponsor Logo',
+            currentLogoUrl: sponsor.logoUrl,
+            currentLogoAlt: sponsor.name + ' Logo'
+        }) %>                        <!-- Description -->
                         <hr class="my-4">
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
