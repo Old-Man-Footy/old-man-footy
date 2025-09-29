@@ -105,6 +105,22 @@ function setupDOM() {
               <label for="state-QLD">QLD</label>
               <button type="button" id="selectAllStates" class="btn btn-sm btn-link">Select All</button>
               <button type="button" id="clearAllStates" class="btn btn-sm btn-link">Clear All</button>
+              
+              <h6>Select Notification Types:</h6>
+              <input type="checkbox" class="notification-checkbox" value="Carnival_Notifications" id="notification_Carnival_Notifications">
+              <label for="notification_Carnival_Notifications">Carnival Notifications</label>
+              <input type="checkbox" class="notification-checkbox" value="Delegate_Alerts" id="notification_Delegate_Alerts">
+              <label for="notification_Delegate_Alerts">Delegate Alerts</label>
+              <input type="checkbox" class="notification-checkbox" value="Website_Updates" id="notification_Website_Updates">
+              <label for="notification_Website_Updates">Website Updates</label>
+              <input type="checkbox" class="notification-checkbox" value="Program_Changes" id="notification_Program_Changes">
+              <label for="notification_Program_Changes">Program Changes</label>
+              <input type="checkbox" class="notification-checkbox" value="Special_Offers" id="notification_Special_Offers">
+              <label for="notification_Special_Offers">Special Offers</label>
+              <input type="checkbox" class="notification-checkbox" value="Community_News" id="notification_Community_News">
+              <label for="notification_Community_News">Community News</label>
+              <button type="button" id="selectAllNotifications" class="btn btn-sm btn-link">Select All</button>
+              <button type="button" id="clearAllNotifications" class="btn btn-sm btn-link">Clear All</button>
             </div>
             <div id="unsubscribeSection" style="display: none;">
               <button type="button" id="unsubscribeBtn" class="btn btn-danger">Unsubscribe</button>
@@ -537,6 +553,8 @@ describe('Dashboard Manager - Comprehensive Tests', () => {
       document.getElementById('subscriptionToggle').checked = true;
       document.getElementById('state-NSW').checked = true;
       document.getElementById('state-VIC').checked = true;
+      // Need to select at least one notification type for dual validation to pass
+      document.getElementById('notification_Carnival_Notifications').checked = true;
       
       fetchMock.mockResolvedValueOnce({
         ok: true,
@@ -552,7 +570,8 @@ describe('Dashboard Manager - Comprehensive Tests', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             isActive: true,
-            states: ['NSW', 'VIC']
+            states: ['NSW', 'VIC'],
+            notificationPreferences: ['Carnival_Notifications']
           })
         });
       });
@@ -579,15 +598,21 @@ describe('Dashboard Manager - Comprehensive Tests', () => {
       });
     });
 
-    it('should validate subscription before saving', async () => {
+    it('should show confirmation dialog when unsubscribing via toggle', async () => {
+      // Mock global.confirm to return false (user cancels)
+      global.confirm.mockReturnValue(false);
+      
       // Disable subscription toggle
       document.getElementById('subscriptionToggle').checked = false;
       
       const saveBtn = document.getElementById('saveSubscriptionBtn');
       saveBtn.click();
       
-      const alert = document.getElementById('subscriptionAlert');
-      expect(alert.innerHTML).toContain('Please enable email notifications first');
+      // Should show confirmation dialog
+      expect(global.confirm).toHaveBeenCalledWith('Are you sure you want to unsubscribe from all email notifications?');
+      
+      // Should not make any API calls since user cancelled
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('should validate state selection before saving', async () => {
