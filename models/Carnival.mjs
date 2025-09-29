@@ -388,6 +388,29 @@ class Carnival extends Model {
 
       await carnival.update(updateData);
 
+      // Automatically add the claiming club as an attendee
+      const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
+      
+      // Check if the club is already registered as an attendee
+      const isAlreadyRegistered = await CarnivalClub.isClubRegistered(carnivalId, user.clubId);
+      
+      if (!isAlreadyRegistered) {
+        await CarnivalClub.create({
+          carnivalId: carnivalId,
+          clubId: user.clubId,
+          registrationDate: new Date(),
+          approvalStatus: 'approved', // Auto-approve the hosting club
+          numberOfTeams: 1, // Default to 1 team
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        
+        console.log(`🏈 Auto-registered claiming club "${user.club.clubName}" as attendee for carnival "${carnival.title}"`);
+      } else {
+        console.log(`📋 Club "${user.club.clubName}" was already registered as attendee for carnival "${carnival.title}"`);
+      }
+
       // Send notification to original MySideline contact if email exists
       if (originalMySidelineContactEmail) {
         try {
@@ -633,6 +656,29 @@ class Carnival extends Model {
       };
 
       await carnival.update(updateData);
+
+      // Automatically add the claiming club as an attendee
+      const CarnivalClub = (await import('./CarnivalClub.mjs')).default;
+      
+      // Check if the club is already registered as an attendee
+      const isAlreadyRegistered = await CarnivalClub.isClubRegistered(carnivalId, targetClubId);
+      
+      if (!isAlreadyRegistered) {
+        await CarnivalClub.create({
+          carnivalId: carnivalId,
+          clubId: targetClubId,
+          registrationDate: new Date(),
+          approvalStatus: 'approved', // Auto-approve the hosting club
+          numberOfTeams: 1, // Default to 1 team
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        
+        console.log(`🏈 Auto-registered claiming club "${targetClub.clubName}" as attendee for carnival "${carnival.title}"`);
+      } else {
+        console.log(`📋 Club "${targetClub.clubName}" was already registered as attendee for carnival "${carnival.title}"`);
+      }
 
       // Send notification to original MySideline contact if email exists
       if (originalMySidelineContactEmail) {
