@@ -362,6 +362,7 @@ const showCarnivalHandler = async (req, res) => {
     carnival.isActive &&
     carnival.mySidelineId &&
     !carnival.createdByUserId &&
+    !carnival.clubId && // Cannot claim if already claimed by any club
     userWithClub &&
     userWithClub.clubId &&
     // State-based restriction: can only claim carnivals in your club's state or carnivals with no state
@@ -399,15 +400,11 @@ const showCarnivalHandler = async (req, res) => {
     canRegisterClub = !userClubRegistration && carnival.createdByUserId !== userWithClub.id;
   }
 
-  // Check if user can manage this carnival (always allow for owners/admins regardless of active status)
-  const canManage =
-    userWithClub &&
-    (userWithClub.isAdmin ||
-      carnival.createdByUserId === userWithClub.id ||
-      (userWithClub.clubId &&
-        carnival.creator &&
-        carnival.creator.club &&
-        carnival.creator.club.id === userWithClub.clubId));
+  // Check if user can edit this carnival (standardized permission check)
+  const canEditCarnival = userWithClub ? await carnival.canUserEditAsync(userWithClub) : false;
+
+  // Use single standard permission check for all management operations
+  const canManage = canEditCarnival;
 
   // Check if merge carnival option should be available
   let canMergeCarnival = false;
@@ -474,6 +471,7 @@ const showCarnivalHandler = async (req, res) => {
     userClubRegistration,
     canRegisterClub,
     canManage,
+    canEditCarnival, // Pass proper edit permission check
     canMergeCarnival, // Pass merge option availability
     availableMergeTargets, // Pass available merge targets
     isInactiveCarnival: !carnival.isActive,

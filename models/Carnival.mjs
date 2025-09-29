@@ -129,33 +129,31 @@ class Carnival extends Model {
    * @param {Object} user - User object to check permissions
    * @returns {boolean} Edit permission status
    */
+  /**
+   * Check if user can edit this carnival
+   * @param {Object} user - User object to check permissions
+   * @returns {boolean} Edit permission status
+   */
   canUserEdit(user) {
     if (!user) return false;
     
     // Admin users can edit any carnival
     if (user.isAdmin) return true;
     
-    // User can edit their own carnivals
+    // User can edit their own carnivals (by created or claimed ownership)
     if (this.clubId && this.clubId === user.clubId) return true;
     
     return false;
   }
 
   /**
-   * Check if user can edit this carnival (async version for club delegate checking)
+   * Check if user can edit this carnival (async version for compatibility)
    * @param {Object} user - User object to check permissions
    * @returns {Promise<boolean>} Edit permission status
    */
   async canUserEditAsync(user) {
-    if (!user) return false;
-    
-    // Admin users can edit any carnival
-    if (user.isAdmin) return true;
-    
-    // Users can edit their own carnivals
-    if (this.clubId && this.clubId === user.clubId) return true;
-    
-    return false;
+    // Currently identical to sync version, but kept async for future delegate checking
+    return this.canUserEdit(user);
   }
 
   /**

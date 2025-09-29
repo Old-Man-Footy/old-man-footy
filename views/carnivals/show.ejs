@@ -161,7 +161,7 @@
                                     </a>
                                     
                                     <!-- Admin Claim Button (if not already owned by someone) -->
-                                    <% if (!carnival.createdByUserId || carnival.createdByUserId === null) { %>
+                                    <% if (!canEditCarnival && user && user.isAdmin) { %>
                                         <a href="/admin/carnivals/<%= carnival.id %>/claim" class="btn btn-outline-tertiary btn-sm">
                                             <i class="bi bi-hand-thumbs-up"></i> Admin Claim
                                         </a>
@@ -172,7 +172,7 @@
                     <% } %>
 
                     <!-- Carnival Owner Actions Section -->
-                    <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
+                    <% if (canEditCarnival || canTakeOwnership) { %>
                         <div class="alert alert-info mb-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -197,7 +197,7 @@
 
                                     
                                     <!-- Edit button for owners -->
-                                    <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId) { %>
+                                    <% if (canEditCarnival) { %>
                                         <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-primary btn-sm">
                                             <i class="bi bi-people"></i> Manage Attendees
                                         </a>
@@ -221,7 +221,7 @@
                                     <% } %>
 
                                     <!-- Release ownership button for MySideline carnivals owned by the user -->
-                                    <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId && carnival.lastMySidelineSync) { %>
+                                    <% if (canEditCarnival && carnival.lastMySidelineSync) { %>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#releaseOwnershipModal">
@@ -423,7 +423,7 @@
                                 </div>
                             <% }); %>
                         </div>
-                        <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
+                        <% if (canEditCarnival || canTakeOwnership) { %>
                             <div class="text-center mt-4">
                                 <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-tertiary">
                                     <i class="bi bi-list-ul"></i> Manage Attendees
@@ -432,7 +432,7 @@
                         <% } %>
                     </div>
                 </div>
-            <% } else if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
+            <% } else if (canEditCarnival || canTakeOwnership) { %>
                 <!-- Show empty state for carnival owners -->
                 <div class="card shadow mb-4">
                     <div class="card-header bg-info text-primary">
@@ -928,7 +928,7 @@
                 </div>
 
                 <!-- Admin Actions for Carnival Owners -->
-                <% if ((user && carnival.createdByUserId && user.id === carnival.createdByUserId) || canTakeOwnership) { %>
+                <% if (canEditCarnival || canTakeOwnership) { %>
                     <div class="mt-3">
                         <h6 class="text-muted mb-2">Admin Actions</h6>
                         <div class="d-flex flex-wrap gap-2">
@@ -943,7 +943,7 @@
                             <% } %>
 
                             <!-- Edit for owners -->
-                            <% if (user && carnival.createdByUserId && user.id === carnival.createdByUserId) { %>
+                            <% if (canEditCarnival) { %>
                                 <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-sm btn-primary">
                                     <i class="bi bi-people"></i> Manage Attendees
                                 </a>
@@ -1317,7 +1317,7 @@
 
 <!-- Email Attendees Modal -->
 <% if (user && carnival.attendingClubs && carnival.attendingClubs.length > 0 && 
-       ((user.id === carnival.createdByUserId) || 
+       (canEditCarnival || 
         (user.clubId && carnival.attendingClubs.some(club => club.id === user.clubId)))) { %>
 <div class="modal fade" id="emailAttendeesModal" tabindex="-1" aria-labelledby="emailAttendeesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
