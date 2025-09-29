@@ -331,6 +331,7 @@ const updateClubProfileHandler = async (req, res) => {
 
   const {
     location,
+    state,
     description,
     contactPerson,
     contactEmail,
@@ -346,6 +347,7 @@ const updateClubProfileHandler = async (req, res) => {
   // Prepare update data
   const updateData = {
     location: location?.trim(),
+    state: state?.trim(),
     contactEmail: contactEmail?.trim(),
     contactPhone: contactPhone?.trim(),
     contactPerson: contactPerson?.trim(),
