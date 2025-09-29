@@ -701,3 +701,13 @@
         width: 0; /* Will be set by JS */
     }
 }
+
+/**
+ * Fix text-primary contrast issue on colored backgrounds in dark mode
+ * Bootstrap's text-primary becomes white in dark mode which creates poor
+ * contrast against yellow (bg-tertiary) backgrounds
+ */
+[data-theme="dark"] .card.bg-tertiary .text-primary,
+[data-theme="dark"] .bg-tertiary .text-primary {
+    color: var(--theme-bg-primary) !important;
+}
