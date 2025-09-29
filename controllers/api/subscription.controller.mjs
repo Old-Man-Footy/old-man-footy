@@ -5,7 +5,7 @@
 
 import { validationResult } from 'express-validator';
 import { EmailSubscription } from '../../models/index.mjs';
-import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
+import { AUSTRALIAN_STATES, NOTIFICATION_TYPES_ARRAY } from '../../config/constants.mjs';
 
 /**
  * Get current user's email subscription status and preferences
@@ -33,7 +33,9 @@ export const getUserSubscription = async (req, res) => {
                     email: userEmail,
                     isActive: false,
                     states: [],
-                    availableStates: AUSTRALIAN_STATES
+                    notificationPreferences: [],
+                    availableStates: AUSTRALIAN_STATES,
+                    availableNotifications: NOTIFICATION_TYPES_ARRAY
                 }
             });
         }
@@ -44,8 +46,10 @@ export const getUserSubscription = async (req, res) => {
                 email: subscription.email,
                 isActive: subscription.isActive,
                 states: subscription.states || [],
+                notificationPreferences: subscription.notificationPreferences || [],
                 subscribedAt: subscription.subscribedAt,
-                availableStates: AUSTRALIAN_STATES
+                availableStates: AUSTRALIAN_STATES,
+                availableNotifications: NOTIFICATION_TYPES_ARRAY
             }
         });
 
@@ -81,10 +85,10 @@ export const updateUserSubscription = async (req, res) => {
         }
 
         const userEmail = req.user.email;
-        const { states, isActive } = req.body;
+        const { states, notificationPreferences, isActive } = req.body;
         
         // Check if there are actual changes to make
-        if (states === undefined && isActive === undefined) {
+        if (states === undefined && notificationPreferences === undefined && isActive === undefined) {
             // No changes to make, but return current subscription
             const existingSubscription = await EmailSubscription.findOne({
                 where: { email: userEmail }
@@ -103,6 +107,7 @@ export const updateUserSubscription = async (req, res) => {
                 subscription: {
                     email: existingSubscription.email,
                     states: existingSubscription.states,
+                    notificationPreferences: existingSubscription.notificationPreferences || [],
                     isActive: existingSubscription.isActive,
                     subscribedAt: existingSubscription.subscribedAt
                 }
@@ -120,6 +125,7 @@ export const updateUserSubscription = async (req, res) => {
                 email: userEmail,
                 isActive: isActive !== undefined ? isActive : true,
                 states: states || [],
+                notificationPreferences: notificationPreferences || [],
                 source: 'dashboard',
                 subscribedAt: new Date()
             });
@@ -129,6 +135,10 @@ export const updateUserSubscription = async (req, res) => {
             
             if (states !== undefined) {
                 updateData.states = states;
+            }
+            
+            if (notificationPreferences !== undefined) {
+                updateData.notificationPreferences = notificationPreferences;
             }
             
             if (isActive !== undefined) {
@@ -151,6 +161,7 @@ export const updateUserSubscription = async (req, res) => {
                 email: subscription.email,
                 isActive: subscription.isActive,
                 states: subscription.states,
+                notificationPreferences: subscription.notificationPreferences || [],
                 subscribedAt: subscription.subscribedAt
             }
         });

@@ -1247,6 +1247,39 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Notification Types Selection -->
+                <div id="notificationSelection" style="display: none;">
+                    <h6 class="mb-3 mt-4">
+                        <i class="bi bi-bell"></i> Select Notification Types
+                    </h6>
+                    <p class="text-muted small mb-3">
+                        Choose which types of notifications you'd like to receive:
+                    </p>
+                    
+                    <div class="row">
+                        <% NOTIFICATION_TYPES_ARRAY.forEach((notificationType, index) => { %>
+                        <div class="col-md-6 col-sm-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input notification-checkbox" type="checkbox" 
+                                       id="notification_<%= notificationType.replace(/[^a-zA-Z0-9]/g, '_') %>" value="<%= notificationType %>">
+                                <label class="form-check-label" for="notification_<%= notificationType.replace(/[^a-zA-Z0-9]/g, '_') %>">
+                                    <%= notificationType.replace(/_/g, ' ') %>
+                                </label>
+                            </div>
+                        </div>
+                        <% }) %>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllNotifications">
+                            <i class="bi bi-check-all"></i> Select All
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllNotifications">
+                            <i class="bi bi-x-circle"></i> Clear All
+                        </button>
+                    </div>
+                </div>
                 
                 <!-- Unsubscribe Section -->
                 <div id="unsubscribeSection" class="mt-4" style="display: none;">

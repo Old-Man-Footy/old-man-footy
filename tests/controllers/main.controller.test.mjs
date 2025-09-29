@@ -188,9 +188,10 @@ vi.mock('/services/carouselImageService.mjs', () => ({
   }
 }));
 
-// Mock constants
-vi.mock('/config/constants.mjs', () => ({
-  AUSTRALIAN_STATES: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
+// Mock constants - path must match the import in main.controller.mjs
+vi.mock('../../config/constants.mjs', () => ({
+  AUSTRALIAN_STATES: ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'],
+  NOTIFICATION_TYPES_ARRAY: ['CARNIVAL_ANNOUNCEMENTS', 'CLUB_UPDATES', 'SPONSOR_HIGHLIGHTS', 'GENERAL_NEWS']
 }));
 
 // Now import the controller and dependencies

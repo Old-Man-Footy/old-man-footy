@@ -208,4 +208,80 @@ describe('EmailSubscription Model (Mocked)', () => {
     await EmailSubscription.create({ email: 'unique@test.com' });
     await expect(EmailSubscription.create({ email: 'unique@test.com' })).rejects.toThrow();
   });
+
+  it('should create subscription with default notification preferences', async () => {
+    const sub = await EmailSubscription.create({ email: 'notify@test.com' });
+    expect(sub.notificationPreferences).toEqual({
+      carnival_announcements: true,
+      club_updates: true,
+      sponsor_highlights: false,
+      general_news: true
+    });
+  });
+
+  it('should allow custom notification preferences', async () => {
+    const customPrefs = {
+      carnival_announcements: false,
+      club_updates: true,
+      sponsor_highlights: true,
+      general_news: false
+    };
+    const sub = await EmailSubscription.create({ 
+      email: 'custom@test.com',
+      notificationPreferences: customPrefs
+    });
+    expect(sub.notificationPreferences).toEqual(customPrefs);
+  });
+
+  it('should update individual notification preferences', async () => {
+    const sub = await EmailSubscription.create({ email: 'update@test.com' });
+    
+    sub.updateNotificationPreferences({
+      carnival_announcements: false,
+      sponsor_highlights: true
+    });
+    
+    expect(sub.notificationPreferences).toEqual({
+      carnival_announcements: false,
+      club_updates: true,
+      sponsor_highlights: true,
+      general_news: true
+    });
+  });
+
+  it('should check if specific notification is enabled', async () => {
+    const sub = await EmailSubscription.create({ email: 'check@test.com' });
+    
+    expect(sub.hasNotificationEnabled('carnival_announcements')).toBe(true);
+    expect(sub.hasNotificationEnabled('sponsor_highlights')).toBe(false);
+  });
+
+  it('should enable and disable individual notifications', async () => {
+    const sub = await EmailSubscription.create({ email: 'toggle@test.com' });
+    
+    sub.disableNotification('carnival_announcements');
+    expect(sub.hasNotificationEnabled('carnival_announcements')).toBe(false);
+    
+    sub.enableNotification('sponsor_highlights');
+    expect(sub.hasNotificationEnabled('sponsor_highlights')).toBe(true);
+  });
+
+  it('should generate and validate verification tokens', async () => {
+    const sub = await EmailSubscription.create({ email: 'verify@test.com' });
+    
+    expect(sub.verificationToken).toMatch(/^[a-f0-9]{32}$/);
+    expect(sub.isVerificationTokenValid()).toBe(true);
+    expect(sub.isVerified()).toBe(false);
+  });
+
+  it('should verify subscription and clear verification token', async () => {
+    const sub = await EmailSubscription.create({ email: 'verify2@test.com' });
+    
+    sub.verify();
+    
+    expect(sub.isVerified()).toBe(true);
+    expect(sub.verifiedAt).toBeInstanceOf(Date);
+    expect(sub.verificationToken).toBeNull();
+    expect(sub.verificationTokenExpiresAt).toBeNull();
+  });
 });

@@ -18,7 +18,7 @@ import { validationResult } from 'express-validator';
 import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import carouselImageService from '../services/carouselImageService.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, NOTIFICATION_TYPES_ARRAY } from '../config/constants.mjs';
 import crypto from 'crypto';
 import asyncHandler from '../middleware/asyncHandler.mjs';
 
@@ -247,6 +247,7 @@ export const getDashboard = asyncHandler(async (req, res) => {
     playerCount, // New: player count for user's club
     emailSubscription, // New: user's email subscription status
     AUSTRALIAN_STATES, // New: available states for subscription management
+    NOTIFICATION_TYPES_ARRAY, // New: available notification types for subscription management
     additionalCSS: [],
   });
 });

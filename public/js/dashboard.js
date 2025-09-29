@@ -45,6 +45,10 @@ export const dashboardManager = {
         this.elements.stateCheckboxes = document.querySelectorAll('.state-checkbox');
         this.elements.selectAllStatesBtn = document.getElementById('selectAllStates');
         this.elements.clearAllStatesBtn = document.getElementById('clearAllStates');
+        this.elements.notificationSelection = document.getElementById('notificationSelection');
+        this.elements.notificationCheckboxes = document.querySelectorAll('.notification-checkbox');
+        this.elements.selectAllNotificationsBtn = document.getElementById('selectAllNotifications');
+        this.elements.clearAllNotificationsBtn = document.getElementById('clearAllNotifications');
         this.elements.unsubscribeSection = document.getElementById('unsubscribeSection');
         this.elements.unsubscribeBtn = document.getElementById('unsubscribeBtn');
         this.elements.saveSubscriptionBtn = document.getElementById('saveSubscriptionBtn');
@@ -458,6 +462,16 @@ export const dashboardManager = {
             this.clearAllStates();
         });
 
+        // Handle select all notifications
+        this.elements.selectAllNotificationsBtn?.addEventListener('click', () => {
+            this.selectAllNotifications();
+        });
+
+        // Handle clear all notifications
+        this.elements.clearAllNotificationsBtn?.addEventListener('click', () => {
+            this.clearAllNotifications();
+        });
+
         // Handle unsubscribe
         this.elements.unsubscribeBtn?.addEventListener('click', () => {
             this.handleUnsubscribe();
@@ -512,6 +526,13 @@ export const dashboardManager = {
                 checkbox.checked = subscription.states.includes(checkbox.value);
             });
         }
+
+        // Set notification type checkboxes
+        if (subscription && subscription.notificationPreferences) {
+            this.elements.notificationCheckboxes.forEach(checkbox => {
+                checkbox.checked = subscription.notificationPreferences.includes(checkbox.value);
+            });
+        }
     },
 
     /**
@@ -522,6 +543,10 @@ export const dashboardManager = {
         
         if (this.elements.stateSelection) {
             this.elements.stateSelection.style.display = isChecked ? 'block' : 'none';
+        }
+        
+        if (this.elements.notificationSelection) {
+            this.elements.notificationSelection.style.display = isChecked ? 'block' : 'none';
         }
         
         if (this.elements.unsubscribeSection) {
@@ -543,6 +568,24 @@ export const dashboardManager = {
      */
     clearAllStates() {
         this.elements.stateCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    },
+
+    /**
+     * Select all notification types
+     */
+    selectAllNotifications() {
+        this.elements.notificationCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+    },
+
+    /**
+     * Clear all notification types
+     */
+    clearAllNotifications() {
+        this.elements.notificationCheckboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
     },
@@ -647,6 +690,16 @@ export const dashboardManager = {
             return;
         }
 
+        // Get selected notification types
+        const selectedNotifications = Array.from(this.elements.notificationCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+
+        if (selectedNotifications.length === 0) {
+            this.showSubscriptionAlert('Please select at least one notification type', 'warning');
+            return;
+        }
+
         try {
             const response = await fetch('/api/subscriptions/me', {
                 method: 'PUT',
@@ -655,7 +708,8 @@ export const dashboardManager = {
                 },
                 body: JSON.stringify({
                     isActive: true,
-                    states: selectedStates
+                    states: selectedStates,
+                    notificationPreferences: selectedNotifications
                 })
             });
 

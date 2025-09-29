@@ -8,7 +8,7 @@ import { body } from 'express-validator';
 import { ensureAuthenticated } from '../../middleware/auth.mjs';
 import { applyApiSecurity } from '../../middleware/security.mjs';
 import * as subscriptionController from '../../controllers/api/subscription.controller.mjs';
-import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
+import { AUSTRALIAN_STATES, NOTIFICATION_TYPES_ARRAY } from '../../config/constants.mjs';
 
 const router = express.Router();
 
@@ -37,6 +37,14 @@ router.put('/me', [
         .optional({ nullable: true, checkFalsy: true })
         .isIn(AUSTRALIAN_STATES)
         .withMessage('Invalid state code'),
+    body('notificationPreferences')
+        .optional({ nullable: true, checkFalsy: true })
+        .isArray()
+        .withMessage('Notification preferences must be an array'),
+    body('notificationPreferences.*')
+        .optional({ nullable: true, checkFalsy: true })
+        .isIn(NOTIFICATION_TYPES_ARRAY)
+        .withMessage('Invalid notification type'),
     body('isActive')
         .optional({ nullable: true, checkFalsy: true })
         .isBoolean()

@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { validationResult } from 'express-validator';
 import { EmailSubscription } from '../../models/index.mjs';
-import { AUSTRALIAN_STATES } from '../../config/constants.mjs';
+import { AUSTRALIAN_STATES, NOTIFICATION_TYPES_ARRAY } from '../../config/constants.mjs';
 import * as subscriptionController from '../../controllers/api/subscription.controller.mjs';
 
 // Mock dependencies
@@ -14,6 +14,14 @@ vi.mock('express-validator');
 vi.mock('../../models/index.mjs');
 vi.mock('../../config/constants.mjs', () => ({
     AUSTRALIAN_STATES: ['NSW', 'QLD', 'VIC', 'WA', 'SA', 'TAS', 'NT', 'ACT'],
+    NOTIFICATION_TYPES_ARRAY: [
+        'Carnival_Notifications',
+        'Delegate_Alerts', 
+        'Website_Updates',
+        'Program_Changes',
+        'Special_Offers',
+        'Community_News'
+    ],
     PLAYER_SHORTS_COLORS_ARRAY: ['Unrestricted', 'Red', 'Yellow', 'Blue', 'Green'],
     APPROVAL_STATUS_ARRAY: ['pending', 'approved', 'rejected'],
     ATTENDANCE_STATUS_ARRAY: ['confirmed', 'tentative', 'unavailable'],
@@ -38,6 +46,7 @@ describe('API Subscription Controller', () => {
         email: 'user@example.com',
         isActive: true,
         states: ['NSW', 'QLD'],
+        notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
         subscribedAt: new Date('2024-01-15T10:30:00Z'),
         unsubscribedAt: null,
         source: 'dashboard',
@@ -88,8 +97,10 @@ describe('API Subscription Controller', () => {
                     email: 'user@example.com',
                     isActive: true,
                     states: ['NSW', 'QLD'],
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
                     subscribedAt: expect.any(Date),
-                    availableStates: AUSTRALIAN_STATES
+                    availableStates: AUSTRALIAN_STATES,
+                    availableNotifications: NOTIFICATION_TYPES_ARRAY
                 }
             });
         });
@@ -109,7 +120,9 @@ describe('API Subscription Controller', () => {
                     email: 'user@example.com',
                     isActive: false,
                     states: [],
-                    availableStates: AUSTRALIAN_STATES
+                    notificationPreferences: [],
+                    availableStates: AUSTRALIAN_STATES,
+                    availableNotifications: NOTIFICATION_TYPES_ARRAY
                 }
             });
         });
@@ -128,8 +141,10 @@ describe('API Subscription Controller', () => {
                     email: 'user@example.com',
                     isActive: true,
                     states: [],
-                    subscribedAt: expect.any(Date),
-                    availableStates: AUSTRALIAN_STATES
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
+                    subscribedAt: new Date('2024-01-15T10:30:00.000Z'),
+                    availableStates: AUSTRALIAN_STATES,
+                    availableNotifications: NOTIFICATION_TYPES_ARRAY
                 }
             });
         });
@@ -164,7 +179,9 @@ describe('API Subscription Controller', () => {
                     email: 'different@example.com',
                     isActive: false,
                     states: [],
-                    availableStates: AUSTRALIAN_STATES
+                    notificationPreferences: [],
+                    availableStates: AUSTRALIAN_STATES,
+                    availableNotifications: NOTIFICATION_TYPES_ARRAY
                 }
             });
         });
@@ -174,12 +191,14 @@ describe('API Subscription Controller', () => {
         it('should create new subscription when none exists', async () => {
             req.body = {
                 states: ['NSW', 'VIC'],
+                notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
                 isActive: true
             };
 
             EmailSubscription.findOne.mockResolvedValue(null);
             const newSubscription = createMockEmailSubscription({
-                states: ['NSW', 'VIC']
+                states: ['NSW', 'VIC'],
+                notificationPreferences: ['Carnival_Notifications', 'Website_Updates']
             });
             EmailSubscription.create.mockResolvedValue(newSubscription);
 
@@ -193,6 +212,7 @@ describe('API Subscription Controller', () => {
                 email: 'user@example.com',
                 isActive: true,
                 states: ['NSW', 'VIC'],
+                notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
                 source: 'dashboard',
                 subscribedAt: expect.any(Date)
             });
@@ -204,6 +224,7 @@ describe('API Subscription Controller', () => {
                     email: 'user@example.com',
                     isActive: true,
                     states: ['NSW', 'VIC'],
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
                     subscribedAt: expect.any(Date)
                 }
             });
@@ -212,6 +233,7 @@ describe('API Subscription Controller', () => {
         it('should update existing subscription with new states', async () => {
             req.body = {
                 states: ['QLD', 'WA'],
+                notificationPreferences: ['Delegate_Alerts', 'Special_Offers'],
                 isActive: true
             };
 
@@ -224,6 +246,7 @@ describe('API Subscription Controller', () => {
 
             expect(existingSubscription.update).toHaveBeenCalledWith({
                 states: ['QLD', 'WA'],
+                notificationPreferences: ['Delegate_Alerts', 'Special_Offers'],
                 isActive: true,
                 subscribedAt: expect.any(Date),
                 unsubscribedAt: null
@@ -236,6 +259,7 @@ describe('API Subscription Controller', () => {
                     email: 'user@example.com',
                     isActive: true,
                     states: ['NSW'],
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
                     subscribedAt: new Date('2024-01-15T10:30:00.000Z')
                 }
             });
@@ -263,7 +287,8 @@ describe('API Subscription Controller', () => {
                     email: 'user@example.com',
                     isActive: true,
                     states: ['NSW', 'QLD'],
-                    subscribedAt: expect.any(Date)
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
+                    subscribedAt: new Date('2024-01-15T10:30:00.000Z')
                 }
             });
         });
@@ -402,6 +427,7 @@ describe('API Subscription Controller', () => {
                 email: 'user@example.com',
                 isActive: true,
                 states: ['NSW'],
+                notificationPreferences: [],
                 source: 'dashboard',
                 subscribedAt: expect.any(Date)
             });
@@ -424,8 +450,126 @@ describe('API Subscription Controller', () => {
                 email: 'user@example.com',
                 isActive: true,
                 states: [],
+                notificationPreferences: [],
                 source: 'dashboard',
                 subscribedAt: expect.any(Date)
+            });
+        });
+
+        it('should update only notification preferences when provided', async () => {
+            req.body = {
+                notificationPreferences: ['Community_News', 'Program_Changes']
+            };
+
+            const existingSubscription = createMockEmailSubscription();
+            EmailSubscription.findOne.mockResolvedValue(existingSubscription);
+
+            await subscriptionController.updateUserSubscription(req, res);
+
+            expect(existingSubscription.update).toHaveBeenCalledWith({
+                notificationPreferences: ['Community_News', 'Program_Changes']
+            });
+
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Subscription preferences updated successfully',
+                subscription: {
+                    email: 'user@example.com',
+                    isActive: true,
+                    states: ['NSW', 'QLD'],
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
+                    subscribedAt: expect.any(Date)
+                }
+            });
+        });
+
+        it('should create subscription with notification preferences when provided', async () => {
+            req.body = {
+                states: ['SA'],
+                notificationPreferences: ['Carnival_Notifications', 'Delegate_Alerts', 'Community_News'],
+                isActive: true
+            };
+
+            EmailSubscription.findOne.mockResolvedValue(null);
+            const newSubscription = createMockEmailSubscription({
+                states: ['SA'],
+                notificationPreferences: ['Carnival_Notifications', 'Delegate_Alerts', 'Community_News']
+            });
+            EmailSubscription.create.mockResolvedValue(newSubscription);
+
+            await subscriptionController.updateUserSubscription(req, res);
+
+            expect(EmailSubscription.create).toHaveBeenCalledWith({
+                email: 'user@example.com',
+                isActive: true,
+                states: ['SA'],
+                notificationPreferences: ['Carnival_Notifications', 'Delegate_Alerts', 'Community_News'],
+                source: 'dashboard',
+                subscribedAt: expect.any(Date)
+            });
+
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Subscription preferences updated successfully',
+                subscription: {
+                    email: 'user@example.com',
+                    isActive: true,
+                    states: ['SA'],
+                    notificationPreferences: ['Carnival_Notifications', 'Delegate_Alerts', 'Community_News'],
+                    subscribedAt: expect.any(Date)
+                }
+            });
+        });
+
+        it('should create subscription with empty notification preferences when not provided', async () => {
+            req.body = {
+                states: ['NT'],
+                isActive: true
+            };
+
+            EmailSubscription.findOne.mockResolvedValue(null);
+            const newSubscription = createMockEmailSubscription({
+                states: ['NT'],
+                notificationPreferences: []
+            });
+            EmailSubscription.create.mockResolvedValue(newSubscription);
+
+            await subscriptionController.updateUserSubscription(req, res);
+
+            expect(EmailSubscription.create).toHaveBeenCalledWith({
+                email: 'user@example.com',
+                isActive: true,
+                states: ['NT'],
+                notificationPreferences: [],
+                source: 'dashboard',
+                subscribedAt: expect.any(Date)
+            });
+        });
+
+        it('should handle empty notification preferences array', async () => {
+            req.body = {
+                notificationPreferences: []
+            };
+
+            const existingSubscription = createMockEmailSubscription();
+            EmailSubscription.findOne.mockResolvedValue(existingSubscription);
+
+            await subscriptionController.updateUserSubscription(req, res);
+
+            expect(existingSubscription.update).toHaveBeenCalledWith({
+                notificationPreferences: []
+            });
+
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Subscription preferences updated successfully',
+                subscription: {
+                    email: 'user@example.com',
+                    isActive: true,
+                    states: ['NSW', 'QLD'],
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
+                    subscribedAt: expect.any(Date)
+                }
             });
         });
     });
@@ -566,7 +710,8 @@ describe('API Subscription Controller', () => {
                     email: 'user@example.com',
                     isActive: true,
                     states: ['NSW', 'QLD'],
-                    subscribedAt: expect.any(Date)
+                    notificationPreferences: ['Carnival_Notifications', 'Website_Updates'],
+                    subscribedAt: new Date('2024-01-15T10:30:00.000Z')
                 }
             });
         });
