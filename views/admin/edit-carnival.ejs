@@ -75,7 +75,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/admin/carnivals/<%= carnival.id %>/edit" 
+                    <form method="POST" action="/admin/carnivals/<%= carnival.id %>/update" 
                           data-mysideline-carnival-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://profile.mysideline.com.au/register/clubsearch/?source=rugby-league&entityType=team&isEntityIdSearch=true&entity=true&criteria=' %>"
                           enctype="multipart/form-data" class="needs-validation" novalidate>
                         
