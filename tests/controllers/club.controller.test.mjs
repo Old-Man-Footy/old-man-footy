@@ -392,9 +392,9 @@ describe('Club Controller', () => {
 
       it('should display public club listings with default pagination', async () => {
         const mockClubs = [mockClub, { ...mockClub, id: 2, clubName: 'Second Club' }];
-        // Each club needs getCarnivalCount method for the controller logic
+        // Each club needs getTotalCarnivalCount method for the controller logic
         mockClubs.forEach(club => {
-          club.getCarnivalCount = vi.fn().mockResolvedValue(5);
+          club.getTotalCarnivalCount = vi.fn().mockResolvedValue(5);
         });
         Club.findAll.mockResolvedValue(mockClubs);
 

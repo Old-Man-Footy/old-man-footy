@@ -147,7 +147,9 @@
                                                 <% } %>
                                             </td>
                                             <td>
-                                                <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
+                                                <% if (carnival.state) { %>
+                                                    <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
+                                                <% } %>
                                             </td>
                                             <td>
                                                 <small class="text-muted">

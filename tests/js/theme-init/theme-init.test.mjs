@@ -13,6 +13,8 @@ describe('theme-init.js', () => {
     resetDOM();
     // Clear any stored theme
     localStorage.clear();
+    // Set module mode to prevent auto-initialization
+    window.__THEME_INIT_MODULE_MODE__ = true;
   });
 
   it('applies dark theme when saved preference is dark', () => {
@@ -42,14 +44,16 @@ describe('theme-init.js', () => {
   });
 
   it('adds and later removes theme-loading class and applies theme-applied to body', async () => {
-  // Use fake timers before invoking to capture scheduled timeouts
-  vi.useFakeTimers();
-  initTheme();
-  // theme-loading should be set immediately
-  expect(document.documentElement.className.includes('theme-loading')).toBe(true);
-  // Fast-forward timers for setTimeout(50)
-  vi.runAllTimers();
+    // Use fake timers before invoking to capture scheduled timeouts
+    vi.useFakeTimers();
+    initTheme();
+    // theme-loading should be set immediately
+    expect(document.documentElement.className.includes('theme-loading')).toBe(true);
+    // Fast-forward timers for setTimeout(50)
+    vi.runAllTimers();
     expect(document.documentElement.className.includes('theme-loading')).toBe(false);
     expect(document.body.classList.contains('theme-applied')).toBe(true);
+    // Clean up fake timers
+    vi.useRealTimers();
   });
 });

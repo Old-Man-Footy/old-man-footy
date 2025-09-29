@@ -119,7 +119,9 @@
                                         
                                         <!-- Badges -->
                                         <div class="mb-2">
-                                            <span class="badge badge-sm state-<%= carnival.state.toLowerCase() %> me-1"><%= carnival.state %></span>
+                                            <% if (carnival.state) { %>
+                                                <span class="badge badge-sm state-<%= carnival.state.toLowerCase() %> me-1"><%= carnival.state %></span>
+                                            <% } %>
                                             <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
                                                 <% if (carnival.date >= new Date()) { %>
                                                     <span class="badge badge-sm bg-primary me-1">Upcoming</span>

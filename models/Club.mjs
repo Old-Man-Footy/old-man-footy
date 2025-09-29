@@ -44,41 +44,145 @@ class Club extends Model {
   }
 
   /**
+   * Get count of carnivals hosted by this club's delegates
+   * @returns {Promise<number>} Number of carnivals hosted
+   */
+  async getHostedCarnivalCount() {
+    try {
+      const delegateIds = await this.getDelegateIds();
+      if (delegateIds.length === 0) return 0;
+
+      const { Carnival } = await import('./index.mjs');
+      
+      const hostedCarnivals = await Carnival.findAll({
+        where: {
+          createdByUserId: { [Op.in]: delegateIds },
+          isActive: true
+        }
+      });
+
+      return hostedCarnivals.length;
+    } catch (error) {
+      console.error('Error getting hosted carnival count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get count of carnivals this club is attending (but not hosting)
+   * @returns {Promise<number>} Number of carnivals attending
+   */
+  async getAttendingCarnivalCount() {
+    try {
+      const delegateIds = await this.getDelegateIds();
+      if (delegateIds.length === 0) {
+        // Still check if club is attending any carnivals
+        const { CarnivalClub, Carnival } = await import('./index.mjs');
+        
+        const attendingCarnivals = await CarnivalClub.findAll({
+          where: {
+            clubId: this.id,
+            isActive: true
+          },
+          include: [{
+            model: Carnival,
+            as: 'carnival',
+            where: { isActive: true }
+          }]
+        });
+
+        return attendingCarnivals.length;
+      }
+
+      const { Carnival, CarnivalClub } = await import('./index.mjs');
+      
+      // Get carnivals hosted by this club's delegates
+      const hostedCarnivals = await Carnival.findAll({
+        where: {
+          createdByUserId: { [Op.in]: delegateIds },
+          isActive: true
+        },
+        attributes: ['id']
+      });
+      
+      const hostedCarnivalIds = hostedCarnivals.map(c => c.id);
+
+      // Get attending carnivals (excluding hosted ones)
+      const attendingCarnivals = await CarnivalClub.findAll({
+        where: {
+          clubId: this.id,
+          isActive: true,
+          ...(hostedCarnivalIds.length > 0 && {
+            carnivalId: {
+              [Op.notIn]: hostedCarnivalIds
+            }
+          })
+        },
+        include: [{
+          model: Carnival,
+          as: 'carnival', 
+          where: { isActive: true }
+        }]
+      });
+
+      return attendingCarnivals.length;
+    } catch (error) {
+      console.error('Error getting attending carnival count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get total count of unique carnivals (hosted + attending)
+   * @returns {Promise<number>} Total number of unique carnivals
+   */
+  async getTotalCarnivalCount() {
+    try {
+      const delegateIds = await this.getDelegateIds();
+      const { Carnival, CarnivalClub } = await import('./index.mjs');
+      
+      // Get hosted carnival IDs
+      const hostedCarnivalIds = delegateIds.length > 0 ? await Carnival.findAll({
+        where: {
+          createdByUserId: { [Op.in]: delegateIds },
+          isActive: true
+        },
+        attributes: ['id']
+      }).then(carnivals => carnivals.map(c => c.id)) : [];
+
+      // Get attending carnival IDs  
+      const attendingCarnivalIds = await CarnivalClub.findAll({
+        where: {
+          clubId: this.id,
+          isActive: true
+        },
+        include: [{
+          model: Carnival,
+          as: 'carnival',
+          where: { isActive: true },
+          attributes: ['id']
+        }],
+        attributes: []
+      }).then(carnivalClubs => carnivalClubs.map(cc => cc.carnival.id));
+
+      // Combine and deduplicate
+      const allIds = new Set([...hostedCarnivalIds, ...attendingCarnivalIds]);
+
+      return allIds.size;
+    } catch (error) {
+      console.error('Error getting total carnival count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * @deprecated Use getHostedCarnivalCount(), getAttendingCarnivalCount(), or getTotalCarnivalCount() instead
    * Get club's carnival count (unique combination of hosted and attended carnivals)
-   * @returns {Promise<number>} Number of unique active carnivals
+   * @returns {Promise<number>} Total number of unique carnivals
    */
   async getCarnivalCount() {
-    const { Carnival, CarnivalClub } = await import('./index.mjs');
-
-    // Get carnivals hosted by this club's delegates
-    const delegateIds = await this.getDelegateIds();
-    const hostedCarnivalIds = await Carnival.findAll({
-      where: {
-        createdByUserId: { [Op.in]: delegateIds },
-        isActive: true
-      },
-      attributes: ['id']
-    }).then(carnivals => carnivals.map(c => c.id));
-
-    // Get carnivals this club is attending
-    const attendingCarnivalIds = await CarnivalClub.findAll({
-      where: {
-        clubId: this.id,
-        isActive: true
-      },
-      include: [{
-        model: Carnival,
-        as: 'carnival',
-        where: { isActive: true },
-        attributes: ['id']
-      }],
-      attributes: []
-    }).then(carnivalClubs => carnivalClubs.map(cc => cc.carnival.id));
-
-    // Combine and get unique carnival IDs
-    const uniqueCarnivalIds = [...new Set([...hostedCarnivalIds, ...attendingCarnivalIds])];
-    
-    return uniqueCarnivalIds.length;
+    console.warn('getCarnivalCount() is deprecated. Use getHostedCarnivalCount(), getAttendingCarnivalCount(), or getTotalCarnivalCount() instead.');
+    return await this.getTotalCarnivalCount();
   }
 
   /**

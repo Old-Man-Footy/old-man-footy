@@ -2,7 +2,12 @@
  * Critical theme initialization script
  * This runs immediately (not as a module) to prevent theme flashing
  */
-(function() {
+
+/**
+ * Initialize theme based on saved preference or system preference
+ * @returns {string} The applied theme ('light' or 'dark')
+ */
+export function initTheme() {
     'use strict';
     
     // Apply theme-loading class immediately to prevent flash
@@ -50,6 +55,15 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', showContent);
     } else {
-        showContent();
+        // Use setTimeout to avoid synchronous execution during tests
+        setTimeout(showContent, 50);
     }
-})();
+    
+    return theme;
+}
+
+// Auto-initialize when this file is loaded directly (not as a module)
+// This maintains backward compatibility for non-module usage
+if (typeof window !== 'undefined' && !window.__THEME_INIT_MODULE_MODE__) {
+    initTheme();
+}

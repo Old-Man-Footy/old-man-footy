@@ -77,7 +77,7 @@ const showClubListingsHandler = async (req, res) => {
   // Get club statistics for each club
   const clubsWithStats = await Promise.all(
     clubs.map(async (club) => {
-      const carnivalCount = await club.getCarnivalCount();
+      const carnivalCount = await club.getTotalCarnivalCount();
       return {
         ...club.toJSON(),
         carnivalCount,

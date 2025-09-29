@@ -364,7 +364,9 @@
                                             </div>
 
                                             <div class="mb-3">
-                                                <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
+                                                <% if (carnival.state) { %>
+                                                    <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
+                                                <% } %>
                                                 <% if (carnival.date >= new Date()) { %>
                                                     <span class="badge bg-primary">Upcoming</span>
                                                 <% } else { %>
@@ -496,7 +498,9 @@
                                             <% } %>
 
                                             <div class="mb-3">
-                                                <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
+                                                <% if (carnival.state) { %>
+                                                    <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
+                                                <% } %>
                                                 <% if (new Date(carnival.date) >= new Date()) { %>
                                                     <span class="badge bg-light">Upcoming</span>
                                                 <% } else { %>
