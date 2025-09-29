@@ -64,7 +64,9 @@ This means no automatic emails are sent when carnivals are created or updated, w
 #### Email Scheduler Service
 - [ ] Create `EmailSchedulerService.mjs`
   - [ ] Cron job management and registration
+  - [ ] **Content evaluation logic** - Check for new content before scheduling sends
   - [ ] Campaign execution logic leveraging existing `CarnivalEmailService`
+  - [ ] **Skip empty campaigns** - Abort send if no new/updated content found
   - [ ] Error handling and retry mechanisms
   - [ ] Rate limiting to prevent Gmail API abuse
   - [ ] **Frequency capping per subscriber** (critical for spam prevention)
@@ -74,15 +76,30 @@ This means no automatic emails are sent when carnivals are created or updated, w
 #### **Priority: Weekly Digest System**
 - [ ] **Weekly Carnival Digest** - Addresses the TODO comment to prevent spam
   - [ ] Aggregate new/updated carnivals from the past week
+  - [ ] **Content-conditional sending** - Only send if there are new/updated carnivals to report
+  - [ ] Track last digest send date per subscriber to prevent duplicate content
   - [ ] State-based filtering using existing EmailSubscription logic
   - [ ] Utilizes existing unsubscribe system
   - [ ] Template builds on existing carnival notification HTML structure
+  - [ ] **No-content weeks = No emails** (critical spam prevention)
 - [ ] **Immediate Goal:** Replace the disabled individual carnival notifications
 - [ ] **Enable safe carnival notifications** by uncommenting the disabled code once digest is ready
 
+#### **Technical Requirements for Content-Conditional Sending**
+- [ ] **Last Digest Tracking** 
+  - [ ] Store `lastDigestSent` timestamp per EmailSubscription
+  - [ ] Query carnivals created/updated since last digest date
+- [ ] **Content Validation Logic**
+  - [ ] `hasNewContent()` method to check for carnival changes since last send
+  - [ ] State-specific filtering (only check carnivals relevant to subscriber's state)
+  - [ ] Return early from digest job if no new content found
+- [ ] **Logging for Empty Weeks**
+  - [ ] Log when digest jobs run but find no content to send
+  - [ ] Track content evaluation metrics for monitoring
+
 #### Secondary Campaign Types (Lower Priority)
-- [ ] **Carnival Reminders** - 7 days, 3 days, 1 day before events
-- [ ] **Registration Deadlines** - 14 days, 7 days, 2 days before closing
+- [ ] **Carnival Reminders** - 7 days before events
+- [ ] **Registration Deadlines** - 7 days before closing
 
 ### Phase 2: Advanced Campaign Management
 **Duration:** 2-3 weeks  
