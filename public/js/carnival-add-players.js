@@ -124,7 +124,7 @@ export const carnivalAddPlayersManager = {
         const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
         if (selectedCount === 0) {
             carnival.preventDefault();
-            alert('Please select at least one player to add.');
+           this.showAlert('Please select at least one player to add.');
         }
     }
 };

@@ -148,7 +148,7 @@ export const dashboardManager = {
     confirmTransfer() {
         const select = document.getElementById('newPrimaryUserId');
         if (!select || !select.value) {
-            alert('Please select a delegate to transfer the role to.');
+            this.showAlert('Please select a delegate to transfer the role to.');
             return false;
         }
         const selectedOption = select.options[select.selectedIndex];
@@ -258,14 +258,14 @@ export const dashboardManager = {
                 const selectedAction = leaveClubModal.querySelector('input[name="leaveAction"]:checked');
                 if (selectedAction?.value === 'transfer' && delegateSelect && !delegateSelect.value) {
                     e.preventDefault();
-                    alert('Please select a delegate to transfer the primary role to.');
+                    this.showAlert('Please select a delegate to transfer the primary role to.');
                     delegateSelect?.focus();
                     return false;
                 }
                 const confirmCheckbox = leaveClubModal.querySelector('#confirmLeave');
                 if (confirmCheckbox && !confirmCheckbox.checked) {
                     e.preventDefault();
-                    alert('Please confirm that you want to leave the club.');
+                    this.showAlert('Please confirm that you want to leave the club.');
                     confirmCheckbox.focus();
                     return false;
                 }

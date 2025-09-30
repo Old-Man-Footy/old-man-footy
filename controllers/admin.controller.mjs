@@ -12,6 +12,7 @@ import crypto from 'crypto';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import AuditService from '../services/auditService.mjs';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
+import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
 /**
  * Get Admin Dashboard with system statistics
@@ -562,20 +563,14 @@ const updateClubHandler = async (req, res) => {
         isPubliclyListed: !!isPubliclyListed
     };
 
-    // Handle logo upload if provided
-    if (req.structuredUploads && req.structuredUploads.length > 0) {
-        const logoUpload = req.structuredUploads.find(upload => upload.fieldname === 'logo');
-        if (logoUpload) {
-            updateData.logoUrl = logoUpload.path;
-            console.log(`📸 Admin updated club ${club.id} logo: ${logoUpload.path}`);
-        }
-    }
+    // Handle all uploads using shared processor (defensive against corrupted uploads)
+    const processedData = processStructuredUploads(req, updateData, 'club', club.id);
 
     // Update club with all editable fields
-    await club.update(updateData);
+    await club.update(processedData);
 
     const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
-        ? `Club ${clubName} has been updated successfully, including new logo upload` 
+        ? `Club ${clubName} has been updated successfully, including uploaded files` 
         : `Club ${clubName} has been updated successfully`;
 
     req.flash('success_msg', successMessage);
@@ -849,45 +844,10 @@ const updateCarnivalHandler = async (req, res) => {
         isActive: !!isActive
     };
 
-    // Handle structured file uploads
-    if (req.structuredUploads && req.structuredUploads.length > 0) {
-        const existingAdditionalImages = carnival.additionalImages || [];
-        const existingDrawFiles = carnival.drawFiles || [];
+    // Handle all uploads using shared processor (defensive against corrupted uploads)
+    const processedData = processStructuredUploads(req, updateData, 'carnival', carnival.id);
 
-        for (const upload of req.structuredUploads) {
-            switch (upload.fieldname) {
-                case 'logo':
-                    updateData.clubLogoURL = upload.path;
-                    console.log(`📸 Admin updated carnival ${carnival.id} logo: ${upload.path}`);
-                    break;
-                case 'promotionalImage':
-                    updateData.promotionalImageURL = upload.path;
-                    console.log(`📸 Admin updated carnival ${carnival.id} promotional image: ${upload.path}`);
-                    break;
-                case 'drawFile':
-                    const newDrawFile = {
-                        url: upload.path,
-                        filename: upload.originalname,
-                        title: req.body.drawTitle || `Draw Document ${existingDrawFiles.length + 1}`,
-                        uploadMetadata: upload.metadata
-                    };
-                    existingDrawFiles.push(newDrawFile);
-                    updateData.drawFiles = existingDrawFiles;
-                    
-                    // Update legacy fields with first draw file
-                    if (existingDrawFiles.length === 1) {
-                        updateData.drawFileURL = newDrawFile.url;
-                        updateData.drawFileName = newDrawFile.filename;
-                        updateData.drawTitle = req.body.drawTitle || newDrawFile.title;
-                        updateData.drawDescription = req.body.drawDescription || '';
-                    }
-                    console.log(`📄 Admin added draw document to carnival ${carnival.id}: ${upload.path}`);
-                    break;
-            }
-        }
-    }
-
-    await carnival.update(updateData);
+    await carnival.update(processedData);
 
     const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
         ? `Carnival ${title} has been updated successfully, including ${req.structuredUploads.length} file upload(s)` 
@@ -1963,4 +1923,4 @@ export const {
     getAuditStatisticsHandler: getAuditStatistics,
     exportAuditLogsHandler: exportAuditLogs,
     syncMySidelineHandler: syncMySideline
-} = wrapControllers(rawControllers);
+} = wrapControllers(rawControllers); 

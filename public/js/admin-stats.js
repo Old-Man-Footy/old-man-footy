@@ -91,11 +91,11 @@ export const adminStatsManager = {
                 URL.revokeObjectURL(url);
                 a.remove();
             } else {
-                alert('Error exporting report. Please try again.');
+               this.showAlert('Error exporting report. Please try again.');
             }
         } catch (error) {
             console.error('Export error:', error);
-            alert('Error exporting report. Please try again.');
+           this.showAlert('Error exporting report. Please try again.');
         }
     },
 

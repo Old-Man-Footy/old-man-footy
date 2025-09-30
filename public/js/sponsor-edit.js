@@ -7,6 +7,9 @@
 export const sponsorEditManager = {
     elements: {},
 
+    /** Staged file from logo uploader */
+    stagedFile: null,
+
     /**
      * Initialize the sponsor edit functionality
      */
@@ -74,6 +77,9 @@ export const sponsorEditManager = {
             this.elements.emailInput.addEventListener('blur', this.validateEmail);
             this.elements.emailInput.addEventListener('input', this.clearFieldError);
         }
+
+        // Logo file selection from logo uploader
+        document.addEventListener('logoFileSelected', this.handleLogoFileSelected);
     },
 
     /**
@@ -89,18 +95,70 @@ export const sponsorEditManager = {
     /**
      * Handle form submission
      */
-    handleFormSubmit: (event) => {
+    handleFormSubmit: async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        
         const form = event.target;
         
         if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
             sponsorEditManager.showValidationErrors();
-        } else {
-            sponsorEditManager.showSubmissionFeedback();
+            form.classList.add('was-validated');
+            return;
+        }
+        
+        try {
+            // Disable submit button during processing
+            if (sponsorEditManager.elements.submitBtn) {
+                sponsorEditManager.elements.submitBtn.disabled = true;
+            }
+            
+            // Create FormData from form
+            const formData = new FormData(form);
+            
+            // Add staged file if available
+            if (sponsorEditManager.stagedFile) {
+                formData.append('logo', sponsorEditManager.stagedFile);
+            }
+            
+            // Submit via AJAX
+            const response = await fetch(form.action, {
+                method: form.method || 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                sponsorEditManager.showSubmissionFeedback(true);
+                // Redirect after short delay for user feedback
+                setTimeout(() => {
+                    window.location.href = response.url || '/sponsors';
+                }, 1500);
+            } else {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+        } catch (error) {
+            console.error('Form submission error:', error);
+            sponsorEditManager.showSubmissionFeedback(false, error.message);
+        } finally {
+            // Re-enable submit button
+            if (sponsorEditManager.elements.submitBtn) {
+                sponsorEditManager.elements.submitBtn.disabled = false;
+            }
         }
         
         form.classList.add('was-validated');
+    },
+
+    /**
+     * Handle logo file selection from logo uploader
+     */
+    handleLogoFileSelected: (event) => {
+        const { file, previewUrl } = event.detail;
+        sponsorEditManager.stagedFile = file;
+        
+        // Optional: Update UI to show selected file
+        console.log('Logo file selected for sponsor:', file.name);
     },
 
     /**
@@ -251,17 +309,12 @@ export const sponsorEditManager = {
     /**
      * Show submission feedback
      */
-    showSubmissionFeedback() {
-        if (this.elements.submitBtn) {
-            const originalText = this.elements.submitBtn.innerHTML;
-            this.elements.submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Updating...';
-            this.elements.submitBtn.disabled = true;
-            
-            // Re-enable after form submission
-            setTimeout(() => {
-                this.elements.submitBtn.innerHTML = originalText;
-                this.elements.submitBtn.disabled = false;
-            }, 3000);
+    showSubmissionFeedback(success = true, errorMessage = null) {
+        if (success) {
+            this.showToast('Sponsor updated successfully!', 'success');
+        } else {
+            const message = errorMessage || 'Failed to update sponsor. Please try again.';
+            this.showToast(message, 'danger');
         }
     },
 

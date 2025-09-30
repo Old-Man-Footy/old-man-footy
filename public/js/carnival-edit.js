@@ -7,10 +7,14 @@
 export const carnivalEditManager = {
     // DOM element references
     elements: {},
+    
+    // Property to store the staged logo file for upload
+    stagedFile: null,
 
     // Initializes the entire manager.
     initialize() {
         this.cacheDOMElements();
+        this.bindEvents();
         this.initializePageStyling();
         this.initializeFileUploads();
         this.initializeMultiDayCarnivalFunctionality();
@@ -35,6 +39,69 @@ export const carnivalEditManager = {
             testLinkBtn: document.getElementById('testLinkBtn'),
             form: document.querySelector('form[data-mysideline-carnival-url]'),
         };
+    },
+
+    // Binds event listeners for form submission and logo file selection
+    bindEvents() {
+        if (this.elements.form) {
+            this.elements.form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleFormSubmit();
+            });
+        }
+
+        // Listen for logo file selection events
+        document.addEventListener('logoFileSelected', (event) => {
+            this.handleLogoFileSelected(event);
+        });
+    },
+
+    // Handles logo file selection from the uploader component
+    handleLogoFileSelected(event) {
+        this.stagedFile = event.detail.file;
+        console.log('Logo file staged for upload:', this.stagedFile.name);
+    },
+
+    // Handles form submission with AJAX and file upload
+    async handleFormSubmit() {
+        try {
+            const formData = new FormData(this.elements.form);
+            
+            // Add the staged logo file if one exists
+            if (this.stagedFile) {
+                formData.append('clubLogo', this.stagedFile);
+            }
+
+            const response = await fetch(this.elements.form.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.redirected) {
+                // Follow the redirect for successful submissions
+                window.location.href = response.url;
+                return;
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Form submission failed:', errorText);
+               this.showAlert('An error occurred while updating the carnival. Please try again.');
+                return;
+            }
+
+            // Handle successful response
+            const result = await response.json();
+            if (result.success) {
+                window.location.href = result.redirectUrl || '/admin/carnivals';
+            } else {
+               this.showAlert(result.message || 'An error occurred while updating the carnival.');
+            }
+
+        } catch (error) {
+            console.error('Error submitting form:', error);
+           this.showAlert('An error occurred while updating the carnival. Please try again.');
+        }
     },
 
     // Sets initial styles and visibility for page elements.

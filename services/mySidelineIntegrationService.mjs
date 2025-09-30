@@ -3,7 +3,6 @@ import MySidelineScraperService from './mySidelineScraperService.mjs';
 import MySidelineCarnivalParserService from './mySidelineCarnivalParserService.mjs';
 import MySidelineDataService from './mySidelineDataService.mjs';
 import MySidelineLogoDownloadService from './mySidelineLogoDownloadService.mjs';
-import ImageNamingService from './imageNamingService.mjs';
 import { Carnival, SyncLog } from '../models/index.mjs';
 
 /**
@@ -177,9 +176,9 @@ class MySidelineIntegrationService {
                 .filter(carnival => carnival.clubLogoURL 
                     && carnival.clubLogoURL.startsWith('http')).map(carnival => {
                         const logoUrl = carnival.clubLogoURL;
-                        const entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL; // Use constant instead of string
+                        const entityType = 'carnival'; 
                         const entityId = carnival.id;
-                        const imageType = ImageNamingService.IMAGE_TYPES.LOGO;
+                        const imageType = 'logo';
                         return { logoUrl, entityType, entityId, imageType };                
             });
 

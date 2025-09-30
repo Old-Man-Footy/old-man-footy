@@ -54,10 +54,10 @@ export const clubSponsorsManager = {
                 if (data && data.success) {
                     try { location.reload(); } catch {}
                 } else {
-                    alert('Error updating sponsor order' + (data && data.message ? (': ' + data.message) : ''));
+                    this.showAlert('Error updating sponsor order' + (data && data.message ? (': ' + data.message) : ''));
                 }
             })
-            .catch(() => alert('Error updating sponsor order'));
+            .catch(() => this.showAlert('Error updating sponsor order'));
         } catch {}
     }
 };

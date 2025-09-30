@@ -7,28 +7,15 @@
  */
 
 import express from 'express';
-import multer from 'multer';
+import fs from 'fs/promises';
+import path from 'path';
 import { ensureAuthenticated } from '../../middleware/auth.mjs';
-import ImageUploadService from '../../services/imageUploadService.mjs';
+import { galleryUpload, handleUploadError } from '../../middleware/upload.mjs';
 import ImageUpload from '../../models/ImageUpload.mjs';
+import { sequelize } from '../../config/database.mjs';
 import asyncHandler from '../../middleware/asyncHandler.mjs';
 
 const router = express.Router();
-
-// Configure multer for memory storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: ImageUploadService.MAX_FILE_SIZE
-  },
-  fileFilter: (req, file, cb) => {
-    if (ImageUploadService.ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed'), false);
-    }
-  }
-});
 
 /**
  * POST /api/images/upload
@@ -36,7 +23,7 @@ const upload = multer({
  */
 router.post('/upload', 
   ensureAuthenticated, 
-  upload.single('image'), 
+  galleryUpload, 
   asyncHandler(async (req, res) => {
     try {
       const { attribution, carnivalId, clubId } = req.body;
@@ -63,30 +50,45 @@ router.post('/upload',
         });
       }
 
-      // Process the upload
-      const result = await ImageUploadService.processUpload(
-        req.file,
-        {
-          attribution: attribution || null,
-          carnivalId: hasCarnival ? parseInt(carnivalId) : null,
-          clubId: hasClub ? parseInt(clubId) : null
-        },
-        req.user
-      );
-
-      if (!result.success) {
+      // Check if files were uploaded by middleware
+      if (!req.files || req.files.length === 0) {
         return res.status(400).json({
           error: {
             status: 400,
-            message: result.message
+            message: 'No image file uploaded'
           }
         });
       }
 
+      // For backward compatibility, only process the first file
+      // (frontend sends single files to this endpoint)
+      const uploadedFile = req.files[0];
+      
+      // Create ImageUpload record
+      const imageUpload = await ImageUpload.create({
+        originalName: uploadedFile.originalname,
+        filename: uploadedFile.filename,
+        path: uploadedFile.path,
+        mimetype: uploadedFile.mimetype,
+        size: uploadedFile.size,
+        uploadedBy: req.user.id,
+        attribution: attribution || null,
+        carnivalId: hasCarnival ? parseInt(carnivalId) : null,
+        clubId: hasClub ? parseInt(clubId) : null
+      });
+
       res.json({
         success: true,
-        message: result.message,
-        image: result.image
+        message: 'Image uploaded successfully',
+        image: {
+          id: imageUpload.id,
+          filename: imageUpload.filename,
+          path: imageUpload.path,
+          attribution: imageUpload.attribution,
+          carnivalId: imageUpload.carnivalId,
+          clubId: imageUpload.clubId,
+          uploadedAt: imageUpload.createdAt
+        }
       });
 
     } catch (error) {
@@ -120,20 +122,57 @@ router.delete('/:id',
         });
       }
 
-      const result = await ImageUploadService.deleteImage(imageId, req.user);
-
-      if (!result.success) {
-        return res.status(403).json({
+      // Find the image
+      const image = await ImageUpload.findByPk(imageId);
+      if (!image) {
+        return res.status(404).json({
           error: {
-            status: 403,
-            message: result.message
+            status: 404,
+            message: 'Image not found'
           }
         });
       }
 
+      // Check permissions
+      let canDelete = false;
+
+      if (req.user.isAdmin) {
+        canDelete = true;
+      } else if (image.clubId && req.user.clubId === image.clubId) {
+        // User can delete images from their own club
+        canDelete = true;
+      } else if (image.carnivalId) {
+        // Check if user's club is associated with the carnival
+        canDelete = await ImageUpload.canUserUploadForCarnival(req.user, image.carnivalId);
+      }
+
+      if (!canDelete) {
+        return res.status(403).json({
+          error: {
+            status: 403,
+            message: 'You do not have permission to delete this image'
+          }
+        });
+      }
+
+      // Delete file from disk
+      const filePath = path.join(process.cwd(), 'public', image.path);
+      try {
+        await fs.unlink(filePath);
+        console.log(`🗑️ Deleted file from disk: ${filePath}`);
+      } catch (fileError) {
+        console.warn(`⚠️ Could not delete file from disk: ${filePath}`, fileError.message);
+        // Continue with database deletion even if file deletion fails
+      }
+
+      // Delete database record
+      await image.destroy();
+
+      console.log(`✅ Image deleted successfully: ID ${imageId} by user ${req.user.id}`);
+
       res.json({
         success: true,
-        message: result.message
+        message: 'Image deleted successfully'
       });
 
     } catch (error) {
@@ -266,20 +305,30 @@ router.get('/stats',
         });
       }
 
-      const result = await ImageUploadService.getUploadStats();
-
-      if (!result.success) {
-        return res.status(500).json({
-          error: {
-            status: 500,
-            message: result.message
+      // Get upload statistics
+      const totalImages = await ImageUpload.count();
+      const carnivalImages = await ImageUpload.count({
+        where: {
+          carnivalId: {
+            [sequelize.Sequelize.Op.ne]: null
           }
-        });
-      }
+        }
+      });
+      const clubImages = await ImageUpload.count({
+        where: {
+          clubId: {
+            [sequelize.Sequelize.Op.ne]: null
+          }
+        }
+      });
 
       res.json({
         success: true,
-        stats: result.stats
+        stats: {
+          totalImages,
+          carnivalImages,
+          clubImages
+        }
       });
 
     } catch (error) {

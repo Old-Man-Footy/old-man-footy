@@ -24,6 +24,7 @@ import { recalculateRegistrationFees } from './carnivalClub.controller.mjs';
 import mySidelineService from '../services/mySidelineIntegrationService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
+import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
 /**
  * Display list of all carnivals with filtering options
@@ -609,63 +610,15 @@ const createCarnivalHandler = async (req, res) => {
       carnival = await createOrMergeCarnival(carnivalData, req.user.id);
     }
 
-    // Handle structured file uploads after carnival creation
+    // Handle all uploads using shared processor (defensive against corrupted uploads)
     if (req.structuredUploads && req.structuredUploads.length > 0) {
-      const uploadUpdates = {};
-      const additionalImages = [];
-      const drawFiles = [];
-
-      for (const upload of req.structuredUploads) {
-        switch (upload.fieldname) {
-          case 'logo':
-            uploadUpdates.clubLogoURL = upload.path;
-            break;
-          case 'promotionalImage':
-            if (!uploadUpdates.promotionalImageURL) {
-              uploadUpdates.promotionalImageURL = upload.path;
-            } else {
-              additionalImages.push(upload.path);
-            }
-            break;
-          case 'galleryImage':
-            additionalImages.push(upload.path);
-            break;
-          case 'drawDocument':
-            drawFiles.push({
-              url: upload.path,
-              filename: upload.originalname,
-              title: req.body.drawTitle || `Draw Document ${drawFiles.length + 1}`,
-              uploadMetadata: upload.metadata,
-            });
-            break;
-          case 'bannerImage':
-            // Store banner images in additionalImages with metadata
-            additionalImages.push(upload.path);
-            break;
-        }
+      const uploadUpdates = processStructuredUploads(req, {}, 'carnival', carnival.id);
+      
+      // Update carnival with processed upload data
+      if (Object.keys(uploadUpdates).length > 0) {
+        await carnival.update(uploadUpdates);
+        console.log(`✅ Carnival ${carnival.id} created with ${req.structuredUploads.length} structured uploads`);
       }
-
-      // Update carnival with file paths
-      if (additionalImages.length > 0) {
-        uploadUpdates.additionalImages = additionalImages;
-      }
-
-      if (drawFiles.length > 0) {
-        uploadUpdates.drawFiles = drawFiles;
-        // Maintain legacy compatibility
-        uploadUpdates.drawFileURL = drawFiles[0].url;
-        uploadUpdates.drawFileName = drawFiles[0].filename;
-        uploadUpdates.drawTitle = req.body.drawTitle || drawFiles[0].title;
-        uploadUpdates.drawDescription = req.body.drawDescription || '';
-      }
-
-      // Update carnival with upload information
-      await carnival.update(uploadUpdates);
-
-      // Log structured upload success
-      console.log(
-        `✅ Carnival ${carnival.id} created with ${req.structuredUploads.length} structured uploads`
-      );
     }
 
     // Check if this was a merge operation
@@ -897,47 +850,12 @@ const updateCarnivalHandler = async (req, res) => {
     perPlayerFee: req.body.perPlayerFee ? parseFloat(req.body.perPlayerFee) : 0,
   };
 
-  // Handle structured file uploads (including draw documents)
+  // Handle all uploads using shared processor (defensive against corrupted uploads)
   if (req.structuredUploads && req.structuredUploads.length > 0) {
-    const existingAdditionalImages = carnival.additionalImages || [];
-    const existingDrawFiles = carnival.drawFiles || [];
-
-    for (const upload of req.structuredUploads) {
-      switch (upload.fieldname) {
-        case 'logo':
-          updateData.clubLogoURL = upload.path;
-          console.log(`📸 Updated carnival ${carnival.id} logo: ${upload.path}`);
-          break;
-        case 'promotionalImage':
-          updateData.promotionalImageURL = upload.path;
-          console.log(`📸 Updated carnival ${carnival.id} promotional image: ${upload.path}`);
-          break;
-        case 'galleryImage':
-          existingAdditionalImages.push(upload.path);
-          updateData.additionalImages = existingAdditionalImages;
-          console.log(`📸 Added gallery image to carnival ${carnival.id}: ${upload.path}`);
-          break;
-        case 'drawDocument':
-          const newDrawFile = {
-            url: upload.path,
-            filename: upload.originalname,
-            title: req.body.drawTitle || `Draw Document ${existingDrawFiles.length + 1}`,
-            uploadMetadata: upload.metadata,
-          };
-          existingDrawFiles.push(newDrawFile);
-          updateData.drawFiles = existingDrawFiles;
-
-          // Update legacy fields with first draw file
-          if (existingDrawFiles.length === 1) {
-            updateData.drawFileURL = newDrawFile.url;
-            updateData.drawFileName = newDrawFile.filename;
-            updateData.drawTitle = req.body.drawTitle || newDrawFile.title;
-            updateData.drawDescription = req.body.drawDescription || '';
-          }
-          console.log(`📄 Added draw document to carnival ${carnival.id}: ${upload.path}`);
-          break;
-      }
-    }
+    const processedUploads = processStructuredUploads(req, updateData, 'carnival', carnival.id);
+    
+    // Merge processed uploads into updateData
+    Object.assign(updateData, processedUploads);
   }
 
   // Check if fee structure changed before updating

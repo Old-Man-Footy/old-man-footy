@@ -76,7 +76,7 @@ export const adminEditClubManager = {
         
         if (!isValid) {
             e.preventDefault();
-            alert('Please fill in all required fields.');
+           this.showAlert('Please fill in all required fields.');
         }
     },
 

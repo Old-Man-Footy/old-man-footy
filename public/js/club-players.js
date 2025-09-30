@@ -91,12 +91,12 @@ export const clubPlayersPageManager = {
         if (file) {
             const name = (file.name || '').toLowerCase();
             if (!name.endsWith('.csv')) {
-                alert('Please select a CSV file.');
+                this.showAlert('Please select a CSV file.');
                 e.target.value = '';
                 return;
             }
             if (file.size > 5 * 1024 * 1024) {
-                alert('File size must be less than 5MB.');
+                this.showAlert('File size must be less than 5MB.');
                 e.target.value = '';
                 return;
             }
@@ -109,7 +109,7 @@ export const clubPlayersPageManager = {
         const file = csvFileInput.files && csvFileInput.files[0];
         if (!file) {
             e.preventDefault();
-            alert('Please select a CSV file to upload.');
+            this.showAlert('Please select a CSV file to upload.');
             return;
         }
         const submitButton = csvForm.querySelector('button[type="submit"]');

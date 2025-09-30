@@ -8,13 +8,18 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import ImageNamingService from '../services/imageNamingService.mjs';
-import { UPLOAD_DIRECTORIES_ARRAY } from '../config/constants.mjs';
+import { UPLOAD_DIRECTORIES } from '../config/constants.mjs';
 
-// Ensure upload directories exist (with error handling for read-only filesystems)
-const uploadDirs = UPLOAD_DIRECTORIES_ARRAY;
+// Ensure base upload directories exist (entity-specific dirs created dynamically)
+const baseUploadDirs = [
+    UPLOAD_DIRECTORIES.UPLOADS_ROOT,
+    UPLOAD_DIRECTORIES.TEMP,
+    UPLOAD_DIRECTORIES.LOGOS,    // For image-manager compatibility
+    UPLOAD_DIRECTORIES.IMAGES,   // For image-manager compatibility  
+    UPLOAD_DIRECTORIES.DOCUMENTS // For image-manager compatibility
+];
 
-uploadDirs.forEach(dir => {
+baseUploadDirs.forEach(dir => {
     try {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
@@ -27,47 +32,82 @@ uploadDirs.forEach(dir => {
     }
 });
 
-// Configure storage with structured naming
+// Configure storage with entity-based folder structure and content-type subfolders
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Use temporary directory - files will be moved to final location in processStructuredUpload
-        cb(null, 'public/uploads/temp/');
-    },
-    filename: async function (req, file, cb) {
         try {
-            // Extract context from request
+            // Extract context to determine entity-specific folder
             const context = extractUploadContext(req, file);
             
-            // Generate structured filename
-            const namingResult = await ImageNamingService.generateImageName({
-                entityType: context.entityType,
-                entityId: context.entityId,
-                imageType: context.imageType,
-                uploaderId: context.uploaderId,
-                originalName: file.originalname,
-                customSuffix: context.customSuffix
-            });
+            // Build entity-specific path
+            let entityFolder;
+            switch (context.entityType) {
+                case 'club':
+                    entityFolder = `clubs/${context.entityId}`;
+                    break;
+                case 'carnival':
+                    entityFolder = `carnivals/${context.entityId}`;
+                    break;
+                case 'sponsor':
+                    entityFolder = `sponsors/${context.entityId}`;
+                    break;
+                case 'user':
+                    entityFolder = `users/${context.entityId}`;
+                    break;
+                default:
+                    entityFolder = 'general';
+            }
             
-            // Store metadata in request for later use
+            // Determine content type subfolder based on field name
+            let contentTypeFolder = 'logos'; // default
+            
+            if (file.fieldname === 'logo') {
+                contentTypeFolder = 'logos';
+            } else if (file.fieldname === 'gallery' || file.fieldname === 'galleryImage' || file.fieldname === 'images') {
+                contentTypeFolder = 'gallery';
+            } else if (file.fieldname === 'promotionalImage' || file.fieldname === 'promotional') {
+                contentTypeFolder = 'gallery';
+            } else if (file.fieldname === 'bannerImage' || file.fieldname === 'banner') {
+                contentTypeFolder = 'gallery';
+            } else if (file.fieldname === 'drawDocument' || file.fieldname === 'draw') {
+                contentTypeFolder = 'documents';
+            } else if (file.fieldname === 'avatar') {
+                contentTypeFolder = 'avatars';
+            } else if (file.fieldname === 'socialMedia') {
+                contentTypeFolder = 'gallery';
+            } else if (file.fieldname === 'thumbnail') {
+                contentTypeFolder = 'gallery';
+            }
+            
+            // Create full destination path with content type subfolder
+            const destinationPath = `public/uploads/${entityFolder}/${contentTypeFolder}`;
+            
+            // Ensure the directory exists
+            if (!fs.existsSync(destinationPath)) {
+                fs.mkdirSync(destinationPath, { recursive: true });
+            }
+            
+            console.log(`📁 Upload destination: ${destinationPath} (field: ${file.fieldname}, content: ${contentTypeFolder})`);
+            
+            // Store metadata for later use in processStructuredUpload
             if (!req.uploadMetadata) req.uploadMetadata = [];
             req.uploadMetadata.push({
                 fieldname: file.fieldname,
-                ...namingResult
+                entityFolder: entityFolder,
+                contentTypeFolder: contentTypeFolder,
+                originalName: file.originalname
             });
             
-            // Ensure the target directory exists
-            const targetDir = path.join('public/uploads', namingResult.relativePath);
-            if (!fs.existsSync(targetDir)) {
-                fs.mkdirSync(targetDir, { recursive: true });
-            }
-            
-            cb(null, namingResult.filename);
+            cb(null, destinationPath);
         } catch (error) {
-            console.error('Error generating structured filename:', error);
-            // Fallback to original naming scheme
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+            console.error('Error determining upload destination:', error);
+            // Fallback to temp directory
+            cb(null, 'public/uploads/temp/');
         }
+    },
+    filename: function (req, file, cb) {
+        // Keep original filename - file will be overwritten if same name exists
+        cb(null, file.originalname);
     }
 });
 
@@ -80,27 +120,25 @@ const storage = multer.diskStorage({
 function extractUploadContext(req, file) {
     // Default context
     let context = {
-        entityType: ImageNamingService.ENTITY_TYPES.SYSTEM,
+        entityType: 'general',
         entityId: 1,
-        imageType: ImageNamingService.IMAGE_TYPES.GALLERY,
-        uploaderId: req.user ? req.user.id : 1,
-        customSuffix: ''
+        uploaderId: req.user ? req.user.id : 1
     };
     
     // Determine entity type and ID from route
     if (req.route && req.route.path) {
         if (req.route.path.includes('/clubs')) {
-            context.entityType = ImageNamingService.ENTITY_TYPES.CLUB;
+            context.entityType = 'club';
             // For club uploads, try multiple sources for the club ID
             context.entityId = req.params.id || 
                              req.body.clubId || 
                              (req.user && req.user.clubId) || 
                              1;
         } else if (req.route.path.includes('/carnivals')) {
-            context.entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL;
+            context.entityType = 'carnival';
             context.entityId = req.params.id || req.body.carnivalId || 1;
         } else if (req.route.path.includes('/sponsors')) {
-            context.entityType = ImageNamingService.ENTITY_TYPES.SPONSOR;
+            context.entityType = 'sponsor';
             context.entityId = req.params.id || req.body.sponsorId || 1;
         }
     }
@@ -109,59 +147,31 @@ function extractUploadContext(req, file) {
     if (req.originalUrl) {
         if (req.originalUrl.includes('/clubs/manage')) {
             // Club management routes - use user's club ID
-            context.entityType = ImageNamingService.ENTITY_TYPES.CLUB;
+            context.entityType = 'club';
             context.entityId = (req.user && req.user.clubId) || 1;
         } else if (req.originalUrl.includes('/carnivals/') && req.originalUrl.includes('/edit')) {
             // Carnival edit routes
-            context.entityType = ImageNamingService.ENTITY_TYPES.CARNIVAL;
+            context.entityType = 'carnival';
             const carnivalIdMatch = req.originalUrl.match(/\/carnivals\/(\d+)\//);
             context.entityId = carnivalIdMatch ? parseInt(carnivalIdMatch[1]) : 1;
         }
     }
     
-    // Determine image type from field name
-    switch (file.fieldname) {
-        case 'logo':
-        case 'clubLogo':
-            context.imageType = ImageNamingService.IMAGE_TYPES.LOGO;
-            break;
-        case 'promotionalImage':
-        case 'promoImage':
-            context.imageType = ImageNamingService.IMAGE_TYPES.PROMOTIONAL;
-            break;
-        case 'drawDocument':
-        case 'drawFile':
-            context.imageType = ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT;
-            break;
-        case 'galleryImage':
-            context.imageType = ImageNamingService.IMAGE_TYPES.GALLERY;
-            break;
-        case 'bannerImage':
-            context.imageType = ImageNamingService.IMAGE_TYPES.BANNER;
-            break;
-        case 'avatar':
-            context.imageType = ImageNamingService.IMAGE_TYPES.AVATAR;
-            context.entityType = ImageNamingService.ENTITY_TYPES.USER;
-            context.entityId = req.user ? req.user.id : 1;
-            break;
-        default:
-            context.imageType = ImageNamingService.IMAGE_TYPES.GALLERY;
-    }
-    
-    // Add upload context as suffix if available
-    if (req.body.uploadContext) {
-        context.customSuffix = req.body.uploadContext;
+    // Special handling for avatar uploads
+    if (file.fieldname === 'avatar') {
+        context.entityType = 'user';
+        context.entityId = req.user ? req.user.id : 1;
     }
     
     // Debug logging to help troubleshoot upload context issues
     console.log(`📸 Upload context for ${file.fieldname}:`, {
         entityType: context.entityType,
         entityId: context.entityId,
-        imageType: context.imageType,
         route: req.route?.path,
         originalUrl: req.originalUrl,
         userClubId: req.user?.clubId,
-        paramsId: req.params?.id
+        paramsId: req.params?.id,
+        originalFilename: file.originalname
     });
     
     return context;
@@ -169,49 +179,62 @@ function extractUploadContext(req, file) {
 
 // Enhanced file filter function
 const fileFilter = (req, file, cb) => {
-    // Allowed file types by category with MIME type support
+    // Allowed file types by field name with MIME type support
     const allowedTypes = {
-        [ImageNamingService.IMAGE_TYPES.LOGO]: {
+        logo: {
             extensions: /jpeg|jpg|png|gif|svg|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/,
+            description: 'JPG, PNG, GIF, SVG, or WebP'
         },
-        [ImageNamingService.IMAGE_TYPES.PROMOTIONAL]: {
+        promotional: {
             extensions: /jpeg|jpg|png|gif|svg|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/,
+            description: 'JPG, PNG, GIF, SVG, or WebP'
         },
-        [ImageNamingService.IMAGE_TYPES.GALLERY]: {
+        gallery: {
             extensions: /jpeg|jpg|png|gif|svg|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/,
+            description: 'JPG, PNG, GIF, SVG, or WebP'
         },
-        [ImageNamingService.IMAGE_TYPES.BANNER]: {
+        banner: {
             extensions: /jpeg|jpg|png|gif|svg|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|svg\+xml|webp)$/,
+            description: 'JPG, PNG, GIF, SVG, or WebP'
         },
-        [ImageNamingService.IMAGE_TYPES.AVATAR]: {
+        avatar: {
             extensions: /jpeg|jpg|png|gif|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/,
+            description: 'JPG, PNG, GIF, or WebP'
         },
-        [ImageNamingService.IMAGE_TYPES.THUMBNAIL]: {
+        thumbnail: {
             extensions: /jpeg|jpg|png|gif|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/,
+            description: 'JPG, PNG, GIF, or WebP'
         },
-        [ImageNamingService.IMAGE_TYPES.SOCIAL_MEDIA]: {
+        socialMedia: {
             extensions: /jpeg|jpg|png|gif|webp/,
-            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/
+            mimeTypes: /^image\/(jpeg|jpg|png|gif|webp)$/,
+            description: 'JPG, PNG, GIF, or WebP'
         },
-        [ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT]: {
+        draw: {
             extensions: /pdf|doc|docx|xls|xlsx|txt|csv/,
-            mimeTypes: /^(application\/(pdf|msword|vnd\.(openxmlformats-officedocument\.wordprocessingml\.document|ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet))|text\/(plain|csv))$/
+            mimeTypes: /^(application\/(pdf|msword|vnd\.(openxmlformats-officedocument\.wordprocessingml\.document|ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet))|text\/(plain|csv))$/,
+            description: 'PDF, DOC, DOCX, XLS, XLSX, or TXT'
+        },
+        drawDocument: {
+            extensions: /pdf|doc|docx|xls|xlsx|txt|csv/,
+            mimeTypes: /^(application\/(pdf|msword|vnd\.(openxmlformats-officedocument\.wordprocessingml\.document|ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet))|text\/(plain|csv))$/,
+            description: 'PDF, DOC, DOCX, XLS, XLSX, or TXT'
+        },
+        document: {
+            extensions: /pdf|doc|docx|xls|xlsx|txt|csv/,
+            mimeTypes: /^(application\/(pdf|msword|vnd\.(openxmlformats-officedocument\.wordprocessingml\.document|ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet))|text\/(plain|csv))$/,
+            description: 'PDF, DOC, DOCX, XLS, XLSX, or TXT'
         }
     };
     
-    // Determine image type from field name
-    const context = extractUploadContext(req, file);
-    const allowedType = allowedTypes[context.imageType];
-    
-    if (!allowedType) {
-        return cb(new Error(`Unsupported image type: ${context.imageType}`));
-    }
+    // Get allowed type based on field name, default to logo validation
+    const allowedType = allowedTypes[file.fieldname] || allowedTypes.logo;
     
     const extname = allowedType.extensions.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedType.mimeTypes.test(file.mimetype);
@@ -224,20 +247,13 @@ const fileFilter = (req, file, cb) => {
                    file.mimetype === 'application/xml');
     
     // Allow SVG files for logo uploads specifically
-    const isSvgAllowed = context.imageType === ImageNamingService.IMAGE_TYPES.LOGO && isSvg;
+    const isSvgAllowed = file.fieldname === 'logo' && isSvg;
     
     if ((mimetype && extname) || isSvgAllowed) {
         return cb(null, true);
     } else {
-        // Create user-friendly error messages
-        let allowedFormats = '';
-        if (context.imageType === ImageNamingService.IMAGE_TYPES.LOGO) {
-            allowedFormats = 'JPG, PNG, GIF, SVG, or WebP';
-        } else if (context.imageType === ImageNamingService.IMAGE_TYPES.DRAW_DOCUMENT) {
-            allowedFormats = 'PDF, DOC, DOCX, XLS, XLSX, or TXT';
-        } else {
-            allowedFormats = 'JPG, PNG, GIF, or WebP';
-        }
+        // Use description from allowed type configuration
+        const allowedFormats = allowedType.description;
         
         cb(new Error(`Invalid file type for ${file.fieldname}. Allowed formats: ${allowedFormats}. Received: ${file.mimetype} for file: ${file.originalname}`));
     }
@@ -256,7 +272,7 @@ const upload = multer({
 
 /**
  * Post-upload processing middleware
- * Moves files from temp directory to structured paths and updates database
+ * Files are already in their final entity-specific locations with original names
  */
 const processStructuredUpload = async (req, res, next) => {
     if (!req.files && !req.file) {
@@ -268,59 +284,44 @@ const processStructuredUpload = async (req, res, next) => {
         const uploadResults = [];
         
         for (const file of files) {
-            // Find corresponding metadata
-            const metadata = req.uploadMetadata?.find(meta => 
-                meta.filename === file.filename
-            );
+            // Files are already in their final location with original name in content-type subfolders
+            // Extract the relative path from the full path for web serving
+            const fullPath = file.path;
+            const publicIndex = fullPath.indexOf('public/');
+            const webPath = publicIndex !== -1 ? fullPath.substring(publicIndex + 7) : fullPath;
             
-            if (metadata) {
-                // Move file from temp to structured location
-                const tempPath = file.path;
-                const finalPath = path.join('public/uploads', metadata.fullPath);
-                
-                // Ensure target directory exists (with error handling for read-only filesystems)
-                const targetDir = path.dirname(finalPath);
-                try {
-                    if (!fs.existsSync(targetDir)) {
-                        fs.mkdirSync(targetDir, { recursive: true });
-                    }
-                } catch (dirError) {
-                    console.warn(`Warning: Could not create target directory ${targetDir}:`, dirError.message);
-                    // If we can't create the directory, try to use the temp directory as fallback
-                    const fallbackPath = path.join('public/uploads/temp', metadata.filename);
-                    file.path = fallbackPath;
-                    file.structuredPath = `temp/${metadata.filename}`;
-                    
-                    uploadResults.push({
-                        fieldname: file.fieldname,
-                        originalname: file.originalname,
-                        filename: metadata.filename,
-                        path: `/uploads/temp/${metadata.filename}`,
-                        size: file.size,
-                        metadata: metadata.metadata,
-                        warning: 'File saved to temp directory due to filesystem restrictions'
-                    });
-                    continue;
-                }
-                
-                // Move file
-                fs.renameSync(tempPath, finalPath);
-                
-                // Update file object with final information
-                file.path = finalPath;
-                file.filename = metadata.filename;
-                file.structuredPath = metadata.fullPath;
-                file.metadata = metadata.metadata;
-                
-                uploadResults.push({
-                    fieldname: file.fieldname,
-                    originalname: file.originalname,
-                    filename: metadata.filename,
-                    path: `/uploads/${metadata.fullPath.replace(/\\/g, '/')}`,
-                    size: file.size,
-                    metadata: metadata.metadata
-                });
+            // Create enhanced metadata for the file including content type information
+            const fileExtension = path.extname(file.originalname).toLowerCase();
+            
+            // Determine content type from path structure
+            let contentType = 'logos'; // default
+            if (webPath.includes('/gallery/')) {
+                contentType = 'gallery';
+            } else if (webPath.includes('/documents/')) {
+                contentType = 'documents';
+            } else if (webPath.includes('/avatars/')) {
+                contentType = 'avatars';
+            } else if (webPath.includes('/logos/')) {
+                contentType = 'logos';
             }
+            
+            const metadata = {
+                type: file.fieldname,
+                contentType: contentType,
+                originalName: file.originalname,
+                extension: fileExtension,
+                uploadedAt: new Date().toISOString()
+            };
+            
+            uploadResults.push({
+                fieldname: file.fieldname,
+                originalname: file.originalname,
+                filename: file.filename,
+                path: `/${webPath.replace(/\\/g, '/')}`,
+                size: file.size,
+                contentType: contentType,
+                metadata: metadata
+            });
         }
         
         // Store upload results in request for controllers to use
@@ -389,6 +390,12 @@ export const documentUpload = [
 
 export const avatarUpload = [
     upload.single('avatar'),
+    processStructuredUpload
+];
+
+// Gallery image uploads - handles multiple images for gallery functionality
+export const galleryUpload = [
+    upload.array('images', 10), // Support up to 10 images at once
     processStructuredUpload
 ];
 

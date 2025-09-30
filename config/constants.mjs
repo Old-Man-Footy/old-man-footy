@@ -120,35 +120,12 @@ export const IMAGE_DIRECTORIES_ARRAY = Object.values(IMAGE_DIRECTORIES);
 export const SUPPORTED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
 
 /**
- * Upload directory paths
+ * Upload directory paths - Simplified for entity-folder structure compatibility
+ * Entity-specific uploads now use: public/uploads/{entityType}s/{id}/{contentType}/
  */
 export const UPLOAD_DIRECTORIES = {
-    // Parent directories
-    LOGOS: 'public/uploads/logos',
-    IMAGES: 'public/uploads/images',
-    DOCUMENTS: 'public/uploads/documents',
+    // Root directories (kept for backward compatibility)
     UPLOADS_ROOT: 'public/uploads',
-    
-    // Logo subdirectories
-    CLUB_LOGOS: 'public/uploads/logos/club',
-    CARNIVAL_LOGOS: 'public/uploads/logos/carnival',
-    SPONSOR_LOGOS: 'public/uploads/logos/sponsor',
-    SYSTEM_LOGOS: 'public/uploads/logos/system',
-    
-    // Image subdirectories
-    CLUB_PROMO: 'public/uploads/images/club/promo',
-    CLUB_GALLERY: 'public/uploads/images/club/gallery',
-    CARNIVAL_PROMO: 'public/uploads/images/carnival/promo',
-    CARNIVAL_GALLERY: 'public/uploads/images/carnival/gallery',
-    SPONSOR_PROMO: 'public/uploads/images/sponsor/promo',
-    SPONSOR_GALLERY: 'public/uploads/images/sponsor/gallery',
-    
-    // Document subdirectories
-    CLUB_DOCUMENTS: 'public/uploads/documents/club',
-    CARNIVAL_DOCUMENTS: 'public/uploads/documents/carnival',
-    SPONSOR_DOCUMENTS: 'public/uploads/documents/sponsor',
-    
-    // Temporary directory
     TEMP: 'public/uploads/temp'
 };
 

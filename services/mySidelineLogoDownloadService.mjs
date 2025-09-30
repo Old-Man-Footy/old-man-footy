@@ -10,7 +10,6 @@ import http from 'http';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { URL } from 'url';
-import ImageNamingService from './imageNamingService.mjs';
 
 class MySidelineLogoDownloadService {
     constructor() {
@@ -30,7 +29,7 @@ class MySidelineLogoDownloadService {
      * @param {string} [imageType] - Type of image (defaults to logo)
      * @returns {Promise<Object>} Result object with success status and local path
      */
-    async downloadLogo(logoUrl, entityType, entityId, imageType = ImageNamingService.IMAGE_TYPES.LOGO) {
+    async downloadLogo(logoUrl, entityType, entityId, imageType = 'logo') {
         try {
             // Validate input parameters, and ignore default NRL Logo.
             if (!logoUrl 
@@ -76,37 +75,23 @@ class MySidelineLogoDownloadService {
                 };
             }
 
-            // Generate local filename using ImageNamingService (same as upload middleware)
+            // Generate folder-based path: carnivals/{id}/logos/mysideline-logo.ext
             const extension = this.getFileExtension(logoUrl, downloadResult.contentType);
-            const originalName = `mysideline-logo${extension}`;
-
-            const namingResult = await ImageNamingService.generateImageName({
-                entityType,
-                entityId,
-                imageType,
-                uploaderId: this.systemUserId, // Use same system user ID as upload middleware
-                originalName,
-                customSuffix: 'mysideline'
-            });
-
-            // Follow same pattern as upload middleware - create temp file first, then move to final location
-            const tempDir = path.join('public/uploads', 'temp');
-            await fs.mkdir(tempDir, { recursive: true });
+            const filename = `mysideline-logo${extension}`;
             
-            // Write to temp location first (same as upload middleware)
-            const tempFilePath = path.join(tempDir, namingResult.filename);
-            await fs.writeFile(tempFilePath, downloadResult.data);
+            // Create folder structure: carnivals/{entityId}/logos/
+            const entityFolder = `carnivals/${entityId}/logos`;
+            const fullUploadPath = path.join('public/uploads', entityFolder);
+            
+            // Ensure upload directory exists
+            await fs.mkdir(fullUploadPath, { recursive: true });
+            
+            // Write directly to final location (no temp file needed for MySideline downloads)
+            const finalFilePath = path.join(fullUploadPath, filename);
+            await fs.writeFile(finalFilePath, downloadResult.data);
 
-            // Ensure final upload directory exists
-            const finalUploadPath = path.join('public/uploads', namingResult.relativePath);
-            await fs.mkdir(finalUploadPath, { recursive: true });
-
-            // Move from temp to final location (same as processStructuredUpload middleware)
-            const finalFilePath = path.join(finalUploadPath, namingResult.filename);
-            await fs.rename(tempFilePath, finalFilePath);
-
-            // Generate the public URL for the stored image (same format as upload middleware)
-            const publicUrl = `/uploads/${namingResult.fullPath.replace(/\\/g, '/')}`;
+            // Generate the public URL for the stored image
+            const publicUrl = `/uploads/${entityFolder}/${filename}`.replace(/\\/g, '/');
 
             console.log(`✅ Logo downloaded and stored: ${publicUrl}`);
 
@@ -114,12 +99,11 @@ class MySidelineLogoDownloadService {
                 success: true,
                 localPath: finalFilePath,
                 publicUrl,
-                filename: namingResult.filename,
+                filename,
                 originalUrl: logoUrl,
                 fileSize: downloadResult.data.length,
                 contentType: downloadResult.contentType,
-                metadata: namingResult.metadata,
-                structuredPath: namingResult.fullPath
+                folderPath: entityFolder
             };
 
         } catch (error) {
@@ -456,18 +440,31 @@ class MySidelineLogoDownloadService {
      */
     async findExistingLogo(logoUrl, entityType, entityId) {
         try {
-            const existingImages = await ImageNamingService.getEntityImages(
-                entityType, 
-                entityId, 
-                ImageNamingService.IMAGE_TYPES.LOGO
-            );
-
-            // Look for MySideline logos by checking custom suffix
-            const mySidelineLogos = existingImages.filter(img => 
-                img.customSuffix && img.customSuffix.includes('mysideline')
-            );
-
-            return mySidelineLogos.length > 0 ? mySidelineLogos[0] : null;
+            // Check for mysideline logo in the folder structure
+            const entityFolder = `${entityType}s/${entityId}/logos`;
+            const folderPath = path.join('public', 'uploads', entityFolder);
+            
+            try {
+                const files = await fs.readdir(folderPath);
+                const mysidelineFile = files.find(file => file.startsWith('mysideline-logo.'));
+                
+                if (mysidelineFile) {
+                    const filePath = path.join(folderPath, mysidelineFile);
+                    const stats = await fs.stat(filePath);
+                    return {
+                        localPath: filePath,
+                        publicUrl: `/uploads/${entityFolder}/${mysidelineFile}`.replace(/\\/g, '/'),
+                        fileSize: stats.size,
+                        filename: mysidelineFile,
+                        folderPath: entityFolder
+                    };
+                }
+            } catch (dirError) {
+                // Directory doesn't exist or can't be read
+                return null;
+            }
+            
+            return null;
         } catch (error) {
             console.error('Error checking for existing logo:', error);
             return null;

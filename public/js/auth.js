@@ -74,7 +74,7 @@ export class AuthFormManager {
             if (!email.value.trim() || !password.value.trim()) {
                 e.preventDefault();
                 // In a real app, you'd show a non-blocking message instead of an alert.
-                alert('Please enter both email and password.');
+               this.showAlert('Please enter both email and password.');
             }
         });
     }

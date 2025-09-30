@@ -35,11 +35,11 @@ export const editRegistrationManager = {
                 // On success, redirect to the attendees page.
                 window.location.href = `/carnivals/${this.carnivalId}/attendees`;
             } else {
-                alert(result.message || 'Error removing registration');
+               this.showAlert(result.message || 'Error removing registration');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while removing the registration.');
+           this.showAlert('An error occurred while removing the registration.');
         }
     },
 

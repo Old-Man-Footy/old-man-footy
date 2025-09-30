@@ -16,16 +16,43 @@ import {
 } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import ImageNamingService from '../services/imageNamingService.mjs';
+import fs from 'fs/promises';
+import { existsSync } from 'fs';
+import path from 'path';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
 import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
-import path from 'path';
-import fs from 'fs/promises';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
+import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
+
+const getClubUploadPath = (clubId, contentType = 'logos') => {
+  return `public/uploads/clubs/${clubId}/${contentType}/`;
+};
+
+const readClubImages = async (clubId, imageType = 'logos') => {
+  const uploadPath = getClubUploadPath(clubId, imageType);
+  
+  try {
+    if (!fs.existsSync(uploadPath)) {
+      return [];
+    }
+    
+    const files = await fs.readdir(uploadPath);
+    return files
+      .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+      .map(file => ({
+        filename: file,
+        url: `/uploads/clubs/${clubId}/${imageType}/${file}`,
+        path: path.join(uploadPath, file)
+      }));
+  } catch (error) {
+    console.error(`Error reading club images for club ${clubId}:`, error);
+    return [];
+  }
+};
 
 /**
- * Display public club listings with search and filter options
+ * Display public club listings with search and filter optionsC:\Users\devon\source\repos\old-man-footy\public\uploads
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -360,25 +387,12 @@ const updateClubProfileHandler = async (req, res) => {
     isActive: isActive === 'on',
   };
 
-  // Handle structured file uploads
+  // Handle all uploads using shared processor (defensive against corrupted uploads)
   if (req.structuredUploads && req.structuredUploads.length > 0) {
-    for (const upload of req.structuredUploads) {
-      switch (upload.fieldname) {
-        case 'logo':
-          updateData.logoUrl = upload.path;
-          console.log(`📸 Updated club ${club.id} logo: ${upload.path}`);
-          break;
-        case 'galleryImage':
-          // For clubs, we might store gallery images differently
-          // This could be extended to support a gallery field in the Club model
-          console.log(`📸 Added gallery image to club ${club.id}: ${upload.path}`);
-          break;
-        case 'bannerImage':
-          // Store banner image reference if the club model supports it
-          console.log(`📸 Added banner image to club ${club.id}: ${upload.path}`);
-          break;
-      }
-    }
+    const processedUploads = processStructuredUploads(req, updateData, 'club', club.id);
+    
+    // Merge processed uploads into updateData
+    Object.assign(updateData, processedUploads);
   }
 
   await club.update(updateData);
@@ -404,11 +418,7 @@ const getClubImagesHandler = async (req, res) => {
     });
   }
 
-  const images = await ImageNamingService.getEntityImages(
-    ImageNamingService.ENTITY_TYPES.CLUB,
-    parseInt(clubId),
-    imageType
-  );
+  const images = await readClubImages(parseInt(clubId), imageType);
 
   return res.json({
     success: true,
@@ -433,27 +443,32 @@ const deleteClubImageHandler = async (req, res) => {
     });
   }
 
-  // Parse the filename to verify it belongs to this club
-  const parsed = ImageNamingService.parseImageName(filename);
-  if (
-    !parsed ||
-    parsed.entityType !== ImageNamingService.ENTITY_TYPES.CLUB ||
-    parsed.entityId !== parseInt(clubId)
-  ) {
-    return res.status(400).json({
+  // Determine content type based on file location (logos vs gallery)
+  let contentType = 'gallery'; // default
+  let fullPath = null;
+  
+  // Check both possible locations
+  const logoPath = getClubUploadPath(clubId, 'logos') + filename;
+  const galleryPath = getClubUploadPath(clubId, 'gallery') + filename;
+  
+  if (existsSync(logoPath)) {
+    contentType = 'logos';
+    fullPath = logoPath;
+  } else if (existsSync(galleryPath)) {
+    contentType = 'gallery';
+    fullPath = galleryPath;
+  } else {
+    return res.status(404).json({
       success: false,
-      message: 'Invalid image file or image does not belong to this club',
+      message: 'Image file not found or does not belong to this club',
     });
   }
 
-  // Get the full path and delete the file
-  const imagePath = ImageNamingService.getRelativePath(parsed.entityType, parsed.imageType);
-  const fullPath = path.join(imagePath, filename);
-
-  await fs.unlink(path.join('uploads', fullPath));
+  // Delete the file
+  await fs.unlink(fullPath);
 
   // If this was the club's logo, update the database
-  if (parsed.imageType === ImageNamingService.IMAGE_TYPES.LOGO) {
+  if (contentType === 'logos') {
     const club = await Club.findByPk(clubId);
     if (club && club.logoUrl && club.logoUrl.includes(filename)) {
       await club.update({ logoUrl: null });
@@ -712,12 +727,12 @@ const addSponsorToClubHandler = async (req, res) => {
       isPubliclyVisible: true,
     };
 
-    // Handle logo upload
+    // Handle logo upload using defensive processor
     if (req.structuredUploads && req.structuredUploads.length > 0) {
-      const logoUpload = req.structuredUploads.find((upload) => upload.fieldname === 'logo');
-      if (logoUpload) {
-        newSponsorData.logoUrl = logoUpload.path;
-      }
+      const processedUploads = processStructuredUploads(req, newSponsorData, 'sponsor', 'new-sponsor');
+      
+      // Merge processed uploads into sponsor data
+      Object.assign(newSponsorData, processedUploads);
     }
 
     sponsor = await Sponsor.create(newSponsorData);

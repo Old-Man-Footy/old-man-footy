@@ -10,6 +10,7 @@ import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY, SPONSORSHIP_LEVELS, SPONSORSHIP_LEVEL_ORDER } from '../config/constants.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
+import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
 /**
  * Display public sponsor listings with search and filter options
@@ -220,15 +221,10 @@ export const createSponsor = asyncHandler(async (req, res) => {
     clubId: club.id,
   };
 
-  // Handle logo upload
-  if (req.structuredUploads && req.structuredUploads.length > 0) {
-    const logoUpload = req.structuredUploads.find((upload) => upload.fieldname === 'logo');
-    if (logoUpload) {
-      sponsorData.logoUrl = logoUpload.path;
-    }
-  }
+  // Process structured uploads using defensive shared utility
+  const processedSponsorData = processStructuredUploads(req, sponsorData, 'sponsor', 'new-sponsor');
 
-  const sponsor = await Sponsor.create(sponsorData);
+  const sponsor = await Sponsor.create(processedSponsorData);
 
   req.flash('success_msg', 'Sponsor created successfully!');
   return res.redirect(`/sponsors/${sponsor.id}`);
@@ -350,15 +346,10 @@ export const updateSponsor = asyncHandler(async (req, res) => {
     clubId: club.id,
   };
 
-  // Handle logo upload
-  if (req.structuredUploads && req.structuredUploads.length > 0) {
-    const logoUpload = req.structuredUploads.find((upload) => upload.fieldname === 'logo');
-    if (logoUpload) {
-      updateData.logoUrl = logoUpload.path;
-    }
-  }
+  // Process structured uploads using defensive shared utility
+  const processedUpdateData = processStructuredUploads(req, updateData, 'sponsor', sponsor.id);
 
-  await sponsor.update(updateData);
+  await sponsor.update(processedUpdateData);
 
   req.flash('success_msg', 'Sponsor updated successfully!');
   return res.redirect(`/sponsors/${sponsor.id}`);
