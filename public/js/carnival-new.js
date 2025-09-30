@@ -14,9 +14,6 @@ import { showAlert } from './utils/ui-helpers.js';
 export const carnivalNewManager = {
     /** Cached DOM elements */
     elements: {},
-    
-    /** Staged logo file for upload */
-    stagedFile: null,
 
     /** Entry point: cache elements, bind events, and perform initial UI state updates. */
     initialize() {
@@ -104,11 +101,6 @@ export const carnivalNewManager = {
 
             this.elements.endDateInput.addEventListener('change', carnivalNewManager.handleEndDateChange);
         }
-
-        // Logo uploader integration
-        document.addEventListener('logoFileSelected', (event) => {
-            carnivalNewManager.handleLogoFileSelected(event);
-        });
     },
 
     /** File upload area click handler: forwards click to the hidden file input. */
@@ -199,16 +191,6 @@ export const carnivalNewManager = {
     },
 
     /**
-     * Handle logo file selection from the logo uploader
-     * @param {CustomEvent} event - The logoFileSelected event
-     */
-    handleLogoFileSelected: (event) => {
-        console.log('Carnival New: Logo file selected', event.detail);
-        carnivalNewManager.stagedFile = event.detail.file;
-        console.log('Carnival New: File staged for form submission', carnivalNewManager.stagedFile?.name);
-    },
-
-    /**
      * Handle form submission with AJAX
      * @param {Event} event - Form submit event
      */
@@ -219,12 +201,7 @@ export const carnivalNewManager = {
         if (!form) return;
         
         // Prepare form data
-        const formData = new FormData(form);
-        
-        // Include staged logo file if available
-        if (carnivalNewManager.stagedFile) {
-            formData.append('logo', carnivalNewManager.stagedFile);
-        }
+        const formData = new FormData(form);        
         
         try {
             const response = await fetch(form.action, {

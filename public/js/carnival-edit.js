@@ -10,15 +10,11 @@ export const carnivalEditManager = {
     // DOM element references
     elements: {},
     
-    // Property to store the staged logo file for upload
-    stagedFile: null,
-
     // Initializes the entire manager.
     initialize() {
         this.cacheDOMElements();
         this.bindEvents();
         this.initializePageStyling();
-        this.initializeFileUploads();
         this.initializeMultiDayCarnivalFunctionality();
         this.initializeMySidelineIntegration();
     },
@@ -27,10 +23,6 @@ export const carnivalEditManager = {
     cacheDOMElements() {
         this.elements = {
             endDateContainer: document.getElementById('endDateContainer'),
-            logoPreviewImages: document.querySelectorAll('.carnival-logo-preview'),
-            promoPreviewImages: document.querySelectorAll('.carnival-promo-preview'),
-            fileInputs: document.querySelectorAll('.file-input-hidden'),
-            fileUploadAreas: document.querySelectorAll('.file-upload-area'),
             isMultiDayCheckbox: document.getElementById('isMultiDay'),
             endDateInput: document.getElementById('endDate'),
             dateLabel: document.getElementById('dateLabel'),
@@ -43,7 +35,7 @@ export const carnivalEditManager = {
         };
     },
 
-    // Binds event listeners for form submission and logo file selection
+    // Binds event listeners for form submission
     bindEvents() {
         if (this.elements.form) {
             this.elements.form.addEventListener('submit', (e) => {
@@ -51,17 +43,6 @@ export const carnivalEditManager = {
                 this.handleFormSubmit();
             });
         }
-
-        // Listen for logo file selection events
-        document.addEventListener('logoFileSelected', (event) => {
-            this.handleLogoFileSelected(event);
-        });
-    },
-
-    // Handles logo file selection from the uploader component
-    handleLogoFileSelected(event) {
-        this.stagedFile = event.detail.file;
-        console.log('Logo file staged for upload:', this.stagedFile.name);
     },
 
     // Handles form submission with AJAX and file upload
@@ -69,11 +50,6 @@ export const carnivalEditManager = {
         try {
             const formData = new FormData(this.elements.form);
             
-            // Add the staged logo file if one exists
-            if (this.stagedFile) {
-                formData.append('logo', this.stagedFile);
-            }
-
             const response = await fetch(this.elements.form.action, {
                 method: 'POST',
                 body: formData
@@ -114,35 +90,9 @@ export const carnivalEditManager = {
                 this.elements.endDateContainer.style.display = 'none';
             }
         }
-        this.elements.logoPreviewImages.forEach(img => {
-            img.style.height = '150px';
-            img.style.objectFit = 'contain';
-        });
-        this.elements.promoPreviewImages.forEach(img => {
-            img.style.height = '150px';
-            img.style.objectFit = 'cover';
-        });
-        this.elements.fileInputs.forEach(input => {
-            input.style.display = 'none';
-        });
     },
 
-    // Makes file upload areas clickable.
-    initializeFileUploads() {
-        this.elements.fileUploadAreas.forEach(area => {
-            area.addEventListener('click', this.handleFileAreaClick);
-        });
-    },
-
-    // Handle click on a file upload area using an arrow function for proper scoping.
-    // Handle click on a file upload area using a regular function for proper `this` binding.
-    handleFileAreaClick: function(carnival) {
-        const area = carnival.currentTarget;
-        const input = area?.querySelector('input[type="file"]');
-        if (input) input.click();
-    },
-
-    // Sets up event listeners and logic for multi-day carnivals.
+    // Sets up event listeners and logic for file upload areas. // Sets up event listeners and logic for multi-day carnivals.
     initializeMultiDayCarnivalFunctionality() {
         const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
         if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;

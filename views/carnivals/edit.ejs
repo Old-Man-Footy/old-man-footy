@@ -440,18 +440,17 @@
                             <h5 class="text-primary mb-3">Update Images & Documents</h5>
                             <p class="text-muted mb-3">Upload new files to replace existing ones (optional)</p>
                             
-                            <div class="col-md-6 mb-3">
-                                <label for="clubLogo" class="form-label">Club Logo</label>
-                                <%- include('../partials/logo-uploader', {
-                                    fieldName: 'logo',
-                                    uploadText: 'Click or drag to upload new club logo',
-                                    maxFileSize: 'Max 10MB',
-                                    acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
-                                    helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
-                                    currentLogoUrl: carnival.clubLogoURL
-                                }) %>
-                            </div>
-                            <div class="row">                                
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="logo" class="form-label">Club Logo</label>
+                                    <div class="file-upload-area">
+                                        <input type="file" class="form-control file-input-hidden" id="logo" name="logo" 
+                                               accept="image/*">
+                                        <i class="bi bi-image display-6 text-muted"></i>
+                                        <p class="upload-text mt-2">Click or drag to upload new club logo</p>
+                                        <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
+                                    </div>
+                                </div>                                
                                 <div class="col-md-4 mb-3">
                                     <label for="promotionalImage" class="form-label">New Promotional Image</label>
                                     <div class="file-upload-area">

@@ -1,14 +1,10 @@
 /**
  * Sponsor Edit Page Manager
- * Handles sponsor editing functionality including form validation,
- * logo upload, and form submission
+ * Handles sponsor editing functionality including form validation
  */
 
 export const sponsorEditManager = {
     elements: {},
-
-    /** Staged file from logo uploader */
-    stagedFile: null,
 
     /**
      * Initialize the sponsor edit functionality
@@ -35,7 +31,6 @@ export const sponsorEditManager = {
             instagramInput: document.getElementById('instagramUrl'),
             twitterInput: document.getElementById('twitterUrl'),
             linkedinInput: document.getElementById('linkedinUrl'),
-            logoUploadSection: document.querySelector('.logo-upload-section'),
             visibilityCheckbox: document.getElementById('isPubliclyVisible')
         };
     },
@@ -77,11 +72,6 @@ export const sponsorEditManager = {
             this.elements.emailInput.addEventListener('blur', this.validateEmail);
             this.elements.emailInput.addEventListener('input', this.clearFieldError);
         }
-
-        // Logo file selection from logo uploader
-        document.addEventListener('logoFileSelected', (event) => {
-            this.handleLogoFileSelected(event);
-        });
     },
 
     /**
@@ -116,13 +106,8 @@ export const sponsorEditManager = {
             }
             
             // Create FormData from form
-            const formData = new FormData(form);
-            
-            // Add staged file if available
-            if (sponsorEditManager.stagedFile) {
-                formData.append('logo', sponsorEditManager.stagedFile);
-            }
-            
+            const formData = new FormData(form);            
+
             // Submit via AJAX
             const response = await fetch(form.action, {
                 method: form.method || 'POST',
@@ -150,17 +135,6 @@ export const sponsorEditManager = {
         }
         
         form.classList.add('was-validated');
-    },
-
-    /**
-     * Handle logo file selection from logo uploader
-     */
-    handleLogoFileSelected: (event) => {
-        const { file, previewUrl } = event.detail;
-        sponsorEditManager.stagedFile = file;
-        
-        // Optional: Update UI to show selected file
-        console.log('Logo file selected for sponsor:', file.name);
     },
 
     /**

@@ -81,37 +81,6 @@
                             </div>
                         </div>
 
-                        <!-- Logo Upload -->
-                        <h6 class="mb-3 mt-4 text-primary">
-                            <i class="bi bi-image me-2"></i>Logo
-                        </h6>
-
-                        <% if (sponsor.logoUrl) { %>
-                            <div class="mb-3">
-                                <div class="d-flex align-items-center">
-                                    <img src="<%= sponsor.logoUrl %>" 
-                                         alt="<%= sponsor.name %> Logo" 
-                                         class="me-3 border rounded" 
-                                         style="max-height: 80px; max-width: 120px;">
-                                    <small class="text-muted">
-                                        Upload a new image to replace the current logo
-                                    </small>
-                                </div>
-                            </div>
-                        <% } %>
-
-                        <!-- Logo Upload -->
-                        <%- include('../partials/logo-uploader', {
-                            fieldName: 'logo',
-                            uploadText: 'Upload Sponsor Logo',
-                            inputId: 'sponsor-logo-file',
-                            maxFileSize: 'Max 10MB',
-                            acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
-                            helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
-                            currentLogoUrl: sponsor.logoUrl,
-                            currentLogoAlt: sponsor.name + ' Logo'
-                        }) %>
-
                         <!-- Description -->
                         <hr class="my-4">
                         <div class="mb-3">

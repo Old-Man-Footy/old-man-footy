@@ -140,7 +140,6 @@ This codebase is shared publicly to:
 ├── public/                                  # Static assets served to clients
 │   ├── icons/                                  # Application icons and favicons
 │   ├── js/                                     # Client-side JavaScript files
-│   ├── logos/                                  # Club and sponsor logos
 │   ├── screenshots/                            # Documentation screenshots
 │   ├── styles/                                 # CSS stylesheets with light/dark themes
 │   └── uploads/                                # User-uploaded files directory
@@ -257,7 +256,6 @@ This codebase is shared publicly to:
     │   ├── flash-messages.ejs                     # Flash message display
     │   ├── gallery.ejs                            # Gallery component
     │   ├── help-modal.ejs                         # Help modal component
-    │   └── logo-uploader.ejs                      # Logo upload component
     ├── sponsors/                               # Sponsor management view templates
     │   ├── list.ejs                               # List all sponsors
     │   └── show.ejs                               # View sponsor details

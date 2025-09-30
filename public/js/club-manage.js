@@ -32,11 +32,6 @@ export const clubManageManager = {
         if (this.elements.descriptionTextarea) {
             this.elements.descriptionTextarea.addEventListener('input', this.handleDescriptionInput.bind(this));
         }
-
-        // Listen for logo file selection events from logo-uploader.js
-        document.addEventListener('logoFileSelected', (event) => {
-            this.handleLogoFileSelected(event);
-        });
     },
 
     // Handlers
@@ -63,12 +58,6 @@ export const clubManageManager = {
 
         // Use FormData to prepare for submission
         const formData = new FormData(form);
-
-        // Append the staged file if it exists
-        if (this.stagedFile) {
-            // 'logo' should match the name attribute of your file input
-            formData.append('logo', this.stagedFile);
-        }
 
         // Optional: Disable button to prevent multiple submissions
         if (this.elements.submitButton) {
@@ -111,7 +100,6 @@ export const clubManageManager = {
                     
                     if (responseData.success) {
                         showAlert(responseData.message || 'Club profile updated successfully!', 'success');
-                        this.handleSuccessfulSubmission();
                         return;
                     } else {
                         console.error('Club manage: JSON response indicated failure:', responseData);
@@ -128,7 +116,6 @@ export const clubManageManager = {
             if (response.redirected || response.status === 302) {
                 console.log('Club manage: Handling redirect response');
                 showAlert('Club profile updated successfully!', 'success');
-                this.handleSuccessfulSubmission();
                 
                 // Follow redirect after showing success message
                 setTimeout(() => {
@@ -147,7 +134,6 @@ export const clubManageManager = {
             if (responseText.includes('alert-success') || response.status === 200) {
                 console.log('Club manage: Detected success in HTML response');
                 showAlert('Club profile updated successfully!', 'success');
-                this.handleSuccessfulSubmission();
                 
                 setTimeout(() => {
                     window.location.href = '/clubs';
@@ -190,112 +176,6 @@ export const clubManageManager = {
         const ta = e.currentTarget;
         ta.style.height = 'auto';
         ta.style.height = `${ta.scrollHeight}px`;
-    },
-
-    /**
-     * Handle logo file selection from the external logo uploader
-     * @param {CustomEvent} event - Event with file data
-     */
-    handleLogoFileSelected(event) {
-        console.log('Club manage received logo file:', event.detail);
-        this.stagedFile = event.detail.file || null;
-        // The external logo uploader handles all UI feedback
-        // We just need to store the file reference for AJAX submission
-    },
-
-    /**
-     * Handle successful form submission (logo update and file reset)
-     */
-    handleSuccessfulSubmission() {
-        console.log('Club manage: Handling successful submission');
-        
-        // Update logo preview if we had a file upload
-        if (this.stagedFile) {
-            console.log('Club manage: Updating logo display for file:', this.stagedFile.name);
-            this.updateLogoDisplay();
-        }
-        
-        // Reset staged file and notify uploader
-        this.resetStagedFile();
-    },
-
-    /**
-     * Update logo display in the UI after successful upload (enhanced with error handling)
-     */
-    updateLogoDisplay() {
-        if (!this.stagedFile) {
-            console.warn('Club manage: No staged file to display');
-            return;
-        }
-
-        console.log('Club manage: Updating logo display for file:', this.stagedFile.name, 'Type:', this.stagedFile.type);
-        
-        // Find the logo preview element with enhanced selector matching
-        const logoPreview = document.querySelector('#logoPreview, .logo-preview, [data-logo-preview], .club-logo img, .logo-container img');
-        
-        if (!logoPreview) {
-            console.warn('Club manage: No logo preview element found');
-            return;
-        }
-        
-        console.log('Club manage: Found logo preview element:', logoPreview.tagName, logoPreview.className);
-        
-        // Validate file type before processing
-        if (!this.stagedFile.type.startsWith('image/')) {
-            console.error('Club manage: Staged file is not an image:', this.stagedFile.type);
-            return;
-        }
-        
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-            try {
-                console.log('Club manage: FileReader loaded successfully, updating preview');
-                
-                if (logoPreview.tagName === 'IMG') {
-                    logoPreview.src = e.target.result;
-                    logoPreview.style.display = 'block'; // Ensure visibility
-                } else {
-                    logoPreview.style.backgroundImage = `url(${e.target.result})`;
-                    logoPreview.style.backgroundSize = 'cover';
-                    logoPreview.style.backgroundPosition = 'center';
-                }
-                
-                // Add visual feedback class
-                logoPreview.classList.add('logo-updated');
-                setTimeout(() => {
-                    logoPreview.classList.remove('logo-updated');
-                }, 2000);
-                
-                console.log('Club manage: Logo preview updated successfully');
-            } catch (error) {
-                console.error('Club manage: Error updating logo preview:', error);
-            }
-        };
-        
-        reader.onerror = (error) => {
-            console.error('Club manage: FileReader error:', error);
-        };
-        
-        reader.onabort = () => {
-            console.warn('Club manage: FileReader was aborted');
-        };
-        
-        try {
-            reader.readAsDataURL(this.stagedFile);
-        } catch (error) {
-            console.error('Club manage: Error starting FileReader:', error);
-        }
-    },
-
-    /**
-     * Reset the staged file after successful submission
-     */
-    resetStagedFile() {
-        this.stagedFile = null;
-        
-        // Dispatch event to notify logo uploader to reset its state
-        document.dispatchEvent(new CustomEvent('logoUploadComplete'));
     }
 };
 

@@ -13,10 +13,7 @@ import { UPLOAD_DIRECTORIES } from '../config/constants.mjs';
 // Ensure base upload directories exist (entity-specific dirs created dynamically)
 const baseUploadDirs = [
     UPLOAD_DIRECTORIES.UPLOADS_ROOT,
-    UPLOAD_DIRECTORIES.TEMP,
-    UPLOAD_DIRECTORIES.LOGOS,    // For image-manager compatibility
-    UPLOAD_DIRECTORIES.IMAGES,   // For image-manager compatibility  
-    UPLOAD_DIRECTORIES.DOCUMENTS // For image-manager compatibility
+    UPLOAD_DIRECTORIES.TEMP
 ];
 
 baseUploadDirs.forEach(dir => {
@@ -51,9 +48,6 @@ const storage = multer.diskStorage({
                 case 'sponsor':
                     entityFolder = `sponsors/${context.entityId}`;
                     break;
-                case 'user':
-                    entityFolder = `users/${context.entityId}`;
-                    break;
                 default:
                     entityFolder = 'general';
             }
@@ -71,13 +65,7 @@ const storage = multer.diskStorage({
                 contentTypeFolder = 'gallery';
             } else if (file.fieldname === 'drawDocument' || file.fieldname === 'draw') {
                 contentTypeFolder = 'documents';
-            } else if (file.fieldname === 'avatar') {
-                contentTypeFolder = 'avatars';
-            } else if (file.fieldname === 'socialMedia') {
-                contentTypeFolder = 'gallery';
-            } else if (file.fieldname === 'thumbnail') {
-                contentTypeFolder = 'gallery';
-            }
+            } 
             
             // Create full destination path with content type subfolder
             const destinationPath = `public/uploads/${entityFolder}/${contentTypeFolder}`;
