@@ -4,6 +4,8 @@
  * Refactored to the Manager Object Pattern per repository standards.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Encapsulates all behaviour for the Carnival New page.
  * - Use initialize() to set up the module.
@@ -104,7 +106,9 @@ export const carnivalNewManager = {
         }
 
         // Logo uploader integration
-        document.addEventListener('logoFileSelected', carnivalNewManager.handleLogoFileSelected);
+        document.addEventListener('logoFileSelected', (event) => {
+            carnivalNewManager.handleLogoFileSelected(event);
+        });
     },
 
     /** File upload area click handler: forwards click to the hidden file input. */
@@ -247,14 +251,14 @@ export const carnivalNewManager = {
                 
                 // Show error message to user
                 if (errorData.error?.message) {
-                   this.showAlert('Error: ' + errorData.error.message);
+                   showAlert('Error: ' + errorData.error.message);
                 } else {
-                   this.showAlert('An error occurred while creating the carnival. Please try again.');
+                   showAlert('An error occurred while creating the carnival. Please try again.');
                 }
             }
         } catch (error) {
             console.error('Network error:', error);
-           this.showAlert('Network error. Please check your connection and try again.');
+           showAlert('Network error. Please check your connection and try again.');
         }
     },
 

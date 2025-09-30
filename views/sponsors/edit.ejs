@@ -104,6 +104,10 @@
                         <%- include('../partials/logo-uploader', {
                             fieldName: 'logo',
                             uploadText: 'Upload Sponsor Logo',
+                            inputId: 'sponsor-logo-file',
+                            maxFileSize: 'Max 10MB',
+                            acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                            helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
                             currentLogoUrl: sponsor.logoUrl,
                             currentLogoAlt: sponsor.name + ' Logo'
                         }) %>

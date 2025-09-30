@@ -75,7 +75,5 @@ const logoAcceptAttribute = locals.acceptAttribute || 'image/jpeg,image/jpg,imag
     </div>
 </div>
 
-<!-- Logo uploader functionality is provided by external JavaScript -->
-<script type="module" src="/js/logo-uploader.js" 
-        data-input-id="<%= logoInputId %>" 
-        data-upload-text="<%= logoUploadText %>"></script>
+<!-- Logo uploader functionality is provided by logo-uploader.js (included by parent page) -->
+<!-- Script tag removed to prevent duplicate loading and multiple event listeners -->

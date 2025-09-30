@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Logo Uploader Manager
  * Handles drag-and-drop file upload functionality for logo uploader partials
@@ -29,6 +31,16 @@ export const logoUploaderManager = {
      * @param {Object} options - Configuration options
      */
     initialize(containerId = 'logoUploader', options = {}) {
+        // Check if this container has already been initialized
+        if (!this.initializedContainers) {
+            this.initializedContainers = new Set();
+        }
+        
+        if (this.initializedContainers.has(containerId)) {
+            console.log(`Logo uploader already initialized for container '${containerId}', skipping...`);
+            return;
+        }
+        
         this.cacheElements(containerId);
         
         // Merge options with defaults
@@ -37,6 +49,8 @@ export const logoUploaderManager = {
 
         if (this.elements.uploadArea) {
             this.bindEvents();
+            // Mark this container as initialized
+            this.initializedContainers.add(containerId);
         }
     },
 
@@ -70,6 +84,16 @@ export const logoUploaderManager = {
      * @param {string} uploadText - Default upload text
      */
     initializeFromPartial(inputId, uploadText) {
+        // Check if this input has already been initialized
+        if (!this.initializedInputs) {
+            this.initializedInputs = new Set();
+        }
+        
+        if (this.initializedInputs.has(inputId)) {
+            console.log(`Logo uploader already initialized for input '${inputId}', skipping...`);
+            return;
+        }
+        
         console.log('Initializing logo uploader from EJS partial for input:', inputId);
         
         const fileInput = document.getElementById(inputId);
@@ -92,6 +116,9 @@ export const logoUploaderManager = {
 
         this.defaultUploadText = uploadText || 'Click or drag to upload logo';
         this.bindEvents();
+        
+        // Mark this input as initialized
+        this.initializedInputs.add(inputId);
     },
 
     /**
@@ -326,7 +353,7 @@ export const logoUploaderManager = {
      */
     showError(message) {
         // Use browser alert for now - can be enhanced with better UI
-        this.showAlert(message);
+        showAlert(message);
     },
 
     /**

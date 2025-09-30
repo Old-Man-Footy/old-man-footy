@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Club Management Interface (Manager Object Pattern)
  * Handles form interactions for club profile management with AJAX submission
@@ -32,7 +34,9 @@ export const clubManageManager = {
         }
 
         // Listen for logo file selection events from logo-uploader.js
-        document.addEventListener('logoFileSelected', this.handleLogoFileSelected.bind(this));
+        document.addEventListener('logoFileSelected', (event) => {
+            this.handleLogoFileSelected(event);
+        });
     },
 
     // Handlers
@@ -53,7 +57,7 @@ export const clubManageManager = {
         });
 
         if (!isValid) {
-            this.showAlert('Please fill in all required fields.', 'danger');
+            showAlert('Please fill in all required fields.', 'danger');
             return;
         }
 
@@ -91,7 +95,7 @@ export const clubManageManager = {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Club manage: Form submission failed with status', response.status, ':', errorText);
-                this.showAlert(`Server error (${response.status}): Please try again or contact support.`, 'danger');
+                showAlert(`Server error (${response.status}): Please try again or contact support.`, 'danger');
                 return;
             }
 
@@ -106,12 +110,12 @@ export const clubManageManager = {
                     console.log('Club manage: Parsed JSON response:', responseData);
                     
                     if (responseData.success) {
-                        this.showAlert(responseData.message || 'Club profile updated successfully!', 'success');
+                        showAlert(responseData.message || 'Club profile updated successfully!', 'success');
                         this.handleSuccessfulSubmission();
                         return;
                     } else {
                         console.error('Club manage: JSON response indicated failure:', responseData);
-                        this.showAlert(responseData.message || 'Failed to update club profile.', 'danger');
+                        showAlert(responseData.message || 'Failed to update club profile.', 'danger');
                         return;
                     }
                 } catch (jsonError) {
@@ -123,7 +127,7 @@ export const clubManageManager = {
             // Server sends redirect response for successful form submissions (current pattern)
             if (response.redirected || response.status === 302) {
                 console.log('Club manage: Handling redirect response');
-                this.showAlert('Club profile updated successfully!', 'success');
+                showAlert('Club profile updated successfully!', 'success');
                 this.handleSuccessfulSubmission();
                 
                 // Follow redirect after showing success message
@@ -142,7 +146,7 @@ export const clubManageManager = {
             // Check if response contains success indicators
             if (responseText.includes('alert-success') || response.status === 200) {
                 console.log('Club manage: Detected success in HTML response');
-                this.showAlert('Club profile updated successfully!', 'success');
+                showAlert('Club profile updated successfully!', 'success');
                 this.handleSuccessfulSubmission();
                 
                 setTimeout(() => {
@@ -155,7 +159,7 @@ export const clubManageManager = {
                     textLength: responseText.length,
                     preview: responseText.substring(0, 200)
                 });
-                this.showAlert('Unexpected response from server. Please refresh the page.', 'warning');
+                showAlert('Unexpected response from server. Please refresh the page.', 'warning');
             }
 
         } catch (error) {
@@ -167,11 +171,11 @@ export const clubManageManager = {
             });
             
             if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                this.showAlert('Network connection failed. Please check your connection and try again.', 'danger');
+                showAlert('Network connection failed. Please check your connection and try again.', 'danger');
             } else if (error.name === 'AbortError') {
-                this.showAlert('Request was cancelled. Please try again.', 'warning');
+                showAlert('Request was cancelled. Please try again.', 'warning');
             } else {
-                this.showAlert('Submission failed due to a network error. Please try again.', 'danger');
+                showAlert('Submission failed due to a network error. Please try again.', 'danger');
             }
         } finally {
             // Re-enable the button
@@ -292,33 +296,6 @@ export const clubManageManager = {
         
         // Dispatch event to notify logo uploader to reset its state
         document.dispatchEvent(new CustomEvent('logoUploadComplete'));
-    },
-
-    /**
-     * Show alert banner using Bootstrap alert classes
-     * @param {string} message - Alert message to display  
-     * @param {string} type - Bootstrap alert type ('success', 'danger', 'warning', 'info')
-     */
-    showAlert(message, type) {
-        // Remove any existing alerts
-        const existingAlerts = document.querySelectorAll('.alert-banner');
-        existingAlerts.forEach(alert => alert.remove());
-
-        // Create new alert
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-banner position-fixed`;
-        alert.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px; text-align: center;';
-        alert.innerHTML = message;
-
-        // Add to page
-        document.body.appendChild(alert);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (alert && alert.parentNode) {
-                alert.remove();
-            }
-        }, 5000);
     }
 };
 

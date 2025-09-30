@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Carnival Add Players Manager
  * Manages the behavior of the add players form in the carnival application.
@@ -124,7 +126,7 @@ export const carnivalAddPlayersManager = {
         const selectedCount = document.querySelectorAll('.player-checkbox:checked').length;
         if (selectedCount === 0) {
             carnival.preventDefault();
-           this.showAlert('Please select at least one player to add.');
+           showAlert('Please select at least one player to add.');
         }
     }
 };

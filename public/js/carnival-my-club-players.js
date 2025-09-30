@@ -4,6 +4,8 @@
  * Follows the Manager Object Pattern for maintainability and testability.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 export const carnivalMyClubPlayersManager = {
   elements: {},
   carnivalId: null,
@@ -122,13 +124,13 @@ export const carnivalMyClubPlayersManager = {
           carnivalMyClubPlayersManager.locationReload();
         }, 500);
       } else {
-       this.showAlert('Error: ' + result.message);
+       showAlert('Error: ' + result.message);
         // Revert the select value on error
         select.value = select.dataset.currentTeam || '';
       }
     } catch (error) {
       console.error('Error:', error);
-     this.showAlert('An error occurred while updating team assignment.');
+     showAlert('An error occurred while updating team assignment.');
       // Revert the select value on error
       select.value = select.dataset.currentTeam || '';
     }
@@ -165,11 +167,11 @@ export const carnivalMyClubPlayersManager = {
           carnivalMyClubPlayersManager.locationReload();
         }, 500);
       } else {
-       this.showAlert('Error: ' + result.message);
+       showAlert('Error: ' + result.message);
       }
     } catch (error) {
       console.error('Error:', error);
-     this.showAlert('An error occurred while moving the player.');
+     showAlert('An error occurred while moving the player.');
     }
   },
 
@@ -188,7 +190,7 @@ export const carnivalMyClubPlayersManager = {
    */
   async removePlayer(assignmentId) {
     if (!this.registrationId) {
-     this.showAlert('Registration ID not found.');
+     showAlert('Registration ID not found.');
       return;
     }
     try {
@@ -199,11 +201,11 @@ export const carnivalMyClubPlayersManager = {
       if (result.success) {
         this.locationReload();
       } else {
-       this.showAlert('Error: ' + result.message);
+       showAlert('Error: ' + result.message);
       }
     } catch (error) {
       console.error('Error:', error);
-     this.showAlert('An error occurred while removing the player.');
+     showAlert('An error occurred while removing the player.');
     }
   },
 
@@ -253,7 +255,7 @@ export const carnivalMyClubPlayersManager = {
     const selectedCount = document.querySelectorAll('.modal-player-checkbox:checked').length;
     if (selectedCount === 0) {
       e.preventDefault();
-     this.showAlert('Please select at least one player to add.');
+     showAlert('Please select at least one player to add.');
       return false;
     }
   },

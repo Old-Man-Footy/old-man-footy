@@ -5,6 +5,8 @@
  * making it more robust, testable, and suitable for use with modern UI components like modals.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * A wrapper for the Fetch API to provide consistent error handling and response parsing.
  * In a real application, this might live in a shared utilities file.
@@ -84,7 +86,7 @@ export class AdminUserManager {
             }
         } catch (error) {
             console.error(`Action "${action}" failed:`, error);
-            await this.showAlert(`An unexpected error occurred: ${error.message}`);
+            await showAlert(`An unexpected error occurred: ${error.message}`);
         } finally {
             button.disabled = false;
         }
@@ -101,9 +103,9 @@ export class AdminUserManager {
 
         try {
             const result = await apiRequest(`/admin/users/${userId}/password-reset`, { method: 'POST' });
-            await this.showAlert(result.message || 'Password reset email sent successfully.');
+            await showAlert(result.message || 'Password reset email sent successfully.');
         } catch (error) {
-            await this.showAlert(`Error sending password reset email: ${error.message}`);
+            await showAlert(`Error sending password reset email: ${error.message}`);
         }
     }
 
@@ -129,7 +131,7 @@ export class AdminUserManager {
             // This part would be specific to the consuming application's UI structure.
             window.location.reload(); // Or emit a custom carnival for the UI to handle.
         } catch (error) {
-            await this.showAlert(`Error updating user status: ${error.message}`);
+            await showAlert(`Error updating user status: ${error.message}`);
         }
     }
 
@@ -148,7 +150,7 @@ export class AdminUserManager {
 
         try {
             const result = await apiRequest(`/admin/users/${userId}/delete`, { method: 'POST' });
-            await this.showAlert(result.message || 'User deleted successfully.');
+            await showAlert(result.message || 'User deleted successfully.');
 
             if (isEditPage === 'true') {
                 window.location.href = '/admin/users';
@@ -156,7 +158,7 @@ export class AdminUserManager {
                 window.location.reload(); // Or remove the element from the DOM.
             }
         } catch (error) {
-            await this.showAlert(`Error deleting user: ${error.message}`);
+            await showAlert(`Error deleting user: ${error.message}`);
         }
     }
 

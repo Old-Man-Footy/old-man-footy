@@ -184,7 +184,7 @@ async function startServer() {
     try {
         // Step 1: One-time database setup
         await setupDatabase();
-        
+
         // Step 2: Seed help content on startup
         try {
             const { seedHelpContent } = await import('./scripts/seed-help-content.mjs');
@@ -205,15 +205,36 @@ async function startServer() {
             console.log('📊 Site is now accessible and ready to serve requests');
         });
 
-        // ================== GRACEFUL SHUTDOWN LOGIC ADDED HERE ==================
+        // Step 5: Handle server connections for graceful shutdown
+        const connections = new Set();
+
+        server.on('connection', (socket) => {
+            connections.add(socket);
+            socket.on('close', () => {
+                connections.delete(socket);
+            });
+        });
+
         const gracefulShutdown = () => {
             console.log('Received shutdown signal. Closing server...');
+
             // If the MySideline sync timeout is pending, clear it
             if (global.mySidelineInitTimeout) {
                 clearTimeout(global.mySidelineInitTimeout);
             }
+
+            // Set a timeout to force shutdown
+            const shutdownTimeout = setTimeout(() => {
+                console.error('Could not close connections in time, forcefully shutting down');
+                for (const socket of connections) {
+                    socket.destroy();
+                }
+                process.exit(1); // Exit with an error code
+            }, 10000); // 10-second grace period
+
             server.close(() => {
                 console.log('Server has been closed.');
+                clearTimeout(shutdownTimeout); // Cancel the forceful shutdown
                 process.exit(0);
             });
         };
@@ -224,7 +245,7 @@ async function startServer() {
         process.on('SIGINT', gracefulShutdown);
         // ======================================================================
         
-        // Step 5: Initialize MySideline sync after server is running (skip in jest tests)
+        // Step 6: Initialize MySideline sync after server is running (skip in jest tests)
         if (!process.env.JEST_WORKER_ID) {
             global.mySidelineInitTimeout = setTimeout(async () => {
                 await initializeMySidelineSync();

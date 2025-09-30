@@ -4,6 +4,8 @@
  * Refactored into a testable object pattern.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 export const editRegistrationManager = {
     carnivalId: null,
 
@@ -35,11 +37,11 @@ export const editRegistrationManager = {
                 // On success, redirect to the attendees page.
                 window.location.href = `/carnivals/${this.carnivalId}/attendees`;
             } else {
-               this.showAlert(result.message || 'Error removing registration');
+               showAlert(result.message || 'Error removing registration');
             }
         } catch (error) {
             console.error('Error:', error);
-           this.showAlert('An error occurred while removing the registration.');
+           showAlert('An error occurred while removing the registration.');
         }
     },
 

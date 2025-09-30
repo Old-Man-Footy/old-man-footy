@@ -4,6 +4,8 @@
  * Refactored into a testable object pattern.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 export const attendeesManager = {
     carnivalId: null,
 
@@ -116,12 +118,12 @@ export const attendeesManager = {
             const result = await this.sendRequest(`/carnivals/${this.carnivalId}/attendees/${registrationId}/approve`, 'POST');
             if (result.success) {
                 this.updateRegistrationUI(registrationId, 'approved');
-                this.showAlert('success', result.message);
+                showAlert('success', result.message);
             } else {
-                this.showAlert('danger', result.message || 'Error approving registration');
+                showAlert('danger', result.message || 'Error approving registration');
             }
         } catch (error) {
-            this.showAlert('danger', 'Error approving registration');
+            showAlert('danger', 'Error approving registration');
         }
     },
     
@@ -131,7 +133,7 @@ export const attendeesManager = {
             const result = await this.sendRequest(`/carnivals/${this.carnivalId}/attendees/${registrationId}/reject`, 'POST', { rejectionReason });
             if (result.success) {
                 this.updateRegistrationUI(registrationId, 'rejected', rejectionReason);
-                this.showAlert('success', result.message);
+                showAlert('success', result.message);
                 // Close the rejection modal
                 const modalElement = document.getElementById('rejectionModal');
                 if (modalElement && typeof bootstrap !== 'undefined') {
@@ -139,10 +141,10 @@ export const attendeesManager = {
                     if (modal) modal.hide();
                 }
             } else {
-                this.showAlert('danger', result.message || 'Error rejecting registration');
+                showAlert('danger', result.message || 'Error rejecting registration');
             }
         } catch (error) {
-            this.showAlert('danger', 'Error rejecting registration');
+            showAlert('danger', 'Error rejecting registration');
         }
     },
 
@@ -231,7 +233,7 @@ export const attendeesManager = {
                 if (card) card.remove();
             });
         } catch (error) {
-            this.showAlert('danger', 'Error removing club from carnival');
+            showAlert('danger', 'Error removing club from carnival');
         }
     },
 
@@ -261,24 +263,13 @@ export const attendeesManager = {
     handleActionResult(result, errorMessage, onSuccess = null) {
         if (result.success) {
             // This now correctly calls the method on the same object.
-            this.showAlert('success', result.message);
+            showAlert('success', result.message);
             if (onSuccess) onSuccess();
             // Remove the automatic page reload to allow for immediate UI updates
             // setTimeout(() => window.location.reload(), 1500);
         } else {
-            this.showAlert('danger', result.message || errorMessage);
+            showAlert('danger', result.message || errorMessage);
         }
-    },
-
-    // Displays a floating alert message.
-    showAlert(type, message) {
-        document.querySelectorAll('.alert-floating').forEach(alert => alert.remove());
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show alert-floating`;
-        alert.style.cssText = `position: fixed; top: 20px; right: 20px; z-index: 9999;`;
-        alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 5000);
     },
     
     // Sends an API request.

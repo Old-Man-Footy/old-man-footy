@@ -106,8 +106,16 @@ const storage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        // Keep original filename - file will be overwritten if same name exists
-        cb(null, file.originalname);
+        // Generate unique filename to prevent corruption from simultaneous uploads
+        const timestamp = Date.now();
+        const randomSuffix = Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        const baseName = path.basename(file.originalname, extension);
+        
+        const uniqueFilename = `${baseName}-${timestamp}-${randomSuffix}${extension}`;
+        
+        console.log(`📝 Generated unique filename: ${uniqueFilename} (original: ${file.originalname})`);
+        cb(null, uniqueFilename);
     }
 });
 

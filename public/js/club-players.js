@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Club Players Manager (clean)
  */
@@ -91,12 +93,12 @@ export const clubPlayersPageManager = {
         if (file) {
             const name = (file.name || '').toLowerCase();
             if (!name.endsWith('.csv')) {
-                this.showAlert('Please select a CSV file.');
+                showAlert('Please select a CSV file.');
                 e.target.value = '';
                 return;
             }
             if (file.size > 5 * 1024 * 1024) {
-                this.showAlert('File size must be less than 5MB.');
+                showAlert('File size must be less than 5MB.');
                 e.target.value = '';
                 return;
             }
@@ -109,7 +111,7 @@ export const clubPlayersPageManager = {
         const file = csvFileInput.files && csvFileInput.files[0];
         if (!file) {
             e.preventDefault();
-            this.showAlert('Please select a CSV file to upload.');
+            showAlert('Please select a CSV file to upload.');
             return;
         }
         const submitButton = csvForm.querySelector('button[type="submit"]');

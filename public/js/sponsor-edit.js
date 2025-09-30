@@ -79,7 +79,9 @@ export const sponsorEditManager = {
         }
 
         // Logo file selection from logo uploader
-        document.addEventListener('logoFileSelected', this.handleLogoFileSelected);
+        document.addEventListener('logoFileSelected', (event) => {
+            this.handleLogoFileSelected(event);
+        });
     },
 
     /**

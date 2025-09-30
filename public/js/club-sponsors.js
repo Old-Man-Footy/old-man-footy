@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Club Sponsors Manager
  */
@@ -54,10 +56,10 @@ export const clubSponsorsManager = {
                 if (data && data.success) {
                     try { location.reload(); } catch {}
                 } else {
-                    this.showAlert('Error updating sponsor order' + (data && data.message ? (': ' + data.message) : ''));
+                    showAlert('Error updating sponsor order' + (data && data.message ? (': ' + data.message) : ''));
                 }
             })
-            .catch(() => this.showAlert('Error updating sponsor order'));
+            .catch(() => showAlert('Error updating sponsor order'));
         } catch {}
     }
 };

@@ -17,6 +17,7 @@
 - [x] **Step 11: Convert carnival-new.js to AJAX form submission with staged files** *(Completed - added handleFormSubmit with fetch API and updated proceedAnyway)*  
 - [x] **Step 12: Convert carnival-edit.js to AJAX form submission with staged files** *(Completed - added stagedFile property, bindEvents method, handleFormSubmit with AJAX, and logoFileSelected event handling)*
 - [x] **Step 13: Convert club-manage.js to AJAX form submission with staged files** *(Completed - already implemented with stagedFile property, handleFormSubmit with fetch API, FormData, logoFileSelected event handling, and complete AJAX pattern matching other forms)*
+- [ ] **Step 14: Forms using logo-uploader.ejs should populate `<%= logoInputId %>-preview-container` when image is selected for upload as a preview before submission**
 - [ ] **Step 14: Update admin forms to use AJAX submission patterns**
 - [ ] **Step 15: Update unit and js tests to cover AJAX form submissions and staged file handling, as well as to expect entity-folder structure, and removal of imageNamingService**
 ```

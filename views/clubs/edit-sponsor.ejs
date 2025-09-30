@@ -191,14 +191,18 @@
                                 </div>
                             </div>
                         <% } %>
-
-        <!-- Logo Upload -->
-        <%- include('../partials/logo-uploader', {
-            fieldName: 'logo',
-            uploadText: 'Upload Sponsor Logo',
-            currentLogoUrl: sponsor.logoUrl,
-            currentLogoAlt: sponsor.name + ' Logo'
-        }) %>                        <!-- Description -->
+                        <!-- Logo Upload -->
+                        <%- include('../partials/logo-uploader', {
+                            fieldName: 'logo',
+                            uploadText: 'Upload Sponsor Logo',
+                            inputId: 'sponsor-logo-file',
+                            maxFileSize: 'Max 10MB',
+                            acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
+                            helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP',
+                            currentLogoUrl: sponsor.logoUrl,
+                            currentLogoAlt: sponsor.name + ' Logo'
+                        }) %>                        
+                        <!-- Description -->
                         <hr class="my-4">
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>

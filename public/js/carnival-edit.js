@@ -4,6 +4,8 @@
  * Refactored into a testable object pattern.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 export const carnivalEditManager = {
     // DOM element references
     elements: {},
@@ -69,7 +71,7 @@ export const carnivalEditManager = {
             
             // Add the staged logo file if one exists
             if (this.stagedFile) {
-                formData.append('clubLogo', this.stagedFile);
+                formData.append('logo', this.stagedFile);
             }
 
             const response = await fetch(this.elements.form.action, {
@@ -86,7 +88,7 @@ export const carnivalEditManager = {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Form submission failed:', errorText);
-               this.showAlert('An error occurred while updating the carnival. Please try again.');
+                showAlert('An error occurred while updating the carnival. Please try again.');
                 return;
             }
 
@@ -95,12 +97,12 @@ export const carnivalEditManager = {
             if (result.success) {
                 window.location.href = result.redirectUrl || '/admin/carnivals';
             } else {
-               this.showAlert(result.message || 'An error occurred while updating the carnival.');
+                showAlert(result.message || 'An error occurred while updating the carnival.');
             }
 
         } catch (error) {
             console.error('Error submitting form:', error);
-           this.showAlert('An error occurred while updating the carnival. Please try again.');
+            showAlert('An error occurred while updating the carnival. Please try again.');
         }
     },
 
