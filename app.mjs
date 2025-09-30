@@ -193,7 +193,7 @@ async function startServer() {
         } catch (error) {
             console.warn('⚠️  Warning: Help content seeding failed:', error.message);
             // Don't exit - let the site run without help content if needed
-        }        
+        }
         
         // Step 3: Sync session store
         await sessionStore.sync();
@@ -204,6 +204,26 @@ async function startServer() {
             console.log(`🚀 Old Man Footy server running on port ${PORT}`);
             console.log('📊 Site is now accessible and ready to serve requests');
         });
+
+        // ================== GRACEFUL SHUTDOWN LOGIC ADDED HERE ==================
+        const gracefulShutdown = () => {
+            console.log('Received shutdown signal. Closing server...');
+            // If the MySideline sync timeout is pending, clear it
+            if (global.mySidelineInitTimeout) {
+                clearTimeout(global.mySidelineInitTimeout);
+            }
+            server.close(() => {
+                console.log('Server has been closed.');
+                process.exit(0);
+            });
+        };
+
+        // Listen for termination signals (e.g., from Docker)
+        process.on('SIGTERM', gracefulShutdown);
+        // Listen for interrupt signals (e.g., Ctrl+C)
+        process.on('SIGINT', gracefulShutdown);
+        // ======================================================================
+        
         // Step 5: Initialize MySideline sync after server is running (skip in jest tests)
         if (!process.env.JEST_WORKER_ID) {
             global.mySidelineInitTimeout = setTimeout(async () => {
