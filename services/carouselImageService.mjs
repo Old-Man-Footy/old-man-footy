@@ -9,7 +9,7 @@
 import { promises as fs } from 'fs';
 import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { IMAGE_DIRECTORIES_ARRAY, SUPPORTED_IMAGE_EXTENSIONS } from '../config/constants.mjs';
+import { SUPPORTED_IMAGE_EXTENSIONS, getAllEntityGalleryDirectories } from '../config/constants.mjs';
 import ImageUpload from '../models/ImageUpload.mjs';
 
 // ES Module equivalent of __dirname
@@ -21,8 +21,6 @@ class CarouselImageService {
         this.uploadsPath = join(__dirname, '..', 'public', 'uploads');
         this.publicPath = '/uploads';
         
-        // Use constants instead of hardcoded arrays for legacy directory scanning
-        this.imageDirectories = IMAGE_DIRECTORIES_ARRAY;
         this.supportedExtensions = SUPPORTED_IMAGE_EXTENSIONS;
         
         // Cache for performance
@@ -71,19 +69,21 @@ class CarouselImageService {
                 console.error('Error fetching images from database:', dbError);
             }
 
-            // Fallback: Scan filesystem directories for legacy images
-            for (const directory of this.imageDirectories) {
-                const fullPath = join(this.uploadsPath, directory);
+            // Scan entity-specific gallery directories for images
+            try {
+                const entityGalleryDirs = await getAllEntityGalleryDirectories(true); // Get public entity galleries
                 
-                try {
-                    await fs.access(fullPath);
-                    const images = await this.scanDirectory(fullPath, directory);
-                    allImages.push(...images);
-                } catch (error) {
-                    // Directory doesn't exist or can't be accessed, continue
-                    console.log(`Directory not accessible: ${fullPath}`);
+                for (const galleryDir of entityGalleryDirs) {
+                    try {
+                        const images = await this.scanEntityDirectory(galleryDir);
+                        allImages.push(...images);
+                    } catch (error) {
+                        console.log(`Error scanning entity gallery: ${galleryDir}`, error);
+                    }
                 }
-            }
+            } catch (error) {
+                console.error('Error getting entity gallery directories:', error);
+            }            
 
             // Sort by upload time (newest first), then add randomization
             const sortedImages = allImages.sort((a, b) => b.uploadTime - a.uploadTime);
@@ -147,13 +147,68 @@ class CarouselImageService {
     }
 
     /**
+     * Scan an entity-specific gallery directory for images
+     * @param {Object} galleryInfo - Gallery directory information from getAllEntityGalleryDirectories
+     * @returns {Promise<Array>} Array of image objects with entity metadata
+     */
+    async scanEntityDirectory(galleryInfo) {
+        try {
+            const fullPath = join(this.uploadsPath, galleryInfo.relativePath);
+            const files = await fs.readdir(fullPath);
+            const images = [];
+
+            for (const file of files) {
+                const filePath = join(fullPath, file);
+                const ext = extname(file).toLowerCase();
+                
+                // Only include supported image files
+                if (this.supportedExtensions.includes(ext)) {
+                    try {
+                        const stats = await fs.stat(filePath);
+                        
+                        // Skip very small files (likely thumbnails or invalid images)
+                        if (stats.size < 5000) continue;
+                        
+                        const imageObject = {
+                            filename: file,
+                            url: `${this.publicPath}/${galleryInfo.relativePath}/${file}`,
+                            uploadTime: stats.mtime.getTime(),
+                            size: stats.size,
+                            type: 'gallery', // Entity galleries are always gallery type
+                            source: galleryInfo.entityType, // Use entity type as source
+                            entityId: galleryInfo.entityId,
+                            entityName: galleryInfo.entityName || `${galleryInfo.entityType} ${galleryInfo.entityId}`,
+                            isPublic: galleryInfo.isPublic
+                        };
+
+                        images.push(imageObject);
+                    } catch (statError) {
+                        console.log(`Could not stat file ${filePath}:`, statError.message);
+                    }
+                }
+            }
+
+            return images;
+        } catch (error) {
+            console.error(`Error scanning entity directory ${galleryInfo.relativePath}:`, error);
+            return [];
+        }
+    }
+
+    /**
      * Determine image type from path
      * @param {string} relativePath - Relative path of the image
      * @returns {string} Image type (gallery, promo, etc.)
      */
     getImageType(relativePath) {
+        // Handle entity-specific directory paths (uploads/carnival/123/gallery)
+        if (relativePath.includes('/gallery')) return 'gallery';
+        if (relativePath.includes('/promo')) return 'promotional';
+        
+        // Handle legacy flat paths
         if (relativePath.includes('/gallery/')) return 'gallery';
         if (relativePath.includes('/promo/')) return 'promotional';
+        
         return 'general';
     }
 
@@ -163,9 +218,16 @@ class CarouselImageService {
      * @returns {string} Image source (carnival, club, sponsor)
      */
     getImageSource(relativePath) {
+        // Handle entity-specific directory paths first (uploads/carnival/123/gallery or uploads/club/456/gallery)
+        if (relativePath.includes('uploads/carnival/') || relativePath.includes('/carnival/')) return 'carnival';
+        if (relativePath.includes('uploads/club/') || relativePath.includes('/club/')) return 'club';
+        if (relativePath.includes('uploads/sponsor/') || relativePath.includes('/sponsor/')) return 'sponsor';
+        
+        // Handle legacy flat directory paths
         if (relativePath.includes('/carnival/')) return 'carnival';
         if (relativePath.includes('/club/')) return 'club';
         if (relativePath.includes('/sponsor/')) return 'sponsor';
+        
         return 'unknown';
     }
 

@@ -81,6 +81,18 @@
                             </div>
                         </div>
 
+                        <!-- Logo Upload -->
+                        <hr class="my-4">
+                        <%- include('../partials/_imageUploader', { 
+                            fieldName: 'logo',
+                            label: 'Company Logo',
+                            allowedTypes: ['.jpg', '.jpeg', '.png', '.gif'],
+                            maxSize: 5,
+                            multiple: false,
+                            required: false,
+                            helpText: 'Upload your company logo (JPEG, PNG, or GIF, max 5MB)'
+                        }) %>
+
                         <!-- Description -->
                         <hr class="my-4">
                         <div class="mb-3">

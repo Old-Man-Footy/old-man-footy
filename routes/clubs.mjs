@@ -1,12 +1,25 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { clubUpload, sponsorUpload, handleUploadError } from '../middleware/upload.mjs';
+import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as clubController from '../controllers/club.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
+
+// Configure upload field configurations
+const clubFieldConfig = [
+    { name: 'logo', maxCount: 1 },
+    { name: 'gallery', maxCount: 5 }
+];
+const sponsorFieldConfig = [
+    { name: 'logo', maxCount: 1 }
+];
+
+// Create uploader instances
+const clubUpload = createFormUploader('club', clubFieldConfig);
+const sponsorUpload = createFormUploader('sponsor', sponsorFieldConfig);
 
 // Apply centralized security to all routes
 router.use(applySecurity);
@@ -41,7 +54,7 @@ router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 
 // Update club profile with structured upload support
-router.post('/manage/profile', ensureAuthenticated, clubUpload, handleUploadError, [
+router.post('/manage/profile', ensureAuthenticated, clubUpload.upload.fields(clubFieldConfig), clubUpload.process, [
     body('clubName').optional({ nullable: true, checkFalsy: true }).isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
     body('state').optional({ nullable: true, checkFalsy: true }).isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
     body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
@@ -76,7 +89,7 @@ router.get('/manage/sponsors', ensureAuthenticated, clubController.showClubSpons
 
 // Add new sponsor or link existing sponsor to club
 router.get('/manage/sponsors/add', ensureAuthenticated, clubController.showAddSponsor);
-router.post('/manage/sponsors/add', ensureAuthenticated, sponsorUpload, handleUploadError, [
+router.post('/manage/sponsors/add', ensureAuthenticated, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, [
     body('sponsorName').trim().isLength({ min: 2, max: 200 }).withMessage('Sponsor name must be between 2 and 200 characters'),
     body('businessType').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
     body('location').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
@@ -101,7 +114,7 @@ router.post('/manage/sponsors/add', ensureAuthenticated, sponsorUpload, handleUp
 
 // Edit sponsor for club
 router.get('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsor);
-router.post('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, sponsorUpload, handleUploadError, [
+router.post('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, [
     body('sponsorName').trim().isLength({ min: 2, max: 200 }).withMessage('Sponsor name must be between 2 and 200 characters'),
     body('businessType').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
     body('location').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),

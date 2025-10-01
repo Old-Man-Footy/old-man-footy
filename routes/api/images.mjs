@@ -10,7 +10,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { ensureAuthenticated } from '../../middleware/auth.mjs';
-import { galleryUpload, handleUploadError } from '../../middleware/upload.mjs';
+import { galleryUpload, handleGalleryUploadError } from '../../middleware/galleryUpload.mjs';
 import ImageUpload from '../../models/ImageUpload.mjs';
 import { sequelize } from '../../config/database.mjs';
 import asyncHandler from '../../middleware/asyncHandler.mjs';
@@ -50,8 +50,8 @@ router.post('/upload',
         });
       }
 
-      // Check if files were uploaded by middleware
-      if (!req.files || req.files.length === 0) {
+      // Check if file was uploaded by middleware
+      if (!req.file) {
         return res.status(400).json({
           error: {
             status: 400,
@@ -60,9 +60,8 @@ router.post('/upload',
         });
       }
 
-      // For backward compatibility, only process the first file
-      // (frontend sends single files to this endpoint)
-      const uploadedFile = req.files[0];
+      // Single file upload from gallery middleware
+      const uploadedFile = req.file;
       
       // Create ImageUpload record
       const imageUpload = await ImageUpload.create({

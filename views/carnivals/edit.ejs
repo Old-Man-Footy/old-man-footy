@@ -442,34 +442,40 @@
                             
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="logo" class="form-label">Club Logo</label>
-                                    <div class="file-upload-area">
-                                        <input type="file" class="form-control file-input-hidden" id="logo" name="logo" 
-                                               accept="image/*">
-                                        <i class="bi bi-image display-6 text-muted"></i>
-                                        <p class="upload-text mt-2">Click or drag to upload new club logo</p>
-                                        <small class="text-muted">Max 10MB, JPG/PNG/SVG/GIF/WebP</small>
-                                    </div>
+                                    <%- include('../partials/_imageUploader', {
+                                        fieldName: 'logo',
+                                        label: 'Club Logo',
+                                        allowedTypes: ['.jpg', '.jpeg', '.png', '.gif'],
+                                        maxSize: 5,
+                                        multiple: false,
+                                        required: false,
+                                        helpText: 'Recommended: 512x512px for best display',
+                                        currentImageUrl: carnival.clubLogoURL
+                                    }) %>
                                 </div>                                
                                 <div class="col-md-4 mb-3">
-                                    <label for="promotionalImage" class="form-label">New Promotional Image</label>
-                                    <div class="file-upload-area">
-                                        <input type="file" class="form-control file-input-hidden" id="promotionalImage" name="promotionalImage" 
-                                               accept="image/*">
-                                        <i class="bi bi-image display-6 text-muted"></i>
-                                        <p class="upload-text mt-2">Click or drag to upload new promotional image</p>
-                                        <small class="text-muted">Max 5MB, JPG/PNG only</small>
-                                    </div>
+                                    <%- include('../partials/_imageUploader', {
+                                        fieldName: 'promotionalImage',
+                                        label: 'Promotional Image',
+                                        allowedTypes: ['.jpg', '.jpeg', '.png'],
+                                        maxSize: 5,
+                                        multiple: false,
+                                        required: false,
+                                        helpText: 'Recommended: 1200x630px for social media',
+                                        currentImageUrl: carnival.promotionalImageURL
+                                    }) %>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="drawFile" class="form-label">New Draw Sheet</label>
-                                    <div class="file-upload-area">
-                                        <input type="file" class="form-control file-input-hidden" id="drawFile" name="drawFile" 
-                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                        <i class="bi bi-file-earmark-text display-6 text-muted"></i>
-                                        <p class="upload-text mt-2">Click or drag to upload new draw sheet</p>
-                                        <small class="text-muted">Max 10MB, PDF/DOC/Image files</small>
-                                    </div>
+                                    <%- include('../partials/_documentUploader', {
+                                        fieldName: 'drawDocument',
+                                        uploadText: 'Select draw file to upload',
+                                        maxFileSize: 'Max 10MB per file',
+                                        acceptedFormats: 'PDF/DOC/DOCX or Images',
+                                        helpText: 'Upload the carnival draw document or image',
+                                        acceptAttribute: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+                                        multiple: false,
+                                        existingFiles: carnival.drawFileURL ? [{name: 'Current Draw File', url: carnival.drawFileURL}] : []
+                                    }) %>
                                 </div>
                             </div>
 

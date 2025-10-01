@@ -939,11 +939,6 @@ Carnival.init({
     type: DataTypes.STRING,
     allowNull: true
   },
-  additionalImages: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: []
-  },
   // Social Media Links
   socialMediaFacebook: {
     type: DataTypes.STRING,

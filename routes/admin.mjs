@@ -8,9 +8,17 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import { clubUpload, carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
+import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applyAdminSecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as adminController from '../controllers/admin.controller.mjs';
+
+// Upload configurations for admin routes
+const clubFieldConfig = [{ name: 'logo', maxCount: 1 }, { name: 'gallery', maxCount: 5 }];
+const carnivalFieldConfig = [{ name: 'logo', maxCount: 1 }, { name: 'promotionalImage', maxCount: 1 }, { name: 'drawDocument', maxCount: 1 }];
+
+// Create form uploaders for admin routes
+const clubUpload = createFormUploader('club', clubFieldConfig);
+const carnivalUpload = createFormUploader('carnival', carnivalFieldConfig);
 
 const router = express.Router();
 
@@ -89,8 +97,8 @@ const clubUpdateValidation = [
 ];
 
 router.post('/clubs/:id/update',
-    clubUpload,
-    handleUploadError,
+    clubUpload.upload.fields(clubFieldConfig),
+    clubUpload.process,
     clubUpdateValidation,
     adminController.updateClub
 );
@@ -129,8 +137,8 @@ const carnivalUpdateValidation = [
 ];
 
 router.post('/carnivals/:id/update',
-    carnivalUpload,
-    handleUploadError,
+    carnivalUpload.upload.fields(carnivalFieldConfig),
+    carnivalUpload.process,
     carnivalUpdateValidation,
     adminController.updateCarnival
 );

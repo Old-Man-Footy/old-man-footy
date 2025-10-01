@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { ensureAuthenticated } from '../middleware/auth.mjs';
-import { carnivalUpload, handleUploadError } from '../middleware/upload.mjs';
+import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
+import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as carnivalController from '../controllers/carnival.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
@@ -58,6 +58,14 @@ const validateCarnival = [
         .withMessage('Longitude must be a valid number between -180 and 180')
 ];
 
+// Create carnival form uploader with field configuration
+const carnivalUpload = createFormUploader('carnivals', [
+    { name: 'logo', maxCount: 1 },
+    { name: 'promotionalImage', maxCount: 5 },
+    { name: 'galleryImage', maxCount: 10 },
+    { name: 'drawDocument', maxCount: 5 }
+]);
+
 // Mount carnival club routes as sub-router
 // This handles all routes like /:carnivalId/attendees, /:carnivalId/register, etc.
 router.use('/', carnivalClubRoutes);
@@ -75,13 +83,23 @@ router.get('/:id/gallery', carnivalController.viewGallery);
 router.get('/:id', carnivalController.show);
 
 // Create carnival POST with validation
-router.post('/new', ensureAuthenticated, carnivalUpload, handleUploadError, validateCarnival, carnivalController.postNew);
+router.post('/new', ensureAuthenticated, ensureAdmin, carnivalUpload.upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'promotionalImage', maxCount: 5 },
+    { name: 'galleryImage', maxCount: 10 },
+    { name: 'drawDocument', maxCount: 5 }
+]), carnivalUpload.process, ...validateCarnival, carnivalController.postNew);
 
 // Edit carnival form
 router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 
 // Update carnival POST with validation
-router.post('/:id/edit', ensureAuthenticated, carnivalUpload, handleUploadError, validateCarnival, carnivalController.postEdit);
+router.post('/:id/edit', ensureAuthenticated, ensureAdmin, carnivalUpload.upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'promotionalImage', maxCount: 5 },
+    { name: 'galleryImage', maxCount: 10 },
+    { name: 'drawDocument', maxCount: 5 }
+]), carnivalUpload.process, ...validateCarnival, carnivalController.postEdit);
 
 // Delete carnival
 router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);

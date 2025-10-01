@@ -88,6 +88,21 @@
                                 </div>
                             </div>
 
+                            <!-- Club Logo -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <%- include('../partials/_imageUploader', { 
+                                        fieldName: 'logo',
+                                        label: 'Club Logo',
+                                        allowedTypes: ['.jpg', '.jpeg', '.png', '.gif'],
+                                        maxSize: 5,
+                                        multiple: false,
+                                        required: false,
+                                        helpText: 'Upload your club logo (JPEG, PNG, or GIF, max 5MB)'
+                                    }) %>
+                                </div>
+                            </div>
+
                             <!-- Contact Information -->
                             <div class="row mb-4">
                                 <div class="col-12">

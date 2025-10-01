@@ -2,11 +2,19 @@ import express from 'express';
 import { body } from 'express-validator';
 import * as sponsorController from '../controllers/sponsor.controller.mjs';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import { sponsorUpload, handleUploadError } from '../middleware/upload.mjs';
+import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
+
+// Configure upload field configuration
+const sponsorFieldConfig = [
+    { name: 'logo', maxCount: 1 }
+];
+
+// Create uploader instance
+const sponsorUpload = createFormUploader('sponsor', sponsorFieldConfig);
 
 // Apply centralized security to all routes
 router.use(applySecurity);
@@ -43,7 +51,7 @@ router.get('/', sponsorController.showSponsorListings);
 router.get('/new', ensureAuthenticated, ensureAdmin, sponsorController.showCreateSponsor);
 
 // Create new sponsor - POST route can come before parameterized routes
-router.post('/', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploadError, validateSponsor, sponsorController.createSponsor);
+router.post('/', ensureAuthenticated, ensureAdmin, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, validateSponsor, sponsorController.createSponsor);
 
 // Individual sponsor profile (public) - MUST come after all specific routes
 router.get('/:id', sponsorController.showSponsorProfile);
@@ -52,7 +60,7 @@ router.get('/:id', sponsorController.showSponsorProfile);
 router.get('/:id/edit', ensureAuthenticated, ensureAdmin, sponsorController.showEditSponsor);
 
 // Update sponsor
-router.post('/:id', ensureAuthenticated, ensureAdmin, sponsorUpload, handleUploadError, validateSponsor, sponsorController.updateSponsor);
+router.post('/:id', ensureAuthenticated, ensureAdmin, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, validateSponsor, sponsorController.updateSponsor);
 
 // Delete sponsor (soft delete)
 router.delete('/:id', ensureAuthenticated, ensureAdmin, sponsorController.deleteSponsor);

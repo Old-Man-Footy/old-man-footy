@@ -9,6 +9,32 @@
  */
 
 /**
+ * Get field mapping for different entity types
+ * @param {string} entityType - Type of entity (club, carnival, sponsor)
+ * @param {string} fieldname - Original field name from upload
+ * @returns {string} Mapped field name for database
+ */
+const getFieldMapping = (entityType, fieldname) => {
+  const mappings = {
+    carnival: {
+      logo: 'clubLogoURL',
+      promotionalImage: 'promotionalImageURL',
+      drawDocument: 'drawFiles',
+      galleryImage: 'galleryImages',
+    },
+    club: {
+      logo: 'logoUrl',
+      galleryImage: 'galleryImages'
+    },
+    sponsor: {
+      logo: 'logoUrl'
+    }
+  };
+
+  return mappings[entityType]?.[fieldname] || fieldname;
+};
+
+/**
  * Processes structured uploads with defensive error handling
  * @param {Object} req - Express request object with structuredUploads
  * @param {Object} updateData - Data object to populate with upload paths
@@ -43,47 +69,43 @@ export const processStructuredUploads = (req, updateData, entityType, entityId) 
       continue;
     }
 
+    // Get the appropriate field name for this entity type
+    const mappedField = getFieldMapping(entityType, upload.fieldname);
+    
     // Process based on field type
     switch (upload.fieldname) {
       case 'logo':
-        updateData.logoUrl = upload.path;
-        console.log(`📸 Updated ${entityType} ${entityId} logo: ${upload.path}`);
+        updateData[mappedField] = upload.path;
+        console.log(`📸 Updated ${entityType} ${entityId} logo (${mappedField}): ${upload.path}`);
         break;
       
       case 'promotionalImage':
-        updateData.promotionalImageUrl = upload.path;
-        console.log(`📸 Updated ${entityType} ${entityId} promotional image: ${upload.path}`);
+        updateData[mappedField] = upload.path;
+        console.log(`📸 Updated ${entityType} ${entityId} promotional image (${mappedField}): ${upload.path}`);
         break;
       
       case 'galleryImage':
         // Handle gallery images - store as array for multiple images
-        if (!updateData.galleryImages) {
-          updateData.galleryImages = [];
+        if (!updateData[mappedField]) {
+          updateData[mappedField] = [];
         }
-        updateData.galleryImages.push(upload.path);
-        console.log(`📸 Added gallery image to ${entityType} ${entityId}: ${upload.path}`);
+        updateData[mappedField].push(upload.path);
+        console.log(`📸 Added gallery image to ${entityType} ${entityId} (${mappedField}): ${upload.path}`);
         break;
       
       case 'drawDocument':
         // Handle draw documents for carnivals
-        if (!updateData.drawDocuments) {
-          updateData.drawDocuments = [];
+        if (!updateData[mappedField]) {
+          updateData[mappedField] = [];
         }
-        updateData.drawDocuments.push(upload.path);
-        console.log(`📸 Added draw document to ${entityType} ${entityId}: ${upload.path}`);
+        updateData[mappedField].push(upload.path);
+        console.log(`📸 Added draw document to ${entityType} ${entityId} (${mappedField}): ${upload.path}`);
         break;
       
-      case 'bannerImage':
-        // Handle banner images
-        if (!updateData.bannerImages) {
-          updateData.bannerImages = [];
-        }
-        updateData.bannerImages.push(upload.path);
-        console.log(`📸 Added banner image to ${entityType} ${entityId}: ${upload.path}`);
-        break;
+
       
       case 'avatar':
-        updateData.avatarUrl = upload.path;
+        updateData.avatarUrl = upload.path; // Avatar stays the same for all entities
         console.log(`📸 Updated ${entityType} ${entityId} avatar: ${upload.path}`);
         break;
       
@@ -123,7 +145,7 @@ export const validateStructuredUploads = (uploads) => {
 /**
  * Extracts specific upload type from structured uploads
  * @param {Array} uploads - Array of structured uploads
- * @param {string} fieldname - Field name to extract (e.g., 'logo', 'bannerImage')
+ * @param {string} fieldname - Field name to extract (e.g., 'logo')
  * @returns {Object|null} Upload object or null if not found
  */
 export const extractUploadByFieldname = (uploads, fieldname) => {

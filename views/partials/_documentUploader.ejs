@@ -1,0 +1,100 @@
+<%
+/*
+ * Document Uploader Partial
+ * 
+ * A reusable document uploader component for handling multiple document files.
+ * Displays a list of selected files with file type icons and file names.
+ * 
+ * Required parameters:
+ * - fieldName: The name attribute for the file input (e.g., 'drawDocument', 'documents')
+ * - uploadText: Text to display for upload prompt (e.g., 'Select draw documents')
+ * - maxFileSize: Maximum file size description (e.g., 'Max 50MB per file')
+ * - acceptedFormats: Accepted file formats description (e.g., 'PDF/DOC/DOCX/XLS/XLSX')
+ * - helpText: Additional help text for the upload
+ * 
+ * Optional parameters:
+ * - inputId: Custom ID for the file input (defaults to fieldName)
+ * - acceptAttribute: Custom accept attribute (defaults to standard document formats)
+ * - multiple: Whether multiple files are allowed (defaults to true)
+ * - maxFiles: Maximum number of files (defaults to 10)
+ * - existingFiles: Array of existing file objects with {name, url} structure
+ */
+
+// Set defaults
+const docFieldName = locals.fieldName || 'documents';
+const docInputId = locals.inputId || docFieldName;
+const docUploadText = locals.uploadText || 'Select documents to upload';
+const docMaxFileSize = locals.maxFileSize || 'Max 50MB per file';
+const docAcceptedFormats = locals.acceptedFormats || 'PDF/DOC/DOCX/XLS/XLSX';
+const docHelpText = locals.helpText || 'Upload document files. Multiple files can be selected.';
+const docAcceptAttribute = locals.acceptAttribute || '.pdf,.doc,.docx,.xls,.xlsx,.txt,.rtf';
+const docMultiple = locals.multiple !== false; // Default to true unless explicitly false
+const docMaxFiles = locals.maxFiles || 10;
+const docExistingFiles = locals.existingFiles || [];
+%>
+
+<div class="document-uploader" id="<%= docInputId %>-document-uploader">
+    <div class="file-input-section">
+        <div class="document-upload-area border border-2 border-dashed rounded p-4 text-center" 
+             id="<%= docInputId %>-upload-area">
+            <input type="file" 
+                   class="form-control d-none" 
+                   id="<%= docInputId %>" 
+                   name="<%= docFieldName %>" 
+                   accept="<%= docAcceptAttribute %>"
+                   <% if (docMultiple) { %>multiple<% } %>
+                   data-max-files="<%= docMaxFiles %>">
+            <i class="bi bi-file-earmark-arrow-up display-6 text-muted"></i>
+            <p class="upload-text mt-2" id="<%= docInputId %>-upload-text"><%= docUploadText %></p>
+            <small class="text-muted"><%= docMaxFileSize %>, <%= docAcceptedFormats %></small>
+        </div>
+    </div>
+    
+    <% if (docExistingFiles && docExistingFiles.length > 0) { %>
+        <div class="existing-files mt-3" id="<%= docInputId %>-existing-files">
+            <h6 class="text-muted mb-2">
+                <i class="bi bi-files me-2"></i>Current Files
+            </h6>
+            <div class="list-group list-group-flush">
+                <% docExistingFiles.forEach((file, index) => { %>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                            <div>
+                                <small class="text-muted">
+                                    <% if (file.url) { %>
+                                        <a href="<%= file.url %>" target="_blank" class="text-decoration-none">
+                                            <%= file.name || `Document ${index + 1}` %>
+                                        </a>
+                                    <% } else { %>
+                                        <%= file.name || `Document ${index + 1}` %>
+                                    <% } %>
+                                </small>
+                            </div>
+                        </div>
+                        <small class="text-muted">Existing</small>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    <% } %>
+    
+    <div class="selected-files mt-3 d-none" id="<%= docInputId %>-selected-files">
+        <h6 class="text-muted mb-2">
+            <i class="bi bi-files me-2"></i>Selected Files
+            <span class="badge bg-primary ms-2" id="<%= docInputId %>-file-count">0</span>
+        </h6>
+        <div class="list-group list-group-flush" id="<%= docInputId %>-file-list">
+            <!-- Dynamic file list will be populated here -->
+        </div>
+    </div>
+    
+    <div class="form-text mt-2">
+        <%= docHelpText %>
+        <% if (docMultiple) { %>
+            <br><small class="text-muted">Maximum <%= docMaxFiles %> files allowed.</small>
+        <% } %>
+    </div>
+</div>
+
+<!-- Document uploader functionality is provided by document-uploader.js (included by parent page) -->

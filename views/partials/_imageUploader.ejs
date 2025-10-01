@@ -1,0 +1,86 @@
+ <%
+/*
+ * Image Uploader Partial
+ * 
+ * A reusable image uploader component for handling single image files (logos, promotional images).
+ * Displays image preview with thumbnail for uploaded and existing image.
+ * 
+ * Required parameters:
+ * - fieldName: The name attribute for the file input (e.g., 'logo', 'promotionalImage')
+ * - uploadText: Text to display for upload prompt (e.g., 'Select logo image')
+ * - maxFileSize: Maximum file size description (e.g., 'Max 10MB')
+ * - acceptedFormats: Accepted file formats description (e.g., 'JPG/PNG/GIF/WEBP')
+ * - helpText: Additional help text for the upload
+ * 
+ * Optional parameters:
+ * - inputId: Custom ID for the file input (defaults to fieldName)
+ * - acceptAttribute: Custom accept attribute (defaults to standard image formats)
+ * - existingFile: Existing file object with {name, url, alt} structure
+ * - previewWidth: Width for image preview (defaults to '120px')
+ * - previewHeight: Height for image preview (defaults to '120px')
+ */
+
+// Set defaults for single image upload
+const imgFieldName = locals.fieldName || 'logo';
+const imgInputId = locals.inputId || imgFieldName;
+const imgUploadText = locals.uploadText || 'Select image to upload';
+const imgMaxFileSize = locals.maxFileSize || 'Max 10MB';
+const imgAcceptedFormats = locals.acceptedFormats || 'JPG/PNG/GIF/WEBP';
+const imgHelpText = locals.helpText || 'Upload image file. Optimal size: 400x400px or larger.';
+const imgAcceptAttribute = locals.acceptAttribute || '.jpg,.jpeg,.png,.gif,.webp,.svg';
+const imgExistingFile = locals.existingFile || null;
+const imgPreviewWidth = locals.previewWidth || '120px';
+const imgPreviewHeight = locals.previewHeight || '120px';
+%>
+
+<!-- Image Upload Section -->
+<div class="image-uploader" id="<%= imgInputId %>-image-uploader">
+    <div class="file-input-section">
+        <div class="image-upload-area border border-2 border-dashed rounded p-4 text-center" 
+             id="<%= imgInputId %>-upload-area">
+            <input type="file" 
+                   class="form-control d-none" 
+                   id="<%= imgInputId %>" 
+                   name="<%= imgFieldName %>" 
+                   accept="<%= imgAcceptAttribute %>"
+                   data-preview-width="<%= imgPreviewWidth %>"
+                   data-preview-height="<%= imgPreviewHeight %>">
+            <i class="bi bi-image display-6 text-muted"></i>
+            <p class="upload-text mt-2" id="<%= imgInputId %>-upload-text"><%= imgUploadText %></p>
+            <small class="text-muted"><%= imgMaxFileSize %>, <%= imgAcceptedFormats %></small>
+        </div>
+    </div>
+    
+    <% if (imgExistingFile && imgExistingFile.url) { %>
+        <div class="existing-images mt-3" id="<%= imgInputId %>-existing-images">
+            <h6 class="text-muted mb-2">
+                <i class="bi bi-image me-2"></i>Current Image
+            </h6>
+            <div class="existing-image-item position-relative d-inline-block">
+                <div class="image-thumbnail border rounded"
+                     id="<%= imgInputId %>-existing-thumbnail">
+                    <img src="<%= imgExistingFile.url %>" 
+                         alt="<%= imgExistingFile.alt || imgExistingFile.name || 'Current image' %>" 
+                         class="img-fluid w-100 h-100 object-fit-cover">
+                </div>
+                <small class="text-muted d-block text-center mt-1 text-truncate image-name">
+                    <%= imgExistingFile.name || 'Current image' %>
+                </small>
+                <span class="badge bg-success position-absolute top-0 end-0 m-1">Current</span>
+            </div>
+        </div>
+    <% } %>
+    
+    <div class="selected-images mt-3 d-none" id="<%= imgInputId %>-selected-images">
+        <h6 class="text-muted mb-2">
+            <i class="bi bi-image me-2"></i>Selected Image
+        </h6>
+        <div id="<%= imgInputId %>-image-preview">
+            <!-- Dynamic image preview will be populated here -->
+        </div>
+    </div>
+    
+    <div class="form-text mt-2">
+        <%= imgHelpText %>
+    </div>
+</div>
