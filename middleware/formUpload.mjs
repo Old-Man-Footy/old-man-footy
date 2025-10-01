@@ -55,8 +55,8 @@ const formFileFilter = (req, file, cb) => {
     case 'avatars':
     case 'gallery':
       // Image files only
-      allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-      allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+      allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      allowedExtensions = ['.jpg', '.jpeg', '.png'];
       
       // Special handling for SVG (logos and avatars only, not gallery)
       if (subfolder !== 'gallery') {
@@ -82,12 +82,16 @@ const formFileFilter = (req, file, cb) => {
     default:
       // General files - allow images and documents
       allowedTypes = [
-        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-        'application/pdf', 'application/msword', 
+        'image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml',
+        'application/pdf', 
+        'application/msword', 
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain'
+        'application/vnd.ms-excel', 
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain',        
+        'text/csv'
       ];
-      allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.doc', '.docx', '.txt'];
+      allowedExtensions = ['.jpg', '.jpeg', '.png', '.svg', '.pdf', '.doc', '.docx', '.txt', '.xls', '.xlsx', '.csv'];
       break;
   }
   

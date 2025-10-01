@@ -9,7 +9,7 @@
 import { promises as fs } from 'fs';
 import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { SUPPORTED_IMAGE_EXTENSIONS, getAllEntityGalleryDirectories } from '../config/constants.mjs';
+import { SUPPORTED_GALLERY_EXTENSIONS, getAllEntityGalleryDirectories } from '../config/constants.mjs';
 import ImageUpload from '../models/ImageUpload.mjs';
 
 // ES Module equivalent of __dirname
@@ -21,7 +21,7 @@ class CarouselImageService {
         this.uploadsPath = join(__dirname, '..', 'public', 'uploads');
         this.publicPath = '/uploads';
         
-        this.supportedExtensions = SUPPORTED_IMAGE_EXTENSIONS;
+        this.supportedExtensions = SUPPORTED_GALLERY_EXTENSIONS;
         
         // Cache for performance
         this.imageCache = null;

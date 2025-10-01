@@ -149,9 +149,9 @@ export const imageUploaderManager = {
      */
     validateFile(file, config) {
         // Check file type
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml'];
         if (!allowedTypes.includes(file.type)) {
-            return { isValid: false, error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, and SVG files are allowed.' };
+            return { isValid: false, error: 'Invalid file type. Only JPG, PNG and SVG files are allowed.' };
         }
         
         // Check file size (10MB default limit)

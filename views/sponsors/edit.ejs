@@ -86,11 +86,11 @@
                         <%- include('../partials/_imageUploader', { 
                             fieldName: 'logo',
                             label: 'Company Logo',
-                            allowedTypes: ['.jpg', '.jpeg', '.png', '.gif'],
-                            maxSize: 5,
+                            allowedTypes: ['.jpg', '.jpeg', '.png', '.svg'],
+                            maxSize: 10,
                             multiple: false,
                             required: false,
-                            helpText: 'Upload your company logo (JPEG, PNG, or GIF, max 5MB)'
+                            helpText: 'Upload your company logo (JPEG, PNG, or SVG, max 5MB)'
                         }) %>
 
                         <!-- Description -->

@@ -445,8 +445,8 @@
                                     <%- include('../partials/_imageUploader', {
                                         fieldName: 'logo',
                                         label: 'Club Logo',
-                                        allowedTypes: ['.jpg', '.jpeg', '.png', '.gif'],
-                                        maxSize: 5,
+                                        allowedTypes: ['.jpg', '.jpeg', '.png', '.svg'],
+                                        maxSize: 10,
                                         multiple: false,
                                         required: false,
                                         helpText: 'Recommended: 512x512px for best display',
@@ -458,10 +458,10 @@
                                         fieldName: 'promotionalImage',
                                         label: 'Promotional Image',
                                         allowedTypes: ['.jpg', '.jpeg', '.png'],
-                                        maxSize: 5,
+                                        maxSize: 10,
                                         multiple: false,
                                         required: false,
-                                        helpText: 'Recommended: 1200x630px for social media',
+                                        helpText: 'Recommended: 1200x630px or larger',
                                         currentImageUrl: carnival.promotionalImageURL
                                     }) %>
                                 </div>
@@ -470,9 +470,9 @@
                                         fieldName: 'drawDocument',
                                         uploadText: 'Select draw file to upload',
                                         maxFileSize: 'Max 10MB per file',
-                                        acceptedFormats: 'PDF/DOC/DOCX or Images',
+                                        acceptedFormats: 'PDF/DOC/DOCX/XLS/XLSX or Images',
                                         helpText: 'Upload the carnival draw document or image',
-                                        acceptAttribute: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+                                        acceptAttribute: '.pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx',
                                         multiple: false,
                                         existingFiles: carnival.drawFileURL ? [{name: 'Current Draw File', url: carnival.drawFileURL}] : []
                                     }) %>

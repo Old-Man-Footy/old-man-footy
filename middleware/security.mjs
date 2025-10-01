@@ -535,7 +535,7 @@ export const validateSecureEmail = (email) => {
  * File upload security middleware
  * Validates and secures file uploads
  */
-export const validateFileUpload = (allowedTypes = [], maxSize = 5 * 1024 * 1024) => {
+export const validateFileUpload = (allowedTypes = [], maxSize = 10 * 1024 * 1024) => {
   return (req, res, next) => {
     if (!req.file && !req.files) {
       return next();

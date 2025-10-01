@@ -45,7 +45,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { UPLOAD_CONFIG } from '../config/constants.mjs';
+import { GALLERY_UPLOAD_CONFIG } from '../config/constants.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,7 +104,7 @@ const galleryUpload = multer({
   storage: galleryStorage,
   fileFilter: galleryFileFilter,
   limits: {
-    fileSize: UPLOAD_CONFIG.MAX_FILE_SIZE || (10 * 1024 * 1024), // 10MB default
+    fileSize: GALLERY_UPLOAD_CONFIG.MAX_FILE_SIZE || (10 * 1024 * 1024), // 10MB default
     files: 1 // Single file upload for gallery
   }
 }).single('image'); // Field name expected by gallery upload API
@@ -119,7 +119,7 @@ const handleGalleryUploadError = (error, req, res, next) => {
     
     switch (error.code) {
       case 'LIMIT_FILE_SIZE':
-        const maxSize = UPLOAD_CONFIG.MAX_FILE_SIZE || (10 * 1024 * 1024);
+        const maxSize = GALLERY_UPLOAD_CONFIG.MAX_FILE_SIZE || (10 * 1024 * 1024);
         const maxSizeMB = Math.round(maxSize / (1024 * 1024));
         message = `File too large. Maximum size is ${maxSizeMB}MB.`;
         break;

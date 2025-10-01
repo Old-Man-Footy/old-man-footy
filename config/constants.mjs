@@ -130,7 +130,7 @@ export async function getEntityGalleryDirectories(entityType, filterPublic = tru
                     // Check for images in the gallery directory
                     const files = fs.readdirSync(galleryPath);
                     const hasImages = files.some(file => 
-                        SUPPORTED_IMAGE_EXTENSIONS.includes(path.extname(file).toLowerCase())
+                        SUPPORTED_GALLERY_EXTENSIONS.includes(path.extname(file).toLowerCase())
                     );
                     
                     if (hasImages) {
@@ -208,7 +208,7 @@ export async function getAllEntityGalleryDirectories(filterPublic = true) {
 /**
  * Supported image file extensions
  */
-export const SUPPORTED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
+export const SUPPORTED_GALLERY_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
 
 /**
  * Upload directory paths - Simplified for entity-folder structure compatibility
@@ -228,15 +228,12 @@ export const UPLOAD_DIRECTORIES_ARRAY = Object.values(UPLOAD_DIRECTORIES);
 /**
  * Upload configuration settings
  */
-export const UPLOAD_CONFIG = {
+export const GALLERY_UPLOAD_CONFIG = {
     MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB in bytes
     ALLOWED_MIME_TYPES: [
         'image/jpeg',
         'image/jpg', 
-        'image/png',
-        'image/webp',
-        'image/gif',
-        'image/svg+xml'
+        'image/png'
     ]
 };
 

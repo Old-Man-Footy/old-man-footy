@@ -73,7 +73,7 @@ This plan outlines the refactoring of the current file upload system from a sing
   Ready to proceed with refactoring - all functionality baseline established
 
 ## Phase 2: Create Gallery Upload Middleware
-- [x] Create `middleware/galleryUpload.mjs` ✅ Created specialized AJAX-focused gallery uploader with entity-based storage (carnivals/clubs), filename generation (timestamp-random-basename), image validation (jpg/png/gif/webp), 10MB limit, enhanced error handling with JSON responses, and validation helpers
+- [x] Create `middleware/galleryUpload.mjs` ✅ Created specialized AJAX-focused gallery uploader with entity-based storage (carnivals/clubs), filename generation (timestamp-random-basename), image validation (jpg/png/gif/webp/svg), 10MB limit, enhanced error handling with JSON responses, and validation helpers
 - [x] Implement AJAX-focused uploader: ✅ All functionality implemented
   - [x] Destination: `public/uploads/{entityType}/{entityId}/gallery` ✅ Dynamic destination with mkdirSync
   - [x] File naming with unique suffixes ✅ timestamp-random-basename pattern
@@ -101,7 +101,7 @@ This plan outlines the refactoring of the current file upload system from a sing
   - [x] Change middleware usage to `galleryUpload.single('image')` ✅ Updated to single file handling  
   - [x] Verify controller logic still works with new file structure ✅ Updated from req.files[0] to req.file
   - [x] Test AJAX gallery uploads ✅ Route loading test successful
-  - [x] Add UPLOAD_CONFIG to constants.mjs ✅ Added with MAX_FILE_SIZE and ALLOWED_MIME_TYPES
+  - [x] Add GALLERY_UPLOAD_CONFIG to constants.mjs ✅ Added with MAX_FILE_SIZE and ALLOWED_MIME_TYPES
 
 ## Phase 5: Update Web Routes (Form System)
 - [x] Update `routes/carnivals.mjs`:

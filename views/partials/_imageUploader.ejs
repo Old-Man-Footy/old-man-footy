@@ -9,7 +9,7 @@
  * - fieldName: The name attribute for the file input (e.g., 'logo', 'promotionalImage')
  * - uploadText: Text to display for upload prompt (e.g., 'Select logo image')
  * - maxFileSize: Maximum file size description (e.g., 'Max 10MB')
- * - acceptedFormats: Accepted file formats description (e.g., 'JPG/PNG/GIF/WEBP')
+ * - acceptedFormats: Accepted file formats description (e.g., 'JPG/PNG/SVG')
  * - helpText: Additional help text for the upload
  * 
  * Optional parameters:
@@ -25,7 +25,7 @@ const imgFieldName = locals.fieldName || 'logo';
 const imgInputId = locals.inputId || imgFieldName;
 const imgUploadText = locals.uploadText || 'Select image to upload';
 const imgMaxFileSize = locals.maxFileSize || 'Max 10MB';
-const imgAcceptedFormats = locals.acceptedFormats || 'JPG/PNG/GIF/WEBP';
+const imgAcceptedFormats = locals.acceptedFormats || 'JPG/PNG/SVG';
 const imgHelpText = locals.helpText || 'Upload image file. Optimal size: 400x400px or larger.';
 const imgAcceptAttribute = locals.acceptAttribute || '.jpg,.jpeg,.png,.gif,.webp,.svg';
 const imgExistingFile = locals.existingFile || null;
