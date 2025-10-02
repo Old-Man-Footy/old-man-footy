@@ -561,7 +561,7 @@ describe('Carnival Controller', () => {
 
       expect(req.flash).toHaveBeenCalledWith(
         'success_msg', 
-        'Carnival created successfully! 🎉'
+        'Carnival created successfully! 🎉 Now you can add images and additional details.'
       );
       expect(res.redirect).toHaveBeenCalledWith('/carnivals/1?showPostCreationModal=true');
     });

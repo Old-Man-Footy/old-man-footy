@@ -676,9 +676,9 @@ const createCarnivalHandler = async (req, res) => {
     );
     return res.redirect(`/carnivals/${carnival.id}`);
   } else {
-    // For manually created carnivals, redirect with flag to show important notices modal
-    req.flash('success_msg', 'Carnival created successfully! 🎉');
-    return res.redirect(`/carnivals/${carnival.id}?showPostCreationModal=true`);
+    // For manually created carnivals, redirect to edit page to allow adding images
+    req.flash('success_msg', 'Carnival created successfully! 🎉 Now you can add images and additional details.');
+    return res.redirect(`/carnivals/${carnival.id}/edit`);
   }
 };
 

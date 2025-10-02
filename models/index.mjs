@@ -208,6 +208,11 @@ ImageUpload.belongsTo(Club, {
   as: 'club'
 });
 
+ImageUpload.belongsTo(User, {
+  foreignKey: 'uploadedBy',
+  as: 'uploader'
+});
+
 // Carnival has many ImageUploads (one-to-many)
 Carnival.hasMany(ImageUpload, {
   foreignKey: 'carnivalId',

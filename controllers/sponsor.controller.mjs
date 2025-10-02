@@ -221,13 +221,10 @@ export const createSponsor = asyncHandler(async (req, res) => {
     clubId: club.id,
   };
 
-  // Process structured uploads using defensive shared utility
-  const processedSponsorData = processStructuredUploads(req, sponsorData, 'sponsor', 'new-sponsor');
+  const sponsor = await Sponsor.create(sponsorData);
 
-  const sponsor = await Sponsor.create(processedSponsorData);
-
-  req.flash('success_msg', 'Sponsor created successfully!');
-  return res.redirect(`/sponsors/${sponsor.id}`);
+  req.flash('success_msg', 'Sponsor created successfully! You can now add images and additional details.');
+  return res.redirect(`/sponsors/${sponsor.id}/edit`);
 });
 
 /**

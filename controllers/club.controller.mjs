@@ -329,6 +329,33 @@ const showClubManagementHandler = async (req, res) => {
 };
 
 /**
+ * Show club edit form (for /:id/edit route to match carnival pattern)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showEditFormHandler = async (req, res) => {
+  const club = await Club.findByPk(req.params.id);
+
+  if (!club) {
+    req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Check if user can edit this club (club delegate or admin)
+  const canEdit = club.canUserEdit(req.user);
+  if (!canEdit) {
+    req.flash('error_msg', 'You can only edit your own club\'s profile.');
+    return res.redirect('/dashboard');
+  }
+
+  return res.render('clubs/manage', {
+    title: 'Edit Club Profile',
+    club,
+    additionalCSS: ['/styles/club.styles.css'],
+  });
+};
+
+/**
  * Update club profile information
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -727,14 +754,6 @@ const addSponsorToClubHandler = async (req, res) => {
       isPubliclyVisible: true,
     };
 
-    // Handle logo upload using defensive processor
-    if (req.structuredUploads && req.structuredUploads.length > 0) {
-      const processedUploads = processStructuredUploads(req, newSponsorData, 'sponsor', 'new-sponsor');
-      
-      // Merge processed uploads into sponsor data
-      Object.assign(newSponsorData, processedUploads);
-    }
-
     sponsor = await Sponsor.create(newSponsorData);
   } else {
     req.flash('error_msg', 'Invalid sponsor type selected.');
@@ -748,8 +767,8 @@ const addSponsorToClubHandler = async (req, res) => {
   // Update the sponsor's display order
   await sponsor.update({ displayOrder });
 
-  req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club!`);
-  return res.redirect('/clubs/manage/sponsors');
+  req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club! You can now add images and additional details.`);
+  return res.redirect(`/sponsors/${sponsor.id}/edit`);
 };
 
 /**
@@ -1750,6 +1769,7 @@ const rawControllers = {
   showClubListingsHandler,
   showClubProfileHandler,
   showClubManagementHandler,
+  showEditFormHandler,
   updateClubProfileHandler,
   getClubImagesHandler,
   deleteClubImageHandler,
@@ -1780,6 +1800,7 @@ export const {
   showClubListingsHandler: showClubListings,
   showClubProfileHandler: showClubProfile,
   showClubManagementHandler: showClubManagement,
+  showEditFormHandler: getEdit,
   updateClubProfileHandler: updateClubProfile,
   getClubImagesHandler: getClubImages,
   deleteClubImageHandler: deleteClubImage,

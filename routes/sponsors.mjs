@@ -2,8 +2,9 @@ import express from 'express';
 import { body } from 'express-validator';
 import * as sponsorController from '../controllers/sponsor.controller.mjs';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import { createFormUploader } from '../middleware/formUpload.mjs';
+import { createFormUploader, validateEntityId } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
+import { asyncHandler } from '../middleware/asyncHandler.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
@@ -51,7 +52,7 @@ router.get('/', sponsorController.showSponsorListings);
 router.get('/new', ensureAuthenticated, ensureAdmin, sponsorController.showCreateSponsor);
 
 // Create new sponsor - POST route can come before parameterized routes
-router.post('/', ensureAuthenticated, ensureAdmin, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, validateSponsor, sponsorController.createSponsor);
+router.post('/', ensureAuthenticated, ensureAdmin, validateSponsor, sponsorController.createSponsor);
 
 // Individual sponsor profile (public) - MUST come after all specific routes
 router.get('/:id', sponsorController.showSponsorProfile);
@@ -60,7 +61,9 @@ router.get('/:id', sponsorController.showSponsorProfile);
 router.get('/:id/edit', ensureAuthenticated, ensureAdmin, sponsorController.showEditSponsor);
 
 // Update sponsor
-router.post('/:id', ensureAuthenticated, ensureAdmin, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, validateSponsor, sponsorController.updateSponsor);
+router.post('/:id', ensureAuthenticated, ensureAdmin, validateEntityId('id'), asyncHandler(async (req, res, next) => {
+    await sponsorUpload.upload.fields(sponsorFieldConfig)(req, res, next);
+}), sponsorUpload.process, validateSponsor, sponsorController.updateSponsor);
 
 // Delete sponsor (soft delete)
 router.delete('/:id', ensureAuthenticated, ensureAdmin, sponsorController.deleteSponsor);

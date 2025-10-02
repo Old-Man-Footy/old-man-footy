@@ -5,13 +5,37 @@
  * Supports multiple images per carnival/club with attribution.
  */
 
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Op } from 'sequelize';
 import { sequelize } from '../config/database.mjs';
 
 /**
  * ImageUpload model class extending Sequelize Model
  */
 class ImageUpload extends Model {
+  /**
+   * Get the public URL for this image
+   * Supports both legacy URL field and new file-based uploads
+   * @returns {string} Public URL to access the image
+   */
+  get publicUrl() {
+    if (this.url) {
+      // Legacy URL-based image
+      return this.url;
+    } else if (this.path) {
+      // File-based upload - convert server path to public URL
+      const publicPath = this.path.replace(/^.*[\/\\]public[\/\\]/, '/');
+      return publicPath.replace(/\\/g, '/'); // Normalize path separators
+    }
+    return null;
+  }
+
+  /**
+   * Check if this is a file-based upload (vs URL-based)
+   * @returns {boolean} True if this uses file tracking fields
+   */
+  get isFileUpload() {
+    return !!(this.filename && this.path);
+  }
   /**
    * Check if this image belongs to a carnival
    * @returns {boolean} True if carnivalId is set
@@ -258,14 +282,65 @@ ImageUpload.init({
   },
   url: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true, // Now nullable for file-based uploads
     validate: {
-      notEmpty: true,
-      isUrl: true
+      isUrl: {
+        msg: 'URL must be a valid URL format'
+      },
+      urlOrFileRequired(value) {
+        // Either URL or file fields must be present
+        if (!value && !this.filename) {
+          throw new Error('Either URL or file upload information must be provided');
+        }
+      }
     },
     set(value) {
       this.setDataValue('url', value ? value.trim() : value);
     }
+  },
+  originalName: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Original filename when uploaded'
+  },
+  filename: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Generated filename on server'
+  },
+  path: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Full file path on server'
+  },
+  mimetype: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'MIME type of uploaded file',
+    validate: {
+      isImageMimetype(value) {
+        if (value && !value.startsWith('image/')) {
+          throw new Error('File must be an image');
+        }
+      }
+    }
+  },
+  size: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'File size in bytes',
+    validate: {
+      min: 0
+    }
+  },
+  uploadedBy: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Users',
+      key: 'id'
+    },
+    comment: 'User who uploaded the image'
   },
   attribution: {
     type: DataTypes.STRING,
@@ -312,6 +387,18 @@ ImageUpload.init({
     },
     {
       fields: ['createdAt']
+    },
+    {
+      fields: ['uploadedBy']
+    },
+    {
+      fields: ['filename'],
+      unique: true,
+      where: {
+        filename: {
+          [Op.ne]: null
+        }
+      }
     }
   ],
   validate: {

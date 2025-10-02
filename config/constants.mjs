@@ -238,6 +238,83 @@ export const GALLERY_UPLOAD_CONFIG = {
 };
 
 /**
+ * File size limits by content type (also exported individually for test validation)
+ */
+export const MAX_FILE_SIZES = {
+    logos: 5 * 1024 * 1024,      // 5MB for logos
+    avatars: 2 * 1024 * 1024,    // 2MB for avatars  
+    documents: 10 * 1024 * 1024, // 10MB for documents
+    gallery: 10 * 1024 * 1024,   // 10MB for gallery images
+    promo: 5 * 1024 * 1024,      // 5MB for promotional images
+    promotional: 5 * 1024 * 1024  // 5MB for promotional images
+};
+
+/**
+ * Allowed file extensions by content type (also exported individually for test validation)
+ */
+export const ALLOWED_EXTENSIONS = {
+    logos: ['.jpg', '.jpeg', '.png', '.svg'],
+    avatars: ['.jpg', '.jpeg', '.png'],
+    documents: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv'],
+    gallery: ['.jpg', '.jpeg', '.png'],
+    promo: ['.jpg', '.jpeg', '.png'],
+    promotional: ['.jpg', '.jpeg', '.png']
+};
+
+/**
+ * Allowed MIME types by content type (also exported individually for test validation)
+ */
+export const ALLOWED_MIME_TYPES = {
+    logos: ['image/jpeg', 'image/png', 'image/svg+xml'],
+    avatars: ['image/jpeg', 'image/png'],
+    documents: [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain',
+        'text/csv'
+    ],
+    gallery: ['image/jpeg', 'image/png'],
+    promo: ['image/jpeg', 'image/png'],
+    promotional: ['image/jpeg', 'image/png']
+};
+
+/**
+ * Form upload configuration for traditional form-based uploads
+ */
+export const FORM_UPLOAD_CONFIG = {
+    // File size limits by content type
+    MAX_FILE_SIZES,
+    
+    // Allowed file extensions by content type
+    ALLOWED_EXTENSIONS,
+    
+    // Allowed MIME types by content type
+    ALLOWED_MIME_TYPES,
+    
+    // Maximum number of files per upload
+    MAX_FILES: 1,
+    
+    // Field name to subfolder mapping
+    FIELD_SUBFOLDER_MAP: {
+        logo: 'logos',
+        clubLogo: 'logos',
+        carnivalLogo: 'logos',
+        sponsorLogo: 'logos',
+        avatar: 'avatars',
+        userAvatar: 'avatars',
+        document: 'documents',
+        gallery: 'gallery',
+        galleryImage: 'gallery',
+        promo: 'promo',
+        promoImage: 'promo',
+        promotional: 'promo'
+    }
+};
+
+/**
  * Contact inquiry types
  */
 export const CONTACT_INQUIRY_TYPES = {

@@ -1,8 +1,9 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import { createFormUploader } from '../middleware/formUpload.mjs';
+import { createFormUploader, validateEntityId } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
+import { asyncHandler } from '../middleware/asyncHandler.mjs';
 import * as carnivalController from '../controllers/carnival.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 // Import carnival club routes as a sub-router
@@ -82,24 +83,21 @@ router.get('/:id/gallery', carnivalController.viewGallery);
 // Show individual carnival
 router.get('/:id', carnivalController.show);
 
-// Create carnival POST with validation
-router.post('/new', ensureAuthenticated, ensureAdmin, carnivalUpload.upload.fields([
-    { name: 'logo', maxCount: 1 },
-    { name: 'promotionalImage', maxCount: 5 },
-    { name: 'galleryImage', maxCount: 10 },
-    { name: 'drawDocument', maxCount: 5 }
-]), carnivalUpload.process, ...validateCarnival, carnivalController.postNew);
+// Create carnival POST with validation (no image uploads on create)
+router.post('/new', ensureAuthenticated, ensureAdmin, ...validateCarnival, carnivalController.postNew);
 
 // Edit carnival form
 router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 
 // Update carnival POST with validation
-router.post('/:id/edit', ensureAuthenticated, ensureAdmin, carnivalUpload.upload.fields([
-    { name: 'logo', maxCount: 1 },
-    { name: 'promotionalImage', maxCount: 5 },
-    { name: 'galleryImage', maxCount: 10 },
-    { name: 'drawDocument', maxCount: 5 }
-]), carnivalUpload.process, ...validateCarnival, carnivalController.postEdit);
+router.post('/:id/edit', ensureAuthenticated, ensureAdmin, validateEntityId('id'), asyncHandler(async (req, res, next) => {
+    await carnivalUpload.upload.fields([
+        { name: 'logo', maxCount: 1 },
+        { name: 'promotionalImage', maxCount: 1 },
+        { name: 'galleryImage', maxCount: 10 },
+        { name: 'drawDocument', maxCount: 1 }
+    ])(req, res, next);
+}), carnivalUpload.process, ...validateCarnival, carnivalController.postEdit);
 
 // Delete carnival
 router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);

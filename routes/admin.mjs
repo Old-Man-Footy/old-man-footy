@@ -8,7 +8,8 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
-import { createFormUploader } from '../middleware/formUpload.mjs';
+import { createFormUploader, validateEntityId } from '../middleware/formUpload.mjs';
+import asyncHandler from '../middleware/asyncHandler.mjs';
 import { applyAdminSecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as adminController from '../controllers/admin.controller.mjs';
 
@@ -97,7 +98,10 @@ const clubUpdateValidation = [
 ];
 
 router.post('/clubs/:id/update',
-    clubUpload.upload.fields(clubFieldConfig),
+    validateEntityId('id'),
+    asyncHandler(async (req, res, next) => {
+        await clubUpload.upload.fields(clubFieldConfig)(req, res, next);
+    }),
     clubUpload.process,
     clubUpdateValidation,
     adminController.updateClub
@@ -137,7 +141,10 @@ const carnivalUpdateValidation = [
 ];
 
 router.post('/carnivals/:id/update',
-    carnivalUpload.upload.fields(carnivalFieldConfig),
+    validateEntityId('id'),
+    asyncHandler(async (req, res, next) => {
+        await carnivalUpload.upload.fields(carnivalFieldConfig)(req, res, next);
+    }),
     carnivalUpload.process,
     carnivalUpdateValidation,
     adminController.updateCarnival
