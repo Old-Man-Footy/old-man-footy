@@ -42,9 +42,9 @@ This plan outlines the refactoring of the current file upload system from a sing
   
   **Key Route Endpoints:**
   - POST `/sponsors` (create), POST `/sponsors/:id` (update) 
-  - POST `/clubs/edit/profile` (club profile)
-  - POST `/clubs/edit/sponsors/add` (club sponsor creation)
-  - POST `/clubs/edit/sponsors/:sponsorId/edit` (club sponsor edit)
+  - POST `/clubs/{id}/profile` (club profile)
+  - POST `/clubs/{id}/sponsors/add` (club sponsor creation)
+  - POST `/clubs/{id}/sponsors/:sponsorId/edit` (club sponsor edit)
   - POST `/carnivals/new` (carnival creation)
   - POST `/carnivals/:id/edit` (carnival edit)
   - POST `/admin/clubs` (admin club management)

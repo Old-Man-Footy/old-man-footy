@@ -1,7 +1,4 @@
-<div class="con                    <a href="/clubs/<%= club.id %>/edit" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-arrow-left me-1"></i> Back to Club Profile
-                    </a>
-                    <a href="/clubs/<%= club.id %>/sponsors/add" class="btn btn-primary">er mt-4" data-page-id="clubs-sponsors">
+<div class="container mt-4" data-page-id="clubs-sponsors">
     <div class="row">
         <div class="col-md-12">
             <!-- Page Header -->
@@ -34,9 +31,9 @@
                                 <!-- Sponsor Logo -->
                                 <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 150px;">
                                     <% if (sponsor.logoUrl) { %>
-                                        <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>" 
-                                            alt="<%= sponsor.sponsorName %> Logo" 
-                                            class="img-fluid" 
+                                        <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>"
+                                            alt="<%= sponsor.sponsorName %> Logo"
+                                            class="img-fluid"
                                             style="max-height: 120px; max-width: 100%; object-fit: contain;">
                                     <% } else { %>
                                         <div class="text-center text-muted">
@@ -55,12 +52,12 @@
                                             </span>
                                         </div>
                                     <% } %>
-                                    
+
                                     <div class="mb-auto">
                                         <h5 class="card-title">
                                             <%= sponsor.sponsorName %>
                                         </h5>
-                                        
+
                                         <% if (sponsor.businessType) { %>
                                             <p class="text-muted small mb-2">
                                                 <i class="fas fa-industry me-1"></i>

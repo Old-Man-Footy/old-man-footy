@@ -1071,7 +1071,7 @@ describe('Club Controller', () => {
           'success_msg',
           'Sponsor "Test Sponsor" has been added to your club!'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit/sponsors');
+        expect(res.redirect).toHaveBeenCalledWith(`/clubs/1/sponsors`);
       });
     });
   });

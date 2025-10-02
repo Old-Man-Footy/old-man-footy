@@ -10,7 +10,7 @@ import { adminEditClubManager } from '../../../public/js/admin-edit-club.js';
 // Helper function to set up the DOM for each test
 function setupDOM() {
     document.body.innerHTML = `
-        <form action="/admin/clubs/edit/1">
+        <form action="/admin/clubs/1/edit">
             <input name="name" required />
             <textarea id="description"></textarea>
             <div class="file-upload-area">
