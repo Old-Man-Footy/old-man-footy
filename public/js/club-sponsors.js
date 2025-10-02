@@ -18,6 +18,18 @@ export const clubSponsorsManager = {
         this.elements.saveButton = document.getElementById('save-sponsor-order');
     },
 
+    getClubId() {
+        // Try to get club ID from data attribute on container
+        const container = document.querySelector('[data-club-id]');
+        if (container && container.dataset.clubId) {
+            return container.dataset.clubId;
+        }
+        
+        // Fallback: extract from URL path
+        const pathMatch = window.location.pathname.match(/\/clubs\/(\d+)/);
+        return pathMatch ? pathMatch[1] : null;
+    },
+
     bindEvents() {
         const { saveButton } = this.elements;
         if (saveButton) {
@@ -46,7 +58,8 @@ export const clubSponsorsManager = {
         if (!sponsorList) return;
         const sponsorIds = Array.from(sponsorList.children).map(item => item.getAttribute('data-sponsor-id'));
         try {
-            fetch('/clubs/edit/sponsors/reorder', {
+            const clubId = this.getClubId();
+            fetch(`/clubs/${clubId}/sponsors/reorder`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sponsorOrder: sponsorIds })

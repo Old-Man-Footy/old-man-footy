@@ -75,6 +75,22 @@ export const alternateNamesManager = {
         }
     },
 
+    getClubId() {
+        // Get club ID from data attribute on container
+        const container = document.querySelector('[data-club-id]');
+        if (container) {
+            return container.getAttribute('data-club-id');
+        }
+        
+        // Fallback: extract from URL path (/clubs/:id/...)
+        const pathMatch = window.location.pathname.match(/\/clubs\/(\d+)\//);
+        if (pathMatch) {
+            return pathMatch[1];
+        }
+        
+        throw new Error('Could not determine club ID');
+    },
+
     destroy() {
         if (this.elements && this.elements.container && this._bound.containerClick) {
             this.elements.container.removeEventListener('click', this._bound.containerClick);
@@ -127,7 +143,8 @@ export const alternateNamesManager = {
         const alternateName = formData.get('alternateName');
 
         try {
-            const result = await apiRequest('/clubs/edit/alternate-names', {
+            const clubId = this.getClubId();
+            const result = await apiRequest(`/clubs/${clubId}/alternate-names`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alternateName })
@@ -153,7 +170,8 @@ export const alternateNamesManager = {
         const alternateName = this.elements.editForm.querySelector('#editAlternateName').value;
 
         try {
-            const result = await apiRequest(`/clubs/edit/alternate-names/${id}`, {
+            const clubId = this.getClubId();
+            const result = await apiRequest(`/clubs/${clubId}/alternate-names/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alternateName })
@@ -174,7 +192,8 @@ export const alternateNamesManager = {
         if (!confirmed) return;
 
         try {
-            const result = await apiRequest(`/clubs/edit/alternate-names/${id}`, {
+            const clubId = this.getClubId();
+            const result = await apiRequest(`/clubs/${clubId}/alternate-names/${id}`, {
                 method: 'DELETE'
             });
             if (result.success) {
