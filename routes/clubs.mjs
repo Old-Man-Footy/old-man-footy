@@ -215,23 +215,23 @@ router.put('/:id/alternate-names/:alternateId', ensureAuthenticated, [
 router.delete('/:id/alternate-names/:alternateId', ensureAuthenticated, clubController.deleteAlternateName);
 
 // Club sponsor management - MUST come before /:id route
-router.get('/:id/sponsors', ensureAuthenticated, clubController.showClubSponsorsHandler);
-router.get('/:id/sponsors/add', ensureAuthenticated, clubController.showAddSponsorHandler);
-router.post('/:id/sponsors/add', ensureAuthenticated, sponsorUpload, [
+router.get('/:id/sponsors', ensureAuthenticated, clubController.showClubSponsors);
+router.get('/:id/sponsors/add', ensureAuthenticated, clubController.showAddSponsor);
+router.post('/:id/sponsors/add', ensureAuthenticated, sponsorUpload.upload.fields(sponsorFieldConfig), [
     body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
     body('sponsorshipLevel').isIn(['1', '2', '3', '4', '5']).withMessage('Valid sponsorship level required'),
     body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
-], clubController.addSponsorToClubHandler);
-router.get('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsorHandler);
-router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, sponsorUpload, [
+], clubController.addSponsorToClub);
+router.get('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsor);
+router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, sponsorUpload.upload.fields(sponsorFieldConfig), [
     body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
     body('sponsorshipLevel').isIn(['1', '2', '3', '4', '5']).withMessage('Valid sponsorship level required'),
     body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
-], clubController.updateClubSponsorHandler);
-router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, clubController.removeSponsorFromClubHandler);
-router.post('/:id/sponsors/reorder', ensureAuthenticated, clubController.reorderClubSponsorsHandler);
+], clubController.updateClubSponsor);
+router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, clubController.removeSponsorFromClub);
+router.post('/:id/sponsors/reorder', ensureAuthenticated, clubController.reorderClubSponsors);
 
 // Club edit form (for consistency with carnival routes) - MUST come before /:id route
 router.get('/:id/edit', ensureAuthenticated, clubController.getEdit);

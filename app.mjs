@@ -207,6 +207,7 @@ async function startServer() {
             console.log('📊 Site is now accessible and ready to serve requests');
         });
 
+        // ======================================================================
         // Step 5: Handle server connections for graceful shutdown
         const connections = new Set();
 
@@ -217,8 +218,14 @@ async function startServer() {
             });
         });
 
-        const gracefulShutdown = () => {
-            console.log('Received shutdown signal. Closing server...');
+        let isShuttingDown = false;
+        const gracefulShutdown = (signal) => {
+            if (isShuttingDown) {
+                console.log('Shutdown already in progress. Ignoring signal.');
+                return;
+            }
+            isShuttingDown = true;
+            console.log(`Received ${signal}. Closing server gracefully...`);
 
             // If the MySideline sync timeout is pending, clear it
             if (global.mySidelineInitTimeout) {
@@ -227,24 +234,32 @@ async function startServer() {
 
             // Set a timeout to force shutdown
             const shutdownTimeout = setTimeout(() => {
-                console.error('Could not close connections in time, forcefully shutting down');
+                console.error('Could not close connections in time, forcefully shutting down.');
                 for (const socket of connections) {
                     socket.destroy();
                 }
                 process.exit(1); // Exit with an error code
             }, 10000); // 10-second grace period
 
-            server.close(() => {
-                console.log('Server has been closed.');
+            server.close(async () => {
+                console.log('HTTP server closed.');
+                
+                console.log('All resources closed. Exiting.');
                 clearTimeout(shutdownTimeout); // Cancel the forceful shutdown
                 process.exit(0);
             });
+
+            // If there are no active connections, server.close() will be synchronous
+            // and the callback will be called immediately.
+            // For any existing connections, it will wait for them to close.
+            for (const socket of connections) {
+                socket.end();
+            }
         };
 
-        // Listen for termination signals (e.g., from Docker)
-        process.on('SIGTERM', gracefulShutdown);
-        // Listen for interrupt signals (e.g., Ctrl+C)
-        process.on('SIGINT', gracefulShutdown);
+        // Listen for termination signals
+        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
         // ======================================================================
         
         // Step 6: Initialize MySideline sync after server is running (skip in jest tests)
