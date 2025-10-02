@@ -21,7 +21,7 @@
                             <p class="mt-3 lead"><%= sponsor.description %></p>
                         <% } %>
                     </div>
-                    <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
+                    <% if (sponsor.canUserEdit && sponsor.canUserEdit(user)) { %>
                         <div class="sponsor-action-buttons">
                             <a href="/sponsors/<%= sponsor.id %>/edit" class="btn btn-tertiary">
                                 <i class="bi bi-pencil"></i> Edit
@@ -161,7 +161,7 @@
         <!-- Sidebar -->
         <div class="col-lg-4">
             <!-- Quick Actions -->
-            <% if (user && (user.role === 'admin' || user.role === 'primary_delegate')) { %>
+            <% if (sponsor.canUserEdit && sponsor.canUserEdit(user)) { %>
                 <div class="sponsor-info-card">
                     <h4 class="mb-3">Quick Actions</h4>
                     <div class="d-grid gap-2">

@@ -482,99 +482,39 @@ const getClubManagementHandler = async (req, res) => {
 };
 
 /**
- * Show Edit Club form
+ * Show Edit Club form - Redirect to unified interface
+ * Using standardized /clubs/:id/edit route for all users
  */
 const showEditClubHandler = async (req, res) => {
     const clubId = req.params.id;
     
-    const club = await Club.findByPk(clubId, {
-        include: [
-            { 
-                model: User, 
-                as: 'delegates',
-                attributes: ['id', 'firstName', 'lastName', 'email', 'isPrimaryDelegate', 'isActive']
-            }
-        ]
-    });
-
-    if (!club) {
-        req.flash('error_msg', 'Club not found');
-        return res.redirect('/admin/clubs');
-    }
-
-    // Transform the data to add primaryDelegate for template compatibility
-    const clubData = club.toJSON();
-    clubData.primaryDelegate = clubData.delegates && clubData.delegates.length > 0 
-        ? clubData.delegates.find(delegate => delegate.isPrimaryDelegate) 
-        : null;
-
-    return res.render('admin/edit-club', {
-        title: `Edit ${club.clubName} - Admin Dashboard`,
-        club: clubData,
-        additionalCSS: ['/styles/admin.styles.css']
-    });
-};
-
-/**
- * Update Club
- */
-const updateClubHandler = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        req.flash('error_msg', errors.array()[0].msg);
-        return res.redirect(`/admin/clubs/${req.params.id}/edit`);
-    }
-
-    const clubId = req.params.id;
-    const {
-        clubName,
-        state,
-        location,
-        description,
-        contactEmail,
-        contactPhone,
-        facebookUrl,
-        instagramUrl,
-        twitterUrl,
-        websiteUrl,
-        isActive,
-        isPubliclyListed
-    } = req.body;
-
+    // Validate club exists before redirecting
     const club = await Club.findByPk(clubId);
     if (!club) {
         req.flash('error_msg', 'Club not found');
         return res.redirect('/admin/clubs');
     }
 
-    // Prepare update data
-    const updateData = {
-        clubName,
-        state,
-        location: location || null,
-        description: description || null,
-        contactEmail: contactEmail || null,
-        contactPhone: contactPhone || null,
-        facebookUrl: facebookUrl || null,
-        instagramUrl: instagramUrl || null,
-        twitterUrl: twitterUrl || null,
-        website: websiteUrl || null,
-        isActive: !!isActive,
-        isPubliclyListed: !!isPubliclyListed
-    };
+    // Redirect to unified interface - club.canUserEdit() will handle admin authorization
+    return res.redirect(`/clubs/${clubId}/edit`);
+};
 
-    // Handle all uploads using shared processor (defensive against corrupted uploads)
-    const processedData = processStructuredUploads(req, updateData, 'club', club.id);
+/**
+ * Update Club - Redirect to unified interface
+ * Using standardized /clubs/:id route for all club updates
+ */
+const updateClubHandler = async (req, res) => {
+    const clubId = req.params.id;
+    
+    // Validate club exists before redirecting
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+        req.flash('error_msg', 'Club not found');
+        return res.redirect('/admin/clubs');
+    }
 
-    // Update club with all editable fields
-    await club.update(processedData);
-
-    const successMessage = req.structuredUploads && req.structuredUploads.length > 0 
-        ? `Club ${clubName} has been updated successfully, including uploaded files` 
-        : `Club ${clubName} has been updated successfully`;
-
-    req.flash('success_msg', successMessage);
-    return res.redirect('/admin/clubs');
+    // Redirect POST request to unified update handler with same request data
+    return res.redirect(307, `/clubs/${clubId}`);
 };
 
 /**

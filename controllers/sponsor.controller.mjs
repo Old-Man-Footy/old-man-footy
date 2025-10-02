@@ -120,13 +120,13 @@ export const showSponsorProfile = asyncHandler(async (req, res) => {
 });
 
 /**
- * Show sponsor creation form (for admins only)
+ * Show sponsor creation form (for admins and club delegates)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 export const showCreateSponsor = asyncHandler(async (req, res) => {
-  if (!req.user || !req.user.isAdmin) {
-    req.flash('error_msg', 'Access denied. Admin privileges required.');
+  if (!req.user || (!req.user.isAdmin && !req.user.clubId)) {
+    req.flash('error_msg', 'Access denied. You must be an admin or club delegate to create sponsors.');
     return res.redirect('/dashboard');
   }
 
@@ -149,13 +149,13 @@ export const showCreateSponsor = asyncHandler(async (req, res) => {
 });
 
 /**
- * Create a new sponsor (club-specific)
+ * Create a new sponsor (for admins and club delegates)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 export const createSponsor = asyncHandler(async (req, res) => {
-  if (!req.user || !req.user.isAdmin) {
-    req.flash('error_msg', 'Access denied. Admin privileges required.');
+  if (!req.user || (!req.user.isAdmin && !req.user.clubId)) {
+    req.flash('error_msg', 'Access denied. You must be an admin or club delegate to create sponsors.');
     return res.redirect('/dashboard');
   }
 
@@ -228,16 +228,11 @@ export const createSponsor = asyncHandler(async (req, res) => {
 });
 
 /**
- * Show sponsor edit form (for admins only)
+ * Show sponsor edit form (for admins and authorized delegates)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 export const showEditSponsor = asyncHandler(async (req, res) => {
-  if (!req.user || !req.user.isAdmin) {
-    req.flash('error_msg', 'Access denied. Admin privileges required.');
-    return res.redirect('/dashboard');
-  }
-
   const { id } = req.params;
 
   const sponsor = await Sponsor.findOne({
@@ -258,6 +253,11 @@ export const showEditSponsor = asyncHandler(async (req, res) => {
     return res.redirect('/sponsors');
   }
 
+  if (!sponsor.canUserEdit(req.user)) {
+    req.flash('error_msg', 'Access denied. You do not have permission to edit this sponsor.');
+    return res.redirect('/dashboard');
+  }
+
   const clubs = await Club.findAll({ where: { isActive: true }, order: [['clubName', 'ASC']], attributes: ['id', 'clubName', 'state'] });
 
   return res.render('sponsors/edit', {
@@ -271,16 +271,11 @@ export const showEditSponsor = asyncHandler(async (req, res) => {
 });
 
 /**
- * Update sponsor information (club-specific)
+ * Update sponsor information (for admins and authorized delegates)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 export const updateSponsor = asyncHandler(async (req, res) => {
-  if (!req.user || !req.user.isAdmin) {
-    req.flash('error_msg', 'Access denied. Admin privileges required.');
-    return res.redirect('/dashboard');
-  }
-
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     req.flash('error_msg', 'Please correct the validation errors.');
@@ -295,6 +290,11 @@ export const updateSponsor = asyncHandler(async (req, res) => {
   if (!sponsor) {
     req.flash('error_msg', 'Sponsor not found.');
     return res.redirect('/sponsors');
+  }
+
+  if (!sponsor.canUserEdit(req.user)) {
+    req.flash('error_msg', 'Access denied. You do not have permission to edit this sponsor.');
+    return res.redirect('/dashboard');
   }
 
   const {
@@ -358,13 +358,6 @@ export const updateSponsor = asyncHandler(async (req, res) => {
  * @param {Object} res - Express response object
  */
 export const deleteSponsor = asyncHandler(async (req, res) => {
-  if (!req.user || !req.user.isAdmin) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. Admin privileges required.',
-    });
-  }
-
   const { id } = req.params;
   const sponsor = await Sponsor.findOne({
     where: { id, isActive: true },
@@ -374,6 +367,13 @@ export const deleteSponsor = asyncHandler(async (req, res) => {
     return res.status(404).json({
       success: false,
       message: 'Sponsor not found.',
+    });
+  }
+
+  if (!sponsor.canUserEdit(req.user)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. You do not have permission to delete this sponsor.',
     });
   }
 
@@ -392,13 +392,6 @@ export const deleteSponsor = asyncHandler(async (req, res) => {
  * @param {Object} res - Express response object
  */
 export const toggleSponsorStatus = asyncHandler(async (req, res) => {
-  if (!req.user || !req.user.isAdmin) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. Admin privileges required.',
-    });
-  }
-
   const { id } = req.params;
   const { isActive } = req.body;
 
@@ -408,6 +401,13 @@ export const toggleSponsorStatus = asyncHandler(async (req, res) => {
     return res.status(404).json({
       success: false,
       message: 'Sponsor not found.',
+    });
+  }
+
+  if (!sponsor.canUserEdit(req.user)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. You do not have permission to modify this sponsor.',
     });
   }
 

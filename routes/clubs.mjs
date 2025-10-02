@@ -25,8 +25,16 @@ const sponsorUpload = createFormUploader('sponsor', sponsorFieldConfig);
 // Apply centralized security to all routes
 router.use(applySecurity);
 
-// Club management (authenticated delegates only) - MUST come before /:id route
-router.get('/manage', ensureAuthenticated, clubController.showClubManagement);
+// DEPRECATED: Redirect /clubs/manage to appropriate destination
+router.get('/manage', ensureAuthenticated, (req, res) => {
+    if (req.user.isAdmin) {
+        // Admin users see all clubs
+        return res.redirect('/admin/clubs');
+    } else {
+        // Delegate users edit their own club
+        return res.redirect(`/clubs/${req.user.clubId}/edit`);
+    }
+});
 
 // Create new club (for users without clubs)
 router.post('/create', ensureAuthenticated, [
@@ -54,30 +62,15 @@ router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 // Leave club route
 router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 
-// Update club profile with structured upload support
-router.post('/manage/profile', ensureAuthenticated, asyncHandler(async (req, res, next) => {
-    await clubUpload.upload.fields(clubFieldConfig)(req, res, next);
-}), clubUpload.process, [
-    body('clubName').optional({ nullable: true, checkFalsy: true }).isLength({ min: 2, max: 100 }).withMessage('Club name must be between 2 and 100 characters'),
-    body('state').optional({ nullable: true, checkFalsy: true }).isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
-    body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
-        if (email && email.trim()) {
-            const result = validateSecureEmail(email);
-            if (!result.isValid) {
-                throw new Error(result.errors[0]);
-            }
-        }
-        return true;
-    }),
-    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
-    body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
-    body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
-    body('twitterUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid X (Twitter) URL required'),
-    body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less'),
-    body('contactPerson').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Contact person name must be 100 characters or less'),
-    body('location').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
-    body('contactPhone').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less')
-], clubController.updateClubProfile);
+// DEPRECATED: Redirect to standard club edit route
+router.post('/manage/profile', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to edit its profile.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}`);
+});
 
 // API endpoints for image management
 // Get all images for a club
@@ -86,77 +79,115 @@ router.get('/:clubId/images', ensureAuthenticated, clubController.getClubImages)
 // Delete a specific club image
 router.delete('/:clubId/images/:filename', ensureAuthenticated, clubController.deleteClubImage);
 
-// Sponsor management routes for club delegates
-// View club's sponsors
-router.get('/manage/sponsors', ensureAuthenticated, clubController.showClubSponsors);
+// DEPRECATED: Redirect to standard club sponsors route
+router.get('/manage/sponsors', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to manage sponsors.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(`/clubs/${userClubId}/sponsors`);
+});
 
-// Add new sponsor or link existing sponsor to club
-router.get('/manage/sponsors/add', ensureAuthenticated, clubController.showAddSponsor);
-router.post('/manage/sponsors/add', ensureAuthenticated, [
-    body('sponsorName').trim().isLength({ min: 2, max: 200 }).withMessage('Sponsor name must be between 2 and 200 characters'),
-    body('businessType').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
-    body('location').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
-    body('state').optional({ nullable: true, checkFalsy: true }).isIn(AUSTRALIAN_STATES).withMessage('Invalid state selection'),
-    body('description').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
-    body('contactPerson').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
-    body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
-        if (email && email.trim()) {
-            const result = validateSecureEmail(email);
-            if (!result.isValid) {
-                throw new Error(result.errors[0]);
-            }
-        }
-        return true;
-    }),
-    body('contactPhone').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
-    body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
-    body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
-    body('twitterUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required')
-], clubController.addSponsorToClub);
+// DEPRECATED: Redirect to standard club sponsors/add route
+router.get('/manage/sponsors/add', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to add sponsors.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(`/clubs/${userClubId}/sponsors/add`);
+});
 
-// Edit sponsor for club
-router.get('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsor);
-router.post('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, asyncHandler(async (req, res, next) => {
-    await sponsorUpload.upload.fields(sponsorFieldConfig)(req, res, next);
-}), sponsorUpload.process, [
-    body('sponsorName').trim().isLength({ min: 2, max: 200 }).withMessage('Sponsor name must be between 2 and 200 characters'),
-    body('businessType').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Business type must be 100 characters or less'),
-    body('location').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Location must be 100 characters or less'),
-    body('state').optional({ nullable: true, checkFalsy: true }).isIn(AUSTRALIAN_STATES).withMessage('Invalid state selection'),
-    body('description').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 2000 }).withMessage('Description must be 2000 characters or less'),
-    body('contactPerson').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
-    body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
-        if (email && email.trim()) {
-            const result = validateSecureEmail(email);
-            if (!result.isValid) {
-                throw new Error(result.errors[0]);
-            }
-        }
-        return true;
-    }),
-    body('contactPhone').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
-    body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
-    body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
-    body('twitterUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required')
-], clubController.updateClubSponsor);
+router.post('/manage/sponsors/add', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to add sponsors.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}/sponsors/add`);
+});
 
-// Remove sponsor from club
-router.post('/manage/sponsors/:sponsorId/remove', ensureAuthenticated, clubController.removeSponsorFromClub);
+// DEPRECATED: Redirect to standard club sponsor edit route
+router.get('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    const { sponsorId } = req.params;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to edit sponsors.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(`/clubs/${userClubId}/sponsors/${sponsorId}/edit`);
+});
 
-// Update sponsor priority/order for club
-router.post('/manage/sponsors/reorder', ensureAuthenticated, clubController.reorderClubSponsors);
+router.post('/manage/sponsors/:sponsorId/edit', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    const { sponsorId } = req.params;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to edit sponsors.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}/sponsors/${sponsorId}/edit`);
+});
 
-// Alternate names management routes for club delegates
-router.get('/manage/alternate-names', ensureAuthenticated, clubController.showClubAlternateNames);
-router.post('/manage/alternate-names', ensureAuthenticated, [
-    body('alternateName').isLength({ min: 2, max: 100 }).withMessage('Alternate name must be between 2 and 100 characters')
-], clubController.addAlternateName);
-router.put('/manage/alternate-names/:id', ensureAuthenticated, [
-    body('alternateName').isLength({ min: 2, max: 100 }).withMessage('Alternate name must be between 2 and 100 characters')
-], clubController.updateAlternateName);
-router.delete('/manage/alternate-names/:id', ensureAuthenticated, clubController.deleteAlternateName);
+// DEPRECATED: Redirect to standard club sponsor remove route
+router.post('/manage/sponsors/:sponsorId/remove', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    const { sponsorId } = req.params;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to remove sponsors.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}/sponsors/${sponsorId}/remove`);
+});
+
+// DEPRECATED: Redirect to standard club sponsors reorder route
+router.post('/manage/sponsors/reorder', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to reorder sponsors.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}/sponsors/reorder`);
+});
+
+// DEPRECATED: Redirect to standard club alternate names route
+router.get('/manage/alternate-names', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to manage alternate names.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(`/clubs/${userClubId}/alternate-names`);
+});
+// DEPRECATED: Redirect to standard club alternate names route (POST)
+router.post('/manage/alternate-names', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to manage alternate names.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}/alternate-names`);
+});
+// DEPRECATED: Redirect to standard club alternate names route (PUT)
+router.put('/manage/alternate-names/:id', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    const alternateNameId = req.params.id;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to manage alternate names.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}/alternate-names/${alternateNameId}`);
+});
+// DEPRECATED: Redirect to standard club alternate names route (DELETE)
+router.delete('/manage/alternate-names/:id', ensureAuthenticated, (req, res) => {
+    const userClubId = req.user.ClubId;
+    const alternateNameId = req.params.id;
+    if (!userClubId) {
+        req.flash('error', 'You must be a member of a club to manage alternate names.');
+        return res.redirect('/clubs');
+    }
+    return res.redirect(307, `/clubs/${userClubId}/alternate-names/${alternateNameId}`);
+});
 
 // Proxy club creation routes (for delegates and admins)
 router.get('/create-on-behalf', ensureAuthenticated, clubController.getCreateOnBehalf);
@@ -172,6 +203,35 @@ router.post('/create-on-behalf', ensureAuthenticated, [
 // Club ownership claiming routes - MUST come before /:id route
 router.get('/:id/claim', ensureAuthenticated, clubController.getClaimOwnership);
 router.post('/:id/claim', ensureAuthenticated, clubController.postClaimOwnership);
+
+// Club alternate names management - MUST come before /:id route
+router.get('/:id/alternate-names', ensureAuthenticated, clubController.showClubAlternateNames);
+router.post('/:id/alternate-names', ensureAuthenticated, [
+    body('alternateName').isLength({ min: 2, max: 100 }).withMessage('Alternate name must be between 2 and 100 characters')
+], clubController.addAlternateName);
+router.put('/:id/alternate-names/:alternateId', ensureAuthenticated, [
+    body('alternateName').isLength({ min: 2, max: 100 }).withMessage('Alternate name must be between 2 and 100 characters')
+], clubController.updateAlternateName);
+router.delete('/:id/alternate-names/:alternateId', ensureAuthenticated, clubController.deleteAlternateName);
+
+// Club sponsor management - MUST come before /:id route
+router.get('/:id/sponsors', ensureAuthenticated, clubController.showClubSponsorsHandler);
+router.get('/:id/sponsors/add', ensureAuthenticated, clubController.showAddSponsorHandler);
+router.post('/:id/sponsors/add', ensureAuthenticated, sponsorUpload, [
+    body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
+    body('sponsorshipLevel').isIn(['1', '2', '3', '4', '5']).withMessage('Valid sponsorship level required'),
+    body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
+], clubController.addSponsorToClubHandler);
+router.get('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsorHandler);
+router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, sponsorUpload, [
+    body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
+    body('sponsorshipLevel').isIn(['1', '2', '3', '4', '5']).withMessage('Valid sponsorship level required'),
+    body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
+], clubController.updateClubSponsorHandler);
+router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, clubController.removeSponsorFromClubHandler);
+router.post('/:id/sponsors/reorder', ensureAuthenticated, clubController.reorderClubSponsorsHandler);
 
 // Club edit form (for consistency with carnival routes) - MUST come before /:id route
 router.get('/:id/edit', ensureAuthenticated, clubController.getEdit);

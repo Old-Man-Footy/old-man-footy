@@ -22,10 +22,17 @@ export async function showClubPlayers(req, res, next) {
     console.log('=== DEBUG: showClubPlayers called ===');
     console.log('User:', req.user ? { id: req.user.id, email: req.user.email, clubId: req.user.clubId } : 'No user');
     
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      console.log('=== DEBUG: User not authenticated or no clubId ===');
-      req.flash('error', 'You must be a club delegate to view players.');
+    // Ensure user is authenticated
+    if (!req.user) {
+      console.log('=== DEBUG: User not authenticated ===');
+      req.flash('error', 'You must be logged in to view players.');
+      return res.redirect('/auth/login');
+    }
+
+    // Check if user has appropriate permissions (admin or delegate)
+    if (!req.user.isAdmin && !req.user.clubId) {
+      console.log('=== DEBUG: User is neither admin nor has clubId ===');
+      req.flash('error', 'You must be an admin or club delegate to view players.');
       return res.redirect('/dashboard');
     }
 
@@ -40,9 +47,13 @@ export async function showClubPlayers(req, res, next) {
 
     // Build where conditions
     const whereConditions = {
-      clubId: req.user.clubId,
       isActive: true
     };
+
+    // Admins can see all players, delegates only see their club's players
+    if (!req.user.isAdmin) {
+      whereConditions.clubId = req.user.clubId;
+    }
 
     // Add search functionality
     if (search && search.trim()) {
@@ -141,9 +152,15 @@ export async function showClubPlayers(req, res, next) {
  */
 export async function showAddPlayerForm(req, res, next) {
   try {
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to add players.');
+    // Ensure user is authenticated
+    if (!req.user) {
+      req.flash('error', 'You must be logged in to add players.');
+      return res.redirect('/auth/login');
+    }
+
+    // Check if user has appropriate permissions (admin or delegate)
+    if (!req.user.isAdmin && !req.user.clubId) {
+      req.flash('error', 'You must be an admin or club delegate to add players.');
       return res.redirect('/dashboard');
     }
 
@@ -193,9 +210,15 @@ export async function createPlayer(req, res, next) {
       });
     }
 
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to add players.');
+    // Ensure user is authenticated
+    if (!req.user) {
+      req.flash('error', 'You must be logged in to add players.');
+      return res.redirect('/auth/login');
+    }
+
+    // Check if user has appropriate permissions (admin or delegate)
+    if (!req.user.isAdmin && !req.user.clubId) {
+      req.flash('error', 'You must be an admin or club delegate to add players.');
       return res.redirect('/dashboard');
     }
 
@@ -243,18 +266,15 @@ export async function showEditPlayerForm(req, res, next) {
   try {
     const playerId = req.params.id;
 
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to edit players.');
-      return res.redirect('/dashboard');
+    // Ensure user is authenticated
+    if (!req.user) {
+      req.flash('error', 'You must be logged in to edit players.');
+      return res.redirect('/auth/login');
     }
 
-    // Find the player (must belong to user's club)
+    // Find the player first
     const player = await ClubPlayer.findOne({
-      where: {
-        id: playerId,
-        clubId: req.user.clubId
-      },
+      where: { id: playerId },
       include: [{
         model: Club,
         as: 'playerClub',
@@ -263,7 +283,13 @@ export async function showEditPlayerForm(req, res, next) {
     });
 
     if (!player) {
-      req.flash('error', 'Player not found or you do not have permission to edit this player.');
+      req.flash('error', 'Player not found.');
+      return res.redirect('/clubs/players');
+    }
+
+    // Check if user can edit this player
+    if (!player.canUserEdit(req.user)) {
+      req.flash('error', 'You do not have permission to edit this player.');
       return res.redirect('/clubs/players');
     }
 
@@ -308,10 +334,7 @@ export async function updatePlayer(req, res, next) {
     if (!errors.isEmpty()) {
       // Find player for re-rendering form
       const player = await ClubPlayer.findOne({
-        where: {
-          id: playerId,
-          clubId: req.user.clubId
-        },
+        where: { id: playerId },
         include: [{
           model: Club,
           as: 'playerClub',
@@ -321,6 +344,12 @@ export async function updatePlayer(req, res, next) {
 
       if (!player) {
         req.flash('error', 'Player not found.');
+        return res.redirect('/clubs/players');
+      }
+
+      // Check if user can edit this player
+      if (!player.canUserEdit(req.user)) {
+        req.flash('error', 'You do not have permission to edit this player.');
         return res.redirect('/clubs/players');
       }
 
@@ -346,22 +375,25 @@ export async function updatePlayer(req, res, next) {
       });
     }
 
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to edit players.');
-      return res.redirect('/dashboard');
+    // Ensure user is authenticated
+    if (!req.user) {
+      req.flash('error', 'You must be logged in to edit players.');
+      return res.redirect('/auth/login');
     }
 
-    // Find the player (must belong to user's club)
+    // Find the player
     const player = await ClubPlayer.findOne({
-      where: {
-        id: playerId,
-        clubId: req.user.clubId
-      }
+      where: { id: playerId }
     });
 
     if (!player) {
-      req.flash('error', 'Player not found or you do not have permission to edit this player.');
+      req.flash('error', 'Player not found.');
+      return res.redirect('/clubs/players');
+    }
+
+    // Check if user can edit this player
+    if (!player.canUserEdit(req.user)) {
+      req.flash('error', 'You do not have permission to edit this player.');
       return res.redirect('/clubs/players');
     }
 
@@ -408,23 +440,28 @@ export async function deactivatePlayer(req, res, next) {
   try {
     const playerId = req.params.id;
 
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to remove players.');
-      return res.redirect('/dashboard');
+    // Ensure user is authenticated
+    if (!req.user) {
+      req.flash('error', 'You must be logged in to remove players.');
+      return res.redirect('/auth/login');
     }
 
-    // Find the player (must belong to user's club)
+    // Find the player
     const player = await ClubPlayer.findOne({
       where: {
         id: playerId,
-        clubId: req.user.clubId,
         isActive: true
       }
     });
 
     if (!player) {
-      req.flash('error', 'Player not found or you do not have permission to remove this player.');
+      req.flash('error', 'Player not found or is already inactive.');
+      return res.redirect('/clubs/players');
+    }
+
+    // Check if user can edit this player
+    if (!player.canUserEdit(req.user)) {
+      req.flash('error', 'You do not have permission to remove this player.');
       return res.redirect('/clubs/players');
     }
 
@@ -453,23 +490,28 @@ export async function reactivatePlayer(req, res, next) {
   try {
     const playerId = req.params.id;
 
-    // Ensure user is authenticated and has a club
-    if (!req.user || !req.user.clubId) {
-      req.flash('error', 'You must be a club delegate to reactivate players.');
-      return res.redirect('/dashboard');
+    // Ensure user is authenticated
+    if (!req.user) {
+      req.flash('error', 'You must be logged in to reactivate players.');
+      return res.redirect('/auth/login');
     }
 
-    // Find the inactive player (must belong to user's club)
+    // Find the inactive player
     const player = await ClubPlayer.findOne({
       where: {
         id: playerId,
-        clubId: req.user.clubId,
         isActive: false
       }
     });
 
     if (!player) {
-      req.flash('error', 'Inactive player not found or you do not have permission to reactivate this player.');
+      req.flash('error', 'Inactive player not found.');
+      return res.redirect('/clubs/players');
+    }
+
+    // Check if user has permission to edit this player
+    if (!player.canUserEdit(req.user)) {
+      req.flash('error', 'You do not have permission to reactivate this player.');
       return res.redirect('/clubs/players');
     }
 
@@ -495,20 +537,30 @@ export async function reactivatePlayer(req, res, next) {
  * @param {Function} next - Express next middleware function
  */
 export async function downloadCsvTemplate(req, res, next) {
-  // Ensure user is authenticated and has a club
-  if (!req.user || !req.user.clubId) {
-    req.flash('error', 'You must be a club delegate to download the template.');
+  // Ensure user is authenticated
+  if (!req.user) {
+    req.flash('error', 'You must be logged in to download the template.');
+    return res.redirect('/auth/login');
+  }
+
+  // Admins and delegates can both download templates
+  if (!req.user.isAdmin && !req.user.clubId) {
+    req.flash('error', 'You must be an admin or club delegate to download the template.');
     return res.redirect('/dashboard');
   }
 
-  // Get club information for filename
-  const club = await Club.findByPk(req.user.clubId, {
-    attributes: ['id', 'clubName']
-  });
+  // For admins, use a generic club name; for delegates, use their club
+  let club = null;
+  let clubName = 'Players';
 
-  if (!club) {
-    req.flash('error', 'Club not found.');
-    return res.redirect('/dashboard');
+  if (req.user.clubId) {
+    club = await Club.findByPk(req.user.clubId, {
+      attributes: ['id', 'clubName']
+    });
+
+    if (club) {
+      clubName = club.clubName;
+    }
   }
 
   // Create CSV template with headers and sample data
@@ -555,7 +607,7 @@ export async function downloadCsvTemplate(req, res, next) {
   ].join('\n');
 
   // Set response headers for file download
-  const filename = `${club.clubName.replace(/[^a-zA-Z0-9]/g, '_')}_players_template.csv`;
+  const filename = `${clubName.replace(/[^a-zA-Z0-9]/g, '_')}_players_template.csv`;
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
@@ -571,10 +623,10 @@ export async function downloadCsvTemplate(req, res, next) {
  * @param {Function} next - Express next middleware function
  */
 export async function importPlayersFromCsv(req, res, next) {
-  // Ensure user is authenticated and has a club
-  if (!req.user || !req.user.clubId) {
-    req.flash('error', 'You must be a club delegate to import players.');
-    return res.redirect('/dashboard');
+  // Ensure user is authenticated
+  if (!req.user) {
+    req.flash('error', 'You must be logged in to import players.');
+    return res.redirect('/auth/login');
   }
 
   // Check if file was uploaded
@@ -583,14 +635,33 @@ export async function importPlayersFromCsv(req, res, next) {
     return res.redirect('/clubs/players');
   }
 
+  // For import operations, we need a target club
+  let targetClubId = req.user.clubId;
+  
+  // If admin, they might specify a target club (this would need form field support)
+  if (req.user.isAdmin && req.body.targetClubId) {
+    targetClubId = req.body.targetClubId;
+  }
+
+  if (!targetClubId) {
+    req.flash('error', 'A target club must be specified for player import.');
+    return res.redirect('/clubs/players');
+  }
+
   // Get club information
-  const club = await Club.findByPk(req.user.clubId, {
+  const club = await Club.findByPk(targetClubId, {
     attributes: ['id', 'clubName']
   });
 
   if (!club) {
-    req.flash('error', 'Club not found.');
-    return res.redirect('/dashboard');
+    req.flash('error', 'Target club not found.');
+    return res.redirect('/clubs/players');
+  }
+
+  // Check authorization for the target club
+  if (!req.user.isAdmin && req.user.clubId !== targetClubId) {
+    req.flash('error', 'You do not have permission to import players for this club.');
+    return res.redirect('/clubs/players');
   }
 
   const { shortsColor = 'Unrestricted', updateExisting = false, notes = '' } = req.body;
@@ -655,13 +726,13 @@ export async function importPlayersFromCsv(req, res, next) {
       // Use the formatted date for database storage
       const formattedDob = dobValidation.formattedDate;
 
-      // Check if player already exists - based on name and DOB within user's club
+      // Check if player already exists - based on name and DOB within target club
       const existingPlayer = await ClubPlayer.findOne({
         where: {
           firstName: playerData.firstname,
           lastName: playerData.lastname,
           dateOfBirth: formattedDob,
-          clubId: req.user.clubId, // SECURITY: Only check within user's club
+          clubId: targetClubId, // Check within target club
           isActive: true
         }
       });
@@ -684,9 +755,9 @@ export async function importPlayersFromCsv(req, res, next) {
         continue;
       }
 
-      // Create new player - ALWAYS use the authenticated user's club ID
+      // Create new player for the target club
       await ClubPlayer.create({
-        clubId: req.user.clubId, // SECURITY: Force user's club ID
+        clubId: targetClubId, // Use the authorized target club ID
         firstName: playerData.firstname,
         lastName: playerData.lastname,
         email: playerData.email.toLowerCase(),

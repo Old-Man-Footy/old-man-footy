@@ -30,6 +30,23 @@ class Sponsor extends Model {
   isAssociatedWithClub(clubId) {
     return this.clubId === clubId;
   }
+
+  /**
+   * Check if a user can edit this sponsor
+   * @param {User} user - The user to check permissions for
+   * @returns {boolean} True if user can edit this sponsor
+   */
+  canUserEdit(user) {
+    if (!user) return false;
+    
+    // Admins have universal edit permissions
+    if (user.isAdmin) return true;
+    
+    // Club delegates can edit sponsors associated with their club
+    if (this.clubId && this.clubId === user.clubId) return true;
+    
+    return false;
+  }
 }
 
 /**
