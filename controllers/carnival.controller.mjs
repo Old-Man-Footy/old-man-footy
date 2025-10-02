@@ -786,6 +786,18 @@ const updateCarnivalHandler = async (req, res) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Check if this is an AJAX request
+    const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+    
+    if (isAjax) {
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors occurred',
+        errors: errors.array()
+      });
+    }
+
     const states = AUSTRALIAN_STATES;
 
     // Fetch user's club information for auto-population on error
@@ -890,6 +902,18 @@ const updateCarnivalHandler = async (req, res) => {
     if (registrations.length > 0) {
       req.flash('info_msg', `Fee structure updated. Registration fees have been automatically recalculated for ${registrations.length} existing registration(s).`);
     }
+  }
+
+  // Check if this is an AJAX request
+  const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+  
+  if (isAjax) {
+    // Return JSON response for AJAX requests
+    return res.json({
+      success: true,
+      message: 'Carnival updated successfully!',
+      redirectUrl: `/carnivals/${carnival.id}`
+    });
   }
 
   req.flash('success_msg', 'Carnival updated successfully!');

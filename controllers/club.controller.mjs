@@ -363,7 +363,20 @@ const showEditFormHandler = async (req, res) => {
 const updateClubProfileHandler = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // Create detailed error messages for better user feedback
+    // Check if this is an AJAX request
+    const isAjaxRequest = req.xhr || 
+                         req.headers.accept?.indexOf('json') > -1 || 
+                         req.headers['content-type']?.indexOf('multipart/form-data') > -1;
+    
+    if (isAjaxRequest) {
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+    
+    // Traditional form submission - create detailed error messages for better user feedback
     const errorMessages = errors.array().map((error) => error.msg);
     req.flash('error_msg', `Validation errors: ${errorMessages.join(', ')}`);
     return res.redirect(`/clubs/${req.user.clubId}/edit`);
@@ -917,6 +930,20 @@ const updateClubSponsorHandler = async (req, res) => {
   // Validate request
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Check if this is an AJAX request
+    const isAjaxRequest = req.xhr || 
+                         req.headers.accept?.indexOf('json') > -1 || 
+                         req.headers['content-type']?.indexOf('multipart/form-data') > -1;
+    
+    if (isAjaxRequest) {
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+    
+    // Traditional form submission
     req.flash('error_msg', 'Please correct the validation errors.');
     return res.redirect(`/clubs/${club.id}/sponsors/${sponsorId}/edit`);
   }

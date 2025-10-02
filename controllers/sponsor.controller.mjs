@@ -278,6 +278,20 @@ export const showEditSponsor = asyncHandler(async (req, res) => {
 export const updateSponsor = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Check if this is an AJAX request
+    const isAjaxRequest = req.xhr || 
+                         req.headers.accept?.indexOf('json') > -1 || 
+                         req.headers['content-type']?.indexOf('multipart/form-data') > -1;
+    
+    if (isAjaxRequest) {
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+    
+    // Traditional form submission - use flash message and redirect
     req.flash('error_msg', 'Please correct the validation errors.');
     return res.redirect(`/sponsors/${req.params.id}/edit`);
   }
