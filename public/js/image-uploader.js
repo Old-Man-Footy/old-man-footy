@@ -330,8 +330,3 @@ export const imageUploaderManager = {
         this.initializeUploader(uploaderContainer);
     }
 };
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    imageUploaderManager.initialize();
-});

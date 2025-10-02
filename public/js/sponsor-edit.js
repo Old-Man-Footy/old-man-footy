@@ -1,3 +1,5 @@
+import { imageUploaderManager } from './image-uploader.js';
+
 /**
  * Sponsor Edit Page Manager
  * Handles sponsor editing functionality including form validation
@@ -337,4 +339,5 @@ export const sponsorEditManager = {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     sponsorEditManager.initialize();
+    imageUploaderManager.initialize();
 });

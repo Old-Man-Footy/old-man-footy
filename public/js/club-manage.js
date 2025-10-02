@@ -1,4 +1,5 @@
 import { showAlert } from './utils/ui-helpers.js';
+import { imageUploaderManager } from './image-uploader.js';
 
 /**
  * Club Management Interface (Manager Object Pattern)
@@ -182,4 +183,5 @@ export const clubManageManager = {
 // Bootstrap in the browser
 document.addEventListener('DOMContentLoaded', () => {
     clubManageManager.initialize();
+    imageUploaderManager.initialize();
 });

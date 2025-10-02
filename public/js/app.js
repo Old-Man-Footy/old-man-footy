@@ -234,7 +234,7 @@ const oldmanfooty = {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    const preview = this.closest('.file-upload-area, .mb-3').querySelector('.upload-preview');
+                    const preview = this.closest('.file-upload-area, .image-upload-area, .mb-3').querySelector('.upload-preview');
                     
                     reader.onload = function(e) {
                         if (file.type.startsWith('image/')) {
@@ -249,7 +249,7 @@ const oldmanfooty = {
                     }
                     
                     // Update upload text
-                    const uploadText = this.closest('.file-upload-area, .mb-3').querySelector('.upload-text');
+                    const uploadText = this.closest('.file-upload-area, .image-upload-area, .mb-3').querySelector('.upload-text');
                     if (uploadText) {
                         uploadText.textContent = `Selected: ${file.name}`;
                     }
@@ -258,7 +258,7 @@ const oldmanfooty = {
         });
 
         // Drag and drop for file upload areas
-        document.querySelectorAll('.file-upload-area').forEach(area => {
+        document.querySelectorAll('.file-upload-area, .image-upload-area').forEach(area => {
             const input = area.querySelector('input[type="file"]');
             
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
