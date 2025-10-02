@@ -137,7 +137,7 @@ const carnivalRoutes = await import('./routes/carnivals.mjs');
 const carnivalClubRoutes = await import('./routes/carnivalClubs.mjs');
 const carnivalSponsorRoutes = await import('./routes/carnivalSponsors.mjs');
 const clubRoutes = await import('./routes/clubs.mjs');
-const clubPlayerRoutes = await import('./routes/clubPlayers.mjs');
+
 const sponsorRoutes = await import('./routes/sponsors.mjs');
 const adminRoutes = await import('./routes/admin.mjs');
 const apiRoutes = await import('./routes/api/index.mjs');
@@ -149,7 +149,7 @@ app.use('/auth', authRoutes.default);
 app.use('/carnivals', carnivalRoutes.default);
 app.use('/carnivals', carnivalClubRoutes.default);
 app.use('/carnival-sponsors', carnivalSponsorRoutes.default);
-app.use('/clubs/players', clubPlayerRoutes.default);
+
 app.use('/clubs', clubRoutes.default);
 app.use('/sponsors', sponsorRoutes.default);
 app.use('/admin', adminRoutes.default);

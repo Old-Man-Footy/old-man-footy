@@ -42,9 +42,9 @@ This plan outlines the refactoring of the current file upload system from a sing
   
   **Key Route Endpoints:**
   - POST `/sponsors` (create), POST `/sponsors/:id` (update) 
-  - POST `/clubs/manage/profile` (club profile)
-  - POST `/clubs/manage/sponsors/add` (club sponsor creation)
-  - POST `/clubs/manage/sponsors/:sponsorId/edit` (club sponsor edit)
+  - POST `/clubs/edit/profile` (club profile)
+  - POST `/clubs/edit/sponsors/add` (club sponsor creation)
+  - POST `/clubs/edit/sponsors/:sponsorId/edit` (club sponsor edit)
   - POST `/carnivals/new` (carnival creation)
   - POST `/carnivals/:id/edit` (carnival edit)
   - POST `/admin/clubs` (admin club management)
@@ -157,7 +157,7 @@ This plan outlines the refactoring of the current file upload system from a sing
   - [x] Configure the partial to use the correct fieldName ('logo') and pass the existing sponsor.logoUrl for the initial preview.
   - [x] In sponsors/edit.ejs, add image uploader for sponsor logo uploads with consistent configuration.  
 * **Task 7.4: Integrate Uploader into Club Views** ✅ 
-  - [x] In clubs/manage.ejs, replace the existing logo input with the _imageUploader partial.  
+  - [x] In clubs/edit.ejs, replace the existing logo input with the _imageUploader partial.  
   - [x] Configure the partial with fieldName: 'logo' and pass club.logoUrl.  
 * **Task 7.5: Integrate Uploaders into Carnival Views** ✅  
   - [x] In carnivals/edit.ejs, add two instances of the _imageUploader partial:  
@@ -241,13 +241,9 @@ This plan outlines the refactoring of the current file upload system from a sing
   - [x] Express-validator integration ✅ Input validation middleware properly configured
   - [x] Directory creation errors ✅ Error handling for filesystem operations
   - [x] Consistent error formatting ✅ Standardized error response structure across all routes
-- [ ] **Task 8.6: Performance testing**:
-  - [ ] Multiple simultaneous uploads
-  - [ ] Large file uploads  
-  - [ ] Directory creation under load
 
 ## Phase 9: Remove drawFiles Field from Carnival Model
-- [ ] Replace where drawFiles is used in the codebase with drawFileURL, we only need one.
+- [ ] Replace where drawFiles is used in the codebase with drawFileURL, we only need the one file per Carnival.
 - [ ] Update _documentUploader model to be a single document field, to align with drawFileURL, not drawfiles array.
 - [ ] Update carnival controller to handle single drawFileURL instead of array
 - [ ] Update carnival views to use drawFileURL for displaying the draw file

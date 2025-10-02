@@ -321,7 +321,7 @@ const showClubManagementHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  return res.render('clubs/manage', {
+  return res.render('clubs/edit', {
     title: 'Manage Club Profile',
     club,
     additionalCSS: ['/styles/club.styles.css'],
@@ -348,7 +348,7 @@ const showEditFormHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  return res.render('clubs/manage', {
+  return res.render('clubs/edit', {
     title: 'Edit Club Profile',
     club,
     additionalCSS: ['/styles/club.styles.css'],
@@ -366,7 +366,7 @@ const updateClubProfileHandler = async (req, res) => {
     // Create detailed error messages for better user feedback
     const errorMessages = errors.array().map((error) => error.msg);
     req.flash('error_msg', `Validation errors: ${errorMessages.join(', ')}`);
-    return res.redirect('/clubs/manage');
+    return res.redirect(`/clubs/${req.user.clubId}/edit`);
   }
 
   const user = req.user;
@@ -425,7 +425,7 @@ const updateClubProfileHandler = async (req, res) => {
   await club.update(updateData);
 
   req.flash('success_msg', 'Club profile updated successfully!');
-  return res.redirect('/clubs/manage');
+  return res.redirect(`/clubs/${club.id}/edit`);
 };
 
 /**
@@ -525,7 +525,7 @@ const showClubSponsorsHandler = async (req, res, next) => {
     }
     if (parseInt(requestedClubId) !== user.clubId && !user.isAdmin) {
       req.flash('error_msg', 'You can only manage sponsors for your own club.');
-      return res.redirect('/clubs/manage');
+      return res.redirect(`/clubs/${user.clubId}/edit`);
     }
     const club = await Club.findByPk(user.clubId, {
       include: [
@@ -556,6 +556,29 @@ const showClubSponsorsHandler = async (req, res, next) => {
 };
 
 /**
+ * Show the create club form
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showCreateFormHandler = async (req, res) => {
+  // Ensure user doesn't already have a club
+  if (req.user.clubId) {
+    req.flash(
+      'error_msg',
+      'You are already associated with a club. You can only be a member of one club at a time.'
+    );
+    return res.redirect(`/clubs/${req.user.clubId}/edit`);
+  }
+
+  return res.render('clubs/create', {
+    title: 'Create New Club',
+    states: AUSTRALIAN_STATES,
+    additionalCSS: ['/styles/club.styles.css'],
+    additionalJS: ['/js/clubs/club-create.js']
+  });
+};
+
+/**
  * Create new club (for users without clubs)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -564,7 +587,7 @@ const createClubHandler = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     req.flash('error_msg', 'Please correct the validation errors.');
-    return res.redirect('/clubs/manage');
+    return res.redirect('/dashboard');
   }
 
   const user = req.user;
@@ -575,7 +598,7 @@ const createClubHandler = async (req, res) => {
       'error_msg',
       'You are already associated with a club. You can only be a member of one club at a time.'
     );
-    return res.redirect('/clubs/manage');
+    return res.redirect(`/clubs/${user.clubId}/edit`);
   }
 
   const { clubName, state, location, description } = req.body;
@@ -587,7 +610,7 @@ const createClubHandler = async (req, res) => {
 
   if (existingClub) {
     req.flash('error_msg', 'A club with this name already exists. Please choose a different name.');
-    return res.redirect('/clubs/manage');
+    return res.redirect('/dashboard');
   }
 
   // Create the club with the user as primary delegate
@@ -704,14 +727,14 @@ const addSponsorToClubHandler = async (req, res) => {
 
     if (!sponsor) {
       req.flash('error_msg', 'Selected sponsor not found.');
-      return res.redirect('/clubs/manage/sponsors/add');
+      return res.redirect(`/clubs/${club.id}/sponsors/add`);
     }
 
     // Check if already linked
     const isAlreadyLinked = await sponsor.isAssociatedWithClub(club.id);
     if (isAlreadyLinked) {
       req.flash('error_msg', 'This sponsor is already linked to your club.');
-      return res.redirect('/clubs/manage/sponsors');
+      return res.redirect(`/clubs/${club.id}/sponsors`);
     }
 
     // Link the sponsor to the club
@@ -757,7 +780,7 @@ const addSponsorToClubHandler = async (req, res) => {
     sponsor = await Sponsor.create(newSponsorData);
   } else {
     req.flash('error_msg', 'Invalid sponsor type selected.');
-    return res.redirect('/clubs/manage/sponsors/add');
+    return res.redirect(`/clubs/${club.id}/sponsors/add`);
   }
 
   // Set display order for the sponsor
@@ -796,21 +819,21 @@ const removeSponsorFromClubHandler = async (req, res) => {
 
   if (!sponsor) {
     req.flash('error_msg', 'Sponsor not found.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
   // Check if sponsor is linked to this club
   const isLinked = await sponsor.isAssociatedWithClub(club.id);
   if (!isLinked) {
     req.flash('error_msg', 'This sponsor is not linked to your club.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
   // Remove the association
   await club.removeSponsor(sponsor);
 
   req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been removed from your club.`);
-  return res.redirect('/clubs/manage/sponsors');
+  return res.redirect(`/clubs/${club.id}/sponsors`);
 };
 
 /**
@@ -844,7 +867,7 @@ const showEditClubSponsorHandler = async (req, res) => {
 
   if (!sponsor) {
     req.flash('error_msg', 'Sponsor not found or not associated with your club.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
   return res.render('clubs/edit-sponsor', {
@@ -888,14 +911,14 @@ const updateClubSponsorHandler = async (req, res) => {
 
   if (!sponsor) {
     req.flash('error_msg', 'Sponsor not found or not associated with your club.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
   // Validate request
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     req.flash('error_msg', 'Please correct the validation errors.');
-    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+    return res.redirect(`/clubs/${club.id}/sponsors/${sponsorId}/edit`);
   }
 
   const {
@@ -942,11 +965,11 @@ const updateClubSponsorHandler = async (req, res) => {
     });
 
     req.flash('success_msg', `Sponsor "${sponsorName}" has been updated successfully.`);
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   } catch (error) {
     console.error('Error updating sponsor:', error);
     req.flash('error_msg', 'An error occurred while updating the sponsor.');
-    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+    return res.redirect(`/clubs/${club.id}/sponsors/${sponsorId}/edit`);
   }
 };
 
@@ -1407,7 +1430,7 @@ const joinClubHandler = async (req, res) => {
       'error_msg',
       'You are already associated with a club. You can only be a member of one club at a time.'
     );
-    return res.redirect('/clubs/manage');
+    return res.redirect(`/clubs/${user.clubId}/edit`);
   }
 
   const club = await Club.findOne({
@@ -1428,7 +1451,7 @@ const joinClubHandler = async (req, res) => {
 
   if (!club) {
     req.flash('error_msg', 'Club not found or is not active.');
-    return res.redirect('/clubs/manage');
+    return res.redirect('/dashboard');
   }
 
   // Check if club has a primary delegate
@@ -1774,6 +1797,7 @@ const rawControllers = {
   getClubImagesHandler,
   deleteClubImageHandler,
   showClubSponsorsHandler,
+  showCreateFormHandler,
   createClubHandler,
   showAddSponsorHandler,
   addSponsorToClubHandler,
@@ -1805,6 +1829,7 @@ export const {
   getClubImagesHandler: getClubImages,
   deleteClubImageHandler: deleteClubImage,
   showClubSponsorsHandler: showClubSponsors,
+  showCreateFormHandler: showCreateForm,
   createClubHandler: createClub,
   showAddSponsorHandler: showAddSponsor,
   addSponsorToClubHandler: addSponsorToClub,

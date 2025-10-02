@@ -25,7 +25,7 @@
                         <h5 class="mb-0"><i class="bi bi-gear"></i> Club Profile Settings</h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="/clubs/manage/profile" enctype="multipart/form-data">
+                        <form method="POST" action="/clubs/<%= club.id %>/edit" enctype="multipart/form-data">
                             <!-- Basic Information -->
                             <div class="row mb-4">
                                 <div class="col-12">
@@ -216,13 +216,13 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="/clubs/manage/alternate-names" class="btn btn-outline-primary">
+                            <a href="/clubs/<%= club.id %>/alternate-names" class="btn btn-outline-primary">
                                 <i class="bi bi-search"></i> Manage Alternate Names
                             </a>
-                            <a href="/clubs/manage/sponsors" class="btn btn-outline-primary">
+                            <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-primary">
                                 <i class="bi bi-award"></i> Manage Sponsors
                             </a>
-                            <a href="/clubs/players" class="btn btn-outline-primary">
+                            <a href="/clubs/<%= club.id %>/players" class="btn btn-outline-primary">
                                 <i class="bi bi-people"></i> Manage Players
                             </a>
                             <% if (club.isPubliclyListed) { %>

@@ -127,7 +127,7 @@ export const alternateNamesManager = {
         const alternateName = formData.get('alternateName');
 
         try {
-            const result = await apiRequest('/clubs/manage/alternate-names', {
+            const result = await apiRequest('/clubs/edit/alternate-names', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alternateName })
@@ -153,7 +153,7 @@ export const alternateNamesManager = {
         const alternateName = this.elements.editForm.querySelector('#editAlternateName').value;
 
         try {
-            const result = await apiRequest(`/clubs/manage/alternate-names/${id}`, {
+            const result = await apiRequest(`/clubs/edit/alternate-names/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alternateName })
@@ -174,7 +174,7 @@ export const alternateNamesManager = {
         if (!confirmed) return;
 
         try {
-            const result = await apiRequest(`/clubs/manage/alternate-names/${id}`, {
+            const result = await apiRequest(`/clubs/edit/alternate-names/${id}`, {
                 method: 'DELETE'
             });
             if (result.success) {

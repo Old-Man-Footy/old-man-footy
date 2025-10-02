@@ -36,6 +36,6 @@ describe('club-sponsors.js', () => {
 
     document.getElementById('save-sponsor-order').click();
 
-    expect(fetch).toHaveBeenCalledWith('/clubs/manage/sponsors/reorder', expect.any(Object));
+    expect(fetch).toHaveBeenCalledWith('/clubs/edit/sponsors/reorder', expect.any(Object));
   });
 });

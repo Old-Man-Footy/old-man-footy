@@ -17,7 +17,7 @@ export const clubManageManager = {
     },
 
     cacheElements() {
-        this.elements.form = document.querySelector('form[action*="/clubs/manage"]');
+        this.elements.form = document.querySelector('form[action*="/clubs/edit"]');
         if (!this.elements.form) return; // Stop if form not found
 
         this.elements.descriptionTextarea = document.getElementById('description');

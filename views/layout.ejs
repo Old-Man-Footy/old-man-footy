@@ -89,7 +89,7 @@
                                     <i class="bi bi-plus-circle"></i> Add Carnival
                                 </a></li>
                                 <% if (user.clubId) { %>
-                                    <li><a class="dropdown-item" href="/clubs/manage">
+                                    <li><a class="dropdown-item" href="/clubs/<%= user.clubId.id || user.clubId %>/edit">
                                         <i class="bi bi-gear"></i> Manage Club Profile
                                     </a></li>
                                 <% } %>

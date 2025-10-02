@@ -1,10 +1,12 @@
 import express from 'express';
+import multer from 'multer';
 import { body } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
 import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
 import * as clubController from '../controllers/club.controller.mjs';
+import * as clubPlayerController from '../controllers/clubPlayer.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 
 const router = express.Router();
@@ -17,6 +19,21 @@ const clubFieldConfig = [
 const sponsorFieldConfig = [
     { name: 'logo', maxCount: 1 }
 ];
+
+// Configure multer for CSV file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'), false);
+    }
+  }
+});
 
 // Create uploader instances
 const clubUpload = createFormUploader('club', clubFieldConfig);
@@ -62,14 +79,14 @@ router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 // Leave club route
 router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 
-// DEPRECATED: Redirect to standard club edit route
+// DEPRECATED: Redirect to dynamic club edit route
 router.post('/manage/profile', ensureAuthenticated, (req, res) => {
     const userClubId = req.user.ClubId;
     if (!userClubId) {
         req.flash('error', 'You must be a member of a club to edit its profile.');
         return res.redirect('/clubs');
     }
-    return res.redirect(307, `/clubs/${userClubId}`);
+    return res.redirect(307, `/clubs/${userClubId}/edit`);
 });
 
 // API endpoints for image management
@@ -235,12 +252,47 @@ router.post('/:id/sponsors/reorder', ensureAuthenticated, clubController.reorder
 
 // Club edit form (for consistency with carnival routes) - MUST come before /:id route
 router.get('/:id/edit', ensureAuthenticated, clubController.getEdit);
+router.post('/:id/edit', ensureAuthenticated, clubController.updateClubProfile);
 
 // Public club listings - MUST come before /:id route
 router.get('/', clubController.showClubListings);
 
+// Create new club form - MUST come before /:id route
+router.get('/new', ensureAuthenticated, clubController.showCreateForm);
+
 // Club gallery (public) - MUST come before /:id route
 router.get('/:id/gallery', clubController.viewClubGallery);
+
+// Club player management routes - MUST come before /:id route
+router.get('/:id/players', clubPlayerController.showClubPlayers);
+router.get('/:id/players/csv-template', clubPlayerController.downloadCsvTemplate);
+router.post('/:id/players/csv-import', 
+  upload.single('csvFile'),
+  clubPlayerController.validateCsvImport,
+  clubPlayerController.importPlayersFromCsv
+);
+router.get('/:id/players/add', clubPlayerController.showAddPlayerForm);
+router.post('/:id/players', 
+  clubPlayerController.validatePlayer,
+  clubPlayerController.createPlayer
+);
+router.get('/:id/players/:playerId/edit', 
+  clubPlayerController.validatePlayerId,
+  clubPlayerController.showEditPlayerForm
+);
+router.put('/:id/players/:playerId', 
+  clubPlayerController.validatePlayerId,
+  clubPlayerController.validatePlayer,
+  clubPlayerController.updatePlayer
+);
+router.delete('/:id/players/:playerId', 
+  clubPlayerController.validatePlayerId,
+  clubPlayerController.deactivatePlayer
+);
+router.post('/:id/players/:playerId/reactivate', 
+  clubPlayerController.validatePlayerId,
+  clubPlayerController.reactivatePlayer
+);
 
 // Individual club profile (public) - MUST come LAST as it catches all /:id patterns
 router.get('/:id', clubController.showClubProfile);

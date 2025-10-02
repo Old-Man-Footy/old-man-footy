@@ -12,7 +12,7 @@
                         Edit sponsor information for <%= club.clubName %>
                     </p>
                 </div>
-                <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Back to Sponsors
                 </a>
             </div>
@@ -26,7 +26,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/clubs/manage/sponsors/<%= sponsor.id %>/edit" enctype="multipart/form-data" id="sponsorForm">
+                    <form method="POST" action="/clubs/<%= club.id %>/sponsors/<%= sponsor.id %>/edit" enctype="multipart/form-data" id="sponsorForm">
                         <!-- Basic Information -->
                         <div class="row">
                             <div class="col-md-8">
@@ -232,7 +232,7 @@
 
                         <!-- Form Actions -->
                         <div class="d-flex justify-content-between">
-                            <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                            <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">

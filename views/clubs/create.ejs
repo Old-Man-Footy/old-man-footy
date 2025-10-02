@@ -1,0 +1,197 @@
+<!-- Page Header -->
+<div class="bg-primary py-4 mb-4" data-page-id="clubs-create">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="h2 mb-0">Create New Club</h1>
+                <p class="lead mb-0">Register your rugby league club in our community</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <a href="/dashboard" class="btn btn-outline-tertiary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Club Creation Form -->
+<section class="py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-tertiary">
+                        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Club Registration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Getting Started:</strong> Fill out the required information below to create your club profile. 
+                            You'll become the primary delegate and can add other members after creation.
+                        </div>
+
+                        <form method="POST" action="/clubs/create" enctype="multipart/form-data">
+                            <!-- Basic Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3"><i class="bi bi-info-circle"></i> Basic Information</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="clubName" class="form-label">Club Name *</label>
+                                    <input type="text" class="form-control" id="clubName" name="clubName" 
+                                           placeholder="e.g., Parramatta Eels Junior Rugby League" required maxlength="100">
+                                    <div class="form-text">Official name of your rugby league club</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="state" class="form-label">State *</label>
+                                    <select class="form-select" id="state" name="state" required>
+                                        <option value="">Select State</option>
+                                        <% states.forEach(state => { %>
+                                            <option value="<%= state %>"><%= state %></option>
+                                        <% }) %>
+                                    </select>
+                                    <div class="form-text">State where your club is based</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label">Location/Suburb</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           placeholder="e.g., Parramatta, Sydney" maxlength="100">
+                                    <div class="form-text">Specify your club's home location or suburb</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactEmail" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contactEmail" name="contactEmail" 
+                                           placeholder="e.g., info@yourclub.com" maxlength="100">
+                                    <div class="form-text">Primary contact email for your club</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <label for="description" class="form-label">Club Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="4"
+                                              placeholder="Tell potential players about your club, its history, values, and what makes it special..."
+                                              maxlength="1000"></textarea>
+                                    <div class="form-text">This will be shown on your public club profile (max 1000 characters)</div>
+                                </div>
+                            </div>
+
+                            <!-- Club Logo -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <%- include('../partials/_imageUploader', { 
+                                        fieldName: 'logo',
+                                        label: 'Club Logo (Optional)',
+                                        allowedTypes: ['.jpg', '.jpeg', '.png', '.svg'],
+                                        maxSize: 10,
+                                        multiple: false,
+                                        required: false,
+                                        helpText: 'Upload your club logo (JPEG, PNG, SVG, max 10MB). You can add this later if needed.'
+                                    }) %>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3"><i class="bi bi-telephone"></i> Contact Information</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactPerson" class="form-label">Primary Contact Person</label>
+                                    <input type="text" class="form-control" id="contactPerson" name="contactPerson" 
+                                           placeholder="e.g., John Smith" maxlength="100">
+                                    <div class="form-text">Main contact person for the club</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactPhone" class="form-label">Contact Phone</label>
+                                    <input type="tel" class="form-control" id="contactPhone" name="contactPhone" 
+                                           placeholder="e.g., 0412 345 678" maxlength="20">
+                                    <div class="form-text">Primary phone number for contact</div>
+                                </div>
+                            </div>
+
+                            <!-- Website & Social Media -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3"><i class="bi bi-globe"></i> Online Presence (Optional)</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="website" class="form-label">Website URL</label>
+                                    <input type="url" class="form-control" id="website" name="website" 
+                                           placeholder="https://www.yourclub.com" maxlength="255">
+                                    <div class="form-text">Your club's official website</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="facebookPage" class="form-label">Facebook Page</label>
+                                    <input type="url" class="form-control" id="facebookPage" name="facebookPage" 
+                                           placeholder="https://facebook.com/yourclub" maxlength="255">
+                                    <div class="form-text">Link to your Facebook page</div>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Agreement -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Important:</strong> By creating this club profile, you agree to:
+                                        <ul class="mb-0 mt-2">
+                                            <li>Provide accurate information about your club</li>
+                                            <li>Act as the primary delegate responsible for club management</li>
+                                            <li>Comply with our community guidelines and terms of service</li>
+                                            <li>Keep contact information up to date</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="/dashboard" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-check-circle"></i> Create Club Profile
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="row mt-4 justify-content-center">
+            <div class="col-lg-8">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="bi bi-lightbulb"></i> What happens next?</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-check-circle text-success"></i> Your club profile will be created</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> You'll become the primary delegate</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Other users can search and join your club</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-check-circle text-success"></i> You can add players and manage rosters</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Register for carnivals and events</li>
+                                    <li><i class="bi bi-check-circle text-success"></i> Upload photos and manage galleries</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Need help? <a href="/help/club-management" class="text-decoration-none">View our club management guide</a> 
+                                or <a href="/contact" class="text-decoration-none">contact support</a>.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

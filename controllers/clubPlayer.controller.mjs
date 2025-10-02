@@ -11,7 +11,7 @@ import { Op } from 'sequelize';
 import { validateBirthDate } from '../utils/dateUtils.mjs';
 
 /**
- * Display club players list for the authenticated user's club
+ * Display club players list for the specified club
  * 
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -21,6 +21,7 @@ export async function showClubPlayers(req, res, next) {
   try {
     console.log('=== DEBUG: showClubPlayers called ===');
     console.log('User:', req.user ? { id: req.user.id, email: req.user.email, clubId: req.user.clubId } : 'No user');
+    console.log('Club ID from URL:', req.params.id);
     
     // Ensure user is authenticated
     if (!req.user) {
@@ -36,7 +37,21 @@ export async function showClubPlayers(req, res, next) {
       return res.redirect('/dashboard');
     }
 
-    console.log('=== DEBUG: User has clubId:', req.user.clubId, '===');
+    // Get club ID from URL
+    const clubId = parseInt(req.params.id);
+    if (!clubId || isNaN(clubId)) {
+      req.flash('error', 'Invalid club ID.');
+      return res.redirect('/dashboard');
+    }
+
+    // Authorization check: delegates can only access their own club
+    if (!req.user.isAdmin && req.user.clubId !== clubId) {
+      console.log('=== DEBUG: Delegate trying to access different club ===');
+      req.flash('error', 'You can only manage players for your own club.');
+      return res.redirect('/dashboard');
+    }
+
+    console.log('=== DEBUG: User authorized for club:', clubId, '===');
 
     // Get search and filter parameters
     const { search, sortBy = 'lastName', sortOrder = 'ASC', page = 1 } = req.query;
@@ -50,10 +65,8 @@ export async function showClubPlayers(req, res, next) {
       isActive: true
     };
 
-    // Admins can see all players, delegates only see their club's players
-    if (!req.user.isAdmin) {
-      whereConditions.clubId = req.user.clubId;
-    }
+    // Filter to the specified club (authorization already checked above)
+    whereConditions.clubId = clubId;
 
     // Add search functionality
     if (search && search.trim()) {
@@ -85,7 +98,7 @@ export async function showClubPlayers(req, res, next) {
     // Get inactive players (no pagination needed as they should be fewer)
     const inactivePlayers = await ClubPlayer.findAll({
       where: {
-        clubId: req.user.clubId,
+        clubId: clubId,
         isActive: false
       },
       order: [['updatedAt', 'DESC']], // Most recently deactivated first
@@ -103,7 +116,7 @@ export async function showClubPlayers(req, res, next) {
     const currentPage = parseInt(page);
 
     // Get club information
-    const club = await Club.findByPk(req.user.clubId, {
+    const club = await Club.findByPk(clubId, {
       attributes: ['id', 'clubName']
     });
 
@@ -164,8 +177,21 @@ export async function showAddPlayerForm(req, res, next) {
       return res.redirect('/dashboard');
     }
 
+    // Get club ID from URL
+    const clubId = parseInt(req.params.id);
+    if (!clubId || isNaN(clubId)) {
+      req.flash('error', 'Invalid club ID.');
+      return res.redirect('/dashboard');
+    }
+
+    // Authorization check: delegates can only access their own club
+    if (!req.user.isAdmin && req.user.clubId !== clubId) {
+      req.flash('error', 'You can only manage players for your own club.');
+      return res.redirect('/dashboard');
+    }
+
     // Get club information
-    const club = await Club.findByPk(req.user.clubId, {
+    const club = await Club.findByPk(clubId, {
       attributes: ['id', 'clubName']
     });
 
@@ -194,20 +220,11 @@ export async function showAddPlayerForm(req, res, next) {
  */
 export async function createPlayer(req, res, next) {
   try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      // Get club information for re-rendering form
-      const club = await Club.findByPk(req.user.clubId, {
-        attributes: ['id', 'clubName']
-      });
-
-      return res.render('clubs/players/add', {
-        title: `Add Player - ${club.clubName}`,
-        club,
-        formData: req.body,
-        errors: errors.array()
-      });
+    // Get club ID from URL
+    const clubId = parseInt(req.params.id);
+    if (!clubId || isNaN(clubId)) {
+      req.flash('error', 'Invalid club ID.');
+      return res.redirect('/dashboard');
     }
 
     // Ensure user is authenticated
@@ -222,12 +239,34 @@ export async function createPlayer(req, res, next) {
       return res.redirect('/dashboard');
     }
 
+    // Authorization check: delegates can only access their own club
+    if (!req.user.isAdmin && req.user.clubId !== clubId) {
+      req.flash('error', 'You can only manage players for your own club.');
+      return res.redirect('/dashboard');
+    }
+
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // Get club information for re-rendering form
+      const club = await Club.findByPk(clubId, {
+        attributes: ['id', 'clubName']
+      });
+
+      return res.render('clubs/players/add', {
+        title: `Add Player - ${club.clubName}`,
+        club,
+        formData: req.body,
+        errors: errors.array()
+      });
+    }
+
     // Extract validated data
     const { firstName, lastName, dateOfBirth, email, notes, shorts } = req.body;
 
     // Create the player
     const player = await ClubPlayer.create({
-      clubId: req.user.clubId,
+      clubId: clubId,
       firstName,
       lastName,
       dateOfBirth,
@@ -237,7 +276,7 @@ export async function createPlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully added to your club.`);
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   } catch (error) {
     console.error('Error creating player:', error);
     
@@ -251,7 +290,7 @@ export async function createPlayer(req, res, next) {
     }
 
     // Redirect back to form
-    return res.redirect('/clubs/players/add');
+    return res.redirect(`/clubs/${clubId}/players/add`);
   }
 }
 
@@ -264,12 +303,36 @@ export async function createPlayer(req, res, next) {
  */
 export async function showEditPlayerForm(req, res, next) {
   try {
-    const playerId = req.params.id;
+    // Get club ID and player ID from URL
+    const clubId = parseInt(req.params.id);
+    const playerId = parseInt(req.params.playerId);
+    
+    if (!clubId || isNaN(clubId)) {
+      req.flash('error', 'Invalid club ID.');
+      return res.redirect('/dashboard');
+    }
+    
+    if (!playerId || isNaN(playerId)) {
+      req.flash('error', 'Invalid player ID.');
+      return res.redirect(`/clubs/${clubId}/players`);
+    }
 
     // Ensure user is authenticated
     if (!req.user) {
       req.flash('error', 'You must be logged in to edit players.');
       return res.redirect('/auth/login');
+    }
+
+    // Check if user has appropriate permissions (admin or delegate)
+    if (!req.user.isAdmin && !req.user.clubId) {
+      req.flash('error', 'You must be an admin or club delegate to edit players.');
+      return res.redirect('/dashboard');
+    }
+
+    // Authorization check: delegates can only access their own club
+    if (!req.user.isAdmin && req.user.clubId !== clubId) {
+      req.flash('error', 'You can only manage players for your own club.');
+      return res.redirect('/dashboard');
     }
 
     // Find the player first
@@ -284,25 +347,31 @@ export async function showEditPlayerForm(req, res, next) {
 
     if (!player) {
       req.flash('error', 'Player not found.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
+    }
+    
+    // Verify the player belongs to the specified club
+    if (player.clubId !== clubId) {
+      req.flash('error', 'Player does not belong to the specified club.');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Check if user can edit this player
     if (!player.canUserEdit(req.user)) {
       req.flash('error', 'You do not have permission to edit this player.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Ensure club data is available - fallback to fetching it separately if needed
     let club = player.playerClub;
     if (!club) {
-      club = await Club.findByPk(req.user.clubId, {
+      club = await Club.findByPk(clubId, {
         attributes: ['id', 'clubName']
       });
       
       if (!club) {
         req.flash('error', 'Club not found.');
-        return res.redirect('/clubs/players');
+        return res.redirect(`/clubs/${clubId}/players`);
       }
     }
 
@@ -327,7 +396,20 @@ export async function showEditPlayerForm(req, res, next) {
  */
 export async function updatePlayer(req, res, next) {
   try {
-    const playerId = req.params.id;
+    // Extract and validate URL parameters
+    const clubId = parseInt(req.params.id);
+    const playerId = parseInt(req.params.playerId);
+    
+    if (isNaN(clubId) || isNaN(playerId)) {
+      req.flash('error', 'Invalid club or player ID.');
+      return res.redirect('/clubs');
+    }
+    
+    // Authorization check - delegates can only access their own club
+    if (req.user.role === 'delegate' && req.user.clubId !== clubId) {
+      req.flash('error', 'You do not have permission to access this club.');
+      return res.redirect('/clubs');
+    }
 
     // Check for validation errors
     const errors = validationResult(req);
@@ -344,25 +426,31 @@ export async function updatePlayer(req, res, next) {
 
       if (!player) {
         req.flash('error', 'Player not found.');
-        return res.redirect('/clubs/players');
+        return res.redirect(`/clubs/${clubId}/players`);
+      }
+      
+      // Verify the player belongs to the specified club
+      if (player.clubId !== clubId) {
+        req.flash('error', 'Player does not belong to the specified club.');
+        return res.redirect(`/clubs/${clubId}/players`);
       }
 
       // Check if user can edit this player
       if (!player.canUserEdit(req.user)) {
         req.flash('error', 'You do not have permission to edit this player.');
-        return res.redirect('/clubs/players');
+        return res.redirect(`/clubs/${clubId}/players`);
       }
 
       // Ensure club data is available - fallback to fetching it separately if needed
       let club = player.playerClub;
       if (!club) {
-        club = await Club.findByPk(req.user.clubId, {
+        club = await Club.findByPk(clubId, {
           attributes: ['id', 'clubName']
         });
         
         if (!club) {
           req.flash('error', 'Club not found.');
-          return res.redirect('/clubs/players');
+          return res.redirect(`/clubs/${clubId}/players`);
         }
       }
 
@@ -388,13 +476,19 @@ export async function updatePlayer(req, res, next) {
 
     if (!player) {
       req.flash('error', 'Player not found.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
+    }
+    
+    // Verify the player belongs to the specified club
+    if (player.clubId !== clubId) {
+      req.flash('error', 'Player does not belong to the specified club.');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Check if user can edit this player
     if (!player.canUserEdit(req.user)) {
       req.flash('error', 'You do not have permission to edit this player.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Extract validated data
@@ -411,7 +505,7 @@ export async function updatePlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully updated.`);
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   } catch (error) {
     console.error('Error updating player:', error);
     
@@ -425,7 +519,7 @@ export async function updatePlayer(req, res, next) {
     }
 
     // Redirect back to edit form
-    return res.redirect(`/clubs/players/${req.params.id}/edit`);
+    return res.redirect(`/clubs/${clubId}/players/${playerId}/edit`);
   }
 }
 
@@ -438,7 +532,20 @@ export async function updatePlayer(req, res, next) {
  */
 export async function deactivatePlayer(req, res, next) {
   try {
-    const playerId = req.params.id;
+    // Extract and validate URL parameters
+    const clubId = parseInt(req.params.id);
+    const playerId = parseInt(req.params.playerId);
+    
+    if (isNaN(clubId) || isNaN(playerId)) {
+      req.flash('error', 'Invalid club or player ID.');
+      return res.redirect('/clubs');
+    }
+    
+    // Authorization check - delegates can only access their own club
+    if (req.user.role === 'delegate' && req.user.clubId !== clubId) {
+      req.flash('error', 'You do not have permission to access this club.');
+      return res.redirect('/clubs');
+    }
 
     // Ensure user is authenticated
     if (!req.user) {
@@ -456,13 +563,19 @@ export async function deactivatePlayer(req, res, next) {
 
     if (!player) {
       req.flash('error', 'Player not found or is already inactive.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
+    }
+    
+    // Verify the player belongs to the specified club
+    if (player.clubId !== clubId) {
+      req.flash('error', 'Player does not belong to the specified club.');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Check if user can edit this player
     if (!player.canUserEdit(req.user)) {
       req.flash('error', 'You do not have permission to remove this player.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Deactivate the player (soft delete)
@@ -471,11 +584,11 @@ export async function deactivatePlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been removed from your club.`);
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   } catch (error) {
     console.error('Error deactivating player:', error);
     req.flash('error', 'Failed to remove player. Please try again.');
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   }
 }
 
@@ -488,7 +601,20 @@ export async function deactivatePlayer(req, res, next) {
  */
 export async function reactivatePlayer(req, res, next) {
   try {
-    const playerId = req.params.id;
+    // Extract and validate URL parameters
+    const clubId = parseInt(req.params.id);
+    const playerId = parseInt(req.params.playerId);
+    
+    if (isNaN(clubId) || isNaN(playerId)) {
+      req.flash('error', 'Invalid club or player ID.');
+      return res.redirect('/clubs');
+    }
+    
+    // Authorization check - delegates can only access their own club
+    if (req.user.role === 'delegate' && req.user.clubId !== clubId) {
+      req.flash('error', 'You do not have permission to access this club.');
+      return res.redirect('/clubs');
+    }
 
     // Ensure user is authenticated
     if (!req.user) {
@@ -506,13 +632,19 @@ export async function reactivatePlayer(req, res, next) {
 
     if (!player) {
       req.flash('error', 'Inactive player not found.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
+    }
+    
+    // Verify the player belongs to the specified club
+    if (player.clubId !== clubId) {
+      req.flash('error', 'Player does not belong to the specified club.');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Check if user has permission to edit this player
     if (!player.canUserEdit(req.user)) {
       req.flash('error', 'You do not have permission to reactivate this player.');
-      return res.redirect('/clubs/players');
+      return res.redirect(`/clubs/${clubId}/players`);
     }
 
     // Reactivate the player
@@ -521,11 +653,11 @@ export async function reactivatePlayer(req, res, next) {
     });
 
     req.flash('success', `Player ${player.getFullName()} has been successfully reactivated.`);
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   } catch (error) {
     console.error('Error reactivating player:', error);
     req.flash('error', 'Failed to reactivate player. Please try again.');
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   }
 }
 
@@ -543,24 +675,37 @@ export async function downloadCsvTemplate(req, res, next) {
     return res.redirect('/auth/login');
   }
 
-  // Admins and delegates can both download templates
-  if (!req.user.isAdmin && !req.user.clubId) {
-    req.flash('error', 'You must be an admin or club delegate to download the template.');
+  // Extract and validate club ID from URL
+  const clubId = parseInt(req.params.id);
+  if (isNaN(clubId)) {
+    req.flash('error', 'Invalid club ID.');
     return res.redirect('/dashboard');
   }
 
-  // For admins, use a generic club name; for delegates, use their club
-  let club = null;
-  let clubName = 'Players';
+  // Authorization: Delegates can only download for their own club, admins can download for any club
+  if (!req.user.isAdmin && req.user.clubId !== clubId) {
+    req.flash('error', 'You can only download templates for your own club.');
+    return res.redirect('/dashboard');
+  }
 
-  if (req.user.clubId) {
-    club = await Club.findByPk(req.user.clubId, {
+  // Fetch the club using the URL parameter
+  let clubName = 'Players';
+  
+  try {
+    const club = await Club.findByPk(clubId, {
       attributes: ['id', 'clubName']
     });
 
     if (club) {
       clubName = club.clubName;
+    } else {
+      req.flash('error', 'Club not found.');
+      return res.redirect('/dashboard');
     }
+  } catch (error) {
+    console.error('Error fetching club for CSV template:', error);
+    req.flash('error', 'Error loading club information.');
+    return res.redirect('/dashboard');
   }
 
   // Create CSV template with headers and sample data
@@ -629,39 +774,33 @@ export async function importPlayersFromCsv(req, res, next) {
     return res.redirect('/auth/login');
   }
 
+  // Extract and validate club ID from URL
+  const clubId = parseInt(req.params.id);
+  if (isNaN(clubId)) {
+    req.flash('error', 'Invalid club ID.');
+    return res.redirect('/dashboard');
+  }
+
+  // Authorization: Delegates can only import for their own club, admins can import for any club
+  if (!req.user.isAdmin && req.user.clubId !== clubId) {
+    req.flash('error', 'You can only import players for your own club.');
+    return res.redirect('/dashboard');
+  }
+
   // Check if file was uploaded
   if (!req.file) {
     req.flash('error', 'Please select a CSV file to upload.');
-    return res.redirect('/clubs/players');
-  }
-
-  // For import operations, we need a target club
-  let targetClubId = req.user.clubId;
-  
-  // If admin, they might specify a target club (this would need form field support)
-  if (req.user.isAdmin && req.body.targetClubId) {
-    targetClubId = req.body.targetClubId;
-  }
-
-  if (!targetClubId) {
-    req.flash('error', 'A target club must be specified for player import.');
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   }
 
   // Get club information
-  const club = await Club.findByPk(targetClubId, {
+  const club = await Club.findByPk(clubId, {
     attributes: ['id', 'clubName']
   });
 
   if (!club) {
-    req.flash('error', 'Target club not found.');
-    return res.redirect('/clubs/players');
-  }
-
-  // Check authorization for the target club
-  if (!req.user.isAdmin && req.user.clubId !== targetClubId) {
-    req.flash('error', 'You do not have permission to import players for this club.');
-    return res.redirect('/clubs/players');
+    req.flash('error', 'Club not found.');
+    return res.redirect('/dashboard');
   }
 
   const { shortsColor = 'Unrestricted', updateExisting = false, notes = '' } = req.body;
@@ -672,7 +811,7 @@ export async function importPlayersFromCsv(req, res, next) {
   
   if (lines.length < 2) {
     req.flash('error', 'CSV file must contain at least a header row and one data row.');
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   }
 
   // Parse headers
@@ -684,7 +823,7 @@ export async function importPlayersFromCsv(req, res, next) {
   
   if (missingHeaders.length > 0) {
     req.flash('error', `Missing required columns: ${missingHeaders.join(', ')}. Please use the template.`);
-    return res.redirect('/clubs/players');
+    return res.redirect(`/clubs/${clubId}/players`);
   }
 
   // Process data rows
@@ -726,13 +865,13 @@ export async function importPlayersFromCsv(req, res, next) {
       // Use the formatted date for database storage
       const formattedDob = dobValidation.formattedDate;
 
-      // Check if player already exists - based on name and DOB within target club
+      // Check if player already exists - based on name and DOB within club
       const existingPlayer = await ClubPlayer.findOne({
         where: {
           firstName: playerData.firstname,
           lastName: playerData.lastname,
           dateOfBirth: formattedDob,
-          clubId: targetClubId, // Check within target club
+          clubId: clubId, // Check within club
           isActive: true
         }
       });
@@ -755,9 +894,9 @@ export async function importPlayersFromCsv(req, res, next) {
         continue;
       }
 
-      // Create new player for the target club
+      // Create new player for the club
       await ClubPlayer.create({
-        clubId: targetClubId, // Use the authorized target club ID
+        clubId: clubId, // Use the authorized club ID
         firstName: playerData.firstname,
         lastName: playerData.lastname,
         email: playerData.email.toLowerCase(),
@@ -791,7 +930,7 @@ export async function importPlayersFromCsv(req, res, next) {
     req.flash('error', `Errors encountered: ${results.errors.slice(0, 5).join('; ')}${results.errors.length > 5 ? '...' : ''}`);
   }
 
-  return res.redirect('/clubs/players');  
+  return res.redirect(`/clubs/${clubId}/players`);  
 }
 
 /**

@@ -3,7 +3,7 @@ import { clubManageManager } from '../../../public/js/club-manage.js';
 
 function setupDOM() {
   document.body.innerHTML = `
-    <form action="/clubs/manage/123">
+    <form action="/clubs/123/edit">
       <input name="name" required />
       <textarea id="description"></textarea>
       <div class="file-upload-area">

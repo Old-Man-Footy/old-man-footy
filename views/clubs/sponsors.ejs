@@ -1,4 +1,7 @@
-<div class="container mt-4" data-page-id="clubs-sponsors">
+<div class="con                    <a href="/clubs/<%= club.id %>/edit" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Club Profile
+                    </a>
+                    <a href="/clubs/<%= club.id %>/sponsors/add" class="btn btn-primary">er mt-4" data-page-id="clubs-sponsors">
     <div class="row">
         <div class="col-md-12">
             <!-- Page Header -->
@@ -13,10 +16,10 @@
                     </p>
                 </div>
                 <div>
-                    <a href="/clubs/manage" class="btn btn-outline-secondary me-2">
+                    <a href="/clubs/<%= club.id %>/edit" class="btn btn-outline-secondary me-2">
                         <i class="fas fa-arrow-left me-1"></i>Back to Club Management
                     </a>
-                    <a href="/clubs/manage/sponsors/add" class="btn btn-primary">
+                    <a href="/clubs/<%= club.id %>/sponsors/add" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i>Add Sponsor
                     </a>
                 </div>
@@ -85,7 +88,7 @@
                                             <a href="/sponsors/<%= sponsor.id %>" class="btn btn-outline-primary btn-sm">
                                                 <i class="fas fa-eye me-1"></i>View
                                             </a>
-                                            <a href="/clubs/manage/sponsors/<%= sponsor.id %>/edit" class="btn btn-outline-tertiary btn-sm">
+                                            <a href="/clubs/<%= club.id %>/sponsors/<%= sponsor.id %>/edit" class="btn btn-outline-tertiary btn-sm">
                                                 <i class="bi bi-pencil-square me-1"></i>Edit
                                             </a>
                                             <% if (sponsor.website) { %>
@@ -93,7 +96,7 @@
                                                     <i class="fas fa-external-link-alt me-1"></i>Website
                                                 </a>
                                             <% } %>
-                                            <form method="POST" action="/clubs/manage/sponsors/<%= sponsor.id %>/remove" class="d-inline">
+                                            <form method="POST" action="/clubs/<%= club.id %>/sponsors/<%= sponsor.id %>/remove" class="d-inline">
                                                 <button data-confirm="Remove <%= sponsor.sponsorName %> from your club?"
                                                         type="submit" class="btn btn-outline-danger btn-sm">
                                                     <i class="bi bi-x-circle"></i> Remove
@@ -116,7 +119,7 @@
                     <p class="text-muted mb-4">
                         Your club doesn't have any sponsors linked yet. Add sponsors to showcase your partnerships and support network.
                     </p>
-                    <a href="/clubs/manage/sponsors/add" class="btn btn-primary btn-lg">
+                    <a href="/clubs/<%= club.id %>/sponsors/add" class="btn btn-primary btn-lg">
                         <i class="fas fa-plus me-2"></i>Add Your First Sponsor
                     </a>
                 </div>

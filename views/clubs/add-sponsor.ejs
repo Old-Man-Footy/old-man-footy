@@ -12,7 +12,7 @@
                         Add a new sponsor for <%= club.clubName %>
                     </p>
                 </div>
-                <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Back to Sponsors
                 </a>
             </div>
@@ -26,7 +26,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/clubs/manage/sponsors/add" enctype="multipart/form-data" id="sponsorForm">
+                    <form method="POST" action="/clubs/<%= club.id %>/sponsors/add" enctype="multipart/form-data" id="sponsorForm">
                         <input type="hidden" name="sponsorType" id="sponsorTypeInput" value="new">
 
                         <!-- Basic Information -->
@@ -172,7 +172,7 @@
                                 <i class="bi bi-save me-1"></i>
                                 <span id="submitText">Add Sponsor</span>
                             </button>
-                            <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                            <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                         </div>

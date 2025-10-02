@@ -5,7 +5,7 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-          <li class="breadcrumb-item"><a href="/clubs/players">Players</a></li>
+          <li class="breadcrumb-item"><a href="/clubs/<%= club.id %>/players">Players</a></li>
           <li class="breadcrumb-item active" aria-current="page">Edit <%= player.getFullName() %></li>
         </ol>
       </nav>
@@ -40,7 +40,7 @@
             </div>
           <% } %>
 
-          <form method="POST" action="/clubs/players/<%= player.id %>" novalidate>
+          <form method="POST" action="/clubs/<%= club.id %>/players/<%= player.id %>" novalidate>
             <input type="hidden" name="_method" value="PUT">
             
             <div class="row">
@@ -180,7 +180,7 @@
             </div>
 
             <div class="d-flex justify-content-between">
-              <a href="/clubs/players" class="btn btn-outline-secondary">
+              <a href="/clubs/<%= club.id %>/players" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-2"></i>Cancel
               </a>
               <button type="submit" class="btn btn-primary">
@@ -335,7 +335,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form method="POST" action="/clubs/players/<%= player.id %>" class="d-inline">
+        <form method="POST" action="/clubs/<%= club.id %>/players/<%= player.id %>" class="d-inline">
           <input type="hidden" name="_method" value="DELETE">
           <button type="submit" class="btn btn-danger">
             <i class="bi bi-person-dash me-1"></i>Remove Player

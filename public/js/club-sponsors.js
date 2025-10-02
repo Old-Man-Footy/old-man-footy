@@ -46,7 +46,7 @@ export const clubSponsorsManager = {
         if (!sponsorList) return;
         const sponsorIds = Array.from(sponsorList.children).map(item => item.getAttribute('data-sponsor-id'));
         try {
-            fetch('/clubs/manage/sponsors/reorder', {
+            fetch('/clubs/edit/sponsors/reorder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sponsorOrder: sponsorIds })
