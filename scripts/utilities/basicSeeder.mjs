@@ -172,7 +172,6 @@ class BasicSeeder {
                 promotionalImageURL: carnivalData.promotionalImageURL,
                 
                 // Draw and documents
-                drawFiles: carnivalData.drawFiles || [],
                 drawFileURL: carnivalData.drawFileURL,
                 drawFileName: carnivalData.drawFileName,
                 drawTitle: carnivalData.drawTitle,

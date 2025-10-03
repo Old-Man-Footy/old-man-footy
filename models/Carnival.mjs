@@ -972,12 +972,6 @@ Carnival.init({
       this.setDataValue('socialMediaWebsite', value && value.trim() ? value.trim() : null);
     }
   },
-  // Enhanced Draw/Document Upload Support
-  drawFiles: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: []
-  },
   // Legacy draw fields for backward compatibility
   drawFileURL: {
     type: DataTypes.STRING,

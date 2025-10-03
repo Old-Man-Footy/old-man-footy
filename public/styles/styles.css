@@ -976,29 +976,15 @@ button[type="submit"]:contains("Complete Registration"):focus {
     max-width: 120px;
 }
 
-/* Document Uploader Component Styles */
+.image-upload-area,
 .document-upload-area {
     cursor: pointer;
     transition: border-color 0.3s ease;
 }
 
+.image-upload-area:hover,
 .document-upload-area:hover {
-    border-color: #0d6efd !important;
-}
-
-/* Dark theme image uploader styles */
-@media (prefers-color-scheme: dark) {
-    .image-upload-area {
-        background-color: var(--bs-dark-bg-subtle);
-    }
-    
-    .image-upload-area:hover {
-        background-color: var(--bs-primary-bg-subtle) !important;
-    }
-    
-    .image-thumbnail {
-        background-color: var(--bs-dark-bg-subtle);
-    }
+    border-color: var(--rugby-green) !important;
 }
 
 /* Form Enhancements */

@@ -19,7 +19,7 @@ const getFieldMapping = (entityType, fieldname) => {
     carnival: {
       logo: 'clubLogoURL',
       promotionalImage: 'promotionalImageURL',
-      drawDocument: 'drawFiles',
+      drawDocument: 'drawFileURL',
       galleryImage: 'galleryImages',
     },
     club: {
