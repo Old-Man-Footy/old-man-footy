@@ -274,7 +274,14 @@ export const attendeesManager = {
     
     // Sends an API request.
     async sendRequest(url, method, body = null) {
-        const options = { method, headers: { 'Content-Type': 'application/json' } };
+        const options = { 
+            method, 
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            } 
+        };
         if (body) options.body = JSON.stringify(body);
         const response = await fetch(url, options);
         return response.json();

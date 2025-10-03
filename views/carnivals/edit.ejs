@@ -19,6 +19,7 @@
                     <form method="POST" action="/carnivals/<%= carnival.id %>/edit" 
                           data-mysideline-carnival-url="<%= process.env.MYSIDELINE_EVENT_URL || 'https://www.mysideline.com/register/' %>"
                           enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <input type="hidden" name="_token" value="<%= csrfToken %>">
                         <!-- Basic Information -->
                         <div class="mb-4">
                             <h5 class="text-primary mb-3">

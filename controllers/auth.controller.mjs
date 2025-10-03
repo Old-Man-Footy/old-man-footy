@@ -25,6 +25,7 @@ import { wrapControllers } from '../middleware/asyncHandler.mjs';
 const showLoginForm = (req, res) => {
   return res.render('auth/login', {
     title: 'Login',
+    csrfToken: req.csrfToken()
   });
 };
 

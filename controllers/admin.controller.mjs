@@ -698,10 +698,11 @@ const showEditCarnivalHandler = async (req, res) => {
         return res.redirect('/admin/carnivals');
     }
 
-    return res.render('admin/edit-carnival', {
+    return res.render('carnivals/edit', {
         title: `Edit ${carnival.title} - Admin Dashboard`,
         carnival,
-        additionalCSS: ['/styles/admin.styles.css']
+        additionalCSS: ['/styles/admin.styles.css'],
+        csrfToken: req.csrfToken()
     });
 };
 

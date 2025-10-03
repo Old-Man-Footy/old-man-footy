@@ -113,7 +113,11 @@ export const sponsorEditManager = {
             // Submit via AJAX
             const response = await fetch(form.action, {
                 method: form.method || 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
             });
             
             if (response.ok) {

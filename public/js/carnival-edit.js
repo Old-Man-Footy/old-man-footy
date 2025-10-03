@@ -53,7 +53,11 @@ export const carnivalEditManager = {
             
             const response = await fetch(this.elements.form.action, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
             });
 
             if (response.redirected) {

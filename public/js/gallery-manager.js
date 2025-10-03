@@ -192,6 +192,10 @@ export const galleryManager = {
 
             const response = await fetch('/api/images/upload', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: formData
             });
 
@@ -269,7 +273,11 @@ export const galleryManager = {
 
         try {
             const response = await fetch(`/api/images/${imageId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
             });
 
             if (!response.ok) {

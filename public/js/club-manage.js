@@ -74,7 +74,11 @@ export const clubManageManager = {
             
             const response = await fetch(form.action, {
                 method: form.method,
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
             });
 
             console.log('Club manage: Response status:', response.status);

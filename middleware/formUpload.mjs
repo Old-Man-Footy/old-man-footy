@@ -273,14 +273,23 @@ export const createFormUploader = (entityType, fieldConfig = {}) => {
    * Middleware to handle post-upload processing for form-based uploads
    */
   const processFormUpload = async (req, res, next) => {
+    console.log('🟣 FormUpload processFormUpload - Starting file processing');
+    console.log('🟣 Files in request:', { 
+      hasFile: !!req.file, 
+      hasFiles: !!req.files,
+      fileCount: req.files ? (Array.isArray(req.files) ? req.files.length : Object.keys(req.files).length) : 0
+    });
+    
     try {
       // Only process if files were uploaded
       if (!req.file && !req.files) {
+        console.log('🟣 No files to process, skipping...');
         return next();
       }
       
       // Handle single file upload
       if (req.file) {
+        console.log('🟣 Processing single file upload:', req.file.fieldname);
         const file = req.file;
         const subfolder = getSubfolderForField(file.fieldname);
         const relativePath = `/uploads/${entityType}/${req.params.id || req.body.id}/${subfolder}/${file.filename}`;
@@ -293,6 +302,7 @@ export const createFormUploader = (entityType, fieldConfig = {}) => {
           mimetype: file.mimetype,
           size: file.size
         };
+        console.log('🟣 Single file processed:', req.uploadedFile.path);
       }
       
       // Handle multiple file upload
@@ -333,8 +343,10 @@ export const createFormUploader = (entityType, fieldConfig = {}) => {
         });
       }
       
+      console.log('🟣 File processing complete, continuing to next middleware');
       next();
     } catch (error) {
+      console.error('❌ FormUpload processFormUpload error:', error);
       next(error);
     }
   };

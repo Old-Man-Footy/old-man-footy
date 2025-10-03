@@ -604,7 +604,9 @@ export const dashboardManager = {
             const response = await fetch('/api/subscriptions/me', {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             });
 
@@ -649,7 +651,9 @@ export const dashboardManager = {
                 const response = await fetch('/api/subscriptions/me', {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         isActive: false,
@@ -706,7 +710,9 @@ export const dashboardManager = {
             const response = await fetch('/api/subscriptions/me', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     isActive: true,

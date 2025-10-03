@@ -108,6 +108,8 @@ export const carnivalMyClubPlayersManager = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ teamNumber: teamNumber || null })
       });
@@ -152,6 +154,8 @@ export const carnivalMyClubPlayersManager = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ teamNumber: parseInt(targetTeam) })
       });
@@ -195,7 +199,11 @@ export const carnivalMyClubPlayersManager = {
     }
     try {
       const response = await fetch(`/carnivals/${this.carnivalId}/attendees/${this.registrationId}/players/${assignmentId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
       });
       const result = await response.json();
       if (result.success) {

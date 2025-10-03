@@ -703,11 +703,29 @@ const showEditFormHandler = async (req, res) => {
   }
 
   const states = AUSTRALIAN_STATES;
+  
+  // Debug CSRF token generation
+  let csrfToken;
+  try {
+    if (typeof req.csrfToken === 'function') {
+      csrfToken = req.csrfToken();
+      console.log('CSRF Token generated:', csrfToken);
+    } else {
+      console.error('req.csrfToken is not a function:', typeof req.csrfToken);
+      csrfToken = null;
+    }
+  } catch (error) {
+    console.error('Error generating CSRF token:', error.message);
+    csrfToken = null;
+  }
+  
   return res.render('carnivals/edit', {
     title: 'Edit Carnival',
     carnival,
     states,
+    csrfToken,
     additionalCSS: ['/styles/carnival.styles.css'],
+    additionalJS: ['/js/carnival-edit.js'],
   });
 };
 
@@ -770,26 +788,50 @@ export async function createOrMergeCarnival(carnivalData, userId) {
  * @param {Object} res - Express response object
  */
 const updateCarnivalHandler = async (req, res) => {
-  const carnival = await Carnival.findByPk(req.params.id);
+  console.log('🎯 updateCarnivalHandler - CONTROLLER ENTRY POINT - ID:', req.params.id);
+  console.log('🎯 updateCarnivalHandler - Request method:', req.method);
+  console.log('🎯 updateCarnivalHandler - Request URL:', req.url);
+  console.log('🎯 updateCarnivalHandler - User ID:', req.user?.id);
+  console.log('🎯 updateCarnivalHandler - Body keys:', Object.keys(req.body || {}));
+  console.log('🎯 updateCarnivalHandler - Files keys:', Object.keys(req.files || {}));
+  console.log('⚡ updateCarnivalHandler - Starting controller method for ID:', req.params.id);
+  
+  try {
+    console.log('⚡ updateCarnivalHandler - Finding carnival by PK:', req.params.id);
+    const carnival = await Carnival.findByPk(req.params.id);
 
-  if (!carnival) {
-    req.flash('error_msg', 'Carnival not found.');
-    return res.redirect('/dashboard');
-  }
+    if (!carnival) {
+      console.log('❌ updateCarnivalHandler - Carnival not found for ID:', req.params.id);
+      req.flash('error_msg', 'Carnival not found.');
+      return res.redirect('/dashboard');
+    }
+    console.log('✅ updateCarnivalHandler - Carnival found:', carnival.title);
 
-  // Check if user can edit this carnival (using async method for club delegate checking)
-  const canEdit = await carnival.canUserEditAsync(req.user);
-  if (!canEdit) {
-    req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
-    return res.redirect('/dashboard');
-  }
+    // Check if user can edit this carnival (using async method for club delegate checking)
+    console.log('⚡ updateCarnivalHandler - Checking user permissions for user:', req.user?.id);
+    try {
+      const canEdit = await carnival.canUserEditAsync(req.user);
+      if (!canEdit) {
+        console.log('❌ updateCarnivalHandler - User lacks edit permissions');
+        req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
+        return res.redirect('/dashboard');
+      }
+      console.log('✅ updateCarnivalHandler - User has edit permissions');
+    } catch (error) {
+      console.error('❌ updateCarnivalHandler - Error checking permissions:', error);
+      throw error;
+    }
 
+  console.log('⚡ updateCarnivalHandler - Checking validation results');
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('❌ updateCarnivalHandler - Validation errors found:', errors.array());
     // Check if this is an AJAX request
     const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+    console.log('⚡ updateCarnivalHandler - Is AJAX request:', isAjax);
     
     if (isAjax) {
+      console.log('⚡ updateCarnivalHandler - Returning JSON error response');
       // Return JSON response for AJAX requests
       return res.status(400).json({
         success: false,
@@ -829,10 +871,13 @@ const updateCarnivalHandler = async (req, res) => {
       errors: errors.array(),
       user: userWithClub, // Pass user data for auto-population
       additionalCSS: ['/styles/carnival.styles.css'],
+      additionalJS: ['/js/carnival-edit.js'],
     });
   }
 
+  console.log('✅ updateCarnivalHandler - Validation passed, proceeding with update');
   // Update carnival data
+  console.log('⚡ updateCarnivalHandler - Building update data from request body');
   const updateData = {
     title: req.body.title,
     date: new Date(req.body.date),
@@ -863,11 +908,20 @@ const updateCarnivalHandler = async (req, res) => {
   };
 
   // Handle all uploads using shared processor (defensive against corrupted uploads)
+  console.log('⚡ updateCarnivalHandler - Checking for structured uploads');
+  console.log('⚡ updateCarnivalHandler - req.structuredUploads:', req.structuredUploads?.length || 0);
   if (req.structuredUploads && req.structuredUploads.length > 0) {
-    const processedUploads = processStructuredUploads(req, updateData, 'carnival', carnival.id);
-    
-    // Merge processed uploads into updateData
-    Object.assign(updateData, processedUploads);
+    console.log('⚡ updateCarnivalHandler - Processing structured uploads');
+    try {
+      const processedUploads = processStructuredUploads(req, updateData, 'carnival', carnival.id);
+      console.log('⚡ updateCarnivalHandler - Processed uploads:', Object.keys(processedUploads));
+      
+      // Merge processed uploads into updateData
+      Object.assign(updateData, processedUploads);
+    } catch (error) {
+      console.error('❌ updateCarnivalHandler - Error processing uploads:', error);
+      throw error;
+    }
   }
 
   // Check if fee structure changed before updating
@@ -877,8 +931,16 @@ const updateCarnivalHandler = async (req, res) => {
   const newPerPlayerFee = parseFloat(updateData.perPlayerFee) || 0;
   
   const feeStructureChanged = (oldTeamFee !== newTeamFee) || (oldPerPlayerFee !== newPerPlayerFee);
+  console.log('⚡ updateCarnivalHandler - Fee structure changed:', feeStructureChanged);
 
-  await carnival.update(updateData);
+  console.log('⚡ updateCarnivalHandler - Updating carnival in database');
+  try {
+    await carnival.update(updateData);
+    console.log('✅ updateCarnivalHandler - Carnival updated successfully');
+  } catch (error) {
+    console.error('❌ updateCarnivalHandler - Error updating carnival:', error);
+    throw error;
+  }
 
   // If fee structure changed, recalculate fees for all existing registrations
   if (feeStructureChanged) {
@@ -906,8 +968,10 @@ const updateCarnivalHandler = async (req, res) => {
 
   // Check if this is an AJAX request
   const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+  console.log('⚡ updateCarnivalHandler - Final response, isAjax:', isAjax);
   
   if (isAjax) {
+    console.log('✅ updateCarnivalHandler - Returning JSON success response');
     // Return JSON response for AJAX requests
     return res.json({
       success: true,
@@ -916,8 +980,30 @@ const updateCarnivalHandler = async (req, res) => {
     });
   }
 
+  console.log('✅ updateCarnivalHandler - Setting flash message and redirecting');
   req.flash('success_msg', 'Carnival updated successfully!');
   return res.redirect(`/carnivals/${carnival.id}`);
+  
+  } catch (error) {
+    console.error('🚨 updateCarnivalHandler - UNHANDLED ERROR IN CONTROLLER:', error);
+    console.error('🚨 updateCarnivalHandler - Error stack:', error.stack);
+    console.error('🚨 updateCarnivalHandler - Error name:', error.name);
+    console.error('🚨 updateCarnivalHandler - Error message:', error.message);
+    
+    // Check if this is an AJAX request
+    const isAjax = req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+    
+    if (isAjax) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error occurred',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal error'
+      });
+    }
+    
+    req.flash('error_msg', 'An error occurred while updating the carnival. Please try again.');
+    return res.redirect(`/carnivals/${req.params.id}/edit`);
+  }
 };
 
 /**

@@ -59,13 +59,11 @@ const validateCarnival = [
         .withMessage('Longitude must be a valid number between -180 and 180')
 ];
 
-// Create carnival form uploader with field configuration
-const carnivalUpload = createFormUploader('carnivals', [
-    { name: 'logo', maxCount: 1 },
-    { name: 'promotionalImage', maxCount: 5 },
-    { name: 'galleryImage', maxCount: 10 },
-    { name: 'drawDocument', maxCount: 5 }
-]);
+// Create carnival form uploader with proper configuration
+const carnivalUpload = createFormUploader('carnivals', { 
+    maxFileSize: 10 * 1024 * 1024, // 10MB
+    maxFiles: 20 // Total across all fields (1+5+10+5)
+});
 
 // Mount carnival club routes as sub-router
 // This handles all routes like /:carnivalId/attendees, /:carnivalId/register, etc.
@@ -90,14 +88,71 @@ router.post('/new', ensureAuthenticated, ensureAdmin, ...validateCarnival, carni
 router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 
 // Update carnival POST with validation
-router.post('/:id/edit', ensureAuthenticated, ensureAdmin, validateEntityId('id'), asyncHandler(async (req, res, next) => {
-    await carnivalUpload.upload.fields([
-        { name: 'logo', maxCount: 1 },
-        { name: 'promotionalImage', maxCount: 1 },
-        { name: 'galleryImage', maxCount: 10 },
-        { name: 'drawDocument', maxCount: 1 }
-    ])(req, res, next);
-}), carnivalUpload.process, ...validateCarnival, carnivalController.postEdit);
+router.post('/:id/edit', 
+    (req, res, next) => {
+        console.log('🔵 POST /carnivals/:id/edit - Starting middleware chain for ID:', req.params.id);
+        next();
+    },
+    ensureAuthenticated, 
+    (req, res, next) => {
+        console.log('🟢 POST /carnivals/:id/edit - Auth middleware passed');
+        next();
+    },
+    validateEntityId('id'), 
+    (req, res, next) => {
+        console.log('🟡 POST /carnivals/:id/edit - Entity ID validation passed');
+        next();
+    },
+    (req, res, next) => {
+        console.log('🟠 POST /carnivals/:id/edit - Starting multer upload middleware');
+        console.log('🟠 Request details:', {
+            method: req.method,
+            contentType: req.headers['content-type'],
+            contentLength: req.headers['content-length'],
+            hasBody: !!req.body,
+            paramId: req.params.id
+        });
+        next();
+    },
+    (req, res, next) => {
+        // Add multer error handling wrapper
+        carnivalUpload.upload.fields([
+            { name: 'logo', maxCount: 1 },
+            { name: 'promotionalImage', maxCount: 5 },
+            { name: 'galleryImage', maxCount: 10 },
+            { name: 'drawDocument', maxCount: 5 }
+        ])(req, res, (err) => {
+            if (err) {
+                console.error('🚨 Multer error:', {
+                    message: err.message,
+                    code: err.code,
+                    field: err.field,
+                    stack: err.stack
+                });
+                return next(err);
+            }
+            console.log('🟠 POST /carnivals/:id/edit - Multer upload middleware completed successfully');
+            console.log('🟠 Upload results:', {
+                hasFile: !!req.file,
+                hasFiles: !!req.files,
+                fileKeys: req.files ? Object.keys(req.files) : 'none'
+            });
+            next();
+        });
+    }, 
+    (req, res, next) => {
+        console.log('🟣 POST /carnivals/:id/edit - Multer processing complete, starting validation');
+        console.log('� Request body keys:', Object.keys(req.body || {}));
+        console.log('� Request files:', req.files ? Object.keys(req.files) : 'none');
+        next();
+    },
+    validateCarnivalEdit, 
+    (req, res, next) => {
+        console.log('⚫ POST /carnivals/:id/edit - All validation passed, calling controller');
+        next();
+    },
+    CarnivalController.updateCarnivalHandler
+);
 
 // Delete carnival
 router.post('/:id/delete', ensureAuthenticated, carnivalController.delete);

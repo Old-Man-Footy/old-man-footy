@@ -1,0 +1,1 @@
+Get-Process node | Where-Object { $_.CommandLine -like '*old-man-footy*' } | Stop-Process -Force

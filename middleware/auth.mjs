@@ -47,7 +47,14 @@ function setupSessionAuth(req, res, next) {
 
   // Add isAuthenticated method to request
   req.isAuthenticated = function() {
-    return !!(req.session && req.session.userId && req.user);
+    const hasSession = !!(req.session);
+    const hasUserId = !!(req.session && req.session.userId);
+    const hasUser = !!req.user;
+    const result = !!(req.session && req.session.userId && req.user);
+    
+    console.log('🔍 IsAuthenticated Check: session =', hasSession, 'userId =', hasUserId, 'user =', hasUser, 'RESULT =', result);
+    
+    return result;
   };
 
   next();
@@ -58,8 +65,11 @@ function setupSessionAuth(req, res, next) {
  * Loads user from session if authenticated
  */
 async function loadSessionUser(req, res, next) {
+  console.log('🔍 LoadSessionUser: session.userId =', req.session?.userId, 'req.user =', !!req.user);
+  
   if (req.session.userId && !req.user) {
     try {
+      console.log('🔍 LoadSessionUser: Loading user from database for ID:', req.session.userId);
       const { User, Club } = await import('../models/index.mjs');
       const user = await User.findByPk(req.session.userId, {
         include: [{
@@ -69,13 +79,15 @@ async function loadSessionUser(req, res, next) {
       });
       
       if (user && user.isActive) {
+        console.log('✅ LoadSessionUser: User loaded successfully:', user.email);
         req.user = user;
       } else {
+        console.log('❌ LoadSessionUser: User not found or inactive - clearing session');
         // User not found or inactive - clear session
         req.session.userId = null;
       }
     } catch (error) {
-      console.error('Error loading session user:', error);
+      console.error('❌ LoadSessionUser: Error loading session user:', error);
       req.session.userId = null;
     }
   }
@@ -84,9 +96,14 @@ async function loadSessionUser(req, res, next) {
 
 // Middleware to ensure user is authenticated
 function ensureAuthenticated(req, res, next) {
+    console.log('🔐 EnsureAuthenticated: isAuthenticated =', req.isAuthenticated(), 'session.userId =', req.session?.userId, 'req.user =', !!req.user);
+    
     if (req.isAuthenticated()) {
+        console.log('✅ EnsureAuthenticated: User authenticated, proceeding');
         return next();
     }
+    
+    console.log('❌ EnsureAuthenticated: User not authenticated, redirecting');
     
     // Check if this is an AJAX request
     if (isAjaxRequest(req)) {

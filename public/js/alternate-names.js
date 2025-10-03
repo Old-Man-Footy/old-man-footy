@@ -146,7 +146,11 @@ export const alternateNamesManager = {
             const clubId = this.getClubId();
             const result = await apiRequest(`/clubs/${clubId}/alternate-names`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ alternateName })
             });
             if (result.success) {
@@ -173,7 +177,11 @@ export const alternateNamesManager = {
             const clubId = this.getClubId();
             const result = await apiRequest(`/clubs/${clubId}/alternate-names/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ alternateName })
             });
             if (result.success) {
@@ -194,7 +202,11 @@ export const alternateNamesManager = {
         try {
             const clubId = this.getClubId();
             const result = await apiRequest(`/clubs/${clubId}/alternate-names/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
             });
             if (result.success) {
                 location.reload();

@@ -50,7 +50,11 @@ export function createStandardFormSubmissionHandler(manager, formDataKey = 'logo
 
             const response = await fetch(form.action, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
             });
 
             if (response.redirected) {

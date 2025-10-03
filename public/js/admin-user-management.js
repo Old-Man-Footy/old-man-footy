@@ -16,6 +16,16 @@ import { showAlert } from './utils/ui-helpers.js';
  * @throws {Error} Throws an error for network issues or non-OK HTTP responses.
  */
 async function apiRequest(url, options) {
+    const defaultHeaders = {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+    };
+    
+    options.headers = {
+        ...defaultHeaders,
+        ...options.headers
+    };
+    
     const response = await fetch(url, options);
     if (!response.ok) {
         const errorText = await response.text();

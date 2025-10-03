@@ -49,7 +49,11 @@ export const editRegistrationManager = {
     async sendRequest(url, method, body = null) {
         const options = {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
         };
         if (body) {
             options.body = JSON.stringify(body);

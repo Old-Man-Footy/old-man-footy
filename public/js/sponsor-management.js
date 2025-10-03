@@ -85,7 +85,11 @@ export const sponsorManagementManager = {
         const newStatus = !this.elements.currentStatus;
         fetch(`/sponsors/${sponsorId}/status`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({ isActive: newStatus })
         })
             .then((response) => {
@@ -111,7 +115,10 @@ export const sponsorManagementManager = {
         if (!this.safeConfirm(confirmMessage)) return;
         fetch(`/sponsors/${sponsorId}`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
         })
             .then((response) => {
                 if (response.ok) {

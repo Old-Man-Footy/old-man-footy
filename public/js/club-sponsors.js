@@ -61,7 +61,11 @@ export const clubSponsorsManager = {
             const clubId = this.getClubId();
             fetch(`/clubs/${clubId}/sponsors/reorder`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ sponsorOrder: sponsorIds })
             })
             .then(r => r.json())

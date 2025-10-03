@@ -75,7 +75,7 @@ app.use(session({
     secret: getCurrentConfig().security.sessionSecret,
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true, // Changed to true so sessions are created for all requests
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,

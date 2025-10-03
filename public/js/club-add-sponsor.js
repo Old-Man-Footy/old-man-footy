@@ -102,7 +102,11 @@ export const clubAddSponsorManager = {
         try {
             const response = await fetch('/api/sponsors/check-duplicate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ sponsorName })
             });
             const data = await response.json();
