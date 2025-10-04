@@ -98,7 +98,8 @@
                                         maxSize: 10,
                                         multiple: false,
                                         required: false,
-                                        helpText: 'Upload your club logo (JPEG, PNG, SVG, max 10MB)'
+                                        helpText: 'Upload your club logo (JPEG, PNG, SVG, max 10MB)',
+                                        existingFile: club.logoUrl ? { url: club.logoUrl, name: 'Current Logo' } : null
                                     }) %>
                                 </div>
                             </div>

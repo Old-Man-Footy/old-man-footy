@@ -200,7 +200,8 @@
                             maxSize: 10,
                             multiple: false,
                             required: false,
-                            helpText: 'Upload a new logo (JPEG, PNG, or SVG, max 10MB)'
+                            helpText: 'Upload a new logo (JPEG, PNG, or SVG, max 10MB)',
+                            existingFile: sponsor.logoUrl ? { url: sponsor.logoUrl, name: 'Current Logo' } : null
                         }) %>
                              
                         <!-- Description -->

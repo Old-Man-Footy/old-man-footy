@@ -380,7 +380,7 @@ const updateClubProfileHandler = async (req, res) => {
     // Traditional form submission - create detailed error messages for better user feedback
     const errorMessages = errors.array().map((error) => error.msg);
     req.flash('error_msg', `Validation errors: ${errorMessages.join(', ')}`);
-    return res.redirect(`/clubs/${req.user.clubId}/edit`);
+    return res.redirect(`/clubs/${req.params.id}/edit`);
   }
 
   const user = req.user;
@@ -400,7 +400,7 @@ const updateClubProfileHandler = async (req, res) => {
   // Safety check for req.body
   if (!req.body || typeof req.body !== 'object') {
     req.flash('error_msg', 'Invalid form data received.');
-    return res.redirect(`/clubs/${user.clubId}/edit`);
+    return res.redirect(`/clubs/${req.params.id}/edit`);
   }
 
   const {
@@ -447,7 +447,7 @@ const updateClubProfileHandler = async (req, res) => {
   req.flash('success_msg', 'Club profile updated successfully!');
   
   // Redirect to the public club view
-  return res.redirect(`/clubs/${club.id}`);
+  return res.redirect(`/clubs/${req.params.id}`);
 };
 
 /**

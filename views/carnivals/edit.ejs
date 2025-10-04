@@ -31,7 +31,7 @@
                             
                             <div class="mb-3">
                                 <label for="title" class="form-label">Carnival Title *</label>
-                                <input type="text" class="form-control" id="title" name="title" 
+                                <input type="text" class="form-control" id="title" name="title"  
                                        value="<%= carnival.title %>" required>
                                 <div class="invalid-feedback">Please provide a carnival title.</div>
                             </div>
@@ -451,7 +451,7 @@
                                         multiple: false,
                                         required: false,
                                         helpText: 'Recommended: 512x512px for best display',
-                                        currentImageUrl: carnival.clubLogoURL
+                                        existingFile: carnival.clubLogoURL ? { url: carnival.clubLogoURL, name: 'Current Logo' } : null
                                     }) %>
                                 </div>                                
                                 <div class="col-md-4 mb-3">
@@ -463,7 +463,7 @@
                                         multiple: false,
                                         required: false,
                                         helpText: 'Recommended: 1200x630px or larger',
-                                        currentImageUrl: carnival.promotionalImageURL
+                                        existingFile: carnival.promotionalImageURL ? { url: carnival.promotionalImageURL, name: 'Current Image' } : null
                                     }) %>
                                 </div>
                                 <div class="col-md-4 mb-3">
