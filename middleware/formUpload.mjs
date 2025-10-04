@@ -281,6 +281,9 @@ export const createFormUploader = (entityType, fieldConfig = {}) => {
     });
     
     try {
+      // Initialize structured uploads array for controller
+      req.structuredUploads = [];
+      
       // Only process if files were uploaded
       if (!req.file && !req.files) {
         console.log('🟣 No files to process, skipping...');
@@ -294,56 +297,62 @@ export const createFormUploader = (entityType, fieldConfig = {}) => {
         const subfolder = getSubfolderForField(file.fieldname);
         const relativePath = `/uploads/${entityType}/${req.params.id || req.body.id}/${subfolder}/${file.filename}`;
         
-        // Store the path in request for controller to use
-        req.uploadedFile = {
+        // Store the structured upload for controller to use
+        const structuredUpload = {
           fieldname: file.fieldname,
           path: relativePath,
           originalName: file.originalname,
           mimetype: file.mimetype,
           size: file.size
         };
-        console.log('🟣 Single file processed:', req.uploadedFile.path);
+        
+        req.structuredUploads.push(structuredUpload);
+
       }
       
       // Handle multiple file upload
       if (req.files && Array.isArray(req.files)) {
-        req.uploadedFiles = req.files.map(file => {
+        req.files.forEach(file => {
           const subfolder = getSubfolderForField(file.fieldname);
           const relativePath = `/uploads/${entityType}/${req.params.id || req.body.id}/${subfolder}/${file.filename}`;
           
-          return {
+          const structuredUpload = {
             fieldname: file.fieldname,
             path: relativePath,
             originalName: file.originalname,
             mimetype: file.mimetype,
             size: file.size
           };
+          
+          req.structuredUploads.push(structuredUpload);
+
         });
       }
       
       // Handle multiple fields with files
       if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
-        req.uploadedFilesByField = {};
-        
         Object.keys(req.files).forEach(fieldname => {
           const filesArray = Array.isArray(req.files[fieldname]) ? req.files[fieldname] : [req.files[fieldname]];
           
-          req.uploadedFilesByField[fieldname] = filesArray.map(file => {
+          filesArray.forEach(file => {
             const subfolder = getSubfolderForField(file.fieldname);
             const relativePath = `/uploads/${entityType}/${req.params.id || req.body.id}/${subfolder}/${file.filename}`;
             
-            return {
+            const structuredUpload = {
               fieldname: file.fieldname,
               path: relativePath,
               originalName: file.originalname,
               mimetype: file.mimetype,
               size: file.size
             };
+            
+            req.structuredUploads.push(structuredUpload);
+
           });
         });
       }
       
-      console.log('🟣 File processing complete, continuing to next middleware');
+
       next();
     } catch (error) {
       console.error('❌ FormUpload processFormUpload error:', error);

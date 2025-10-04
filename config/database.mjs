@@ -88,7 +88,7 @@ function ensureDataDirectory() {
 let sequelizeOptions = {
   dialect: 'sqlite',
   storage: dbPath,
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  logging: process.env.NODE_ENV === 'test' ? console.log : false,
   define: {
     timestamps: true,
     underscored: false,

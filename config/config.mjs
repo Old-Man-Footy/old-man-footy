@@ -193,7 +193,7 @@ export const getCurrentDatabaseConfig = () => {
   
   const baseConfig = {
     dialect: 'sqlite',
-    logging: env === 'test' ? false : env === 'development' ? console.log : false,
+    logging: env === 'test' ? console.log : false,
     define: {
       freezeTableName: true,
       timestamps: true

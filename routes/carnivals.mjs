@@ -16,53 +16,90 @@ router.use(applySecurity);
 
 // Validation middleware for carnival
 const validateCarnival = [
-    body('title').trim().isLength({ min: 5, max: 200 }).withMessage('Title must be between 5 and 200 characters'),
-    body('date').isISO8601().withMessage('Valid date is required'),
-    body('endDate')
-        .optional({ nullable: true, checkFalsy: true })
-        .custom((endDate, { req }) => {
-            if (endDate && req.body.date) {
-                const startDate = new Date(req.body.date);
-                const end = new Date(endDate);
-                if (end <= startDate) {
-                    throw new Error('End date must be after start date');
-                }
-            }
-            return true;
-        })
-        .isISO8601().withMessage('Valid end date is required'),
-    body('locationAddress').trim().isLength({ min: 5, max: 500 }).withMessage('Location must be between 5 and 500 characters'),
-    body('organiserContactName').trim().isLength({ min: 2, max: 100 }).withMessage('Contact name must be between 2 and 100 characters'),
-    body('organiserContactEmail').custom((email) => {
-        const result = validateSecureEmail(email);
-        if (!result.isValid) {
-            throw new Error(result.errors[0]);
+  body('title')
+    .trim()
+    .isLength({ min: 5, max: 200 })
+    .withMessage('Title must be between 5 and 200 characters'),
+  body('date').isISO8601().withMessage('Valid date is required'),
+  body('endDate')
+    .optional({ nullable: true, checkFalsy: true })
+    .custom((endDate, { req }) => {
+      if (endDate && req.body.date) {
+        const startDate = new Date(req.body.date);
+        const end = new Date(endDate);
+        if (end <= startDate) {
+          throw new Error('End date must be after start date');
         }
-        return true;
-    }),
-    body('organiserContactPhone').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 20 }).withMessage('Phone number must be 20 characters or less'),
-    body('registrationFee').optional({ nullable: true, checkFalsy: true }).isDecimal({ decimal_digits: '0,2' }).withMessage('Registration fee must be a valid amount'),
-    body('feesDescription').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 1000 }).withMessage('Fees description must be 1000 characters or less'),
-    body('callForVolunteers').optional({ nullable: true, checkFalsy: true }).trim().isLength({ max: 1000 }).withMessage('Call for volunteers must be 1000 characters or less'),
-    body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state is required'),
-    body('socialMediaFacebook').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
-    body('socialMediaInstagram').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),
-    body('socialMediaTwitter').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Twitter URL required'),
-    body('socialMediaWebsite').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
-    body('locationLatitude')
-        .optional({ nullable: true, checkFalsy: true })
-        .isFloat({ min: -90, max: 90 })
-        .withMessage('Latitude must be a valid number between -90 and 90'),
-    body('locationLongitude')
-        .optional({ nullable: true, checkFalsy: true })
-        .isFloat({ min: -180, max: 180 })
-        .withMessage('Longitude must be a valid number between -180 and 180')
+      }
+      return true;
+    })
+    .isISO8601()
+    .withMessage('Valid end date is required'),
+  body('locationAddress')
+    .trim()
+    .isLength({ min: 5, max: 500 })
+    .withMessage('Location must be between 5 and 500 characters'),
+  body('organiserContactName')
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Contact name must be between 2 and 100 characters'),
+  body('organiserContactEmail').custom((email) => {
+    const result = validateSecureEmail(email);
+    if (!result.isValid) {
+      throw new Error(result.errors[0]);
+    }
+    return true;
+  }),
+  body('organiserContactPhone')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isLength({ max: 20 })
+    .withMessage('Phone number must be 20 characters or less'),
+  body('registrationFee')
+    .optional({ nullable: true, checkFalsy: true })
+    .isDecimal({ decimal_digits: '0,2' })
+    .withMessage('Registration fee must be a valid amount'),
+  body('feesDescription')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Fees description must be 1000 characters or less'),
+  body('callForVolunteers')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Call for volunteers must be 1000 characters or less'),
+  body('state').isIn(AUSTRALIAN_STATES).withMessage('Valid state is required'),
+  body('socialMediaFacebook')
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL()
+    .withMessage('Valid Facebook URL required'),
+  body('socialMediaInstagram')
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL()
+    .withMessage('Valid Instagram URL required'),
+  body('socialMediaTwitter')
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL()
+    .withMessage('Valid Twitter URL required'),
+  body('socialMediaWebsite')
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL()
+    .withMessage('Valid website URL required'),
+  body('locationLatitude')
+    .optional({ nullable: true, checkFalsy: true })
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be a valid number between -90 and 90'),
+  body('locationLongitude')
+    .optional({ nullable: true, checkFalsy: true })
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be a valid number between -180 and 180'),
 ];
 
 // Create carnival form uploader with proper configuration
-const carnivalUpload = createFormUploader('carnivals', { 
-    maxFileSize: 10 * 1024 * 1024, // 10MB
-    maxFiles: 20 // Total across all fields (1+5+10+5)
+const carnivalUpload = createFormUploader('carnivals', {
+  maxFileSize: 10 * 1024 * 1024, // 10MB
+  maxFiles: 20, // Total across all fields (1+5+10+5)
 });
 
 // Mount carnival club routes as sub-router
@@ -82,76 +119,37 @@ router.get('/:id/gallery', carnivalController.viewGallery);
 router.get('/:id', carnivalController.show);
 
 // Create carnival POST with validation (no image uploads on create)
-router.post('/new', ensureAuthenticated, ensureAdmin, ...validateCarnival, carnivalController.postNew);
+router.post(
+  '/new',
+  ensureAuthenticated,
+  ensureAdmin,
+  ...validateCarnival,
+  carnivalController.postNew
+);
 
 // Edit carnival form
 router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 
 // Update carnival POST with validation
-router.post('/:id/edit', 
-    (req, res, next) => {
-        console.log('🔵 POST /carnivals/:id/edit - Starting middleware chain for ID:', req.params.id);
-        next();
-    },
-    ensureAuthenticated, 
-    (req, res, next) => {
-        console.log('🟢 POST /carnivals/:id/edit - Auth middleware passed');
-        next();
-    },
-    validateEntityId('id'), 
-    (req, res, next) => {
-        console.log('🟡 POST /carnivals/:id/edit - Entity ID validation passed');
-        next();
-    },
-    (req, res, next) => {
-        console.log('🟠 POST /carnivals/:id/edit - Starting multer upload middleware');
-        console.log('🟠 Request details:', {
-            method: req.method,
-            contentType: req.headers['content-type'],
-            contentLength: req.headers['content-length'],
-            hasBody: !!req.body,
-            paramId: req.params.id
-        });
-        next();
-    },
-    (req, res, next) => {
-        // Add multer error handling wrapper
-        carnivalUpload.upload.fields([
-            { name: 'logo', maxCount: 1 },
-            { name: 'promotionalImage', maxCount: 5 },
-            { name: 'galleryImage', maxCount: 10 },
-            { name: 'drawDocument', maxCount: 5 }
-        ])(req, res, (err) => {
-            if (err) {
-                console.error('🚨 Multer error:', {
-                    message: err.message,
-                    code: err.code,
-                    field: err.field,
-                    stack: err.stack
-                });
-                return next(err);
-            }
-            console.log('🟠 POST /carnivals/:id/edit - Multer upload middleware completed successfully');
-            console.log('🟠 Upload results:', {
-                hasFile: !!req.file,
-                hasFiles: !!req.files,
-                fileKeys: req.files ? Object.keys(req.files) : 'none'
-            });
-            next();
-        });
-    }, 
-    (req, res, next) => {
-        console.log('🟣 POST /carnivals/:id/edit - Multer processing complete, starting validation');
-        console.log('� Request body keys:', Object.keys(req.body || {}));
-        console.log('� Request files:', req.files ? Object.keys(req.files) : 'none');
-        next();
-    },
-    validateCarnivalEdit, 
-    (req, res, next) => {
-        console.log('⚫ POST /carnivals/:id/edit - All validation passed, calling controller');
-        next();
-    },
-    CarnivalController.updateCarnivalHandler
+router.post(
+  '/:id/edit',
+  ensureAuthenticated,
+  validateEntityId('id'),
+  carnivalUpload.upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'promotionalImage', maxCount: 5 },
+    { name: 'galleryImage', maxCount: 10 },
+    { name: 'drawDocument', maxCount: 5 },
+  ]),
+  carnivalUpload.process,
+  (req, res, next) => {
+    console.log('� Request body keys:', Object.keys(req.body || {}));
+    console.log('� Request files:', req.files ? Object.keys(req.files) : 'none');
+    next();
+  },
+  ...validateCarnival,
+
+  carnivalController.postEdit
 );
 
 // Delete carnival
@@ -164,9 +162,18 @@ router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeO
 router.post('/:id/release-ownership', ensureAuthenticated, carnivalController.releaseOwnership);
 
 // Merge MySideline carnival with existing carnival
-router.post('/:id/merge', ensureAuthenticated, [
-    body('targetCarnivalId').notEmpty().withMessage('Target carnival is required').isInt().withMessage('Target carnival must be a valid ID')
-], carnivalController.mergeCarnival);
+router.post(
+  '/:id/merge',
+  ensureAuthenticated,
+  [
+    body('targetCarnivalId')
+      .notEmpty()
+      .withMessage('Target carnival is required')
+      .isInt()
+      .withMessage('Target carnival must be a valid ID'),
+  ],
+  carnivalController.mergeCarnival
+);
 
 // Sponsor management routes for carnivals
 // Manage sponsors for a specific carnival
@@ -176,21 +183,30 @@ router.get('/:id/sponsors', ensureAuthenticated, carnivalController.showCarnival
 router.post('/:id/sponsors/add', ensureAuthenticated, carnivalController.addSponsorToCarnival);
 
 // Remove sponsor from carnival
-router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, carnivalController.removeSponsorFromCarnival);
+router.post(
+  '/:id/sponsors/:sponsorId/remove',
+  ensureAuthenticated,
+  carnivalController.removeSponsorFromCarnival
+);
 
 // Send email to attendee clubs
-router.post('/:id/email-attendees', ensureAuthenticated, [
+router.post(
+  '/:id/email-attendees',
+  ensureAuthenticated,
+  [
     body('subject')
-        .notEmpty()
-        .withMessage('Subject is required')
-        .isLength({ max: 200 })
-        .withMessage('Subject must be 200 characters or less'),
+      .notEmpty()
+      .withMessage('Subject is required')
+      .isLength({ max: 200 })
+      .withMessage('Subject must be 200 characters or less'),
     body('customMessage')
-        .notEmpty()
-        .withMessage('Message is required')
-        .isLength({ max: 2000 })
-        .withMessage('Message must be 2000 characters or less')
-], carnivalController.sendEmailToAttendees);
+      .notEmpty()
+      .withMessage('Message is required')
+      .isLength({ max: 2000 })
+      .withMessage('Message must be 2000 characters or less'),
+  ],
+  carnivalController.sendEmailToAttendees
+);
 
 // Show comprehensive player list for all clubs attending a carnival
 router.get('/:id/players', ensureAuthenticated, carnivalController.showAllPlayers);
