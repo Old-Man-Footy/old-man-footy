@@ -446,7 +446,6 @@ export const sessionSecurity = (req, res, next) => {
     
     // Initialize lastRegeneration if not set (first time after login)
     if (!req.session.lastRegeneration) {
-      console.log('🔧 SessionSecurity: Initializing lastRegeneration for user:', req.user.id);
       req.session.lastRegeneration = now;
       return next();
     }
@@ -454,18 +453,15 @@ export const sessionSecurity = (req, res, next) => {
     const lastRegeneration = req.session.lastRegeneration;
     
     if (now - lastRegeneration > regenerationInterval) {
-      console.log('🔄 SessionSecurity: Regenerating session for user:', req.user.id);
       req.session.regenerate((err) => {
         if (err) {
           console.error('❌ SessionSecurity: Session regeneration failed:', err);
           return next(err);
         }
-        console.log('✅ SessionSecurity: Session regenerated, restoring user data');
         req.session.lastRegeneration = now;
         // Restore user data after regeneration
         if (req.user) {
           req.session.userId = req.user.id;
-          console.log('✅ SessionSecurity: User ID restored:', req.session.userId);
         }
         next();
       });

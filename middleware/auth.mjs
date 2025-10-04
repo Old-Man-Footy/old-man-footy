@@ -90,10 +90,8 @@ async function loadSessionUser(req, res, next) {
 
 // Middleware to ensure user is authenticated
 function ensureAuthenticated(req, res, next) {
-    console.log('🔐 EnsureAuthenticated: isAuthenticated =', req.isAuthenticated(), 'session.userId =', req.session?.userId, 'req.user =', !!req.user);
     
     if (req.isAuthenticated()) {
-        console.log('✅ EnsureAuthenticated: User authenticated, proceeding');
         return next();
     }
     

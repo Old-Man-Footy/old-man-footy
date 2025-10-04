@@ -5,6 +5,7 @@ import { ensureAuthenticated } from '../middleware/auth.mjs';
 import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
+import { storeClubReturnUrl } from '../middleware/returnUrl.mjs';
 import * as clubController from '../controllers/club.controller.mjs';
 import * as clubPlayerController from '../controllers/clubPlayer.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
@@ -251,7 +252,7 @@ router.post('/:id/sponsors/:sponsorId/remove', ensureAuthenticated, clubControll
 router.post('/:id/sponsors/reorder', ensureAuthenticated, clubController.reorderClubSponsors);
 
 // Club edit form (for consistency with carnival routes) - MUST come before /:id route
-router.get('/:id/edit', ensureAuthenticated, clubController.getEdit);
+router.get('/:id/edit', ensureAuthenticated, storeClubReturnUrl, clubController.getEdit);
 router.post('/:id/edit', ensureAuthenticated, clubUpload.upload.fields(clubFieldConfig), [
     body('location').optional({ nullable: true, checkFalsy: true }).isLength({ min: 2, max: 100 }).withMessage('Location must be between 2 and 100 characters'),
     body('state').optional({ nullable: true }).isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),

@@ -11,6 +11,7 @@ import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
 import { createFormUploader, validateEntityId } from '../middleware/formUpload.mjs';
 import asyncHandler from '../middleware/asyncHandler.mjs';
 import { applyAdminSecurity, validateSecureEmail } from '../middleware/security.mjs';
+import { storeClubReturnUrl, storeCarnivalReturnUrl } from '../middleware/returnUrl.mjs';
 import * as adminController from '../controllers/admin.controller.mjs';
 
 // Upload configurations for admin routes
@@ -70,7 +71,7 @@ router.post('/users/:id/delete', adminController.deleteUser);
  * Club Management Routes
  */
 router.get('/clubs', adminController.getClubManagement);
-router.get('/clubs/:id/edit', adminController.showEditClub);
+router.get('/clubs/:id/edit', storeClubReturnUrl, adminController.showEditClub);
 
 // Club update validation using centralized security
 const clubUpdateValidation = [
@@ -112,7 +113,7 @@ router.post('/clubs/:id/delete', adminController.deactivateClub);
  * Carnival Management Routes
  */
 router.get('/carnivals', adminController.getCarnivalManagement);
-router.get('/carnivals/:id/edit', adminController.showEditCarnival);
+router.get('/carnivals/:id/edit', storeCarnivalReturnUrl, adminController.showEditCarnival);
 
 // Carnival update validation using centralized security
 const carnivalUpdateValidation = [
