@@ -23,7 +23,7 @@ import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 import { recalculateRegistrationFees } from './carnivalClub.controller.mjs';
 import mySidelineService from '../services/mySidelineIntegrationService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
-import { smartRedirect, smartAjaxResponse } from '../utils/redirectUtils.mjs';
+
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
 import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
@@ -972,17 +972,18 @@ const updateCarnivalHandler = async (req, res) => {
   console.log('⚡ updateCarnivalHandler - Final response, isAjax:', isAjax);
   
   if (isAjax) {
-    console.log('✅ updateCarnivalHandler - Returning JSON success response with smart redirect');
-    // Return JSON response for AJAX requests with smart redirect URL
-    return smartAjaxResponse(req, res, {
+    console.log('✅ updateCarnivalHandler - Returning JSON success response');
+    // Return JSON response for AJAX requests
+    return res.json({
       success: true,
       message: 'Carnival updated successfully!',
-    }, `/carnivals/${carnival.id}`, req.user);
+      redirectUrl: `/carnivals/${carnival.id}`
+    });
   }
 
-  console.log('✅ updateCarnivalHandler - Setting flash message and using smart redirect');
+  console.log('✅ updateCarnivalHandler - Setting flash message and redirecting to public view');
   req.flash('success_msg', 'Carnival updated successfully!');
-  return smartRedirect(req, res, `/carnivals/${carnival.id}`, req.user);
+  return res.redirect(`/carnivals/${carnival.id}`);
   
   } catch (error) {
     console.error('🚨 updateCarnivalHandler - UNHANDLED ERROR IN CONTROLLER:', error);

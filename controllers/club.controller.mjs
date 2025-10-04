@@ -23,7 +23,7 @@ import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mj
 import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
-import { smartRedirect } from '../utils/redirectUtils.mjs';
+
 import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
 const getClubUploadPath = (clubId, contentType = 'logos') => {
@@ -446,8 +446,8 @@ const updateClubProfileHandler = async (req, res) => {
 
   req.flash('success_msg', 'Club profile updated successfully!');
   
-  // Use smart redirect to take user back to where they came from
-  return smartRedirect(req, res, `/clubs/${club.id}/edit`, req.user);
+  // Redirect to the public club view
+  return res.redirect(`/clubs/${club.id}`);
 };
 
 /**

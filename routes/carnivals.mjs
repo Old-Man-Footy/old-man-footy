@@ -4,7 +4,6 @@ import { ensureAuthenticated, ensureAdmin } from '../middleware/auth.mjs';
 import { createFormUploader, validateEntityId } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
-import { storeCarnivalReturnUrl } from '../middleware/returnUrl.mjs';
 import * as carnivalController from '../controllers/carnival.controller.mjs';
 import { AUSTRALIAN_STATES } from '../config/constants.mjs';
 // Import carnival club routes as a sub-router
@@ -129,7 +128,7 @@ router.post(
 );
 
 // Edit carnival form
-router.get('/:id/edit', ensureAuthenticated, storeCarnivalReturnUrl, carnivalController.getEdit);
+router.get('/:id/edit', ensureAuthenticated, carnivalController.getEdit);
 
 // Update carnival POST with validation
 router.post(
