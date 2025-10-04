@@ -1,6 +1,6 @@
 /**
  * Error Page JavaScript (Manager Object Pattern)
- * Enhanced Go Back functionality with fallback behavior and accessibility.
+ * Handles 'Go Back' navigation and 'Copy Error Details' functionality.
  */
 
 export const errorPageManager = {
@@ -13,17 +13,52 @@ export const errorPageManager = {
 
     cacheElements() {
         this.elements.goBackBtn = document.getElementById('goBackBtn');
+        // Add the new elements for the copy functionality
+        this.elements.copyBtn = document.getElementById('copyErrorBtn');
+        this.elements.errorContent = document.getElementById('errorDetailsContent');
     },
 
     bindEvents() {
-        const btn = this.elements.goBackBtn;
-        if (!btn) return;
-        btn.addEventListener('click', this.handleGoBack);
-        btn.addEventListener('keydown', (carnival) => {
-            if (carnival.key === 'Enter' || carnival.key === ' ') {
-                carnival.preventDefault();
-                btn.click();
-            }
+        const { goBackBtn, copyBtn, errorContent } = this.elements;
+
+        // Bind events for the 'Go Back' button
+        if (goBackBtn) {
+            goBackBtn.addEventListener('click', this.handleGoBack);
+            goBackBtn.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    goBackBtn.click();
+                }
+            });
+        }
+
+        // Bind event for the 'Copy Error' button
+        if (copyBtn && errorContent) {
+            copyBtn.addEventListener('click', this.handleCopyDetails.bind(this));
+        }
+    },
+
+    /**
+     * Copies the error details to the user's clipboard and provides visual feedback.
+     */
+    handleCopyDetails() {
+        const { copyBtn, errorContent } = this.elements;
+
+        // Use the Clipboard API to copy the text content
+        navigator.clipboard.writeText(errorContent.innerText).then(() => {
+            // Provide visual feedback on success
+            const originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+            copyBtn.disabled = true;
+
+            // Revert the button to its original state after 2 seconds
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHtml;
+                copyBtn.disabled = false;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy error details:', err);
+            alert('Could not copy error details to clipboard.');
         });
     },
 

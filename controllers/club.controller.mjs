@@ -396,6 +396,12 @@ const updateClubProfileHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
+  // Safety check for req.body
+  if (!req.body || typeof req.body !== 'object') {
+    req.flash('error_msg', 'Invalid form data received.');
+    return res.redirect(`/clubs/${user.clubId}/edit`);
+  }
+
   const {
     location,
     state,

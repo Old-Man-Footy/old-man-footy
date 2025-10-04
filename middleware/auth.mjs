@@ -52,8 +52,6 @@ function setupSessionAuth(req, res, next) {
     const hasUser = !!req.user;
     const result = !!(req.session && req.session.userId && req.user);
     
-    console.log('🔍 IsAuthenticated Check: session =', hasSession, 'userId =', hasUserId, 'user =', hasUser, 'RESULT =', result);
-    
     return result;
   };
 
@@ -65,11 +63,8 @@ function setupSessionAuth(req, res, next) {
  * Loads user from session if authenticated
  */
 async function loadSessionUser(req, res, next) {
-  console.log('🔍 LoadSessionUser: session.userId =', req.session?.userId, 'req.user =', !!req.user);
-  
   if (req.session.userId && !req.user) {
     try {
-      console.log('🔍 LoadSessionUser: Loading user from database for ID:', req.session.userId);
       const { User, Club } = await import('../models/index.mjs');
       const user = await User.findByPk(req.session.userId, {
         include: [{
@@ -79,7 +74,6 @@ async function loadSessionUser(req, res, next) {
       });
       
       if (user && user.isActive) {
-        console.log('✅ LoadSessionUser: User loaded successfully:', user.email);
         req.user = user;
       } else {
         console.log('❌ LoadSessionUser: User not found or inactive - clearing session');
