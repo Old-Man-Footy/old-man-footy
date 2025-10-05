@@ -909,6 +909,55 @@ const updateCarnivalHandler = async (req, res) => {
     perPlayerFee: req.body.perPlayerFee ? parseFloat(req.body.perPlayerFee) : 0,
   };
 
+  const filesToDelete = {};
+  
+  // Check for logo deletion
+  if (req.body.delete_logo === 'true') {
+    filesToDelete.logo = carnival.logo;
+    updateData.logo = null;
+  }
+  
+  // Check for promotional image deletion
+  if (req.body.delete_promotionalImage === 'true') {
+    filesToDelete.promotionalImage = carnival.promotionalImage;
+    updateData.promotionalImage = null;
+  }
+  
+  // Check for draw document deletion
+  if (req.body.delete_drawDocument === 'true') {
+    filesToDelete.drawDocument = carnival.drawDocument;
+    updateData.drawDocument = null;
+  }
+
+  // Process file deletions
+  if (Object.keys(filesToDelete).length > 0) {
+    try {
+      const fs = await import('fs').then(module => module.promises);
+      const path = await import('path');
+      
+      for (const [fieldName, filePath] of Object.entries(filesToDelete)) {
+        if (filePath) {
+          try {
+            // Convert web URL back to file system path
+            const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+            const fullPath = path.resolve(cleanPath);
+            
+            // Check if file exists before attempting deletion
+            await fs.access(fullPath);
+            await fs.unlink(fullPath);
+            console.log(`✅ updateCarnivalHandler - Successfully deleted file: ${fullPath}`);
+          } catch (deleteError) {
+            console.warn(`⚠️ updateCarnivalHandler - Could not delete file ${filePath}:`, deleteError.message);
+            // Continue with update even if file deletion fails
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ updateCarnivalHandler - Error during file deletion:', error);
+      // Continue with update even if file deletion fails
+    }
+  }
+
   // Handle all uploads using shared processor (defensive against corrupted uploads)
   console.log('⚡ updateCarnivalHandler - Checking for structured uploads');
   console.log('⚡ updateCarnivalHandler - req.structuredUploads:', req.structuredUploads?.length || 0);
