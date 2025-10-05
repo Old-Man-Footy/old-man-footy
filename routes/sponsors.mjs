@@ -15,7 +15,7 @@ const sponsorFieldConfig = [
 ];
 
 // Create uploader instance
-const sponsorUpload = createFormUploader('sponsor', sponsorFieldConfig);
+const sponsorUpload = createFormUploader('sponsors', sponsorFieldConfig);
 
 // Apply centralized security to all routes
 router.use(applySecurity);

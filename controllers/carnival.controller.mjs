@@ -613,7 +613,7 @@ const createCarnivalHandler = async (req, res) => {
 
     // Handle all uploads using shared processor (defensive against corrupted uploads)
     if (req.structuredUploads && req.structuredUploads.length > 0) {
-      const uploadUpdates = processStructuredUploads(req, {}, 'carnival', carnival.id);
+      const uploadUpdates = await processStructuredUploads(req, {}, 'carnivals', carnival.id);
       
       // Update carnival with processed upload data
       if (Object.keys(uploadUpdates).length > 0) {
@@ -914,7 +914,7 @@ const updateCarnivalHandler = async (req, res) => {
   if (req.structuredUploads && req.structuredUploads.length > 0) {
     console.log('⚡ updateCarnivalHandler - Processing structured uploads');
     try {
-      const processedUploads = processStructuredUploads(req, updateData, 'carnival', carnival.id);
+      const processedUploads = await processStructuredUploads(req, updateData, 'carnivals', carnival.id);
       console.log('⚡ updateCarnivalHandler - Processed uploads:', Object.keys(processedUploads));
       
       // Merge processed uploads into updateData

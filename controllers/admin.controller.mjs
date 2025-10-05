@@ -786,7 +786,7 @@ const updateCarnivalHandler = async (req, res) => {
     };
 
     // Handle all uploads using shared processor (defensive against corrupted uploads)
-    const processedData = processStructuredUploads(req, updateData, 'carnival', carnival.id);
+    const processedData = await processStructuredUploads(req, updateData, 'carnivals', carnival.id);
 
     await carnival.update(processedData);
 

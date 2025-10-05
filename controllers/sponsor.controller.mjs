@@ -358,7 +358,7 @@ export const updateSponsor = asyncHandler(async (req, res) => {
   };
 
   // Process structured uploads using defensive shared utility
-  const processedUpdateData = processStructuredUploads(req, updateData, 'sponsor', sponsor.id);
+  const processedUpdateData = await processStructuredUploads(req, updateData, 'sponsors', sponsor.id);
 
   await sponsor.update(processedUpdateData);
 

@@ -16,17 +16,17 @@
  */
 const getFieldMapping = (entityType, fieldname) => {
   const mappings = {
-    carnival: {
+    carnivals: {
       logo: 'clubLogoURL',
       promotionalImage: 'promotionalImageURL',
       drawDocument: 'drawFileURL',
       galleryImage: 'galleryImages',
     },
-    club: {
+    clubs: {
       logo: 'logoUrl',
       galleryImage: 'galleryImages'
     },
-    sponsor: {
+    sponsors: {
       logo: 'logoUrl'
     }
   };
@@ -101,9 +101,7 @@ export const processStructuredUploads = (req, updateData, entityType, entityId) 
         updateData[mappedField].push(upload.path);
         console.log(`📸 Added draw document to ${entityType} ${entityId} (${mappedField}): ${upload.path}`);
         break;
-      
-
-      
+     
       case 'avatar':
         updateData.avatarUrl = upload.path; // Avatar stays the same for all entities
         console.log(`📸 Updated ${entityType} ${entityId} avatar: ${upload.path}`);

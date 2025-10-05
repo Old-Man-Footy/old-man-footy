@@ -18,8 +18,8 @@ const clubFieldConfig = [{ name: 'logo', maxCount: 1 }, { name: 'gallery', maxCo
 const carnivalFieldConfig = [{ name: 'logo', maxCount: 1 }, { name: 'promotionalImage', maxCount: 1 }, { name: 'drawDocument', maxCount: 1 }];
 
 // Create form uploaders for admin routes
-const clubUpload = createFormUploader('club', clubFieldConfig);
-const carnivalUpload = createFormUploader('carnival', carnivalFieldConfig);
+const clubUpload = createFormUploader('clubs', clubFieldConfig);
+const carnivalUpload = createFormUploader('carnivals', carnivalFieldConfig);
 
 const router = express.Router();
 
