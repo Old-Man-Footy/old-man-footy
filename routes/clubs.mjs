@@ -37,8 +37,8 @@ const upload = multer({
 });
 
 // Create uploader instances
-const clubUpload = createFormUploader('club', clubFieldConfig);
-const sponsorUpload = createFormUploader('sponsor', sponsorFieldConfig);
+const clubUpload = createFormUploader('clubs', clubFieldConfig);
+const sponsorUpload = createFormUploader('sponsors', sponsorFieldConfig);
 
 // Apply centralized security to all routes
 router.use(applySecurity);
@@ -253,7 +253,7 @@ router.post('/:id/sponsors/reorder', ensureAuthenticated, clubController.reorder
 
 // Club edit form (for consistency with carnival routes) - MUST come before /:id route
 router.get('/:id/edit', ensureAuthenticated, clubController.getEdit);
-router.post('/:id/edit', ensureAuthenticated, clubUpload.upload.fields(clubFieldConfig), [
+router.post('/:id/edit', ensureAuthenticated, clubUpload.upload.fields(clubFieldConfig), clubUpload.process, [
     body('location').optional({ nullable: true, checkFalsy: true }).isLength({ min: 2, max: 100 }).withMessage('Location must be between 2 and 100 characters'),
     body('state').optional({ nullable: true }).isIn(AUSTRALIAN_STATES).withMessage('Valid state required'),
     body('contactEmail').optional({ nullable: true, checkFalsy: true }).custom((email) => {
@@ -266,7 +266,7 @@ router.post('/:id/edit', ensureAuthenticated, clubUpload.upload.fields(clubField
         return true;
     }),
     body('contactPhone').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Contact phone must be 20 characters or less'),
-    body('contactPerson').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Contact person must be 100 characters or less'),
+    body('contactPerson').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }).withMessage('Contact person must be 100characters or less'),
     body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('facebookUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Facebook URL required'),
     body('instagramUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid Instagram URL required'),

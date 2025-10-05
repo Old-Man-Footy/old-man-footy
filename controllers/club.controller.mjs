@@ -390,10 +390,16 @@ const updateClubProfileHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  const club = await Club.findByPk(user.clubId);
+  const club = await Club.findByPk(req.params.id);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Authorization check: user must be either an admin or a member of this club
+  if (!user.isAdmin && user.clubId !== parseInt(req.params.id)) {
+    req.flash('error_msg', 'You do not have permission to edit this club.');
     return res.redirect('/dashboard');
   }
 
@@ -436,13 +442,25 @@ const updateClubProfileHandler = async (req, res) => {
 
   // Handle all uploads using shared processor (defensive against corrupted uploads)
   if (req.structuredUploads && req.structuredUploads.length > 0) {
-    const processedUploads = processStructuredUploads(req, updateData, 'club', club.id);
-    
-    // Merge processed uploads into updateData
-    Object.assign(updateData, processedUploads);
+    try {
+      const processedUploads = await processStructuredUploads(req, updateData, 'clubs', club.id);
+     
+      // Merge processed uploads into updateData
+      Object.assign(updateData, processedUploads);
+    } catch (error) {
+      console.error('Error processing uploads:', error);
+      throw error;
+    }
   }
 
-  await club.update(updateData);
+  // Database update
+  try {
+    await club.update(updateData);
+  } catch (dbError) {
+    console.error('Database update failed:', dbError);
+    req.flash('error_msg', 'Failed to update club profile. Please try again.');
+    return res.redirect(`/admin/clubs/${club.id}/edit`);
+  }
 
   req.flash('success_msg', 'Club profile updated successfully!');
   
@@ -519,8 +537,13 @@ const deleteClubImageHandler = async (req, res) => {
   // If this was the club's logo, update the database
   if (contentType === 'logos') {
     const club = await Club.findByPk(clubId);
-    if (club && club.logoUrl && club.logoUrl.includes(filename)) {
-      await club.update({ logoUrl: null });
+    if (club && club.logoUrl) {
+      // Extract the actual filename from the logoUrl path
+      const logoUrlFilename = club.logoUrl.split('/').pop();
+      // Only null the logoUrl if we're deleting the exact file currently set as logo
+      if (logoUrlFilename === filename) {
+        await club.update({ logoUrl: null });
+      } 
     }
   }
 
@@ -654,8 +677,6 @@ const createClubHandler = async (req, res) => {
     clubId: newClub.id,
     isPrimaryDelegate: true,
   });
-
-  console.log(`✅ User ${user.email} created new club: ${clubName} (ID: ${newClub.id})`);
 
   req.flash(
     'success_msg',
@@ -1520,8 +1541,6 @@ const joinClubHandler = async (req, res) => {
     // Commit the transaction
     await transaction.commit();
 
-    console.log(`✅ User ${user.email} joined club: ${club.clubName} (ID: ${club.id})`);
-
     req.flash(
       'success_msg',
       `You have successfully joined "${club.clubName}" as a club delegate. You can now create carnivals for this club.`
@@ -1657,7 +1676,6 @@ const leaveClubHandler = async (req, res) => {
     } else {
       // Regular delegate leaving
       successMessage = `You have successfully left "${clubName}". You can now join a different club if needed.`;
-      console.log(`✅ User ${user.email} left club: ${clubName} (ID: ${club.id})`);
     }
 
     // Disassociate user from the club
