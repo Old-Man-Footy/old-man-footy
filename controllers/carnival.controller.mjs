@@ -711,7 +711,6 @@ const showEditFormHandler = async (req, res) => {
   try {
     if (typeof req.csrfToken === 'function') {
       csrfToken = req.csrfToken();
-      console.log('CSRF Token generated:', csrfToken);
     } else {
       console.error('req.csrfToken is not a function:', typeof req.csrfToken);
       csrfToken = null;
@@ -807,8 +806,7 @@ const updateCarnivalHandler = async (req, res) => {
       req.flash('error_msg', 'Carnival not found.');
       return res.redirect('/dashboard');
     }
-    console.log('✅ updateCarnivalHandler - Carnival found:', carnival.title);
-
+  
     // Check if user can edit this carnival (using async method for club delegate checking)
     console.log('⚡ updateCarnivalHandler - Checking user permissions for user:', req.user?.id);
     try {
@@ -818,7 +816,6 @@ const updateCarnivalHandler = async (req, res) => {
         req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
         return res.redirect('/dashboard');
       }
-      console.log('✅ updateCarnivalHandler - User has edit permissions');
     } catch (error) {
       console.error('❌ updateCarnivalHandler - Error checking permissions:', error);
       throw error;
@@ -877,9 +874,7 @@ const updateCarnivalHandler = async (req, res) => {
     });
   }
 
-  console.log('✅ updateCarnivalHandler - Validation passed, proceeding with update');
   // Update carnival data
-  console.log('⚡ updateCarnivalHandler - Building update data from request body');
   const updateData = {
     title: req.body.title,
     date: new Date(req.body.date),
@@ -945,7 +940,6 @@ const updateCarnivalHandler = async (req, res) => {
             // Check if file exists before attempting deletion
             await fs.access(fullPath);
             await fs.unlink(fullPath);
-            console.log(`✅ updateCarnivalHandler - Successfully deleted file: ${fullPath}`);
           } catch (deleteError) {
             console.warn(`⚠️ updateCarnivalHandler - Could not delete file ${filePath}:`, deleteError.message);
             // Continue with update even if file deletion fails
@@ -962,10 +956,8 @@ const updateCarnivalHandler = async (req, res) => {
   console.log('⚡ updateCarnivalHandler - Checking for structured uploads');
   console.log('⚡ updateCarnivalHandler - req.structuredUploads:', req.structuredUploads?.length || 0);
   if (req.structuredUploads && req.structuredUploads.length > 0) {
-    console.log('⚡ updateCarnivalHandler - Processing structured uploads');
     try {
       const processedUploads = await processStructuredUploads(req, updateData, 'carnivals', carnival.id);
-      console.log('⚡ updateCarnivalHandler - Processed uploads:', Object.keys(processedUploads));
       
       // Merge processed uploads into updateData
       Object.assign(updateData, processedUploads);
@@ -982,12 +974,8 @@ const updateCarnivalHandler = async (req, res) => {
   const newPerPlayerFee = parseFloat(updateData.perPlayerFee) || 0;
   
   const feeStructureChanged = (oldTeamFee !== newTeamFee) || (oldPerPlayerFee !== newPerPlayerFee);
-  console.log('⚡ updateCarnivalHandler - Fee structure changed:', feeStructureChanged);
-
-  console.log('⚡ updateCarnivalHandler - Updating carnival in database');
   try {
     await carnival.update(updateData);
-    console.log('✅ updateCarnivalHandler - Carnival updated successfully');
   } catch (error) {
     console.error('❌ updateCarnivalHandler - Error updating carnival:', error);
     throw error;
@@ -1022,7 +1010,6 @@ const updateCarnivalHandler = async (req, res) => {
   console.log('⚡ updateCarnivalHandler - Final response, isAjax:', isAjax);
   
   if (isAjax) {
-    console.log('✅ updateCarnivalHandler - Returning JSON success response');
     // Return JSON response for AJAX requests
     return res.json({
       success: true,
@@ -1031,7 +1018,6 @@ const updateCarnivalHandler = async (req, res) => {
     });
   }
 
-  console.log('✅ updateCarnivalHandler - Setting flash message and redirecting to public view');
   req.flash('success_msg', 'Carnival updated successfully!');
   return res.redirect(`/carnivals/${carnival.id}`);
   

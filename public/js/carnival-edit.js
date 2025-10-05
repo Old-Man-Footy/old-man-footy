@@ -6,6 +6,7 @@
 
 import { showAlert } from './utils/ui-helpers.js';
 import { documentUploaderManager } from './document-uploader.js';
+import { imageUploaderManager } from './image-uploader.js';
 
 export const carnivalEditManager = {
     // DOM element references
@@ -262,4 +263,5 @@ export const carnivalEditManager = {
 document.addEventListener('DOMContentLoaded', () => {
     carnivalEditManager.initialize();
     documentUploaderManager.initialize();
+    imageUploaderManager.initialize();
 });
