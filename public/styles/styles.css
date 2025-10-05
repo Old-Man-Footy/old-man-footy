@@ -1725,6 +1725,17 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background-color: var(--theme-card-bg) !important;
 }
 
+[data-theme="dark"] .image-upload-area,
+[data-theme="dark"] .document-upload-area {
+    border-color: var(--theme-border-color) !important;
+    background-color: var(--theme-card-bg) !important;
+}
+
+[data-theme="dark"] .image-upload-area:hover,
+[data-theme="dark"] .document-upload-area:hover {
+    border-color: var(--rugby-green) !important;
+}
+
 [data-theme="dark"] .nav-tabs .nav-link:hover,
 [data-theme="dark"] .nav-tabs .nav-link:focus {
     color: var(--theme-text-primary) !important;
