@@ -99,7 +99,7 @@ const validateCarnival = [
 // Create carnival form uploader with proper configuration
 const carnivalUpload = createFormUploader('carnivals', {
   maxFileSize: 10 * 1024 * 1024, // 10MB
-  maxFiles: 20, // Total across all fields (1+5+10+5)
+  maxFiles: 13, // Total across all fields (1+1+10+1)
 });
 
 // Mount carnival club routes as sub-router
@@ -137,9 +137,9 @@ router.post(
   validateEntityId('id'),
   carnivalUpload.upload.fields([
     { name: 'logo', maxCount: 1 },
-    { name: 'promotionalImage', maxCount: 5 },
+    { name: 'promotionalImage', maxCount: 1 },
     { name: 'galleryImage', maxCount: 10 },
-    { name: 'drawDocument', maxCount: 5 },
+    { name: 'drawDocument', maxCount: 1 },
   ]),
   carnivalUpload.process,
   (req, res, next) => {
