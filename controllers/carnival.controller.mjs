@@ -13,6 +13,7 @@ import {
   ClubPlayer,
   CarnivalClubPlayer,
   Sponsor,
+  CarnivalSponsor,
   sequelize,
 } from '../models/index.mjs';
 import { Op } from 'sequelize';
@@ -1108,21 +1109,145 @@ export const mergeCarnival = asyncHandler(async (req, res) => {
 });
 
 export const showCarnivalSponsors = asyncHandler(async (req, res) => {
-  // Placeholder for carnival sponsors functionality
-  req.flash('error_msg', 'Carnival sponsors functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}`);
+  try {
+    const carnivalId = req.params.id;
+    
+    // Fetch the carnival
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect('/carnivals');
+    }
+
+    // Fetch current carnival sponsors with sponsor details
+    const carnivalSponsors = await CarnivalSponsor.getActiveForCarnival(carnivalId);
+    
+    // Fetch all available sponsors
+    const sponsors = await Sponsor.findAll({
+      where: { isActive: true },
+      order: [['sponsorName', 'ASC']]
+    });
+
+    res.render('carnivals/sponsors', {
+      title: `${carnival.title} - Sponsors`,
+      carnival,
+      carnivalSponsors,
+      sponsors,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Error showing carnival sponsors:', error);
+    req.flash('error_msg', 'Failed to load carnival sponsors');
+    return res.redirect(`/carnivals/${req.params.id}/edit`);
+  }
 });
 
 export const addSponsorToCarnival = asyncHandler(async (req, res) => {
-  // Placeholder for add sponsor functionality
-  req.flash('error_msg', 'Add sponsor functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  try {
+    const carnivalId = req.params.id;
+    const { sponsorId } = req.body;
+
+    // Validate required fields
+    if (!sponsorId) {
+      req.flash('error_msg', 'Sponsor selection is required');
+      return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+    }
+
+    // Check if carnival exists
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect('/carnivals');
+    }
+
+    // Check if sponsor exists
+    const sponsor = await Sponsor.findByPk(sponsorId);
+    if (!sponsor) {
+      req.flash('error_msg', 'Sponsor not found');
+      return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+    }
+
+    // Check if relationship already exists
+    const existingRelation = await CarnivalSponsor.findOne({
+      where: {
+        carnivalId,
+        sponsorId,
+        isActive: true
+      }
+    });
+
+    if (existingRelation) {
+      req.flash('error_msg', `${sponsor.sponsorName} is already linked to this carnival`);
+      return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+    }
+
+    // Create the carnival-sponsor relationship
+    await CarnivalSponsor.create({
+      carnivalId,
+      sponsorId,
+      isActive: true,
+      addedBy: req.user.id,
+      addedAt: new Date()
+    });
+
+    req.flash('success_msg', `${sponsor.sponsorName} has been successfully added to ${carnival.title}`);
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+
+  } catch (error) {
+    console.error('Error adding sponsor to carnival:', error);
+    req.flash('error_msg', 'Failed to add sponsor to carnival');
+    return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  }
 });
 
 export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
-  // Placeholder for remove sponsor functionality
-  req.flash('error_msg', 'Remove sponsor functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  try {
+    const carnivalId = req.params.id;
+    const sponsorId = req.params.sponsorId;
+
+    // Check if carnival exists
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect('/carnivals');
+    }
+
+    // Check if sponsor exists
+    const sponsor = await Sponsor.findByPk(sponsorId);
+    if (!sponsor) {
+      req.flash('error_msg', 'Sponsor not found');
+      return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+    }
+
+    // Find and update the relationship to inactive
+    const carnivalSponsor = await CarnivalSponsor.findOne({
+      where: {
+        carnivalId,
+        sponsorId,
+        isActive: true
+      }
+    });
+
+    if (!carnivalSponsor) {
+      req.flash('error_msg', `${sponsor.sponsorName} is not currently linked to this carnival`);
+      return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+    }
+
+    // Soft delete by marking as inactive
+    await carnivalSponsor.update({
+      isActive: false,
+      removedBy: req.user.id,
+      removedAt: new Date()
+    });
+
+    req.flash('success_msg', `${sponsor.sponsorName} has been successfully removed from ${carnival.title}`);
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+
+  } catch (error) {
+    console.error('Error removing sponsor from carnival:', error);
+    req.flash('error_msg', 'Failed to remove sponsor from carnival');
+    return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  }
 });
 
 export const sendEmailToAttendees = asyncHandler(async (req, res) => {
