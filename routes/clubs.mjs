@@ -1,10 +1,23 @@
 import express from 'express';
 import multer from 'multer';
 import { body } from 'express-validator';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
 import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
+
+// Create require for CommonJS modules in ES module context
+const require = createRequire(import.meta.url);
+const fs = require('fs');
+const path = require('path');
+
+// Get current working directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..');
 
 import * as clubController from '../controllers/club.controller.mjs';
 import * as clubPlayerController from '../controllers/clubPlayer.controller.mjs';
@@ -39,6 +52,102 @@ const upload = multer({
 // Create uploader instances
 const clubUpload = createFormUploader('clubs', clubFieldConfig);
 const sponsorUpload = createFormUploader('sponsors', sponsorFieldConfig);
+
+// Create club-specific sponsor uploader with custom path structure
+const clubSponsorUpload = (() => {
+  const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      try {
+        const clubId = req.params.id;
+        const sponsorId = req.params.sponsorId;
+        
+        if (!clubId || !sponsorId) {
+          return cb(new Error('Club ID and Sponsor ID are required for club-specific sponsor uploads'));
+        }
+        
+        // Get subfolder based on field name
+        const subfolder = sponsorFieldConfig.find(config => config.name === file.fieldname) ? 'logos' : 'general';
+        
+        // Create destination path: public/uploads/clubs/{clubId}/sponsors/{sponsorId}/logos/
+        const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'clubs', clubId.toString(), 'sponsors', sponsorId.toString(), subfolder);        // Create directory if it doesn't exist  
+        fs.mkdirSync(uploadDir, { recursive: true });
+        
+        cb(null, uploadDir);
+      } catch (error) {
+        cb(error);
+      }
+    },
+    filename: function (req, file, cb) {
+      // Generate unique filename with timestamp and random suffix
+      const timestamp = Date.now();
+      const randomSuffix = Math.round(Math.random() * 1E9);
+      const extension = path.extname(file.originalname);
+      const basename = path.basename(file.originalname, extension);
+      
+      const filename = `${timestamp}-${randomSuffix}-${basename}${extension}`;
+      cb(null, filename);
+    }
+  });
+  
+  const uploader = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+      // Allow image files for logos
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed for sponsor logos'), false);
+      }
+    },
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 5MB limit
+      files: 1
+    }
+  });
+  
+  const process = async (req, res, next) => {
+    try {
+      // Initialize structured uploads array for controller
+      req.structuredUploads = [];
+      
+      // Only process if files were uploaded
+      if (!req.file && !req.files) {
+        return next();
+      }
+      
+      // Handle files uploaded
+      const files = req.files || (req.file ? { [req.file.fieldname]: [req.file] } : {});
+      
+      for (const [fieldname, fileArray] of Object.entries(files)) {
+        for (const file of fileArray) {
+          const clubId = req.params.id;
+          const sponsorId = req.params.sponsorId;
+          const subfolder = 'logos';
+          
+          // Create relative path for database storage
+          const relativePath = `/uploads/clubs/${clubId}/sponsors/${sponsorId}/${subfolder}/${file.filename}`;
+          
+          req.structuredUploads.push({
+            fieldname: fieldname,
+            originalname: file.originalname,
+            filename: file.filename,
+            mimetype: file.mimetype,
+            size: file.size,
+            path: file.path,
+            relativePath: relativePath,
+            subfolder: subfolder
+          });
+        }
+      }
+      
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+  
+  return { upload: uploader, process };
+})();
 
 // Apply centralized security to all routes
 router.use(applySecurity);
@@ -107,14 +216,14 @@ router.delete('/:id/alternate-names/:alternateId', ensureAuthenticated, clubCont
 // Club sponsor management - MUST come before /:id route
 router.get('/:id/sponsors', ensureAuthenticated, clubController.showClubSponsors);
 router.get('/:id/sponsors/add', ensureAuthenticated, clubController.showAddSponsor);
-router.post('/:id/sponsors/add', ensureAuthenticated, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, [
+router.post('/:id/sponsors/add', ensureAuthenticated, clubSponsorUpload.upload.fields(sponsorFieldConfig), clubSponsorUpload.process, [
     body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
     body('sponsorshipLevel').isIn(SPONSORSHIP_LEVELS_ARRAY).withMessage('Valid sponsorship level required'),
     body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
 ], clubController.addSponsorToClub);
 router.get('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsor);
-router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, sponsorUpload.upload.fields(sponsorFieldConfig), sponsorUpload.process, [
+router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, clubSponsorUpload.upload.fields(sponsorFieldConfig), clubSponsorUpload.process, [
     body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
     body('sponsorshipLevel').isIn(SPONSORSHIP_LEVELS_ARRAY).withMessage('Valid sponsorship level required'),
     body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),

@@ -8,6 +8,32 @@
  * @date September 30, 2025
  */
 
+import path from 'path';
+
+/**
+ * Convert absolute file path to relative web path
+ * @param {string} absolutePath - Absolute file system path
+ * @returns {string} Relative web path starting with /uploads/
+ */
+const convertToWebPath = (absolutePath) => {
+  if (!absolutePath || typeof absolutePath !== 'string') {
+    return '';
+  }
+
+  // Find the 'uploads' directory in the path and create web-relative path
+  const uploadsIndex = absolutePath.indexOf('uploads');
+  if (uploadsIndex === -1) {
+    console.warn(`⚠️ Upload path does not contain 'uploads' directory: ${absolutePath}`);
+    return '';
+  }
+
+  // Extract everything from 'uploads' onwards and normalize path separators
+  const relativePath = absolutePath.substring(uploadsIndex).replace(/\\/g, '/');
+  
+  // Ensure it starts with a forward slash for web paths
+  return `/${relativePath}`;
+};
+
 /**
  * Get field mapping for different entity types
  * @param {string} entityType - Type of entity (club, carnival, sponsor)
@@ -72,16 +98,19 @@ export const processStructuredUploads = (req, updateData, entityType, entityId) 
     // Get the appropriate field name for this entity type
     const mappedField = getFieldMapping(entityType, upload.fieldname);
     
+    // Use relativePath if available, otherwise convert absolute path to relative web path
+    const webPath = upload.relativePath || convertToWebPath(upload.path);
+    
     // Process based on field type
     switch (upload.fieldname) {
       case 'logo':
-        updateData[mappedField] = upload.path;
-        console.log(`📸 Updated ${entityType} ${entityId} logo (${mappedField}): ${upload.path}`);
+        updateData[mappedField] = webPath;
+        console.log(`📸 Updated ${entityType} ${entityId} logo (${mappedField}): ${webPath}`);
         break;
       
       case 'promotionalImage':
-        updateData[mappedField] = upload.path;
-        console.log(`📸 Updated ${entityType} ${entityId} promotional image (${mappedField}): ${upload.path}`);
+        updateData[mappedField] = webPath;
+        console.log(`📸 Updated ${entityType} ${entityId} promotional image (${mappedField}): ${webPath}`);
         break;
       
       case 'galleryImage':
@@ -89,8 +118,8 @@ export const processStructuredUploads = (req, updateData, entityType, entityId) 
         if (!updateData[mappedField]) {
           updateData[mappedField] = [];
         }
-        updateData[mappedField].push(upload.path);
-        console.log(`📸 Added gallery image to ${entityType} ${entityId} (${mappedField}): ${upload.path}`);
+        updateData[mappedField].push(webPath);
+        console.log(`📸 Added gallery image to ${entityType} ${entityId} (${mappedField}): ${webPath}`);
         break;
       
       case 'drawDocument':
@@ -98,17 +127,17 @@ export const processStructuredUploads = (req, updateData, entityType, entityId) 
         if (!updateData[mappedField]) {
           updateData[mappedField] = [];
         }
-        updateData[mappedField].push(upload.path);
-        console.log(`📸 Added draw document to ${entityType} ${entityId} (${mappedField}): ${upload.path}`);
+        updateData[mappedField].push(webPath);
+        console.log(`📸 Added draw document to ${entityType} ${entityId} (${mappedField}): ${webPath}`);
         break;
      
       case 'avatar':
-        updateData.avatarUrl = upload.path; // Avatar stays the same for all entities
-        console.log(`📸 Updated ${entityType} ${entityId} avatar: ${upload.path}`);
+        updateData.avatarUrl = webPath; // Avatar stays the same for all entities
+        console.log(`📸 Updated ${entityType} ${entityId} avatar: ${webPath}`);
         break;
       
       default:
-        console.warn(`⚠️ Unknown upload field '${upload.fieldname}' for ${entityType} ${entityId}: ${upload.path}`);
+        console.warn(`⚠️ Unknown upload field '${upload.fieldname}' for ${entityType} ${entityId}: ${webPath}`);
         break;
     }
   }

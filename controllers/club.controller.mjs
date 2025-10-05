@@ -385,11 +385,6 @@ const updateClubProfileHandler = async (req, res) => {
 
   const user = req.user;
 
-  if (user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to manage its profile.');
-    return res.redirect('/dashboard');
-  }
-
   const club = await Club.findByPk(req.params.id);
 
   if (!club) {
@@ -397,8 +392,9 @@ const updateClubProfileHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  // Authorization check: user must be either an admin or a member of this club
-  if (!user.isAdmin && user.clubId !== parseInt(req.params.id)) {
+  // Authorization check: use the same logic as the GET handler
+  const canEdit = club.canUserEdit(user);
+  if (!canEdit) {
     req.flash('error_msg', 'You do not have permission to edit this club.');
     return res.redirect('/dashboard');
   }
@@ -854,6 +850,17 @@ const addSponsorToClubHandler = async (req, res) => {
       };
 
       sponsor = await Sponsor.create(newSponsorData);
+      
+      // Process uploaded files for new sponsor
+      if (req.structuredUploads && req.structuredUploads.length > 0) {
+        const sponsorUpdateData = {};
+        const processedUploads = await processStructuredUploads(req, sponsorUpdateData, 'clubs', club.id, sponsor.id);
+        
+        // Update the sponsor with processed file paths
+        if (Object.keys(sponsorUpdateData).length > 0) {
+          await sponsor.update(sponsorUpdateData);
+        }
+      }
     } else {
       req.flash('error_msg', 'Invalid sponsor type selected.');
       return res.redirect(`/clubs/${club.id}/sponsors/add`);
@@ -1045,14 +1052,8 @@ const updateClubSponsorHandler = async (req, res) => {
   } = req.body;
 
   try {
-    // Handle file upload if provided
-    let logoFilename = sponsor.logoFilename;
-    if (req.file) {
-      logoFilename = req.file.filename;
-    }
-
-    // Update sponsor
-    await sponsor.update({
+    // Prepare update data
+    const updateData = {
       sponsorName: sponsorName.trim(),
       businessType: businessType ? businessType.trim() : null,
       sponsorshipLevel,
@@ -1066,9 +1067,22 @@ const updateClubSponsorHandler = async (req, res) => {
       location: location ? location.trim() : null,
       state,
       description: description ? description.trim() : null,
-      logoFilename,
       isPubliclyVisible: isPubliclyVisible === 'true',
-    });
+    };
+
+    // Process uploaded files if present
+    if (req.structuredUploads && req.structuredUploads.length > 0) {
+      const processedUploads = await processStructuredUploads(req, updateData, 'clubs', club.id, sponsor.id);
+    } else if (req.file) {
+      // Legacy fallback for direct file upload
+      updateData.logoFilename = req.file.filename;
+    } else {
+      // Keep existing logo filename if no new upload
+      updateData.logoFilename = sponsor.logoFilename;
+    }
+
+    // Update sponsor
+    await sponsor.update(updateData);
 
     req.flash('success_msg', `Sponsor "${sponsorName}" has been updated successfully.`);
     return res.redirect(`/clubs/${club.id}/sponsors`);

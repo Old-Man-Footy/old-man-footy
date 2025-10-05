@@ -394,48 +394,6 @@
                             </div>
                         </div>
 
-                        <!-- Current Images Display -->
-                        <div class="mb-4">
-                            <h5 class="text-primary mb-3">Current Images</h5>
-                            <div class="row">
-                                <% if (carnival.clubLogoURL) { %>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img src="<%= carnival.clubLogoURL %>" class="card-img-top carnival-logo-preview" alt="Current Carnival Logo">
-                                            <div class="card-body text-center">
-                                                <small class="text-muted">Current Carnival Logo</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <% } %>
-                                <% if (carnival.promotionalImageURL) { %>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img src="<%= carnival.promotionalImageURL %>" class="card-img-top carnival-promo-preview" alt="Current Promotional Image">
-                                            <div class="card-body text-center">
-                                                <small class="text-muted">Current Promotional Image</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <% } %>
-                                <% if (carnival.drawFileURL) { %>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <div class="card-body text-center">
-                                                <i class="bi bi-file-earmark-text display-6 text-muted"></i>
-                                                <br>
-                                                <small class="text-muted">Current Draw File</small>
-                                                <br>
-                                                <a href="<%= carnival.drawFileURL %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                                    <i class="bi bi-download"></i> View
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <% } %>
-                            </div>
-                        </div>
-
                         <!-- File Uploads -->
                         <div class="mb-4">
                             <h5 class="text-primary mb-3">Update Images & Documents</h5>
