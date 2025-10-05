@@ -123,13 +123,24 @@ export const documentUploaderManager = {
     },
     
     /**
-     * Handle file selection for multiple files
+     * Handle file selection for single or multiple files
      * @param {Object} config - Uploader configuration
      * @param {Array} files - Selected files
      */
     handleFileSelection(config, files) {
         if (!files || files.length === 0) {
             return;
+        }
+        
+        const isMultiple = config.input.hasAttribute('multiple');
+        
+        // For single file uploads, only take the first file and replace any existing file
+        if (!isMultiple) {
+            if (files.length > 1) {
+                this.showErrors(['Only one file can be selected for this upload.']);
+                return;
+            }
+            config.selectedFiles = []; // Clear existing files for single upload
         }
         
         // Validate files
@@ -139,15 +150,20 @@ export const documentUploaderManager = {
             return;
         }
         
-        // Check if adding these files would exceed the limit
-        const totalFiles = config.selectedFiles.length + files.length;
-        if (totalFiles > config.maxFiles) {
-            this.showErrors([`Maximum ${config.maxFiles} files allowed. You selected ${files.length} files, but only ${config.maxFiles - config.selectedFiles.length} more can be added.`]);
-            return;
+        if (isMultiple) {
+            // Check if adding these files would exceed the limit
+            const totalFiles = config.selectedFiles.length + files.length;
+            if (totalFiles > config.maxFiles) {
+                this.showErrors([`Maximum ${config.maxFiles} files allowed. You selected ${files.length} files, but only ${config.maxFiles - config.selectedFiles.length} more can be added.`]);
+                return;
+            }
+            
+            // Add files to selected files for multiple upload
+            config.selectedFiles.push(...files);
+        } else {
+            // Replace the file for single upload
+            config.selectedFiles = [...files];
         }
-        
-        // Add files to selected files
-        config.selectedFiles.push(...files);
         
         // Update display
         this.updateFileDisplay(config);
