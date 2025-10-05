@@ -19,20 +19,17 @@ import { validateBirthDate } from '../utils/dateUtils.mjs';
  */
 export async function showClubPlayers(req, res, next) {
   try {
-    console.log('=== DEBUG: showClubPlayers called ===');
     console.log('User:', req.user ? { id: req.user.id, email: req.user.email, clubId: req.user.clubId } : 'No user');
     console.log('Club ID from URL:', req.params.id);
     
     // Ensure user is authenticated
     if (!req.user) {
-      console.log('=== DEBUG: User not authenticated ===');
       req.flash('error', 'You must be logged in to view players.');
       return res.redirect('/auth/login');
     }
 
     // Check if user has appropriate permissions (admin or delegate)
     if (!req.user.isAdmin && !req.user.clubId) {
-      console.log('=== DEBUG: User is neither admin nor has clubId ===');
       req.flash('error', 'You must be an admin or club delegate to view players.');
       return res.redirect('/dashboard');
     }
@@ -46,19 +43,16 @@ export async function showClubPlayers(req, res, next) {
 
     // Authorization check: delegates can only access their own club
     if (!req.user.isAdmin && req.user.clubId !== clubId) {
-      console.log('=== DEBUG: Delegate trying to access different club ===');
       req.flash('error', 'You can only manage players for your own club.');
       return res.redirect('/dashboard');
     }
 
-    console.log('=== DEBUG: User authorized for club:', clubId, '===');
 
     // Get search and filter parameters
     const { search, sortBy = 'lastName', sortOrder = 'ASC', page = 1 } = req.query;
     const limit = 20;
     const offset = (parseInt(page) - 1) * limit;
 
-    console.log('=== DEBUG: Query params ===', { search, sortBy, sortOrder, page });
 
     // Build where conditions
     const whereConditions = {
@@ -78,7 +72,6 @@ export async function showClubPlayers(req, res, next) {
       ];
     }
 
-    console.log('=== DEBUG: Where conditions ===', whereConditions);
 
     // Get players with pagination
     const { count, rows: players } = await ClubPlayer.findAndCountAll({
@@ -93,7 +86,6 @@ export async function showClubPlayers(req, res, next) {
       }]
     });
 
-    console.log('=== DEBUG: Found players ===', { count, playersLength: players.length });
 
     // Get inactive players (no pagination needed as they should be fewer)
     const inactivePlayers = await ClubPlayer.findAll({
@@ -109,7 +101,6 @@ export async function showClubPlayers(req, res, next) {
       }]
     });
 
-    console.log('=== DEBUG: Found inactive players ===', { inactiveCount: inactivePlayers.length });
 
     // Calculate pagination info
     const totalPages = Math.ceil(count / limit);
@@ -120,15 +111,12 @@ export async function showClubPlayers(req, res, next) {
       attributes: ['id', 'clubName']
     });
 
-    console.log('=== DEBUG: Club found ===', club ? { id: club.id, name: club.clubName } : 'No club');
 
     if (!club) {
-      console.log('=== DEBUG: Club not found, redirecting ===');
       req.flash('error', 'Club not found.');
       return res.redirect('/dashboard');
     }
 
-    console.log('=== DEBUG: About to render view ===');
 
     return res.render('clubs/players/index', {
       title: `${club.clubName} - Players`,
@@ -149,7 +137,6 @@ export async function showClubPlayers(req, res, next) {
       }
     });
 
-    console.log('=== DEBUG: View rendered successfully ===');
   } catch (error) {
     console.error('=== DEBUG: Error in showClubPlayers ===', error);
     next(error);
@@ -406,7 +393,7 @@ export async function updatePlayer(req, res, next) {
     }
     
     // Authorization check - delegates can only access their own club
-    if (req.user.role === 'delegate' && req.user.clubId !== clubId) {
+    if (!user.isAdmin && req.user.clubId !== clubId) {
       req.flash('error', 'You do not have permission to access this club.');
       return res.redirect('/clubs');
     }
@@ -542,7 +529,7 @@ export async function deactivatePlayer(req, res, next) {
     }
     
     // Authorization check - delegates can only access their own club
-    if (req.user.role === 'delegate' && req.user.clubId !== clubId) {
+    if (!user.isAdmin && req.user.clubId !== clubId) {
       req.flash('error', 'You do not have permission to access this club.');
       return res.redirect('/clubs');
     }
@@ -611,7 +598,7 @@ export async function reactivatePlayer(req, res, next) {
     }
     
     // Authorization check - delegates can only access their own club
-    if (req.user.role === 'delegate' && req.user.clubId !== clubId) {
+    if (!user.isAdmin && req.user.clubId !== clubId) {
       req.flash('error', 'You do not have permission to access this club.');
       return res.redirect('/clubs');
     }

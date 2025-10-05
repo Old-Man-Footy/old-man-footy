@@ -385,7 +385,7 @@ const updateClubProfileHandler = async (req, res) => {
 
   const user = req.user;
 
-  if (!user.clubId) {
+  if (user.clubId) {
     req.flash('error_msg', 'You must be associated with a club to manage its profile.');
     return res.redirect('/dashboard');
   }
@@ -572,7 +572,7 @@ const showClubSponsorsHandler = async (req, res, next) => {
       req.flash('error_msg', 'You can only manage sponsors for your own club.');
       return res.redirect(`/clubs/${user.clubId}/edit`);
     }
-    const club = await Club.findByPk(user.clubId, {
+    const club = await Club.findByPk(requestedClubId, {
       include: [
         {
           model: Sponsor,
@@ -692,16 +692,24 @@ const createClubHandler = async (req, res) => {
  */
 const showAddSponsorHandler = async (req, res) => {
   const user = req.user;
+  const clubId = req.params.id;
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to add sponsors.');
-    return res.redirect('/dashboard');
+  if (!user) {
+    req.flash('error_msg', 'You must be logged in to add sponsors.');
+    return res.redirect('/auth/login');
   }
 
-  const club = await Club.findByPk(user.clubId);
+  // Find the club from the URL parameter
+  const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
+    return res.redirect('/clubs');
+  }
+
+  // Check if user has permission to add sponsors for this club
+  if (!user.isAdmin && user.clubId !== parseInt(clubId)) {
+    req.flash('error_msg', 'You do not have permission to add sponsors for this club.');
     return res.redirect('/dashboard');
   }
 
@@ -746,95 +754,136 @@ const showAddSponsorHandler = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const addSponsorToClubHandler = async (req, res) => {
-  const user = req.user;
+  try {
+    const user = req.user;
+    const clubId = req.params.id;
+        
+    if (!user) {
+      req.flash('error_msg', 'You must be logged in to add sponsors.');
+      return res.redirect('/auth/login');
+    }
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to add sponsors.');
-    return res.redirect('/dashboard');
-  }
+    // Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg);
+      req.flash('error_msg', errorMessages.join(', '));
+      console.log(`🔍 DEBUG: Validation failed, redirecting to /clubs/${clubId}/sponsors/add`);
+      return res.redirect(`/clubs/${clubId}/sponsors/add`);
+    }
 
-  const club = await Club.findByPk(user.clubId);
+    // Find the club from the URL parameter
+    console.log(`🔍 DEBUG: Looking up club with ID: ${clubId}`);
+    const club = await Club.findByPk(clubId);
 
-  if (!club) {
-    req.flash('error_msg', 'Club not found.');
-    return res.redirect('/dashboard');
-  }
+    if (!club) {
+      console.log(`🔍 DEBUG: Club not found, redirecting to /clubs`);
+      req.flash('error_msg', 'Club not found.');
+      return res.redirect('/clubs');
+    }
+    
+    // Check if user has permission to add sponsors for this club
+    const hasPermission = user.isAdmin || user.clubId === parseInt(clubId);
+    
+    if (!hasPermission) {
+      req.flash('error_msg', 'You do not have permission to add sponsors for this club.');
+      return res.redirect('/dashboard');
+    }
+    
+    console.log(`🔍 DEBUG: Permission granted, continuing...`);
 
-  const { sponsorType, existingSponsorId, ...sponsorData } = req.body;
+    const { sponsorType, existingSponsorId, ...sponsorData } = req.body;
 
-  let sponsor;
+    let sponsor;
 
-  if (sponsorType === 'existing' && existingSponsorId) {
-    // Link existing sponsor to club
-    sponsor = await Sponsor.findByPk(existingSponsorId);
+    if (sponsorType === 'existing' && existingSponsorId) {
+      // Link existing sponsor to club
+      sponsor = await Sponsor.findByPk(existingSponsorId);
 
-    if (!sponsor) {
-      req.flash('error_msg', 'Selected sponsor not found.');
+      if (!sponsor) {
+        req.flash('error_msg', 'Selected sponsor not found.');
+        return res.redirect(`/clubs/${club.id}/sponsors/add`);
+      }
+
+      // Check if already linked
+      const isAlreadyLinked = await sponsor.isAssociatedWithClub(club.id);
+      if (isAlreadyLinked) {
+        console.log(`   - Sponsor already linked, redirecting to /clubs/${club.id}/sponsors`);
+        req.flash('error_msg', 'This sponsor is already linked to your club.');
+        return res.redirect(`/clubs/${club.id}/sponsors`);
+      }
+
+      // Link the sponsor to the club
+      await sponsor.update({ clubId: club.id });
+    } else if (sponsorType === 'new') {
+      // Create new sponsor
+      const {
+        sponsorName,
+        businessType,
+        location,
+        state,
+        description,
+        contactPerson,
+        contactEmail,
+        contactPhone,
+        website,
+        facebookUrl,
+        instagramUrl,
+        twitterUrl,
+        linkedinUrl,
+        sponsorshipLevel,
+      } = sponsorData;
+
+      const newSponsorData = {
+        sponsorName: sponsorName?.trim(),
+        businessType: businessType?.trim(),
+        location: location?.trim(),
+        state,
+        description: description?.trim(),
+        contactPerson: contactPerson?.trim(),
+        contactEmail: contactEmail?.trim(),
+        contactPhone: contactPhone?.trim(),
+        website: website?.trim(),
+        facebookUrl: facebookUrl?.trim(),
+        instagramUrl: instagramUrl?.trim(),
+        twitterUrl: twitterUrl?.trim(),
+        linkedinUrl: linkedinUrl?.trim(),
+        sponsorshipLevel,
+        clubId: club.id,
+        isPubliclyVisible: true,
+      };
+
+      sponsor = await Sponsor.create(newSponsorData);
+    } else {
+      req.flash('error_msg', 'Invalid sponsor type selected.');
       return res.redirect(`/clubs/${club.id}/sponsors/add`);
     }
 
-    // Check if already linked
-    const isAlreadyLinked = await sponsor.isAssociatedWithClub(club.id);
-    if (isAlreadyLinked) {
-      req.flash('error_msg', 'This sponsor is already linked to your club.');
-      return res.redirect(`/clubs/${club.id}/sponsors`);
+    // Set display order for the sponsor
+    const currentSponsors = await club.getClubSponsors();
+    const displayOrder = currentSponsors.length + 1;
+
+    // Update the sponsor's display order
+    await sponsor.update({ displayOrder });
+
+    console.log(`   - Success! Redirecting to /clubs/${club.id}/sponsors/${sponsor.id}/edit`);
+    req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club! You can now add images and additional details.`);
+    return res.redirect(`/clubs/${club.id}/sponsors/${sponsor.id}/edit`);
+
+  } catch (error) {
+    console.error('Error adding sponsor to club:', error);
+    
+    // Handle Sequelize validation errors
+    if (error.name === 'SequelizeValidationError') {
+      const errorMessages = error.errors.map(err => err.message);
+      req.flash('error_msg', errorMessages.join(', '));
+      return res.redirect(`/clubs/${req.params.id}/sponsors/add`);
     }
-
-    // Link the sponsor to the club
-    await sponsor.update({ clubId: club.id });
-  } else if (sponsorType === 'new') {
-    // Create new sponsor
-    const {
-      sponsorName,
-      businessType,
-      location,
-      state,
-      description,
-      contactPerson,
-      contactEmail,
-      contactPhone,
-      website,
-      facebookUrl,
-      instagramUrl,
-      twitterUrl,
-      linkedinUrl,
-      sponsorshipLevel,
-    } = sponsorData;
-
-    const newSponsorData = {
-      sponsorName: sponsorName?.trim(),
-      businessType: businessType?.trim(),
-      location: location?.trim(),
-      state,
-      description: description?.trim(),
-      contactPerson: contactPerson?.trim(),
-      contactEmail: contactEmail?.trim(),
-      contactPhone: contactPhone?.trim(),
-      website: website?.trim(),
-      facebookUrl: facebookUrl?.trim(),
-      instagramUrl: instagramUrl?.trim(),
-      twitterUrl: twitterUrl?.trim(),
-      linkedinUrl: linkedinUrl?.trim(),
-      sponsorshipLevel,
-      clubId: club.id,
-      isPubliclyVisible: true,
-    };
-
-    sponsor = await Sponsor.create(newSponsorData);
-  } else {
-    req.flash('error_msg', 'Invalid sponsor type selected.');
-    return res.redirect(`/clubs/${club.id}/sponsors/add`);
+    
+    // Handle other errors
+    req.flash('error_msg', 'An error occurred while adding the sponsor. Please try again.');
+    return res.redirect(`/clubs/${req.params.id}/sponsors/add`);
   }
-
-  // Set display order for the sponsor
-  const currentSponsors = await club.getClubSponsors();
-  const displayOrder = currentSponsors.length + 1;
-
-  // Update the sponsor's display order
-  await sponsor.update({ displayOrder });
-
-  req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club! You can now add images and additional details.`);
-  return res.redirect(`/sponsors/${sponsor.id}/edit`);
 };
 
 /**
