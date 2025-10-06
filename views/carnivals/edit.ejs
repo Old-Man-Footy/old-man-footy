@@ -163,16 +163,6 @@
                                                placeholder="Australia">
                                         <div class="form-text">Country where the carnival is held</div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">&nbsp;</label>
-                                        <div class="d-flex align-items-center">
-                                            <button type="button" class="btn btn-outline-info btn-sm" id="getLocationBtn">
-                                                <i class="bi bi-geo"></i> Get GPS from Address
-                                            </button>
-                                            <small class="text-muted ms-2">Auto-fill coordinates from the main address</small>
-                                        </div>
-                                        <div class="form-text">&nbsp;</div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -399,7 +389,7 @@
                             <h5 class="text-primary mb-3">Update Images & Documents</h5>
                             <p class="text-muted mb-3">Upload new files to replace existing ones (optional)</p>
                             
-                            <div class="row">
+                            <div class="row upload-equal-height">
                                 <div class="col-md-4 mb-3">
                                     <%- include('../partials/_imageUploader', {
                                         fieldName: 'logo',
