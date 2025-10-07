@@ -47,7 +47,12 @@ function setupSessionAuth(req, res, next) {
 
   // Add isAuthenticated method to request
   req.isAuthenticated = function() {
-    return !!(req.session && req.session.userId && req.user);
+    const hasSession = !!(req.session);
+    const hasUserId = !!(req.session && req.session.userId);
+    const hasUser = !!req.user;
+    const result = !!(req.session && req.session.userId && req.user);
+    
+    return result;
   };
 
   next();
@@ -71,11 +76,12 @@ async function loadSessionUser(req, res, next) {
       if (user && user.isActive) {
         req.user = user;
       } else {
+        console.log('❌ LoadSessionUser: User not found or inactive - clearing session');
         // User not found or inactive - clear session
         req.session.userId = null;
       }
     } catch (error) {
-      console.error('Error loading session user:', error);
+      console.error('❌ LoadSessionUser: Error loading session user:', error);
       req.session.userId = null;
     }
   }
@@ -84,9 +90,12 @@ async function loadSessionUser(req, res, next) {
 
 // Middleware to ensure user is authenticated
 function ensureAuthenticated(req, res, next) {
+    
     if (req.isAuthenticated()) {
         return next();
     }
+    
+    console.log('❌ EnsureAuthenticated: User not authenticated, redirecting');
     
     // Check if this is an AJAX request
     if (isAjaxRequest(req)) {

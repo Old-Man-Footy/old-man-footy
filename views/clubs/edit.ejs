@@ -25,28 +25,7 @@
                         <h5 class="mb-0"><i class="bi bi-gear"></i> Club Profile Settings</h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="/clubs/manage/profile" enctype="multipart/form-data">
-                            <!-- Logo Upload Section for Primary Delegates -->
-                            <% if (user.isPrimaryDelegate) { %>
-                                <div class="row mb-4">
-                                    <div class="col-12">
-                                        <h6 class="text-primary mb-3">
-                                            <i class="bi bi-image"></i> Club Logo
-                                        </h6>
-                                        <%- include('../partials/logo-uploader', { 
-                                            fieldName: 'logo',
-                                            inputId: 'logo',
-                                            uploadText: 'Click or drag to upload club logo',
-                                            maxFileSize: 'Max 10MB',
-                                            acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
-                                            helpText: 'Upload a logo for your club. Recommended size: 200x200 pixels or larger, square format.',
-                                            currentLogoUrl: club.logoUrl,
-                                            currentLogoAlt: 'Current Club Logo'
-                                        }) %>
-                                    </div>
-                                </div>
-                            <% } %>
-
+                        <form method="POST" action="/clubs/<%= club.id %>/edit" enctype="multipart/form-data">
                             <!-- Basic Information -->
                             <div class="row mb-4">
                                 <div class="col-12">
@@ -106,6 +85,22 @@
                                               placeholder="Tell potential players about your club, its history, values, and what makes it special..."
                                               maxlength="1000"><%= club.description || '' %></textarea>
                                     <div class="form-text">This will be shown on your public club profile (max 1000 characters)</div>
+                                </div>
+                            </div>
+
+                            <!-- Club Logo -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <%- include('../partials/_imageUploader', { 
+                                        fieldName: 'logo',
+                                        label: 'Club Logo',
+                                        allowedTypes: ['.jpg', '.jpeg', '.png', '.svg'],
+                                        maxSize: 10,
+                                        multiple: false,
+                                        required: false,
+                                        helpText: 'Upload your club logo (JPEG, PNG, SVG, max 10MB)',
+                                        existingFile: club.logoUrl ? { url: club.logoUrl, name: 'Current Logo' } : null
+                                    }) %>
                                 </div>
                             </div>
 
@@ -222,13 +217,13 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="/clubs/manage/alternate-names" class="btn btn-outline-primary">
+                            <a href="/clubs/<%= club.id %>/alternate-names" class="btn btn-outline-primary">
                                 <i class="bi bi-search"></i> Manage Alternate Names
                             </a>
-                            <a href="/clubs/manage/sponsors" class="btn btn-outline-primary">
+                            <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-primary">
                                 <i class="bi bi-award"></i> Manage Sponsors
                             </a>
-                            <a href="/clubs/players" class="btn btn-outline-primary">
+                            <a href="/clubs/<%= club.id %>/players" class="btn btn-outline-primary">
                                 <i class="bi bi-people"></i> Manage Players
                             </a>
                             <% if (club.isPubliclyListed) { %>

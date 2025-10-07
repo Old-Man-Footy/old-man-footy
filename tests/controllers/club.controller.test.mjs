@@ -506,7 +506,7 @@ describe('Club Controller', () => {
 
         await showClubManagement(req, res, next);
 
-        expect(res.render).toHaveBeenCalledWith('clubs/manage', expect.objectContaining({
+        expect(res.render).toHaveBeenCalledWith('clubs/edit', expect.objectContaining({
           title: 'Manage Club Profile',
           club: mockClub
         }));
@@ -556,7 +556,7 @@ describe('Club Controller', () => {
           'success_msg',
           'Club profile updated successfully!'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       });
 
       it('should handle validation errors', async () => {
@@ -571,7 +571,7 @@ describe('Club Controller', () => {
           'error_msg',
           'Validation errors: Email is invalid, Phone is invalid'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       });
 
       it('should handle user without club', async () => {
@@ -639,7 +639,7 @@ describe('Club Controller', () => {
           'error_msg',
           'Please correct the validation errors.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       });
 
       it('should handle duplicate club name', async () => {
@@ -651,7 +651,7 @@ describe('Club Controller', () => {
           'error_msg',
           'A club with this name already exists. Please choose a different name.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       });
     });
   });
@@ -713,7 +713,7 @@ describe('Club Controller', () => {
           'error_msg',
           'You are already associated with a club. You can only be a member of one club at a time.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       });
 
       it('should handle club not found', async () => {
@@ -725,7 +725,7 @@ describe('Club Controller', () => {
           'error_msg',
           'Club not found or is not active.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       });
     });
 
@@ -988,7 +988,7 @@ describe('Club Controller', () => {
           'error_msg',
           'You can only manage sponsors for your own club.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       });
       // it('should display club sponsors for authorized user', async () => {
       //   req.user = { ...mockUser, clubId: 1 };
@@ -1029,7 +1029,7 @@ describe('Club Controller', () => {
       //     'error_msg',
       //     'You can only manage sponsors for your own club.'
       //   );
-      //   expect(res.redirect).toHaveBeenCalledWith('/clubs/manage');
+      //   expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
       // });
     });
 
@@ -1071,7 +1071,7 @@ describe('Club Controller', () => {
           'success_msg',
           'Sponsor "Test Sponsor" has been added to your club!'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/manage/sponsors');
+        expect(res.redirect).toHaveBeenCalledWith(`/clubs/1/sponsors`);
       });
     });
   });

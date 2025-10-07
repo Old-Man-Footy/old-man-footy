@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Carnival Show Page script (Manager Object Pattern)
  * Handles club registration, unregistration, admin actions, and modals.
@@ -101,18 +103,18 @@ export const carnivalShowManager = {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
+                showAlert(data.message);
                 // Defer reload to avoid jsdom navigation errors in tests
                 setTimeout(() => {
                     try { window.location.reload(); } catch (_) { /* noop in non-browser env */ }
                 }, 0);
             } else {
-                alert('Error: ' + data.message);
+                showAlert('Error: ' + data.message);
             }
         })
         .catch(err => {
             console.error('Error:', err);
-            alert('An error occurred while unregistering. Please try again.');
+            showAlert('An error occurred while unregistering. Please try again.');
         });
     },
 
@@ -131,13 +133,13 @@ export const carnivalShowManager = {
 
         if (playerCount && (parseInt(playerCount, 10) < 1 || parseInt(playerCount, 10) > 100)) {
             e.preventDefault();
-            alert('Player count must be between 1 and 100.');
+            showAlert('Player count must be between 1 and 100.');
             return false;
         }
 
         if (contactEmail && !carnivalShowManager.isValidEmail(contactEmail)) {
             e.preventDefault();
-            alert('Please enter a valid email address.');
+            showAlert('Please enter a valid email address.');
             return false;
         }
 
@@ -197,20 +199,20 @@ export const carnivalShowManager = {
         // Validate required fields
         if (!subject || !message) {
             e.preventDefault();
-            alert('Please fill in both the subject and message fields.');
+            showAlert('Please fill in both the subject and message fields.');
             return false;
         }
 
         // Validate length limits
         if (subject.length > 200) {
             e.preventDefault();
-            alert('Subject must be 200 characters or less.');
+            showAlert('Subject must be 200 characters or less.');
             return false;
         }
 
         if (message.length > 2000) {
             e.preventDefault();
-            alert('Message must be 2000 characters or less.');
+            showAlert('Message must be 2000 characters or less.');
             return false;
         }
 
@@ -308,13 +310,13 @@ export const carnivalShowManager = {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                alert(`Carnival ${action}d successfully!`);
+                showAlert(`Carnival ${action}d successfully!`);
                 // Defer reload to avoid jsdom navigation errors in tests
                 setTimeout(() => {
                     try { window.location.reload(); } catch (_) { /* noop in non-browser env */ }
                 }, 0);
             } else {
-                alert('Error: ' + (data.message || 'Failed to update carnival status'));
+                showAlert('Error: ' + (data.message || 'Failed to update carnival status'));
                 if (button && originalContent !== null) {
                     button.innerHTML = originalContent;
                     button.disabled = false;
@@ -323,7 +325,7 @@ export const carnivalShowManager = {
         })
         .catch(err => {
             console.error('Error:', err);
-            alert('An error occurred while updating the carnival status. Please try again.');
+            showAlert('An error occurred while updating the carnival status. Please try again.');
             if (button && originalContent !== null) {
                 button.innerHTML = originalContent;
                 button.disabled = false;
@@ -336,7 +338,7 @@ export const carnivalShowManager = {
         const targetSelect = document.getElementById('targetCarnivalId');
         const targetCarnivalName = document.getElementById('targetCarnivalName');
         if (!targetSelect || !targetSelect.value) {
-            alert('Please select a carnival to merge into.');
+            showAlert('Please select a carnival to merge into.');
             return;
         }
 

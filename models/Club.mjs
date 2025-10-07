@@ -217,6 +217,23 @@ class Club extends Model {
   }
 
   /**
+   * Check if a user can edit this club
+   * @param {User} user - The user to check permissions for
+   * @returns {boolean} True if user can edit this club
+   */
+  canUserEdit(user) {
+    if (!user) return false;
+    
+    // Admins have universal edit permissions
+    if (user.isAdmin) return true;
+    
+    // Club delegates can edit their own club
+    if (this.id && this.id === user.clubId) return true;
+    
+    return false;
+  }
+
+  /**
    * Check if a user can claim ownership of this club
    * @param {User} user - The user attempting to claim
    * @returns {boolean} True if user can claim this club

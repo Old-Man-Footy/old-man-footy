@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Dashboard JavaScript (Manager Object Pattern)
  * Handles dashboard functionality including carnival filtering and user interactions
@@ -148,7 +150,7 @@ export const dashboardManager = {
     confirmTransfer() {
         const select = document.getElementById('newPrimaryUserId');
         if (!select || !select.value) {
-            alert('Please select a delegate to transfer the role to.');
+            showAlert('Please select a delegate to transfer the role to.');
             return false;
         }
         const selectedOption = select.options[select.selectedIndex];
@@ -258,14 +260,14 @@ export const dashboardManager = {
                 const selectedAction = leaveClubModal.querySelector('input[name="leaveAction"]:checked');
                 if (selectedAction?.value === 'transfer' && delegateSelect && !delegateSelect.value) {
                     e.preventDefault();
-                    alert('Please select a delegate to transfer the primary role to.');
+                    showAlert('Please select a delegate to transfer the primary role to.');
                     delegateSelect?.focus();
                     return false;
                 }
                 const confirmCheckbox = leaveClubModal.querySelector('#confirmLeave');
                 if (confirmCheckbox && !confirmCheckbox.checked) {
                     e.preventDefault();
-                    alert('Please confirm that you want to leave the club.');
+                    showAlert('Please confirm that you want to leave the club.');
                     confirmCheckbox.focus();
                     return false;
                 }
@@ -602,7 +604,9 @@ export const dashboardManager = {
             const response = await fetch('/api/subscriptions/me', {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             });
 
@@ -647,7 +651,9 @@ export const dashboardManager = {
                 const response = await fetch('/api/subscriptions/me', {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         isActive: false,
@@ -704,7 +710,9 @@ export const dashboardManager = {
             const response = await fetch('/api/subscriptions/me', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     isActive: true,

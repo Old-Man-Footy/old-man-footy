@@ -4,6 +4,8 @@
  * Refactored into a testable object pattern.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 export const editRegistrationManager = {
     carnivalId: null,
 
@@ -35,11 +37,11 @@ export const editRegistrationManager = {
                 // On success, redirect to the attendees page.
                 window.location.href = `/carnivals/${this.carnivalId}/attendees`;
             } else {
-                alert(result.message || 'Error removing registration');
+               showAlert(result.message || 'Error removing registration');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while removing the registration.');
+           showAlert('An error occurred while removing the registration.');
         }
     },
 
@@ -47,7 +49,11 @@ export const editRegistrationManager = {
     async sendRequest(url, method, body = null) {
         const options = {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
         };
         if (body) {
             options.body = JSON.stringify(body);

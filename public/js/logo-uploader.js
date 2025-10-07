@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Logo Uploader Manager
  * Handles drag-and-drop file upload functionality for logo uploader partials
@@ -29,6 +31,16 @@ export const logoUploaderManager = {
      * @param {Object} options - Configuration options
      */
     initialize(containerId = 'logoUploader', options = {}) {
+        // Check if this container has already been initialized
+        if (!this.initializedContainers) {
+            this.initializedContainers = new Set();
+        }
+        
+        if (this.initializedContainers.has(containerId)) {
+            console.log(`Logo uploader already initialized for container '${containerId}', skipping...`);
+            return;
+        }
+        
         this.cacheElements(containerId);
         
         // Merge options with defaults
@@ -37,6 +49,8 @@ export const logoUploaderManager = {
 
         if (this.elements.uploadArea) {
             this.bindEvents();
+            // Mark this container as initialized
+            this.initializedContainers.add(containerId);
         }
     },
 
@@ -56,6 +70,8 @@ export const logoUploaderManager = {
             uploadArea: container.querySelector('.logo-upload-area'),
             fileInput: container.querySelector('input[type="file"]'),
             previewImg: container.querySelector('.logo-preview img'),
+            previewContainer: container.querySelector('.logo-preview'),
+            noLogoCard: container.querySelector('.no-logo-card'),
             removeBtn: container.querySelector('.btn-remove-logo'),
             uploadText: container.querySelector('.upload-text'),
             helpText: container.querySelector('.help-text')
@@ -68,6 +84,16 @@ export const logoUploaderManager = {
      * @param {string} uploadText - Default upload text
      */
     initializeFromPartial(inputId, uploadText) {
+        // Check if this input has already been initialized
+        if (!this.initializedInputs) {
+            this.initializedInputs = new Set();
+        }
+        
+        if (this.initializedInputs.has(inputId)) {
+            console.log(`Logo uploader already initialized for input '${inputId}', skipping...`);
+            return;
+        }
+        
         console.log('Initializing logo uploader from EJS partial for input:', inputId);
         
         const fileInput = document.getElementById(inputId);
@@ -90,6 +116,9 @@ export const logoUploaderManager = {
 
         this.defaultUploadText = uploadText || 'Click or drag to upload logo';
         this.bindEvents();
+        
+        // Mark this input as initialized
+        this.initializedInputs.add(inputId);
     },
 
     /**
@@ -117,6 +146,9 @@ export const logoUploaderManager = {
         if (this.elements.removeBtn) {
             this.elements.removeBtn.addEventListener('click', (e) => this.handleRemoveImage(e));
         }
+
+        // Listen for upload completion events from parent form managers
+        document.addEventListener('logoUploadComplete', (e) => this.handleUploadComplete(e.detail));
     },
 
     /**
@@ -228,22 +260,51 @@ export const logoUploaderManager = {
         }
 
         // Show preview if it's an image
-        if (file.type.startsWith('image/') && this.elements.previewImg) {
+        if (file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                this.elements.previewImg.src = e.target.result;
-                this.elements.previewImg.style.display = 'block';
-                
-                // Show remove button
-                if (this.elements.removeBtn) {
-                    this.elements.removeBtn.style.display = 'block';
-                }
+                this.showImagePreview(e.target.result, file.name);
             };
             reader.readAsDataURL(file);
         }
 
         // Add visual feedback
         this.elements.uploadArea?.classList.add('file-selected');
+    },
+
+    /**
+     * Show image preview in the appropriate container
+     * @param {string} imageSrc - Image source URL or data URL
+     * @param {string} fileName - Original file name
+     */
+    showImagePreview(imageSrc, fileName) {
+        // Hide the no-logo card if it exists
+        if (this.elements.noLogoCard) {
+            this.elements.noLogoCard.style.display = 'none';
+        }
+
+        // Show preview container and update image
+        if (this.elements.previewContainer) {
+            this.elements.previewContainer.style.display = 'block';
+            
+            // Find the preview image within the container
+            const previewImg = this.elements.previewContainer.querySelector('img');
+            if (previewImg) {
+                previewImg.src = imageSrc;
+                previewImg.alt = fileName || 'Logo preview';
+            }
+        }
+
+        // Legacy support: update direct preview image element
+        if (this.elements.previewImg) {
+            this.elements.previewImg.src = imageSrc;
+            this.elements.previewImg.style.display = 'block';
+        }
+
+        // Show remove button if it exists
+        if (this.elements.removeBtn) {
+            this.elements.removeBtn.style.display = 'block';
+        }
     },
 
     /**
@@ -292,7 +353,7 @@ export const logoUploaderManager = {
      */
     showError(message) {
         // Use browser alert for now - can be enhanced with better UI
-        alert(message);
+        showAlert(message);
     },
 
     /**
@@ -309,32 +370,111 @@ export const logoUploaderManager = {
         });
         
         document.dispatchEvent(event);
+    },
+
+
+
+    /**
+     * Handle successful upload completion
+     * @param {Object} response - Upload response data
+     */
+    handleUploadComplete(response) {
+        if (!this.elements || !this.elements.previewImg) return;
+        
+        try {
+            // Update preview with uploaded image
+            if (response.imageUrl) {
+                this.elements.previewImg.src = response.imageUrl;
+                this.elements.previewImg.style.display = 'block';
+                this.elements.uploadText.style.display = 'none';
+            }
+            
+            // Show success feedback
+            if (this.elements.uploadArea) {
+                this.elements.uploadArea.classList.add('upload-success');
+                setTimeout(() => {
+                    this.elements.uploadArea.classList.remove('upload-success');
+                }, 2000);
+            }
+            
+            console.log('Logo uploader: Upload completion handled successfully');
+        } catch (error) {
+            console.error('Logo uploader: Error handling upload completion:', error);
+        }
+    },
+
+    /**
+     * Reset uploader state after successful submission
+     */
+    resetUploader() {
+        if (!this.elements) return;
+        
+        try {
+            // Reset file input
+            if (this.elements.fileInput) {
+                this.elements.fileInput.value = '';
+            }
+            
+            // Reset visual state
+            if (this.elements.uploadArea) {
+                this.elements.uploadArea.classList.remove('dragover', 'upload-success');
+            }
+            
+            // Show/hide appropriate preview containers
+            if (this.elements.previewContainer) {
+                this.elements.previewContainer.style.display = 'none';
+            }
+            if (this.elements.noLogoCard) {
+                this.elements.noLogoCard.style.display = 'block';
+            }
+            
+            // Reset help text
+            if (this.elements.helpText) {
+                this.elements.helpText.textContent = 'Select an image or drag and drop here';
+            }
+            
+            console.log('Logo uploader: State reset completed');
+        } catch (error) {
+            console.error('Logo uploader: Error resetting uploader state:', error);
+        }
     }
 };
 
 // Auto-initialize based on script tag data attributes
 if (typeof window !== 'undefined' && !window.logoUploaderInitialized) {
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('Logo Uploader: DOMContentLoaded event fired');
+        
         // Find the script tag with data attributes
         const scriptTag = document.querySelector('script[src*="logo-uploader.js"][data-input-id]');
+        console.log('Logo Uploader: Script tag found:', scriptTag);
         
         if (scriptTag) {
             const inputId = scriptTag.dataset.inputId;
             const uploadText = scriptTag.dataset.uploadText;
+            console.log('Logo Uploader: Auto-initialization detected - inputId:', inputId, 'uploadText:', uploadText);
             
             // Initialize the logo uploader for the specified input ID
             const container = document.getElementById(inputId + '-upload-area')?.closest('.row') || 
                              document.querySelector(`#${inputId}`).closest('.row');
+            console.log('Logo Uploader: Container found:', container);
             
             if (container) {
+                console.log('Logo Uploader: Calling initializeFromPartial with inputId:', inputId);
                 // Adapt to EJS partial structure
                 logoUploaderManager.initializeFromPartial(inputId, uploadText);
+                console.log('Logo Uploader: initializeFromPartial completed successfully');
+            } else {
+                console.warn('Logo Uploader: No container found for inputId:', inputId);
             }
         } else {
+            console.log('Logo Uploader: No script tag with data-input-id found, using fallback');
             // Fallback: Look for logo uploader containers
             const uploaders = document.querySelectorAll('[id*="logoUploader"], .logo-uploader-container');
+            console.log('Logo Uploader: Fallback containers found:', uploaders.length);
             uploaders.forEach(uploader => {
                 if (uploader.id) {
+                    console.log('Logo Uploader: Initializing fallback container:', uploader.id);
                     logoUploaderManager.initialize(uploader.id);
                 }
             });
@@ -342,4 +482,5 @@ if (typeof window !== 'undefined' && !window.logoUploaderInitialized) {
     });
     
     window.logoUploaderInitialized = true;
+    console.log('Logo Uploader: Auto-initialization setup complete');
 }

@@ -58,6 +58,23 @@ class ClubPlayer extends Model {
     const lastInitial = this.lastName ? this.lastName.charAt(0).toUpperCase() : '';
     return `${firstInitial}.${lastInitial}.`;
   }
+
+  /**
+   * Check if a user can edit this player
+   * @param {User} user - The user to check permissions for
+   * @returns {boolean} True if user can edit this player
+   */
+  canUserEdit(user) {
+    if (!user) return false;
+    
+    // Admins have universal edit permissions
+    if (user.isAdmin) return true;
+    
+    // Club delegates can edit players associated with their club
+    if (this.clubId && this.clubId === user.clubId) return true;
+    
+    return false;
+  }
 }
 
 /**

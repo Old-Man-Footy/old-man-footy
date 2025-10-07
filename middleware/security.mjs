@@ -401,7 +401,7 @@ export const csrfTokenProvider = (req, res, next) => {
 
 /**
  * CSRF protection middleware
- * Validates CSRF tokens for state-changing operations
+ * Validates CSRF tokens for state-changing operations using the global CSRF system
  */
 export const csrfProtection = (req, res, next) => {
   // Skip CSRF for GET requests and API endpoints that use other auth methods
@@ -409,19 +409,20 @@ export const csrfProtection = (req, res, next) => {
     return next();
   }
   
-  // For now, implement a simple token-based approach
+  // Use the same token system as csrfTokenProvider
   const token = req.body._token || req.headers['x-csrf-token'];
-  const sessionToken = req.session?.csrfToken;
+  const expectedToken = req.csrfToken ? req.csrfToken() : null;
   
-  if (!sessionToken) {
-    // Generate token if none exists
-    if (req.session) {
-      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
-    }
-    return next();
+  if (!expectedToken) {
+    return res.status(403).json({
+      error: {
+        status: 403,
+        message: 'CSRF token system not available'
+      }
+    });
   }
   
-  if (req.method !== 'GET' && token !== sessionToken) {
+  if (req.method !== 'GET' && token !== expectedToken) {
     return res.status(403).json({
       error: {
         status: 403,
@@ -440,14 +441,21 @@ export const csrfProtection = (req, res, next) => {
 export const sessionSecurity = (req, res, next) => {
   // Regenerate session ID periodically for active sessions
   if (req.session && req.user) {
-    const lastRegeneration = req.session.lastRegeneration || 0;
     const now = Date.now();
     const regenerationInterval = 30 * 60 * 1000; // 30 minutes
+    
+    // Initialize lastRegeneration if not set (first time after login)
+    if (!req.session.lastRegeneration) {
+      req.session.lastRegeneration = now;
+      return next();
+    }
+    
+    const lastRegeneration = req.session.lastRegeneration;
     
     if (now - lastRegeneration > regenerationInterval) {
       req.session.regenerate((err) => {
         if (err) {
-          console.error('Session regeneration failed:', err);
+          console.error('❌ SessionSecurity: Session regeneration failed:', err);
           return next(err);
         }
         req.session.lastRegeneration = now;
@@ -535,7 +543,7 @@ export const validateSecureEmail = (email) => {
  * File upload security middleware
  * Validates and secures file uploads
  */
-export const validateFileUpload = (allowedTypes = [], maxSize = 5 * 1024 * 1024) => {
+export const validateFileUpload = (allowedTypes = [], maxSize = 10 * 1024 * 1024) => {
   return (req, res, next) => {
     if (!req.file && !req.files) {
       return next();

@@ -1,7 +1,8 @@
+import { imageUploaderManager } from './image-uploader.js';
+
 /**
  * Sponsor Edit Page Manager
- * Handles sponsor editing functionality including form validation,
- * logo upload, and form submission
+ * Handles sponsor editing functionality including form validation
  */
 
 export const sponsorEditManager = {
@@ -32,7 +33,6 @@ export const sponsorEditManager = {
             instagramInput: document.getElementById('instagramUrl'),
             twitterInput: document.getElementById('twitterUrl'),
             linkedinInput: document.getElementById('linkedinUrl'),
-            logoUploadSection: document.querySelector('.logo-upload-section'),
             visibilityCheckbox: document.getElementById('isPubliclyVisible')
         };
     },
@@ -89,15 +89,55 @@ export const sponsorEditManager = {
     /**
      * Handle form submission
      */
-    handleFormSubmit: (event) => {
+    handleFormSubmit: async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        
         const form = event.target;
         
         if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
             sponsorEditManager.showValidationErrors();
-        } else {
-            sponsorEditManager.showSubmissionFeedback();
+            form.classList.add('was-validated');
+            return;
+        }
+        
+        try {
+            // Disable submit button during processing
+            if (sponsorEditManager.elements.submitBtn) {
+                sponsorEditManager.elements.submitBtn.disabled = true;
+            }
+            
+            // Create FormData from form
+            const formData = new FormData(form);            
+
+            // Submit via AJAX
+            const response = await fetch(form.action, {
+                method: form.method || 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                sponsorEditManager.showSubmissionFeedback(true);
+                // Redirect after short delay for user feedback
+                setTimeout(() => {
+                    window.location.href = response.url || '/sponsors';
+                }, 1500);
+            } else {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+        } catch (error) {
+            console.error('Form submission error:', error);
+            sponsorEditManager.showSubmissionFeedback(false, error.message);
+        } finally {
+            // Re-enable submit button
+            if (sponsorEditManager.elements.submitBtn) {
+                sponsorEditManager.elements.submitBtn.disabled = false;
+            }
         }
         
         form.classList.add('was-validated');
@@ -251,17 +291,12 @@ export const sponsorEditManager = {
     /**
      * Show submission feedback
      */
-    showSubmissionFeedback() {
-        if (this.elements.submitBtn) {
-            const originalText = this.elements.submitBtn.innerHTML;
-            this.elements.submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Updating...';
-            this.elements.submitBtn.disabled = true;
-            
-            // Re-enable after form submission
-            setTimeout(() => {
-                this.elements.submitBtn.innerHTML = originalText;
-                this.elements.submitBtn.disabled = false;
-            }, 3000);
+    showSubmissionFeedback(success = true, errorMessage = null) {
+        if (success) {
+            this.showToast('Sponsor updated successfully!', 'success');
+        } else {
+            const message = errorMessage || 'Failed to update sponsor. Please try again.';
+            this.showToast(message, 'danger');
         }
     },
 
@@ -308,4 +343,5 @@ export const sponsorEditManager = {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     sponsorEditManager.initialize();
+    imageUploaderManager.initialize();
 });

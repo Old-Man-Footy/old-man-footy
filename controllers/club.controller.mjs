@@ -16,16 +16,44 @@ import {
 } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import ImageNamingService from '../services/imageNamingService.mjs';
+import fs from 'fs/promises';
+import { existsSync } from 'fs';
+import path from 'path';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
 import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
-import path from 'path';
-import fs from 'fs/promises';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import InvitationEmailService from '../services/email/InvitationEmailService.mjs';
 
+import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
+
+const getClubUploadPath = (clubId, contentType = 'logos') => {
+  return `public/uploads/clubs/${clubId}/${contentType}/`;
+};
+
+const readClubImages = async (clubId, imageType = 'logos') => {
+  const uploadPath = getClubUploadPath(clubId, imageType);
+  
+  try {
+    if (!fs.existsSync(uploadPath)) {
+      return [];
+    }
+    
+    const files = await fs.readdir(uploadPath);
+    return files
+      .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+      .map(file => ({
+        filename: file,
+        url: `/uploads/clubs/${clubId}/${imageType}/${file}`,
+        path: path.join(uploadPath, file)
+      }));
+  } catch (error) {
+    console.error(`Error reading club images for club ${clubId}:`, error);
+    return [];
+  }
+};
+
 /**
- * Display public club listings with search and filter options
+ * Display public club listings with search and filter optionsC:\Users\devon\source\repos\old-man-footy\public\uploads
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -294,8 +322,35 @@ const showClubManagementHandler = async (req, res) => {
     return res.redirect('/dashboard');
   }
 
-  return res.render('clubs/manage', {
+  return res.render('clubs/edit', {
     title: 'Manage Club Profile',
+    club,
+    additionalCSS: ['/styles/club.styles.css'],
+  });
+};
+
+/**
+ * Show club edit form (for /:id/edit route to match carnival pattern)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showEditFormHandler = async (req, res) => {
+  const club = await Club.findByPk(req.params.id);
+
+  if (!club) {
+    req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Check if user can edit this club (club delegate or admin)
+  const canEdit = club.canUserEdit(req.user);
+  if (!canEdit) {
+    req.flash('error_msg', 'You can only edit your own club\'s profile.');
+    return res.redirect('/dashboard');
+  }
+
+  return res.render('clubs/edit', {
+    title: 'Edit Club Profile',
     club,
     additionalCSS: ['/styles/club.styles.css'],
   });
@@ -309,24 +364,45 @@ const showClubManagementHandler = async (req, res) => {
 const updateClubProfileHandler = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // Create detailed error messages for better user feedback
+    // Check if this is an AJAX request
+    const isAjaxRequest = req.xhr || 
+                         req.headers.accept?.indexOf('json') > -1 || 
+                         req.headers['content-type']?.indexOf('multipart/form-data') > -1;
+    
+    if (isAjaxRequest) {
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+    
+    // Traditional form submission - create detailed error messages for better user feedback
     const errorMessages = errors.array().map((error) => error.msg);
     req.flash('error_msg', `Validation errors: ${errorMessages.join(', ')}`);
-    return res.redirect('/clubs/manage');
+    return res.redirect(`/clubs/${req.params.id}/edit`);
   }
 
   const user = req.user;
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to manage its profile.');
-    return res.redirect('/dashboard');
-  }
-
-  const club = await Club.findByPk(user.clubId);
+  const club = await Club.findByPk(req.params.id);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
     return res.redirect('/dashboard');
+  }
+
+  // Authorization check: use the same logic as the GET handler
+  const canEdit = club.canUserEdit(user);
+  if (!canEdit) {
+    req.flash('error_msg', 'You do not have permission to edit this club.');
+    return res.redirect('/dashboard');
+  }
+
+  // Safety check for req.body
+  if (!req.body || typeof req.body !== 'object') {
+    req.flash('error_msg', 'Invalid form data received.');
+    return res.redirect(`/clubs/${req.params.id}/edit`);
   }
 
   const {
@@ -360,31 +436,32 @@ const updateClubProfileHandler = async (req, res) => {
     isActive: isActive === 'on',
   };
 
-  // Handle structured file uploads
+  // Handle all uploads using shared processor (defensive against corrupted uploads)
   if (req.structuredUploads && req.structuredUploads.length > 0) {
-    for (const upload of req.structuredUploads) {
-      switch (upload.fieldname) {
-        case 'logo':
-          updateData.logoUrl = upload.path;
-          console.log(`📸 Updated club ${club.id} logo: ${upload.path}`);
-          break;
-        case 'galleryImage':
-          // For clubs, we might store gallery images differently
-          // This could be extended to support a gallery field in the Club model
-          console.log(`📸 Added gallery image to club ${club.id}: ${upload.path}`);
-          break;
-        case 'bannerImage':
-          // Store banner image reference if the club model supports it
-          console.log(`📸 Added banner image to club ${club.id}: ${upload.path}`);
-          break;
-      }
+    try {
+      const processedUploads = await processStructuredUploads(req, updateData, 'clubs', club.id);
+     
+      // Merge processed uploads into updateData
+      Object.assign(updateData, processedUploads);
+    } catch (error) {
+      console.error('Error processing uploads:', error);
+      throw error;
     }
   }
 
-  await club.update(updateData);
+  // Database update
+  try {
+    await club.update(updateData);
+  } catch (dbError) {
+    console.error('Database update failed:', dbError);
+    req.flash('error_msg', 'Failed to update club profile. Please try again.');
+    return res.redirect(`/admin/clubs/${club.id}/edit`);
+  }
 
   req.flash('success_msg', 'Club profile updated successfully!');
-  return res.redirect('/clubs/manage');
+  
+  // Redirect to the public club view
+  return res.redirect(`/clubs/${req.params.id}`);
 };
 
 /**
@@ -404,11 +481,7 @@ const getClubImagesHandler = async (req, res) => {
     });
   }
 
-  const images = await ImageNamingService.getEntityImages(
-    ImageNamingService.ENTITY_TYPES.CLUB,
-    parseInt(clubId),
-    imageType
-  );
+  const images = await readClubImages(parseInt(clubId), imageType);
 
   return res.json({
     success: true,
@@ -425,38 +498,56 @@ const getClubImagesHandler = async (req, res) => {
 const deleteClubImageHandler = async (req, res) => {
   const { clubId, filename } = req.params;
 
+  const club = await Club.findByPk(clubId);
+  if (!club) {
+    return res.status(404).json({
+      success: false,
+      message: 'Club not found.',
+    });
+  }
+
   // Verify user has access to this club
-  if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
+  if (!club.canUserEdit(req.user)) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. You can only delete images for your own club.',
     });
   }
 
-  // Parse the filename to verify it belongs to this club
-  const parsed = ImageNamingService.parseImageName(filename);
-  if (
-    !parsed ||
-    parsed.entityType !== ImageNamingService.ENTITY_TYPES.CLUB ||
-    parsed.entityId !== parseInt(clubId)
-  ) {
-    return res.status(400).json({
+  // Determine content type based on file location (logos vs gallery)
+  let contentType = 'gallery'; // default
+  let fullPath = null;
+  
+  // Check both possible locations
+  const logoPath = getClubUploadPath(clubId, 'logos') + filename;
+  const galleryPath = getClubUploadPath(clubId, 'gallery') + filename;
+  
+  if (existsSync(logoPath)) {
+    contentType = 'logos';
+    fullPath = logoPath;
+  } else if (existsSync(galleryPath)) {
+    contentType = 'gallery';
+    fullPath = galleryPath;
+  } else {
+    return res.status(404).json({
       success: false,
-      message: 'Invalid image file or image does not belong to this club',
+      message: 'Image file not found or does not belong to this club',
     });
   }
 
-  // Get the full path and delete the file
-  const imagePath = ImageNamingService.getRelativePath(parsed.entityType, parsed.imageType);
-  const fullPath = path.join(imagePath, filename);
-
-  await fs.unlink(path.join('uploads', fullPath));
+  // Delete the file
+  await fs.unlink(fullPath);
 
   // If this was the club's logo, update the database
-  if (parsed.imageType === ImageNamingService.IMAGE_TYPES.LOGO) {
-    const club = await Club.findByPk(clubId);
-    if (club && club.logoUrl && club.logoUrl.includes(filename)) {
-      await club.update({ logoUrl: null });
+  if (contentType === 'logos') {
+    
+    if (club && club.logoUrl) {
+      // Extract the actual filename from the logoUrl path
+      const logoUrlFilename = club.logoUrl.split('/').pop();
+      // Only null the logoUrl if we're deleting the exact file currently set as logo
+      if (logoUrlFilename === filename) {
+        await club.update({ logoUrl: null });
+      } 
     }
   }
 
@@ -464,6 +555,51 @@ const deleteClubImageHandler = async (req, res) => {
     success: true,
     message: 'Image deleted successfully',
   });
+};
+
+/**
+ * Show single club-specific sponsor
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const showClubSponsorHandler = async (req, res, next) => {
+  try {
+    const { id: clubId, sponsorId } = req.params;
+
+    // Check if carnival exists
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+      req.flash('error_msg', 'Club not found');
+      return res.redirect('/clubs');
+    }
+
+    // Find sponsor belonging to this carnival
+    const sponsor = await Sponsor.findOne({
+      where: { 
+        id: sponsorId, 
+        isActive: true,
+        clubId: clubId // Ensure sponsor belongs to this club
+      }
+    });
+
+    if (!sponsor) {
+      req.flash('error_msg', 'Sponsor not found or not associated with this club.');
+      return res.redirect(`/clubs/${clubId}/sponsors`);
+    }
+
+    return res.render('shared/sponsors/view-sponsor', {
+      title: `${sponsor.sponsorName} - ${club.clubName}`,
+      entityType: 'club',
+      entityData: club,
+      routePrefix: `/clubs/${club.id}`,
+      sponsor,
+      canEdit: club.canUserEdit(req.user),
+      additionalCSS: ['/styles/sponsor.styles.css'],
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 /**
@@ -477,15 +613,8 @@ const showClubSponsorsHandler = async (req, res, next) => {
     const user = req.user;
     // Security: Only allow managing sponsors for your own club (unless admin)
     const requestedClubId = req.params.clubId || req.params.id || user.clubId;
-    if (!user.clubId) {
-      req.flash('error_msg', 'You must be associated with a club to manage sponsors.');
-      return res.redirect('/dashboard');
-    }
-    if (parseInt(requestedClubId) !== user.clubId && !user.isAdmin) {
-      req.flash('error_msg', 'You can only manage sponsors for your own club.');
-      return res.redirect('/clubs/manage');
-    }
-    const club = await Club.findByPk(user.clubId, {
+   
+    const club = await Club.findByPk(requestedClubId, {
       include: [
         {
           model: Sponsor,
@@ -499,18 +628,49 @@ const showClubSponsorsHandler = async (req, res, next) => {
       req.flash('error_msg', 'Club not found.');
       return res.redirect('/dashboard');
     }
+
+     if (!club.canUserEdit(user)) {
+      req.flash('error_msg', 'You must be associated with this club to manage sponsors.');
+      return res.redirect('/dashboard');
+    }
+
     // Sort sponsors using the hierarchical sorting service
     const sortedSponsors = sortSponsorsHierarchically(club.clubSponsors, 'club');
     
-    return res.render('clubs/sponsors', {
+    return res.render('shared/sponsors/sponsors', {
       title: 'Manage Club Sponsors',
-      club,
+      entityType: 'club',
+      entityData: club,
+      routePrefix: `/clubs/${club.id}`,
       sponsors: sortedSponsors,
       additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
     });
   } catch (err) {
     next(err);
   }
+};
+
+/**
+ * Show the create club form
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const showCreateFormHandler = async (req, res) => {
+  // Ensure user doesn't already have a club
+  if (req.user.clubId) {
+    req.flash(
+      'error_msg',
+      'You are already associated with a club. You can only be a member of one club at a time.'
+    );
+    return res.redirect(`/clubs/${req.user.clubId}/edit`);
+  }
+
+  return res.render('clubs/create', {
+    title: 'Create New Club',
+    states: AUSTRALIAN_STATES,
+    additionalCSS: ['/styles/club.styles.css'],
+    additionalJS: ['/js/clubs/club-create.js']
+  });
 };
 
 /**
@@ -522,7 +682,7 @@ const createClubHandler = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     req.flash('error_msg', 'Please correct the validation errors.');
-    return res.redirect('/clubs/manage');
+    return res.redirect('/dashboard');
   }
 
   const user = req.user;
@@ -533,7 +693,7 @@ const createClubHandler = async (req, res) => {
       'error_msg',
       'You are already associated with a club. You can only be a member of one club at a time.'
     );
-    return res.redirect('/clubs/manage');
+    return res.redirect(`/clubs/${user.clubId}/edit`);
   }
 
   const { clubName, state, location, description } = req.body;
@@ -545,7 +705,7 @@ const createClubHandler = async (req, res) => {
 
   if (existingClub) {
     req.flash('error_msg', 'A club with this name already exists. Please choose a different name.');
-    return res.redirect('/clubs/manage');
+    return res.redirect('/dashboard');
   }
 
   // Create the club with the user as primary delegate
@@ -568,8 +728,6 @@ const createClubHandler = async (req, res) => {
     isPrimaryDelegate: true,
   });
 
-  console.log(`✅ User ${user.email} created new club: ${clubName} (ID: ${newClub.id})`);
-
   req.flash(
     'success_msg',
     `Club "${clubName}" has been created successfully! You are now the primary delegate.`
@@ -584,16 +742,24 @@ const createClubHandler = async (req, res) => {
  */
 const showAddSponsorHandler = async (req, res) => {
   const user = req.user;
+  const clubId = req.params.id;
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to add sponsors.');
-    return res.redirect('/dashboard');
+  if (!user) {
+    req.flash('error_msg', 'You must be logged in to add sponsors.');
+    return res.redirect('/auth/login');
   }
 
-  const club = await Club.findByPk(user.clubId);
+  // Find the club from the URL parameter
+  const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
+    return res.redirect('/clubs');
+  }
+
+  // Check if user has permission to add sponsors for this club
+  if (!club.canUserEdit(user)) {
+    req.flash('error_msg', 'You do not have permission to add sponsors for this club.');
     return res.redirect('/dashboard');
   }
 
@@ -638,103 +804,142 @@ const showAddSponsorHandler = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const addSponsorToClubHandler = async (req, res) => {
-  const user = req.user;
-
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to add sponsors.');
-    return res.redirect('/dashboard');
-  }
-
-  const club = await Club.findByPk(user.clubId);
-
-  if (!club) {
-    req.flash('error_msg', 'Club not found.');
-    return res.redirect('/dashboard');
-  }
-
-  const { sponsorType, existingSponsorId, ...sponsorData } = req.body;
-
-  let sponsor;
-
-  if (sponsorType === 'existing' && existingSponsorId) {
-    // Link existing sponsor to club
-    sponsor = await Sponsor.findByPk(existingSponsorId);
-
-    if (!sponsor) {
-      req.flash('error_msg', 'Selected sponsor not found.');
-      return res.redirect('/clubs/manage/sponsors/add');
+  try {
+    const user = req.user;
+    const clubId = req.params.id;
+        
+    if (!user) {
+      req.flash('error_msg', 'You must be logged in to add sponsors.');
+      return res.redirect('/auth/login');
     }
 
-    // Check if already linked
-    const isAlreadyLinked = await sponsor.isAssociatedWithClub(club.id);
-    if (isAlreadyLinked) {
-      req.flash('error_msg', 'This sponsor is already linked to your club.');
-      return res.redirect('/clubs/manage/sponsors');
+    // Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg);
+      req.flash('error_msg', errorMessages.join(', '));
+      console.log(`🔍 DEBUG: Validation failed, redirecting to /clubs/${clubId}/sponsors/add`);
+      return res.redirect(`/clubs/${clubId}/sponsors/add`);
     }
 
-    // Link the sponsor to the club
-    await sponsor.update({ clubId: club.id });
-  } else if (sponsorType === 'new') {
-    // Create new sponsor
-    const {
-      sponsorName,
-      businessType,
-      location,
-      state,
-      description,
-      contactPerson,
-      contactEmail,
-      contactPhone,
-      website,
-      facebookUrl,
-      instagramUrl,
-      twitterUrl,
-      linkedinUrl,
-      sponsorshipLevel,
-    } = sponsorData;
+    // Find the club from the URL parameter
+    console.log(`🔍 DEBUG: Looking up club with ID: ${clubId}`);
+    const club = await Club.findByPk(clubId);
 
-    const newSponsorData = {
-      sponsorName: sponsorName?.trim(),
-      businessType: businessType?.trim(),
-      location: location?.trim(),
-      state,
-      description: description?.trim(),
-      contactPerson: contactPerson?.trim(),
-      contactEmail: contactEmail?.trim(),
-      contactPhone: contactPhone?.trim(),
-      website: website?.trim(),
-      facebookUrl: facebookUrl?.trim(),
-      instagramUrl: instagramUrl?.trim(),
-      twitterUrl: twitterUrl?.trim(),
-      linkedinUrl: linkedinUrl?.trim(),
-      sponsorshipLevel,
-      clubId: club.id,
-      isPubliclyVisible: true,
-    };
+    if (!club) {
+      console.log(`🔍 DEBUG: Club not found, redirecting to /clubs`);
+      req.flash('error_msg', 'Club not found.');
+      return res.redirect('/clubs');
+    }
+    
+    if (!club.canUserEdit(user)) {
+      req.flash('error_msg', 'You do not have permission to add sponsors for this club.');
+      return res.redirect('/dashboard');
+    }
+    
+    const { sponsorType, existingSponsorId, ...sponsorData } = req.body;
 
-    // Handle logo upload
-    if (req.structuredUploads && req.structuredUploads.length > 0) {
-      const logoUpload = req.structuredUploads.find((upload) => upload.fieldname === 'logo');
-      if (logoUpload) {
-        newSponsorData.logoUrl = logoUpload.path;
+    let sponsor;
+
+    if (sponsorType === 'existing' && existingSponsorId) {
+      // Link existing sponsor to club
+      sponsor = await Sponsor.findByPk(existingSponsorId);
+
+      if (!sponsor) {
+        req.flash('error_msg', 'Selected sponsor not found.');
+        return res.redirect(`/clubs/${club.id}/sponsors/add`);
       }
+
+      // Check if already linked
+      const isAlreadyLinked = await sponsor.isAssociatedWithClub(club.id);
+      if (isAlreadyLinked) {
+        console.log(`   - Sponsor already linked, redirecting to /clubs/${club.id}/sponsors`);
+        req.flash('error_msg', 'This sponsor is already linked to your club.');
+        return res.redirect(`/clubs/${club.id}/sponsors`);
+      }
+
+      // Link the sponsor to the club
+      await sponsor.update({ clubId: club.id });
+    } else if (sponsorType === 'new') {
+      // Create new sponsor
+      const {
+        sponsorName,
+        businessType,
+        location,
+        state,
+        description,
+        contactPerson,
+        contactEmail,
+        contactPhone,
+        website,
+        facebookUrl,
+        instagramUrl,
+        twitterUrl,
+        linkedinUrl,
+        sponsorshipLevel,
+      } = sponsorData;
+
+      const newSponsorData = {
+        sponsorName: sponsorName?.trim(),
+        businessType: businessType?.trim(),
+        location: location?.trim(),
+        state,
+        description: description?.trim(),
+        contactPerson: contactPerson?.trim(),
+        contactEmail: contactEmail?.trim(),
+        contactPhone: contactPhone?.trim(),
+        website: website?.trim(),
+        facebookUrl: facebookUrl?.trim(),
+        instagramUrl: instagramUrl?.trim(),
+        twitterUrl: twitterUrl?.trim(),
+        linkedinUrl: linkedinUrl?.trim(),
+        sponsorshipLevel,
+        clubId: club.id,
+        isPubliclyVisible: true,
+      };
+
+      sponsor = await Sponsor.create(newSponsorData);
+      
+      // Process uploaded files for new sponsor
+      if (req.structuredUploads && req.structuredUploads.length > 0) {
+        const sponsorUpdateData = {};
+        const processedUploads = await processStructuredUploads(req, sponsorUpdateData, 'sponsors', club.id, sponsor.id);
+        
+        // Update the sponsor with processed file paths
+        if (Object.keys(sponsorUpdateData).length > 0) {
+          await sponsor.update(sponsorUpdateData);
+        }
+      }
+    } else {
+      req.flash('error_msg', 'Invalid sponsor type selected.');
+      return res.redirect(`/clubs/${club.id}/sponsors/add`);
     }
 
-    sponsor = await Sponsor.create(newSponsorData);
-  } else {
-    req.flash('error_msg', 'Invalid sponsor type selected.');
-    return res.redirect('/clubs/manage/sponsors/add');
+    // Set display order for the sponsor
+    const currentSponsors = await club.getClubSponsors();
+    const displayOrder = currentSponsors.length + 1;
+
+    // Update the sponsor's display order
+    await sponsor.update({ displayOrder });
+
+    console.log(`   - Success! Redirecting to /clubs/${club.id}/sponsors/${sponsor.id}/edit`);
+    req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club! You can now add images and additional details.`);
+    return res.redirect(`/clubs/${club.id}/sponsors/${sponsor.id}/edit`);
+
+  } catch (error) {
+    console.error('Error adding sponsor to club:', error);
+    
+    // Handle Sequelize validation errors
+    if (error.name === 'SequelizeValidationError') {
+      const errorMessages = error.errors.map(err => err.message);
+      req.flash('error_msg', errorMessages.join(', '));
+      return res.redirect(`/clubs/${req.params.id}/sponsors/add`);
+    }
+    
+    // Handle other errors
+    req.flash('error_msg', 'An error occurred while adding the sponsor. Please try again.');
+    return res.redirect(`/clubs/${req.params.id}/sponsors/add`);
   }
-
-  // Set display order for the sponsor
-  const currentSponsors = await club.getClubSponsors();
-  const displayOrder = currentSponsors.length + 1;
-
-  // Update the sponsor's display order
-  await sponsor.update({ displayOrder });
-
-  req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been added to your club!`);
-  return res.redirect('/clubs/manage/sponsors');
 };
 
 /**
@@ -762,21 +967,21 @@ const removeSponsorFromClubHandler = async (req, res) => {
 
   if (!sponsor) {
     req.flash('error_msg', 'Sponsor not found.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
   // Check if sponsor is linked to this club
   const isLinked = await sponsor.isAssociatedWithClub(club.id);
   if (!isLinked) {
     req.flash('error_msg', 'This sponsor is not linked to your club.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
   // Remove the association
   await club.removeSponsor(sponsor);
 
   req.flash('success_msg', `Sponsor "${sponsor.sponsorName}" has been removed from your club.`);
-  return res.redirect('/clubs/manage/sponsors');
+  return res.redirect(`/clubs/${club.id}/sponsors`);
 };
 
 /**
@@ -810,13 +1015,15 @@ const showEditClubSponsorHandler = async (req, res) => {
 
   if (!sponsor) {
     req.flash('error_msg', 'Sponsor not found or not associated with your club.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
-  return res.render('clubs/edit-sponsor', {
+  return res.render('shared/sponsors/edit-sponsor', {
     title: 'Edit Sponsor',
+    entityType: 'club',
+    entityData: club,
+    routePrefix: `/clubs/${club.id}`,
     sponsor,
-    club,
     states: AUSTRALIAN_STATES,
     sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
     additionalCSS: ['/styles/sponsor.styles.css'],
@@ -854,14 +1061,28 @@ const updateClubSponsorHandler = async (req, res) => {
 
   if (!sponsor) {
     req.flash('error_msg', 'Sponsor not found or not associated with your club.');
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
   // Validate request
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Check if this is an AJAX request
+    const isAjaxRequest = req.xhr || 
+                         req.headers.accept?.indexOf('json') > -1 || 
+                         req.headers['content-type']?.indexOf('multipart/form-data') > -1;
+    
+    if (isAjaxRequest) {
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+    
+    // Traditional form submission
     req.flash('error_msg', 'Please correct the validation errors.');
-    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+    return res.redirect(`/clubs/${club.id}/sponsors/${sponsorId}/edit`);
   }
 
   const {
@@ -882,14 +1103,8 @@ const updateClubSponsorHandler = async (req, res) => {
   } = req.body;
 
   try {
-    // Handle file upload if provided
-    let logoFilename = sponsor.logoFilename;
-    if (req.file) {
-      logoFilename = req.file.filename;
-    }
-
-    // Update sponsor
-    await sponsor.update({
+    // Prepare update data
+    const updateData = {
       sponsorName: sponsorName.trim(),
       businessType: businessType ? businessType.trim() : null,
       sponsorshipLevel,
@@ -903,16 +1118,29 @@ const updateClubSponsorHandler = async (req, res) => {
       location: location ? location.trim() : null,
       state,
       description: description ? description.trim() : null,
-      logoFilename,
       isPubliclyVisible: isPubliclyVisible === 'true',
-    });
+    };
+
+    // Process uploaded files if present
+    if (req.structuredUploads && req.structuredUploads.length > 0) {
+      const processedUploads = await processStructuredUploads(req, updateData, 'sponsors', club.id, sponsor.id);
+    } else if (req.file) {
+      // Legacy fallback for direct file upload
+      updateData.logoUrl = req.file.filename;
+    } else {
+      // Keep existing logo filename if no new upload
+      updateData.logoUrl = sponsor.logoUrl;
+    }
+
+    // Update sponsor
+    await sponsor.update(updateData);
 
     req.flash('success_msg', `Sponsor "${sponsorName}" has been updated successfully.`);
-    return res.redirect('/clubs/manage/sponsors');
+    return res.redirect(`/clubs/${club.id}/sponsors`);
   } catch (error) {
     console.error('Error updating sponsor:', error);
     req.flash('error_msg', 'An error occurred while updating the sponsor.');
-    return res.redirect(`/clubs/manage/sponsors/${sponsorId}/edit`);
+    return res.redirect(`/clubs/${club.id}/sponsors/${sponsorId}/edit`);
   }
 };
 
@@ -1373,7 +1601,7 @@ const joinClubHandler = async (req, res) => {
       'error_msg',
       'You are already associated with a club. You can only be a member of one club at a time.'
     );
-    return res.redirect('/clubs/manage');
+    return res.redirect(`/clubs/${user.clubId}/edit`);
   }
 
   const club = await Club.findOne({
@@ -1394,7 +1622,7 @@ const joinClubHandler = async (req, res) => {
 
   if (!club) {
     req.flash('error_msg', 'Club not found or is not active.');
-    return res.redirect('/clubs/manage');
+    return res.redirect('/dashboard');
   }
 
   // Check if club has a primary delegate
@@ -1426,8 +1654,6 @@ const joinClubHandler = async (req, res) => {
 
     // Commit the transaction
     await transaction.commit();
-
-    console.log(`✅ User ${user.email} joined club: ${club.clubName} (ID: ${club.id})`);
 
     req.flash(
       'success_msg',
@@ -1564,7 +1790,6 @@ const leaveClubHandler = async (req, res) => {
     } else {
       // Regular delegate leaving
       successMessage = `You have successfully left "${clubName}". You can now join a different club if needed.`;
-      console.log(`✅ User ${user.email} left club: ${clubName} (ID: ${club.id})`);
     }
 
     // Disassociate user from the club
@@ -1735,10 +1960,13 @@ const rawControllers = {
   showClubListingsHandler,
   showClubProfileHandler,
   showClubManagementHandler,
+  showEditFormHandler,
   updateClubProfileHandler,
   getClubImagesHandler,
   deleteClubImageHandler,
+  showClubSponsorHandler,
   showClubSponsorsHandler,
+  showCreateFormHandler,
   createClubHandler,
   showAddSponsorHandler,
   addSponsorToClubHandler,
@@ -1765,10 +1993,13 @@ export const {
   showClubListingsHandler: showClubListings,
   showClubProfileHandler: showClubProfile,
   showClubManagementHandler: showClubManagement,
+  showEditFormHandler: getEdit,
   updateClubProfileHandler: updateClubProfile,
   getClubImagesHandler: getClubImages,
   deleteClubImageHandler: deleteClubImage,
+  showClubSponsorHandler: showClubSponsor,
   showClubSponsorsHandler: showClubSponsors,
+  showCreateFormHandler: showCreateForm,
   createClubHandler: createClub,
   showAddSponsorHandler: showAddSponsor,
   addSponsorToClubHandler: addSponsorToClub,

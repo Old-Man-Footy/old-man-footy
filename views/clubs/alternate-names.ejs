@@ -5,7 +5,7 @@
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="/clubs/manage">Manage Club</a></li>
+                    <li class="breadcrumb-item"><a href="/clubs/<%= club.id %>/edit">Manage Club</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Alternate Names</li>
                 </ol>
             </nav>
@@ -16,7 +16,7 @@
                     <h2><%= club.clubName %> - Alternate Names</h2>
                     <p class="text-muted">Manage search names for your club to help players find you more easily.</p>
                 </div>
-                <a href="/clubs/manage" class="btn btn-outline-secondary">
+                <a href="/clubs/<%= club.id %>/edit" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Back to Club Management
                 </a>
             </div>

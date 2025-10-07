@@ -147,16 +147,6 @@ class Carnival extends Model {
   }
 
   /**
-   * Check if user can edit this carnival (async version for compatibility)
-   * @param {Object} user - User object to check permissions
-   * @returns {Promise<boolean>} Edit permission status
-   */
-  async canUserEditAsync(user) {
-    // Currently identical to sync version, but kept async for future delegate checking
-    return this.canUserEdit(user);
-  }
-
-  /**
    * Get creator user information
    * @returns {Promise<User|null>} Creator user or null
    */
@@ -939,11 +929,6 @@ Carnival.init({
     type: DataTypes.STRING,
     allowNull: true
   },
-  additionalImages: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: []
-  },
   // Social Media Links
   socialMediaFacebook: {
     type: DataTypes.STRING,
@@ -976,12 +961,6 @@ Carnival.init({
       // Convert empty strings to null for cleaner data storage
       this.setDataValue('socialMediaWebsite', value && value.trim() ? value.trim() : null);
     }
-  },
-  // Enhanced Draw/Document Upload Support
-  drawFiles: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: []
   },
   // Legacy draw fields for backward compatibility
   drawFileURL: {

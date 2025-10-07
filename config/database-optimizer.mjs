@@ -24,39 +24,6 @@ import * as path from 'path';
  */
 class DatabaseOptimizer {
     /**
-     * Configure Sequelize connection options for production environment.
-     * Validates and sanitizes all environment variables for security.
-     *
-     * @returns {Promise<Object>} Sequelize connection options
-     */
-    static async configureProduction() {
-        // Validate and sanitize environment variables for connection pool
-        // Inline comment: Ensure all environment variables are sanitized before use
-        const maxPoolSize = Number.isInteger(Number(process.env.SQLITE_MAX_POOL_SIZE)) ? Number(process.env.SQLITE_MAX_POOL_SIZE) : 5;
-        const minPoolSize = Number.isInteger(Number(process.env.SQLITE_MIN_POOL_SIZE)) ? Number(process.env.SQLITE_MIN_POOL_SIZE) : 1;
-        const acquireTimeout = Number.isInteger(Number(process.env.SQLITE_ACQUIRE_TIMEOUT)) ? Number(process.env.SQLITE_ACQUIRE_TIMEOUT) : 30000;
-        const idleTimeout = Number.isInteger(Number(process.env.SQLITE_IDLE_TIMEOUT)) ? Number(process.env.SQLITE_IDLE_TIMEOUT) : 10000;
-        const queryTimeout = Number.isInteger(Number(process.env.SQLITE_QUERY_TIMEOUT)) ? Number(process.env.SQLITE_QUERY_TIMEOUT) : 30000;
-
-        const connectionOptions = {
-            pool: {
-                max: maxPoolSize,
-                min: minPoolSize,
-                acquire: acquireTimeout,
-                idle: idleTimeout
-            },
-            dialectOptions: {
-                options: {
-                    enableForeignKeyConstraints: true
-                },
-                timeout: queryTimeout
-            },
-            logging: process.env.NODE_ENV === 'production' ? false : console.log,
-        };
-        return connectionOptions;
-    }
-
-    /**
      * Create database indexes for performance optimization.
      * Uses only secure, parameterized queries.
      *

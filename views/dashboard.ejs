@@ -210,7 +210,7 @@
     <div class="row mb-4 dashboard-stats">
         <div class="col-md-6 mb-3">
             <% if (user.clubId && user.clubId.clubName) { %>
-                <a href="/clubs/players" class="text-decoration-none">
+                <a href="/clubs/<%= user.clubId.id || user.clubId %>/players" class="text-decoration-none">
                     <div class="card dashboard-stat-card clickable-card">
                         <div class="card-body text-center">
                             <i class="bi bi-people display-4 mb-2"></i>
@@ -234,7 +234,7 @@
         </div>
         <div class="col-md-6 mb-3">
             <% if (user.clubId && user.clubId.clubName) { %>
-                <a href="/clubs/manage" class="text-decoration-none">
+                <a href="/clubs/<%= user.clubId.id || user.clubId %>/edit" class="text-decoration-none">
                     <div class="card dashboard-stat-card clickable-card">
                         <div class="card-body text-center">
                             <% if (user.clubId.logoUrl) { %>
@@ -260,7 +260,7 @@
                     </div>
                 </div>
             <% } else { %>
-                <a href="/clubs/manage" class="text-decoration-none">
+                <a href="/clubs" class="text-decoration-none">
                     <div class="card dashboard-stat-card clickable-card">
                         <div class="card-body text-center">
                             <i class="bi bi-people display-4 mb-2"></i>
@@ -415,8 +415,11 @@
                                     <i class="bi bi-info-circle"></i>
                                     <strong>Join a club first:</strong> You need to be associated with a club to create, or claim carnivals.
                                     <div class="mt-2">
-                                        <a href="/clubs/manage" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-building"></i> Join or Create Club
+                                        <a href="/clubs/new" class="btn btn-primary btn-sm me-2">
+                                            <i class="bi bi-plus-circle"></i> Create Club
+                                        </a>
+                                        <a href="/clubs" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-search"></i> Join Club
                                         </a>
                                     </div>
                                 </div>
@@ -664,7 +667,7 @@
                                     <i class="bi bi-arrow-right-circle"></i> Transfer Primary Role
                                 </button>
                             <% } %>
-                            <button type="button" class="btn btn-outline-tertiary" data-action="navigate" data-target="/clubs/manage">
+                            <button type="button" class="btn btn-outline-tertiary" data-action="navigate" data-target="/clubs/<%= user.clubId.id || user.clubId %>/edit">
                                 <i class="bi bi-gear"></i> Manage Club Settings
                             </button>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
@@ -690,7 +693,7 @@
                     <div class="card-body">
                         <p class="mb-3">As a delegate for <%= user.clubId.clubName %>, you can create and manage carnivals for your club.</p>
                         <div class="d-flex flex-wrap gap-2">
-                            <a href="/clubs/manage" class="btn btn-outline-primary">
+                            <a href="/clubs/<%= user.clubId.id || user.clubId %>/edit" class="btn btn-outline-primary">
                                 <i class="bi bi-building"></i> Manage Club Profile
                             </a>
                             <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#leaveClubModal">
@@ -725,7 +728,7 @@
                                 <small class="d-block text-muted mt-1">Add your rugby league club to start managing carnivals</small>
                             </label>
                             <% if (!clubs || clubs.length === 0) { %>
-                                <a href="/clubs/manage" class="btn btn-outline-primary btn-sm ms-3">
+                                <a href="/clubs" class="btn btn-outline-primary btn-sm ms-3">
                                     <i class="bi bi-plus"></i> Add Club
                                 </a>
                             <% } %>
@@ -735,11 +738,8 @@
                             <input type="checkbox" class="form-check-input me-3 checklist-item" id="step4" data-step="sponsors">
                             <label for="step4" class="flex-grow-1 mb-0">
                                 <strong>Add sponsors to your club</strong>
-                                <small class="d-block text-muted mt-1">Showcase your club's supporters and partners</small>
+                                <small class="d-block text-muted mt-1">Showcase your club's supporters and partners via your club page</small>
                             </label>
-                            <a href="/sponsors" class="btn btn-outline-tertiary btn-sm ms-3">
-                                <i class="bi bi-building"></i> Sponsors
-                            </a>
                         </div>
                         
                         <div class="list-group-item d-flex align-items-center py-3 border-0">

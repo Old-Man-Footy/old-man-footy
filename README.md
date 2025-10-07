@@ -89,17 +89,17 @@ This codebase is shared publicly to:
 │   └── database-optimizer.mjs                  # Database performance optimization
 ├── controllers/                             # MVC Controllers - Handle HTTP requests
 │   ├── admin.controller.mjs                    # Admin panel functionality
-│   ├── auth.controller.mjs                     # User authentication logic
+│   ├── auth.controller.mjs                     # User authentication logic (including subscription features)
 │   ├── carnival.controller.mjs                 # Carnival management operations
 │   ├── carnivalClub.controller.mjs             # Carnival-club relationships
 │   ├── carnivalSponsor.controller.mjs          # Carnival sponsorship
-│   ├── club.controller.mjs                     # Club management operations
+│   ├── club.controller.mjs                     # Club management operations (including sponsor management)
 │   ├── clubPlayer.controller.mjs               # Club player management
 │   ├── comingSoon.controller.mjs               # Coming soon page handling
 │   ├── help.controller.mjs                     # Help system and documentation
 │   ├── main.controller.mjs                     # Main application routes
 │   ├── maintenance.controller.mjs              # Maintenance mode handling
-│   └── sponsor.controller.mjs                  # Sponsor management operations
+│   └── subscription.controller.mjs             # Email subscription management
 ├── data/                                    # Database files
 │   ├── dev-old-man-footy.db                    # Development SQLite database
 │   └── test-old-man-footy.db                   # Test SQLite database
@@ -140,7 +140,6 @@ This codebase is shared publicly to:
 ├── public/                                  # Static assets served to clients
 │   ├── icons/                                  # Application icons and favicons
 │   ├── js/                                     # Client-side JavaScript files
-│   ├── logos/                                  # Club and sponsor logos
 │   ├── screenshots/                            # Documentation screenshots
 │   ├── styles/                                 # CSS stylesheets with light/dark themes
 │   └── uploads/                                # User-uploaded files directory
@@ -257,7 +256,6 @@ This codebase is shared publicly to:
     │   ├── flash-messages.ejs                     # Flash message display
     │   ├── gallery.ejs                            # Gallery component
     │   ├── help-modal.ejs                         # Help modal component
-    │   └── logo-uploader.ejs                      # Logo upload component
     ├── sponsors/                               # Sponsor management view templates
     │   ├── list.ejs                               # List all sponsors
     │   └── show.ejs                               # View sponsor details

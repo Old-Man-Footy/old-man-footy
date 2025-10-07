@@ -75,7 +75,7 @@ app.use(session({
     secret: getCurrentConfig().security.sessionSecret,
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true, // Changed to true so sessions are created for all requests
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
@@ -134,10 +134,10 @@ async function initializeMySidelineSync() {
 const indexRoutes = await import('./routes/index.mjs');
 const authRoutes = await import('./routes/auth.mjs');
 const carnivalRoutes = await import('./routes/carnivals.mjs');
+const carnivalClubRoutes = await import('./routes/carnivalClubs.mjs');
 const carnivalSponsorRoutes = await import('./routes/carnivalSponsors.mjs');
 const clubRoutes = await import('./routes/clubs.mjs');
-const clubPlayerRoutes = await import('./routes/clubPlayers.mjs');
-const sponsorRoutes = await import('./routes/sponsors.mjs');
+
 const adminRoutes = await import('./routes/admin.mjs');
 const apiRoutes = await import('./routes/api/index.mjs');
 const subscriptionRoutes = await import('./routes/subscription.mjs');
@@ -146,10 +146,10 @@ const subscriptionRoutes = await import('./routes/subscription.mjs');
 app.use('/', indexRoutes.default);
 app.use('/auth', authRoutes.default);
 app.use('/carnivals', carnivalRoutes.default);
+app.use('/carnivals', carnivalClubRoutes.default);
 app.use('/carnival-sponsors', carnivalSponsorRoutes.default);
-app.use('/clubs/players', clubPlayerRoutes.default);
+
 app.use('/clubs', clubRoutes.default);
-app.use('/sponsors', sponsorRoutes.default);
 app.use('/admin', adminRoutes.default);
 app.use('/api', apiRoutes.default);
 app.use('/api/subscribe', subscriptionRoutes.default);
@@ -184,7 +184,7 @@ async function startServer() {
     try {
         // Step 1: One-time database setup
         await setupDatabase();
-        
+
         // Step 2: Seed help content on startup
         try {
             const { seedHelpContent } = await import('./scripts/seed-help-content.mjs');
@@ -205,26 +205,62 @@ async function startServer() {
             console.log('📊 Site is now accessible and ready to serve requests');
         });
 
-        // ================== GRACEFUL SHUTDOWN LOGIC ADDED HERE ==================
-        const gracefulShutdown = () => {
-            console.log('Received shutdown signal. Closing server...');
+        // ======================================================================
+        // Step 5: Handle server connections for graceful shutdown
+        const connections = new Set();
+
+        server.on('connection', (socket) => {
+            connections.add(socket);
+            socket.on('close', () => {
+                connections.delete(socket);
+            });
+        });
+
+        let isShuttingDown = false;
+        const gracefulShutdown = (signal) => {
+            if (isShuttingDown) {
+                console.log('Shutdown already in progress. Ignoring signal.');
+                return;
+            }
+            isShuttingDown = true;
+            console.log(`Received ${signal}. Closing server gracefully...`);
+
             // If the MySideline sync timeout is pending, clear it
             if (global.mySidelineInitTimeout) {
                 clearTimeout(global.mySidelineInitTimeout);
             }
-            server.close(() => {
-                console.log('Server has been closed.');
+
+            // Set a timeout to force shutdown
+            const shutdownTimeout = setTimeout(() => {
+                console.error('Could not close connections in time, forcefully shutting down.');
+                for (const socket of connections) {
+                    socket.destroy();
+                }
+                process.exit(1); // Exit with an error code
+            }, 10000); // 10-second grace period
+
+            server.close(async () => {
+                console.log('HTTP server closed.');
+                
+                console.log('All resources closed. Exiting.');
+                clearTimeout(shutdownTimeout); // Cancel the forceful shutdown
                 process.exit(0);
             });
+
+            // If there are no active connections, server.close() will be synchronous
+            // and the callback will be called immediately.
+            // For any existing connections, it will wait for them to close.
+            for (const socket of connections) {
+                socket.end();
+            }
         };
 
-        // Listen for termination signals (e.g., from Docker)
-        process.on('SIGTERM', gracefulShutdown);
-        // Listen for interrupt signals (e.g., Ctrl+C)
-        process.on('SIGINT', gracefulShutdown);
+        // Listen for termination signals
+        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
         // ======================================================================
         
-        // Step 5: Initialize MySideline sync after server is running (skip in jest tests)
+        // Step 6: Initialize MySideline sync after server is running (skip in jest tests)
         if (!process.env.JEST_WORKER_ID) {
             global.mySidelineInitTimeout = setTimeout(async () => {
                 await initializeMySidelineSync();

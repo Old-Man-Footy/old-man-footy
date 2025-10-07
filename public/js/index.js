@@ -47,7 +47,11 @@ export const indexPageManager = {
             for (const [key, value] of new FormData(form).entries()) params.append(key, value);
             fetch('/subscribe', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: params
             })
                 .then((response) => {

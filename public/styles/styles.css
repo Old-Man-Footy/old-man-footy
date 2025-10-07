@@ -901,6 +901,225 @@ button[type="submit"]:contains("Complete Registration"):focus {
     background: var(--theme-bg-tertiary);
 }
 
+/* Image Uploader Component Styles */
+.image-upload-area {
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.image-upload-area:hover {
+    border-color: var(--bs-primary) !important;
+    background-color: var(--bs-light) !important;
+}
+
+.image-upload-area.dragover {
+    border-color: var(--bs-success) !important;
+    background-color: var(--bs-success-bg-subtle) !important;
+}
+
+.image-thumbnail {
+    background-color: var(--bs-light);
+    position: relative;
+}
+
+.image-thumbnail img {
+    transition: transform 0.2s ease;
+}
+
+.image-thumbnail:hover img {
+    transform: scale(1.05);
+}
+
+.existing-image-item .badge {
+    font-size: 0.65em;
+}
+
+/* Ensure existing images are properly aligned within upload areas */
+.existing-images {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+}
+
+.existing-image-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: auto !important;
+    margin: 0 auto !important;
+}
+
+/* Override Bootstrap inline classes specifically */
+.existing-image-item.position-relative.d-inline-block {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+}
+
+.existing-image-item .image-thumbnail {
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.existing-image-item .image-name {
+    text-align: center !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+}
+
+.existing-image-item .badge {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    transform: translate(25%, -25%) !important;
+}
+
+/* Ultra-specific override for maximum compatibility */
+.upload-equal-height .existing-images .existing-image-item.position-relative.d-inline-block {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: auto !important;
+    margin: 0 auto !important;
+    height: 100% !important;
+}
+
+.upload-equal-height .existing-images .existing-image-item .image-thumbnail {
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.upload-equal-height .existing-images .existing-image-item .image-name {
+    text-align: center !important;
+    margin-top: 0.5rem !important;
+}
+
+/* Override inline styles that prevent proper alignment */
+.upload-equal-height .existing-images .existing-image-item .image-thumbnail[style*="200px"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 200px !important;
+    height: 200px !important;
+}
+
+.upload-equal-height .existing-images .existing-image-item .image-thumbnail img[style*="100%"] {
+    object-fit: contain !important;
+    object-position: center !important;
+    background-color: var(--theme-bg-secondary, #f8f9fa) !important;
+}
+
+/* Ensure consistent image container appearance for different aspect ratios */
+.upload-equal-height .existing-images .existing-image-item .image-thumbnail {
+    background-color: var(--theme-bg-secondary, #f8f9fa) !important;
+    border: 1px solid var(--theme-border-color, #dee2e6) !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.selected-image-item {
+    position: relative;
+}
+
+.selected-image-item .remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.selected-image-item .remove-image:hover {
+    background: rgba(220, 53, 69, 1);
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+
+.image-preview-container {
+    overflow: hidden;
+}
+
+.image-preview-max-width {
+    max-width: 100%;
+}
+
+.image-name {
+    max-width: 120px;
+}
+
+/* Upload Area Styling */
+.image-upload-area,
+.document-upload-area {
+    cursor: pointer;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+    background-color: #f8f9fa;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-upload-area:hover,
+.document-upload-area:hover {
+    border-color: var(--rugby-green) !important;
+    background-color: #e9ecef;
+}
+
+/* Equal height containers for upload areas */
+.image-uploader,
+.document-uploader {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-input-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+}
+
+/* Ensure upload columns have equal heights */
+.row:has(.image-uploader, .document-uploader),
+.upload-equal-height {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row:has(.image-uploader, .document-uploader) > [class*="col-"],
+.upload-equal-height > [class*="col-"] {
+    display: flex;
+    flex-direction: column;
+}
+
 /* Form Enhancements */
 .form-control,
 .form-select {
@@ -1637,6 +1856,18 @@ button[type="submit"]:contains("Complete Registration"):focus {
 [data-theme="dark"]  .file-upload-area {
     border: 2px dashed var(--theme-border-color);
     background-color: var(--theme-card-bg) !important;
+}
+
+[data-theme="dark"] .image-upload-area,
+[data-theme="dark"] .document-upload-area {
+    border-color: var(--theme-border-color) !important;
+    background-color: var(--theme-card-bg) !important;
+}
+
+[data-theme="dark"] .image-upload-area:hover,
+[data-theme="dark"] .document-upload-area:hover {
+    border-color: var(--rugby-green) !important;
+    background-color: var(--theme-bg-secondary) !important;
 }
 
 [data-theme="dark"] .nav-tabs .nav-link:hover,

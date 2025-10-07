@@ -5,6 +5,9 @@
  * Centralizes commonly used values to maintain consistency and ease maintenance.
  */
 
+import fs from 'fs';
+import path from 'path';
+
 /**
  * Australian states and territories
  * Used for form dropdowns, validation, and data processing
@@ -98,57 +101,122 @@ export const LOGO_DISPLAY_SIZES = {
 export const LOGO_DISPLAY_SIZES_ARRAY = Object.values(LOGO_DISPLAY_SIZES);
 
 /**
- * Image directory paths used by CarouselImageService
+ * Dynamic directory functions for entity-specific gallery scanning
  */
-export const IMAGE_DIRECTORIES = {
-    CARNIVAL_GALLERY: 'images/carnival/gallery',
-    CARNIVAL_PROMO: 'images/carnival/promo',
-    CLUB_GALLERY: 'images/club/gallery', 
-    CLUB_PROMO: 'images/club/promo',
-    SPONSOR_GALLERY: 'images/sponsor/gallery',
-    SPONSOR_PROMO: 'images/sponsor/promo'
-};
 
 /**
- * Array of image directories for scanning
+ * Get all gallery directories for a specific entity type
+ * @param {string} entityType - Entity type ('carnivals' or 'clubs')
+ * @param {boolean} filterPublic - Whether to filter for public entities only
+ * @returns {Promise<string[]>} Array of gallery directory paths
  */
-export const IMAGE_DIRECTORIES_ARRAY = Object.values(IMAGE_DIRECTORIES);
+export async function getEntityGalleryDirectories(entityType, filterPublic = true) {
+    const uploadsPath = path.join('public', 'uploads', entityType);
+    const directories = [];
+    
+    try {
+        if (!fs.existsSync(uploadsPath)) {
+            return directories;
+        }
+        
+        const entityDirs = fs.readdirSync(uploadsPath);
+        
+        for (const entityId of entityDirs) {
+            const galleryPath = path.join(uploadsPath, entityId, 'gallery');
+            
+            if (fs.existsSync(galleryPath)) {
+                const stat = fs.statSync(galleryPath);
+                if (stat.isDirectory()) {
+                    // Check for images in the gallery directory
+                    const files = fs.readdirSync(galleryPath);
+                    const hasImages = files.some(file => 
+                        SUPPORTED_GALLERY_EXTENSIONS.includes(path.extname(file).toLowerCase())
+                    );
+                    
+                    if (hasImages) {
+                        directories.push(galleryPath);
+                    }
+                }
+            }
+        }
+        
+        // If filtering for public entities, check entity visibility
+        if (filterPublic) {
+            return await filterPublicEntityDirectories(directories, entityType);
+        }
+        
+        return directories;
+    } catch (error) {
+        console.error(`Error scanning ${entityType} gallery directories:`, error);
+        return directories;
+    }
+}
+
+/**
+ * Filter directories to only include public entities
+ * @param {string[]} directories - Array of directory paths
+ * @param {string} entityType - Entity type ('carnivals' or 'clubs')
+ * @returns {Promise<string[]>} Filtered array of public entity directories
+ */
+async function filterPublicEntityDirectories(directories, entityType) {
+    try {
+        // Import models dynamically to avoid circular dependencies
+        const { Carnival, Club } = await import('../models/index.mjs');
+        
+        const publicDirs = [];
+        
+        for (const dir of directories) {
+            // Extract entity ID from path: public/uploads/{entityType}/{id}/gallery
+            const pathParts = dir.split(path.sep);
+            const entityId = pathParts[pathParts.length - 2]; // Get ID from path
+            
+            let entity = null;
+            if (entityType === 'carnivals') {
+                entity = await Carnival.findByPk(entityId, { attributes: ['id', 'isPublic'] });
+            } else if (entityType === 'clubs') {
+                entity = await Club.findByPk(entityId, { attributes: ['id', 'isPublic'] });
+            }
+            
+            // Include if entity exists and is public (default to true if isPublic field doesn't exist)
+            if (entity && (entity.isPublic !== false)) {
+                publicDirs.push(dir);
+            }
+        }
+        
+        return publicDirs;
+    } catch (error) {
+        console.error('Error filtering public entity directories:', error);
+        // On error, return all directories (fail open)
+        return directories;
+    }
+}
+
+/**
+ * Get all entity gallery directories (both carnivals and clubs)
+ * @param {boolean} filterPublic - Whether to filter for public entities only
+ * @returns {Promise<string[]>} Array of all gallery directory paths
+ */
+export async function getAllEntityGalleryDirectories(filterPublic = true) {
+    const [carnivalDirs, clubDirs] = await Promise.all([
+        getEntityGalleryDirectories('carnivals', filterPublic),
+        getEntityGalleryDirectories('clubs', filterPublic)
+    ]);
+    
+    return [...carnivalDirs, ...clubDirs];
+}
 
 /**
  * Supported image file extensions
  */
-export const SUPPORTED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
+export const SUPPORTED_GALLERY_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
 
 /**
- * Upload directory paths
+ * Upload directory paths - Simplified for entity-folder structure compatibility
+ * Entity-specific uploads now use: public/uploads/{entityType}s/{id}/{contentType}/
  */
 export const UPLOAD_DIRECTORIES = {
-    // Parent directories
-    LOGOS: 'public/uploads/logos',
-    IMAGES: 'public/uploads/images',
-    DOCUMENTS: 'public/uploads/documents',
+    // Root directories (kept for backward compatibility)
     UPLOADS_ROOT: 'public/uploads',
-    
-    // Logo subdirectories
-    CLUB_LOGOS: 'public/uploads/logos/club',
-    CARNIVAL_LOGOS: 'public/uploads/logos/carnival',
-    SPONSOR_LOGOS: 'public/uploads/logos/sponsor',
-    SYSTEM_LOGOS: 'public/uploads/logos/system',
-    
-    // Image subdirectories
-    CLUB_PROMO: 'public/uploads/images/club/promo',
-    CLUB_GALLERY: 'public/uploads/images/club/gallery',
-    CARNIVAL_PROMO: 'public/uploads/images/carnival/promo',
-    CARNIVAL_GALLERY: 'public/uploads/images/carnival/gallery',
-    SPONSOR_PROMO: 'public/uploads/images/sponsor/promo',
-    SPONSOR_GALLERY: 'public/uploads/images/sponsor/gallery',
-    
-    // Document subdirectories
-    CLUB_DOCUMENTS: 'public/uploads/documents/club',
-    CARNIVAL_DOCUMENTS: 'public/uploads/documents/carnival',
-    SPONSOR_DOCUMENTS: 'public/uploads/documents/sponsor',
-    
-    // Temporary directory
     TEMP: 'public/uploads/temp'
 };
 
@@ -156,6 +224,95 @@ export const UPLOAD_DIRECTORIES = {
  * Array of upload directories for scanning
  */
 export const UPLOAD_DIRECTORIES_ARRAY = Object.values(UPLOAD_DIRECTORIES);
+
+/**
+ * Upload configuration settings
+ */
+export const GALLERY_UPLOAD_CONFIG = {
+    MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB in bytes
+    ALLOWED_MIME_TYPES: [
+        'image/jpeg',
+        'image/jpg', 
+        'image/png'
+    ]
+};
+
+/**
+ * File size limits by content type (also exported individually for test validation)
+ */
+export const MAX_FILE_SIZES = {
+    logos: 5 * 1024 * 1024,      // 5MB for logos
+    avatars: 2 * 1024 * 1024,    // 2MB for avatars  
+    documents: 10 * 1024 * 1024, // 10MB for documents
+    gallery: 10 * 1024 * 1024,   // 10MB for gallery images
+    promo: 5 * 1024 * 1024,      // 5MB for promotional images
+    promotional: 5 * 1024 * 1024  // 5MB for promotional images
+};
+
+/**
+ * Allowed file extensions by content type (also exported individually for test validation)
+ */
+export const ALLOWED_EXTENSIONS = {
+    logos: ['.jpg', '.jpeg', '.png', '.svg'],
+    avatars: ['.jpg', '.jpeg', '.png'],
+    documents: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv'],
+    gallery: ['.jpg', '.jpeg', '.png'],
+    promo: ['.jpg', '.jpeg', '.png'],
+    promotional: ['.jpg', '.jpeg', '.png']
+};
+
+/**
+ * Allowed MIME types by content type (also exported individually for test validation)
+ */
+export const ALLOWED_MIME_TYPES = {
+    logos: ['image/jpeg', 'image/png', 'image/svg+xml'],
+    avatars: ['image/jpeg', 'image/png'],
+    documents: [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain',
+        'text/csv'
+    ],
+    gallery: ['image/jpeg', 'image/png'],
+    promo: ['image/jpeg', 'image/png'],
+    promotional: ['image/jpeg', 'image/png']
+};
+
+/**
+ * Form upload configuration for traditional form-based uploads
+ */
+export const FORM_UPLOAD_CONFIG = {
+    // File size limits by content type
+    MAX_FILE_SIZES,
+    
+    // Allowed file extensions by content type
+    ALLOWED_EXTENSIONS,
+    
+    // Allowed MIME types by content type
+    ALLOWED_MIME_TYPES,
+    
+    // Maximum number of files per upload
+    MAX_FILES: 1,
+    
+    // Field name to subfolder mapping
+    FIELD_SUBFOLDER_MAP: {
+        logo: 'logos',
+        clubLogo: 'logos',
+        carnivalLogo: 'logos',
+        sponsorLogo: 'logos',
+        avatar: 'avatars',
+        userAvatar: 'avatars',
+        document: 'documents',
+        gallery: 'gallery',
+        galleryImage: 'gallery',
+        promo: 'promo',
+        promoImage: 'promo',
+        promotional: 'promo'
+    }
+};
 
 /**
  * Contact inquiry types

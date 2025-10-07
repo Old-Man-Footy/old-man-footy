@@ -8,7 +8,7 @@
             </div>
             <div class="col-lg-4 text-end">
                 <% if (user && user.clubId) { %>
-                    <a href="/clubs/manage" class="btn btn-outline-tertiary">
+                    <a href="/clubs/<%= user.clubId.id || user.clubId %>/edit" class="btn btn-outline-tertiary">
                         <i class="bi bi-gear"></i> Manage Club Profile
                     </a>
                 <% } %>
@@ -154,5 +154,22 @@
                 <% } %>
             </div>
         <% } %>
+        
+        <!-- Can't find your club? Create one! -->
+        <div class="mt-5">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">
+                        <i class="bi bi-plus-circle"></i> Can't find your club?
+                    </h5>
+                    <p class="card-text">
+                        Create a club profile to help other players find and connect with your team.
+                    </p>
+                    <a href="/clubs/new" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Create New Club
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </section>

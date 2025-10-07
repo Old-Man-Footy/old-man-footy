@@ -4,6 +4,8 @@
  * Refactored to the Manager Object Pattern per repository standards.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Encapsulates all behaviour for the Carnival New page.
  * - Use initialize() to set up the module.
@@ -67,6 +69,11 @@ export const carnivalNewManager = {
 
     /** Attach event listeners. */
     bindEvents() {
+        // Form submission
+        if (this.elements.carnivalForm) {
+            this.elements.carnivalForm.addEventListener('submit', carnivalNewManager.handleFormSubmit);
+        }
+
         // Make file upload areas clickable
         if (this.elements.fileUploadAreas?.length) {
             this.elements.fileUploadAreas.forEach((area) =>
@@ -183,12 +190,64 @@ export const carnivalNewManager = {
         }
     },
 
+    /**
+     * Handle form submission with AJAX
+     * @param {Event} event - Form submit event
+     */
+    handleFormSubmit: async (event) => {
+        event.preventDefault();
+        
+        const form = carnivalNewManager.elements.carnivalForm;
+        if (!form) return;
+        
+        // Prepare form data
+        const formData = new FormData(form);        
+        
+        try {
+            const response = await fetch(form.action, {
+                method: form.method || 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                // Success - redirect to the carnival page or show success message
+                const result = await response.json();
+                if (result.redirect) {
+                    window.location.href = result.redirect;
+                } else {
+                    // Fallback - reload the page or redirect to carnivals list
+                    window.location.href = '/carnivals';
+                }
+            } else {
+                // Handle server errors
+                const errorData = await response.json();
+                console.error('Form submission failed:', errorData);
+                
+                // Show error message to user
+                if (errorData.error?.message) {
+                   showAlert('Error: ' + errorData.error.message);
+                } else {
+                   showAlert('An error occurred while creating the carnival. Please try again.');
+                }
+            }
+        } catch (error) {
+            console.error('Network error:', error);
+           showAlert('Network error. Please check your connection and try again.');
+        }
+    },
+
     /** Set forceCreate and submit the form. Exposed on window for backwards compat. */
     proceedAnyway: () => {
         const force = carnivalNewManager.elements.forceCreate;
         const form = carnivalNewManager.elements.carnivalForm;
         if (force) force.value = 'true';
-        if (form) form.submit();
+        // Use AJAX submission instead of direct form.submit()
+        if (form) {
+            carnivalNewManager.handleFormSubmit({ preventDefault: () => {} });
+        }
     },
 
     /** Reset the carnival form. Exposed on window for backwards compat. */

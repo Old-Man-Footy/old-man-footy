@@ -4,14 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %> | Old Man Footy</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="/icons/favicon.ico">
     
-    <!-- Critical theme script - MUST load immediately to prevent flash -->
-    <script src="/js/theme-init.js"></script>
-    
+    <!-- Critical inline theme initialization to prevent flash -->
+    <script>
+        (function() {
+            'use strict';
+            
+            // Apply theme-loading class immediately
+            document.documentElement.className = 'theme-loading';
+            
+            // Get saved theme or use system preference
+            const savedTheme = localStorage.getItem('oldmanfooty-theme');
+            let theme = 'light';
+            
+            if (savedTheme === 'dark' || savedTheme === 'light') {
+                theme = savedTheme;
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme = 'dark';
+            }
+            
+            // Apply theme immediately
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+            
+            // Store for later use
+            window.__INITIAL_THEME__ = theme;
+            
+            // Remove loading class once DOM is ready
+            function showContent() {
+                document.documentElement.classList.remove('theme-loading');
+                if (document.body) {
+                    document.body.classList.add('theme-applied');
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showContent);
+            } else {
+                showContent();
+            }
+        })();
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/styles/styles.css" rel="stylesheet">
@@ -89,7 +129,7 @@
                                     <i class="bi bi-plus-circle"></i> Add Carnival
                                 </a></li>
                                 <% if (user.clubId) { %>
-                                    <li><a class="dropdown-item" href="/clubs/manage">
+                                    <li><a class="dropdown-item" href="/clubs/<%= user.clubId.id || user.clubId %>/edit">
                                         <i class="bi bi-gear"></i> Manage Club Profile
                                     </a></li>
                                 <% } %>
@@ -188,8 +228,15 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Critical theme initialization - runs immediately to prevent flash -->
+    <script src="/js/theme-init.js"></script>
     <script type="module" src="/js/app.js"></script>
     <script type="module" src="/js/help-system.js"></script>
+    <% if (typeof additionalJS !== 'undefined' && additionalJS && additionalJS.length > 0) { %>
+        <% additionalJS.forEach(jsFile => { %>
+            <script type="module" src="<%= jsFile %>"></script>
+        <% }); %>
+    <% } %>
     <!-- Global Help Modal -->
     <div class="modal fade" id="global-help-modal" tabindex="-1">
         <div class="modal-dialog modal-lg">

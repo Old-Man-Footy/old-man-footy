@@ -5,14 +5,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 // Mocked associations
-const mockAssoc = { club: {}, delegates: {}, alternateNames: {}, parentClub: {}, creator: {}, carnivals: {}, attendingClubs: {}, attendingCarnivals: {}, sponsors: {}, clubs: {}, carnival: {}, participatingClub: {}, playerAssignments: {}, playerClub: {}, carnivalAssignments: {}, hostClub: {}, auditLogs: {}, user: {}, clubPlayer: {}, carnivalClub: {}, carnivalSponsor: {} };
+const mockAssoc = { club: {}, delegates: {}, alternateNames: {}, parentClub: {}, creator: {}, carnivals: {}, attendingClubs: {}, attendingCarnivals: {}, sponsors: {}, carnivalSponsors: {}, clubs: {}, carnival: {}, participatingClub: {}, playerAssignments: {}, playerClub: {}, carnivalAssignments: {}, hostClub: {}, auditLogs: {}, user: {}, clubPlayer: {}, carnivalClub: {}, carnivalSponsor: {} };
 
 // Mocked models
 const User = { associations: { club: mockAssoc.club, carnivals: mockAssoc.carnivals, auditLogs: mockAssoc.auditLogs } };
 const Club = { associations: { delegates: mockAssoc.delegates, alternateNames: mockAssoc.alternateNames, attendingCarnivals: mockAssoc.attendingCarnivals, sponsors: mockAssoc.sponsors, players: mockAssoc.playerClub } };
 const ClubAlternateName = { associations: { parentClub: mockAssoc.parentClub } };
 const ClubPlayer = { associations: { playerClub: mockAssoc.playerClub, carnivalAssignments: mockAssoc.carnivalAssignments } };
-const Carnival = { associations: { creator: mockAssoc.creator, attendingClubs: mockAssoc.attendingClubs, sponsors: mockAssoc.sponsors, hostClub: mockAssoc.hostClub } };
+const Carnival = { associations: { creator: mockAssoc.creator, attendingClubs: mockAssoc.attendingClubs, carnivalSponsors: mockAssoc.carnivalSponsors, hostClub: mockAssoc.hostClub } };
 const CarnivalClub = { associations: { carnival: mockAssoc.carnival, participatingClub: mockAssoc.participatingClub, playerAssignments: mockAssoc.playerAssignments } };
 const CarnivalClubPlayer = { associations: { carnivalClub: mockAssoc.carnivalClub, clubPlayer: mockAssoc.clubPlayer } };
 const CarnivalSponsor = { associations: { carnival: mockAssoc.carnival, sponsor: {} } };

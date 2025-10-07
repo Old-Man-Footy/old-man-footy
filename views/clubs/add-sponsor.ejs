@@ -12,7 +12,7 @@
                         Add a new sponsor for <%= club.clubName %>
                     </p>
                 </div>
-                <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Back to Sponsors
                 </a>
             </div>
@@ -26,7 +26,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/clubs/manage/sponsors/add" enctype="multipart/form-data" id="sponsorForm">
+                    <form method="POST" action="/clubs/<%= club.id %>/sponsors/add" enctype="multipart/form-data" id="sponsorForm">
                         <input type="hidden" name="sponsorType" id="sponsorTypeInput" value="new">
 
                         <!-- Basic Information -->
@@ -41,8 +41,10 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="sponsorshipLevel" class="form-label">Sponsorship Level</label>
-                                    <select class="form-select" name="sponsorshipLevel" id="sponsorshipLevel">
+                                    <label for="sponsorshipLevel" class="form-label">
+                                        Sponsorship Level <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" name="sponsorshipLevel" id="sponsorshipLevel" required>
                                         <option value="">Select level...</option>
                                         <% sponsorshipLevels.forEach(level => { %>
                                             <option value="<%= level %>"><%= level %></option>
@@ -166,25 +168,13 @@
                             </div>
                         </div>
 
-                        <!-- Logo Upload -->
-                        <h6 class="mb-3 mt-4 text-primary">
-                            <i class="bi bi-image me-2"></i>Logo
-                        </h6>
-                        <%- include('../partials/logo-uploader', {
-                            fieldName: 'logo',
-                            uploadText: 'Click or drag to upload sponsor logo',
-                            maxFileSize: 'Max 10MB',
-                            acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
-                            helpText: 'Upload a logo image for the sponsor. Supported formats: JPG, PNG, SVG, GIF, WebP. Max size: 10MB.'
-                        }) %>
-
                         <!-- Submit Buttons -->
                         <div class="d-flex gap-2 pt-3 border-top">
                             <button type="submit" class="btn btn-primary" id="submitBtn">
                                 <i class="bi bi-save me-1"></i>
                                 <span id="submitText">Add Sponsor</span>
                             </button>
-                            <a href="/clubs/manage/sponsors" class="btn btn-outline-secondary">
+                            <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                         </div>

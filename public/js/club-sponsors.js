@@ -1,3 +1,5 @@
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Club Sponsors Manager
  */
@@ -14,6 +16,18 @@ export const clubSponsorsManager = {
     cacheElements() {
         this.elements.sponsorList = document.getElementById('sponsor-order-list');
         this.elements.saveButton = document.getElementById('save-sponsor-order');
+    },
+
+    getClubId() {
+        // Try to get club ID from data attribute on container
+        const container = document.querySelector('[data-club-id]');
+        if (container && container.dataset.clubId) {
+            return container.dataset.clubId;
+        }
+        
+        // Fallback: extract from URL path
+        const pathMatch = window.location.pathname.match(/\/clubs\/(\d+)/);
+        return pathMatch ? pathMatch[1] : null;
     },
 
     bindEvents() {
@@ -44,9 +58,14 @@ export const clubSponsorsManager = {
         if (!sponsorList) return;
         const sponsorIds = Array.from(sponsorList.children).map(item => item.getAttribute('data-sponsor-id'));
         try {
-            fetch('/clubs/manage/sponsors/reorder', {
+            const clubId = this.getClubId();
+            fetch(`/clubs/${clubId}/sponsors/reorder`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ sponsorOrder: sponsorIds })
             })
             .then(r => r.json())
@@ -54,10 +73,10 @@ export const clubSponsorsManager = {
                 if (data && data.success) {
                     try { location.reload(); } catch {}
                 } else {
-                    alert('Error updating sponsor order' + (data && data.message ? (': ' + data.message) : ''));
+                    showAlert('Error updating sponsor order' + (data && data.message ? (': ' + data.message) : ''));
                 }
             })
-            .catch(() => alert('Error updating sponsor order'));
+            .catch(() => showAlert('Error updating sponsor order'));
         } catch {}
     }
 };

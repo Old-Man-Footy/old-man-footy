@@ -17,13 +17,15 @@ import {
 } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
 
 // Import recalculation function from carnivalClub controller
 import { recalculateRegistrationFees } from './carnivalClub.controller.mjs';
 import mySidelineService from '../services/mySidelineIntegrationService.mjs';
 import { sortSponsorsHierarchically } from '../services/sponsorSortingService.mjs';
+
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
+import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
 /**
  * Display list of all carnivals with filtering options
@@ -265,10 +267,9 @@ const showCarnivalHandler = async (req, res) => {
       },
       {
         model: Sponsor,
-        as: 'sponsors',
+        as: 'carnivalSponsors',
         where: { isActive: true },
         required: false,
-        through: { attributes: ['displayOrder'] },
       },
       // Include attendees relationship   
       {
@@ -401,7 +402,7 @@ const showCarnivalHandler = async (req, res) => {
   }
 
   // Check if user can edit this carnival (standardized permission check)
-  const canEditCarnival = userWithClub ? await carnival.canUserEditAsync(userWithClub) : false;
+  const canEditCarnival = userWithClub ? carnival.canUserEdit(userWithClub) : false;
 
   // Use single standard permission check for all management operations
   const canManage = canEditCarnival;
@@ -460,7 +461,7 @@ const showCarnivalHandler = async (req, res) => {
   const isRegistrationActive = await carnival.isRegistrationActiveAsync();
 
   // Sort sponsors hierarchically using the sorting service
-  const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
+  const sortedSponsors = sortSponsorsHierarchically(carnival.carnivalSponsors || [], 'carnival');
 
   return res.render('carnivals/show', {
     title: carnival.title,
@@ -478,7 +479,7 @@ const showCarnivalHandler = async (req, res) => {
     isMySidelineCarnival: !!carnival.mySidelineId,
     isRegistrationActive, // Pass registration status including deadline check
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
-    additionalCSS: ['/styles/carnival.styles.css'],
+    additionalCSS: ['/styles/carnival.styles.css','/styles/sponsor.styles.css'],
     hostClub,
   });
 };
@@ -609,63 +610,15 @@ const createCarnivalHandler = async (req, res) => {
       carnival = await createOrMergeCarnival(carnivalData, req.user.id);
     }
 
-    // Handle structured file uploads after carnival creation
+    // Handle all uploads using shared processor (defensive against corrupted uploads)
     if (req.structuredUploads && req.structuredUploads.length > 0) {
-      const uploadUpdates = {};
-      const additionalImages = [];
-      const drawFiles = [];
-
-      for (const upload of req.structuredUploads) {
-        switch (upload.fieldname) {
-          case 'logo':
-            uploadUpdates.clubLogoURL = upload.path;
-            break;
-          case 'promotionalImage':
-            if (!uploadUpdates.promotionalImageURL) {
-              uploadUpdates.promotionalImageURL = upload.path;
-            } else {
-              additionalImages.push(upload.path);
-            }
-            break;
-          case 'galleryImage':
-            additionalImages.push(upload.path);
-            break;
-          case 'drawDocument':
-            drawFiles.push({
-              url: upload.path,
-              filename: upload.originalname,
-              title: req.body.drawTitle || `Draw Document ${drawFiles.length + 1}`,
-              uploadMetadata: upload.metadata,
-            });
-            break;
-          case 'bannerImage':
-            // Store banner images in additionalImages with metadata
-            additionalImages.push(upload.path);
-            break;
-        }
+      const uploadUpdates = await processStructuredUploads(req, {}, 'carnivals', carnival.id);
+      
+      // Update carnival with processed upload data
+      if (Object.keys(uploadUpdates).length > 0) {
+        await carnival.update(uploadUpdates);
+        console.log(`✅ Carnival ${carnival.id} created with ${req.structuredUploads.length} structured uploads`);
       }
-
-      // Update carnival with file paths
-      if (additionalImages.length > 0) {
-        uploadUpdates.additionalImages = additionalImages;
-      }
-
-      if (drawFiles.length > 0) {
-        uploadUpdates.drawFiles = drawFiles;
-        // Maintain legacy compatibility
-        uploadUpdates.drawFileURL = drawFiles[0].url;
-        uploadUpdates.drawFileName = drawFiles[0].filename;
-        uploadUpdates.drawTitle = req.body.drawTitle || drawFiles[0].title;
-        uploadUpdates.drawDescription = req.body.drawDescription || '';
-      }
-
-      // Update carnival with upload information
-      await carnival.update(uploadUpdates);
-
-      // Log structured upload success
-      console.log(
-        `✅ Carnival ${carnival.id} created with ${req.structuredUploads.length} structured uploads`
-      );
     }
 
     // Check if this was a merge operation
@@ -723,9 +676,9 @@ const createCarnivalHandler = async (req, res) => {
     );
     return res.redirect(`/carnivals/${carnival.id}`);
   } else {
-    // For manually created carnivals, redirect with flag to show important notices modal
-    req.flash('success_msg', 'Carnival created successfully! 🎉');
-    return res.redirect(`/carnivals/${carnival.id}?showPostCreationModal=true`);
+    // For manually created carnivals, redirect to edit page to allow adding images
+    req.flash('success_msg', 'Carnival created successfully! 🎉 Now you can add images and additional details.');
+    return res.redirect(`/carnivals/${carnival.id}/edit`);
   }
 };
 
@@ -743,18 +696,35 @@ const showEditFormHandler = async (req, res) => {
   }
 
   // Check if user can edit this carnival (using async method for club delegate checking)
-  const canEdit = await carnival.canUserEditAsync(req.user);
+  const canEdit = carnival.canUserEdit(req.user);
   if (!canEdit) {
     req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
     return res.redirect('/dashboard');
   }
 
   const states = AUSTRALIAN_STATES;
+  
+  // Debug CSRF token generation
+  let csrfToken;
+  try {
+    if (typeof req.csrfToken === 'function') {
+      csrfToken = req.csrfToken();
+    } else {
+      console.error('req.csrfToken is not a function:', typeof req.csrfToken);
+      csrfToken = null;
+    }
+  } catch (error) {
+    console.error('Error generating CSRF token:', error.message);
+    csrfToken = null;
+  }
+  
   return res.render('carnivals/edit', {
     title: 'Edit Carnival',
     carnival,
     states,
+    csrfToken,
     additionalCSS: ['/styles/carnival.styles.css'],
+    additionalJS: ['/js/carnival-edit.js'],
   });
 };
 
@@ -817,22 +787,56 @@ export async function createOrMergeCarnival(carnivalData, userId) {
  * @param {Object} res - Express response object
  */
 const updateCarnivalHandler = async (req, res) => {
-  const carnival = await Carnival.findByPk(req.params.id);
+  console.log('🎯 updateCarnivalHandler - CONTROLLER ENTRY POINT - ID:', req.params.id);
+  console.log('🎯 updateCarnivalHandler - Request method:', req.method);
+  console.log('🎯 updateCarnivalHandler - Request URL:', req.url);
+  console.log('🎯 updateCarnivalHandler - User ID:', req.user?.id);
+  console.log('🎯 updateCarnivalHandler - Body keys:', Object.keys(req.body || {}));
+  console.log('🎯 updateCarnivalHandler - Files keys:', Object.keys(req.files || {}));
+  console.log('⚡ updateCarnivalHandler - Starting controller method for ID:', req.params.id);
+  
+  try {
+    console.log('⚡ updateCarnivalHandler - Finding carnival by PK:', req.params.id);
+    const carnival = await Carnival.findByPk(req.params.id);
 
-  if (!carnival) {
-    req.flash('error_msg', 'Carnival not found.');
-    return res.redirect('/dashboard');
-  }
+    if (!carnival) {
+      console.log('❌ updateCarnivalHandler - Carnival not found for ID:', req.params.id);
+      req.flash('error_msg', 'Carnival not found.');
+      return res.redirect('/dashboard');
+    }
+  
+    // Check if user can edit this carnival (using async method for club delegate checking)
+    console.log('⚡ updateCarnivalHandler - Checking user permissions for user:', req.user?.id);
+    try {
+      const canEdit = carnival.canUserEdit(req.user);
+      if (!canEdit) {
+        console.log('❌ updateCarnivalHandler - User lacks edit permissions');
+        req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
+        return res.redirect('/dashboard');
+      }
+    } catch (error) {
+      console.error('❌ updateCarnivalHandler - Error checking permissions:', error);
+      throw error;
+    }
 
-  // Check if user can edit this carnival (using async method for club delegate checking)
-  const canEdit = await carnival.canUserEditAsync(req.user);
-  if (!canEdit) {
-    req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
-    return res.redirect('/dashboard');
-  }
-
+  console.log('⚡ updateCarnivalHandler - Checking validation results');
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log('❌ updateCarnivalHandler - Validation errors found:', errors.array());
+    // Check if this is an AJAX request
+    const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+    console.log('⚡ updateCarnivalHandler - Is AJAX request:', isAjax);
+    
+    if (isAjax) {
+      console.log('⚡ updateCarnivalHandler - Returning JSON error response');
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors occurred',
+        errors: errors.array()
+      });
+    }
+
     const states = AUSTRALIAN_STATES;
 
     // Fetch user's club information for auto-population on error
@@ -864,6 +868,7 @@ const updateCarnivalHandler = async (req, res) => {
       errors: errors.array(),
       user: userWithClub, // Pass user data for auto-population
       additionalCSS: ['/styles/carnival.styles.css'],
+      additionalJS: ['/js/carnival-edit.js'],
     });
   }
 
@@ -897,46 +902,66 @@ const updateCarnivalHandler = async (req, res) => {
     perPlayerFee: req.body.perPlayerFee ? parseFloat(req.body.perPlayerFee) : 0,
   };
 
-  // Handle structured file uploads (including draw documents)
-  if (req.structuredUploads && req.structuredUploads.length > 0) {
-    const existingAdditionalImages = carnival.additionalImages || [];
-    const existingDrawFiles = carnival.drawFiles || [];
+  const filesToDelete = {};
+  
+  // Check for logo deletion
+  if (req.body.delete_logo === 'true') {
+    filesToDelete.logo = carnival.logo;
+    updateData.logo = null;
+  }
+  
+  // Check for promotional image deletion
+  if (req.body.delete_promotionalImage === 'true') {
+    filesToDelete.promotionalImage = carnival.promotionalImage;
+    updateData.promotionalImage = null;
+  }
+  
+  // Check for draw document deletion
+  if (req.body.delete_drawDocument === 'true') {
+    filesToDelete.drawDocument = carnival.drawDocument;
+    updateData.drawDocument = null;
+  }
 
-    for (const upload of req.structuredUploads) {
-      switch (upload.fieldname) {
-        case 'logo':
-          updateData.clubLogoURL = upload.path;
-          console.log(`📸 Updated carnival ${carnival.id} logo: ${upload.path}`);
-          break;
-        case 'promotionalImage':
-          updateData.promotionalImageURL = upload.path;
-          console.log(`📸 Updated carnival ${carnival.id} promotional image: ${upload.path}`);
-          break;
-        case 'galleryImage':
-          existingAdditionalImages.push(upload.path);
-          updateData.additionalImages = existingAdditionalImages;
-          console.log(`📸 Added gallery image to carnival ${carnival.id}: ${upload.path}`);
-          break;
-        case 'drawDocument':
-          const newDrawFile = {
-            url: upload.path,
-            filename: upload.originalname,
-            title: req.body.drawTitle || `Draw Document ${existingDrawFiles.length + 1}`,
-            uploadMetadata: upload.metadata,
-          };
-          existingDrawFiles.push(newDrawFile);
-          updateData.drawFiles = existingDrawFiles;
-
-          // Update legacy fields with first draw file
-          if (existingDrawFiles.length === 1) {
-            updateData.drawFileURL = newDrawFile.url;
-            updateData.drawFileName = newDrawFile.filename;
-            updateData.drawTitle = req.body.drawTitle || newDrawFile.title;
-            updateData.drawDescription = req.body.drawDescription || '';
+  // Process file deletions
+  if (Object.keys(filesToDelete).length > 0) {
+    try {
+      const fs = await import('fs').then(module => module.promises);
+      const path = await import('path');
+      
+      for (const [fieldName, filePath] of Object.entries(filesToDelete)) {
+        if (filePath) {
+          try {
+            // Convert web URL back to file system path
+            const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+            const fullPath = path.resolve(cleanPath);
+            
+            // Check if file exists before attempting deletion
+            await fs.access(fullPath);
+            await fs.unlink(fullPath);
+          } catch (deleteError) {
+            console.warn(`⚠️ updateCarnivalHandler - Could not delete file ${filePath}:`, deleteError.message);
+            // Continue with update even if file deletion fails
           }
-          console.log(`📄 Added draw document to carnival ${carnival.id}: ${upload.path}`);
-          break;
+        }
       }
+    } catch (error) {
+      console.error('❌ updateCarnivalHandler - Error during file deletion:', error);
+      // Continue with update even if file deletion fails
+    }
+  }
+
+  // Handle all uploads using shared processor (defensive against corrupted uploads)
+  console.log('⚡ updateCarnivalHandler - Checking for structured uploads');
+  console.log('⚡ updateCarnivalHandler - req.structuredUploads:', req.structuredUploads?.length || 0);
+  if (req.structuredUploads && req.structuredUploads.length > 0) {
+    try {
+      const processedUploads = await processStructuredUploads(req, updateData, 'carnivals', carnival.id);
+      
+      // Merge processed uploads into updateData
+      Object.assign(updateData, processedUploads);
+    } catch (error) {
+      console.error('❌ updateCarnivalHandler - Error processing uploads:', error);
+      throw error;
     }
   }
 
@@ -947,8 +972,12 @@ const updateCarnivalHandler = async (req, res) => {
   const newPerPlayerFee = parseFloat(updateData.perPlayerFee) || 0;
   
   const feeStructureChanged = (oldTeamFee !== newTeamFee) || (oldPerPlayerFee !== newPerPlayerFee);
-
-  await carnival.update(updateData);
+  try {
+    await carnival.update(updateData);
+  } catch (error) {
+    console.error('❌ updateCarnivalHandler - Error updating carnival:', error);
+    throw error;
+  }
 
   // If fee structure changed, recalculate fees for all existing registrations
   if (feeStructureChanged) {
@@ -974,8 +1003,42 @@ const updateCarnivalHandler = async (req, res) => {
     }
   }
 
+  // Check if this is an AJAX request
+  const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+  console.log('⚡ updateCarnivalHandler - Final response, isAjax:', isAjax);
+  
+  if (isAjax) {
+    // Return JSON response for AJAX requests
+    return res.json({
+      success: true,
+      message: 'Carnival updated successfully!',
+      redirectUrl: `/carnivals/${carnival.id}`
+    });
+  }
+
   req.flash('success_msg', 'Carnival updated successfully!');
   return res.redirect(`/carnivals/${carnival.id}`);
+  
+  } catch (error) {
+    console.error('🚨 updateCarnivalHandler - UNHANDLED ERROR IN CONTROLLER:', error);
+    console.error('🚨 updateCarnivalHandler - Error stack:', error.stack);
+    console.error('🚨 updateCarnivalHandler - Error name:', error.name);
+    console.error('🚨 updateCarnivalHandler - Error message:', error.message);
+    
+    // Check if this is an AJAX request
+    const isAjax = req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
+    
+    if (isAjax) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error occurred',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal error'
+      });
+    }
+    
+    req.flash('error_msg', 'An error occurred while updating the carnival. Please try again.');
+    return res.redirect(`/carnivals/${req.params.id}/edit`);
+  }
 };
 
 /**
@@ -992,7 +1055,7 @@ const deleteCarnivalHandler = async (req, res) => {
   }
 
   // Check if user can edit this carnival (using async method for club delegate checking)
-  const canEdit = await carnival.canUserEditAsync(req.user);
+  const canEdit = carnival.canUserEdit(req.user);
   if (!canEdit) {
     req.flash('error_msg', 'You can only delete carnivals hosted by your club.');
     return res.redirect('/dashboard');
@@ -1048,7 +1111,7 @@ const releaseOwnershipHandler = async (req, res) => {
  */
 const syncMySidelineHandler = async (req, res) => {
   // Check if user is admin/primary delegate
-  if (!req.user.isPrimaryDelegate && !req.user.isAdmin) {
+  if (!req.user.isAdmin) {
     req.flash('error_msg', 'Access denied. Only administrators can sync MySideline data.');
     return res.redirect('/dashboard');
   }
@@ -1079,21 +1142,446 @@ export const mergeCarnival = asyncHandler(async (req, res) => {
 });
 
 export const showCarnivalSponsors = asyncHandler(async (req, res) => {
-  // Placeholder for carnival sponsors functionality
-  req.flash('error_msg', 'Carnival sponsors functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}`);
+  try {
+    const carnivalId = req.params.id;
+    
+    // Fetch the carnival
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect('/carnivals');
+    }
+
+    // Fetch current carnival sponsors using direct relationship
+    const carnivalSponsors = await carnival.getCarnivalSponsors({
+      where: { isActive: true },
+      order: [['sponsorName', 'ASC']]
+    });
+    
+    // Fetch all available sponsors
+    const sponsors = await Sponsor.findAll({
+      where: { isActive: true },
+      order: [['sponsorName', 'ASC']]
+    });
+
+    res.render('shared/sponsors/sponsors', {
+      title: `${carnival.title} - Sponsors`,
+      entityType: 'carnival',
+      entityData: carnival,
+      routePrefix: `/carnivals/${carnival.id}`,
+      sponsors: carnivalSponsors,
+      allSponsors: sponsors,
+      user: req.user,
+      additionalCSS: ['/styles/carnival.styles.css', '/styles/sponsor.styles.css']
+    });
+  } catch (error) {
+    console.error('Error showing carnival sponsors:', error);
+    req.flash('error_msg', 'Failed to load carnival sponsors');
+    return res.redirect(`/carnivals/${req.params.id}/edit`);
+  }
+});
+
+export const showAddSponsorForm = asyncHandler(async (req, res) => {
+  try {
+    const carnivalId = req.params.id;
+    
+    // Fetch the carnival
+    const carnival = await Carnival.findByPk(carnivalId, {
+      include: [{
+        model: Club,
+        as: 'hostClub'
+      }]
+    });
+    
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect('/carnivals');
+    }
+
+    // Fetch sponsors already linked to this carnival using direct relationship
+    const carnivalSponsors = await carnival.getCarnivalSponsors({
+      where: { isActive: true }
+    });
+    const linkedSponsorIds = carnivalSponsors.map(sponsor => sponsor.id);
+    
+    // Fetch available sponsors (both club sponsors and general sponsors not already linked)
+    let availableSponsors = [];
+    
+    if (carnival.hostClub) {
+      // Get sponsors linked to the hosting club
+      const clubSponsors = await carnival.hostClub.getClubSponsors({
+        where: { isActive: true },
+        order: [['sponsorName', 'ASC']]
+      });
+      availableSponsors = clubSponsors.filter(sponsor => !linkedSponsorIds.includes(sponsor.id));
+    }
+    
+    // Also get general sponsors not linked to any club and not already linked to this carnival
+    const generalSponsors = await Sponsor.findAll({
+      where: { 
+        isActive: true,
+        clubId: null, // Only sponsors not linked to clubs
+        carnivalId: null, // Only sponsors not linked to carnivals
+        id: { [Op.notIn]: linkedSponsorIds }
+      },
+      order: [['sponsorName', 'ASC']]
+    });
+    
+    // Combine club sponsors and general sponsors
+    availableSponsors = [...availableSponsors, ...generalSponsors];
+
+    res.render('carnivals/add-sponsor', {
+      title: `Add Sponsor - ${carnival.title}`,
+      carnival,
+      availableSponsors,
+      user: req.user,
+      states: AUSTRALIAN_STATES,
+      sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY
+    });
+  } catch (error) {
+    console.error('Error showing add sponsor form:', error);
+    req.flash('error_msg', 'Failed to load sponsor form');
+    return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  }
 });
 
 export const addSponsorToCarnival = asyncHandler(async (req, res) => {
-  // Placeholder for add sponsor functionality
-  req.flash('error_msg', 'Add sponsor functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  try {
+    const carnivalId = req.params.id;
+    const { sponsorId, createNew, sponsorName, contactPerson, contactEmail, location, state, sponsorshipLevel, website, description } = req.body;
+
+    // Check if carnival exists
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect('/carnivals');
+    }
+
+    let sponsor;
+
+    if (createNew === 'true') {
+      // Creating a new carnival-specific sponsor
+      if (!sponsorName || sponsorName.trim().length === 0) {
+        req.flash('error_msg', 'Sponsor name is required when creating a new sponsor');
+        return res.redirect(`/carnivals/${carnivalId}/sponsors/add`);
+      }
+
+      // Check if a sponsor with this name already exists
+      const existingSponsor = await Sponsor.findOne({
+        where: {
+          sponsorName: sponsorName.trim()
+        }
+      });
+
+      if (existingSponsor) {
+        req.flash('error_msg', `A sponsor named "${sponsorName}" already exists. Please use the "Link Existing Sponsor" option instead.`);
+        return res.redirect(`/carnivals/${carnivalId}/sponsors/add`);
+      }
+
+      // Create new sponsor directly linked to carnival
+      sponsor = await Sponsor.create({
+        sponsorName: sponsorName.trim(),
+        contactPerson: contactPerson ? contactPerson.trim() : null,
+        contactEmail: contactEmail ? contactEmail.trim() : null,
+        location: location ? location.trim() : null,
+        state: state || null,
+        sponsorshipLevel: sponsorshipLevel || null,
+        website: website ? website.trim() : null,
+        description: description ? description.trim() : null,
+        isPubliclyVisible: true, // Carnival sponsors are publicly visible by default
+        carnivalId: carnivalId, // Direct link to carnival
+        createdBy: req.user.id,
+        createdAt: new Date()
+      });
+      
+    } else {
+      // Copying existing sponsor to carnival
+      if (!sponsorId) {
+        req.flash('error_msg', 'Sponsor selection is required');
+        return res.redirect(`/carnivals/${carnivalId}/sponsors/add`);
+      }
+
+      // Check if sponsor exists
+      const originalSponsor = await Sponsor.findByPk(sponsorId);
+      if (!originalSponsor) {
+        req.flash('error_msg', 'Selected sponsor not found');
+        return res.redirect(`/carnivals/${carnivalId}/sponsors/add`);
+      }
+
+      // Check if sponsor already linked to this carnival
+      const existingSponsor = await Sponsor.findOne({
+        where: {
+          carnivalId: carnivalId,
+          sponsorName: originalSponsor.sponsorName
+        }
+      });
+
+      if (existingSponsor) {
+        req.flash('error_msg', `${originalSponsor.sponsorName} is already linked to this carnival`);
+        return res.redirect(`/carnivals/${carnivalId}/sponsors/add`);
+      }
+
+      // Create a copy of the sponsor linked to the carnival
+      sponsor = await originalSponsor.createCopy({ carnivalId: carnivalId });
+    }
+
+    const actionText = createNew === 'true' ? 'created and added' : 'copied and added';
+    req.flash('success_msg', `${sponsor.sponsorName} has been successfully ${actionText} to ${carnival.title}. Complete the sponsor details below.`);
+    return res.redirect(`/carnivals/${carnivalId}/sponsors/${sponsor.id}/edit`);
+
+  } catch (error) {
+    console.error('Error adding sponsor to carnival:', error);
+    req.flash('error_msg', 'Failed to add sponsor to carnival');
+    return res.redirect(`/carnivals/${req.params.id}/sponsors/add`);
+  }
 });
 
 export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
-  // Placeholder for remove sponsor functionality
-  req.flash('error_msg', 'Remove sponsor functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  try {
+    const carnivalId = parseInt(req.params.id);
+    const sponsorId = parseInt(req.params.sponsorId);
+
+    // Check if carnival exists
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect('/carnivals');
+    }
+
+    // Check if sponsor exists and belongs to this carnival
+    const sponsor = await Sponsor.findOne({
+      where: {
+        id: sponsorId,
+        carnivalId: carnivalId
+      }
+    });
+
+    if (!sponsor) {
+      req.flash('error_msg', 'Sponsor not found or not associated with this carnival');
+      return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+    }
+
+    // Check user permissions - only admin or carnival owner can remove sponsors
+    if (!carnival.canUserEdit(req.user)) {
+      req.flash('error_msg', 'Access denied. You do not have permission to remove sponsors from this carnival.');
+      return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+    }
+
+    const sponsorName = sponsor.sponsorName;
+
+    // DELETE the sponsor record entirely
+    await sponsor.destroy();
+
+    req.flash('success_msg', `${sponsorName} has been successfully removed from ${carnival.title}`);
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+
+  } catch (error) {
+    console.error('Error removing sponsor from carnival:', error);
+    req.flash('error_msg', 'Failed to remove sponsor from carnival');
+    return res.redirect(`/carnivals/${req.params.id}/sponsors`);
+  }
+});
+
+/**
+ * Show single carnival-specific sponsor
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const showCarnivalSponsor = asyncHandler(async (req, res) => {
+  const { id: carnivalId, sponsorId } = req.params;
+
+  // Check if carnival exists
+  const carnival = await Carnival.findByPk(carnivalId);
+  if (!carnival) {
+    req.flash('error_msg', 'Carnival not found');
+    return res.redirect('/carnivals');
+  }
+
+  // Find sponsor belonging to this carnival
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      carnivalId: carnivalId // Ensure sponsor belongs to this carnival
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with this carnival.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+  }
+
+  return res.render('shared/sponsors/view-sponsor', {
+    title: `${sponsor.sponsorName} - ${carnival.title}`,
+    entityType: 'carnival',
+    entityData: carnival,
+    routePrefix: `/carnivals/${carnival.id}`,
+    sponsor,
+    canEdit: carnival.canUserEdit(req.user),
+    additionalCSS: ['/styles/sponsor.styles.css'],
+  });
+});
+
+/**
+ * Show edit form for carnival-specific sponsor
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const showEditCarnivalSponsor = asyncHandler(async (req, res) => {
+  const { id: carnivalId, sponsorId } = req.params;
+
+  // Check if carnival exists
+  const carnival = await Carnival.findByPk(carnivalId);
+  if (!carnival) {
+    req.flash('error_msg', 'Carnival not found');
+    return res.redirect('/carnivals');
+  }
+
+  // Check user permissions - only admin or carnival owner can edit sponsors
+  if (!carnival.canUserEdit(req.user)) {
+    req.flash('error_msg', 'Access denied. You do not have permission to edit sponsors for this carnival.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+  }
+
+  // Find sponsor belonging to this carnival
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      carnivalId: carnivalId // Ensure sponsor belongs to this carnival
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with this carnival.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+  }
+
+  return res.render('shared/sponsors/edit-sponsor', {
+    title: 'Edit Carnival Sponsor',
+    entityType: 'carnival',
+    entityData: carnival,
+    routePrefix: `/carnivals/${carnival.id}`,
+    sponsor,
+    states: AUSTRALIAN_STATES,
+    sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
+    additionalCSS: ['/styles/sponsor.styles.css'],
+  });
+});
+
+/**
+ * Update carnival-specific sponsor
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const updateCarnivalSponsor = asyncHandler(async (req, res) => {
+  const { id: carnivalId, sponsorId } = req.params;
+
+  // Check if carnival exists
+  const carnival = await Carnival.findByPk(carnivalId);
+  if (!carnival) {
+    req.flash('error_msg', 'Carnival not found');
+    return res.redirect('/carnivals');
+  }
+
+  // Check user permissions - only admin or carnival owner can edit sponsors
+  if (!carnival.canUserEdit(req.user)) {
+    req.flash('error_msg', 'Access denied. You do not have permission to edit sponsors for this carnival.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+  }
+
+  // Find sponsor belonging to this carnival
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      carnivalId: carnivalId // Ensure sponsor belongs to this carnival
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with this carnival.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+  }
+
+  // Validate request
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // Check if this is an AJAX request
+    const isAjaxRequest = req.xhr || 
+                         req.headers.accept?.indexOf('json') > -1 || 
+                         req.headers['content-type']?.indexOf('multipart/form-data') > -1;
+    
+    if (isAjaxRequest) {
+      // Return JSON response for AJAX requests
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+    
+    // Traditional form submission
+    req.flash('error_msg', 'Please correct the validation errors.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors/${sponsorId}/edit`);
+  }
+
+  const {
+    sponsorName,
+    businessType,
+    sponsorshipLevel,
+    contactPerson,
+    contactEmail,
+    contactPhone,
+    website,
+    facebookUrl,
+    instagramUrl,
+    twitterUrl,
+    location,
+    state,
+    description,
+    isPubliclyVisible,
+  } = req.body;
+
+  try {
+    // Prepare update data
+    const updateData = {
+      sponsorName: sponsorName.trim(),
+      businessType: businessType ? businessType.trim() : null,
+      sponsorshipLevel,
+      contactPerson: contactPerson ? contactPerson.trim() : null,
+      contactEmail: contactEmail ? contactEmail.trim() : null,
+      contactPhone: contactPhone ? contactPhone.trim() : null,
+      website: website ? website.trim() : null,
+      facebookUrl: facebookUrl ? facebookUrl.trim() : null,
+      instagramUrl: instagramUrl ? instagramUrl.trim() : null,
+      twitterUrl: twitterUrl ? twitterUrl.trim() : null,
+      location: location ? location.trim() : null,
+      state,
+      description: description ? description.trim() : null,
+      isPubliclyVisible: isPubliclyVisible === 'true',
+    };
+
+    // Process uploaded files if present
+    if (req.structuredUploads && req.structuredUploads.length > 0) {
+      const processedUploads = await processStructuredUploads(req, updateData, 'sponsors', carnivalId, sponsor.id);
+    } else if (req.file) {
+      // Legacy fallback for direct file upload
+      updateData.logoUrl = req.file.filename;
+    } else {
+      // Keep existing logo filename if no new upload
+      updateData.logoUrl = sponsor.logoUrl;
+    }
+
+    // Update sponsor
+    await sponsor.update(updateData);
+
+    req.flash('success_msg', `Sponsor "${sponsorName}" has been updated successfully.`);
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+  } catch (error) {
+    console.error('Error updating carnival sponsor:', error);
+    req.flash('error_msg', 'An error occurred while updating the sponsor.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors/${sponsorId}/edit`);
+  }
 });
 
 export const sendEmailToAttendees = asyncHandler(async (req, res) => {

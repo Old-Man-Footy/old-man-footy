@@ -2,14 +2,13 @@
  * ImageUploadService - Handle file uploads for carnival and club galleries
  * 
  * Provides secure image upload functionality with proper validation,
- * permission checks, and file management.
+ * permission checks, and file management using standardized entity-folder structure.
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import ImageUpload from '../models/ImageUpload.mjs';
-import { UPLOAD_DIRECTORIES } from '../config/constants.mjs';
 
 class ImageUploadService {
   /**
@@ -31,25 +30,21 @@ class ImageUploadService {
   /**
    * Determine the appropriate upload directory based on upload data
    * @param {Object} uploadData - Upload metadata (carnivalId, clubId, imageType)
-   * @returns {string} Directory path from UPLOAD_DIRECTORIES
+   * @returns {string} Entity-based directory path
    */
   static getUploadDirectory(uploadData) {
     const { carnivalId, clubId, imageType = 'gallery' } = uploadData;
     
     if (carnivalId && !clubId) {
-      // Carnival image
-      return imageType === 'promo' 
-        ? UPLOAD_DIRECTORIES.CARNIVAL_PROMO 
-        : UPLOAD_DIRECTORIES.CARNIVAL_GALLERY;
+      // Carnival image: carnivals/{id}/{imageType}/
+      return `public/uploads/carnivals/${carnivalId}/${imageType}`;
     } else if (clubId) {
-      // Club image  
-      return imageType === 'promo'
-        ? UPLOAD_DIRECTORIES.CLUB_PROMO
-        : UPLOAD_DIRECTORIES.CLUB_GALLERY;
+      // Club image: clubs/{id}/{imageType}/
+      return `public/uploads/clubs/${clubId}/${imageType}`;
     }
     
     // Default to carnival gallery if unclear
-    return UPLOAD_DIRECTORIES.CARNIVAL_GALLERY;
+    return `public/uploads/carnivals/${carnivalId || 'unknown'}/gallery`;
   }
 
   /**

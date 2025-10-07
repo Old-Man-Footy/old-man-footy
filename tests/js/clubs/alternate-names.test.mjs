@@ -75,7 +75,7 @@ describe('AlternateNamesManager', () => {
 
             await new Promise(process.nextTick); // Wait for async operations
 
-            expect(fetch).toHaveBeenCalledWith('/clubs/manage/alternate-names', expect.objectContaining({
+            expect(fetch).toHaveBeenCalledWith('/clubs/1/alternate-names', expect.objectContaining({
                 method: 'POST',
                 body: JSON.stringify({ alternateName: 'New Test Name' }),
             }));
@@ -124,7 +124,7 @@ describe('AlternateNamesManager', () => {
 
             await new Promise(process.nextTick);
 
-            expect(fetch).toHaveBeenCalledWith('/clubs/manage/alternate-names/2', { method: 'DELETE' });
+            expect(fetch).toHaveBeenCalledWith('/clubs/1/alternate-names/2', { method: 'DELETE' });
             expect(mockLocation.reload).toHaveBeenCalled();
         });
     });
@@ -157,7 +157,7 @@ describe('AlternateNamesManager', () => {
 
             await new Promise(process.nextTick);
 
-            expect(fetch).toHaveBeenCalledWith('/clubs/manage/alternate-names/1', expect.objectContaining({
+            expect(fetch).toHaveBeenCalledWith('/clubs/1/alternate-names/1', expect.objectContaining({
                 method: 'PUT',
                 body: JSON.stringify({ alternateName: 'Updated Name' }),
             }));

@@ -170,10 +170,8 @@ class BasicSeeder {
                 socialMediaWebsite: carnivalData.socialMediaWebsite,
                 clubLogoURL: carnivalData.clubLogoURL,
                 promotionalImageURL: carnivalData.promotionalImageURL,
-                additionalImages: carnivalData.additionalImages || [],
                 
                 // Draw and documents
-                drawFiles: carnivalData.drawFiles || [],
                 drawFileURL: carnivalData.drawFileURL,
                 drawFileName: carnivalData.drawFileName,
                 drawTitle: carnivalData.drawTitle,

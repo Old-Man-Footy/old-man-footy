@@ -4,15 +4,19 @@
  * Refactored into a testable object pattern.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+import { documentUploaderManager } from './document-uploader.js';
+import { imageUploaderManager } from './image-uploader.js';
+
 export const carnivalEditManager = {
     // DOM element references
     elements: {},
-
+    
     // Initializes the entire manager.
     initialize() {
         this.cacheDOMElements();
+        this.bindEvents();
         this.initializePageStyling();
-        this.initializeFileUploads();
         this.initializeMultiDayCarnivalFunctionality();
         this.initializeMySidelineIntegration();
     },
@@ -21,10 +25,6 @@ export const carnivalEditManager = {
     cacheDOMElements() {
         this.elements = {
             endDateContainer: document.getElementById('endDateContainer'),
-            logoPreviewImages: document.querySelectorAll('.carnival-logo-preview'),
-            promoPreviewImages: document.querySelectorAll('.carnival-promo-preview'),
-            fileInputs: document.querySelectorAll('.file-input-hidden'),
-            fileUploadAreas: document.querySelectorAll('.file-upload-area'),
             isMultiDayCheckbox: document.getElementById('isMultiDay'),
             endDateInput: document.getElementById('endDate'),
             dateLabel: document.getElementById('dateLabel'),
@@ -37,6 +37,57 @@ export const carnivalEditManager = {
         };
     },
 
+    // Binds event listeners for form submission
+    bindEvents() {
+        if (this.elements.form) {
+            this.elements.form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleFormSubmit();
+            });
+        }
+    },
+
+    // Handles form submission with AJAX and file upload
+    async handleFormSubmit() {
+        try {
+            const formData = new FormData(this.elements.form);
+            
+            const response = await fetch(this.elements.form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.redirected) {
+                // Follow the redirect for successful submissions
+                window.location.href = response.url;
+                return;
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Form submission failed:', errorText);
+                showAlert('An error occurred while updating the carnival. Please try again.');
+                return;
+            }
+
+            // Handle successful response
+            const result = await response.json();
+            if (result.success) {
+                window.location.href = result.redirectUrl || '/admin/carnivals';
+            } else {
+                showAlert(result.message || 'An error occurred while updating the carnival.');
+            }
+
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            showAlert('An error occurred while updating the carnival. Please try again.');
+        }
+    },
+
     // Sets initial styles and visibility for page elements.
     initializePageStyling() {
         if (this.elements.endDateContainer) {
@@ -45,35 +96,9 @@ export const carnivalEditManager = {
                 this.elements.endDateContainer.style.display = 'none';
             }
         }
-        this.elements.logoPreviewImages.forEach(img => {
-            img.style.height = '150px';
-            img.style.objectFit = 'contain';
-        });
-        this.elements.promoPreviewImages.forEach(img => {
-            img.style.height = '150px';
-            img.style.objectFit = 'cover';
-        });
-        this.elements.fileInputs.forEach(input => {
-            input.style.display = 'none';
-        });
     },
 
-    // Makes file upload areas clickable.
-    initializeFileUploads() {
-        this.elements.fileUploadAreas.forEach(area => {
-            area.addEventListener('click', this.handleFileAreaClick);
-        });
-    },
-
-    // Handle click on a file upload area using an arrow function for proper scoping.
-    // Handle click on a file upload area using a regular function for proper `this` binding.
-    handleFileAreaClick: function(carnival) {
-        const area = carnival.currentTarget;
-        const input = area?.querySelector('input[type="file"]');
-        if (input) input.click();
-    },
-
-    // Sets up event listeners and logic for multi-day carnivals.
+    // Sets up event listeners and logic for file upload areas. // Sets up event listeners and logic for multi-day carnivals.
     initializeMultiDayCarnivalFunctionality() {
         const { isMultiDayCheckbox, endDateContainer, endDateInput, dateLabel, startDateInput } = this.elements;
         if (!isMultiDayCheckbox || !endDateContainer || !endDateInput || !dateLabel || !startDateInput) return;
@@ -237,4 +262,6 @@ export const carnivalEditManager = {
 // This part runs in the browser to initialize the application.
 document.addEventListener('DOMContentLoaded', () => {
     carnivalEditManager.initialize();
+    documentUploaderManager.initialize();
+    imageUploaderManager.initialize();
 });

@@ -1,0 +1,6 @@
+{
+  "signal": "SIGTERM",
+  "ext": "js,mjs,json",
+  "ignore": ["node_modules/"],
+  "watch": ["."]
+}

@@ -4,6 +4,8 @@
  * This version is refactored for testability and includes bug fixes.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 /**
  * Carnival All Players Manager
  * Manages the behavior of the comprehensive player list view.
@@ -157,7 +159,7 @@ export const carnivalAllPlayersManager = {
     exportToCSV() {
         const visibleRows = this.elements.playerRows.filter(row => row.style.display !== 'none');
         if (visibleRows.length === 0) {
-            alert('No players to export. Please adjust your filters.');
+           showAlert('No players to export. Please adjust your filters.');
             return;
         }
         const headers = ['Club', 'State', 'Player Name', 'Age', 'Date of Birth', 'Shorts Colour', 'Status', 'Masters Eligible'];
@@ -184,12 +186,12 @@ export const carnivalAllPlayersManager = {
     printPlayerList() {
         const visibleRows = this.elements.playerRows.filter(row => row.style.display !== 'none');
         if (visibleRows.length === 0) {
-            alert('No players to print. Please adjust your filters.');
+           showAlert('No players to print. Please adjust your filters.');
             return;
         }
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
-            alert('Please allow pop-ups to print the player list.');
+           showAlert('Please allow pop-ups to print the player list.');
             return;
         }
 

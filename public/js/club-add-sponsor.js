@@ -102,7 +102,11 @@ export const clubAddSponsorManager = {
         try {
             const response = await fetch('/api/sponsors/check-duplicate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ sponsorName })
             });
             const data = await response.json();
@@ -122,12 +126,9 @@ export const clubAddSponsorManager = {
         this.state.existingSponsorData = sponsor;
         el.existingSponsorInfo.innerHTML = `
             <div class="d-flex align-items-center">
-                ${sponsor.logoUrl ? 
-                    `<img src="/${sponsor.logoUrl}" alt="${sponsor.sponsorName}" class="me-3 rounded" style="width: 48px; height: 48px; object-fit: contain;">` :
-                    `<div class="me-3 bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                        <i class="bi bi-building text-white"></i>
-                    </div>`
-                }
+               <div class="me-3 bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <i class="bi bi-building text-white"></i>
+                </div>
                 <div>
                     <h6 class="mb-1">${sponsor.sponsorName}</h6>
                     <small class="text-muted">

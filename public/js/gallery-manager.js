@@ -8,9 +8,9 @@ export const galleryManager = {
     currentImages: [],
     selectedFiles: [],
     currentImageIndex: 0,
-    maxFileSize: 5 * 1024 * 1024, // 5MB
+    maxFileSize: 10 * 1024 * 1024, // 10MB
     maxFiles: 10,
-    allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+    allowedTypes: ['image/jpeg', 'image/png'],
 
     initialize() {
         this.cacheElements();
@@ -100,12 +100,12 @@ export const galleryManager = {
 
     validateFile(file) {
         if (!this.allowedTypes.includes(file.type)) {
-            this.showError(`Invalid file type: ${file.name}. Only JPEG, PNG, GIF, and WebP are allowed.`);
+            this.showError(`Invalid file type: ${file.name}. Only JPEG, and PNG are allowed.`);
             return false;
         }
 
         if (file.size > this.maxFileSize) {
-            this.showError(`File too large: ${file.name}. Maximum size is 5MB.`);
+            this.showError(`File too large: ${file.name}. Maximum size is 10MB.`);
             return false;
         }
 
@@ -192,6 +192,10 @@ export const galleryManager = {
 
             const response = await fetch('/api/images/upload', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: formData
             });
 
@@ -269,7 +273,11 @@ export const galleryManager = {
 
         try {
             const response = await fetch(`/api/images/${imageId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
             });
 
             if (!response.ok) {

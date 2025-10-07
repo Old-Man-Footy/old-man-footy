@@ -4,6 +4,8 @@
  * Follows the Manager Object Pattern for maintainability and testability.
  */
 
+import { showAlert } from './utils/ui-helpers.js';
+
 export const carnivalMyClubPlayersManager = {
   elements: {},
   carnivalId: null,
@@ -106,6 +108,8 @@ export const carnivalMyClubPlayersManager = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ teamNumber: teamNumber || null })
       });
@@ -122,13 +126,13 @@ export const carnivalMyClubPlayersManager = {
           carnivalMyClubPlayersManager.locationReload();
         }, 500);
       } else {
-        alert('Error: ' + result.message);
+       showAlert('Error: ' + result.message);
         // Revert the select value on error
         select.value = select.dataset.currentTeam || '';
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred while updating team assignment.');
+     showAlert('An error occurred while updating team assignment.');
       // Revert the select value on error
       select.value = select.dataset.currentTeam || '';
     }
@@ -150,6 +154,8 @@ export const carnivalMyClubPlayersManager = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ teamNumber: parseInt(targetTeam) })
       });
@@ -165,11 +171,11 @@ export const carnivalMyClubPlayersManager = {
           carnivalMyClubPlayersManager.locationReload();
         }, 500);
       } else {
-        alert('Error: ' + result.message);
+       showAlert('Error: ' + result.message);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred while moving the player.');
+     showAlert('An error occurred while moving the player.');
     }
   },
 
@@ -188,22 +194,26 @@ export const carnivalMyClubPlayersManager = {
    */
   async removePlayer(assignmentId) {
     if (!this.registrationId) {
-      alert('Registration ID not found.');
+     showAlert('Registration ID not found.');
       return;
     }
     try {
       const response = await fetch(`/carnivals/${this.carnivalId}/attendees/${this.registrationId}/players/${assignmentId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
       });
       const result = await response.json();
       if (result.success) {
         this.locationReload();
       } else {
-        alert('Error: ' + result.message);
+       showAlert('Error: ' + result.message);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred while removing the player.');
+     showAlert('An error occurred while removing the player.');
     }
   },
 
@@ -253,7 +263,7 @@ export const carnivalMyClubPlayersManager = {
     const selectedCount = document.querySelectorAll('.modal-player-checkbox:checked').length;
     if (selectedCount === 0) {
       e.preventDefault();
-      alert('Please select at least one player to add.');
+     showAlert('Please select at least one player to add.');
       return false;
     }
   },
