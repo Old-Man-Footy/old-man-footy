@@ -1563,13 +1563,13 @@ export const updateCarnivalSponsor = asyncHandler(async (req, res) => {
 
     // Process uploaded files if present
     if (req.structuredUploads && req.structuredUploads.length > 0) {
-      const processedUploads = await processStructuredUploads(req, updateData, 'carnivals', carnivalId, sponsor.id);
+      const processedUploads = await processStructuredUploads(req, updateData, 'sponsors', carnivalId, sponsor.id);
     } else if (req.file) {
       // Legacy fallback for direct file upload
-      updateData.logoFilename = req.file.filename;
+      updateData.logoUrl = req.file.filename;
     } else {
       // Keep existing logo filename if no new upload
-      updateData.logoFilename = sponsor.logoFilename;
+      updateData.logoUrl = sponsor.logoUrl;
     }
 
     // Update sponsor
