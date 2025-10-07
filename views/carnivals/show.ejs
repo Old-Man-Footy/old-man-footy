@@ -169,7 +169,7 @@
                     <!-- Carnival Owner Actions Section -->
                     <% if (canEditCarnival || canTakeOwnership) { %>
                         <div class="alert alert-info mb-4">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div>
                                 <div>
                                     <i class="bi bi-gear-fill me-2"></i>
                                     <strong>
@@ -180,8 +180,8 @@
                                         <% } %>
                                     </strong>
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <!-- Claim button for unclaimed MySideline carnivals -->
+                                
+                                <div class="d-flex gap-2 justify-content-end mt-3">
                                     <% if (canTakeOwnership) { %>
                                         <button type="button" class="btn btn-tertiary btn-sm" 
                                                 data-bs-toggle="modal" 
@@ -190,33 +190,25 @@
                                         </button>
                                     <% } %>
                                     
-                                    <!-- Edit button for owners -->
                                     <% if (canEditCarnival) { %>
                                         <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-people"></i> Attendees
+                                            <i class="bi bi-people"></i> Attending Clubs
                                         </a>
-                                        <!-- View All Players button (only if there are attendee clubs) -->
-                                        <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
-                                            <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-list-ul"></i> Players
-                                            </a>
-                                        <% } %>                               
+                                        <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-list-ul"></i> All Players
+                                        </a>                   
                                         <a href="/carnivals/<%= carnival.id %>/sponsors" class="btn btn-outline-primary btn-sm">
                                             <i class="bi bi-building me-1"></i> Sponsors
                                         </a>                                        
-                                         <!-- Email Attendees button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
                                             <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
                                                 <i class="bi bi-envelope"></i> Email Attendees
                                             </button>
                                         <% } %>
-
                                         <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-primary btn-sm">
                                             <i class="bi bi-pencil"></i> Edit Carnival                                        
-                                        </a>                                       
+                                        </a>                    
                                     <% } %>
-
-                                    <!-- Release ownership button for MySideline carnivals owned by the user -->
                                     <% if (canEditCarnival && carnival.lastMySidelineSync) { %>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 data-bs-toggle="modal" 
@@ -224,8 +216,6 @@
                                             <i class="bi bi-unlock"></i> Release Ownership
                                         </button>
                                     <% } %>
-
-                                    <!-- Merge carnival button for MySideline carnivals owned by the user -->
                                     <% if (canMergeCarnival) { %>
                                         <button type="button" class="btn btn-outline-tertiary btn-sm" 
                                                 data-bs-toggle="modal" 
