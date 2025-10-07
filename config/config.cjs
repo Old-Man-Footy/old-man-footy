@@ -1,41 +1,31 @@
 /**
  * Sequelize CLI Config Wrapper
  * 
- * This CommonJS file serves as a bridge to import the ES modules config
- * for compatibility with Sequelize CLI, which runs in CommonJS mode.
+ * This CommonJS file provides minimal configuration for Sequelize CLI migrations.
+ * Main database configuration has been consolidated to config/database.mjs
  */
+
+const path = require('path');
 
 module.exports = {
   development: {
     dialect: 'sqlite',
-    storage: './data/dev-old-man-footy.db',
-    logging: false,
-    define: {
-      underscored: true, // snake_case columns
-      freezeTableName: true // disables pluralization; uses the table name defined in the model's 'tableName' property if set
-    },
+    storage: path.join(__dirname, '..', 'data', 'dev-old-man-footy.db'),
+    logging: false, // Logging handled by database.mjs
     migrationStorageTableName: 'SequelizeMeta',
     seederStorageTableName: 'SequelizeData'
   },
   test: {
     dialect: 'sqlite',
-    storage: './data/test-old-man-footy.db',
-    logging: false,
-    define: {
-      underscored: true,
-      freezeTableName: true // disables pluralization; uses the table name defined in the model's 'tableName' property if set
-    },
+    storage: path.join(__dirname, '..', 'data', 'test-old-man-footy.db'),
+    logging: false, // Logging handled by database.mjs
     migrationStorageTableName: 'SequelizeMeta',
     seederStorageTableName: 'SequelizeData'
   },
   production: {
     dialect: 'sqlite',
-    storage: './data/old-man-footy.db',
-    logging: false,
-    define: {
-      underscored: true,
-      freezeTableName: true // disables pluralization; uses the table name defined in the model's 'tableName' property if set
-    },
+    storage: path.join(__dirname, '..', 'data', 'old-man-footy.db'),
+    logging: false, // Logging handled by database.mjs
     migrationStorageTableName: 'SequelizeMeta',
     seederStorageTableName: 'SequelizeData'
   }

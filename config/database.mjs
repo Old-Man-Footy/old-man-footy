@@ -14,6 +14,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { createSequelizeLogger } from '../utils/sequelizeLogger.mjs';
 // Note: Avoid importing DatabaseOptimizer at module top-level to prevent ESM circular deps
 
 const __filename = fileURLToPath(import.meta.url);
@@ -83,60 +84,83 @@ function ensureDataDirectory() {
 }
 
 /**
- * Sequelize instance configuration
+ * Get comprehensive Sequelize configuration options
+ * Consolidates all Sequelize settings in one place
  */
-let sequelizeOptions = {
-  dialect: 'sqlite',
-  storage: dbPath,
-  logging: process.env.NODE_ENV === 'test' ? console.log : false,
-  define: {
-    timestamps: true,
-    underscored: false,
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
-  },
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  // SQLite specific options
-  dialectOptions: {
-    // Enable foreign keys in SQLite
-    foreignKeys: true
-  },
-  // Retry configuration for container environments
-  retry: {
-    max: 3,
-    timeout: 5000
-  }
-};
-
-if (process.env.NODE_ENV === 'production') {
-  // Inline production options to avoid circular imports at module init
-  const maxPoolSize = Number.isInteger(Number(process.env.SQLITE_MAX_POOL_SIZE)) ? Number(process.env.SQLITE_MAX_POOL_SIZE) : 5;
-  const minPoolSize = Number.isInteger(Number(process.env.SQLITE_MIN_POOL_SIZE)) ? Number(process.env.SQLITE_MIN_POOL_SIZE) : 1;
-  const acquireTimeout = Number.isInteger(Number(process.env.SQLITE_ACQUIRE_TIMEOUT)) ? Number(process.env.SQLITE_ACQUIRE_TIMEOUT) : 30000;
-  const idleTimeout = Number.isInteger(Number(process.env.SQLITE_IDLE_TIMEOUT)) ? Number(process.env.SQLITE_IDLE_TIMEOUT) : 10000;
-  const queryTimeout = Number.isInteger(Number(process.env.SQLITE_QUERY_TIMEOUT)) ? Number(process.env.SQLITE_QUERY_TIMEOUT) : 30000;
-
-  sequelizeOptions = {
-    ...sequelizeOptions,
+function getSequelizeOptions() {
+  const env = process.env.NODE_ENV || 'development';
+  
+  // Base configuration for all environments
+  const baseOptions = {
+    dialect: 'sqlite',
+    storage: dbPath,
+    logging: createSequelizeLogger(env),
+    define: {
+      timestamps: true,
+      underscored: false,
+      freezeTableName: true, // Use exact model names, don't pluralize
+      createdAt: 'createdAt',
+      updatedAt: 'updatedAt'
+    },
     pool: {
-      max: maxPoolSize,
-      min: minPoolSize,
-      acquire: acquireTimeout,
-      idle: idleTimeout
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
     },
+    // SQLite specific options
     dialectOptions: {
-      options: { enableForeignKeyConstraints: true },
-      timeout: queryTimeout
+      // Enable foreign keys in SQLite
+      foreignKeys: true
     },
-    logging: false,
-    storage: dbPath
+    // Retry configuration for container environments
+    retry: {
+      max: 3,
+      timeout: 5000
+    }
   };
+
+  // Environment-specific overrides
+  if (env === 'production') {
+    // Production optimizations
+    const maxPoolSize = Number.isInteger(Number(process.env.SQLITE_MAX_POOL_SIZE)) ? Number(process.env.SQLITE_MAX_POOL_SIZE) : 5;
+    const minPoolSize = Number.isInteger(Number(process.env.SQLITE_MIN_POOL_SIZE)) ? Number(process.env.SQLITE_MIN_POOL_SIZE) : 1;
+    const acquireTimeout = Number.isInteger(Number(process.env.SQLITE_ACQUIRE_TIMEOUT)) ? Number(process.env.SQLITE_ACQUIRE_TIMEOUT) : 30000;
+    const idleTimeout = Number.isInteger(Number(process.env.SQLITE_IDLE_TIMEOUT)) ? Number(process.env.SQLITE_IDLE_TIMEOUT) : 10000;
+    const queryTimeout = Number.isInteger(Number(process.env.SQLITE_QUERY_TIMEOUT)) ? Number(process.env.SQLITE_QUERY_TIMEOUT) : 30000;
+
+    return {
+      ...baseOptions,
+      logging: false, // No logging in production
+      pool: {
+        max: maxPoolSize,
+        min: minPoolSize,
+        acquire: acquireTimeout,
+        idle: idleTimeout
+      },
+      dialectOptions: {
+        options: { enableForeignKeyConstraints: true },
+        timeout: queryTimeout
+      }
+    };
+  } else if (env === 'test') {
+    // Test environment optimizations
+    return {
+      ...baseOptions,
+      pool: {
+        max: 3,
+        min: 0,
+        acquire: 15000,
+        idle: 5000
+      }
+    };
+  }
+
+  // Development environment (default)
+  return baseOptions;
 }
+
+const sequelizeOptions = getSequelizeOptions();
 
 export const sequelize = new Sequelize(sequelizeOptions);
 
