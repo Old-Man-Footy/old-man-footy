@@ -15,6 +15,7 @@ import ClubPlayer from './ClubPlayer.mjs';
 import Carnival from './Carnival.mjs';
 import CarnivalClub from './CarnivalClub.mjs';
 import CarnivalClubPlayer from './CarnivalClubPlayer.mjs';
+import CarnivalSponsor from './CarnivalSponsor.mjs';
 import Sponsor from './Sponsor.mjs';
 import EmailSubscription from './EmailSubscription.mjs';
 import AuditLog from './AuditLog.mjs';
@@ -211,6 +212,7 @@ export {
   Carnival,
   CarnivalClub,
   CarnivalClubPlayer,
+  CarnivalSponsor,
   Sponsor,
   EmailSubscription,
   AuditLog,
