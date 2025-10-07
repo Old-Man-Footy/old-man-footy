@@ -150,10 +150,20 @@ export class InvitationEmailService extends BaseEmailService {
                         
                         <p><strong>${proxyCreator.firstName} ${proxyCreator.lastName}</strong> has created a club profile for <strong>${club.clubName}</strong> on Old Man Footy and would like to invite you to take ownership of it.</p>
                         
-                        ${customMessage ? this._createInfoBox(`
-                            <h4 style="color: #006837; margin-top: 0;">Message from ${proxyCreator.firstName}:</h4>
-                            <p style="margin: 0; white-space: pre-line;">${customMessage}</p>
-                        `) : ''}
+                        ${this._createInfoBox(`
+                            <h4 style="color: #006837; margin-top: 0;">${customMessage ? `Message from ${proxyCreator.firstName}:` : 'Invitation Details:'}</h4>
+                            <p style="margin: 0; white-space: pre-line;">${customMessage || `${proxyCreator.firstName} ${proxyCreator.lastName} has created a club profile on your behalf to help grow the Old Man Footy community.
+
+We invite you to create an account on our platform using this email address to claim ownership of your club. Claiming ownership will allow you to:
+
+• Manage your club's information and player roster
+• Register for carnivals hosted by other clubs  
+• Create and manage your own carnivals
+• Connect with other Masters Rugby League clubs across Australia
+• Submit player lists to carnival organisers
+
+Old Man Footy is dedicated to supporting the Masters Rugby League community by making it easier for clubs to connect, organise events, and grow the sport we all love.`}</p>
+                        `)}
                         
                         <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
                             <h3 style="color: #006837; margin-top: 0;">${club.clubName}</h3>

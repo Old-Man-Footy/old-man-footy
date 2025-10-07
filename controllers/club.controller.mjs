@@ -1410,12 +1410,16 @@ const getCreateOnBehalfHandler = async (req, res) => {
     return res.redirect('/clubs');
   }
 
+  // Get return URL from query parameter
+  const returnUrl = req.query.returnUrl || null;
+
   return res.render('clubs/create-on-behalf', {
     title: 'Create Club on Behalf of Others',
     user: req.user,
     states: AUSTRALIAN_STATES,
     errors: [],
     formData: {},
+    returnUrl,
     additionalCSS: ['/styles/club.styles.css'],
   });
 };
@@ -1435,6 +1439,9 @@ const postCreateOnBehalfHandler = async (req, res) => {
     return res.redirect('/clubs');
   }
 
+  // Get return URL from query parameter
+  const returnUrl = req.query.returnUrl || null;
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.render('clubs/create-on-behalf', {
@@ -1443,6 +1450,7 @@ const postCreateOnBehalfHandler = async (req, res) => {
       states: AUSTRALIAN_STATES,
       errors: errors.array(),
       formData: req.body,
+      returnUrl,
       additionalCSS: ['/styles/club.styles.css'],
     });
   }
@@ -1471,6 +1479,7 @@ const postCreateOnBehalfHandler = async (req, res) => {
       states: AUSTRALIAN_STATES,
       errors: [{ msg: 'A club with this name already exists.' }],
       formData: req.body,
+      returnUrl,
       additionalCSS: ['/styles/club.styles.css'],
     });
   }
@@ -1502,6 +1511,11 @@ const postCreateOnBehalfHandler = async (req, res) => {
     'success_msg',
     `Club "${clubName}" has been created and an ownership invitation has been sent to ${inviteEmail}.`
   );
+
+  // Redirect to return URL if provided, otherwise to club page
+  if (returnUrl) {
+    return res.redirect(returnUrl);
+  }
   return res.redirect(`/clubs/${newClub.id}`);
 };
 
