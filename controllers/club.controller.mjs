@@ -498,8 +498,16 @@ const getClubImagesHandler = async (req, res) => {
 const deleteClubImageHandler = async (req, res) => {
   const { clubId, filename } = req.params;
 
+  const club = await Club.findByPk(clubId);
+  if (!club) {
+    return res.status(404).json({
+      success: false,
+      message: 'Club not found.',
+    });
+  }
+
   // Verify user has access to this club
-  if (req.user.clubId !== parseInt(clubId) && !req.user.isAdmin) {
+  if (!club.canUserEdit(req.user)) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. You can only delete images for your own club.',
@@ -532,7 +540,7 @@ const deleteClubImageHandler = async (req, res) => {
 
   // If this was the club's logo, update the database
   if (contentType === 'logos') {
-    const club = await Club.findByPk(clubId);
+    
     if (club && club.logoUrl) {
       // Extract the actual filename from the logoUrl path
       const logoUrlFilename = club.logoUrl.split('/').pop();
@@ -550,6 +558,51 @@ const deleteClubImageHandler = async (req, res) => {
 };
 
 /**
+ * Show single club-specific sponsor
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const showClubSponsorHandler = async (req, res, next) => {
+  try {
+    const { id: clubId, sponsorId } = req.params;
+
+    // Check if carnival exists
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+      req.flash('error_msg', 'Club not found');
+      return res.redirect('/clubs');
+    }
+
+    // Find sponsor belonging to this carnival
+    const sponsor = await Sponsor.findOne({
+      where: { 
+        id: sponsorId, 
+        isActive: true,
+        clubId: clubId // Ensure sponsor belongs to this club
+      }
+    });
+
+    if (!sponsor) {
+      req.flash('error_msg', 'Sponsor not found or not associated with this club.');
+      return res.redirect(`/clubs/${clubId}/sponsors`);
+    }
+
+    return res.render('shared/sponsors/view-sponsor', {
+      title: `${sponsor.sponsorName} - ${club.clubName}`,
+      entityType: 'club',
+      entityData: club,
+      routePrefix: `/clubs/${club.id}`,
+      sponsor,
+      canEdit: club.canUserEdit(req.user),
+      additionalCSS: ['/styles/sponsor.styles.css'],
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * Show club's sponsors management page
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -560,14 +613,7 @@ const showClubSponsorsHandler = async (req, res, next) => {
     const user = req.user;
     // Security: Only allow managing sponsors for your own club (unless admin)
     const requestedClubId = req.params.clubId || req.params.id || user.clubId;
-    if (!user.clubId) {
-      req.flash('error_msg', 'You must be associated with a club to manage sponsors.');
-      return res.redirect('/dashboard');
-    }
-    if (parseInt(requestedClubId) !== user.clubId && !user.isAdmin) {
-      req.flash('error_msg', 'You can only manage sponsors for your own club.');
-      return res.redirect(`/clubs/${user.clubId}/edit`);
-    }
+   
     const club = await Club.findByPk(requestedClubId, {
       include: [
         {
@@ -582,6 +628,12 @@ const showClubSponsorsHandler = async (req, res, next) => {
       req.flash('error_msg', 'Club not found.');
       return res.redirect('/dashboard');
     }
+
+     if (!club.canUserEdit(user)) {
+      req.flash('error_msg', 'You must be associated with this club to manage sponsors.');
+      return res.redirect('/dashboard');
+    }
+
     // Sort sponsors using the hierarchical sorting service
     const sortedSponsors = sortSponsorsHierarchically(club.clubSponsors, 'club');
     
@@ -706,7 +758,7 @@ const showAddSponsorHandler = async (req, res) => {
   }
 
   // Check if user has permission to add sponsors for this club
-  if (!user.isAdmin && user.clubId !== parseInt(clubId)) {
+  if (!club.canUserEdit(user)) {
     req.flash('error_msg', 'You do not have permission to add sponsors for this club.');
     return res.redirect('/dashboard');
   }
@@ -780,16 +832,11 @@ const addSponsorToClubHandler = async (req, res) => {
       return res.redirect('/clubs');
     }
     
-    // Check if user has permission to add sponsors for this club
-    const hasPermission = user.isAdmin || user.clubId === parseInt(clubId);
-    
-    if (!hasPermission) {
+    if (!club.canUserEdit(user)) {
       req.flash('error_msg', 'You do not have permission to add sponsors for this club.');
       return res.redirect('/dashboard');
     }
     
-    console.log(`🔍 DEBUG: Permission granted, continuing...`);
-
     const { sponsorType, existingSponsorId, ...sponsorData } = req.body;
 
     let sponsor;
@@ -1917,6 +1964,7 @@ const rawControllers = {
   updateClubProfileHandler,
   getClubImagesHandler,
   deleteClubImageHandler,
+  showClubSponsorHandler,
   showClubSponsorsHandler,
   showCreateFormHandler,
   createClubHandler,
@@ -1949,6 +1997,7 @@ export const {
   updateClubProfileHandler: updateClubProfile,
   getClubImagesHandler: getClubImages,
   deleteClubImageHandler: deleteClubImage,
+  showClubSponsorHandler: showClubSponsor,
   showClubSponsorsHandler: showClubSponsors,
   showCreateFormHandler: showCreateForm,
   createClubHandler: createClub,

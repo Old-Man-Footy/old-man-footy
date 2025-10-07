@@ -1111,7 +1111,7 @@ const releaseOwnershipHandler = async (req, res) => {
  */
 const syncMySidelineHandler = async (req, res) => {
   // Check if user is admin/primary delegate
-  if (!req.user.isPrimaryDelegate && !req.user.isAdmin) {
+  if (!req.user.isAdmin) {
     req.flash('error_msg', 'Access denied. Only administrators can sync MySideline data.');
     return res.redirect('/dashboard');
   }
@@ -1362,7 +1362,7 @@ export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
     }
 
     // Check user permissions - only admin or carnival owner can remove sponsors
-    if (!req.user.isAdmin && carnival.createdByUserId !== req.user.id) {
+    if (!carnival.canUserEdit(req.user)) {
       req.flash('error_msg', 'Access denied. You do not have permission to remove sponsors from this carnival.');
       return res.redirect(`/carnivals/${carnivalId}/sponsors`);
     }
@@ -1383,6 +1383,46 @@ export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Show single carnival-specific sponsor
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const showCarnivalSponsor = asyncHandler(async (req, res) => {
+  const { id: carnivalId, sponsorId } = req.params;
+
+  // Check if carnival exists
+  const carnival = await Carnival.findByPk(carnivalId);
+  if (!carnival) {
+    req.flash('error_msg', 'Carnival not found');
+    return res.redirect('/carnivals');
+  }
+
+  // Find sponsor belonging to this carnival
+  const sponsor = await Sponsor.findOne({
+    where: { 
+      id: sponsorId, 
+      isActive: true,
+      carnivalId: carnivalId // Ensure sponsor belongs to this carnival
+    }
+  });
+
+  if (!sponsor) {
+    req.flash('error_msg', 'Sponsor not found or not associated with this carnival.');
+    return res.redirect(`/carnivals/${carnivalId}/sponsors`);
+  }
+
+  return res.render('shared/sponsors/view-sponsor', {
+    title: `${sponsor.sponsorName} - ${carnival.title}`,
+    entityType: 'carnival',
+    entityData: carnival,
+    routePrefix: `/carnivals/${carnival.id}`,
+    sponsor,
+    canEdit: this.canUserEdit(req.user),
+    additionalCSS: ['/styles/sponsor.styles.css'],
+  });
+});
+
+/**
  * Show edit form for carnival-specific sponsor
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -1398,7 +1438,7 @@ export const showEditCarnivalSponsor = asyncHandler(async (req, res) => {
   }
 
   // Check user permissions - only admin or carnival owner can edit sponsors
-  if (!req.user.isAdmin && carnival.createdByUserId !== req.user.id) {
+  if (!carnival.canUserEdit(req.user)) {
     req.flash('error_msg', 'Access denied. You do not have permission to edit sponsors for this carnival.');
     return res.redirect(`/carnivals/${carnivalId}/sponsors`);
   }
@@ -1445,7 +1485,7 @@ export const updateCarnivalSponsor = asyncHandler(async (req, res) => {
   }
 
   // Check user permissions - only admin or carnival owner can edit sponsors
-  if (!req.user.isAdmin && carnival.createdByUserId !== req.user.id) {
+  if (!carnival.canUserEdit(req.user)) {
     req.flash('error_msg', 'Access denied. You do not have permission to edit sponsors for this carnival.');
     return res.redirect(`/carnivals/${carnivalId}/sponsors`);
   }

@@ -141,7 +141,7 @@ class Carnival extends Model {
     if (user.isAdmin) return true;
     
     // User can edit their own carnivals (by created or claimed ownership)
-    if (this.clubId && this.clubId === user.clubId) return true;
+    if (this.clubId && (this.clubId === user.clubId || this.createdByUserId === user.id)) return true;
     
     return false;
   }

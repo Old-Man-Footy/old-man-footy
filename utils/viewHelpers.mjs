@@ -101,23 +101,23 @@ export function getSponsorshipLevelClass(level) {
     }
 }
 
-/**
- * Check if user has admin or primary delegate role
- * @param {Object} user - User object
- * @returns {boolean} True if user has admin or primary delegate role
- */
-export function isAdminOrPrimaryDelegate(user) {
-    return user && (user.isAdmin || user.isPrimaryDelegate);
-}
+// /**
+//  * Check if user has admin or primary delegate role
+//  * @param {Object} user - User object
+//  * @returns {boolean} True if user has admin or primary delegate role
+//  */
+// export function isAdminOrPrimaryDelegate(user) {
+//     return user && (user.isAdmin || user.isPrimaryDelegate);
+// }
 
-/**
- * Check if user has admin role
- * @param {Object} user - User object
- * @returns {boolean} True if user has admin role
- */
-export function isAdmin(user) {
-    return user && user.isAdmin;
-}
+// /**
+//  * Check if user has admin role
+//  * @param {Object} user - User object
+//  * @returns {boolean} True if user has admin role
+//  */
+// export function isAdmin(user) {
+//     return user && user.isAdmin;
+// }
 
 /**
  * Get display name for user role based on boolean flags

@@ -7,7 +7,6 @@ import { dirname } from 'path';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
 import { createFormUploader } from '../middleware/formUpload.mjs';
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
-import { asyncHandler } from '../middleware/asyncHandler.mjs';
 
 // Create require for CommonJS modules in ES module context
 const require = createRequire(import.meta.url);
@@ -178,6 +177,8 @@ router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 // Leave club route
 router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 
+// Show individual sponsor for carnival context
+router.get('/:id/sponsors/:sponsorId', clubController.showCarnivalSponsor);
 
 // API endpoints for image management
 // Get all images for a club

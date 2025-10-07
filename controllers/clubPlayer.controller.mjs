@@ -28,25 +28,24 @@ export async function showClubPlayers(req, res, next) {
       return res.redirect('/auth/login');
     }
 
-    // Check if user has appropriate permissions (admin or delegate)
-    if (!req.user.isAdmin && !req.user.clubId) {
-      req.flash('error', 'You must be an admin or club delegate to view players.');
-      return res.redirect('/dashboard');
-    }
-
     // Get club ID from URL
     const clubId = parseInt(req.params.id);
     if (!clubId || isNaN(clubId)) {
       req.flash('error', 'Invalid club ID.');
+      return res.redirect('/dashboard');    }
+
+
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+      req.flash('error', 'Club not found.');
       return res.redirect('/dashboard');
     }
 
-    // Authorization check: delegates can only access their own club
-    if (!req.user.isAdmin && req.user.clubId !== clubId) {
+    // Check if user has appropriate permissions (admin or delegate)
+    if (!club.canUserEdit(req.user)) {
       req.flash('error', 'You can only manage players for your own club.');
       return res.redirect('/dashboard');
     }
-
 
     // Get search and filter parameters
     const { search, sortBy = 'lastName', sortOrder = 'ASC', page = 1 } = req.query;
@@ -106,16 +105,9 @@ export async function showClubPlayers(req, res, next) {
     const totalPages = Math.ceil(count / limit);
     const currentPage = parseInt(page);
 
-    // Get club information
-    const club = await Club.findByPk(clubId, {
-      attributes: ['id', 'clubName']
-    });
+   
 
 
-    if (!club) {
-      req.flash('error', 'Club not found.');
-      return res.redirect('/dashboard');
-    }
 
 
     return res.render('clubs/players/index', {
@@ -158,12 +150,6 @@ export async function showAddPlayerForm(req, res, next) {
       return res.redirect('/auth/login');
     }
 
-    // Check if user has appropriate permissions (admin or delegate)
-    if (!req.user.isAdmin && !req.user.clubId) {
-      req.flash('error', 'You must be an admin or club delegate to add players.');
-      return res.redirect('/dashboard');
-    }
-
     // Get club ID from URL
     const clubId = parseInt(req.params.id);
     if (!clubId || isNaN(clubId)) {
@@ -171,19 +157,19 @@ export async function showAddPlayerForm(req, res, next) {
       return res.redirect('/dashboard');
     }
 
-    // Authorization check: delegates can only access their own club
-    if (!req.user.isAdmin && req.user.clubId !== clubId) {
-      req.flash('error', 'You can only manage players for your own club.');
-      return res.redirect('/dashboard');
-    }
-
     // Get club information
     const club = await Club.findByPk(clubId, {
       attributes: ['id', 'clubName']
     });
-
+    
     if (!club) {
       req.flash('error', 'Club not found.');
+      return res.redirect('/dashboard');
+    }
+
+    // Authorization check: delegates can only access their own club
+    if (!club.canUserEdit(req.user)) {
+      req.flash('error', 'You can only manage players for your own club.');
       return res.redirect('/dashboard');
     }
 
@@ -214,6 +200,12 @@ export async function createPlayer(req, res, next) {
       return res.redirect('/dashboard');
     }
 
+    const club = await Club.findByPk(clubId);
+    if (!club) {
+      req.flash('error', 'Club not found.');
+      return res.redirect('/dashboard');
+    }
+
     // Ensure user is authenticated
     if (!req.user) {
       req.flash('error', 'You must be logged in to add players.');
@@ -221,13 +213,7 @@ export async function createPlayer(req, res, next) {
     }
 
     // Check if user has appropriate permissions (admin or delegate)
-    if (!req.user.isAdmin && !req.user.clubId) {
-      req.flash('error', 'You must be an admin or club delegate to add players.');
-      return res.redirect('/dashboard');
-    }
-
-    // Authorization check: delegates can only access their own club
-    if (!req.user.isAdmin && req.user.clubId !== clubId) {
+    if (!club.canUserEdit(req.user)) {
       req.flash('error', 'You can only manage players for your own club.');
       return res.redirect('/dashboard');
     }
@@ -298,6 +284,14 @@ export async function showEditPlayerForm(req, res, next) {
       req.flash('error', 'Invalid club ID.');
       return res.redirect('/dashboard');
     }
+
+    const club = await Club.findByPk(clubId, {
+      attributes: ['id', 'clubName']
+    });
+    if (!club) {
+      req.flash('error', 'Club not found.');
+      return res.redirect(`/clubs/${clubId}/players`);
+    }
     
     if (!playerId || isNaN(playerId)) {
       req.flash('error', 'Invalid player ID.');
@@ -311,55 +305,25 @@ export async function showEditPlayerForm(req, res, next) {
     }
 
     // Check if user has appropriate permissions (admin or delegate)
-    if (!req.user.isAdmin && !req.user.clubId) {
-      req.flash('error', 'You must be an admin or club delegate to edit players.');
-      return res.redirect('/dashboard');
-    }
-
-    // Authorization check: delegates can only access their own club
-    if (!req.user.isAdmin && req.user.clubId !== clubId) {
+    if (!club.canUserEdit(req.user)) {
       req.flash('error', 'You can only manage players for your own club.');
       return res.redirect('/dashboard');
     }
 
     // Find the player first
     const player = await ClubPlayer.findOne({
-      where: { id: playerId },
-      include: [{
-        model: Club,
-        as: 'playerClub',
-        attributes: ['id', 'clubName']
-      }]
+      where: { id: playerId, playerClubId: clubId },      
     });
 
     if (!player) {
-      req.flash('error', 'Player not found.');
+      req.flash('error', 'Player not found for club.');
       return res.redirect(`/clubs/${clubId}/players`);
     }
     
-    // Verify the player belongs to the specified club
-    if (player.clubId !== clubId) {
-      req.flash('error', 'Player does not belong to the specified club.');
-      return res.redirect(`/clubs/${clubId}/players`);
-    }
-
     // Check if user can edit this player
     if (!player.canUserEdit(req.user)) {
       req.flash('error', 'You do not have permission to edit this player.');
       return res.redirect(`/clubs/${clubId}/players`);
-    }
-
-    // Ensure club data is available - fallback to fetching it separately if needed
-    let club = player.playerClub;
-    if (!club) {
-      club = await Club.findByPk(clubId, {
-        attributes: ['id', 'clubName']
-      });
-      
-      if (!club) {
-        req.flash('error', 'Club not found.');
-        return res.redirect(`/clubs/${clubId}/players`);
-      }
     }
 
     return res.render('clubs/players/edit', {
@@ -669,15 +633,6 @@ export async function downloadCsvTemplate(req, res, next) {
     return res.redirect('/dashboard');
   }
 
-  // Authorization: Delegates can only download for their own club, admins can download for any club
-  if (!req.user.isAdmin && req.user.clubId !== clubId) {
-    req.flash('error', 'You can only download templates for your own club.');
-    return res.redirect('/dashboard');
-  }
-
-  // Fetch the club using the URL parameter
-  let clubName = 'Players';
-  
   try {
     const club = await Club.findByPk(clubId, {
       attributes: ['id', 'clubName']
@@ -692,6 +647,12 @@ export async function downloadCsvTemplate(req, res, next) {
   } catch (error) {
     console.error('Error fetching club for CSV template:', error);
     req.flash('error', 'Error loading club information.');
+    return res.redirect('/dashboard');
+  }
+
+  // Authorization: Delegates can only download for their own club, admins can download for any club
+  if (!club.canUserEdit(req.user)) {
+    req.flash('error', 'You can only download templates for your own club.');
     return res.redirect('/dashboard');
   }
 
@@ -768,8 +729,17 @@ export async function importPlayersFromCsv(req, res, next) {
     return res.redirect('/dashboard');
   }
 
+  // Get club information
+  const club = await Club.findByPk(clubId, {
+    attributes: ['id', 'clubName']
+  });
+  if (!club) {
+    req.flash('error', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
   // Authorization: Delegates can only import for their own club, admins can import for any club
-  if (!req.user.isAdmin && req.user.clubId !== clubId) {
+  if (!club.canUserEdit(req.user)) {
     req.flash('error', 'You can only import players for your own club.');
     return res.redirect('/dashboard');
   }
@@ -778,16 +748,6 @@ export async function importPlayersFromCsv(req, res, next) {
   if (!req.file) {
     req.flash('error', 'Please select a CSV file to upload.');
     return res.redirect(`/clubs/${clubId}/players`);
-  }
-
-  // Get club information
-  const club = await Club.findByPk(clubId, {
-    attributes: ['id', 'clubName']
-  });
-
-  if (!club) {
-    req.flash('error', 'Club not found.');
-    return res.redirect('/dashboard');
   }
 
   const { shortsColor = 'Unrestricted', updateExisting = false, notes = '' } = req.body;
