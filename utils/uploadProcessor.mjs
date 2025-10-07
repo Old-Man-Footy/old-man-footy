@@ -125,7 +125,7 @@ export const processStructuredUploads = (req, updateData, entityType, entityId) 
       case 'drawDocument':
         // Handle draw documents for carnivals - single file only
         updateData[mappedField] = webPath;
-        console.log(`� Updated ${entityType} ${entityId} draw document (${mappedField}): ${webPath}`);
+        console.log(`📸 Updated ${entityType} ${entityId} draw document (${mappedField}): ${webPath}`);
         break;
      
       case 'avatar':
