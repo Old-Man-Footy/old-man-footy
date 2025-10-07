@@ -267,10 +267,9 @@ const showCarnivalHandler = async (req, res) => {
       },
       {
         model: Sponsor,
-        as: 'sponsors',
+        as: 'carnivalSponsors',
         where: { isActive: true },
         required: false,
-        through: { attributes: ['displayOrder'] },
       },
       // Include attendees relationship   
       {
@@ -462,7 +461,7 @@ const showCarnivalHandler = async (req, res) => {
   const isRegistrationActive = await carnival.isRegistrationActiveAsync();
 
   // Sort sponsors hierarchically using the sorting service
-  const sortedSponsors = sortSponsorsHierarchically(carnival.sponsors || [], 'carnival');
+  const sortedSponsors = sortSponsorsHierarchically(carnival.carnivalSponsors || [], 'carnival');
 
   return res.render('carnivals/show', {
     title: carnival.title,
@@ -1154,7 +1153,7 @@ export const showCarnivalSponsors = asyncHandler(async (req, res) => {
     }
 
     // Fetch current carnival sponsors using direct relationship
-    const carnivalSponsors = await carnival.getSponsors({
+    const carnivalSponsors = await carnival.getCarnivalSponsors({
       where: { isActive: true },
       order: [['sponsorName', 'ASC']]
     });
@@ -1197,7 +1196,7 @@ export const showAddSponsorForm = asyncHandler(async (req, res) => {
     }
 
     // Fetch sponsors already linked to this carnival using direct relationship
-    const carnivalSponsors = await carnival.getSponsors({
+    const carnivalSponsors = await carnival.getCarnivalSponsors({
       where: { isActive: true }
     });
     const linkedSponsorIds = carnivalSponsors.map(sponsor => sponsor.id);
