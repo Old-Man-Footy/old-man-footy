@@ -5,7 +5,7 @@ import { createFormUploader, validateEntityId } from '../middleware/formUpload.m
 import { applySecurity, validateSecureEmail } from '../middleware/security.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
 import * as carnivalController from '../controllers/carnival.controller.mjs';
-import { AUSTRALIAN_STATES } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
 // Import carnival club routes as a sub-router
 import carnivalClubRoutes from './carnivalClubs.mjs';
 
@@ -190,7 +190,23 @@ router.get('/:id/sponsors/:sponsorId', carnivalController.showCarnivalSponsor);
 
 // Edit sponsor for carnival context
 router.get('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, carnivalController.showEditCarnivalSponsor);
-router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, carnivalController.updateCarnivalSponsor);
+router.post(
+  '/:id/sponsors/:sponsorId/edit',
+  ensureAuthenticated,
+  validateEntityId('id'),
+  validateEntityId('sponsorId'),
+  carnivalUpload.upload.fields([
+    { name: 'logo', maxCount: 1 }
+  ]),
+  carnivalUpload.process,
+  [
+    body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),
+    body('sponsorshipLevel').isIn(SPONSORSHIP_LEVELS_ARRAY).withMessage('Valid sponsorship level required'),
+    body('website').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
+    body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
+  ],
+  carnivalController.updateCarnivalSponsor
+);
 
 // Remove sponsor from carnival
 router.post(
