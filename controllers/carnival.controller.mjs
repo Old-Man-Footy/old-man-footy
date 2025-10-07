@@ -1171,7 +1171,8 @@ export const showCarnivalSponsors = asyncHandler(async (req, res) => {
       routePrefix: `/carnivals/${carnival.id}`,
       sponsors: carnivalSponsors,
       allSponsors: sponsors,
-      user: req.user
+      user: req.user,
+      additionalCSS: ['/styles/carnival.styles.css', '/styles/sponsor.styles.css']
     });
   } catch (error) {
     console.error('Error showing carnival sponsors:', error);
