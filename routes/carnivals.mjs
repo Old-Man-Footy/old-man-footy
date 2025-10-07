@@ -185,6 +185,10 @@ router.get('/:id/sponsors/add', ensureAuthenticated, carnivalController.showAddS
 // Add sponsor to carnival
 router.post('/:id/sponsors/add', ensureAuthenticated, carnivalController.addSponsorToCarnival);
 
+// Edit sponsor for carnival context
+router.get('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, carnivalController.showEditCarnivalSponsor);
+router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, carnivalController.updateCarnivalSponsor);
+
 // Remove sponsor from carnival
 router.post(
   '/:id/sponsors/:sponsorId/remove',

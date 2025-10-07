@@ -89,17 +89,17 @@ This codebase is shared publicly to:
 │   └── database-optimizer.mjs                  # Database performance optimization
 ├── controllers/                             # MVC Controllers - Handle HTTP requests
 │   ├── admin.controller.mjs                    # Admin panel functionality
-│   ├── auth.controller.mjs                     # User authentication logic
+│   ├── auth.controller.mjs                     # User authentication logic (including subscription features)
 │   ├── carnival.controller.mjs                 # Carnival management operations
 │   ├── carnivalClub.controller.mjs             # Carnival-club relationships
 │   ├── carnivalSponsor.controller.mjs          # Carnival sponsorship
-│   ├── club.controller.mjs                     # Club management operations
+│   ├── club.controller.mjs                     # Club management operations (including sponsor management)
 │   ├── clubPlayer.controller.mjs               # Club player management
 │   ├── comingSoon.controller.mjs               # Coming soon page handling
 │   ├── help.controller.mjs                     # Help system and documentation
 │   ├── main.controller.mjs                     # Main application routes
 │   ├── maintenance.controller.mjs              # Maintenance mode handling
-│   └── sponsor.controller.mjs                  # Sponsor management operations
+│   └── subscription.controller.mjs             # Email subscription management
 ├── data/                                    # Database files
 │   ├── dev-old-man-footy.db                    # Development SQLite database
 │   └── test-old-man-footy.db                   # Test SQLite database

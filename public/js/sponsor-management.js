@@ -17,7 +17,6 @@ export const sponsorManagementManager = {
         const currentStatusAttr = document.querySelector('[data-current-status]')?.getAttribute('data-current-status');
         this.elements.currentStatus = currentStatusAttr === 'true';
         this.elements.toggleBtn = document.querySelector('[data-action="toggle-status-btn"]');
-        this.elements.deleteBtn = document.querySelector('[data-action="delete-sponsor-btn"]');
         this.elements.removeForms = Array.from(document.querySelectorAll('[data-confirm-remove]'));
     },
 

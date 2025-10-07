@@ -1,4 +1,4 @@
-<div class="container mt-4" data-page-id="clubs-edit-sponsor">
+<div class="container mt-4" data-page-id="<%= entityType %>s-edit-sponsor"> </div>
     <div class="row justify-content-center">
         <div class="col-md-8">
             <!-- Page Header -->
@@ -9,16 +9,16 @@
                         Edit Sponsor
                     </h2>
                     <p class="text-muted mb-0">
-                        Edit sponsor information for <%= club.clubName %>
+                        Edit sponsor information for <%= entityData.clubName || entityData.carnivalName %>
                     </p>
                 </div>
-                <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
+                <a href="<%= routePrefix %>/sponsors" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Back to Sponsors
                 </a>
             </div>
 
             <!-- Flash Messages -->
-            <%- include('../partials/flash-messages') %>
+            <%- include('../../partials/flash-messages') %>
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
@@ -26,7 +26,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/clubs/<%= club.id %>/sponsors/<%= sponsor.id %>/edit" enctype="multipart/form-data" id="sponsorForm">
+                    <form method="POST" action="<%= routePrefix %>/sponsors/<%= sponsor.id %>/edit" enctype="multipart/form-data" id="sponsorForm">
                         <!-- Basic Information -->
                         <div class="row">
                             <div class="col-md-8">
@@ -193,7 +193,7 @@
                         <% } %>
 
                         <!-- Logo Upload Input -->
-                        <%- include('../partials/_imageUploader', { 
+                        <%- include('../../partials/_imageUploader', { 
                             fieldName: 'logo',
                             label: 'Upload Logo',
                             allowedTypes: ['.jpg', '.jpeg', '.png', '.svg'],
@@ -226,14 +226,14 @@
                                     <strong>Make this sponsor publicly visible</strong>
                                 </label>
                                 <div class="form-text">
-                                    If checked, this sponsor will appear on public sponsor listings and the club's public profile.
+                                    If checked, this sponsor will appear on public sponsor listings and the <%= entityType %>'s public profile.
                                 </div>
                             </div>
                         </div>
 
                         <!-- Form Actions -->
                         <div class="d-flex justify-content-between">
-                            <a href="/clubs/<%= club.id %>/sponsors" class="btn btn-outline-secondary">
+                            <a href="<%= routePrefix %>/sponsors" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">

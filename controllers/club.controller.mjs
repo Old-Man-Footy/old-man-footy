@@ -585,9 +585,11 @@ const showClubSponsorsHandler = async (req, res, next) => {
     // Sort sponsors using the hierarchical sorting service
     const sortedSponsors = sortSponsorsHierarchically(club.clubSponsors, 'club');
     
-    return res.render('clubs/sponsors', {
+    return res.render('shared/sponsors/sponsors', {
       title: 'Manage Club Sponsors',
-      club,
+      entityType: 'club',
+      entityData: club,
+      routePrefix: `/clubs/${club.id}`,
       sponsors: sortedSponsors,
       additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
     });
@@ -969,10 +971,12 @@ const showEditClubSponsorHandler = async (req, res) => {
     return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
-  return res.render('clubs/edit-sponsor', {
+  return res.render('shared/sponsors/edit-sponsor', {
     title: 'Edit Sponsor',
+    entityType: 'club',
+    entityData: club,
+    routePrefix: `/clubs/${club.id}`,
     sponsor,
-    club,
     states: AUSTRALIAN_STATES,
     sponsorshipLevels: SPONSORSHIP_LEVELS_ARRAY,
     additionalCSS: ['/styles/sponsor.styles.css'],
