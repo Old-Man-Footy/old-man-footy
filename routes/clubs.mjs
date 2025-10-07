@@ -177,8 +177,8 @@ router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 // Leave club route
 router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 
-// Show individual sponsor for carnival context
-router.get('/:id/sponsors/:sponsorId', clubController.showCarnivalSponsor);
+// Show individual sponsor for club context
+router.get('/:id/sponsors/:sponsorId', clubController.showClubSponsor);
 
 // API endpoints for image management
 // Get all images for a club

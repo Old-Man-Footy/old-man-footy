@@ -402,7 +402,7 @@ const showCarnivalHandler = async (req, res) => {
   }
 
   // Check if user can edit this carnival (standardized permission check)
-  const canEditCarnival = userWithClub ? await carnival.canUserEditAsync(userWithClub) : false;
+  const canEditCarnival = userWithClub ? carnival.canUserEdit(userWithClub) : false;
 
   // Use single standard permission check for all management operations
   const canManage = canEditCarnival;
@@ -696,7 +696,7 @@ const showEditFormHandler = async (req, res) => {
   }
 
   // Check if user can edit this carnival (using async method for club delegate checking)
-  const canEdit = await carnival.canUserEditAsync(req.user);
+  const canEdit = carnival.canUserEdit(req.user);
   if (!canEdit) {
     req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
     return res.redirect('/dashboard');
@@ -808,7 +808,7 @@ const updateCarnivalHandler = async (req, res) => {
     // Check if user can edit this carnival (using async method for club delegate checking)
     console.log('⚡ updateCarnivalHandler - Checking user permissions for user:', req.user?.id);
     try {
-      const canEdit = await carnival.canUserEditAsync(req.user);
+      const canEdit = carnival.canUserEdit(req.user);
       if (!canEdit) {
         console.log('❌ updateCarnivalHandler - User lacks edit permissions');
         req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
@@ -1055,7 +1055,7 @@ const deleteCarnivalHandler = async (req, res) => {
   }
 
   // Check if user can edit this carnival (using async method for club delegate checking)
-  const canEdit = await carnival.canUserEditAsync(req.user);
+  const canEdit = carnival.canUserEdit(req.user);
   if (!canEdit) {
     req.flash('error_msg', 'You can only delete carnivals hosted by your club.');
     return res.redirect('/dashboard');
@@ -1417,7 +1417,7 @@ export const showCarnivalSponsor = asyncHandler(async (req, res) => {
     entityData: carnival,
     routePrefix: `/carnivals/${carnival.id}`,
     sponsor,
-    canEdit: this.canUserEdit(req.user),
+    canEdit: carnival.canUserEdit(req.user),
     additionalCSS: ['/styles/sponsor.styles.css'],
   });
 });

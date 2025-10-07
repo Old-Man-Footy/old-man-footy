@@ -73,11 +73,11 @@ vi.mock('/models/index.mjs', () => {
       locationAddress: 'Sydney Sports Centre',
       state: 'NSW'
     }),
-    canUserEditAsync: vi.fn().mockResolvedValue(true),
+    canUserEdit: vi.fn().mockResolvedValue(true),
     isRegistrationActiveAsync: vi.fn().mockResolvedValue(true),
     update: vi.fn().mockResolvedValue(true),
     toJSON: vi.fn().mockImplementation(function () {
-      const { toJSON, getPublicDisplayData, canUserEditAsync, isRegistrationActiveAsync, update, ...rest } = this;
+      const { toJSON, getPublicDisplayData, canUserEdit, isRegistrationActiveAsync, update, ...rest } = this;
       return { ...rest, ...overrides };
     }),
     ...overrides
@@ -662,7 +662,7 @@ describe('Carnival Controller', () => {
 
       await getEdit(req, res);
 
-      expect(mockCarnival.canUserEditAsync).toHaveBeenCalledWith(req.user);
+      expect(mockcarnival.canUserEdit).toHaveBeenCalledWith(req.user);
       expect(res.render).toHaveBeenCalledWith('carnivals/edit', expect.objectContaining({
         title: 'Edit Carnival',
         carnival: mockCarnival,
@@ -672,7 +672,7 @@ describe('Carnival Controller', () => {
 
     it('should redirect unauthorized users', async () => {
       const mockCarnival = createMockCarnival();
-      mockCarnival.canUserEditAsync.mockResolvedValue(false);
+      mockcarnival.canUserEdit.mockResolvedValue(false);
 
       req.params.id = '1';
       req.user = { id: 2 };

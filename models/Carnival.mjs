@@ -141,19 +141,9 @@ class Carnival extends Model {
     if (user.isAdmin) return true;
     
     // User can edit their own carnivals (by created or claimed ownership)
-    if (this.clubId && (this.clubId === user.clubId || this.createdByUserId === user.id)) return true;
+    if (this.clubId && this.clubId === user.clubId) return true;
     
     return false;
-  }
-
-  /**
-   * Check if user can edit this carnival (async version for compatibility)
-   * @param {Object} user - User object to check permissions
-   * @returns {Promise<boolean>} Edit permission status
-   */
-  async canUserEditAsync(user) {
-    // Currently identical to sync version, but kept async for future delegate checking
-    return this.canUserEdit(user);
   }
 
   /**
