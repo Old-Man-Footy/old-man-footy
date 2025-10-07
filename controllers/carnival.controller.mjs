@@ -479,7 +479,7 @@ const showCarnivalHandler = async (req, res) => {
     isMySidelineCarnival: !!carnival.mySidelineId,
     isRegistrationActive, // Pass registration status including deadline check
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
-    additionalCSS: ['/styles/carnival.styles.css'],
+    additionalCSS: ['/styles/carnival.styles.css','/styles/sponsor.styles.css'],
     hostClub,
   });
 };
