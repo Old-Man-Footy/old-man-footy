@@ -104,94 +104,13 @@
                 </div>
             </div>
 
-            <!-- Available Sponsors -->
-            <% if (sponsors && sponsors.length > 0) { %>
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="fas fa-link text-info me-2"></i>
-                            Available Sponsors
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-3">
-                            These sponsors are available to be added to this carnival:
-                        </p>
-                        <div class="row g-3">
-                            <% 
-                            // Filter out sponsors already linked to this carnival
-                            const availableSponsors = sponsors.filter(sponsor => 
-                                !carnivalSponsors.some(carnivalSponsor => carnivalSponsor.id === sponsor.id)
-                            );
-                            %>
-                            <% if (availableSponsors.length > 0) { %>
-                                <% availableSponsors.forEach(sponsor => { %>
-                                    <div class="col-md-6 col-lg-4">
-                                        <div class="card h-100 border-dashed">
-                                            <!-- Sponsor Logo -->
-                                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 100px;">
-                                                <% if (sponsor.logoUrl) { %>
-                                                    <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>" 
-                                                        alt="<%= sponsor.sponsorName %> Logo" 
-                                                        class="img-fluid" 
-                                                        style="max-height: 80px; max-width: 100%; object-fit: contain;">
-                                                <% } else { %>
-                                                    <div class="text-center text-muted">
-                                                        <i class="fas fa-building fa-2x"></i>
-                                                    </div>
-                                                <% } %>
-                                            </div>
 
-                                            <div class="card-body d-flex flex-column">
-                                                <h6 class="card-title">
-                                                    <%= sponsor.sponsorName %>
-                                                    <% if (sponsor.sponsorshipLevel) { %>
-                                                        <span class="badge bg-secondary ms-1 small"><%= sponsor.sponsorshipLevel %></span>
-                                                    <% } %>
-                                                </h6>
-                                                
-                                                <% if (sponsor.location) { %>
-                                                    <p class="text-muted small mb-2">
-                                                        <i class="fas fa-map-marker-alt me-1"></i>
-                                                        <%= sponsor.location %><% if (sponsor.state) { %>, <%= sponsor.state %><% } %>
-                                                    </p>
-                                                <% } %>
 
-                                                <div class="mt-auto">
-                                                    <form method="POST" action="/carnivals/<%= carnival.id %>/sponsors/add" class="w-100">
-                                                        <input type="hidden" name="sponsorId" value="<%= sponsor.id %>">
-                                                        <button type="submit" class="btn btn-tertiary btn-sm w-100">
-                                                            <i class="fas fa-plus me-1"></i>Add to Carnival
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <% }); %>
-                            <% } else { %>
-                                <div class="col-12">
-                                    <div class="text-center py-3">
-                                        <p class="text-muted mb-0">
-                                            <i class="fas fa-check-circle text-success me-1"></i>
-                                            All available sponsors are already linked to this carnival!
-                                        </p>
-                                    </div>
-                                </div>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-            <% } %>
         </div>
     </div>
 </div>
 
-<style>
-.border-dashed {
-    border: 2px dashed #dee2e6 !important;
-}
-</style>
+
 
 <!-- Include SortableJS for drag and drop functionality -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>

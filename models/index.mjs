@@ -15,7 +15,6 @@ import ClubPlayer from './ClubPlayer.mjs';
 import Carnival from './Carnival.mjs';
 import CarnivalClub from './CarnivalClub.mjs';
 import CarnivalClubPlayer from './CarnivalClubPlayer.mjs';
-import CarnivalSponsor from './CarnivalSponsor.mjs';
 import Sponsor from './Sponsor.mjs';
 import EmailSubscription from './EmailSubscription.mjs';
 import AuditLog from './AuditLog.mjs';
@@ -90,19 +89,16 @@ Sponsor.belongsTo(Club, {
   as: 'club'
 });
 
-// Carnival and Sponsor many-to-many relationship through CarnivalSponsor
-Carnival.belongsToMany(Sponsor, {
-  through: CarnivalSponsor,
+// Carnival has many Sponsors (one-to-many)
+Carnival.hasMany(Sponsor, {
   foreignKey: 'carnivalId',
-  otherKey: 'sponsorId',
-  as: 'sponsors'
+  as: 'carnivalSponsors'
 });
 
-Sponsor.belongsToMany(Carnival, {
-  through: CarnivalSponsor,
-  foreignKey: 'sponsorId',
-  otherKey: 'carnivalId',
-  as: 'carnivals'
+// Sponsor belongs to Carnival (many-to-one)
+Sponsor.belongsTo(Carnival, {
+  foreignKey: 'carnivalId',
+  as: 'carnival'
 });
 
 // Direct associations for junction tables
@@ -116,16 +112,6 @@ CarnivalClub.belongsTo(Club, {
   as: 'participatingClub'
 });
 
-CarnivalSponsor.belongsTo(Carnival, {
-  foreignKey: 'carnivalId',
-  as: 'carnival'
-});
-
-CarnivalSponsor.belongsTo(Sponsor, {
-  foreignKey: 'sponsorId',
-  as: 'sponsor'
-});
-
 Carnival.hasMany(CarnivalClub, {
   foreignKey: 'carnivalId',
   as: 'carnivalClubs'
@@ -134,16 +120,6 @@ Carnival.hasMany(CarnivalClub, {
 Club.hasMany(CarnivalClub, {
   foreignKey: 'clubId',
   as: 'carnivalClubs'
-});
-
-Carnival.hasMany(CarnivalSponsor, {
-  foreignKey: 'carnivalId',
-  as: 'carnivalSponsors'
-});
-
-Sponsor.hasMany(CarnivalSponsor, {
-  foreignKey: 'sponsorId',
-  as: 'carnivalSponsors'
 });
 
 // Club has many Players (one-to-many)
@@ -235,7 +211,6 @@ export {
   Carnival,
   CarnivalClub,
   CarnivalClubPlayer,
-  CarnivalSponsor,
   Sponsor,
   EmailSubscription,
   AuditLog,
