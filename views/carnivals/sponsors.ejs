@@ -36,14 +36,14 @@
                 <div class="card-body">
                     <% if (carnivalSponsors && carnivalSponsors.length > 0) { %>
                         <div class="row g-3">
-                            <% carnivalSponsors.forEach(sponsor => { %>
+                            <% carnivalSponsors.forEach(carnivalSponsor => { %>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="card h-100 border">
                                         <!-- Sponsor Logo -->
                                         <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 120px;">
-                                            <% if (sponsor.logoUrl) { %>
-                                       <img src="<%= sponsor.logoUrl.startsWith('/') ? sponsor.logoUrl : '/' + sponsor.logoUrl %>" 
-                                           alt="<%= sponsor.sponsorName %> Logo" 
+                                            <% if (carnivalSponsor.sponsor.logoUrl) { %>
+                                       <img src="<%= carnivalSponsor.sponsor.logoUrl.startsWith('/') ? carnivalSponsor.sponsor.logoUrl : '/' + carnivalSponsor.sponsor.logoUrl %>" 
+                                           alt="<%= carnivalSponsor.sponsor.sponsorName %> Logo" 
                                            class="img-fluid" 
                                            style="max-height: 100px; max-width: 100%; object-fit: contain;">
                                             <% } else { %>
@@ -56,26 +56,26 @@
 
                                         <div class="card-body d-flex flex-column">
                                             <h6 class="card-title">
-                                                <%= sponsor.sponsorName %>
-                                                <% if (sponsor.sponsorshipLevel) { %>
-                                                    <span class="badge bg-secondary ms-1 small"><%= sponsor.sponsorshipLevel %></span>
+                                                <%= carnivalSponsor.sponsor.sponsorName %>
+                                                <% if (carnivalSponsor.sponsorshipLevel) { %>
+                                                    <span class="badge bg-secondary ms-1 small"><%= carnivalSponsor.sponsorshipLevel %></span>
                                                 <% } %>
                                             </h6>
                                             
-                                            <% if (sponsor.location) { %>
+                                            <% if (carnivalSponsor.sponsor.location) { %>
                                                 <p class="text-muted small mb-2">
                                                     <i class="fas fa-map-marker-alt me-1"></i>
-                                                    <%= sponsor.location %><% if (sponsor.state) { %>, <%= sponsor.state %><% } %>
+                                                    <%= carnivalSponsor.sponsor.location %><% if (carnivalSponsor.sponsor.state) { %>, <%= carnivalSponsor.sponsor.state %><% } %>
                                                 </p>
                                             <% } %>
 
                                             <div class="mt-auto">
                                                 <div class="btn-group w-100" role="group">
-                                                    <a href="/sponsors/<%= sponsor.id %>" class="btn btn-outline-primary btn-sm">
+                                                    <a href="/sponsors/<%= carnivalSponsor.sponsor.id %>" class="btn btn-outline-primary btn-sm">
                                                         <i class="fas fa-eye me-1"></i>View
                                                     </a>
-                                                    <form method="POST" action="/carnivals/<%= carnival.id %>/sponsors/<%= sponsor.id %>/remove" class="d-inline">
-                                                        <button data-confirm="Remove <%= sponsor.sponsorName %> from this carnival?"
+                                                    <form method="POST" action="/carnivals/<%= carnival.id %>/sponsors/<%= carnivalSponsor.sponsor.id %>/remove" class="d-inline">
+                                                        <button data-confirm="Remove <%= carnivalSponsor.sponsor.sponsorName %> from this carnival?"
                                                                 type="submit" class="btn btn-outline-danger btn-sm">
                                                             <i class="bi bi-x-circle"></i> Remove
                                                         </button>

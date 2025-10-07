@@ -179,6 +179,9 @@ router.post(
 // Manage sponsors for a specific carnival
 router.get('/:id/sponsors', ensureAuthenticated, carnivalController.showCarnivalSponsors);
 
+// Show form to add sponsor to carnival
+router.get('/:id/sponsors/add', ensureAuthenticated, carnivalController.showAddSponsorForm);
+
 // Add sponsor to carnival
 router.post('/:id/sponsors/add', ensureAuthenticated, carnivalController.addSponsorToCarnival);
 

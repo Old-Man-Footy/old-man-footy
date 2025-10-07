@@ -7,6 +7,7 @@
 
 import { Sponsor, Club } from '../models/index.mjs';
 import { Op } from 'sequelize';
+import { sequelize } from '../config/database.mjs';
 import { validationResult } from 'express-validator';
 import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY, SPONSORSHIP_LEVELS, SPONSORSHIP_LEVEL_ORDER } from '../config/constants.mjs';
 import { asyncHandler } from '../middleware/asyncHandler.mjs';
@@ -46,16 +47,14 @@ export const showSponsorListings = asyncHandler(async (req, res) => {
     where: whereClause,
     order: [
       [
-        { 
-          raw: `CASE 
-            WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.GOLD}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.GOLD]}
-            WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.SILVER}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.SILVER]}
-            WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.BRONZE}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.BRONZE]}
-            WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.SUPPORTING}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.SUPPORTING]}
-            WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.IN_KIND}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.IN_KIND]}
-            ELSE 6
-          END`
-        }, 
+        sequelize.literal(`CASE 
+          WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.GOLD}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.GOLD]}
+          WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.SILVER}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.SILVER]}
+          WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.BRONZE}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.BRONZE]}
+          WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.SUPPORTING}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.SUPPORTING]}
+          WHEN sponsorshipLevel = '${SPONSORSHIP_LEVELS.IN_KIND}' THEN ${SPONSORSHIP_LEVEL_ORDER[SPONSORSHIP_LEVELS.IN_KIND]}
+          ELSE 6
+        END`), 
         'ASC'
       ],
       ['sponsorName', 'ASC']
