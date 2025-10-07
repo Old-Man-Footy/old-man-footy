@@ -189,30 +189,31 @@
                                             <i class="bi bi-hand-thumbs-up"></i> Claim Carnival
                                         </button>
                                     <% } %>
-
                                     
                                     <!-- Edit button for owners -->
                                     <% if (canEditCarnival) { %>
                                         <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-people"></i> Manage Attendees
+                                            <i class="bi bi-people"></i> Attendees
                                         </a>
-
                                         <!-- View All Players button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
                                             <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-list-ul"></i> View All Players
+                                                <i class="bi bi-list-ul"></i> Players
                                             </a>
-                                        <% } %>
-                                        
-                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-pencil"></i> Edit Carnival                                        </a>
-
-                                        <!-- Email Attendees button (only if there are attendee clubs) -->
+                                        <% } %>                               
+                                        <a href="/carnivals/<%= carnival.id %>/sponsors" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-building me-1"></i> Sponsors
+                                        </a>                                        
+                                         <!-- Email Attendees button (only if there are attendee clubs) -->
                                         <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
                                             <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
                                                 <i class="bi bi-envelope"></i> Email Attendees
                                             </button>
                                         <% } %>
+
+                                        <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil"></i> Edit Carnival                                        
+                                        </a>                                       
                                     <% } %>
 
                                     <!-- Release ownership button for MySideline carnivals owned by the user -->
