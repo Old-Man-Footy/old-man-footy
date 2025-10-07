@@ -10,32 +10,37 @@
 export function initTheme() {
     'use strict';
     
-    // Apply theme-loading class immediately to prevent flash
-    document.documentElement.className = 'theme-loading';
+    // Check if theme was already initialized inline
+    let theme = window.__INITIAL_THEME__;
     
-    // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem('oldmanfooty-theme');
-    
-    // Determine theme: saved preference > system preference > default light
-    let theme = 'light';
-    
-    if (savedTheme === 'dark' || savedTheme === 'light') {
-        theme = savedTheme;
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        theme = 'dark';
+    if (!theme) {
+        // Fallback: Apply theme-loading class immediately to prevent flash
+        document.documentElement.className = 'theme-loading';
+        
+        // Check localStorage for saved theme preference
+        const savedTheme = localStorage.getItem('oldmanfooty-theme');
+        
+        // Determine theme: saved preference > system preference > default light
+        theme = 'light';
+        
+        if (savedTheme === 'dark' || savedTheme === 'light') {
+            theme = savedTheme;
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            theme = 'dark';
+        }
+        
+        // Apply theme immediately to prevent flash
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-bs-theme');
+            document.documentElement.removeAttribute('data-theme');
+        }
+        
+        // Store theme for main app to use later
+        window.__INITIAL_THEME__ = theme;
     }
-    
-    // Apply theme immediately to prevent flash
-    if (theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
-    } else {
-        document.documentElement.removeAttribute('data-bs-theme');
-        document.documentElement.removeAttribute('data-theme');
-    }
-    
-    // Store theme for main app to use later
-    window.__INITIAL_THEME__ = theme;
     
     // Remove loading class after DOM content is loaded
     function showContent() {
