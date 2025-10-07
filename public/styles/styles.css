@@ -791,7 +791,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 [data-theme="dark"] .rugby-masters-card .bi-globe,
 [data-theme="dark"] .col-md-6 .d-flex .bi-geo-alt,
 [data-theme="dark"] .col-md-6 .d-flex .bi-trophy {
-    color: var(--rugby-green) !important;
+    color: white !important;
 }
 
 /* Dark Mode Text & Element Fixes */
