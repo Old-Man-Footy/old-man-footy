@@ -54,7 +54,7 @@
                         </div>
                     <% } %>
 
-                    <form action="/clubs/create-on-behalf<%= typeof returnUrl !== 'undefined' && returnUrl ? '?returnUrl=' + encodeURIComponent(returnUrl) : '' %>" method="POST">
+                    <form action="<%= formAction %>" method="POST">
                         <!-- Club Basic Information -->
                         <div class="row">
                             <div class="col-md-8">
