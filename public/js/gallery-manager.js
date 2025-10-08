@@ -209,7 +209,7 @@ export const galleryManager = {
             const result = await response.json();
             galleryManager.updateProgress(100);
 
-            galleryManager.showSuccess(`Successfully uploaded ${result.images.length} image(s)`);
+            galleryManager.showSuccess(`Successfully uploaded ${(Array.isArray(result.images) ? result.images.length : 0)} image(s)`);
             
             // Close modal and refresh gallery
             setTimeout(() => {
