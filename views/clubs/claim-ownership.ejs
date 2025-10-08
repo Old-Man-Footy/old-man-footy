@@ -4,7 +4,7 @@
             <!-- Page Header -->
             <div class="text-center mb-4">
                 <h2 class="h3 mb-1">
-                    <i class="fas fa-key text-primary me-2"></i>
+                    <i class="bi bi-key text-primary me-2"></i>
                     Claim Club Ownership
                 </h2>
                 <p class="text-muted mb-0">
@@ -16,7 +16,7 @@
             <div class="card shadow">
                 <div class="card-header bg-primary">
                     <h3 class="mb-0">
-                        <i class="fas fa-crown"></i> Claim Ownership of <%= club.clubName %>
+                        <i class="bi bi-flag"></i> Claim Ownership of <%= club.clubName %>
                     </h3>
                     <p class="mb-0 small">Complete your club registration and become the primary delegate</p>
                 </div>
@@ -24,7 +24,7 @@
                 <div class="card-body">
                     <!-- Success Alert -->
                     <div class="alert alert-success">
-                        <h5><i class="fas fa-check-circle"></i> You're Eligible to Claim This Club!</h5>
+                        <h5><i class="bi bi-check-circle"></i> You're Eligible to Claim This Club!</h5>
                         <p class="mb-0">You've been invited to take ownership of <strong><%= club.clubName %></strong>. 
                         Once you claim it, you'll become the primary delegate and can manage all aspects of your club.</p>
                     </div>
@@ -32,44 +32,44 @@
                     <!-- Club Information -->
                     <div class="card mb-4 border-info">
                         <div class="card-header bg-tertiary">
-                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Club Information</h5>
+                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Club Information</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h6><i class="fas fa-tag"></i> Club Name</h6>
+                                    <h6><i class="bi bi-tag"></i> Club Name</h6>
                                     <p class="text-primary font-weight-bold"><%= club.clubName %></p>
                                     
                                     <% if (club.state) { %>
-                                        <h6><i class="fas fa-map-marker-alt"></i> State</h6>
+                                        <h6><i class="bi bi-geo-alt"></i> State</h6>
                                         <p><%= club.state %></p>
                                     <% } %>
                                     
                                     <% if (club.location) { %>
-                                        <h6><i class="fas fa-location-arrow"></i> Location</h6>
+                                        <h6><i class="bi bi-geo"></i> Location</h6>
                                         <p><%= club.location %></p>
                                     <% } %>
                                 </div>
                                 <div class="col-md-6">
                                     <% if (club.contactPerson) { %>
-                                        <h6><i class="fas fa-user"></i> Contact Person</h6>
+                                        <h6><i class="bi bi-person"></i> Contact Person</h6>
                                         <p><%= club.contactPerson %></p>
                                     <% } %>
                                     
                                     <% if (club.contactEmail) { %>
-                                        <h6><i class="fas fa-envelope"></i> Contact Email</h6>
+                                        <h6><i class="bi bi-envelope"></i> Contact Email</h6>
                                         <p><a href="mailto:<%= club.contactEmail %>"><%= club.contactEmail %></a></p>
                                     <% } %>
                                     
                                     <% if (club.contactPhone) { %>
-                                        <h6><i class="fas fa-phone"></i> Contact Phone</h6>
+                                        <h6><i class="bi bi-phone"></i> Contact Phone</h6>
                                         <p><a href="tel:<%= club.contactPhone %>"><%= club.contactPhone %></a></p>
                                     <% } %>
                                 </div>
                             </div>
                             
                             <% if (club.description) { %>
-                                <h6><i class="fas fa-file-alt"></i> Description</h6>
+                                <h6><i class="bi bi-file-earmark"></i> Description</h6>
                                 <div class="bg-light p-3 rounded">
                                     <p class="mb-0" style="white-space: pre-line;"><%= club.description %></p>
                                 </div>
@@ -81,7 +81,7 @@
                     <% if (proxyCreator) { %>
                         <div class="card mb-4 border-secondary">
                             <div class="card-header bg-tertiary">
-                                <h6 class="mb-0"><i class="fas fa-user-plus"></i> Created By</h6>
+                                <h6 class="mb-0"><i class="bi bi-person-plus"></i> Created By</h6>
                             </div>
                             <div class="card-body">
                                 <p><strong><%= proxyCreator.firstName %> <%= proxyCreator.lastName %></strong> created this club profile for you.</p>
@@ -96,22 +96,22 @@
                     <!-- What Happens Next -->
                     <div class="card mb-4 border-success">
                         <div class="card-header bg-tertiary">
-                            <h6 class="mb-0"><i class="fas fa-trophy"></i> What You'll Get as Club Owner</h6>
+                            <h6 class="mb-0"><i class="bi bi-trophy"></i> What You'll Get as Club Owner</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
                                     <ul class="list-unstyled">
-                                        <li><i class="fas fa-check text-success"></i> <strong>Primary Delegate Status</strong> - You become the main contact for your club</li>
-                                        <li><i class="fas fa-check text-success"></i> <strong>Club Management</strong> - Update club info, logos, and contact details</li>
-                                        <li><i class="fas fa-check text-success"></i> <strong>Create Carnivals</strong> - Organize and host your own carnivals</li>
+                                        <li><i class="bi bi-check2 text-success"></i> <strong>Primary Delegate Status</strong> - You become the main contact for your club</li>
+                                        <li><i class="bi bi-check2 text-success"></i> <strong>Club Management</strong> - Update club info, logos, and contact details</li>
+                                        <li><i class="bi bi-check2 text-success"></i> <strong>Create Carnivals</strong> - Organize and host your own carnivals</li>
                                     </ul>
                                 </div>
                                 <div class="col-md-6">
                                     <ul class="list-unstyled">
-                                        <li><i class="fas fa-check text-success"></i> <strong>Register for Carnivals</strong> - Sign up your teams for carnivals</li>
-                                        <li><i class="fas fa-check text-success"></i> <strong>Manage Sponsors</strong> - Add and showcase your club sponsors</li>
-                                        <li><i class="fas fa-check text-success"></i> <strong>Invite Delegates</strong> - Add other club members to help manage</li>
+                                        <li><i class="bi bi-check2 text-success"></i> <strong>Register for Carnivals</strong> - Sign up your teams for carnivals</li>
+                                        <li><i class="bi bi-check2 text-success"></i> <strong>Manage Sponsors</strong> - Add and showcase your club sponsors</li>
+                                        <li><i class="bi bi-check2 text-success"></i> <strong>Invite Delegates</strong> - Add other club members to help manage</li>
                                     </ul>
                                 </div>
                             </div>
@@ -122,7 +122,7 @@
                     <form action="/clubs/<%= club.id %>/claim" method="POST">
                         <div class="card border-warning">
                             <div class="card-header bg-warning text-dark">
-                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Important Information</h6>
+                                <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Important Information</h6>
                             </div>
                             <div class="card-body">
                                 <div class="form-check mb-3">
@@ -151,10 +151,10 @@
                         <!-- Action Buttons -->
                         <div class="mt-4 d-flex justify-content-between">
                             <a href="/clubs/<%= club.id %>" class="btn btn-secondary">
-                                <i class="fas fa-eye"></i> View Club Profile
+                                <i class="bi bi-eye"></i> View Club Profile
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg" id="claimButton" disabled>
-                                <i class="fas fa-crown"></i> Claim Ownership of <%= club.clubName %>
+                                <i class="bi bi-flag"></i> Claim Ownership of <%= club.clubName %>
                             </button>
                         </div>
                     </form>
@@ -164,7 +164,7 @@
             <!-- Help Section -->
             <div class="card mt-4 border-info">
                 <div class="card-header bg-info text-primary">
-                    <h6 class="mb-0"><i class="fas fa-question-circle"></i> Need Help?</h6>
+                    <h6 class="mb-0"><i class="bi bi-question-circle"></i> Need Help?</h6>
                 </div>
                 <div class="card-body">
                     <p class="small mb-2">

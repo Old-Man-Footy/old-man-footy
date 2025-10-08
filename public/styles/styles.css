@@ -10,6 +10,23 @@
     transition: none !important;
 }
 
+.bi-2x {
+  font-size: 2rem;
+}
+
+.bi-3x {
+  font-size: 3rem;
+}
+
+.bi-4x {
+  font-size: 4rem;
+}
+
+.bi-5x {
+  font-size: 5rem;
+}
+
+
 /* Root Variables for Consistent Theming - Green/Gold Theme */
 :root {
     --rugby-green: #006837;
@@ -791,7 +808,7 @@ button[type="submit"]:contains("Complete Registration"):focus {
 [data-theme="dark"] .rugby-masters-card .bi-globe,
 [data-theme="dark"] .col-md-6 .d-flex .bi-geo-alt,
 [data-theme="dark"] .col-md-6 .d-flex .bi-trophy {
-    color: var(--rugby-green) !important;
+    color: white !important;
 }
 
 /* Dark Mode Text & Element Fixes */

@@ -125,7 +125,7 @@ export const galleryManager = {
                             <img src="${e.target.result}" alt="Preview">
                             <div class="image-preview-overlay">
                                 <button type="button" class="remove-preview-btn" data-file-index="${index}">
-                                    <i class="fas fa-times"></i>
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </div>
                             <div class="alt-text-input">
@@ -209,7 +209,7 @@ export const galleryManager = {
             const result = await response.json();
             galleryManager.updateProgress(100);
 
-            galleryManager.showSuccess(`Successfully uploaded ${result.uploadedImages.length} image(s)`);
+            galleryManager.showSuccess(`Successfully uploaded ${(Array.isArray(result.images) ? result.images.length : 0)} image(s)`);
             
             // Close modal and refresh gallery
             setTimeout(() => {

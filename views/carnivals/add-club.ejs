@@ -57,18 +57,25 @@
                                             <label for="clubId" class="form-label">Club *</label>
                                             <select class="form-select" id="clubId" name="clubId" required data-clubs='<%- JSON.stringify(availableClubs) %>'>
                                                 <option value="">Choose a club...</option>
-                                                <% availableClubs.forEach(club => { %>
-                                                    <option value="<%= club.id %>" 
-                                                            data-club-name="<%= club.clubName %>"
-                                                            data-contact-person="<%= club.contactPerson || '' %>"
-                                                            data-contact-email="<%= club.contactEmail || '' %>"
-                                                            data-contact-phone="<%= club.contactPhone || '' %>">
-                                                        <%= club.clubName %> 
-                                                        (<%= club.state %><% if (club.location) { %> - <%= club.location %><% } %>)
-                                                    </option>
-                                                <% }); %>
+                                                <option value="create-on-behalf" class="fw-bold">
+                                                    🏗️ Create new club on behalf of someone else
+                                                </option>
+                                                <% if (availableClubs && availableClubs.length > 0) { %>
+                                                    <optgroup label="Existing Clubs">
+                                                        <% availableClubs.forEach(club => { %>
+                                                            <option value="<%= club.id %>" 
+                                                                    data-club-name="<%= club.clubName %>"
+                                                                    data-contact-person="<%= club.contactPerson || '' %>"
+                                                                    data-contact-email="<%= club.contactEmail || '' %>"
+                                                                    data-contact-phone="<%= club.contactPhone || '' %>">
+                                                                <%= club.clubName %> 
+                                                                (<%= club.state %><% if (club.location) { %> - <%= club.location %><% } %>)
+                                                            </option>
+                                                        <% }); %>
+                                                    </optgroup>
+                                                <% } %>
                                             </select>
-                                            <div class="form-text">Select the club that will be attending this carnival</div>
+                                            <div class="form-text">Select the club that will be attending this carnival or create a new one on behalf of someone else</div>
                                         </div>
                                     </div>
 

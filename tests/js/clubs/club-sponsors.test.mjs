@@ -3,7 +3,7 @@ import { clubSponsorsManager } from '../../../public/js/club-sponsors.js';
 
 function setupDom({ items = 3 } = {}) {
   const listItems = Array.from({ length: items }).map((_, i) => `<div class="list-group-item" data-sponsor-id="id-${i}">
-    <i class="fas fa-grip-vertical"></i>
+    <i class="bi bi-grip-vertical"></i>
   </div>`).join('');
   document.body.innerHTML = `
     <div id="sponsor-order-list" class="list-group">${listItems}</div>

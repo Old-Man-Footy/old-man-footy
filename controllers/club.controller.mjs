@@ -26,6 +26,16 @@ import InvitationEmailService from '../services/email/InvitationEmailService.mjs
 
 import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
+/**
+ * Helper function to build form action URL with optional return URL parameter
+ * @param {string} baseUrl - The base URL for the form action
+ * @param {string|null} returnUrl - Optional return URL to append as query parameter
+ * @returns {string} Complete form action URL
+ */
+const buildFormActionUrl = (baseUrl, returnUrl = null) => {
+  return baseUrl + (returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : '');
+};
+
 const getClubUploadPath = (clubId, contentType = 'logos') => {
   return `public/uploads/clubs/${clubId}/${contentType}/`;
 };
@@ -1410,12 +1420,20 @@ const getCreateOnBehalfHandler = async (req, res) => {
     return res.redirect('/clubs');
   }
 
+  // Get return URL from query parameter
+  const returnUrl = req.query.returnUrl || null;
+  
+  // Construct form action URL using helper function
+  const formAction = buildFormActionUrl('/clubs/create-on-behalf', returnUrl);
+
   return res.render('clubs/create-on-behalf', {
     title: 'Create Club on Behalf of Others',
     user: req.user,
     states: AUSTRALIAN_STATES,
     errors: [],
     formData: {},
+    returnUrl,
+    formAction, // Pass ready-to-use form action URL
     additionalCSS: ['/styles/club.styles.css'],
   });
 };
@@ -1435,14 +1453,22 @@ const postCreateOnBehalfHandler = async (req, res) => {
     return res.redirect('/clubs');
   }
 
+  // Get return URL from query parameter
+  const returnUrl = req.query.returnUrl || null;
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Construct form action URL using helper function
+    const formAction = buildFormActionUrl('/clubs/create-on-behalf', returnUrl);
+      
     return res.render('clubs/create-on-behalf', {
       title: 'Create Club on Behalf of Others',
       user: req.user,
       states: AUSTRALIAN_STATES,
       errors: errors.array(),
       formData: req.body,
+      returnUrl,
+      formAction, // Pass ready-to-use form action URL
       additionalCSS: ['/styles/club.styles.css'],
     });
   }
@@ -1465,12 +1491,17 @@ const postCreateOnBehalfHandler = async (req, res) => {
   });
 
   if (existingClub) {
+    // Construct form action URL using helper function
+    const formAction = buildFormActionUrl('/clubs/create-on-behalf', returnUrl);
+      
     return res.render('clubs/create-on-behalf', {
       title: 'Create Club on Behalf of Others',
       user: req.user,
       states: AUSTRALIAN_STATES,
       errors: [{ msg: 'A club with this name already exists.' }],
       formData: req.body,
+      returnUrl,
+      formAction, // Pass ready-to-use form action URL
       additionalCSS: ['/styles/club.styles.css'],
     });
   }
@@ -1502,6 +1533,11 @@ const postCreateOnBehalfHandler = async (req, res) => {
     'success_msg',
     `Club "${clubName}" has been created and an ownership invitation has been sent to ${inviteEmail}.`
   );
+
+  // Redirect to return URL if provided, otherwise to club page
+  if (returnUrl) {
+    return res.redirect(returnUrl);
+  }
   return res.redirect(`/clubs/${newClub.id}`);
 };
 

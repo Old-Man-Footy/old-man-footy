@@ -50,36 +50,40 @@ router.post('/upload',
         });
       }
 
-      // Check if file was uploaded by middleware
-      if (!req.file) {
+      // Check if files were uploaded by middleware
+      if (!req.files || req.files.length === 0) {
         return res.status(400).json({
           error: {
             status: 400,
-            message: 'No image file uploaded'
+            message: 'No image files uploaded'
           }
         });
       }
 
-      // Single file upload from gallery middleware
-      const uploadedFile = req.file;
+      // Multiple file upload from gallery middleware
+      const uploadedFiles = req.files;
+      const uploadResults = [];
       
-      // Create ImageUpload record
-      const imageUpload = await ImageUpload.create({
-        originalName: uploadedFile.originalname,
-        filename: uploadedFile.filename,
-        path: uploadedFile.path,
-        mimetype: uploadedFile.mimetype,
-        size: uploadedFile.size,
-        uploadedBy: req.user.id,
-        attribution: attribution || null,
-        carnivalId: hasCarnival ? parseInt(carnivalId) : null,
-        clubId: hasClub ? parseInt(clubId) : null
-      });
+      // Process each file and create ImageUpload records
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const uploadedFile = uploadedFiles[i];
+        
+        // Get attribution for this specific file if provided
+        const fileAttribution = req.body[`altText_${i}`] || attribution || null;
+        
+        const imageUpload = await ImageUpload.create({
+          originalName: uploadedFile.originalname,
+          filename: uploadedFile.filename,
+          path: uploadedFile.path,
+          mimetype: uploadedFile.mimetype,
+          size: uploadedFile.size,
+          uploadedBy: req.user.id,
+          attribution: fileAttribution,
+          carnivalId: hasCarnival ? parseInt(carnivalId) : null,
+          clubId: hasClub ? parseInt(clubId) : null
+        });
 
-      res.json({
-        success: true,
-        message: 'Image uploaded successfully',
-        image: {
+        uploadResults.push({
           id: imageUpload.id,
           filename: imageUpload.filename,
           path: imageUpload.path,
@@ -87,7 +91,14 @@ router.post('/upload',
           carnivalId: imageUpload.carnivalId,
           clubId: imageUpload.clubId,
           uploadedAt: imageUpload.createdAt
-        }
+        });
+      }
+
+      res.json({
+        success: true,
+        message: `${uploadResults.length} image${uploadResults.length > 1 ? 's' : ''} uploaded successfully`,
+        images: uploadResults,
+        count: uploadResults.length
       });
 
     } catch (error) {

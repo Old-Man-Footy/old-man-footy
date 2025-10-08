@@ -43,7 +43,7 @@ export const clubSponsorsManager = {
         try {
             if (typeof Sortable !== 'undefined' && sponsorList) {
                 Sortable.create(sponsorList, {
-                    handle: '.fa-grip-vertical',
+                    handle: '.bi-grip-vertical',
                     animation: 150,
                     onEnd: function() {
                         if (saveButton) saveButton.style.display = 'block';

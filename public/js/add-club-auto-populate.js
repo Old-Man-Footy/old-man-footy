@@ -44,6 +44,12 @@ export const addClubManager = {
             return;
         }
 
+        // Check if create-on-behalf option is selected
+        if (selectedOption.value === 'create-on-behalf') {
+            this.handleCreateOnBehalf();
+            return;
+        }
+
         const data = {
             clubName: selectedOption.getAttribute('data-club-name') || '',
             contactPerson: selectedOption.getAttribute('data-contact-person') || '',
@@ -52,6 +58,27 @@ export const addClubManager = {
         };
 
         this.populateFields(data);
+    },
+
+    /**
+     * Handles redirect to create-on-behalf page with return URL.
+     */
+    handleCreateOnBehalf() {
+        // Get current carnival ID from the URL path
+        const pathParts = window.location.pathname.split('/');
+        const carnivalIdIndex = pathParts.indexOf('carnivals') + 1;
+        const carnivalId = pathParts[carnivalIdIndex];
+        
+        if (carnivalId) {
+            // Create return URL to carnival attendees/add page
+            const returnUrl = encodeURIComponent(`/carnivals/${carnivalId}/attendees/add`);
+            
+            // Redirect to create-on-behalf page with return URL
+            window.location.href = `/clubs/create-on-behalf?returnUrl=${returnUrl}`;
+        } else {
+            // Fallback if carnival ID cannot be determined
+            window.location.href = '/clubs/create-on-behalf';
+        }
     },
 
     /**
