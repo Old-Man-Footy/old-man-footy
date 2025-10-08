@@ -251,7 +251,11 @@ describe('Carnival Controller', () => {
       flash: vi.fn(),
       structuredUploads: null,
       file: null,
-      files: null
+      files: null,
+      csrfToken: vi.fn().mockReturnValue('csrf-token-123'),
+      headers: {
+        accept: 'text/html'
+      }
     };
 
     // Mock response object
@@ -662,7 +666,7 @@ describe('Carnival Controller', () => {
 
       await getEdit(req, res);
 
-      expect(mockcarnival.canUserEdit).toHaveBeenCalledWith(req.user);
+      expect(mockCarnival.canUserEdit).toHaveBeenCalledWith(req.user);
       expect(res.render).toHaveBeenCalledWith('carnivals/edit', expect.objectContaining({
         title: 'Edit Carnival',
         carnival: mockCarnival,
@@ -672,7 +676,7 @@ describe('Carnival Controller', () => {
 
     it('should redirect unauthorized users', async () => {
       const mockCarnival = createMockCarnival();
-      mockcarnival.canUserEdit.mockResolvedValue(false);
+      mockCarnival.canUserEdit.mockResolvedValue(false);
 
       req.params.id = '1';
       req.user = { id: 2 };
