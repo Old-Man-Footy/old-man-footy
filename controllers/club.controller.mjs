@@ -1001,14 +1001,15 @@ const removeSponsorFromClubHandler = async (req, res) => {
  */
 const showEditClubSponsorHandler = async (req, res) => {
   const user = req.user;
-  const { sponsorId } = req.params;
+  const { id: clubId, sponsorId } = req.params;
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
+  // Check if user has permission (admin or club owner)
+  if (!club.canUserEdit(user)) {
+    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
     return res.redirect('/dashboard');
   }
 
-  const club = await Club.findByPk(user.clubId);
+  const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
@@ -1024,7 +1025,7 @@ const showEditClubSponsorHandler = async (req, res) => {
   });
 
   if (!sponsor) {
-    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    req.flash('error_msg', 'Sponsor not found or not associated with this club.');
     return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
@@ -1047,14 +1048,15 @@ const showEditClubSponsorHandler = async (req, res) => {
  */
 const updateClubSponsorHandler = async (req, res) => {
   const user = req.user;
-  const { sponsorId } = req.params;
+  const { id: clubId, sponsorId } = req.params;
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
+  // Allow admins to edit any club's sponsors, or users to edit their own club's sponsors
+  if (!club.canUserEdit(user)) {
+    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
     return res.redirect('/dashboard');
   }
 
-  const club = await Club.findByPk(user.clubId);
+  const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
@@ -1070,7 +1072,7 @@ const updateClubSponsorHandler = async (req, res) => {
   });
 
   if (!sponsor) {
-    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    req.flash('error_msg', 'Sponsor not found or not associated with this club.');
     return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
