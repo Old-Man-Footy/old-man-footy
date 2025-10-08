@@ -8,12 +8,15 @@ You MUST NOT build, implement, or generate any feature, function, or component t
 
 It is acceptable and encouraged to *suggest* potential enhancements, alternative approaches, or refactoring opportunities as part of your response, but these suggestions MUST NOT be implemented unless explicitly approved and requested in a follow-up instruction.
 
+If an instruction is ambiguous or lacks sufficient detail, you MUST report back with your current understanding for review, then ask clarifying questions before proceeding. Never make assumptions about the requirements or the intended functionality.
+
 ## **Core Directives & Priorities**
 
 1. **Security First:** All code you generate MUST be secure. Prioritise security best practices in all layers of the application.  
 2. **Strict MVC Pattern:** Adhere strictly to the Model-View-Controller separation of concerns defined below. Never mix logic between these layers.  
 3. **Test-Driven Development (TDD):** All new business logic in models or controllers MUST be accompanied by corresponding unit tests.  
-4. **Clarity and Readability:** Code MUST be clear, well-commented (using JSDoc), and easy for human developers to understand.
+4. **Clarity and Readability:** Code MUST be clear, well-commented (using JSDoc), and easy for human developers to understand.  
+5. **Execution Command Constraint:** NEVER run the command `npm run dev` or `npm start` or any other request to start the site. If you need me to restart the site, ask me to do it instead.
 
 ## **1. Project Stack**
 
@@ -97,7 +100,7 @@ This project enforces a strict separation of concerns.
 
 * **Principle:** You **MUST NOT** embed client-side application logic directly within <script> tags in .ejs or other view files. All client-side JavaScript **MUST** be placed in external .js files within the /public/js/ directory. This enforces a clean separation between server-rendered templates and client-side behaviour, improving maintainability and security.
 
-* ### **Public JavaScript: The Manager Object Pattern: All public JavaScript files MUST use the export const descriptiveManager = { ... } pattern to encapsulate functionality. This pattern allows for better organisation, modularity, and testability of client-side code.**   **Key Principles:**
+* ### **Public JavaScript: The Manager Object Pattern: All public JavaScript files MUST use the export const descriptiveManager = { ... } pattern to encapsulate functionality. This pattern allows for better organisation, modularity, and testability of client-side code. Key Principles:** 
 
   * **Single Exported Object**: All functions and state should be contained within a single export const descriptiveManager = { ... };.  
   * **initialize Method**: The object must have an initialize() method that serves as the main entry point. This method is responsible for setting up the entire module.  
