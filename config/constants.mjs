@@ -172,13 +172,13 @@ async function filterPublicEntityDirectories(directories, entityType) {
             
             let entity = null;
             if (entityType === 'carnivals') {
-                entity = await Carnival.findByPk(entityId, { attributes: ['id', 'isPublic'] });
+                entity = await Carnival.findByPk(entityId, { attributes: ['id', 'isActive'] });
             } else if (entityType === 'clubs') {
-                entity = await Club.findByPk(entityId, { attributes: ['id', 'isPublic'] });
+                entity = await Club.findByPk(entityId, { attributes: ['id', 'isPubliclyListed'] });
             }
             
-            // Include if entity exists and is public (default to true if isPublic field doesn't exist)
-            if (entity && (entity.isPublic !== false)) {
+            // Include if entity exists and is public
+            if (entity && (entity.isPubliclyListed !== false || entity.isActive !== false)) {
                 publicDirs.push(dir);
             }
         }
