@@ -98,16 +98,16 @@ const galleryStorage = multer.diskStorage({
 
 /**
  * Gallery upload middleware configuration
- * Supports single file upload with 10MB limit
+ * Supports multiple file upload with 10MB limit per file, max 10 files
  */
 const galleryUpload = multer({
   storage: galleryStorage,
   fileFilter: galleryFileFilter,
   limits: {
-    fileSize: GALLERY_UPLOAD_CONFIG.MAX_FILE_SIZE || (10 * 1024 * 1024), // 10MB default
-    files: 1 // Single file upload for gallery
+    fileSize: GALLERY_UPLOAD_CONFIG.MAX_FILE_SIZE || (10 * 1024 * 1024), // 10MB default per file
+    files: GALLERY_UPLOAD_CONFIG.MAX_FILES || 10 // Allow up to 10 files
   }
-}).single('image'); // Field name expected by gallery upload API
+}).array('images', GALLERY_UPLOAD_CONFIG.MAX_FILES || 10); // Field name 'images' with max file count
 
 /**
  * Enhanced error handling middleware for gallery uploads
@@ -124,10 +124,11 @@ const handleGalleryUploadError = (error, req, res, next) => {
         message = `File too large. Maximum size is ${maxSizeMB}MB.`;
         break;
       case 'LIMIT_FILE_COUNT':
-        message = 'Too many files. Only one image can be uploaded at a time.';
+        const maxFiles = GALLERY_UPLOAD_CONFIG.MAX_FILES || 10;
+        message = `Too many files. Maximum ${maxFiles} images can be uploaded at a time.`;
         break;
       case 'LIMIT_UNEXPECTED_FILE':
-        message = 'Unexpected field name. Use "image" field for gallery uploads.';
+        message = 'Unexpected field name. Use "images" field for gallery uploads.';
         break;
       default:
         message = `Upload error: ${error.message}`;

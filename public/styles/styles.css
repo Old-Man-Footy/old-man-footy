@@ -10,6 +10,23 @@
     transition: none !important;
 }
 
+.bi-2x {
+  font-size: 2rem;
+}
+
+.bi-3x {
+  font-size: 3rem;
+}
+
+.bi-4x {
+  font-size: 4rem;
+}
+
+.bi-5x {
+  font-size: 5rem;
+}
+
+
 /* Root Variables for Consistent Theming - Green/Gold Theme */
 :root {
     --rugby-green: #006837;

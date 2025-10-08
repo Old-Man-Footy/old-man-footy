@@ -5,7 +5,7 @@
             <% if (typeof returnUrl !== 'undefined' && returnUrl) { %>
                 <div class="mb-3">
                     <a href="<%= returnUrl %>" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-arrow-left me-1"></i>
+                        <i class="bi bi-arrow-left me-1"></i>
                         Back to Carnival Attendees
                     </a>
                 </div>
@@ -14,7 +14,7 @@
             <!-- Page Header -->
             <div class="text-center mb-4">
                 <h2 class="h3 mb-1">
-                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    <i class="bi bi-plus-circle text-success me-2"></i>
                     Create Club on Behalf
                 </h2>
                 <p class="text-muted mb-0">
@@ -25,7 +25,7 @@
             <div class="card shadow">
                 <div class="card-header bg-primary">
                     <h3 class="mb-0" >
-                        <i class="fas fa-users"></i> Create Club on Behalf of Others
+                        <i class="bi bi-persons"></i> Create Club on Behalf of Others
                     </h3>
                     <p class="mb-0 small">Help other clubs get started on Old Man Footy by creating their profile</p>
                 </div>
@@ -33,7 +33,7 @@
                 <div class="card-body">
                     <!-- Info Alert -->
                     <div class="alert alert-info">
-                        <h5><i class="fas fa-info-circle"></i> How This Works</h5>
+                        <h5><i class="bi bi-info-circle"></i> How This Works</h5>
                         <ul class="mb-0">
                             <li>You can create a club profile for another club that isn't yet on the platform</li>
                             <li>An invitation email will be sent to the club's contact person</li>
@@ -45,7 +45,7 @@
                     <!-- Error Messages -->
                     <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
                         <div class="alert alert-danger">
-                            <h6><i class="fas fa-exclamation-triangle"></i> Please fix the following errors:</h6>
+                            <h6><i class="bi bi-exclamation-triangle"></i> Please fix the following errors:</h6>
                             <ul class="mb-0">
                                 <% errors.forEach(error => { %>
                                     <li><%= error.msg %></li>
@@ -102,7 +102,7 @@
                         </div>
 
                         <!-- Contact Information -->
-                        <h5 class="mt-4 mb-3"><i class="fas fa-address-book"></i> Club Contact Details</h5>
+                        <h5 class="mt-4 mb-3"><i class="bi bi-person-lines-fill"></i> Club Contact Details</h5>
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -156,7 +156,7 @@
                         <!-- Invitation Details -->
                         <div class="card mt-4 border-primary">
                             <div class="card-header bg-primary">
-                                <h5 class="mb-0"><i class="fas fa-envelope"></i> Ownership Invitation</h5>
+                                <h5 class="mb-0"><i class="bi bi-envelope"></i> Ownership Invitation</h5>
                             </div>
                             <div class="card-body">
                                 <div class="form-group">
@@ -193,10 +193,10 @@
                         <!-- Submit Buttons -->
                         <div class="mt-4 d-flex justify-content-between">
                             <a href="/clubs" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Cancel
+                                <i class="bi bi-arrow-left"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-tertiary btn-lg">
-                                <i class="fas fa-plus-circle"></i> Create Club & Send Invitation
+                                <i class="bi bi-plus-circle"></i> Create Club & Send Invitation
                             </button>
                         </div>
                     </form>
@@ -206,22 +206,22 @@
             <!-- Help Information -->
             <div class="card mt-4 border-info">
                 <div class="card-header bg-info text-primary">
-                    <h5 class="mb-0"><i class="fas fa-question-circle"></i> Why Create Clubs on Behalf of Others?</h5>
+                    <h5 class="mb-0"><i class="bi bi-question-circle"></i> Why Create Clubs on Behalf of Others?</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h6><i class="fas fa-network-wired"></i> Build the Network</h6>
+                            <h6><i class="bi bi-diagram-3-fill"></i> Build the Network</h6>
                             <p class="small">Help grow the Old Man Footy community by bringing more clubs onto the platform.</p>
                             
-                            <h6><i class="fas fa-calendar-alt"></i> Better Carnival Planning</h6>
+                            <h6><i class="bi bi-calendar-alt"></i> Better Carnival Planning</h6>
                             <p class="small">Having more clubs listed makes it easier to organize carnivals and invite teams.</p>
                         </div>
                         <div class="col-md-6">
-                            <h6><i class="fas fa-handshake"></i> Help Other Clubs</h6>
+                            <h6><i class="bi bi-people-fill"></i> Help Other Clubs</h6>
                             <p class="small">Some clubs may not know about the platform yet. You can help them get started.</p>
                             
-                            <h6><i class="fas fa-shield-alt"></i> Safe & Secure</h6>
+                            <h6><i class="bi bi-shield-check"></i> Safe & Secure</h6>
                             <p class="small">Only the invited email address can claim ownership. The club remains safe until claimed.</p>
                         </div>
                     </div>

@@ -25,7 +25,7 @@
                                         <div>
                                             <% if (club.location) { %>
                                                 <p class="mb-1 text-muted">
-                                                    <i class="fas fa-map-marker-alt me-1"></i><%= club.location %>
+                                                    <i class="bi bi-geo-alt me-1"></i><%= club.location %>
                                                     <% if (club.state) { %>
                                                         <span class="badge bg-primary ms-2"><%= club.state %></span>
                                                     <% } %>
@@ -33,13 +33,13 @@
                                             <% } %>
                                             <% if (club.establishedYear) { %>
                                                 <p class="mb-0 text-muted">
-                                                    <i class="fas fa-calendar me-1"></i>Established <%= club.establishedYear %>
+                                                    <i class="bi bi-calendar me-1"></i>Established <%= club.establishedYear %>
                                                 </p>
                                             <% } %>
                                         </div>
                                         <div>
                                             <a href="/clubs/<%= club.id %>/gallery" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-images me-1"></i>
+                                                <i class="bi bi-images me-1"></i>
                                                 View Club Gallery
                                             </a>
                                         </div>
@@ -155,7 +155,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header bg-primary d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
-                        <i class="fas fa-calendar-alt me-2"></i>Carnivals Hosted by <%= club.clubName %>
+                        <i class="bi bi-calendar-alt me-2"></i>Carnivals Hosted by <%= club.clubName %>
                     </h5>
                     <span class="badge bg-tertiary text-primary"><%= clubCarnivals.length %> Total</span>
                 </div>
@@ -208,7 +208,7 @@
                                                             </a>
                                                         </h6>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <i class="bi bi-calendar me-1"></i>
                                                             <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
                                                                 weekday: 'short', 
                                                                 month: 'short', 
@@ -217,7 +217,7 @@
                                                             }) %>
                                                         </p>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            <i class="bi bi-geo-alt me-1"></i>
                                                             <%= carnival.locationAddress %>
                                                         </p>
                                                         <div class="mt-auto">
@@ -233,7 +233,7 @@
                                     </div>
                                 <% } else { %>
                                     <div class="text-center py-4">
-                                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                        <i class="bi bi-calendar-times bi-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">No upcoming carnivals</h5>
                                         <p class="text-muted">This club doesn't have any upcoming carnivals scheduled.</p>
                                     </div>
@@ -263,7 +263,7 @@
                                                             </a>
                                                         </h6>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <i class="bi bi-calendar me-1"></i>
                                                             <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
                                                                 weekday: 'short', 
                                                                 month: 'short', 
@@ -272,7 +272,7 @@
                                                             }) %>
                                                         </p>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            <i class="bi bi-geo-alt me-1"></i>
                                                             <%= carnival.locationAddress %>
                                                         </p>
                                                         <div class="mt-auto">
@@ -288,7 +288,7 @@
                                     </div>
                                 <% } else { %>
                                     <div class="text-center py-4">
-                                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                        <i class="bi bi-clock-history bi-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">No past carnivals</h5>
                                         <p class="text-muted">This club hasn't hosted any past carnivals yet.</p>
                                     </div>
@@ -312,7 +312,7 @@
                                                         </a>
                                                     </h6>
                                                     <p class="card-text text-muted small mb-2">
-                                                        <i class="fas fa-calendar me-1"></i>
+                                                        <i class="bi bi-calendar me-1"></i>
                                                         <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
                                                             weekday: 'short', 
                                                             month: 'short', 
@@ -321,7 +321,7 @@
                                                         }) %>
                                                     </p>
                                                     <p class="card-text text-muted small mb-2">
-                                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                                        <i class="bi bi-geo-alt me-1"></i>
                                                         <%= carnival.locationAddress %>
                                                     </p>
                                                     <div class="mt-auto">
@@ -343,12 +343,12 @@
                         </div>
                     <% } else { %>
                         <div class="text-center py-5">
-                            <i class="fas fa-calendar-plus fa-4x text-muted mb-3"></i>
+                            <i class="bi bi-calendar-plus bi-4x text-muted mb-3"></i>
                             <h4 class="text-muted">No Carnivals Yet</h4>
                             <p class="text-muted mb-4">This club hasn't hosted any carnivals on our platform yet.</p>
                             <% if (user && user.clubId && user.clubId.toString() === club.id.toString()) { %>
                                 <a href="/carnivals/new" class="btn btn-primary">
-                                    <i class="fas fa-plus me-2"></i>Add Your First Carnival
+                                    <i class="bi bi-plus me-2"></i>Add Your First Carnival
                                 </a>
                             <% } %>
                         </div>
@@ -360,7 +360,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header bg-info text-primary d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
-                        <i class="fas fa-users me-2"></i>Carnivals Attended by <%= club.clubName %>
+                        <i class="bi bi-persons me-2"></i>Carnivals Attended by <%= club.clubName %>
                     </h5>
                     <span class="badge bg-tertiary bg-tertiary"><%= attendingCarnivals.length %> Total</span>
                 </div>
@@ -413,7 +413,7 @@
                                                             </a>
                                                         </h6>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <i class="bi bi-calendar me-1"></i>
                                                             <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
                                                                 weekday: 'short', 
                                                                 month: 'short', 
@@ -422,12 +422,12 @@
                                                             }) %>
                                                         </p>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            <i class="bi bi-geo-alt me-1"></i>
                                                             <%= carnival.locationAddress %>
                                                         </p>
                                                         <% if (carnival.creator) { %>
                                                             <p class="card-text text-muted small mb-2">
-                                                                <i class="fas fa-user me-1"></i>
+                                                                <i class="bi bi-person me-1"></i>
                                                                 Hosted by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
                                                             </p>
                                                         <% } %>
@@ -444,7 +444,7 @@
                                     </div>
                                 <% } else { %>
                                     <div class="text-center py-4">
-                                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                        <i class="bi bi-calendar-times bi-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">Not attending any upcoming carnivals</h5>
                                         <p class="text-muted">This club isn't registered for any upcoming carnivals.</p>
                                     </div>
@@ -474,7 +474,7 @@
                                                             </a>
                                                         </h6>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <i class="bi bi-calendar me-1"></i>
                                                             <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
                                                                 weekday: 'short', 
                                                                 month: 'short', 
@@ -483,12 +483,12 @@
                                                             }) %>
                                                         </p>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            <i class="bi bi-geo-alt me-1"></i>
                                                             <%= carnival.locationAddress %>
                                                         </p>
                                                         <% if (carnival.creator) { %>
                                                             <p class="card-text text-muted small mb-2">
-                                                                <i class="fas fa-user me-1"></i>
+                                                                <i class="bi bi-person me-1"></i>
                                                                 Hosted by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
                                                             </p>
                                                         <% } %>
@@ -505,7 +505,7 @@
                                     </div>
                                 <% } else { %>
                                     <div class="text-center py-4">
-                                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                        <i class="bi bi-clock-history bi-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">No past carnivals attended</h5>
                                         <p class="text-muted">This club hasn't attended any past carnivals yet.</p>
                                     </div>
@@ -529,7 +529,7 @@
                                                         </a>
                                                     </h6>
                                                     <p class="card-text text-muted small mb-2">
-                                                        <i class="fas fa-calendar me-1"></i>
+                                                        <i class="bi bi-calendar me-1"></i>
                                                         <%= new Date(carnival.date).toLocaleDateString('en-AU', { 
                                                             weekday: 'short', 
                                                             month: 'short', 
@@ -538,12 +538,12 @@
                                                         }) %>
                                                     </p>
                                                     <p class="card-text text-muted small mb-2">
-                                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                                        <i class="bi bi-geo-alt me-1"></i>
                                                         <%= carnival.locationAddress %>
                                                     </p>
                                                     <% if (carnival.creator) { %>
                                                         <p class="card-text text-muted small mb-2">
-                                                            <i class="fas fa-user me-1"></i>
+                                                            <i class="bi bi-person me-1"></i>
                                                             Hosted by <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
                                                         </p>
                                                     <% } %>
@@ -566,13 +566,13 @@
                         </div>
                     <% } else { %>
                         <div class="text-center py-5">
-                            <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                            <i class="bi bi-persons bi-4x text-muted mb-3"></i>
                             <h4 class="text-muted">Not Attending Any Carnivals</h4>
                             <p class="text-muted mb-4">This club isn't currently registered to attend any carnivals.</p>
                             <% if (user && user.clubId && user.clubId.toString() === club.id.toString()) { %>
                                 <p class="text-muted">Visit carnival pages and register your club as an attendee to see them listed here.</p>
                                 <a href="/carnivals" class="btn btn-primary">
-                                    <i class="fas fa-search me-2"></i>Browse Carnivals
+                                    <i class="bi bi-search me-2"></i>Browse Carnivals
                                 </a>
                             <% } %>
                         </div>

@@ -230,6 +230,7 @@ export const UPLOAD_DIRECTORIES_ARRAY = Object.values(UPLOAD_DIRECTORIES);
  */
 export const GALLERY_UPLOAD_CONFIG = {
     MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB in bytes
+    MAX_FILES: 10, // Maximum 10 files per upload
     ALLOWED_MIME_TYPES: [
         'image/jpeg',
         'image/jpg', 

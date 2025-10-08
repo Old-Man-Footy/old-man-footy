@@ -163,6 +163,23 @@ app.use((req, res, next) => {
 
 app.use((error, req, res, next) => {
     const statusCode = error.status || 500;
+    
+    // Check if this is an AJAX/API request
+    const isAjaxRequest = req.xhr || 
+                         req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                         req.headers.accept?.includes('application/json') ||
+                         req.originalUrl?.startsWith('/api/');
+    
+    if (isAjaxRequest) {
+        // Return JSON error response for API/AJAX requests
+        return res.status(statusCode).json({
+            success: false,
+            message: error.message || 'An error occurred',
+            ...(process.env.NODE_ENV !== 'production' && { error: error.stack })
+        });
+    }
+    
+    // Return HTML error page for regular web requests
     res.status(statusCode);
     res.render('error', {
         title: 'Error',
