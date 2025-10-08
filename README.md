@@ -99,7 +99,9 @@ This codebase is shared publicly to:
 │   ├── help.controller.mjs                     # Help system and documentation
 │   ├── main.controller.mjs                     # Main application routes
 │   ├── maintenance.controller.mjs              # Maintenance mode handling
-│   └── subscription.controller.mjs             # Email subscription management
+│   ├── subscription.controller.mjs             # Email subscription management
+│   └── api/                                    # API-specific controllers
+│       └── subscription.controller.mjs             # Public subscription API controller
 ├── data/                                    # Database files
 │   ├── dev-old-man-footy.db                    # Development SQLite database
 │   └── test-old-man-footy.db                   # Test SQLite database
@@ -114,10 +116,12 @@ This codebase is shared publicly to:
 │   ├── asyncHandler.mjs                        # Async error handling middleware
 │   ├── auth.mjs                                # Authentication middleware
 │   ├── comingSoon.mjs                          # Coming soon mode middleware
+│   ├── failureCounterStore.mjs                 # Rate limiting failure tracking
 │   ├── flash.mjs                               # Flash message middleware
+│   ├── formUpload.mjs                          # Form file upload middleware (logos, images)
+│   ├── galleryUpload.mjs                       # Gallery image upload middleware
 │   ├── maintenance.mjs                         # Maintenance mode middleware
 │   ├── security.mjs                            # Security headers and protection
-│   ├── upload.mjs                              # File upload middleware
 │   └── validation.mjs                          # Input validation middleware
 ├── migrations/                              # Sequelize database migrations
 │   └── *.mjs                                    # Database schema migration files
@@ -152,20 +156,34 @@ This codebase is shared publicly to:
 │   ├── clubPlayers.mjs                         # Club player management routes
 │   ├── clubs.mjs                               # Club management routes
 │   ├── index.mjs                               # Main application routes
-│   ├── sponsors.mjs                            # Sponsor management routes
+│   ├── subscription.mjs                        # Email subscription routes
 │   └── api/                                    # API route definitions
 │       ├── help.mjs                               # Help system API routes
 │       ├── images.mjs                             # Image management API routes
 │       ├── index.mjs                              # API routes index
-│       └── sponsors.mjs                           # Sponsor API routes
+│       ├── sponsors.mjs                           # Sponsor API routes
+│       └── subscriptions.mjs                      # Public subscription API routes
 ├── scripts/                                 # Utility and maintenance scripts
+│   ├── capture-mysideline-data.mjs             # MySideline data capture script
+│   ├── check-sync-status.mjs                   # Sync status checking utility
+│   ├── fix-jest-globals.mjs                    # Jest configuration fix utility
+│   ├── generate-secret.mjs                     # Secret key generation utility
+│   ├── manual-mysideline-sync.mjs              # Manual MySideline synchronization
+│   ├── purge-seed-data.mjs                     # Database seed data cleanup
+│   ├── run-migrations.mjs                      # Database migration runner
+│   ├── scheduled-maintenance.mjs               # Scheduled maintenance tasks
+│   ├── seed-database.mjs                       # Database seeding script
+│   ├── seed-help-content.mjs                   # Help content seeding script
+│   ├── smoke-health.mjs                        # Health check smoke tests
+│   ├── fixtures/                               # Test fixture data
+│   ├── tests/                                  # Script testing utilities
+│   └── utilities/                              # Utility script modules
 ├── services/                                # Business logic services and utilities
 │   ├── auditService.mjs                        # Audit logging service
 │   ├── carouselImageService.mjs                # Image carousel management
-│   ├── imageNamingService.mjs                  # Image file naming utilities
 │   ├── imageUploadService.mjs                  # Image upload processing service
-│   ├── mySidelineDataService.mjs               # MySideline data processing
 │   ├── mySidelineCarnivalParserService.mjs     # Carnival parsing service
+│   ├── mySidelineDataService.mjs               # MySideline data processing
 │   ├── mySidelineIntegrationService.mjs        # Main MySideline integration service
 │   ├── mySidelineLogoDownloadService.mjs       # Logo downloading service
 │   ├── mySidelineScraperService.mjs            # Web scraping service
@@ -193,6 +211,10 @@ This codebase is shared publicly to:
 │   ├── vitest.env.mjs                          # Test environment variables
 │   └── vitest.setup.mjs                        # Vitest test configuration
 ├── utils/                                   # Utility functions and helpers
+│   ├── dateUtils.mjs                           # Date formatting and manipulation utilities
+│   ├── sequelizeLogger.mjs                     # Sequelize database logging utility
+│   ├── uiHelpers.mjs                           # UI helper functions
+│   ├── uploadProcessor.mjs                     # File upload processing utilities
 │   └── viewHelpers.mjs                         # EJS view helper functions
 └── views/                                   # EJS templates - MVC Views
     ├── about.ejs                               # About page template
@@ -256,9 +278,7 @@ This codebase is shared publicly to:
     │   ├── flash-messages.ejs                     # Flash message display
     │   ├── gallery.ejs                            # Gallery component
     │   ├── help-modal.ejs                         # Help modal component
-    ├── sponsors/                               # Sponsor management view templates
-    │   ├── list.ejs                               # List all sponsors
-    │   └── show.ejs                               # View sponsor details
+    ├── shared/                                 # Shared template components
     ├── unsubscribe.ejs                         # Email unsubscribe page
     └── unsubscribe-success.ejs                 # Unsubscribe confirmation page
 ```
@@ -307,60 +327,247 @@ The platform utilizes modern web development practices with ES Modules, comprehe
 
 ### API Architecture
 
-The platform provides a RESTful API structure with proper authentication and authorization:
+The platform provides a comprehensive RESTful API structure with proper authentication, authorization, and security. All authenticated endpoints require valid session authentication, and admin endpoints require administrative privileges.
 
-### Authentication
+#### 🔑 Authentication System (`/auth/*`)
 
-- `GET /auth/register` - Registration form
-- `POST /auth/register` - Create new user account
-- `GET /auth/login` - Login form
-- `POST /auth/login` - Authenticate user
-- `POST /auth/logout` - Logout user
+**User Registration & Authentication**
+- `GET /auth/register` - User registration form
+- `POST /auth/register` - Create new user account with validation
+- `GET /auth/login` - User login form
+- `POST /auth/login` - Authenticate user credentials
+- `POST /auth/logout` - Logout and destroy session
+- `GET /auth/profile` - User profile management (authenticated)
+- `POST /auth/profile` - Update user profile (authenticated)
 
-### Carnivals
+**Password Management**
+- `GET /auth/forgot-password` - Password reset request form
+- `POST /auth/forgot-password` - Send password reset email
+- `GET /auth/reset-password/:token` - Password reset form with token
+- `POST /auth/reset-password/:token` - Process password reset
 
-- `GET /carnivals` - List all carnivals (with filtering)
-- `GET /carnivals/new` - Create carnival form (authenticated)
-- `POST /carnivals/new` - Create new carnival (authenticated)
-- `GET /carnivals/:id` - View carnival details
-- `GET /carnivals/:id/edit` - Edit carnival form (owner only)
-- `POST /carnivals/:id/edit` - Update carnival (owner only)
-- `POST /carnivals/:id/delete` - Delete carnival (owner only)
-- `POST /carnivals/:id/take-ownership` - Claim MySideline carnival
+**User Invitations & Verification**
+- `GET /auth/accept-invitation/:token` - Accept user invitation
+- `POST /auth/accept-invitation/:token` - Process invitation acceptance
+- `GET /auth/verify-email/:token` - Email verification endpoint
 
-### Clubs & Players
+#### 🏠 Main Application Routes (`/`)
 
-- `GET /clubs` - List all clubs
-- `GET /clubs/:id` - View club details
-- `GET /clubs/:id/edit` - Edit club form (owner only)
-- `POST /clubs/:id/edit` - Update club (owner only)
-- `GET /clubs/players` - Club player management
-- `POST /clubs/players` - Add new club player
-- `PUT /clubs/players/:id` - Update club player
-- `DELETE /clubs/players/:id` - Delete club player
-
-### Sponsors
-
-- `GET /sponsors` - List all sponsors
-- `GET /sponsors/new` - Create sponsor form (authenticated)
-- `POST /sponsors/new` - Create new sponsor (authenticated)
-- `GET /sponsors/:id/edit` - Edit sponsor form (owner only)
-- `POST /sponsors/:id/edit` - Update sponsor (owner only)
-
-### Admin
-
-- `GET /admin` - Admin dashboard (admin only)
-- `GET /admin/users` - User management (admin only)
-- `GET /admin/sync-logs` - MySideline sync status (admin only)
-- `GET /admin/audit-logs` - System audit logs (admin only)
-
-### General
-
-- `GET /` - Homepage with upcoming carnivals
+**Homepage & Core Pages**
+- `GET /` - Homepage with upcoming carnivals and search
 - `GET /about` - About page
-- `GET /dashboard` - User dashboard (authenticated)
-- `POST /subscribe` - Email subscription
-- `GET /unsubscribe/:token` - Unsubscribe from emails
+- `GET /contact` - Contact form
+- `POST /contact` - Submit contact form
+- `GET /dashboard` - User dashboard with personal carnivals (authenticated)
+- `GET /health` - System health check endpoint
+- `GET /admin/stats` - Admin statistics API (admin only)
+
+#### 🏉 Carnival Management (`/carnivals/*`)
+
+**Carnival CRUD Operations**
+- `GET /carnivals` - List all carnivals with filtering and search
+- `GET /carnivals/new` - Create carnival form (authenticated)
+- `POST /carnivals` - Create new carnival (authenticated)
+- `GET /carnivals/:id` - View carnival details and attendee information
+- `GET /carnivals/:id/edit` - Edit carnival form (owner/admin only)
+- `POST /carnivals/:id` - Update carnival details (owner/admin only)
+- `POST /carnivals/:id/delete` - Delete carnival (owner/admin only)
+
+**Carnival Ownership & MySideline Integration**
+- `GET /carnivals/:id/claim` - Claim MySideline carnival form (authenticated)
+- `POST /carnivals/:id/claim` - Process carnival ownership claim (authenticated)
+- `POST /carnivals/:id/transfer-ownership` - Transfer carnival ownership (owner/admin)
+
+**Carnival Attendee Management**
+- `GET /carnivals/:id/attendees` - View carnival attendees (owner/admin)
+- `POST /carnivals/:id/attendees/email` - Email all attendees (owner/admin)
+- `GET /carnivals/:id/all-players` - Export all carnival players (owner/admin)
+
+**Carnival Gallery & Media**
+- `GET /carnivals/:id/gallery` - Carnival photo gallery
+- `POST /carnivals/:id/gallery/upload` - Upload gallery images (owner/admin)
+- `DELETE /carnivals/:id/gallery/:imageId` - Delete gallery image (owner/admin)
+
+#### 🏛️ Club Management (`/clubs/*`)
+
+**Club CRUD Operations**
+- `GET /clubs` - List all clubs with filtering
+- `GET /clubs/:id` - View club details and information
+- `GET /clubs/:id/edit` - Edit club form (owner/admin only)
+- `POST /clubs/:id/edit` - Update club details (owner/admin only)
+- `GET /clubs/:id/manage` - Club management dashboard (owner/admin only)
+
+**Club Ownership & Creation**
+- `GET /clubs/:id/claim-ownership` - Claim club ownership form (authenticated)
+- `POST /clubs/:id/claim-ownership` - Process club ownership claim (authenticated)
+- `GET /clubs/create-on-behalf` - Create club for other user form (admin only)
+- `POST /clubs/create-on-behalf` - Create club for other user (admin only)
+
+**Club Alternate Names Management**
+- `GET /clubs/:id/alternate-names` - Manage club alternate names (owner/admin)
+- `POST /clubs/:id/alternate-names` - Add alternate name (owner/admin)
+- `DELETE /clubs/:id/alternate-names/:nameId` - Remove alternate name (owner/admin)
+
+**Club Sponsor Management**
+- `GET /clubs/:id/sponsors` - Club sponsor management (owner/admin)
+- `GET /clubs/:id/sponsors/add` - Add sponsor form (owner/admin)
+- `POST /clubs/:id/sponsors/add` - Add sponsor to club (owner/admin)
+- `GET /clubs/:id/sponsors/:sponsorId/edit` - Edit club sponsor (owner/admin)
+- `POST /clubs/:id/sponsors/:sponsorId/edit` - Update club sponsor (owner/admin)
+- `DELETE /clubs/:id/sponsors/:sponsorId` - Remove club sponsor (owner/admin)
+
+**Club Gallery & Media**
+- `GET /clubs/:id/gallery` - Club photo gallery
+- `POST /clubs/:id/gallery/upload` - Upload gallery images (owner/admin)
+- `DELETE /clubs/:id/gallery/:imageId` - Delete gallery image (owner/admin)
+
+**Club Options & Configuration**
+- `GET /clubs/:id/club-options` - Club configuration options (owner/admin)
+- `POST /clubs/:id/club-options` - Update club configuration (owner/admin)
+
+#### 👥 Club Players Management (`/clubs/players/*`)
+
+**Player CRUD Operations**
+- `GET /clubs/:clubId/players` - List club players (owner/admin)
+- `GET /clubs/:clubId/players/add` - Add player form (owner/admin)
+- `POST /clubs/:clubId/players` - Create new club player (owner/admin)
+- `GET /clubs/:clubId/players/:playerId/edit` - Edit player form (owner/admin)
+- `POST /clubs/:clubId/players/:playerId` - Update player details (owner/admin)
+- `DELETE /clubs/:clubId/players/:playerId` - Delete/deactivate player (owner/admin)
+
+**Player Data Management**
+- `GET /clubs/:clubId/players/export` - Export players to CSV (owner/admin)
+- `GET /clubs/:clubId/players/import` - Import players form (owner/admin)
+- `POST /clubs/:clubId/players/import` - Import players from CSV (owner/admin)
+- `POST /clubs/:clubId/players/validate-csv` - Validate CSV before import (owner/admin)
+
+**Player Status Management**
+- `POST /clubs/:clubId/players/:playerId/reactivate` - Reactivate deactivated player (owner/admin)
+- `GET /clubs/:clubId/players/inactive` - View inactive/deactivated players (owner/admin)
+
+#### 🎪 Carnival Club Registration (`/carnival-clubs/*`)
+
+**Carnival Registration Management**
+- `GET /carnival-clubs/:carnivalId/register` - Club registration form (authenticated)
+- `POST /carnival-clubs/:carnivalId/register` - Register club for carnival (authenticated)
+- `GET /carnival-clubs/:registrationId/edit` - Edit registration (owner/admin)
+- `POST /carnival-clubs/:registrationId/edit` - Update registration (owner/admin)
+- `DELETE /carnival-clubs/:registrationId` - Cancel registration (owner/admin)
+
+**Player Management for Carnival Registration**
+- `GET /carnival-clubs/:registrationId/players` - Manage registered players (owner/admin)
+- `POST /carnival-clubs/:registrationId/players` - Add players to registration (owner/admin)
+- `DELETE /carnival-clubs/:registrationId/players/:playerId` - Remove player from registration (owner/admin)
+
+**Registration Status & Approval**
+- `POST /carnival-clubs/:registrationId/approve` - Approve registration (carnival owner/admin)
+- `POST /carnival-clubs/:registrationId/reject` - Reject registration (carnival owner/admin)
+- `GET /carnival-clubs/:carnivalId/attendees` - View all attendees (carnival owner/admin)
+
+#### 🤝 Carnival Sponsors Management (`/carnival-sponsors/*`)
+
+**Carnival Sponsor CRUD**
+- `GET /carnival-sponsors/:carnivalId` - List carnival sponsors (owner/admin)
+- `GET /carnival-sponsors/:carnivalId/add` - Add sponsor form (owner/admin)
+- `POST /carnival-sponsors/:carnivalId/add` - Add sponsor to carnival (owner/admin)
+- `GET /carnival-sponsors/:carnivalId/:sponsorId/edit` - Edit carnival sponsor (owner/admin)
+- `POST /carnival-sponsors/:carnivalId/:sponsorId/edit` - Update carnival sponsor (owner/admin)
+- `DELETE /carnival-sponsors/:carnivalId/:sponsorId` - Remove carnival sponsor (owner/admin)
+
+**Sponsor Display & Ordering**
+- `POST /carnival-sponsors/:carnivalId/reorder` - Update sponsor display order (owner/admin)
+- `GET /carnival-sponsors/:carnivalId/summary` - Sponsor summary report (owner/admin)
+
+#### 📧 Subscription System (`/subscriptions/*`)
+
+**Email Subscription Management**
+- `GET /subscriptions` - Subscription management form
+- `POST /subscriptions` - Create/update email subscription
+- `GET /subscriptions/preferences` - Subscription preferences (authenticated)
+- `POST /subscriptions/preferences` - Update subscription preferences (authenticated)
+- `GET /subscriptions/unsubscribe/:token` - Unsubscribe with token
+- `POST /subscriptions/unsubscribe/:token` - Process unsubscription
+- `GET /subscriptions/verify/:token` - Verify email subscription
+
+#### 🛠️ Admin Interface (`/admin/*`)
+
+**Admin Dashboard & Overview**
+- `GET /admin` - Admin dashboard with system overview (admin only)
+- `GET /admin/stats` - Detailed system statistics API (admin only)
+
+**User Management**
+- `GET /admin/users` - User management interface (admin only)
+- `GET /admin/users/:id/edit` - Edit user form (admin only)
+- `POST /admin/users/:id/edit` - Update user details (admin only)
+- `DELETE /admin/users/:id` - Delete user account (admin only)
+- `POST /admin/users/invite` - Send user invitation (admin only)
+
+**Club Administration**
+- `GET /admin/clubs` - Club administration interface (admin only)
+- `GET /admin/clubs/:id/edit` - Edit club as admin (admin only)
+- `POST /admin/clubs/:id/edit` - Update club as admin (admin only)
+- `DELETE /admin/clubs/:id` - Delete club (admin only)
+
+**Carnival Administration**
+- `GET /admin/carnivals` - Carnival administration interface (admin only)
+- `GET /admin/carnivals/:id/edit` - Edit carnival as admin (admin only)
+- `POST /admin/carnivals/:id/edit` - Update carnival as admin (admin only)
+- `GET /admin/carnivals/:id/players` - View carnival players (admin only)
+- `DELETE /admin/carnivals/:id` - Delete carnival (admin only)
+
+**Carnival Ownership & Claims**
+- `GET /admin/claim-carnival` - Carnival ownership claims interface (admin only)
+- `POST /admin/claim-carnival/:claimId/approve` - Approve carnival claim (admin only)
+- `POST /admin/claim-carnival/:claimId/reject` - Reject carnival claim (admin only)
+
+**System Monitoring & Logs**
+- `GET /admin/audit-logs` - System audit logs (admin only)
+- `GET /admin/sync-logs` - MySideline sync status and logs (admin only)
+- `POST /admin/sync/manual` - Trigger manual MySideline sync (admin only)
+- `GET /admin/reports` - System reports and analytics (admin only)
+
+#### 🌐 Public API Endpoints (`/api/*`)
+
+**Sponsor Public API**
+- `GET /api/sponsors` - Public sponsor search and listing with filters
+- `GET /api/sponsors/:id` - Public sponsor details
+
+**Image Management API**
+- `POST /api/images/upload` - Upload images with permission validation (authenticated)
+- `GET /api/images/:id` - Retrieve image details (authenticated)
+- `DELETE /api/images/:id` - Delete image with permission check (authenticated)
+- `POST /api/images/:id/set-primary` - Set primary image for entity (authenticated)
+- `GET /api/images/carousel/:entityType/:entityId` - Get carousel images for entity
+- `POST /api/images/reorder` - Reorder images for entity (authenticated)
+
+**Help System API**
+- `GET /api/help/:topic` - Get help content for specific topic
+- `GET /api/help` - List all available help topics
+
+**Public Subscription API**
+- `POST /api/subscriptions/subscribe` - Public subscription endpoint with bot protection
+- `POST /api/subscriptions/unsubscribe` - Public unsubscription endpoint
+- `GET /api/subscriptions/verify/:token` - Email verification for subscriptions
+
+**System Status API**
+- `GET /api/status` - Public system status and maintenance information
+- `GET /api/health` - System health check endpoint
+
+#### 🔒 Security & Middleware
+
+**Authentication Requirements**
+- `(authenticated)` - Requires valid user session
+- `(owner only)` - Requires ownership of the resource or admin privileges
+- `(admin only)` - Requires administrative privileges
+- `(carnival owner/admin)` - Requires carnival ownership or admin privileges
+
+**Security Features**
+- CSRF protection on all state-changing operations
+- Input validation and sanitization on all endpoints
+- Rate limiting on authentication and public endpoints
+- File upload validation and virus scanning
+- Bot protection on public subscription endpoints
+- Audit logging for all administrative actions
 
 ## 🚀 Production Platform
 
