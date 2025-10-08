@@ -864,7 +864,7 @@
                                 <a href="/clubs" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-search me-1"></i>Browse Existing Clubs
                                 </a>
-                                <% if (user && (user.role === 'admin' || (user.club && user.club.role === 'delegate'))) { %>
+                                <% if (user && (user.isAdmin || user.isPrimaryDelegate)) { %>
                                     <a href="/clubs/create-on-behalf" class="btn btn-outline-secondary btn-sm">
                                         <i class="bi bi-plus-circle me-1"></i>Create Club on Behalf
                                     </a>
