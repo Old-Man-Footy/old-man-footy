@@ -1003,16 +1003,16 @@ const showEditClubSponsorHandler = async (req, res) => {
   const user = req.user;
   const { id: clubId, sponsorId } = req.params;
 
-  // Check if user has permission (admin or club owner)
-  if (!club.canUserEdit(user)) {
-    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
-    return res.redirect('/dashboard');
-  }
-
   const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Check if user has permission (admin or club owner)
+  if (!club.canUserEdit(user)) {
+    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
     return res.redirect('/dashboard');
   }
 
@@ -1050,16 +1050,16 @@ const updateClubSponsorHandler = async (req, res) => {
   const user = req.user;
   const { id: clubId, sponsorId } = req.params;
 
-  // Allow admins to edit any club's sponsors, or users to edit their own club's sponsors
-  if (!club.canUserEdit(user)) {
-    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
-    return res.redirect('/dashboard');
-  }
-
   const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Allow admins to edit any club's sponsors, or users to edit their own club's sponsors
+  if (!club.canUserEdit(user)) {
+    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
     return res.redirect('/dashboard');
   }
 
