@@ -79,18 +79,17 @@ vi.mock('/models/index.mjs', () => {
     ...overrides
   });
 
-  const createMockClub = (overrides = {}) => ({
-    id: 1,
-    clubName: 'Test Club',
-    state: 'NSW',
-    location: 'Sydney',
-    isActive: true,
-    contactEmail: 'contact@testclub.com',
-    contactPhone: '0987654321',
-    ...overrides
-  });
-
-  const createMockUser = (overrides = {}) => ({
+const createMockClub = (overrides = {}) => ({
+  id: 1,
+  clubName: 'Test Club',
+  state: 'NSW',
+  location: 'Sydney',
+  isActive: true,
+  contactEmail: 'contact@testclub.com',
+  contactPhone: '0987654321',
+  canUserEdit: vi.fn().mockReturnValue(true),
+  ...overrides
+});  const createMockUser = (overrides = {}) => ({
     id: 1,
     email: 'delegate@testclub.com',
     firstName: 'Test',
@@ -456,6 +455,7 @@ describe('Club Player Controller', () => {
 
       ClubPlayer.create.mockRejectedValue(error);
 
+      req.params.id = '1';
       req.body = {
         firstName: 'John',
         lastName: 'Smith',
