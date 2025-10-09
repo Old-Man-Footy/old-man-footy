@@ -275,7 +275,9 @@ const showClubProfileHandler = async (req, res) => {
     user: req.user || null,
     additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],    
     ogTitle: club.clubName,
-    ogDescription: club.description,
+    ogDescription: club.description
+        ? club.description.substring(0, 150) + '...' 
+        : null,
     ogImage: club.logoUrl ? `${process.env.APP_URL}/${club.logoUrl}` : null,
     ogUrl: `${process.env.APP_URL}/clubs/${club.id}`
   });

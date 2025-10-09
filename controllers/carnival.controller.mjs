@@ -463,6 +463,15 @@ const showCarnivalHandler = async (req, res) => {
   // Sort sponsors hierarchically using the sorting service
   const sortedSponsors = sortSponsorsHierarchically(carnival.carnivalSponsors || [], 'carnival');
 
+    // A helper to create a full URL if the path isn't already absolute
+  const createAbsoluteUrl = (path) => {
+      if (!path || path.startsWith('http')) return path;
+      return `${process.env.APP_URL}/${path.startsWith('/') ? path.substring(1) : path}`;
+  };
+
+  // A helper to get the first available image path
+  const imagePath = carnival.promotionalImage || (hostClub && hostClub.logoUrl) || carnival.clubLogoUrl;
+
   return res.render('carnivals/show', {
     title: carnival.title,
     carnival: canManage ? carnival : publicCarnivalData, // Show full data to managers, obfuscated to public
@@ -482,11 +491,10 @@ const showCarnivalHandler = async (req, res) => {
     additionalCSS: ['/styles/carnival.styles.css','/styles/sponsor.styles.css'],
     hostClub,
     ogTitle: carnival.title,
-    ogDescription: carnival.scheduleDetails,
-    ogImage: (() => {
-        const imagePath = carnival.promotionalImage ? carnival.promotionalImage : (carnival.clubLogoUrl ? (hostClub && hostClub.logoUrl ? hostClub.logoUrl : null) : null);
-        return imagePath ? `${process.env.APP_URL}/${imagePath}` : null;
-    })(),
+    ogDescription: carnival.scheduleDetails 
+        ? carnival.scheduleDetails.substring(0, 150) + '...' 
+        : null,
+    ogImage: createAbsoluteUrl(imagePath),
     ogUrl: `${process.env.APP_URL}/carnivals/${carnival.id}`
   });
 };
