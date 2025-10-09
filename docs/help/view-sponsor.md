@@ -1,20 +1,20 @@
 ---
-pageIdentifier: sponsors-details
-title: Sponsor Details Help
+pageIdentifier: view-sponsor
+title: Sponsor Show Help
 ---
 
 ## Overview
-The Sponsor Details page shows all information about a specific sponsor, including supported clubs and carnivals.
+The Sponsor Show page displays all details about a specific sponsor, including supported clubs and carnivals. It’s the main place to review sponsor information and partnership opportunities.
 
 ## Key Features Explained
 ### Sponsor Info
-Displays the sponsor’s name, logo, type, and description.
+Shows the sponsor’s name, logo, type, and description.
 
 ### Supported Clubs & Carnivals
 Lists all clubs and carnivals supported by the sponsor.
 
 ### Partnership Opportunities
-Shows ways to connect or collaborate with the sponsor.
+Displays ways to connect or collaborate with the sponsor.
 
 ## Step-by-Step Guides
 **How to View Sponsor Info:**

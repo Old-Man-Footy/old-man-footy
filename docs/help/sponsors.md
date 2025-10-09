@@ -1,5 +1,5 @@
 ---
-pageIdentifier: sponsors-list
+pageIdentifier: sponsors
 title: Sponsors List Help
 ---
 

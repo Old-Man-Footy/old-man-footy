@@ -28,6 +28,17 @@ import { asyncHandler } from '../middleware/asyncHandler.mjs';
 import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
 /**
+ * Check if carnival is null and handle errors
+ * @param {Object|null} carnival - The carnival object to check
+ */
+const checkNullCarnival = (carnival, res, req,path = '/carnivals') => {
+  if (!carnival) {
+    req.flash('error_msg', 'Carnival not found');
+    return res.redirect(path);
+  }
+}  
+
+/**
  * Display list of all carnivals with filtering options
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -1163,7 +1174,7 @@ export const showCarnivalSponsors = asyncHandler(async (req, res) => {
     // Fetch the carnival
     const carnival = await Carnival.findByPk(carnivalId);
     
-    checkNullCarnival(carnival, req, res);
+    checkNullCarnival(carnival, res, req);
 
     // Fetch current carnival sponsors using direct relationship
     const carnivalSponsors = await carnival.getCarnivalSponsors({
@@ -1206,7 +1217,7 @@ export const showAddSponsorForm = asyncHandler(async (req, res) => {
       }]
     });
     
-    checkNullCarnival(carnival, req, res);
+    checkNullCarnival(carnival, res, req);
 
     // Fetch sponsors already linked to this carnival using direct relationship
     const carnivalSponsors = await carnival.getCarnivalSponsors({
@@ -1263,7 +1274,7 @@ export const addSponsorToCarnival = asyncHandler(async (req, res) => {
     // Check if carnival exists
     const carnival = await Carnival.findByPk(carnivalId);
    
-    checkNullCarnival(carnival, req, res);
+    checkNullCarnival(carnival, res, req);
     
     let sponsor;
 
@@ -1352,7 +1363,7 @@ export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
     // Check if carnival exists
     const carnival = await Carnival.findByPk(carnivalId);
     
-    checkNullCarnival(carnival, req, res);
+    checkNullCarnival(carnival, res, req);
 
     // Check if sponsor exists and belongs to this carnival
     const sponsor = await Sponsor.findOne({
@@ -1399,7 +1410,7 @@ export const showCarnivalSponsor = asyncHandler(async (req, res) => {
   // Check if carnival exists
   const carnival = await Carnival.findByPk(carnivalId);
   
-  checkNullCarnival(carnival, req, res);
+  checkNullCarnival(carnival, res, req);
 
   // Find sponsor belonging to this carnival
   const sponsor = await Sponsor.findOne({
@@ -1441,7 +1452,7 @@ export const showEditCarnivalSponsor = asyncHandler(async (req, res) => {
   // Check if carnival exists
   const carnival = await Carnival.findByPk(carnivalId);
   
-  checkNullCarnival(carnival, req, res);
+  checkNullCarnival(carnival, res, req);
 
   // Check user permissions - only admin or carnival owner can edit sponsors
   if (!carnival.canUserEdit(req.user)) {
@@ -1486,7 +1497,7 @@ export const updateCarnivalSponsor = asyncHandler(async (req, res) => {
   // Check if carnival exists
   const carnival = await Carnival.findByPk(carnivalId);
 
-  checkNullCarnival(carnival, req, res);  
+  checkNullCarnival(carnival, res, req);  
 
   // Check user permissions - only admin or carnival owner can edit sponsors
   if (!carnival.canUserEdit(req.user)) {
@@ -1529,17 +1540,7 @@ export const updateCarnivalSponsor = asyncHandler(async (req, res) => {
     return res.redirect(`/carnivals/${carnivalId}/sponsors/${sponsorId}/edit`);
   }
 
-/**
- * Check if carnival is null and handle errors
- * @param {Object|null} carnival - The carnival object to check
- */
-const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
-    if (!carnival) {
-      req.flash('error_msg', 'Carnival not found');
-      return res.redirect(path);
-    }
-}
-  
+
 
   const {
     sponsorName,

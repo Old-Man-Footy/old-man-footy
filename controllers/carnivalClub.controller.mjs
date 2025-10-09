@@ -14,6 +14,18 @@ import CarnivalEmailService from '../services/email/CarnivalEmailService.mjs';
 import { APPROVAL_STATUS } from '../config/constants.mjs';
 
 /**
+ * Check if carnival is null and handle errors
+ * @param {Object|null} carnival - The carnival object to check
+ */
+const checkNullCarnival = (carnival, res, req,path = '/carnivals') => {
+    if (!carnival) {
+      console.error('Carnival is null despite successful auth result - this should not happen');
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect(path);
+    }
+}
+
+/**
  * Calculate total registration fees for a carnival registration
  * @param {Object} carnival - Carnival instance with fee fields
  * @param {number} numberOfTeams - Number of teams registering
@@ -572,18 +584,6 @@ const removeClubFromCarnivalHandler = async (req, res) => {
     message: `${registration.participatingClub.clubName} has been removed from the carnival.`,
   });
 };
-
-/**
- * Check if carnival is null and handle errors
- * @param {Object|null} carnival - The carnival object to check
- */
-const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
-    if (!carnival) {
-      console.error('Carnival is null despite successful auth result - this should not happen');
-      req.flash('error_msg', 'Carnival not found');
-      return res.redirect(path);
-    }
-}
 
 /**
  * Update display order of attending clubs
