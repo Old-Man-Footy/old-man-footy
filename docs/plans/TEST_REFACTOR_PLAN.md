@@ -1,8 +1,99 @@
 # Test Refactoring Plan - Complete Test Suite Inventory
 
-> **Purpose**: Track the refactoring and rewriting of all test files to ensure proper test coverage, consistent patterns, and 100% pass rate.
+> **Purpose**: Track the refactoring and COMPLETE REWRITING of all test files to ensure proper test coverage, consistent patterns, and 100% pass rate.
 > **Current Status**: 92.2% passing (1078/1169 tests passing, 91 failing)
 > **Target**: 100% passing with clean, maintainable test code
+
+---
+
+## 🎯 Testing Philosophy - Option A: Real Models with Mocked Database
+
+**CRITICAL**: All tests must follow this approach for consistency and maintainability.
+
+### Core Principle
+We use **actual Sequelize model instances** with a **mocked database layer**, not completely mocked model objects.
+
+### Why This Approach?
+
+**✅ Benefits:**
+- Tests actual model methods, validations, and business logic
+- Catches bugs in model implementations
+- Changes to model code automatically reflected in tests
+- Better integration testing between controllers and models
+- Real Sequelize behavior (hooks, getters, setters, scopes)
+- Easier to maintain when models evolve
+
+**❌ What We Avoid:**
+- Completely mocked model objects that don't test real code
+- Tests that pass but hide broken model logic
+- Duplicate mock implementations that drift from real models
+- False confidence from tests that don't exercise actual code paths
+
+### Implementation Pattern
+
+```javascript
+// ✅ CORRECT: Use real models with mocked database
+import { User, Club, Carnival } from '../../models/index.mjs';
+
+describe('Controller Tests', () => {
+  beforeEach(() => {
+    // Mock the database queries, not the model class
+    vi.spyOn(User, 'findByPk').mockResolvedValue(mockUserInstance);
+    vi.spyOn(Club, 'findAll').mockResolvedValue([mockClubInstance]);
+  });
+  
+  it('should use actual model methods', async () => {
+    const user = await User.findByPk(1);
+    // This is a REAL User instance with all methods
+    expect(user.isAdmin()).toBe(true); // Tests actual method
+  });
+});
+
+// ❌ WRONG: Completely mocked model object
+vi.mock('../../models/index.mjs', () => ({
+  User: {
+    findByPk: vi.fn(),
+    // Missing all the actual model methods and behavior
+  }
+}));
+```
+
+### What Gets Mocked
+
+**Mock at the Database Layer:**
+- `Model.findOne()`, `Model.findAll()`, `Model.findByPk()`
+- `model.save()`, `model.destroy()`, `model.update()`
+- `Model.create()`, `Model.bulkCreate()`
+- Database transactions and queries
+
+**Don't Mock:**
+- Model class definitions
+- Instance methods (e.g., `user.isAdmin()`, `carnival.canUserEdit()`)
+- Model validations
+- Virtual fields and getters/setters
+- Sequelize hooks (beforeCreate, afterUpdate, etc.)
+
+### Trade-offs Accepted
+
+**More Work Upfront:**
+- Need to understand actual model structure
+- Must create proper model instances for mocks
+- More complex mock setup
+
+**Better Long-Term:**
+- Tests break when models break (good thing!)
+- Refactoring models automatically updates test coverage
+- New model methods automatically tested
+- Easier to onboard new developers (tests show real usage)
+
+### Migration Strategy
+
+When refactoring tests:
+1. Identify all mocked models
+2. Replace with imports of actual models
+3. Mock only database query methods (findOne, save, etc.)
+4. Use real model instances in mock return values
+5. Verify all model methods work as expected
 
 ---
 
