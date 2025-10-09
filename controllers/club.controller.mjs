@@ -828,16 +828,13 @@ const addSponsorToClubHandler = async (req, res) => {
     if (!errors.isEmpty()) {
       const errorMessages = errors.array().map(error => error.msg);
       req.flash('error_msg', errorMessages.join(', '));
-      console.log(`🔍 DEBUG: Validation failed, redirecting to /clubs/${clubId}/sponsors/add`);
       return res.redirect(`/clubs/${clubId}/sponsors/add`);
     }
 
     // Find the club from the URL parameter
-    console.log(`🔍 DEBUG: Looking up club with ID: ${clubId}`);
     const club = await Club.findByPk(clubId);
 
     if (!club) {
-      console.log(`🔍 DEBUG: Club not found, redirecting to /clubs`);
       req.flash('error_msg', 'Club not found.');
       return res.redirect('/clubs');
     }

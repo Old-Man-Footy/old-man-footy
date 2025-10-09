@@ -1,190 +1,241 @@
-<div class="container mt-4" data-page-id="<%= entityType %>s-view-sponsor">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="h3 mb-1">
-                        <i class="bi bi-building text-primary me-2"></i>
-                        <%= sponsor.sponsorName %>
-                    </h2>
-                    <p class="text-muted mb-0">
-                        Sponsor for <%= entityData.title || entityData.carnivalName || entityData.clubName %>
-                    </p>
-                </div>
-                <div class="btn-group">
-                    <a href="<%= routePrefix %>/sponsors" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>Back to Sponsors
-                    </a>
+<div class="sponsor-header" data-page-id="<%= entityType %>s-view-sponsor">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center mb-3 mb-md-0">
+                <% if (sponsor.logoUrl) { %>
+                    <img src="<%= sponsor.logoUrl %>" 
+                         alt="<%= sponsor.sponsorName %> Logo" 
+                         class="sponsor-logo-large">
+                <% } else { %>
+                    <div class="sponsor-logo-large d-flex align-items-center justify-content-center">
+                        <i class="bi bi-building"></i>
+                    </div>
+                <% } %>
+            </div>
+            <div class="col-md-9">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h1 class="mb-3"><%= sponsor.sponsorName %></h1>
+                        <p class="text-muted mb-0">
+                            Sponsor for <%= entityData.title || entityData.carnivalName || entityData.clubName %>
+                        </p>
+                        
+                        <% if (sponsor.description) { %>
+                            <p class="mt-3 lead"><%= sponsor.description %></p>
+                        <% } %>
+                    </div>
                     <% if (canEdit) { %>
-                        <a href="<%= routePrefix %>/sponsors/<%= sponsor.id %>/edit" class="btn btn-primary">
-                            <i class="bi bi-pencil me-1"></i>Edit
-                        </a>
+                        <div class="sponsor-action-buttons">
+                            <a href="<%= routePrefix %>/sponsors/<%= sponsor.id %>/edit" class="btn btn-tertiary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                        </div>
                     <% } %>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Flash Messages -->
-            <%- include('../../partials/flash-messages') %>
+<div class="container" data-sponsor-id="<%= sponsor.id %>" data-current-status="<%= sponsor.isActive %>">
+    <!-- Flash Messages -->
+    <%- include('../../partials/flash-messages') %>
 
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-info-circle me-2"></i>Sponsor Information
-                    </h5>
+    <div class="row">
+        <!-- Sponsor Information -->
+        <div class="col-lg-8">
+            <div class="sponsor-info-card">
+                <h3 class="mb-4">Sponsor Information</h3>
+                
+                <% if (sponsor.businessType) { %>
+                    <div class="sponsor-info-item">
+                        <div class="sponsor-info-icon">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="sponsor-info-content">
+                            <h6>Business Type</h6>
+                            <p><%= sponsor.businessType %></p>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <% if (sponsor.location) { %>
+                    <div class="sponsor-info-item">
+                        <div class="sponsor-info-icon">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <div class="sponsor-info-content">
+                            <h6>Location</h6>
+                            <p><%= sponsor.location %><% if (sponsor.state) { %>, <%= sponsor.state %><% } %></p>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <% if (sponsor.website) { %>
+                    <div class="sponsor-info-item">
+                        <div class="sponsor-info-icon">
+                            <i class="bi bi-globe"></i>
+                        </div>
+                        <div class="sponsor-info-content">
+                            <h6>Website</h6>
+                            <p><a href="<%= sponsor.website %>" target="_blank" rel="noopener"><%= sponsor.website %></a></p>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <% if (sponsor.contactPerson) { %>
+                    <div class="sponsor-info-item">
+                        <div class="sponsor-info-icon">
+                            <i class="bi bi-person"></i>
+                        </div>
+                        <div class="sponsor-info-content">
+                            <h6>Contact Person</h6>
+                            <p><%= sponsor.contactPerson %></p>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <% if (sponsor.contactEmail) { %>
+                    <div class="sponsor-info-item">
+                        <div class="sponsor-info-icon">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <div class="sponsor-info-content">
+                            <h6>Contact Email</h6>
+                            <p><a href="mailto:<%= sponsor.contactEmail %>"><%= sponsor.contactEmail %></a></p>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <% if (sponsor.contactPhone) { %>
+                    <div class="sponsor-info-item">
+                        <div class="sponsor-info-icon">
+                            <i class="bi bi-telephone"></i>
+                        </div>
+                        <div class="sponsor-info-content">
+                            <h6>Contact Phone</h6>
+                            <p><a href="tel:<%= sponsor.contactPhone %>"><%= sponsor.contactPhone %></a></p>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <div class="sponsor-info-item">
+                    <div class="sponsor-info-icon">
+                        <i class="bi bi-calendar"></i>
+                    </div>
+                    <div class="sponsor-info-content">
+                        <h6>Member Since</h6>
+                        <p><%= new Date(sponsor.createdAt).toLocaleDateString('en-AU', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) %></p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Basic Information -->
+            </div>
+            
+            <!-- Associated Entity Section -->
+            <% if (entityData && (entityData.clubName || entityData.carnivalName)) { %>
+                <div class="sponsor-info-card">
+                    <h3 class="mb-4">Associated <%= entityType === 'club' ? 'Club' : 'Carnival' %></h3>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Sponsor Name</label>
-                                <p class="mb-0"><%= sponsor.sponsorName || 'Not specified' %></p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Sponsorship Level</label>
-                                <p class="mb-0">
-                                    <% if (sponsor.sponsorshipLevel) { %>
-                                        <span class="badge bg-<%= 
-                                            sponsor.sponsorshipLevel === 'Platinum' ? 'primary' :
-                                            sponsor.sponsorshipLevel === 'Gold' ? 'warning' :
-                                            sponsor.sponsorshipLevel === 'Silver' ? 'secondary' :
-                                            sponsor.sponsorshipLevel === 'Bronze' ? 'dark' :
-                                            'info'
-                                        %>"><%= sponsor.sponsorshipLevel %></span>
-                                    <% } else { %>
-                                        Not specified
-                                    <% } %>
-                                </p>
-                            </div>
+                        <div class="col-md-12 mb-3">
+                            <a href="<%= routePrefix %>" class="text-decoration-none">
+                                <div class="card sponsor-club-card-hover">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <% if (entityData.logoPath) { %>
+                                                <img src="<%= entityData.logoPath %>" alt="<%= entityData.clubName || entityData.carnivalName %>" class="me-3 sponsor-club-logo">
+                                            <% } %>
+                                            <div>
+                                                <h6 class="card-title mb-1 text-primary"><%= entityData.clubName || entityData.title || entityData.carnivalName %></h6>
+                                                <% if (entityData.state || entityData.location) { %>
+                                                    <small class="text-muted"><%= entityData.state %><% if (entityData.location) { %> - <%= entityData.location %><% } %></small>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Business Type</label>
-                                <p class="mb-0"><%= sponsor.businessType || 'Not specified' %></p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Location</label>
-                                <p class="mb-0">
-                                    <%= sponsor.location || 'Not specified' %>
-                                    <% if (sponsor.state) { %>
-                                        <span class="text-muted">(<%= sponsor.state %>)</span>
-                                    <% } %>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <% if (sponsor.website) { %>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-muted">Website</label>
-                            <p class="mb-0">
-                                <a href="<%= sponsor.website %>" target="_blank" rel="noopener noreferrer">
-                                    <i class="bi bi-globe me-1"></i><%= sponsor.website %>
-                                </a>
-                            </p>
-                        </div>
+                </div>
+            <% } %>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Navigation -->
+            <div class="sponsor-info-card">
+                <h4 class="mb-3"><%= canEdit ? 'Quick Actions' : 'Navigation' %></h4>
+                <div class="d-grid gap-2">
+                    <% if (canEdit) { %>
+                        <a href="<%= routePrefix %>/sponsors/<%= sponsor.id %>/edit" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Edit Sponsor
+                        </a>
+                        <a href="<%= routePrefix %>/sponsors" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Sponsors
+                        </a>
                     <% } %>
-
-                    <!-- Contact Information -->
-                    <% if (sponsor.contactPerson || sponsor.contactEmail || sponsor.contactPhone) { %>
-                        <hr class="my-4">
-                        <h6 class="text-muted mb-3">
-                            <i class="bi bi-person-lines-fill me-2"></i>Contact Information
-                        </h6>
-
-                        <div class="row">
-                            <% if (sponsor.contactPerson) { %>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold text-muted">Contact Person</label>
-                                        <p class="mb-0"><%= sponsor.contactPerson %></p>
-                                    </div>
-                                </div>
-                            <% } %>
-                            <% if (sponsor.contactEmail) { %>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold text-muted">Email</label>
-                                        <p class="mb-0">
-                                            <a href="mailto:<%= sponsor.contactEmail %>">
-                                                <i class="bi bi-envelope me-1"></i><%= sponsor.contactEmail %>
-                                            </a>
-                                        </p>
-                                    </div>
-                                </div>
-                            <% } %>
-                        </div>
-
-                        <% if (sponsor.contactPhone) { %>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Phone</label>
-                                <p class="mb-0">
-                                    <a href="tel:<%= sponsor.contactPhone %>">
-                                        <i class="bi bi-telephone me-1"></i><%= sponsor.contactPhone %>
-                                    </a>
-                                </p>
-                            </div>
+                    <a href="<%= routePrefix %>" class="btn <%= canEdit ? 'btn-outline-secondary' : 'btn-primary' %>">
+                        <i class="bi bi-arrow-left"></i> Back to <%= entityType === 'club' ? 'Club' : 'Carnival' %>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Social Media Links -->
+            <% if (sponsor.facebookUrl || sponsor.instagramUrl || sponsor.twitterUrl || sponsor.linkedinUrl) { %>
+                <div class="sponsor-info-card">
+                    <h4 class="mb-3">Follow <%= sponsor.sponsorName %></h4>
+                    <div class="social-links">
+                        <% if (sponsor.facebookUrl) { %>
+                            <a href="<%= sponsor.facebookUrl %>" target="_blank" rel="noopener" class="btn btn-facebook">
+                                <i class="bi bi-facebook"></i> Facebook
+                            </a>
                         <% } %>
-                    <% } %>
-
-                    <!-- Social Media Links -->
-                    <% if (sponsor.facebookUrl || sponsor.instagramUrl || sponsor.twitterUrl) { %>
-                        <hr class="my-4">
-                        <h6 class="text-muted mb-3">
-                            <i class="bi bi-share me-2"></i>Social Media
-                        </h6>
-
-                        <div class="d-flex gap-3">
-                            <% if (sponsor.facebookUrl) { %>
-                                <a href="<%= sponsor.facebookUrl %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-facebook me-1"></i>Facebook
-                                </a>
-                            <% } %>
-                            <% if (sponsor.instagramUrl) { %>
-                                <a href="<%= sponsor.instagramUrl %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-danger btn-sm">
-                                    <i class="bi bi-instagram me-1"></i>Instagram
-                                </a>
-                            <% } %>
-                            <% if (sponsor.twitterUrl) { %>
-                                <a href="<%= sponsor.twitterUrl %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-info btn-sm">
-                                    <i class="bi bi-twitter me-1"></i>Twitter
-                                </a>
-                            <% } %>
+                        <% if (sponsor.instagramUrl) { %>
+                            <a href="<%= sponsor.instagramUrl %>" target="_blank" rel="noopener" class="btn btn-instagram">
+                                <i class="bi bi-instagram"></i> Instagram
+                            </a>
+                        <% } %>
+                        <% if (sponsor.twitterUrl) { %>
+                            <a href="<%= sponsor.twitterUrl %>" target="_blank" rel="noopener" class="btn btn-twitter-x">
+                                <i class="bi bi-twitter-x"></i> X (Twitter)
+                            </a>
+                        <% } %>
+                        <% if (sponsor.linkedinUrl) { %>
+                            <a href="<%= sponsor.linkedinUrl %>" target="_blank" rel="noopener" class="btn btn-linkedin">
+                                <i class="bi bi-linkedin"></i> LinkedIn
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
+            
+            <!-- Sponsor Details -->
+            <div class="sponsor-info-card">
+                <h4 class="mb-3 text-center">Sponsor Details</h4>
+                <div class="row text-center">
+                    <div class="col-6 d-flex flex-column align-items-center">
+                        <div class="h3 text-primary mb-0">
+                            <%= Math.floor((Date.now() - new Date(sponsor.createdAt)) / (1000 * 60 * 60 * 24)) %>
                         </div>
-                    <% } %>
-
-                    <!-- Logo Display -->
-                    <% if (sponsor.logoPath) { %>
-                        <hr class="my-4">
-                        <h6 class="text-muted mb-3">
-                            <i class="bi bi-image me-2"></i>Logo
-                        </h6>
-                        <div class="text-center">
-                            <img src="<%= sponsor.logoPath %>" 
-                                 alt="<%= sponsor.sponsorName %> Logo" 
-                                 class="img-fluid rounded shadow-sm"
-                                 style="max-width: 300px; max-height: 200px;">
+                        <small class="text-muted">Days Active</small>
+                    </div>
+                    <div class="col-6 d-flex flex-column align-items-center">
+                        <div class="h3 text-success mb-0">
+                            <%= sponsor.sponsorshipLevel || 'Supporting' %>
                         </div>
-                    <% } %>
-
-                    <!-- Description -->
-                    <% if (sponsor.description) { %>
-                        <hr class="my-4">
-                        <h6 class="text-muted mb-3">
-                            <i class="bi bi-card-text me-2"></i>Description
-                        </h6>
-                        <div class="bg-light p-3 rounded">
-                            <p class="mb-0"><%= sponsor.description %></p>
-                        </div>
-                    <% } %>
+                        <small class="text-muted">Sponsorship Level</small>
+                    </div>
+                </div>
+                <div class="row text-center mt-3">
+                    <div class="col-12">
+                        <span class="badge <%= sponsor.isActive ? 'bg-primary' : 'bg-secondary' %> fs-6">
+                            <i class="bi bi-<%= sponsor.isActive ? 'check-circle' : 'pause-circle' %>"></i>
+                            <%= sponsor.isActive ? 'Active' : 'Inactive' %>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
