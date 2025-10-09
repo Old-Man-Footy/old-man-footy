@@ -147,6 +147,11 @@ const listCarnivalsHandler = async (req, res) => {
         as: 'creator',
         attributes: ['firstName', 'lastName'],
       },
+      {
+        model: Club,
+        as: 'hostClub',
+        attributes: ['logoUrl'],
+      }
     ],
     // Remove database ordering - we'll sort in JavaScript for complex prioritization
   });
@@ -226,6 +231,11 @@ const listCarnivalsHandler = async (req, res) => {
   const processedCarnivals = sortedCarnivals.map((carnival) => {
     const publicData = carnival.getPublicDisplayData();
 
+    const displayLogoUrl = (carnival.clubLogoUrl && carnival.clubLogoUrl.trim()) 
+      ? carnival.clubLogoUrl 
+      : (carnival.hostClub?.logoUrl || '/icons/missing.svg');
+
+
     // Check if this carnival can be claimed by the current user
     // Allow carnivals that either have a MySideline ID or have a MySideline sync timestamp
     const hasMySidelineMarker = carnival.mySidelineId || carnival.lastMySidelineSync;
@@ -241,7 +251,8 @@ const listCarnivalsHandler = async (req, res) => {
     return {
       ...publicData,
       creator: carnival.creator, // Preserve creator relationship
-      canTakeOwnership: canTakeOwnership,
+      canTakeOwnership: canTakeOwnership,      
+      displayLogoUrl: displayLogoUrl,
     };
   });
 
@@ -253,7 +264,7 @@ const listCarnivalsHandler = async (req, res) => {
     states,
     currentFilters: { state, search, upcoming: upcomingFilter, mysideline },
     user: userWithClub, // Pass user data to view for ownership checking
-    additionalCSS: ['/styles/carnival.styles.css'],
+    additionalCSS: ['/styles/carnival.styles.css']
   });
 };
 
