@@ -280,7 +280,11 @@ describe('ImageUploadService', () => {
       ImageUpload.createImageUpload.mockResolvedValue({
         success: true,
         image: { id: 1, url: '/uploads/carnivals/1/gallery/gallery_123_abc.jpg' }
-      });      const result = await ImageUploadService.processUpload(mockFile, mockUploadData, mockUser);
+      });      
+      
+      req.flash('error_msg', 'Carnival not found');
+      
+      const result = await ImageUploadService.processUpload(mockFile, mockUploadData, mockUser);
       
       expect(result.success).toBe(true);
       expect(result.message).toBe('Image uploaded successfully');

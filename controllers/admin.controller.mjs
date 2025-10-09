@@ -693,10 +693,7 @@ const showEditCarnivalHandler = async (req, res) => {
         include: [{ model: User, as: 'creator' }]
     });
 
-    if (!carnival) {
-        req.flash('error_msg', 'Carnival not found');
-        return res.redirect('/admin/carnivals');
-    }
+    checkNullCarnival(carnival, req, res, '/admin/carnivals');
 
     return res.render('carnivals/edit', {
         title: `Edit ${carnival.title} - Admin Dashboard`,
@@ -744,10 +741,9 @@ const updateCarnivalHandler = async (req, res) => {
     } = req.body;
 
     const carnival = await Carnival.findByPk(carnivalId);
-    if (!carnival) {
-        req.flash('error_msg', 'Carnival not found');
-        return res.redirect('/admin/carnivals');
-    }
+
+    checkNullCarnival(carnival, req, res, '/admin/carnivals');
+
 
     // Prepare base update data
     const updateData = {
@@ -1141,10 +1137,7 @@ const showClaimCarnivalFormHandler = async (req, res) => {
         include: [{ model: User, as: 'creator' }]
     });
 
-    if (!carnival) {
-        req.flash('error_msg', 'Carnival not found');
-        return res.redirect('/admin/carnivals');
-    }
+    checkNullCarnival(carnival, req, res, '/admin/carnivals');
 
     // Check if carnival can be claimed (MySideline import with no owner)
     if (carnival.isManuallyEntered) {
@@ -1223,10 +1216,7 @@ const showCarnivalPlayersHandler = async (req, res) => {
         include: [{ model: User, as: 'creator' }]
     });
 
-    if (!carnival) {
-        req.flash('error_msg', 'Carnival not found');
-        return res.redirect('/admin/carnivals');
-    }
+    checkNullCarnival
 
     // Get all club registrations for this carnival with their players
     const { CarnivalClub, CarnivalClubPlayer, ClubPlayer } = await import('../models/index.mjs');
@@ -1801,6 +1791,17 @@ const syncMySidelineHandler = async (req, res) => {
     
     return res.redirect('/admin/dashboard');
 };
+
+/**
+ * Check if carnival is null and handle errors
+ * @param {Object|null} carnival - The carnival object to check
+ */
+const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect(path);
+    }
+}
 
 // Raw controller functions object for wrapping
 const rawControllers = {
