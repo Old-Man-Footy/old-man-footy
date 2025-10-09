@@ -23,7 +23,7 @@
                         <% if (sponsor.description) { %>
                             <p class="mt-3 lead"><%= sponsor.description %></p>
                         <% } %>
-                    </div>
+                    </div>                                        
                     <% if (canEdit) { %>
                         <div class="sponsor-action-buttons">
                             <a href="<%= routePrefix %>/sponsors/<%= sponsor.id %>/edit" class="btn btn-tertiary">
@@ -46,7 +46,11 @@
         <div class="col-lg-8">
             <div class="sponsor-info-card">
                 <h3 class="mb-4">Sponsor Information</h3>
-                
+                <!-- Share Button Dropdown -->
+                <%- include('../../partials/share-button', { 
+                    title: sponsor.sponsorName
+                }) %>
+                <br/>
                 <% if (sponsor.businessType) { %>
                     <div class="sponsor-info-item">
                         <div class="sponsor-info-icon">
@@ -172,7 +176,7 @@
                     <% if (canEdit) { %>
                         <a href="<%= routePrefix %>/sponsors/<%= sponsor.id %>/edit" class="btn btn-primary">
                             <i class="bi bi-pencil"></i> Edit Sponsor
-                        </a>
+                        </a>                        
                         <a href="<%= routePrefix %>/sponsors" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Back to Sponsors
                         </a>
@@ -241,3 +245,6 @@
         </div>
     </div>
 </div>
+
+<!-- Include share button functionality -->
+<script type="module" src="/js/share-button.js"></script>

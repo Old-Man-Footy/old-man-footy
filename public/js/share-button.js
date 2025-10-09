@@ -51,6 +51,7 @@ export const shareButtonManager = {
         
         // Use custom URL if provided, otherwise use current page URL
         const url = customUrl || window.location.href;
+        console.log('Sharing URL:', url); 
         
         // Construct share text
         const shareText = description ? `${title} - ${description}` : title;
@@ -80,7 +81,7 @@ export const shareButtonManager = {
                 window.open(
                     `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`,
                     '_blank',
-                    'width=600,height=400'
+                    'width=600,height=400,noopener,noreferrer'
                 );
                 break;
                 

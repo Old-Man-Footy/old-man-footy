@@ -273,7 +273,11 @@ const showClubProfileHandler = async (req, res) => {
     primaryDelegate,
     sponsors: sortedSponsors,
     user: req.user || null,
-    additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
+    additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],    
+    ogTitle: club.clubName,
+    ogDescription: club.description,
+    ogImage: club.logoUrl ? `${process.env.APP_URL}/${club.logoUrl}` : null,
+    pageUrl: `${process.env.APP_URL}/clubs/${club.id}`
   });
 };
 
@@ -606,6 +610,10 @@ const showClubSponsorHandler = async (req, res, next) => {
       sponsor,
       canEdit: club.canUserEdit(req.user),
       additionalCSS: ['/styles/sponsor.styles.css'],
+      ogTitle: `${sponsor.sponsorName} - ${club.clubName}`,
+      ogDescription: sponsor.location,
+      ogImage: sponsor.logoUrl ? `${process.env.APP_URL}/${sponsor.logoUrl}` : null, 
+      pageUrl: `${process.env.APP_URL}/clubs/${club.id}/sponsors/${sponsor.id}`
     });
   } catch (err) {
     next(err);

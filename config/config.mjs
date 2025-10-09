@@ -1,4 +1,4 @@
-/**
+;/**
  * Application Configuration (ESM)
  * Centralized configuration management following ES modules pattern
  * Reads from environment variables set by dotenv or deployment environment
@@ -22,20 +22,20 @@ export const setEnvironmentVariables = async () => {
     const { config } = await import('dotenv');
     
     // Load environment-specific .env file
-    const envFile = `.env.${env}`;
-    const result = config({ path: envFile });
+    let envFile = `.env.${env}`;
+    let result = config({ path: envFile });
     
     if (result.error) {
       console.log(`📝 No ${envFile} file found - falling back to .env`);
-      envFile = `.env`
+      envFile = '.env';
       result = config({ path: envFile });
       if (result.error) {
         console.log(`📝 No .env file found - using system environment variables`);
-      }
-    } else {
-      console.log(`✅ Configuration loaded from ${envFile}`);
-    }
+      }      
+    } 
+    console.log(`✅ Configuration loaded from ${envFile}`);
   } catch (error) {
+    console.error('🚨 Dotenv configuration failed with a critical error:', error);    
     console.log('📝 Using system environment variables only');
   }
 };

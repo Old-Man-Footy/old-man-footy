@@ -481,6 +481,13 @@ const showCarnivalHandler = async (req, res) => {
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
     additionalCSS: ['/styles/carnival.styles.css','/styles/sponsor.styles.css'],
     hostClub,
+    ogTitle: carnival.title,
+    ogDescription: carnival.scheduleDetails,
+    ogImage: (() => {
+        const imagePath = carnival.promotionalImage ? carnival.promotionalImage : (carnival.clubLogoUrl ? (hostClub && hostClub.logoUrl ? hostClub.logoUrl : null) : null);
+        return imagePath ? `${process.env.APP_URL}/${imagePath}` : null;
+    })(),
+    pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}`
   });
 };
 
@@ -1419,6 +1426,10 @@ export const showCarnivalSponsor = asyncHandler(async (req, res) => {
     sponsor,
     canEdit: carnival.canUserEdit(req.user),
     additionalCSS: ['/styles/sponsor.styles.css'],
+    ogTitle: `${sponsor.sponsorName} - ${carnival.title}`,
+    ogDescription: sponsor.location,
+    ogImage: sponsor.logoUrl ? `${process.env.APP_URL}/${sponsor.logoUrl}` : null, 
+    pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}/sponsors/${sponsor.id}`
   });
 });
 

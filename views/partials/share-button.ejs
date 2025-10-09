@@ -9,6 +9,12 @@
 //     description: 'Optional description text',  // Optional
 //     url: '/custom/url'  // Optional, defaults to current page
 //   })
+//
+// e.g. in res.render() of the page, pass these parameters top update the header layout:
+//        ogTitle: carnival.title,
+//        ogDescription: description,
+//        ogImage: carnival.promotionalImageURL, // This needs to be a full URL, e.g., https://yoursite.com/uploads/image.jpg
+//        pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}` // Construct the full URL
 // 
 // Required scripts:
 //   <script type="module" src="/js/share-button.js"></script>
