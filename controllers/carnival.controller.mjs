@@ -31,7 +31,7 @@ import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
  * Check if carnival is null and handle errors
  * @param {Object|null} carnival - The carnival object to check
  */
-const checkNullCarnival = (carnival, res, req,path = '/carnivals') => {
+const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
   if (!carnival) {
     req.flash('error_msg', 'Carnival not found');
     return res.redirect(path);
