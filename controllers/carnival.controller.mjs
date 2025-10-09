@@ -235,7 +235,6 @@ const listCarnivalsHandler = async (req, res) => {
       ? carnival.clubLogoUrl 
       : (carnival.hostClub?.logoUrl || '/icons/missing.svg');
 
-
     // Check if this carnival can be claimed by the current user
     // Allow carnivals that either have a MySideline ID or have a MySideline sync timestamp
     const hasMySidelineMarker = carnival.mySidelineId || carnival.lastMySidelineSync;
