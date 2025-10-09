@@ -17,7 +17,7 @@ import { APPROVAL_STATUS } from '../config/constants.mjs';
  * Check if carnival is null and handle errors
  * @param {Object|null} carnival - The carnival object to check
  */
-const checkNullCarnival = (carnival, res, req,path = '/carnivals') => {
+const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
     if (!carnival) {
       console.error('Carnival is null despite successful auth result - this should not happen');
       req.flash('error_msg', 'Carnival not found');
