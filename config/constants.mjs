@@ -177,18 +177,18 @@ async function enrichEntityGalleryDirectories(directories, entityType, filterPub
             if (entityType === 'carnivals') {
                 // Fetch carnival with its hosting club relationship
                 entity = await Carnival.findByPk(dirInfo.entityId, {
-                    attributes: ['id', 'title', 'isActive', 'hostingClubId'],
+                    attributes: ['id', 'title', 'isActive', 'clubId'],
                     include: [{
                         model: Club,
-                        as: 'hostingClub',
-                        attributes: ['id', 'name', 'isPubliclyListed']
+                        as: 'hostClub',
+                        attributes: ['id', 'clubName', 'isPubliclyListed']
                     }]
                 });
                 
                 if (entity) {
                     entityName = entity.title;
                     // Carnival is public if it's active OR if its hosting club is publicly listed
-                    isPublic = entity.isActive && (entity.hostingClub && entity.hostingClub.isPubliclyListed);
+                    isPublic = entity.isActive && (entity.hostClub && entity.hostClub.isPubliclyListed);
                 }
             } else if (entityType === 'clubs') {
                 entity = await Club.findByPk(dirInfo.entityId, {

@@ -118,11 +118,7 @@
                                             </div>
                                         </div>
                                         <div class="col-4 d-flex align-items-center justify-content-center p-3">
-                                            <% 
-                                            // Show carnival logo first, then fall back to hosting club logo, then to missing.svg
-                                            const logoUrl = carnival.clubLogoURL || (carnival.creator && carnival.creator.club && carnival.creator.club.logoUrl) || '/icons/missing.svg';
-                                            %>
-                                            <img src="<%= logoUrl %>" alt="Club Logo" 
+                                            <img src="<%= carnival.displayLogoUrl %>" alt="Club Logo" 
                                                  class="img-fluid" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                         </div>
                                     </div>

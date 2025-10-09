@@ -1,4 +1,4 @@
-;/**
+/**
  * Application Configuration (ESM)
  * Centralized configuration management following ES modules pattern
  * Reads from environment variables set by dotenv or deployment environment

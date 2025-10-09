@@ -19,7 +19,6 @@ import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
 import carouselImageService from '../services/carouselImageService.mjs';
 import { AUSTRALIAN_STATES, NOTIFICATION_TYPES_ARRAY } from '../config/constants.mjs';
-import crypto from 'crypto';
 import asyncHandler from '../middleware/asyncHandler.mjs';
 
 /**
@@ -40,7 +39,16 @@ export const getIndex = asyncHandler(async (req, res) => {
     order: [['date', 'ASC']],
     limit: 4,
     include: [
-      { model: User, as:'creator', attributes: ['firstName', 'lastName'] }
+      { 
+        model: User, 
+        as:'creator', 
+        attributes: ['firstName', 'lastName'] 
+      },
+      {
+        model: Club,
+        as: 'hostClub',
+        attributes: ['logoUrl'],
+      }
     ]
   });
 
@@ -54,12 +62,31 @@ export const getIndex = asyncHandler(async (req, res) => {
       order: [['createdAt', 'DESC']], // Show most recently created undated carnivals first
       limit: 4 - upcomingCarnivals.length,
       include: [
-        { model: User, as:'creator', attributes: ['firstName', 'lastName'] }
+        { 
+          model: User, 
+          as:'creator', 
+          attributes: ['firstName', 'lastName'] 
+        },
+        {
+          model: Club,
+          as: 'hostClub',
+          attributes: ['logoUrl'],
+        }
       ]
     });
     
     upcomingCarnivals = [...upcomingCarnivals, ...undatedCarnivals];
   }
+
+  // Apply logo fallback logic to ALL carnivals (both dated and undated)
+  upcomingCarnivals.forEach(carnival => {
+    // Priority: Carnival's own logo -> Host club logo -> Missing icon
+    const displayLogoUrl = (carnival.clubLogoUrl && carnival.clubLogoUrl.trim()) 
+      ? carnival.clubLogoUrl 
+      : (carnival.hostClub?.logoUrl || '/icons/missing.svg');
+
+    carnival.displayLogoUrl = displayLogoUrl;
+  });
 
   // Get statistics for the stats runner
   const stats = {
