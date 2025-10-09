@@ -79,18 +79,17 @@ vi.mock('/models/index.mjs', () => {
     ...overrides
   });
 
-  const createMockClub = (overrides = {}) => ({
-    id: 1,
-    clubName: 'Test Club',
-    state: 'NSW',
-    location: 'Sydney',
-    isActive: true,
-    contactEmail: 'contact@testclub.com',
-    contactPhone: '0987654321',
-    ...overrides
-  });
-
-  const createMockUser = (overrides = {}) => ({
+const createMockClub = (overrides = {}) => ({
+  id: 1,
+  clubName: 'Test Club',
+  state: 'NSW',
+  location: 'Sydney',
+  isActive: true,
+  contactEmail: 'contact@testclub.com',
+  contactPhone: '0987654321',
+  canUserEdit: vi.fn().mockReturnValue(true),
+  ...overrides
+});  const createMockUser = (overrides = {}) => ({
     id: 1,
     email: 'delegate@testclub.com',
     firstName: 'Test',
@@ -266,8 +265,8 @@ describe('Club Player Controller', () => {
 
       await showClubPlayers(req, res, next);
 
-      expect(req.flash).toHaveBeenCalledWith('error', 'You must be a club delegate to view players.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
+      expect(req.flash).toHaveBeenCalledWith('error', 'You must be logged in to view players.');
+      expect(res.redirect).toHaveBeenCalledWith('/auth/login');
     });
 
     it('should handle club not found error', async () => {
@@ -328,7 +327,7 @@ describe('Club Player Controller', () => {
 
       await showAddPlayerForm(req, res, next);
 
-      expect(req.flash).toHaveBeenCalledWith('error', 'You must be a club delegate to add players.');
+      expect(req.flash).toHaveBeenCalledWith('error', 'You can only manage players for your own club.');
       expect(res.redirect).toHaveBeenCalledWith('/dashboard');
     });
 
@@ -456,6 +455,7 @@ describe('Club Player Controller', () => {
 
       ClubPlayer.create.mockRejectedValue(error);
 
+      req.params.id = '1';
       req.body = {
         firstName: 'John',
         lastName: 'Smith',
@@ -533,8 +533,17 @@ describe('Club Player Controller', () => {
 
       await deactivatePlayer(req, res, next);
 
-      expect(req.flash).toHaveBeenCalledWith('error', 'You must be a club delegate to remove players.');
-      expect(res.redirect).toHaveBeenCalledWith('/dashboard');
+      expect(req.flash).toHaveBeenCalledWith('error', 'You do not have permission to access this club.');
+      expect(res.redirect).toHaveBeenCalledWith('/clubs');
+    });
+
+    it('should handle unauthenticated deactivation attempt', async () => {
+      req.user = null;
+
+      await deactivatePlayer(req, res, next);
+
+      expect(req.flash).toHaveBeenCalledWith('error', 'You must be logged in to remove players.');
+      expect(res.redirect).toHaveBeenCalledWith('/auth/login');
     });
   });
 
@@ -548,6 +557,15 @@ describe('Club Player Controller', () => {
       expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
       expect(res.setHeader).toHaveBeenCalledWith('Content-Disposition', 'attachment; filename="Test_Club_players_template.csv"');
       expect(res.send).toHaveBeenCalledWith(expect.stringContaining('firstName,lastName,email,dateOfBirth,notes,shorts'));
+    });
+
+    it('should handle unauthenticated CSV template download', async () => {
+      req.user = null;
+
+      await downloadCsvTemplate(req, res, next);
+
+      expect(req.flash).toHaveBeenCalledWith('error', 'You must be logged in to download the template.');
+      expect(res.redirect).toHaveBeenCalledWith('/auth/login');
     });
 
     it('should handle CSV import with valid data', async () => {
@@ -635,7 +653,7 @@ describe('Club Player Controller', () => {
 
       await downloadCsvTemplate(req, res, next);
 
-      expect(req.flash).toHaveBeenCalledWith('error', 'You must be a club delegate to download the template.');
+      expect(req.flash).toHaveBeenCalledWith('error', 'You can only manage players for your own club.');
       expect(res.redirect).toHaveBeenCalledWith('/dashboard');
     });
   });

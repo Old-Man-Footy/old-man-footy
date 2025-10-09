@@ -231,10 +231,10 @@ export class BaseEmailService {
      * @private
      */
     _getBaseUrl() {
-        const { NODE_ENV, BASE_URL } = process.env;
+        const { NODE_ENV, APP_URL } = process.env;
         
-        if (BASE_URL) {
-            return BASE_URL;
+        if (APP_URL) {
+            return APP_URL;
         }
         
         // Fallback URLs based on environment

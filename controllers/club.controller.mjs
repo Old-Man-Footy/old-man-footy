@@ -273,7 +273,11 @@ const showClubProfileHandler = async (req, res) => {
     primaryDelegate,
     sponsors: sortedSponsors,
     user: req.user || null,
-    additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],
+    additionalCSS: ['/styles/club.styles.css', '/styles/sponsor.styles.css'],    
+    ogTitle: club.clubName,
+    ogDescription: club.description,
+    ogImage: club.logoUrl ? `${process.env.APP_URL}/${club.logoUrl}` : null,
+    pageUrl: `${process.env.APP_URL}/clubs/${club.id}`
   });
 };
 
@@ -606,6 +610,10 @@ const showClubSponsorHandler = async (req, res, next) => {
       sponsor,
       canEdit: club.canUserEdit(req.user),
       additionalCSS: ['/styles/sponsor.styles.css'],
+      ogTitle: `${sponsor.sponsorName} - ${club.clubName}`,
+      ogDescription: sponsor.location,
+      ogImage: sponsor.logoUrl ? `${process.env.APP_URL}/${sponsor.logoUrl}` : null, 
+      pageUrl: `${process.env.APP_URL}/clubs/${club.id}/sponsors/${sponsor.id}`
     });
   } catch (err) {
     next(err);
@@ -828,16 +836,13 @@ const addSponsorToClubHandler = async (req, res) => {
     if (!errors.isEmpty()) {
       const errorMessages = errors.array().map(error => error.msg);
       req.flash('error_msg', errorMessages.join(', '));
-      console.log(`🔍 DEBUG: Validation failed, redirecting to /clubs/${clubId}/sponsors/add`);
       return res.redirect(`/clubs/${clubId}/sponsors/add`);
     }
 
     // Find the club from the URL parameter
-    console.log(`🔍 DEBUG: Looking up club with ID: ${clubId}`);
     const club = await Club.findByPk(clubId);
 
     if (!club) {
-      console.log(`🔍 DEBUG: Club not found, redirecting to /clubs`);
       req.flash('error_msg', 'Club not found.');
       return res.redirect('/clubs');
     }
@@ -1001,17 +1006,18 @@ const removeSponsorFromClubHandler = async (req, res) => {
  */
 const showEditClubSponsorHandler = async (req, res) => {
   const user = req.user;
-  const { sponsorId } = req.params;
+  const { id: clubId, sponsorId } = req.params;
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
-    return res.redirect('/dashboard');
-  }
-
-  const club = await Club.findByPk(user.clubId);
+  const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Check if user has permission (admin or club owner)
+  if (!club.canUserEdit(user)) {
+    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
     return res.redirect('/dashboard');
   }
 
@@ -1024,7 +1030,7 @@ const showEditClubSponsorHandler = async (req, res) => {
   });
 
   if (!sponsor) {
-    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    req.flash('error_msg', 'Sponsor not found or not associated with this club.');
     return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 
@@ -1047,17 +1053,18 @@ const showEditClubSponsorHandler = async (req, res) => {
  */
 const updateClubSponsorHandler = async (req, res) => {
   const user = req.user;
-  const { sponsorId } = req.params;
+  const { id: clubId, sponsorId } = req.params;
 
-  if (!user.clubId) {
-    req.flash('error_msg', 'You must be associated with a club to edit sponsors.');
-    return res.redirect('/dashboard');
-  }
-
-  const club = await Club.findByPk(user.clubId);
+  const club = await Club.findByPk(clubId);
 
   if (!club) {
     req.flash('error_msg', 'Club not found.');
+    return res.redirect('/dashboard');
+  }
+
+  // Allow admins to edit any club's sponsors, or users to edit their own club's sponsors
+  if (!club.canUserEdit(user)) {
+    req.flash('error_msg', 'You do not have permission to edit this club\'s sponsors.');
     return res.redirect('/dashboard');
   }
 
@@ -1070,7 +1077,7 @@ const updateClubSponsorHandler = async (req, res) => {
   });
 
   if (!sponsor) {
-    req.flash('error_msg', 'Sponsor not found or not associated with your club.');
+    req.flash('error_msg', 'Sponsor not found or not associated with this club.');
     return res.redirect(`/clubs/${club.id}/sponsors`);
   }
 

@@ -136,8 +136,8 @@ class Sponsor extends Model {
       isPubliclyVisible: this.isPubliclyVisible,
       sponsorshipLevel: this.sponsorshipLevel,
       displayOrder: this.displayOrder,
-      clubId,
-      carnivalId
+      clubId: clubId || null,
+      carnivalId: carnivalId || null
     };
 
     return await Sponsor.create(sponsorData);

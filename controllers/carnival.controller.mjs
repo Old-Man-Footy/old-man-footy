@@ -481,6 +481,13 @@ const showCarnivalHandler = async (req, res) => {
     showPostCreationModal: req.query.showPostCreationModal === 'true', // Pass query parameter to view
     additionalCSS: ['/styles/carnival.styles.css','/styles/sponsor.styles.css'],
     hostClub,
+    ogTitle: carnival.title,
+    ogDescription: carnival.scheduleDetails,
+    ogImage: (() => {
+        const imagePath = carnival.promotionalImage ? carnival.promotionalImage : (carnival.clubLogoUrl ? (hostClub && hostClub.logoUrl ? hostClub.logoUrl : null) : null);
+        return imagePath ? `${process.env.APP_URL}/${imagePath}` : null;
+    })(),
+    pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}`
   });
 };
 
@@ -1147,10 +1154,8 @@ export const showCarnivalSponsors = asyncHandler(async (req, res) => {
     
     // Fetch the carnival
     const carnival = await Carnival.findByPk(carnivalId);
-    if (!carnival) {
-      req.flash('error_msg', 'Carnival not found');
-      return res.redirect('/carnivals');
-    }
+    
+    checkNullCarnival(carnival, req, res);
 
     // Fetch current carnival sponsors using direct relationship
     const carnivalSponsors = await carnival.getCarnivalSponsors({
@@ -1193,10 +1198,7 @@ export const showAddSponsorForm = asyncHandler(async (req, res) => {
       }]
     });
     
-    if (!carnival) {
-      req.flash('error_msg', 'Carnival not found');
-      return res.redirect('/carnivals');
-    }
+    checkNullCarnival(carnival, req, res);
 
     // Fetch sponsors already linked to this carnival using direct relationship
     const carnivalSponsors = await carnival.getCarnivalSponsors({
@@ -1252,11 +1254,9 @@ export const addSponsorToCarnival = asyncHandler(async (req, res) => {
 
     // Check if carnival exists
     const carnival = await Carnival.findByPk(carnivalId);
-    if (!carnival) {
-      req.flash('error_msg', 'Carnival not found');
-      return res.redirect('/carnivals');
-    }
-
+   
+    checkNullCarnival(carnival, req, res);
+    
     let sponsor;
 
     if (createNew === 'true') {
@@ -1343,10 +1343,8 @@ export const removeSponsorFromCarnival = asyncHandler(async (req, res) => {
 
     // Check if carnival exists
     const carnival = await Carnival.findByPk(carnivalId);
-    if (!carnival) {
-      req.flash('error_msg', 'Carnival not found');
-      return res.redirect('/carnivals');
-    }
+    
+    checkNullCarnival(carnival, req, res);
 
     // Check if sponsor exists and belongs to this carnival
     const sponsor = await Sponsor.findOne({
@@ -1392,10 +1390,8 @@ export const showCarnivalSponsor = asyncHandler(async (req, res) => {
 
   // Check if carnival exists
   const carnival = await Carnival.findByPk(carnivalId);
-  if (!carnival) {
-    req.flash('error_msg', 'Carnival not found');
-    return res.redirect('/carnivals');
-  }
+  
+  checkNullCarnival(carnival, req, res);
 
   // Find sponsor belonging to this carnival
   const sponsor = await Sponsor.findOne({
@@ -1419,6 +1415,10 @@ export const showCarnivalSponsor = asyncHandler(async (req, res) => {
     sponsor,
     canEdit: carnival.canUserEdit(req.user),
     additionalCSS: ['/styles/sponsor.styles.css'],
+    ogTitle: `${sponsor.sponsorName} - ${carnival.title}`,
+    ogDescription: sponsor.location,
+    ogImage: sponsor.logoUrl ? `${process.env.APP_URL}/${sponsor.logoUrl}` : null, 
+    pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}/sponsors/${sponsor.id}`
   });
 });
 
@@ -1432,10 +1432,8 @@ export const showEditCarnivalSponsor = asyncHandler(async (req, res) => {
 
   // Check if carnival exists
   const carnival = await Carnival.findByPk(carnivalId);
-  if (!carnival) {
-    req.flash('error_msg', 'Carnival not found');
-    return res.redirect('/carnivals');
-  }
+  
+  checkNullCarnival(carnival, req, res);
 
   // Check user permissions - only admin or carnival owner can edit sponsors
   if (!carnival.canUserEdit(req.user)) {
@@ -1479,10 +1477,8 @@ export const updateCarnivalSponsor = asyncHandler(async (req, res) => {
 
   // Check if carnival exists
   const carnival = await Carnival.findByPk(carnivalId);
-  if (!carnival) {
-    req.flash('error_msg', 'Carnival not found');
-    return res.redirect('/carnivals');
-  }
+
+  checkNullCarnival(carnival, req, res);  
 
   // Check user permissions - only admin or carnival owner can edit sponsors
   if (!carnival.canUserEdit(req.user)) {
@@ -1524,6 +1520,18 @@ export const updateCarnivalSponsor = asyncHandler(async (req, res) => {
     req.flash('error_msg', 'Please correct the validation errors.');
     return res.redirect(`/carnivals/${carnivalId}/sponsors/${sponsorId}/edit`);
   }
+
+/**
+ * Check if carnival is null and handle errors
+ * @param {Object|null} carnival - The carnival object to check
+ */
+const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect(path);
+    }
+}
+  
 
   const {
     sponsorName,

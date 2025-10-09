@@ -108,7 +108,7 @@ export const LOGO_DISPLAY_SIZES_ARRAY = Object.values(LOGO_DISPLAY_SIZES);
  * Get all gallery directories for a specific entity type
  * @param {string} entityType - Entity type ('carnivals' or 'clubs')
  * @param {boolean} filterPublic - Whether to filter for public entities only
- * @returns {Promise<string[]>} Array of gallery directory paths
+ * @returns {Promise<Object[]>} Array of gallery directory objects with metadata
  */
 export async function getEntityGalleryDirectories(entityType, filterPublic = true) {
     const uploadsPath = path.join('public', 'uploads', entityType);
@@ -134,18 +134,21 @@ export async function getEntityGalleryDirectories(entityType, filterPublic = tru
                     );
                     
                     if (hasImages) {
-                        directories.push(galleryPath);
+                        // Create gallery info object with metadata
+                        const relativePath = path.join(entityType, entityId, 'gallery').replace(/\\/g, '/');
+                        directories.push({
+                            entityId: entityId,
+                            entityType: entityType === 'carnivals' ? 'carnival' : 'club',
+                            relativePath: relativePath,
+                            fullPath: galleryPath
+                        });
                     }
                 }
             }
         }
         
-        // If filtering for public entities, check entity visibility
-        if (filterPublic) {
-            return await filterPublicEntityDirectories(directories, entityType);
-        }
-        
-        return directories;
+        // Enrich with entity data and filter for public if needed
+        return await enrichEntityGalleryDirectories(directories, entityType, filterPublic);
     } catch (error) {
         console.error(`Error scanning ${entityType} gallery directories:`, error);
         return directories;
@@ -153,41 +156,79 @@ export async function getEntityGalleryDirectories(entityType, filterPublic = tru
 }
 
 /**
- * Filter directories to only include public entities
- * @param {string[]} directories - Array of directory paths
+ * Enrich gallery directories with entity data and apply visibility filtering
+ * @param {Object[]} directories - Array of gallery directory objects
  * @param {string} entityType - Entity type ('carnivals' or 'clubs')
- * @returns {Promise<string[]>} Filtered array of public entity directories
+ * @param {boolean} filterPublic - Whether to filter for public entities only
+ * @returns {Promise<Object[]>} Enriched and optionally filtered array of gallery directories
  */
-async function filterPublicEntityDirectories(directories, entityType) {
+async function enrichEntityGalleryDirectories(directories, entityType, filterPublic) {
     try {
         // Import models dynamically to avoid circular dependencies
         const { Carnival, Club } = await import('../models/index.mjs');
         
-        const publicDirs = [];
+        const enrichedDirs = [];
         
-        for (const dir of directories) {
-            // Extract entity ID from path: public/uploads/{entityType}/{id}/gallery
-            const pathParts = dir.split(path.sep);
-            const entityId = pathParts[pathParts.length - 2]; // Get ID from path
-            
+        for (const dirInfo of directories) {
             let entity = null;
+            let isPublic = false;
+            let entityName = '';
+            
             if (entityType === 'carnivals') {
-                entity = await Carnival.findByPk(entityId, { attributes: ['id', 'isPublic'] });
+                // Fetch carnival with its hosting club relationship
+                entity = await Carnival.findByPk(dirInfo.entityId, {
+                    attributes: ['id', 'title', 'isActive', 'hostingClubId'],
+                    include: [{
+                        model: Club,
+                        as: 'hostingClub',
+                        attributes: ['id', 'name', 'isPubliclyListed']
+                    }]
+                });
+                
+                if (entity) {
+                    entityName = entity.title;
+                    // Carnival is public if it's active OR if its hosting club is publicly listed
+                    isPublic = entity.isActive && (entity.hostingClub && entity.hostingClub.isPubliclyListed);
+                }
             } else if (entityType === 'clubs') {
-                entity = await Club.findByPk(entityId, { attributes: ['id', 'isPublic'] });
+                entity = await Club.findByPk(dirInfo.entityId, {
+                    attributes: ['id', 'name', 'isPubliclyListed']
+                });
+                
+                if (entity) {
+                    entityName = entity.name;
+                    // Club is public if isPubliclyListed is true
+                    isPublic = entity.isPubliclyListed === true;
+                }
             }
             
-            // Include if entity exists and is public (default to true if isPublic field doesn't exist)
-            if (entity && (entity.isPublic !== false)) {
-                publicDirs.push(dir);
+            // Skip if entity doesn't exist
+            if (!entity) {
+                continue;
             }
+            
+            // Skip if filtering for public and entity is not public
+            if (filterPublic && !isPublic) {
+                continue;
+            }
+            
+            // Add enriched data to directory info
+            enrichedDirs.push({
+                ...dirInfo,
+                entityName: entityName,
+                isPublic: isPublic
+            });
         }
         
-        return publicDirs;
+        return enrichedDirs;
     } catch (error) {
-        console.error('Error filtering public entity directories:', error);
-        // On error, return all directories (fail open)
-        return directories;
+        console.error('Error enriching entity gallery directories:', error);
+        // On error, return directories without enrichment (fail open)
+        return directories.map(dir => ({
+            ...dir,
+            entityName: `${dir.entityType} ${dir.entityId}`,
+            isPublic: !filterPublic // If not filtering, assume public; if filtering, this is an error case
+        }));
     }
 }
 

@@ -178,6 +178,7 @@ const showCarnivalAttendeesHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get all registered clubs for this carnival
   const attendingClubs = await CarnivalClub.findAll({
@@ -239,6 +240,7 @@ const showAddClubToCarnivalHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get all active clubs not already registered for this carnival
   const registeredClubIds = await CarnivalClub.findAll({
@@ -301,6 +303,7 @@ const registerClubForCarnivalHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   const {
     clubId,
@@ -407,6 +410,7 @@ const showEditRegistrationHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration details
   const registration = await CarnivalClub.findOne({
@@ -460,6 +464,7 @@ const updateRegistrationHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration
   const registration = await CarnivalClub.findOne({
@@ -534,6 +539,7 @@ const removeClubFromCarnivalHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration
   const registration = await CarnivalClub.findOne({
@@ -568,6 +574,18 @@ const removeClubFromCarnivalHandler = async (req, res) => {
 };
 
 /**
+ * Check if carnival is null and handle errors
+ * @param {Object|null} carnival - The carnival object to check
+ */
+const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
+    if (!carnival) {
+      console.error('Carnival is null despite successful auth result - this should not happen');
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect(path);
+    }
+}
+
+/**
  * Update display order of attending clubs
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -586,7 +604,8 @@ const reorderAttendingClubsHandler = async (req, res) => {
     });
   }
 
-  const carnival = authResult.carnival;
+  const carnival = authResult.carnival;  
+  checkNullCarnival(carnival, res, req);
 
   if (!Array.isArray(clubOrder)) {
     return res.status(400).json({
@@ -835,6 +854,7 @@ const showCarnivalClubPlayersHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration details
   const registration = await CarnivalClub.findOne({
@@ -931,6 +951,7 @@ const showAddPlayersToRegistrationHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration details
   const registration = await CarnivalClub.findOne({
@@ -1008,6 +1029,7 @@ const addPlayersToRegistrationHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration details
   const registration = await CarnivalClub.findOne({
@@ -1079,6 +1101,7 @@ const removePlayerFromRegistrationHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get player assignment
   const assignment = await CarnivalClubPlayer.findOne({
@@ -1140,6 +1163,7 @@ const updatePlayerAttendanceStatusHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get player assignment
   const assignment = await CarnivalClubPlayer.findOne({
@@ -1385,6 +1409,7 @@ const approveClubRegistrationHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration
   const registration = await CarnivalClub.findOne({
@@ -1463,6 +1488,7 @@ const rejectClubRegistrationHandler = async (req, res) => {
   }
 
   const carnival = authResult.carnival;
+  checkNullCarnival(carnival, res, req);
 
   // Get registration
   const registration = await CarnivalClub.findOne({

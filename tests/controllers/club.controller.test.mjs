@@ -69,6 +69,7 @@ vi.mock('../../models/index.mjs', () => {
     getClubSponsors: vi.fn().mockResolvedValue([]),
     isUnclaimed: vi.fn().mockReturnValue(false),
     canUserClaim: vi.fn().mockReturnValue(true),
+    canUserEdit: vi.fn().mockReturnValue(true),
     getProxyCreator: vi.fn().mockResolvedValue({ firstName: 'Proxy', lastName: 'Creator' }),
     // Add missing properties for test compatibility
     website: '',
@@ -136,20 +137,6 @@ vi.mock('../../models/index.mjs', () => {
 });
 
 // Mock other services
-vi.mock('../../services/imageNamingService.mjs', () => ({
-  default: {
-    getClubImages: vi.fn().mockResolvedValue([]),
-    getEntityImages: vi.fn().mockResolvedValue([]),
-    parseImageName: vi.fn().mockReturnValue({
-      entityType: 'club',
-      entityId: 1,
-      imageType: 'gallery'
-    }),
-    getRelativePath: vi.fn().mockReturnValue('clubs/gallery'),
-    ENTITY_TYPES: { CLUB: 'club' },
-    IMAGE_TYPES: { LOGO: 'logo', GALLERY: 'gallery' }
-  }
-}));
 
 vi.mock('../../services/sponsorSortingService.mjs', () => ({
   sortSponsorsHierarchically: vi.fn().mockReturnValue([])
@@ -161,13 +148,18 @@ vi.mock('../../services/email/InvitationEmailService.mjs', () => ({
   }
 }));
 
+// Mock fs for existsSync (named import)
+vi.mock('fs', () => ({
+  existsSync: vi.fn()
+}));
+
+// Mock fs/promises (default import)
 vi.mock('fs/promises', () => ({
   default: {
     access: vi.fn(),
-    unlink: vi.fn()
-  },
-  access: vi.fn(),
-  unlink: vi.fn()
+    unlink: vi.fn(),
+    readdir: vi.fn()
+  }
 }));
 
 // Mock constants that the controller imports
@@ -210,7 +202,8 @@ import {
   sequelize as mockSequelize,
   createMockClub} from '../../models/index.mjs';
 
-import ImageNamingService from '../../services/imageNamingService.mjs';
+import { existsSync } from 'fs';
+import fs from 'fs/promises';
 import { sortSponsorsHierarchically } from '../../services/sponsorSortingService.mjs';
 import InvitationEmailService from '../../services/email/InvitationEmailService.mjs';
 import { validationResult } from 'express-validator';
@@ -237,7 +230,11 @@ describe('Club Controller', () => {
       user: null,
       flash: vi.fn(),
       file: null,
-      files: null
+      files: null,
+      csrfToken: vi.fn().mockReturnValue('csrf-token-123'),
+      headers: {
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+      }
     };
 
     // Mock response object
@@ -295,7 +292,6 @@ describe('Club Controller', () => {
 
     // Mock services
     sortSponsorsHierarchically.mockReturnValue([]);
-    ImageNamingService.getClubImages.mockResolvedValue([]);
     InvitationEmailService.sendClubInvitation.mockResolvedValue(true);
 
     // Mock validation to return no errors by default
@@ -556,7 +552,7 @@ describe('Club Controller', () => {
           'success_msg',
           'Club profile updated successfully!'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/1/edit');
       });
 
       it('should handle validation errors', async () => {
@@ -571,7 +567,7 @@ describe('Club Controller', () => {
           'error_msg',
           'Validation errors: Email is invalid, Phone is invalid'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/1/edit');
       });
 
       it('should handle user without club', async () => {
@@ -639,7 +635,7 @@ describe('Club Controller', () => {
           'error_msg',
           'Please correct the validation errors.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
+        expect(res.redirect).toHaveBeenCalledWith('/dashboard');
       });
 
       it('should handle duplicate club name', async () => {
@@ -651,7 +647,7 @@ describe('Club Controller', () => {
           'error_msg',
           'A club with this name already exists. Please choose a different name.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
+        expect(res.redirect).toHaveBeenCalledWith('/dashboard');
       });
     });
   });
@@ -713,7 +709,7 @@ describe('Club Controller', () => {
           'error_msg',
           'You are already associated with a club. You can only be a member of one club at a time.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
+        expect(res.redirect).toHaveBeenCalledWith('/clubs/2/edit');
       });
 
       it('should handle club not found', async () => {
@@ -725,7 +721,7 @@ describe('Club Controller', () => {
           'error_msg',
           'Club not found or is not active.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
+        expect(res.redirect).toHaveBeenCalledWith('/dashboard');
       });
     });
 
@@ -986,9 +982,9 @@ describe('Club Controller', () => {
 
         expect(req.flash).toHaveBeenCalledWith(
           'error_msg',
-          'You can only manage sponsors for your own club.'
+          'You must be associated with this club to manage sponsors.'
         );
-        expect(res.redirect).toHaveBeenCalledWith('/clubs/edit');
+        expect(res.redirect).toHaveBeenCalledWith('/dashboard');
       });
       // it('should display club sponsors for authorized user', async () => {
       //   req.user = { ...mockUser, clubId: 1 };
@@ -1131,25 +1127,31 @@ describe('Club Controller', () => {
         req.params = { clubId: '1' }; // Fix parameter name
         req.query = { imageType: 'gallery' };
 
-        const mockImages = [
-          { filename: 'image1.jpg', url: '/uploads/clubs/1/image1.jpg' },
-          { filename: 'image2.jpg', url: '/uploads/clubs/1/image2.jpg' }
+        const mockFiles = ['image1.jpg', 'image2.jpg', 'document.txt'];
+        const expectedImages = [
+          { 
+            filename: 'image1.jpg', 
+            url: '/uploads/clubs/1/gallery/image1.jpg',
+            path: 'public/uploads/clubs/1/gallery/image1.jpg'
+          },
+          { 
+            filename: 'image2.jpg', 
+            url: '/uploads/clubs/1/gallery/image2.jpg',
+            path: 'public/uploads/clubs/1/gallery/image2.jpg'
+          }
         ];
 
-        // Mock the actual service method used by controller
-        ImageNamingService.getEntityImages = vi.fn().mockResolvedValue(mockImages);
+        // Mock fs operations used by readClubImages function
+        existsSync.mockReturnValue(true);
+        fs.readdir.mockResolvedValue(mockFiles);
 
         await getClubImages(req, res);
 
-        expect(ImageNamingService.getEntityImages).toHaveBeenCalledWith(
-          ImageNamingService.ENTITY_TYPES.CLUB,
-          1,
-          'gallery'
-        );
+        expect(fs.readdir).toHaveBeenCalledWith('public/uploads/clubs/1/gallery/');
         expect(res.json).toHaveBeenCalledWith({
           success: true,
-          images: mockImages,
-          total: mockImages.length
+          images: expectedImages,
+          total: expectedImages.length
         });
       });
 
@@ -1174,22 +1176,15 @@ describe('Club Controller', () => {
       });
 
       it('should successfully delete club image', async () => {
-        const fs = await import('fs/promises');
-        
-        // Mock ImageNamingService methods used by controller
-        ImageNamingService.parseImageName = vi.fn().mockReturnValue({
-          entityType: ImageNamingService.ENTITY_TYPES.CLUB,
-          entityId: 1,
-          imageType: ImageNamingService.IMAGE_TYPES.GALLERY
-        });
-        ImageNamingService.getRelativePath = vi.fn().mockReturnValue('clubs/gallery');
-        ImageNamingService.ENTITY_TYPES = { CLUB: 'club' };
-        ImageNamingService.IMAGE_TYPES = { LOGO: 'logo', GALLERY: 'gallery' };
-        
-        fs.unlink = vi.fn().mockResolvedValue(true);
+        // Mock file system operations used by deleteClubImageHandler
+        existsSync.mockReturnValue(true);  // File exists
+        fs.unlink.mockResolvedValue(true);
 
         await deleteClubImage(req, res);
 
+        // Verify file operations based on controller logic
+        expect(existsSync).toHaveBeenCalledWith('public/uploads/clubs/1/gallery/image1.jpg');
+        expect(fs.unlink).toHaveBeenCalledWith('public/uploads/clubs/1/gallery/image1.jpg');
         expect(res.json).toHaveBeenCalledWith({
           success: true,
           message: 'Image deleted successfully'
@@ -1208,18 +1203,19 @@ describe('Club Controller', () => {
         });
       });
 
-      it('should handle invalid filename', async () => {
-        req.params.filename = '/malicious.txt';
+      it('should handle file not found', async () => {
+        req.params.filename = 'nonexistent.jpg';
         
-        // Mock parseImageName to return null for invalid files
-        ImageNamingService.parseImageName = vi.fn().mockReturnValue(null);
+        // Mock file doesn't exist
+        existsSync.mockReturnValue(false);
 
         await deleteClubImage(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(existsSync).toHaveBeenCalledWith('public/uploads/clubs/1/gallery/nonexistent.jpg');
+        expect(res.status).toHaveBeenCalledWith(404);
         expect(res.json).toHaveBeenCalledWith({
           success: false,
-          message: 'Invalid image file or image does not belong to this club'
+          message: 'Image file not found'
         });
       });
     });
@@ -1248,18 +1244,17 @@ describe('Club Controller', () => {
       }
     });
 
-    it('should handle image service errors', async () => {
+    it('should handle fs readdir errors', async () => {
       req.user = { ...mockUser, clubId: 1 };
       req.params.id = '1';
 
-      ImageNamingService.getClubImages.mockRejectedValue(
-        new Error('Image service error')
-      );
+      existsSync.mockReturnValue(true);
+      fs.readdir.mockRejectedValue(new Error('File system error'));
 
       try {
         await getClubImages(req, res);
       } catch (error) {
-        expect(error.message).toBe('Image service error');
+        expect(error.message).toBe('File system error');
       }
     });
   });

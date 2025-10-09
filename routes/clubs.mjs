@@ -177,17 +177,12 @@ router.post('/join/:id', ensureAuthenticated, clubController.joinClub);
 // Leave club route
 router.post('/leave', ensureAuthenticated, clubController.leaveClub);
 
-// Show individual sponsor for club context
-router.get('/:id/sponsors/:sponsorId', clubController.showClubSponsor);
-
 // API endpoints for image management
 // Get all images for a club
 router.get('/:clubId/images', ensureAuthenticated, clubController.getClubImages);
 
 // Delete a specific club image
 router.delete('/:clubId/images/:filename', ensureAuthenticated, clubController.deleteClubImage);
-
-
 
 // Proxy club creation routes (for delegates and admins)
 router.get('/create-on-behalf', ensureAuthenticated, clubController.getCreateOnBehalf);
@@ -223,6 +218,7 @@ router.post('/:id/sponsors/add', ensureAuthenticated, clubSponsorUpload.upload.f
     body('websiteUrl').optional({ nullable: true, checkFalsy: true }).isURL().withMessage('Valid website URL required'),
     body('description').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }).withMessage('Description must be 1000 characters or less')
 ], clubController.addSponsorToClub);
+router.get('/:id/sponsors/:sponsorId', clubController.showClubSponsor);
 router.get('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, clubController.showEditClubSponsor);
 router.post('/:id/sponsors/:sponsorId/edit', ensureAuthenticated, clubSponsorUpload.upload.fields(sponsorFieldConfig), clubSponsorUpload.process, [
     body('sponsorName').isLength({ min: 2, max: 100 }).withMessage('Sponsor name must be between 2 and 100 characters'),

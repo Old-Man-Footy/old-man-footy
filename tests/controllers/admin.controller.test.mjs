@@ -325,7 +325,11 @@ describe('Admin Controller', () => {
       body: {},
       user: createMockUser({ id: 1, isAdmin: true, email: 'admin@example.com' }),
       flash: vi.fn(),
-      structuredUploads: null
+      structuredUploads: null,
+      csrfToken: vi.fn().mockReturnValue('csrf-token-123'),
+      headers: {
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+      }
     };
 
     // Mock response object

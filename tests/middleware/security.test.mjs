@@ -316,7 +316,7 @@ describe('Security Middleware', () => {
       });
 
       it('should reject requests with invalid CSRF token', () => {
-        mockReq.session = { csrfToken: 'valid-token' };
+        mockReq.csrfToken = vi.fn().mockReturnValue('valid-token');
         mockReq.body = { _token: 'invalid-token' };
         
         csrfProtection(mockReq, mockRes, mockNext);
@@ -333,7 +333,7 @@ describe('Security Middleware', () => {
 
       it('should accept requests with valid CSRF token', () => {
         const validToken = 'valid-token-123';
-        mockReq.session = { csrfToken: validToken };
+        mockReq.csrfToken = vi.fn().mockReturnValue(validToken);
         mockReq.body = { _token: validToken };
         
         csrfProtection(mockReq, mockRes, mockNext);

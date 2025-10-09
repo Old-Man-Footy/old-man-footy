@@ -1,0 +1,66 @@
+<%
+// Share Button Partial
+// 
+// Reusable share button dropdown that can be added to any page.
+// 
+// Usage:
+//   include('partials/share-button', { 
+//     title: 'Page Title',
+//     description: 'Optional description text',  // Optional
+//     url: '/custom/url'  // Optional, defaults to current page
+//   })
+//
+// e.g. in res.render() of the page, pass these parameters top update the header layout:
+//        ogTitle: carnival.title,
+//        ogDescription: description,
+//        ogImage: carnival.promotionalImageURL, // This needs to be a full URL, e.g., https://yoursite.com/uploads/image.jpg
+//        pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}` // Construct the full URL
+// 
+// Required scripts:
+//   <script type="module" src="/js/share-button.js"></script>
+
+// Set defaults if not provided
+const shareTitle = typeof title !== 'undefined' ? title : 'Check this out';
+const shareDescription = typeof description !== 'undefined' ? description : '';
+const shareUrl = typeof url !== 'undefined' ? url : '';
+%>
+
+<!-- Share Button Dropdown -->
+<div class="dropdown share-button-container" data-share-title="<%= shareTitle %>" data-share-description="<%= shareDescription %>" data-share-url="<%= shareUrl %>">
+    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-share-fill me-1"></i>
+        Share
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="shareDropdown">
+        <li>
+            <h6 class="dropdown-header">Share this page</h6>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item" href="#" data-share-platform="facebook">
+                <i class="bi bi-facebook me-2 label-facebook"></i> Facebook
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="#" data-share-platform="twitter">
+                <i class="bi bi-twitter-x me-2 label-twitter-x"></i> X (Twitter)
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="#" data-share-platform="whatsapp">
+                <i class="bi bi-whatsapp me-2 label-whatsapp"></i> WhatsApp
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="#" data-share-platform="email">
+                <i class="bi bi-envelope me-2"></i> Email
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item" href="#" data-share-platform="copy">
+                <i class="bi bi-link-45deg me-2"></i> Copy Link
+            </a>
+        </li>
+    </ul>
+</div>

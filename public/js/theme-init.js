@@ -7,7 +7,7 @@
  * Initialize theme based on saved preference or system preference
  * @returns {string} The applied theme ('light' or 'dark')
  */
-export function initTheme() {
+function initTheme() {
     'use strict';
     
     // Check if theme was already initialized inline

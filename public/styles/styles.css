@@ -1534,6 +1534,10 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: #000000;
 }
 
+.label-whatsapp {
+    color: #25d366;
+}
+
 .btn-facebook:not(:disabled):not(.disabled) { background-color: #1877f2; border-color: #1877f2; color: white; }
 .btn-facebook:hover, .btn-facebook:focus, .btn-facebook:active { background-color: #166fe5; border-color: #166fe5; color: white; box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.25); }
 .btn-youtube, .btn-youtube:not(:disabled):not(.disabled) { background-color: #ff0000; border-color: #ff0000; color: white; }

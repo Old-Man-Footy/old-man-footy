@@ -119,6 +119,7 @@ vi.mock('/models/index.mjs', () => {
     },
     isRegistrationActiveAsync: vi.fn().mockResolvedValue(true),
     getApprovedRegistrationsCount: vi.fn().mockResolvedValue(5),
+    canUserEdit: vi.fn().mockReturnValue(true),
     ...overrides
   });
 

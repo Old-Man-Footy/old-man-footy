@@ -204,6 +204,10 @@ describe('Authentication Controller', () => {
       flash: vi.fn(),
       login: vi.fn(),
       logout: vi.fn(),
+      csrfToken: vi.fn().mockReturnValue('csrf-token-123'),
+      headers: {
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+      }
     };
     
     mockRes = {
