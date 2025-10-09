@@ -86,6 +86,12 @@ vi.mock('../../models/index.mjs', () => {
     },
     isRegistrationActiveAsync: vi.fn().mockResolvedValue(true),
     getApprovedRegistrationsCount: vi.fn().mockResolvedValue(5),
+    canUserEdit: vi.fn().mockImplementation(function(user) {
+      if (!user) return false;
+      if (user.isAdmin) return true;
+      if (this.clubId && this.clubId === user.clubId) return true;
+      return false;
+    }),
     ...overrides
   });
 
