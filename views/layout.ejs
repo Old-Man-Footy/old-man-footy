@@ -14,10 +14,10 @@
         const defaultDescription = 'Your central hub for Masters Rugby League carnival information across Australia.';
         const defaultImageUrl = `${process.env.APP_URL}/icons/old-man-footy.png`; 
 
-        const pageTitle = ogTitle || title;
-        const pageDescription = ogDescription || defaultDescription;
-        const pageImage = ogImage || defaultImageUrl;
-        const currentUrl = ogUrl || process.env.APP_URL;
+        const pageTitle = (typeof ogTitle !== 'undefined' ? ogTitle : null) || title;
+        const pageDescription = (typeof ogDescription !== 'undefined' ? ogDescription : null) || defaultDescription;
+        const pageImage = (typeof ogImage !== 'undefined' ? ogImage : null) || defaultImageUrl;
+        const currentUrl = (typeof ogUrl !== 'undefined' ? ogUrl : null) || process.env.APP_URL;
     %>
 
     <meta name="description" content="<%= pageDescription %>">
