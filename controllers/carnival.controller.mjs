@@ -487,7 +487,7 @@ const showCarnivalHandler = async (req, res) => {
         const imagePath = carnival.promotionalImage ? carnival.promotionalImage : (carnival.clubLogoUrl ? (hostClub && hostClub.logoUrl ? hostClub.logoUrl : null) : null);
         return imagePath ? `${process.env.APP_URL}/${imagePath}` : null;
     })(),
-    pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}`
+    ogUrl: `${process.env.APP_URL}/carnivals/${carnival.id}`
   });
 };
 
@@ -1418,7 +1418,7 @@ export const showCarnivalSponsor = asyncHandler(async (req, res) => {
     ogTitle: `${sponsor.sponsorName} - ${carnival.title}`,
     ogDescription: sponsor.location,
     ogImage: sponsor.logoUrl ? `${process.env.APP_URL}/${sponsor.logoUrl}` : null, 
-    pageUrl: `${process.env.APP_URL}/carnivals/${carnival.id}/sponsors/${sponsor.id}`
+    ogUrl: `${process.env.APP_URL}/carnivals/${carnival.id}/sponsors/${sponsor.id}`
   });
 });
 

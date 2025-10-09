@@ -277,7 +277,7 @@ const showClubProfileHandler = async (req, res) => {
     ogTitle: club.clubName,
     ogDescription: club.description,
     ogImage: club.logoUrl ? `${process.env.APP_URL}/${club.logoUrl}` : null,
-    pageUrl: `${process.env.APP_URL}/clubs/${club.id}`
+    ogUrl: `${process.env.APP_URL}/clubs/${club.id}`
   });
 };
 
@@ -613,7 +613,7 @@ const showClubSponsorHandler = async (req, res, next) => {
       ogTitle: `${sponsor.sponsorName} - ${club.clubName}`,
       ogDescription: sponsor.location,
       ogImage: sponsor.logoUrl ? `${process.env.APP_URL}/${sponsor.logoUrl}` : null, 
-      pageUrl: `${process.env.APP_URL}/clubs/${club.id}/sponsors/${sponsor.id}`
+      ogUrl: `${process.env.APP_URL}/clubs/${club.id}/sponsors/${sponsor.id}`
     });
   } catch (err) {
     next(err);
