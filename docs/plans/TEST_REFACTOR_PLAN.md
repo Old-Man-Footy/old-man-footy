@@ -1,6 +1,6 @@
 # Test Refactoring Plan - Complete Test Suite Inventory
 
-> **Purpose**: Track the refactoring and COMPLETE REWRITING of all test files to ensure proper test coverage, consistent patterns, and 100% pass rate.
+> **Purpose**: Track the refactoring and review of all test files to ensure proper test coverage, consistent patterns, and 100% pass rate with potential rewrites.
 > **Current Status**: 92.2% passing (1078/1169 tests passing, 91 failing)
 > **Target**: 100% passing with clean, maintainable test code
 
@@ -310,7 +310,7 @@ describe('Feature/Component Name', () => {
 
 ### Completion Checklist
 - [ ] Phase 1: Rewrite 5 critical failing test files (0/5 complete)
-- [ ] Phase 2: Review and improve 59 passing test files (0/59 complete)
+- [ ] Phase 2: Review and potentially rewrite 59 passing test files (0/59 complete)
 - [ ] Phase 3: Add missing test coverage for edge cases
 - [ ] Phase 4: Document all test patterns and conventions
 - [ ] Phase 5: Achieve 100% test pass rate
