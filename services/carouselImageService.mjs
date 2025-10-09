@@ -47,23 +47,24 @@ class CarouselImageService {
             // First, get images from the ImageUpload model (carnival images only for carousel)
             try {
                 const dbImages = await ImageUpload.getCarouselImages();
-                const formattedDbImages = dbImages.map(image => ({
-                    id: image.id,
-                    filename: this.extractFilename(image.url),
-                    url: image.url,
-                    uploadTime: new Date(image.createdAt).getTime(),
-                    size: 100000, // Default size for DB images
-                    type: 'gallery',
-                    source: 'carnival',
-                    displayType: 'Carnival Gallery',
-                    entityType: 'carnival',
-                    entityId: image.carnivalId,
-                    entityName: image.carnival ? image.carnival.title : 'Carnival Carnival',
-                    uploader: null, // Not tracking uploader in ImageUpload model
-                    attribution: image.displayAttribution,
-                    isPrimary: false
-                }));
-                
+                const formattedDbImages = dbImages
+                    .filter(image => image.url) // Filter out images with null/undefined URLs
+                    .map(image => ({
+                        id: image.id,
+                        filename: this.extractFilename(image.url),
+                        url: image.url,
+                        uploadTime: new Date(image.createdAt).getTime(),
+                        size: 100000, // Default size for DB images
+                        type: 'gallery',
+                        source: 'carnival',
+                        displayType: 'Carnival Gallery',
+                        entityType: 'carnival',
+                        entityId: image.carnivalId,
+                        entityName: image.carnival ? image.carnival.title : 'Carnival Carnival',
+                        uploader: null, // Not tracking uploader in ImageUpload model
+                        attribution: image.displayAttribution,
+                        isPrimary: false
+                    }));                
                 allImages.push(...formattedDbImages);
             } catch (dbError) {
                 console.error('Error fetching images from database:', dbError);
