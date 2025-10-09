@@ -15,6 +15,17 @@ import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
 
 /**
+ * Check if carnival is null and handle errors
+ * @param {Object|null} carnival - The carnival object to check
+ */
+const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
+    if (!carnival) {
+      req.flash('error_msg', 'Carnival not found');
+      return res.redirect(path);
+    }
+}
+
+/**
  * Get Admin Dashboard with system statistics
  */
 const getAdminDashboardHandler = async (req, res) => {
@@ -693,7 +704,7 @@ const showEditCarnivalHandler = async (req, res) => {
         include: [{ model: User, as: 'creator' }]
     });
 
-    checkNullCarnival(carnival, req, res, '/admin/carnivals');
+    checkNullCarnival(carnival, res, req, '/admin/carnivals');
 
     return res.render('carnivals/edit', {
         title: `Edit ${carnival.title} - Admin Dashboard`,
@@ -742,7 +753,7 @@ const updateCarnivalHandler = async (req, res) => {
 
     const carnival = await Carnival.findByPk(carnivalId);
 
-    checkNullCarnival(carnival, req, res, '/admin/carnivals');
+    checkNullCarnival(carnival, res, req, '/admin/carnivals');
 
 
     // Prepare base update data
@@ -1137,7 +1148,7 @@ const showClaimCarnivalFormHandler = async (req, res) => {
         include: [{ model: User, as: 'creator' }]
     });
 
-    checkNullCarnival(carnival, req, res, '/admin/carnivals');
+    checkNullCarnival(carnival, res, req, '/admin/carnivals');
 
     // Check if carnival can be claimed (MySideline import with no owner)
     if (carnival.isManuallyEntered) {
@@ -1792,16 +1803,7 @@ const syncMySidelineHandler = async (req, res) => {
     return res.redirect('/admin/dashboard');
 };
 
-/**
- * Check if carnival is null and handle errors
- * @param {Object|null} carnival - The carnival object to check
- */
-const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
-    if (!carnival) {
-      req.flash('error_msg', 'Carnival not found');
-      return res.redirect(path);
-    }
-}
+
 
 // Raw controller functions object for wrapping
 const rawControllers = {
