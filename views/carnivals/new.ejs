@@ -337,60 +337,6 @@
                             </div>
                         </div>
 
-                        <!-- File Uploads -->
-                        <div class="mb-4">
-                            <h5 class="text-primary mb-3">Images & Documents</h5>
-                            
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="clubLogo" class="form-label">Club Logo</label>
-                                    <%- include('../partials/logo-uploader', {
-                                        fieldName: 'logo',
-                                        uploadText: 'Click or drag to upload club logo',
-                                        maxFileSize: 'Max 10MB',
-                                        acceptedFormats: 'JPG/PNG/SVG/GIF/WebP',
-                                        helpText: 'Max 10MB, JPG/PNG/SVG/GIF/WebP'
-                                    }) %>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="promotionalImage" class="form-label">Promotional Image</label>
-                                    <div class="file-upload-area">
-                                        <input type="file" class="form-control file-input-hidden" id="promotionalImage" name="promotionalImage" 
-                                               accept="image/*">
-                                        <i class="bi bi-image display-6 text-muted"></i>
-                                        <p class="upload-text mt-2">Click or drag to upload promotional image</p>
-                                        <small class="text-muted">Max 5MB, JPG/PNG only</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="drawFile" class="form-label">Draw Sheet</label>
-                                    <div class="file-upload-area">
-                                        <input type="file" class="form-control file-input-hidden" id="drawFile" name="drawFile" 
-                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                        <i class="bi bi-file-earmark-text display-6 text-muted"></i>
-                                        <p class="upload-text mt-2">Click or drag to upload draw sheet</p>
-                                        <small class="text-muted">Max 10MB, PDF/DOC/Image files</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Draw Information -->
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="drawTitle" class="form-label">Draw Title</label>
-                                    <input type="text" class="form-control" id="drawTitle" name="drawTitle" 
-                                           value="<%= typeof formData !== 'undefined' ? formData.drawTitle : '' %>"
-                                           placeholder="e.g., Pool Draw, Finals Draw">
-                                    <div class="form-text">Optional title for the draw sheet</div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="drawDescription" class="form-label">Draw Description</label>
-                                    <textarea class="form-control" id="drawDescription" name="drawDescription" rows="2" 
-                                              placeholder="Brief description of the draw format or details"><%= typeof formData !== 'undefined' ? formData.drawDescription : '' %></textarea>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Form Actions -->
                         <div class="d-flex justify-content-between">
                             <a href="/dashboard" class="btn btn-outline-secondary">

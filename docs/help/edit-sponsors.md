@@ -1,5 +1,5 @@
 ---
-pageIdentifier: sponsors-edit
+pageIdentifier: edit-sponsors
 title: Edit Sponsor Help
 ---
 
