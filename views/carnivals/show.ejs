@@ -889,53 +889,72 @@
             <% } else if (carnival.isActive && !carnival.clubId) { %>                
                 <!-- Message for when carnival is unclaimed -->
                 <% if (canTakeOwnership) { %>
-                    <!-- User can claim this carnival -->
+                    <!-- Logged-in user who can claim this carnival -->
                     <div class="card shadow mb-4 border-info">
                         <div class="card-header bg-info text-primary">
-                            <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Claim This Carnival</h5>
-                            <p class="alert alert-warning mb-3">
-                                <i class="bi bi-exclamation-circle me-1"></i>
-                                <strong>This carnival is unclaimed.</strong> Club registrations through Old Man Foory are not available until a club claims ownership.
-                            </p>
+                            <h5 class="mb-0"><i class="bi bi-hand-thumbs-up"></i> Claim This Carnival</h5>                            
                         </div>
                         <div class="card-body">
-                            <% if (user) { %>
-                                <!-- Logged in user - encourage to claim if it's their carnival -->
-                                <p class="mb-3">
-                                    <strong>Is this your club's carnival?</strong> Claim it to take control and unlock additional features.
+                            <p class="alert alert-warning mb-3">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                <strong>This carnival is unclaimed.</strong> Club registrations through Old Man Footy are not available until a club claims ownership.
+                            </p>
+                            
+                            <p class="mb-3">
+                                <strong>Is this your club's carnival?</strong> Claim it to take control and unlock additional features.
+                            </p>
+                            
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-star me-2"></i>
+                                <strong>Benefits of claiming:</strong>
+                                <ul class="mb-0 mt-2 small">
+                                    <li>Manage registrations and attendee lists</li>
+                                    <li>Update carnival details and information</li>
+                                    <li>Communicate directly with interested clubs</li>
+                                    <li>Help grow the Old Man Footy community</li>
+                                </ul>
+                            </div>
+                            
+                            <a href="/carnivals/<%= carnival.id %>/claim" class="btn btn-primary w-100 mb-3">
+                                <i class="bi bi-hand-thumbs-up"></i> Claim This Carnival
+                            </a>
+                            
+                            <hr class="my-3">
+                            
+                            <div class="mt-3">
+                                <p class="small mb-2"><strong>Not your carnival?</strong></p>
+                                <p class="small text-muted mb-2">
+                                    Know the organiser? Use the share button above to send them a link and encourage them to join Old Man Footy.
                                 </p>
-                                
-                                <div class="alert alert-info mb-3">
-                                    <i class="bi bi-star me-2"></i>
-                                    <strong>Benefits of claiming:</strong>
-                                    <ul class="mb-0 mt-2 small">
-                                        <li>Manage registrations and attendee lists</li>
-                                        <li>Update carnival details and information</li>
-                                        <li>Communicate directly with interested clubs</li>
-                                        <li>Help grow the Old Man Footy community</li>
-                                    </ul>
-                                </div>
-                                
-                                <a href="/carnivals/<%= carnival.id %>/claim" class="btn btn-primary w-100 mb-3">
+                                <p class="small text-muted mb-0">
+                                    <i class="bi bi-people me-1"></i>
+                                    The more clubs that get involved, the better this platform becomes for everyone in the Masters Rugby League community.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <!-- Non-logged-in users OR logged-in users who cannot claim -->
+                    <div class="card shadow mb-4 border-info">
+                        <div class="card-header bg-info text-primary">
+                            <h5 class="mb-0">
+                                <% if (!user) { %>
                                     <i class="bi bi-hand-thumbs-up"></i> Claim This Carnival
-                                </a>
-                                
-                                <hr class="my-3">
-                                
-                                <div class="mt-3">
-                                    <p class="small mb-2"><strong>Not your carnival?</strong></p>
-                                    <p class="small text-muted mb-2">
-                                        Know the organiser? Use the share button above to send them a link and encourage them to join Old Man Footy.
-                                    </p>
-                                    <p class="small text-muted mb-0">
-                                        <i class="bi bi-people me-1"></i>
-                                        The more clubs that get involved, the better this platform becomes for everyone in the Masters Rugby League community.
-                                    </p>
-                                </div>
-                            <% } else { %>
-                                <!-- Non-logged in user - encourage to register/login to claim -->
+                                <% } else { %>
+                                    <i class="bi bi-people"></i> Grow the Community
+                                <% } %>
+                            </h5>                            
+                        </div>              
+                        <div class="card-body">
+                            <p class="alert alert-warning mb-3">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                <strong>This carnival is unclaimed.</strong> Club registrations through Old Man Footy are not available until a club claims ownership.
+                            </p>
+                            
+                            <% if (!user) { %>
+                                <!-- Non-logged-in user - could be the organiser -->
                                 <p class="mb-3">
-                                    <strong>Is this your club's carnival?</strong> Create an account or log in to claim it and take control.
+                                    <strong>Is this your club's carnival?</strong> Create an account or log in to claim it and unlock powerful management features.
                                 </p>
                                 
                                 <div class="alert alert-info mb-3">
@@ -970,42 +989,27 @@
                                         Every club that joins makes Old Man Footy stronger and helps connect the Masters Rugby League community across Australia.
                                     </p>
                                 </div>
+                            <% } else { %>
+                                <!-- Logged-in user who cannot claim - encourage community growth -->
+                                <p class="mb-3">
+                                    <strong>Know the organiser?</strong> Help grow the Old Man Footy community by encouraging them to join!
+                                </p>
+                                
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Use the share button above to send them a link to this carnival. When they create an account and claim it, they can:
+                                    <ul class="mb-0 mt-2 small">
+                                        <li>Manage club registrations and attendance</li>
+                                        <li>Keep carnival details up to date</li>
+                                        <li>Connect with clubs across Australia</li>
+                                    </ul>
+                                </div>
+                                
+                                <p class="small text-muted mb-0">
+                                    <i class="bi bi-people me-1"></i>
+                                    The more clubs that get involved, the better this platform becomes for everyone in the Masters Rugby League community.
+                                </p>
                             <% } %>
-                        </div>
-                    </div>
-                <% } else { %>
-                    <!-- Logged in user who cannot claim - show community message -->
-                    <div class="card shadow mb-4 border-info">
-                        <div class="card-header bg-info text-primary">
-                            <h5 class="mb-0"><i class="bi bi-people"></i> Grow the Community</h5>
-                            <p class="mb-0 mt-2 small">
-                                <i class="bi bi-exclamation-circle me-1"></i>
-                                <strong>This carnival is unclaimed.</strong> Player registrations are not available until a club claims ownership.
-                            </p>
-                        </div>              
-                        <div class="card-body">
-                            <p class="alert alert-warning mb-3">
-                                <i class="bi bi-exclamation-circle me-1"></i>
-                                <strong>This carnival is unclaimed.</strong> Club registrations through Old Man Foory are not available until a club claims ownership.
-                            </p>
-                            <p class="mb-3">
-                                <strong>Know the organiser?</strong> Help grow the Old Man Footy community by encouraging them to join!
-                            </p>
-                            
-                            <div class="alert alert-info mb-3">
-                                <i class="bi bi-info-circle me-2"></i>
-                                Use the share button above to send them a link to this carnival. When they create an account and claim it, they can:
-                                <ul class="mb-0 mt-2 small">
-                                    <li>Manage club registrations and attendance</li>
-                                    <li>Keep carnival details up to date</li>
-                                    <li>Connect with clubs across Australia</li>
-                                </ul>
-                            </div>
-                            
-                            <p class="small text-muted mb-0">
-                                <i class="bi bi-people me-1"></i>
-                                The more clubs that get involved, the better this platform becomes for everyone in the Masters Rugby League community.
-                            </p>
                         </div>
                     </div>
                 <% } %>
