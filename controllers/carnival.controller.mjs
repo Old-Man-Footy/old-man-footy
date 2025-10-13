@@ -438,8 +438,8 @@ const showCarnivalHandler = async (req, res) => {
       availableMergeTargets = await Carnival.findAll({
         where: {
           isActive: true,
-          isManuallyEntered: true, // Non-MySideline carnivals only
           id: { [Op.ne]: carnival.id }, // Exclude current carnival
+          clubId: { [Op.eq]: null }, // Only carnivals not already claimed by a club
         },
         include: [
           {
