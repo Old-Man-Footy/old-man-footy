@@ -89,53 +89,65 @@
         <div class="row">
             <% carnivals.forEach(carnival => { %>
                 <div class="col-md-6 mb-4">
-                    <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none">
-                        <div class="card shadow-sm carnival-card h-100" style="cursor: pointer;">
+                    <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none" style="cursor: pointer;">
+                    <div class="card shadow-sm carnival-card h-100">
                             <div class="row g-0 h-100">
                                 <div class="col-8">
-                                    <div class="card-body p-3 d-flex flex-column">
-                                        <h6 class="card-title mb-2 text-dark"><%= carnival.title %></h6>                                    
-                                        <!-- Date and Location -->
-                                        <div class="mb-1">
-                                            <small class="text-muted">
-                                                <%- include('../partials/carnival-date', { 
-                                                    carnival: carnival, 
-                                                    format: 'compact',
-                                                    showIcon: true,
-                                                    addClass: 'text-muted'
-                                                }) %>
-                                            </small>
-                                        </div>
-                                        <div class="mb-2">
-                                            <small class="text-muted">
-                                                <%- include('../partials/carnival-address', { 
-                                                    carnival: carnival, 
-                                                    layout: 'inline',
-                                                    truncate: 30,
-                                                    addressClass: 'text-muted'
-                                                }) %>
-                                            </small>
+                                    <div class="card-body p-3 d-flex flex-column h-100">
+                                        <div class="flex-grow-0">
+                                            <h6 class="card-title mb-2 text-dark"><%= carnival.title %></h6>                                    
+                                            <!-- Date and Location -->
+                                            <div class="mb-1">
+                                                <small class="text-muted">
+                                                    <%- include('../partials/carnival-date', { 
+                                                        carnival: carnival, 
+                                                        format: 'compact',
+                                                        showIcon: true,
+                                                        addClass: 'text-muted'
+                                                    }) %>
+                                                </small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <%- include('../partials/carnival-address', { 
+                                                        carnival: carnival, 
+                                                        layout: 'inline',
+                                                        truncate: 30,
+                                                        addressClass: 'text-muted'
+                                                    }) %>
+                                                </small>
+                                            </div>
                                         </div>
                                         
-                                        <!-- Badges -->
-                                        <div class="mb-2">
-                                            <% if (carnival.state) { %>
-                                                <span class="badge badge-sm state-<%= carnival.state.toLowerCase() %> me-1"><%= carnival.state %></span>
-                                            <% } %>
-                                            <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
-                                                <% if (carnival.date >= new Date()) { %>
-                                                    <span class="badge badge-sm bg-primary me-1">Upcoming</span>
-                                                <% } else { %>
-                                                    <span class="badge badge-sm bg-secondary me-1">Past Carnival</span>
+                                        <div class="mt-auto pt-3">
+                                            <!-- Badges -->
+                                            <div class="mb-2">
+                                                <% if (carnival.state) { %>
+                                                    <span class="badge badge-sm state-<%= carnival.state.toLowerCase() %> me-1"><%= carnival.state %></span>
                                                 <% } %>
-                                            <% } else { %>
-                                                <span class="badge badge-sm bg-warning text-dark me-1">Date TBA</span>
-                                            <% } %>
-                                            <% if (carnival.canTakeOwnership) { %>
-                                                <span class="badge badge-sm bg-info text-primary me-1">
-                                                    <i class="bi bi-hand-thumbs-up"></i> Unclaimed
-                                                </span>
-                                            <% } %>
+                                                <% if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) { %>
+                                                    <% if (carnival.date >= new Date()) { %>
+                                                        <span class="badge badge-sm bg-primary me-1">Upcoming</span>
+                                                    <% } else { %>
+                                                        <span class="badge badge-sm bg-secondary me-1">Past Carnival</span>
+                                                    <% } %>
+                                                <% } else { %>
+                                                    <span class="badge badge-sm bg-warning text-dark me-1">Date TBA</span>
+                                                <% } %>
+                                                <% if (carnival.canTakeOwnership) { %>
+                                                    <span class="badge badge-sm bg-info text-primary me-1">
+                                                        <i class="bi bi-hand-thumbs-up"></i> Unclaimed
+                                                    </span>
+                                                <% } %>
+                                            </div>
+                                            <!-- Buttons -->
+                                            <div class="d-flex gap-1">
+                                                <% if (carnival.registrationLink) { %>
+                                                    <a href="<%= carnival.registrationLink %>" class="btn btn-tertiary btn-sm" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open(this.href, '_blank');">
+                                                        <i class="bi bi-person-plus"></i> Player Registration
+                                                    </a>
+                                                <% } %>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -144,7 +156,7 @@
                                          class="img-fluid" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                 </div>
                             </div>
-                        </div>
+                    </div>
                     </a>
                 </div>
             <% }) %>
