@@ -406,10 +406,11 @@ class MySidelineDataService {
             // Set time to start of today to avoid timezone issues
             currentDate.setHours(0, 0, 0, 0);
             
-            // Find all non-disabled carnivals with dates in the past
+            // Find all non-disabled, active carnivals with dates in the past
             const pastCarnivals = await Carnival.findAll({
                 where: {
                     isDisabled: false,
+                    isActive: true,
                     date: {
                         [Op.lt]: currentDate // Less than current date
                     }
