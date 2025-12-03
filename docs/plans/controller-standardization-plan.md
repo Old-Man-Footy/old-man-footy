@@ -42,8 +42,8 @@ export const { functionName } = wrapControllers(rawControllers);
 8. [ ] Remove `asyncHandler` wrapper from `addCarnivalHandler`
 9. [ ] Move `editCarnivalHandler` function into `rawControllers.edit`
 10. [ ] Remove `asyncHandler` wrapper from `editCarnivalHandler`
-11. [ ] Move `deleteCarnivalHandler` function into `rawControllers.delete`
-12. [ ] Remove `asyncHandler` wrapper from `deleteCarnivalHandler`
+11. [ ] Move `disableCarnivalHandler` function into `rawControllers.delete`
+12. [ ] Remove `asyncHandler` wrapper from `disableCarnivalHandler`
 13. [ ] Move `claimCarnivalHandler` function into `rawControllers.claim`
 14. [ ] Remove `asyncHandler` wrapper from `claimCarnivalHandler`
 15. [ ] Move `approveCarnivalHandler` function into `rawControllers.approve`
@@ -99,7 +99,7 @@ export const { functionName } = wrapControllers(rawControllers);
 4. [ ] Move `showCarnivalSponsor` function into `rawControllers.show`
 5. [ ] Move `addCarnivalSponsor` function into `rawControllers.add`
 6. [ ] Move `editCarnivalSponsor` function into `rawControllers.edit`
-7. [ ] Move `deleteCarnivalSponsor` function into `rawControllers.delete`
+7. [ ] Move `disableCarnivalSponsor` function into `rawControllers.delete`
 8. [ ] Add `wrapControllers(rawControllers)` export destructuring
 9. [ ] Test carnival sponsor management functionality
 10. [ ] Verify CRUD operations work correctly

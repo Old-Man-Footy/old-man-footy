@@ -13,11 +13,12 @@ import {
   ClubPlayer,
   CarnivalClubPlayer,
   Sponsor,
+  CarnivalSponsor,
   sequelize,
 } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY } from '../config/constants.mjs';
+import { AUSTRALIAN_STATES, SPONSORSHIP_LEVELS_ARRAY, DEFAULT_COUNTRY } from '../config/constants.mjs';
 
 // Import recalculation function from carnivalClub controller
 import { recalculateRegistrationFees } from './carnivalClub.controller.mjs';
@@ -64,11 +65,13 @@ const listCarnivalsHandler = async (req, res) => {
     whereClause[Op.or] = [
       {
         date: { [Op.gte]: new Date() },
-        isActive: true
+        isActive: true,
+        isDisabled: false
       },
       {
         date: null,
-        isActive: true
+        isActive: true,
+        isDisabled: false
       }
     ];
   }
@@ -108,11 +111,13 @@ const listCarnivalsHandler = async (req, res) => {
           [Op.or]: [
             {
               date: { [Op.gte]: new Date() },
-              isActive: true
+              isActive: true,
+              isDisabled: false
             },
             {
               date: null,
-              isActive: true
+              isActive: true,
+              isDisabled: false
             }
           ]
         },
@@ -130,17 +135,19 @@ const listCarnivalsHandler = async (req, res) => {
     whereClause[Op.or] = [
       {
         date: { [Op.gte]: new Date() },
-        isActive: true
+        isActive: true,
+        isDisabled: false
       },
       {
         date: null,
-        isActive: true
+        isActive: true,
+        isDisabled: false
       }
     ];
   }
 
   const carnivals = await Carnival.findAll({
-    where: whereClause,
+    where: { isDisabled: false, ...whereClause },
     include: [
       {
         model: User,
@@ -231,14 +238,15 @@ const listCarnivalsHandler = async (req, res) => {
   const processedCarnivals = sortedCarnivals.map((carnival) => {
     const publicData = carnival.getPublicDisplayData();
 
-    const displayLogoUrl = (carnival.clubLogoUrl && carnival.clubLogoUrl.trim()) 
-      ? carnival.clubLogoUrl 
+    const displayLogoUrl = (carnival.clubLogoURL && carnival.clubLogoURL.trim()) 
+      ? carnival.clubLogoURL 
       : (carnival.hostClub?.logoUrl || '/icons/missing.svg');
 
     // Check if this carnival can be claimed by the current user
     // Allow carnivals that either have a MySideline ID or have a MySideline sync timestamp
     const hasMySidelineMarker = carnival.mySidelineId || carnival.lastMySidelineSync;
     const canTakeOwnership =
+      !carnival.isDisabled &&
       carnival.isActive &&
       hasMySidelineMarker &&
       !carnival.createdByUserId &&
@@ -432,7 +440,7 @@ const showCarnivalHandler = async (req, res) => {
   let canMergeCarnival = false;
   let availableMergeTargets = [];
 
-  if (userWithClub && carnival.lastMySidelineSync && carnival.isActive) {
+  if (userWithClub && carnival.lastMySidelineSync && carnival.isActive && !carnival.isDisabled) {
     // Admin users can merge any MySideline carnival into any active non-MySideline carnival
     if (userWithClub.isAdmin) {
       availableMergeTargets = await Carnival.findAll({
@@ -466,7 +474,7 @@ const showCarnivalHandler = async (req, res) => {
       availableMergeTargets = await Carnival.findAll({
         where: {
           createdByUserId: userWithClub.id,
-          isActive: true,
+          isDisabled: false,
           isManuallyEntered: true, // Non-MySideline carnivals only
           id: { [Op.ne]: carnival.id }, // Exclude current carnival
         },
@@ -491,10 +499,11 @@ const showCarnivalHandler = async (req, res) => {
   };
 
   // A helper to get the first available image path
-  const imagePath = carnival.promotionalImage || (hostClub && hostClub.logoUrl) || carnival.clubLogoUrl;
+  const imagePath = carnival.promotionalImage || (hostClub && hostClub.logoUrl) || carnival.clubLogoURL;
 
   return res.render('carnivals/show', {
     title: carnival.title,
+    subtitle: carnival.subtitle,
     carnival: canManage ? carnival : publicCarnivalData, // Show full data to managers, obfuscated to public
     user: userWithClub, // Pass enriched user data with club information
     sponsors: sortedSponsors,
@@ -602,15 +611,16 @@ const createCarnivalHandler = async (req, res) => {
   // Prepare carnival data
   const carnivalData = {
     title: req.body.title,
+    subtitle: req.body.subtitle || null,
     date: new Date(req.body.date),
     endDate: req.body.endDate ? new Date(req.body.endDate) : null,
-    locationAddress: req.body.locationAddress,
+    locationAddress: formatAddress(req.body),
     // MySideline-compatible address fields
     locationSuburb: req.body.locationSuburb || null,
     locationPostcode: req.body.locationPostcode || null,
     locationLatitude: req.body.locationLatitude ? parseFloat(req.body.locationLatitude) : null,
     locationLongitude: req.body.locationLongitude ? parseFloat(req.body.locationLongitude) : null,
-    locationCountry: req.body.locationCountry || 'Australia',
+    locationCountry: req.body.locationCountry || DEFAULT_COUNTRY,
     organiserContactName: req.body.organiserContactName,
     organiserContactEmail: req.body.organiserContactEmail,
     organiserContactPhone: req.body.organiserContactPhone,
@@ -719,6 +729,58 @@ const createCarnivalHandler = async (req, res) => {
 };
 
 /**
+ * Formats a location object into a single, comma-separated address string.
+ * It dynamically handles empty, null, or undefined fields to avoid stray commas.
+ *
+ * @param {object} formBody - An object containing address fields (e.g., req.body).
+ * @param {string} [formBody.locationAddressLine1] - Address line 1.
+ * @param {string} [formBody.locationAddressLine2] - Address line 2.
+ * @param {string} [formBody.locationSuburb] - The suburb.
+ * @param {string} [formBody.state] - The state or territory.
+ * @param {string} [formBody.locationPostcode] - The postcode.
+ * @param {string} [formBody.locationCountry] - The country.
+ * @returns {string} A cleanly formatted, single-line address string.
+ */
+function formatAddress( formBody) {
+  if (! formBody) {
+    return '';
+  }
+
+  // Safely trim all potential parts.
+  const line1 = safeTrim(formBody.locationAddressLine1);
+  const line2 = safeTrim(formBody.locationAddressLine2);
+  const suburb = safeTrim(formBody.locationSuburb);
+  const state = safeTrim(formBody.state);
+  const postcode = safeTrim(formBody.locationPostcode);
+  const country = safeTrim(formBody.locationCountry);
+
+  // Combine state and postcode with a space, but only if they exist.
+  // This array will contain 0, 1, or 2 items.
+  const statePostcodeParts = [state, postcode].filter(Boolean);
+  const statePostcode = statePostcodeParts.join(' ');
+
+  // Create an array of all parts that will be joined by commas.
+  const allParts = [
+    line1,
+    line2,
+    suburb,
+    statePostcode,
+    country
+  ];
+
+  // Filter out any empty strings (from fields that were empty or null).
+  // Then, join the remaining parts with a comma and space.
+  return allParts.filter(Boolean).join(', ');
+}
+
+/**
+ * Safely trims a string value. Handles null or undefined inputs.
+ * @param {string | null | undefined} val - The value to trim.
+ * @returns {string} The trimmed string, or an empty string if the input was null/undefined.
+ */
+const safeTrim = (val) => (val || '').trim();
+
+/**
  * Display edit carnival form
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -823,30 +885,20 @@ export async function createOrMergeCarnival(carnivalData, userId) {
  * @param {Object} res - Express response object
  */
 const updateCarnivalHandler = async (req, res) => {
-  console.log('🎯 updateCarnivalHandler - CONTROLLER ENTRY POINT - ID:', req.params.id);
-  console.log('🎯 updateCarnivalHandler - Request method:', req.method);
-  console.log('🎯 updateCarnivalHandler - Request URL:', req.url);
-  console.log('🎯 updateCarnivalHandler - User ID:', req.user?.id);
-  console.log('🎯 updateCarnivalHandler - Body keys:', Object.keys(req.body || {}));
-  console.log('🎯 updateCarnivalHandler - Files keys:', Object.keys(req.files || {}));
-  console.log('⚡ updateCarnivalHandler - Starting controller method for ID:', req.params.id);
-  
   try {
-    console.log('⚡ updateCarnivalHandler - Finding carnival by PK:', req.params.id);
     const carnival = await Carnival.findByPk(req.params.id);
 
     if (!carnival) {
-      console.log('❌ updateCarnivalHandler - Carnival not found for ID:', req.params.id);
+      console.error('❌ updateCarnivalHandler - Carnival not found for ID:', req.params.id);
       req.flash('error_msg', 'Carnival not found.');
       return res.redirect('/dashboard');
     }
   
     // Check if user can edit this carnival (using async method for club delegate checking)
-    console.log('⚡ updateCarnivalHandler - Checking user permissions for user:', req.user?.id);
     try {
       const canEdit = carnival.canUserEdit(req.user);
       if (!canEdit) {
-        console.log('❌ updateCarnivalHandler - User lacks edit permissions');
+        console.error('❌ updateCarnivalHandler - User lacks edit permissions');
         req.flash('error_msg', 'You can only edit carnivals hosted by your club.');
         return res.redirect('/dashboard');
       }
@@ -855,16 +907,13 @@ const updateCarnivalHandler = async (req, res) => {
       throw error;
     }
 
-  console.log('⚡ updateCarnivalHandler - Checking validation results');
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.log('❌ updateCarnivalHandler - Validation errors found:', errors.array());
+    console.error('❌ updateCarnivalHandler - Validation errors found:', errors.array());
     // Check if this is an AJAX request
     const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
-    console.log('⚡ updateCarnivalHandler - Is AJAX request:', isAjax);
     
     if (isAjax) {
-      console.log('⚡ updateCarnivalHandler - Returning JSON error response');
       // Return JSON response for AJAX requests
       return res.status(400).json({
         success: false,
@@ -911,10 +960,12 @@ const updateCarnivalHandler = async (req, res) => {
   // Update carnival data
   const updateData = {
     title: req.body.title,
+    subtitle: req.body.subtitle || null,
     date: new Date(req.body.date),
     endDate: req.body.endDate ? new Date(req.body.endDate) : null,
-    locationAddress: req.body.locationAddress,
-    // MySideline-compatible address fields
+    locationAddress: formatAddress(req.body),
+    locationAddressLine1: req.body.locationAddressLine1 || null,
+    locationAddressLine2: req.body.locationAddressLine2 || null,
     locationSuburb: req.body.locationSuburb || null,
     locationPostcode: req.body.locationPostcode || null,
     locationLatitude: req.body.locationLatitude ? parseFloat(req.body.locationLatitude) : null,
@@ -987,8 +1038,6 @@ const updateCarnivalHandler = async (req, res) => {
   }
 
   // Handle all uploads using shared processor (defensive against corrupted uploads)
-  console.log('⚡ updateCarnivalHandler - Checking for structured uploads');
-  console.log('⚡ updateCarnivalHandler - req.structuredUploads:', req.structuredUploads?.length || 0);
   if (req.structuredUploads && req.structuredUploads.length > 0) {
     try {
       const processedUploads = await processStructuredUploads(req, updateData, 'carnivals', carnival.id);
@@ -1041,7 +1090,6 @@ const updateCarnivalHandler = async (req, res) => {
 
   // Check if this is an AJAX request
   const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest';
-  console.log('⚡ updateCarnivalHandler - Final response, isAjax:', isAjax);
   
   if (isAjax) {
     // Return JSON response for AJAX requests
@@ -1078,11 +1126,11 @@ const updateCarnivalHandler = async (req, res) => {
 };
 
 /**
- * Delete carnival
+ * Disable carnival
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const deleteCarnivalHandler = async (req, res) => {
+const disableCarnivalHandler = async (req, res) => {
   const carnival = await Carnival.findByPk(req.params.id);
 
   if (!carnival) {
@@ -1093,14 +1141,14 @@ const deleteCarnivalHandler = async (req, res) => {
   // Check if user can edit this carnival (using async method for club delegate checking)
   const canEdit = carnival.canUserEdit(req.user);
   if (!canEdit) {
-    req.flash('error_msg', 'You can only delete carnivals hosted by your club.');
+    req.flash('error_msg', 'You can only disable carnivals hosted by your club.');
     return res.redirect('/dashboard');
   }
 
-  // Soft delete by setting isActive to false
-  await carnival.update({ isActive: false });
+  // Disable carnival by setting isDisabled to true
+  await carnival.update({ isDisabled: true, isActive: false });
 
-  req.flash('success_msg', 'Carnival deleted successfully.');
+  req.flash('success_msg', 'Carnival disabled successfully.');
   return res.redirect('/dashboard');
 };
 
@@ -1158,23 +1206,355 @@ const syncMySidelineHandler = async (req, res) => {
   return res.redirect('/dashboard');
 };
 
+/**
+ * Show merge form for MySideline carnival
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getMergeHandler = async (req, res) => {
+  const { id } = req.params;
+
+  // Fetch the source carnival (must be MySideline)
+  const carnival = await Carnival.findByPk(id, {
+    include: [
+      { model: User, as: 'createdBy' },
+      { model: Club, as: 'club' }
+    ]
+  });
+
+  if (!carnival) {
+    req.flash('error_msg', 'Carnival not found.');
+    return res.redirect('/carnivals');
+  }
+
+  // Verify carnival is from MySideline
+  if (!carnival.mySidelineId) {
+    req.flash('error_msg', 'Only MySideline carnivals can be merged.');
+    return res.redirect(`/carnivals/${id}`);
+  }
+
+  // Check permissions - admins can merge any MySideline carnival, 
+  // regular users can only merge unclaimed MySideline carnivals
+  if (!req.user.isAdmin && carnival.userId) {
+    req.flash('error_msg', 'You can only merge unclaimed MySideline carnivals.');
+    return res.redirect(`/carnivals/${id}`);
+  }
+
+  // Get available target carnivals (non-MySideline carnivals that user can access)
+  let whereCondition = {
+    mySidelineId: null, // Not from MySideline
+    isDisabled: false   // Not disabled
+  };
+
+  // If not admin, only show user's own carnivals
+  if (!req.user.isAdmin) {
+    whereCondition.userId = req.user.id;
+  }
+
+  const availableCarnivals = await Carnival.findAll({
+    where: whereCondition,
+    include: [
+      { model: User, as: 'createdBy' },
+      { model: Club, as: 'club' }
+    ],
+    order: [['date', 'DESC']]
+  });
+
+  res.render('carnivals/merge', {
+    title: 'Merge Carnival',
+    carnival,
+    availableCarnivals,
+    user: req.user,
+    messages: req.flash()
+  });
+};
+
 export const list = asyncHandler(listCarnivalsHandler);
 export const show = asyncHandler(showCarnivalHandler);
 export const getNew = asyncHandler(showCreateFormHandler);
 export const postNew = asyncHandler(createCarnivalHandler);
 export const getEdit = asyncHandler(showEditFormHandler);
 export const postEdit = asyncHandler(updateCarnivalHandler);
-export const deleteCarnival = asyncHandler(deleteCarnivalHandler);
+export const getMerge = asyncHandler(getMergeHandler);
+export const disableCarnival = asyncHandler(disableCarnivalHandler);
 export const takeOwnership = asyncHandler(takeOwnershipHandler);
 export const releaseOwnership = asyncHandler(releaseOwnershipHandler);
 export const syncMySideline = asyncHandler(syncMySidelineHandler);
 
+/**
+ * Get mergeable fields from Carnival model dynamically
+ * @returns {Object} Object containing categorized field arrays
+ */
+const getMergeableFields = () => {
+  const attributes = Carnival.getTableName ? Carnival.rawAttributes : Carnival.getAttributes();
+  const fields = Object.keys(attributes);
+  
+  // Fields to exclude from merge operations (system/relationship fields)
+  const excludedFields = new Set([
+    'id', 'createdAt', 'updatedAt', 'createdByUserId', 'clubId', 
+    'isActive', 'isDisabled', 'isManuallyEntered', 'lastSyncDate'
+  ]);
+  
+  const textFields = [];
+  const dateFields = [];
+  const numericFields = [];
+  const booleanFields = [];
+  
+  fields.forEach(field => {
+    if (excludedFields.has(field)) return;
+    
+    const attribute = attributes[field];
+    const type = attribute.type || attribute;
+    
+    if (type.constructor && type.constructor.name) {
+      const typeName = type.constructor.name;
+      
+      if (typeName === 'STRING' || typeName === 'TEXT') {
+        textFields.push(field);
+      } else if (typeName === 'DATE' || typeName === 'DATEONLY') {
+        dateFields.push(field);
+      } else if (typeName === 'INTEGER' || typeName === 'DECIMAL' || typeName === 'FLOAT') {
+        numericFields.push(field);
+      } else if (typeName === 'BOOLEAN') {
+        booleanFields.push(field);
+      }
+    }
+  });
+  
+  return { textFields, dateFields, numericFields, booleanFields };
+};
+
 // Add the missing exports that routes are expecting
-export { deleteCarnival as delete }; // 'delete' alias for deleteCarnival
+export { disableCarnival as delete }; // 'delete' alias for disableCarnival
 export const mergeCarnival = asyncHandler(async (req, res) => {
-  // Placeholder for merge carnival functionality
-  req.flash('error_msg', 'Merge carnival functionality not yet implemented.');
-  return res.redirect(`/carnivals/${req.params.id}`);
+  const { id } = req.params; // Source carnival ID (MySideline)
+  const { targetCarnivalId } = req.body;
+  
+  if (!targetCarnivalId) {
+    req.flash('error_msg', 'Please select a target carnival to merge into.');
+    return res.redirect(`/carnivals/${id}`);
+  }
+
+  const transaction = await sequelize.transaction();
+  
+  try {
+    // Fetch both carnivals with associations
+    const [sourceCarnival, targetCarnival] = await Promise.all([
+      Carnival.findByPk(id, { 
+        include: [
+          { model: User, as: 'createdBy' },
+          { model: Club, as: 'club' },
+          { model: CarnivalSponsor, as: 'carnivalSponsors', where: { isActive: true }, required: false }
+        ],
+        transaction 
+      }),
+      Carnival.findByPk(targetCarnivalId, { 
+        include: [
+          { model: User, as: 'createdBy' },
+          { model: Club, as: 'club' },
+          { model: CarnivalSponsor, as: 'carnivalSponsors', where: { isActive: true }, required: false }
+        ],
+        transaction 
+      })
+    ]);
+
+    // Validate carnivals exist
+    if (!sourceCarnival) {
+      await transaction.rollback();
+      req.flash('error_msg', 'Source carnival not found.');
+      return res.redirect('/carnivals');
+    }
+    
+    if (!targetCarnival) {
+      await transaction.rollback();
+      req.flash('error_msg', 'Target carnival not found.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Validate permissions
+    const isAdmin = req.user.role === 'Admin';
+    const isSourceOwner = sourceCarnival.createdByUserId === req.user.id;
+    const isTargetOwner = targetCarnival.createdByUserId === req.user.id;
+    
+    // SECURITY: Validate club ownership - both carnivals must belong to the same club
+    if (sourceCarnival.clubId && targetCarnival.clubId && 
+        sourceCarnival.clubId !== targetCarnival.clubId) {
+      await transaction.rollback();
+      req.flash('error_msg', 'Cannot merge carnivals from different clubs. Both carnivals must belong to the same club.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+    
+    // For carnivals with club associations, ensure user has permission for that club
+    if (sourceCarnival.clubId || targetCarnival.clubId) {
+      const requiredClubId = sourceCarnival.clubId || targetCarnival.clubId;
+      
+      if (!isAdmin) {
+        // Regular users: must be authorized for the club and own both carnivals
+        const userClub = await Club.findOne({
+          where: { 
+            id: requiredClubId,
+            userId: req.user.id // User must be associated with this club
+          },
+          transaction
+        });
+        
+        if (!userClub) {
+          await transaction.rollback();
+          req.flash('error_msg', 'You are not authorized to merge carnivals for this club.');
+          return res.redirect(`/carnivals/${id}`);
+        }
+        
+        if (!isSourceOwner || !isTargetOwner) {
+          await transaction.rollback();
+          req.flash('error_msg', 'You can only merge carnivals that you created.');
+          return res.redirect(`/carnivals/${id}`);
+        }
+        
+        if (!sourceCarnival.mySidelineId) {
+          await transaction.rollback();
+          req.flash('error_msg', 'Only MySideline carnivals can be merged.');
+          return res.redirect(`/carnivals/${id}`);
+        }
+      }
+    } else {
+      // For unclaimed carnivals (no club association)
+      if (!isAdmin) {
+        if (!isSourceOwner || !isTargetOwner) {
+          await transaction.rollback();
+          req.flash('error_msg', 'You can only merge carnivals that you created.');
+          return res.redirect(`/carnivals/${id}`);
+        }
+        
+        if (!sourceCarnival.mySidelineId) {
+          await transaction.rollback();
+          req.flash('error_msg', 'Only MySideline carnivals can be merged.');
+          return res.redirect(`/carnivals/${id}`);
+        }
+      }
+    }
+
+    // Prevent merging a carnival into itself
+    if (sourceCarnival.id === targetCarnival.id) {
+      await transaction.rollback();
+      req.flash('error_msg', 'Cannot merge a carnival into itself.');
+      return res.redirect(`/carnivals/${id}`);
+    }
+
+    // Build update data using field precedence: fill empty target fields with source data
+    const updateData = {};
+    
+    // Get mergeable fields dynamically from model
+    const { textFields, dateFields, numericFields, booleanFields } = getMergeableFields();
+    
+    // Text fields - only update if target field is empty/null
+    textFields.forEach(field => {
+      if ((!targetCarnival[field] || targetCarnival[field].trim() === '') && 
+          sourceCarnival[field] && sourceCarnival[field].trim() !== '') {
+        updateData[field] = sourceCarnival[field];
+      }
+    });
+
+    // Date fields - only update if target field is null
+    dateFields.forEach(field => {
+      if (!targetCarnival[field] && sourceCarnival[field]) {
+        updateData[field] = sourceCarnival[field];
+      }
+    });
+
+    // Numeric fields - only update if target field is null/0
+    numericFields.forEach(field => {
+      if ((!targetCarnival[field] || targetCarnival[field] === 0) && 
+          sourceCarnival[field] && sourceCarnival[field] !== 0) {
+        updateData[field] = sourceCarnival[field];
+      }
+    });
+
+    // Boolean fields - only update if target field is false and source is true
+    booleanFields.forEach(field => {
+      if (!targetCarnival[field] && sourceCarnival[field]) {
+        updateData[field] = sourceCarnival[field];
+      }
+    });
+
+    // MySideline fields - only add MySideline data if target doesn't already have it
+    if (sourceCarnival.mySidelineId) {
+      // Only set MySideline ID if target doesn't have one
+      if (!targetCarnival.mySidelineId) {
+        updateData.mySidelineId = sourceCarnival.mySidelineId;
+      }
+      
+      // Only set MySideline title if target doesn't have one
+      if (!targetCarnival.mySidelineTitle) {
+        updateData.mySidelineTitle = sourceCarnival.mySidelineTitle || sourceCarnival.title;
+      }
+      
+      // Only set MySideline address if target doesn't have one
+      if (!targetCarnival.mySidelineAddress) {
+        updateData.mySidelineAddress = sourceCarnival.mySidelineAddress || sourceCarnival.locationAddress;
+      }
+      
+      // Only set MySideline date if target doesn't have one
+      if (!targetCarnival.mySidelineDate) {
+        updateData.mySidelineDate = sourceCarnival.mySidelineDate || sourceCarnival.date;
+      }
+      
+      // Always update last sync date when merging MySideline data
+      updateData.lastSyncDate = new Date();
+    }
+
+    // Update the target carnival with merged data
+    if (Object.keys(updateData).length > 0) {
+      await targetCarnival.update(updateData, { transaction });
+    }
+
+    // Merge sponsors from source to target (avoid duplicates by name)
+    if (sourceCarnival.carnivalSponsors && sourceCarnival.carnivalSponsors.length > 0) {
+      const existingSponsorNames = new Set(
+        targetCarnival.carnivalSponsors.map(s => s.sponsorName.toLowerCase())
+      );
+      
+      const sponsorsToAdd = sourceCarnival.carnivalSponsors.filter(
+        sponsor => !existingSponsorNames.has(sponsor.sponsorName.toLowerCase())
+      );
+      
+      for (const sponsor of sponsorsToAdd) {
+        await CarnivalSponsor.create({
+          carnivalId: targetCarnival.id,
+          sponsorName: sponsor.sponsorName,
+          sponsorshipLevel: sponsor.sponsorshipLevel,
+          logoUrl: sponsor.logoUrl,
+          websiteUrl: sponsor.websiteUrl,
+          displayOrder: sponsor.displayOrder,
+          isActive: true,
+          isPubliclyVisible: sponsor.isPubliclyVisible
+        }, { transaction });
+      }
+    }
+
+    // Archive/disable the source carnival instead of deleting it
+    await sourceCarnival.update({
+      isDisabled: true,
+      isActive: false,
+      disabledAt: new Date(),
+      disabledBy: req.user.id,
+      additionalNotes: (sourceCarnival.additionalNotes || '') + 
+        `\n\n[MERGED] This carnival was merged into "${targetCarnival.title}" on ${new Date().toISOString()}`
+    }, { transaction });
+
+    // Log the merge action
+    console.log(`Carnival merge completed: ${sourceCarnival.title} (ID: ${sourceCarnival.id}) merged into ${targetCarnival.title} (ID: ${targetCarnival.id}) by user ${req.user.id}`);
+
+    await transaction.commit();
+
+    req.flash('success_msg', `Successfully merged "${sourceCarnival.title}" into "${targetCarnival.title}". MySideline data has been preserved and the source carnival has been archived.`);
+    return res.redirect(`/carnivals/${targetCarnival.id}`);
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Carnival merge error:', error);
+    req.flash('error_msg', 'An error occurred while merging carnivals. Please try again.');
+    return res.redirect(`/carnivals/${id}`);
+  }
 });
 
 export const showCarnivalSponsors = asyncHandler(async (req, res) => {

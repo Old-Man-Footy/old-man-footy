@@ -161,6 +161,9 @@ router.post('/:id/take-ownership', ensureAuthenticated, carnivalController.takeO
 // Release ownership of MySideline carnival
 router.post('/:id/release-ownership', ensureAuthenticated, carnivalController.releaseOwnership);
 
+// Show merge form for MySideline carnival
+router.get('/:id/merge', ensureAuthenticated, carnivalController.getMerge);
+
 // Merge MySideline carnival with existing carnival
 router.post(
   '/:id/merge',

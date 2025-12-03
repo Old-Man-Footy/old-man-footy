@@ -3,6 +3,7 @@ import { UPLOAD_DIRECTORIES } from './constants.mjs';
 import { sequelize } from './database.mjs';
 import { QueryTypes } from 'sequelize';
 import fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
 
 /**
@@ -228,26 +229,60 @@ class DatabaseOptimizer {
                 }
             }
 
-            // Query performance monitoring
-            if (process.env.NODE_ENV === 'production') {
-                try {
-                    await safeAddHook('beforeQuery', (options) => {
-                        options.startTime = Date.now();
-                    });
-                    await safeAddHook('afterQuery', (options) => {
-                        if (options.startTime) {
-                            const duration = Date.now() - options.startTime;
-                            if (duration > 100) {
-                                console.warn(`Slow query detected: ${duration}ms`, {
-                                    sql: options.sql,
-                                    duration: `${duration}ms`
-                                });
+            // Query performance monitoring - Enable in all environments for debugging
+            try {
+                await safeAddHook('beforeQuery', (options) => {
+                    options.startTime = Date.now();
+                    // Capture SQL query with multiple fallback strategies
+                    options.capturedSql = options.sql || options.query || options.statement;
+                    
+                    // Also capture bind parameters if available
+                    if (options.bind && options.bind.length > 0) {
+                        options.capturedBind = options.bind;
+                    } else if (options.replacements) {
+                        options.capturedReplacements = options.replacements;
+                    }
+                });
+
+                await safeAddHook('afterQuery', (options) => {
+                    if (options.startTime) {
+                        const duration = Date.now() - options.startTime;
+                        // Configurable threshold via environment variable
+                        // Default: 500ms (more realistic for SQLite in containers)
+                        const slowQueryThreshold = parseInt(process.env.SLOW_QUERY_THRESHOLD_MS) || 500;
+                        
+                        if (duration > slowQueryThreshold) {
+                            // Get the actual SQL with fallback strategies
+                            let actualSql = options.capturedSql || options.sql || options.query || options.statement;
+                            
+                            // If still no SQL, try to extract from other properties
+                            if (!actualSql && options.instance && options.instance._previousDataValues) {
+                                actualSql = 'Model operation on ' + (options.instance.constructor.name || 'unknown model');
                             }
+                            
+                            const slowQueryInfo = {
+                                sql: actualSql || 'SQL text not available',
+                                duration: `${duration}ms`,
+                                threshold: `${slowQueryThreshold}ms`,
+                                timestamp: new Date().toISOString(),
+                                environment: process.env.NODE_ENV || 'development'
+                            };
+
+                            // Include bind parameters if available
+                            if (options.capturedBind) {
+                                slowQueryInfo.bindParameters = options.capturedBind;
+                            } else if (options.capturedReplacements) {
+                                slowQueryInfo.replacements = options.capturedReplacements;
+                            }
+
+                            // Log to console (captured by Docker)
+                            console.warn('🐌 SLOW QUERY DETECTED:', JSON.stringify(slowQueryInfo, null, 2));
                         }
-                    });
-                } catch (hookError) {
-                    throw hookError;
-                }
+                    }
+                });
+            } catch (hookError) {
+                console.error('Failed to set up query monitoring hooks:', hookError);
+                throw hookError;
             }
 
             console.log('Database monitoring setup complete');
@@ -274,6 +309,11 @@ class DatabaseOptimizer {
             const { default: User } = await import('../models/User.mjs');
             const expiredInvitations = await User.cleanupExpiredInvitations();
             console.log(`Cleaned up ${expiredInvitations} expired invitation tokens`);
+
+            // Cleanup expired sessions using Session model method (lazy import to avoid cycles)
+            const { default: Session } = await import('../models/Session.mjs');
+            const expiredSessions = await Session.cleanupExpired();
+            console.log(`Cleaned up ${expiredSessions} expired sessions`);
 
             // Optimize database
             await this.optimizeDatabase();
@@ -349,6 +389,8 @@ class DatabaseOptimizer {
             throw Object.assign(new Error(errObj.error.message), errObj);
         }
     }
+
+
 }
 
 export default DatabaseOptimizer;

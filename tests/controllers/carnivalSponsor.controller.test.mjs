@@ -129,7 +129,7 @@ import {
   getCarnivalSponsors,
   getCarnivalSponsor,
   updateCarnivalSponsor,
-  deleteCarnivalSponsor,
+  disableCarnivalSponsor,
   getCarnivalSponsorsForCarnival,
   getCarnivalsForSponsor,
   getCarnivalSponsorshipSummary,
@@ -586,7 +586,7 @@ describe('Carnival Sponsor Controller', () => {
 
       CarnivalSponsor.findByPk.mockResolvedValue(mockRelationship);
 
-      await deleteCarnivalSponsor(req, res);
+      await disableCarnivalSponsor(req, res);
 
       expect(mockRelationship.update).toHaveBeenCalledWith({
         isActive: false
@@ -606,7 +606,7 @@ describe('Carnival Sponsor Controller', () => {
 
       CarnivalSponsor.findByPk.mockResolvedValue(mockRelationship);
 
-      await deleteCarnivalSponsor(req, res);
+      await disableCarnivalSponsor(req, res);
 
       expect(mockRelationship.destroy).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({
@@ -620,7 +620,7 @@ describe('Carnival Sponsor Controller', () => {
 
       CarnivalSponsor.findByPk.mockResolvedValue(null);
 
-      await deleteCarnivalSponsor(req, res);
+      await disableCarnivalSponsor(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({

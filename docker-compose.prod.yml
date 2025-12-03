@@ -41,6 +41,7 @@ services:
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-150} # Default 100 requests per window
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-900000} # Default 15 minutes
       - SESSION_SECRET=${SESSION_SECRET}
+      - SLOW_QUERY_THRESHOLD_MS=${SLOW_QUERY_THRESHOLD_MS:-500} # Default 500ms
       - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@oldmanfooty.au}
       - TZ=${TZ:-Australia/Sydney} # Default timezone
     volumes:

@@ -16,6 +16,11 @@ export const adminCarnivalsManager = {
       },
     
       cacheElements() {
+        // Active Toggle Modal (Deactivate/Activate - isActive field)
+        this.elements.activeToggleModal = document.getElementById('activeToggleModal');
+        this.elements.confirmActiveToggle = document.getElementById('confirmActiveToggle');
+        
+        // Status Toggle Modal (Disable/Enable - isDisabled field)  
         this.elements.statusToggleModal = document.getElementById('statusToggleModal');
         this.elements.confirmStatusToggle = document.getElementById('confirmStatusToggle');
         this.elements.toastContainer = document.getElementById('toast-container');
@@ -39,7 +44,18 @@ export const adminCarnivalsManager = {
       },
     
       bindEvents() {
-        // Setup status toggle buttons
+        // Setup active toggle buttons (Deactivate/Activate - isActive field)
+        const activeToggleButtons = document.querySelectorAll('[data-toggle-carnival-active]');
+        activeToggleButtons.forEach(button => {
+          button.addEventListener('click', (carnival) => {
+            const carnivalId = button.getAttribute('data-toggle-carnival-active');
+            const carnivalTitle = button.getAttribute('data-carnival-title');
+            const currentActive = button.getAttribute('data-current-active') === 'true';
+            this.showActiveToggleModal(carnivalId, carnivalTitle, currentActive);
+          });
+        });
+
+        // Setup status toggle buttons (Disable/Enable - isDisabled field)
         const statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
         statusToggleButtons.forEach(button => {
           button.addEventListener('click', (carnival) => {
@@ -50,9 +66,12 @@ export const adminCarnivalsManager = {
           });
         });
     
-        // Setup confirm button in modal
+        // Setup confirm buttons in modals
         if (this.elements.confirmStatusToggle) {
           this.elements.confirmStatusToggle.addEventListener('click', this.confirmStatusToggle.bind(this));
+        }
+        if (this.elements.confirmActiveToggle) {
+          this.elements.confirmActiveToggle.addEventListener('click', this.confirmActiveToggle.bind(this));
         }
 
         // Setup delete carnival functionality
@@ -322,10 +341,47 @@ export const adminCarnivalsManager = {
         }
       },
     
-      showStatusToggleModal(carnivalId, carnivalTitle, isActive) {
+      // Active Toggle Modal (Deactivate/Activate - isActive field)
+      showActiveToggleModal(carnivalId, carnivalTitle, isActive) {
         this.currentCarnivalId = carnivalId;
         this.currentCarnivalTitle = carnivalTitle;
-        this.currentStatus = isActive;
+        this.currentActiveStatus = isActive;
+
+        // Update modal content based on current active status
+        const modal = this.elements.activeToggleModal;
+        if (!modal) return;
+
+        const titleElement = modal.querySelector('#toggleActiveTitle');
+        const messageElement = modal.querySelector('#activeToggleMessage');
+        const warningElement = modal.querySelector('#activeWarningText');
+        const confirmButton = this.elements.confirmActiveToggle;
+
+        if (titleElement) titleElement.textContent = carnivalTitle;
+
+        if (isActive) {
+          messageElement.textContent = 'Are you sure you want to deactivate this carnival?';
+          warningElement.textContent = 'Deactivated carnivals will hide registration and contact information from visitors.';
+          confirmButton.className = 'btn btn-warning';
+          confirmButton.innerHTML = '<i class="bi bi-pause-circle"></i> Deactivate Carnival';
+        } else {
+          messageElement.textContent = 'Are you sure you want to activate this carnival?';
+          warningElement.textContent = 'Activated carnivals will show registration and contact information to visitors.';
+          confirmButton.className = 'btn btn-success';
+          confirmButton.innerHTML = '<i class="bi bi-play-circle"></i> Activate Carnival';
+        }
+
+        // Show the active toggle modal
+        if (typeof bootstrap !== 'undefined') {
+          const bootstrapModal = new bootstrap.Modal(modal);
+          bootstrapModal.show();
+        }
+      },
+
+      // Status Toggle Modal (Disable/Enable - isDisabled field)
+      showStatusToggleModal(carnivalId, carnivalTitle, isDisabled) {
+        this.currentCarnivalId = carnivalId;
+        this.currentCarnivalTitle = carnivalTitle;
+        this.currentStatus = isDisabled;
     
         // Update modal content based on current status
         const titleElement = document.getElementById('toggleCarnivalTitle');
@@ -336,18 +392,20 @@ export const adminCarnivalsManager = {
     
         if (titleElement) titleElement.textContent = carnivalTitle;
     
-        if (isActive) {
-          messageElement.textContent = 'Are you sure you want to deactivate this carnival?';
-          warningElement.textContent = 'Deactivated carnivals will no longer be visible on the site';
-          actionTextElement.textContent = 'Deactivate';
-          confirmButton.className = 'btn btn-danger';
-          confirmButton.innerHTML = '<i class="bi bi-eye-slash"></i> Deactivate Carnival';
+        if (isDisabled) {
+          // Carnival is currently disabled, offer to enable it
+          messageElement.textContent = 'Are you sure you want to enable this carnival?';
+          warningElement.textContent = 'Enabled carnivals will be visible on the site again';
+          actionTextElement.textContent = 'Enable';
+          confirmButton.className = 'btn btn-success';
+          confirmButton.innerHTML = '<i class="bi bi-eye"></i> Enable Carnival';
         } else {
-          messageElement.textContent = 'Are you sure you want to reactivate this carnival?';
-          warningElement.textContent = 'Reactivated carnivals will become visible on the site again';
-          actionTextElement.textContent = 'Reactivate';
-          confirmButton.className = 'btn btn-tertiary';
-          confirmButton.innerHTML = '<i class="bi bi-eye"></i> Reactivate Carnival';
+          // Carnival is currently enabled, offer to disable it
+          messageElement.textContent = 'Are you sure you want to disable this carnival?';
+          warningElement.textContent = 'Disabled carnivals will no longer be visible on the site';
+          actionTextElement.textContent = 'Disable';
+          confirmButton.className = 'btn btn-danger';
+          confirmButton.innerHTML = '<i class="bi bi-eye-slash"></i> Disable Carnival';
         }
     
         // Show the modal
@@ -357,7 +415,53 @@ export const adminCarnivalsManager = {
         }
       },
     
-      // **THE FIX IS HERE:** Converted to async/await to make it fully awaitable in tests.
+      // Active Toggle Confirmation (Deactivate/Activate - isActive field)
+      async confirmActiveToggle() {
+        if (!this.currentCarnivalId) {
+          console.error('No carnival ID set for active toggle');
+          return;
+        }
+
+        const confirmButton = this.elements.confirmActiveToggle;
+        const originalContent = confirmButton.innerHTML;
+        confirmButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+        confirmButton.disabled = true;
+
+        try {
+          const response = await fetch(`/admin/carnivals/${this.currentCarnivalId}/toggle-active`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ isActive: !this.currentActiveStatus })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            this.showToast('success', data.message);
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            this.showToast('error', data.message || 'Error updating carnival active status');
+          }
+        } catch (error) {
+          console.error('Error toggling carnival active status:', error);
+          this.showToast('error', 'Error updating carnival active status');
+        } finally {
+          confirmButton.innerHTML = originalContent;
+          confirmButton.disabled = false;
+
+          // Hide the active toggle modal
+          const modal = this.elements.activeToggleModal;
+          if (modal && typeof bootstrap !== 'undefined') {
+            const bootstrapModal = bootstrap.Modal.getInstance(modal);
+            if (bootstrapModal) bootstrapModal.hide();
+          }
+        }
+      },
+
+      // Status Toggle Confirmation (Disable/Enable - isDisabled field)
       async confirmStatusToggle() {
         if (!this.currentCarnivalId) {
           console.error('No carnival ID set for status toggle');
@@ -376,7 +480,7 @@ export const adminCarnivalsManager = {
               'Content-Type': 'application/json',
               'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ isActive: !this.currentStatus })
+            body: JSON.stringify({ isDisabled: !this.currentStatus })
           });
           const data = await response.json();
     

@@ -244,6 +244,9 @@
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <h6 class="mb-1"><%= carnival.title %></h6>
+                                            <% if (carnival.subtitle) { %>
+                                                <h6 class="card-subtitle mb-0 text-muted"><%= carnival.subtitle %></h6>
+                                            <% } %>
                                             <p class="mb-1">
                                                 <i class="bi bi-geo-alt"></i> <%= carnival.state %>
                                                 <span class="ms-2">

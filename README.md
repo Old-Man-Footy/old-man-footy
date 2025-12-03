@@ -212,7 +212,6 @@ This codebase is shared publicly to:
 │   └── vitest.setup.mjs                        # Vitest test configuration
 ├── utils/                                   # Utility functions and helpers
 │   ├── dateUtils.mjs                           # Date formatting and manipulation utilities
-│   ├── sequelizeLogger.mjs                     # Sequelize database logging utility
 │   ├── uiHelpers.mjs                           # UI helper functions
 │   ├── uploadProcessor.mjs                     # File upload processing utilities
 │   └── viewHelpers.mjs                         # EJS view helper functions

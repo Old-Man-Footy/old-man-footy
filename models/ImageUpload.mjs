@@ -78,7 +78,7 @@ class ImageUpload extends Model {
         as: 'carnival',
         attributes: ['id', 'title', 'date', 'isActive'],
         where: {
-          isActive: true
+          isDisabled: false
         }
       }],
       order: [['createdAt', 'DESC']],

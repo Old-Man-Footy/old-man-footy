@@ -95,7 +95,10 @@
                                 <div class="col-8">
                                     <div class="card-body p-3 d-flex flex-column h-100">
                                         <div class="flex-grow-0">
-                                            <h6 class="card-title mb-2 text-dark"><%= carnival.title %></h6>                                    
+                                            <h6 class="card-title mb-2 text-dark"><%= carnival.title %></h6>
+                                            <% if (carnival.subtitle) { %>
+                                                <h6 class="card-subtitle mb-2 text-muted"><%= carnival.subtitle %></h6>
+                                            <% } %>                                    
                                             <!-- Date and Location -->
                                             <div class="mb-1">
                                                 <small class="text-muted">
@@ -142,7 +145,11 @@
                                             </div>
                                             <!-- Buttons -->
                                             <div class="d-flex gap-1">
-                                                <% if (carnival.registrationLink) { %>
+                                                <% if (!carnival.isActive) { %>
+                                                    <span class="btn btn-sm btn-secondary" disabled>
+                                                        <i class="bi bi-x-circle"></i> Registration Closed
+                                                    </span>
+                                                <% } else if (carnival.registrationLink) { %>
                                                     <a href="<%= carnival.registrationLink %>" class="btn btn-tertiary btn-sm" target="_blank" onclick="event.stopPropagation(); event.preventDefault(); window.open(this.href, '_blank');">
                                                         <i class="bi bi-person-plus"></i> Player Registration
                                                     </a>

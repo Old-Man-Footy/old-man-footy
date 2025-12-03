@@ -118,8 +118,8 @@
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div>
-                                                        <h6 class="mb-0">
-                                                            <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none">
+                                                        <h6 class="mb-0<%= carnival.isDisabled ? ' text-muted' : '' %>">
+                                                            <a href="/carnivals/<%= carnival.id %>" class="text-decoration-none<%= carnival.isDisabled ? ' text-muted' : '' %>">
                                                                 <%= carnival.title %>
                                                             </a>
                                                         </h6>
@@ -133,7 +133,7 @@
                                             </td>
                                             <td>
                                                 <% if (carnival.date) { %>
-                                                    <span class="fw-medium">
+                                                    <span class="fw-medium<%= carnival.isDisabled ? ' text-muted' : '' %>">
                                                         <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
                                                     </span>
                                                     <br>
@@ -148,7 +148,7 @@
                                             </td>
                                             <td>
                                                 <% if (carnival.state) { %>
-                                                    <span class="badge state-<%= carnival.state.toLowerCase() %>"><%= carnival.state %></span>
+                                                    <span class="badge state-<%= carnival.state.toLowerCase() %><%= carnival.isDisabled ? ' text-muted' : '' %>"><%= carnival.state %></span>
                                                 <% } %>
                                             </td>
                                             <td>
@@ -162,7 +162,7 @@
                                             </td>
                                             <td>
                                                 <% if (carnival.creator) { %>
-                                                    <span class="fw-medium">
+                                                    <span class="fw-medium<%= carnival.isDisabled ? ' text-muted' : '' %>">
                                                         <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
                                                     </span>
                                                     <br>
@@ -172,7 +172,9 @@
                                                 <% } %>
                                             </td>
                                             <td>
-                                                <% if (carnival.isActive) { %>
+                                                <% if (carnival.isDisabled) { %>
+                                                    <span class="badge bg-secondary">Disabled</span>
+                                                <% } else if (carnival.isActive) { %>
                                                     <span class="badge bg-primary">Active</span>
                                                 <% } else { %>
                                                     <span class="badge bg-danger">Inactive</span>
@@ -201,21 +203,41 @@
                                                         </a>
                                                     <% } %>
                                                     
+                                                    <!-- Deactivate/Activate Button (isActive field) -->
                                                     <% if (carnival.isActive) { %>
-                                                        <button type="button" class="btn btn-outline-danger" 
-                                                                title="Deactivate Carnival"
-                                                                data-toggle-carnival-status="<%= carnival.id %>"
+                                                        <button type="button" class="btn btn-outline-warning" 
+                                                                title="Deactivate Carnival (Hide registration & contact)"
+                                                                data-toggle-carnival-active="<%= carnival.id %>"
                                                                 data-carnival-title="<%= carnival.title %>"
-                                                                data-current-status="true">
-                                                            <i class="bi bi-eye-slash"></i>
+                                                                data-current-active="true">
+                                                            <i class="bi bi-pause-circle"></i>
                                                         </button>
                                                     <% } else { %>
-                                                        <button type="button" class="btn btn-outline-tertiary" 
-                                                                title="Reactivate Carnival"
+                                                        <button type="button" class="btn btn-outline-success" 
+                                                                title="Activate Carnival (Show registration & contact)"
+                                                                data-toggle-carnival-active="<%= carnival.id %>"
+                                                                data-carnival-title="<%= carnival.title %>"
+                                                                data-current-active="false">
+                                                            <i class="bi bi-play-circle"></i>
+                                                        </button>
+                                                    <% } %>
+                                                    
+                                                    <!-- Disable/Enable Button (isDisabled field) -->
+                                                    <% if (!carnival.isDisabled) { %>
+                                                        <button type="button" class="btn btn-outline-danger" 
+                                                                title="Disable Carnival (Soft delete - for merged/removed carnivals)"
                                                                 data-toggle-carnival-status="<%= carnival.id %>"
                                                                 data-carnival-title="<%= carnival.title %>"
                                                                 data-current-status="false">
-                                                            <i class="bi bi-eye"></i>
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    <% } else { %>
+                                                        <button type="button" class="btn btn-outline-secondary" 
+                                                                title="Enable Carnival (Restore from soft delete)"
+                                                                data-toggle-carnival-status="<%= carnival.id %>"
+                                                                data-carnival-title="<%= carnival.title %>"
+                                                                data-current-status="true">
+                                                            <i class="bi bi-arrow-clockwise"></i>
                                                         </button>
                                                     <% } %>
                                                 </div>
@@ -289,7 +311,7 @@
     <% } %>
 </div>
 
-<!-- Status Toggle Confirmation Modal -->
+<!-- Status Toggle Confirmation Modal (Disable/Enable - isDisabled field) -->
 <div class="modal fade" id="statusToggleModal" tabindex="-1" aria-labelledby="statusToggleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -311,6 +333,34 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" id="confirmStatusToggle" class="btn btn-tertiary">
                     <i class="bi bi-eye-slash"></i> <span id="toggleActionText">Deactivate</span> Carnival
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Toggle Confirmation Modal (Deactivate/Activate - isActive field) -->
+<div class="modal fade" id="activeToggleModal" tabindex="-1" aria-labelledby="activeToggleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activeToggleModalLabel">
+                    <i class="bi bi-activity text-primary"></i> Carnival Active Status
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="activeToggleMessage">Are you sure you want to change the active status of this carnival?</p>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <span id="activeWarningText">This will affect visitor access to registration and contact information.</span>
+                </div>
+                <p class="mb-0"><strong>Carnival:</strong> <span id="toggleActiveTitle"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmActiveToggle" class="btn btn-warning">
+                    <i class="bi bi-pause-circle"></i> Deactivate Carnival
                 </button>
             </div>
         </div>

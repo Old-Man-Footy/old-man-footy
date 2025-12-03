@@ -47,7 +47,7 @@ router.put('/:id', ensureAuthenticated, [
 ], carnivalSponsorController.updateCarnivalSponsor);
 
 // Delete/deactivate a carnival-sponsor relationship
-router.delete('/:id', ensureAuthenticated, carnivalSponsorController.deleteCarnivalSponsor);
+router.delete('/:id', ensureAuthenticated, carnivalSponsorController.disableCarnivalSponsor);
 
 // Get sponsors for a specific carnival
 router.get('/carnival/:carnivalId/sponsors', carnivalSponsorController.getCarnivalSponsorsForCarnival);

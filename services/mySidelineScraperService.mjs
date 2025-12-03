@@ -268,22 +268,39 @@ class MySidelineScraperService {
         // Generate registration link using the top-level _id
         const registrationLink = `${this.eventUrl}${item._id}`;
 
-        // 
+        // Extract and clean carnival name and date from title
         let { cleanTitle: carnivalName, extractedDate: eventDate } = this.parserService.extractAndStripDateFromTitle(item.name);
         if (!carnivalName || carnivalName.trim() === '') {
             // If no title was extracted, use the full title.
             carnivalName = item.name || 'Masters Rugby League Carnival';                
         }
 
+        // Initialize subtitle variable at the proper scope
+        let subtitle = null;
+        
+        // Try to extract date from competition name if not found in main title
+        if (!eventDate && item.competition?.name) {
+            const competitionData = this.parserService.extractAndStripDateFromTitle(item.competition.name);
+            subtitle = competitionData.cleanTitle;
+            if (competitionData.extractedDate) {
+                eventDate = competitionData.extractedDate;
+            }
+            if (!subtitle || subtitle.trim() === '') {
+                subtitle = null;
+            }
+        }
+
         return {
             // Core carnival data
             title: carnivalName,
+            subtitle: subtitle,
             date: eventDate,
             locationAddress: locationAddress || 'TBC',
             state: state,
             
             // MySideline-specific fields
             mySidelineTitle: item.name,
+            mySidelineSubtitle: item.competition?.name || null,
             mySidelineAddress: locationAddress,
             mySidelineDate: eventDate,
             mySidelineId: item._id,

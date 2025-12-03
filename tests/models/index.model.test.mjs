@@ -16,7 +16,7 @@ const Carnival = { associations: { creator: mockAssoc.creator, attendingClubs: m
 const CarnivalClub = { associations: { carnival: mockAssoc.carnival, participatingClub: mockAssoc.participatingClub, playerAssignments: mockAssoc.playerAssignments } };
 const CarnivalClubPlayer = { associations: { carnivalClub: mockAssoc.carnivalClub, clubPlayer: mockAssoc.clubPlayer } };
 const CarnivalSponsor = { associations: { carnival: mockAssoc.carnival, sponsor: {} } };
-const Sponsor = { associations: { clubs: mockAssoc.clubs, carnivals: mockAssoc.carnivals } };
+const Sponsor = { associations: { clubs: mockAssoc.clubs, carnival: mockAssoc.carnival } };
 const EmailSubscription = {};
 const AuditLog = { associations: { user: mockAssoc.user } };
 const SyncLog = {};
@@ -85,9 +85,9 @@ describe('models/index.mjs (Mocked)', () => {
     expect(models.Sponsor.associations.clubs).toBeDefined();
   });
 
-  it('should define Carnival/Sponsor many-to-many associations', () => {
-    expect(models.Carnival.associations.sponsors).toBeDefined();
-    expect(models.Sponsor.associations.carnivals).toBeDefined();
+  it('should define Carnival/Sponsor one-to-many associations', () => {
+    expect(models.Carnival.associations.carnivalSponsors).toBeDefined();
+    expect(models.Sponsor.associations.carnival).toBeDefined();
   });
 
   it('should define direct associations for junction tables', () => {

@@ -307,12 +307,18 @@ describe('Security Middleware', () => {
         expect(mockNext).toHaveBeenCalledWith();
       });
 
-      it('should generate CSRF token if none exists', () => {
+      it('should return error when CSRF token system not available', () => {
         mockReq.session = {};
+        // No req.csrfToken function - simulating missing csrfTokenProvider
         csrfProtection(mockReq, mockRes, mockNext);
-        expect(mockReq.session.csrfToken).toBeDefined();
-        expect(typeof mockReq.session.csrfToken).toBe('string');
-        expect(mockNext).toHaveBeenCalledWith();
+        expect(mockRes.status).toHaveBeenCalledWith(403);
+        expect(mockRes.json).toHaveBeenCalledWith({
+          error: {
+            status: 403,
+            message: 'CSRF token system not available'
+          }
+        });
+        expect(mockNext).not.toHaveBeenCalled();
       });
 
       it('should reject requests with invalid CSRF token', () => {
@@ -342,7 +348,7 @@ describe('Security Middleware', () => {
 
       it('should accept CSRF token from headers', () => {
         const validToken = 'valid-token-456';
-        mockReq.session = { csrfToken: validToken };
+        mockReq.csrfToken = vi.fn().mockReturnValue(validToken);
         mockReq.headers['x-csrf-token'] = validToken;
         
         csrfProtection(mockReq, mockRes, mockNext);

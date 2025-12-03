@@ -310,7 +310,7 @@ class SeedDataPurger {
         const remainingStats = {
             clubs: await Club.count({ where: { isActive: true } }),
             users: await User.count({ where: { isActive: true } }),
-            carnivals: await Carnival.count({ where: { isActive: true } }),
+            carnivals: await Carnival.count({ where: { isDisabled: false, isActive: true } }),
             subscriptions: await EmailSubscription.count({ where: { isActive: true } })
         };
 

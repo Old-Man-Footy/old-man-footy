@@ -35,6 +35,12 @@
                                        value="<%= carnival.title %>" required>
                                 <div class="invalid-feedback">Please provide a carnival title.</div>
                             </div>
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Carnival Subtitle</label>
+                                <input type="text" class="form-control" id="subtitle" name="subtitle"  
+                                       value="<%= carnival.subtitle %>" required>
+                                <div class="invalid-feedback">Please provide a carnival subtitle.</div>
+                            </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -79,17 +85,10 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="locationAddress" class="form-label">Location Address *</label>
-                                <textarea class="form-control" id="locationAddress" name="locationAddress" rows="2" required><%= carnival.locationAddress %></textarea>
-                                <div class="invalid-feedback">Please provide the location address.</div>
-                            </div>
-
-                            <!-- MySideline-Compatible Address Fields -->
+                            <!-- Location Information -->
                             <div class="mb-4">
-                                <h6 class="text-secondary mb-3">
-                                    <i class="bi bi-geo-alt"></i> Detailed Location Information
-                                    <small class="text-muted">(Optional - for better mapping and MySideline compatibility)</small>
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-geo-alt"></i> Location Information
                                 </h6>
                                 
                                 <div class="row">
@@ -104,10 +103,11 @@
                                 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="locationAddressLine1" class="form-label">Address Line 1</label>
+                                        <label for="locationAddressLine1" class="form-label">Address Line 1 *</label>
                                         <input type="text" class="form-control" id="locationAddressLine1" name="locationAddressLine1" 
                                                value="<%= carnival.locationAddressLine1 || '' %>"
-                                               placeholder="e.g., 123 Main Street">
+                                               placeholder="e.g., 123 Main Street" required>
+                                        <div class="invalid-feedback">Please provide the street address.</div>
                                         <div class="form-text">Street address or venue address</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
@@ -121,10 +121,11 @@
                                 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="locationSuburb" class="form-label">Suburb/City</label>
+                                        <label for="locationSuburb" class="form-label">Suburb *</label>
                                         <input type="text" class="form-control" id="locationSuburb" name="locationSuburb" 
                                                value="<%= carnival.locationSuburb || '' %>"
-                                               placeholder="e.g., Parramatta">
+                                               placeholder="e.g., Parramatta" required>
+                                        <div class="invalid-feedback">Please provide the suburb.</div>
                                         <div class="form-text">The suburb or city where the carnival is held</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
@@ -133,6 +134,13 @@
                                                value="<%= carnival.locationPostcode || '' %>"
                                                placeholder="e.g., 2150" maxlength="10">
                                         <div class="form-text">Australian postcode</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="locationCountry" class="form-label">Country</label>
+                                        <input type="text" class="form-control" id="locationCountry" name="locationCountry" 
+                                               value="<%= carnival.locationCountry || 'Australia' %>"
+                                               placeholder="Australia">
+                                        <div class="form-text">Country where the carnival is held</div>
                                     </div>
                                 </div>
                                 
@@ -143,7 +151,7 @@
                                                value="<%= carnival.locationLatitude || '' %>"
                                                step="0.00000001" min="-90" max="90"
                                                placeholder="e.g., -33.8568">
-                                        <div class="form-text">GPS latitude coordinate (decimal degrees)</div>
+                                        <div class="form-text">GPS latitude coordinate (optional)</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="locationLongitude" class="form-label">Longitude</label>
@@ -151,17 +159,7 @@
                                                value="<%= carnival.locationLongitude || '' %>"
                                                step="0.00000001" min="-180" max="180"
                                                placeholder="e.g., 151.2153">
-                                        <div class="form-text">GPS longitude coordinate (decimal degrees)</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="locationCountry" class="form-label">Country</label>
-                                        <input type="text" class="form-control" id="locationCountry" name="locationCountry" 
-                                               value="<%= carnival.locationCountry || 'Australia' %>"
-                                               placeholder="Australia">
-                                        <div class="form-text">Country where the carnival is held</div>
+                                        <div class="form-text">GPS longitude coordinate (optional)</div>
                                     </div>
                                 </div>
                             </div>
@@ -179,17 +177,17 @@
                                     <div class="invalid-feedback">Please provide a contact name.</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="organiserContactPhone" class="form-label">Contact Phone *</label>
+                                    <label for="organiserContactPhone" class="form-label">Contact Phone</label>
                                     <input type="tel" class="form-control" id="organiserContactPhone" name="organiserContactPhone" 
-                                           value="<%= carnival.organiserContactPhone %>" required>
+                                           value="<%= carnival.organiserContactPhone %>">
                                     <div class="invalid-feedback">Please provide a contact phone number.</div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="organiserContactEmail" class="form-label">Contact Email *</label>
+                                <label for="organiserContactEmail" class="form-label">Contact Email</label>
                                 <input type="email" class="form-control" id="organiserContactEmail" name="organiserContactEmail" 
-                                       value="<%= carnival.organiserContactEmail %>" required>
+                                       value="<%= carnival.organiserContactEmail %>">
                                 <div class="invalid-feedback">Please provide a valid contact email.</div>
                             </div>
                         </div>

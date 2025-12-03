@@ -239,7 +239,7 @@ export const updateCarnivalSponsor = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-export const deleteCarnivalSponsor = async (req, res) => {
+export const disableCarnivalSponsor = async (req, res) => {
   const { id } = req.params;
   const { permanent = false } = req.query;
 

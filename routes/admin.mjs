@@ -150,6 +150,7 @@ router.post('/carnivals/:id/update',
     adminController.updateCarnival
 );
 router.post('/carnivals/:id/toggle-status', adminController.toggleCarnivalStatus);
+router.post('/carnivals/:id/toggle-active', adminController.toggleCarnivalActive);
 router.get('/carnivals/:id/claim', adminController.showClaimCarnivalForm);
 router.post('/carnivals/:id/claim', adminController.adminClaimCarnival);
 router.get('/carnivals/:id/players', adminController.showCarnivalPlayers);

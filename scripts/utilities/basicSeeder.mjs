@@ -59,7 +59,8 @@ class BasicSeeder {
                 twitterUrl: clubData.twitterUrl,
                 logoUrl: clubData.logoUrl,
                 isPubliclyListed: clubData.isPubliclyListed,
-                isActive: true
+                isActive: true,
+                isDisabled: false
             });
             
             this.createdClubs.push(club);
@@ -199,6 +200,7 @@ class BasicSeeder {
                 
                 // Status
                 isActive: true,
+                isDisabled: false,
                 createdAt: new Date(),
                 updatedAt: new Date()
             });
@@ -232,6 +234,7 @@ class BasicSeeder {
                                 ...carnival,
                                 isManuallyEntered: false,
                                 isActive: true,
+                                isDisabled: false,
                                 createdAt: new Date(),
                                 updatedAt: new Date()
                             });

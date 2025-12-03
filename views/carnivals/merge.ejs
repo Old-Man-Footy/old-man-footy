@@ -1,0 +1,250 @@
+<div class="container" data-page-id="carnivals-merge">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="page-title">
+                    <i class="bi bi-arrow-down-up text-warning"></i>
+                    Merge Carnivals
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Carnival
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="bi bi-info-circle"></i> Merge Instructions</h5>
+                <p class="mb-2">This operation will merge one or more source carnivals into the destination carnival:</p>
+                <ul class="mb-0">
+                    <li>Empty fields in the destination will be filled with data from source carnivals</li>
+                    <li>Non-empty fields in the destination will be preserved</li>
+                    <li>If multiple sources have the same field, the first source takes priority</li>
+                    <li>Source carnivals will be disabled after the merge</li>
+                    <li>Players, sponsors, and galleries from source carnivals will be transferred</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merge Form -->
+    <form id="mergeForm" action="/carnivals/<%= carnival.id %>/merge" method="POST">
+        <%= csrfToken %>
+        
+        <!-- Destination Carnival -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-success">
+                    <div class="card-header bg-light-success">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bullseye text-success"></i> 
+                            Destination Carnival (Data will be preserved)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="fw-bold"><%= carnival.title %></h6>
+                                <p class="text-muted mb-2">
+                                    <% if (carnival.date) { %>
+                                        <i class="bi bi-calendar"></i> <%= new Date(carnival.date).toLocaleDateString('en-AU') %>
+                                    <% } else { %>
+                                        <i class="bi bi-calendar-x"></i> No date set
+                                    <% } %>
+                                    | <i class="bi bi-geo-alt"></i> <%= carnival.state || 'No state' %>
+                                </p>
+                                <% if (carnival.locationAddress) { %>
+                                    <p class="small text-muted mb-2">
+                                        <i class="bi bi-pin-map"></i> <%= carnival.locationAddress %>
+                                    </p>
+                                <% } %>
+                                <% if (carnival.creator) { %>
+                                    <p class="small text-muted mb-0">
+                                        <i class="bi bi-person"></i> <%= carnival.creator.firstName %> <%= carnival.creator.lastName %>
+                                    </p>
+                                <% } %>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-end">
+                                    <span class="badge bg-success">Destination</span>
+                                    <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
+                                        <br><small class="text-muted"><%= carnival.attendingClubs.length %> club(s) attending</small>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Source Carnivals Selection -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-light-warning">
+                        <h5 class="mb-0">
+                            <i class="bi bi-diagram-2 text-warning"></i> 
+                            Source Carnivals (Select carnivals to merge)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (availableCarnivals && availableCarnivals.length > 0) { %>
+                            <div class="row">
+                                <% availableCarnivals.forEach((sourceCarnival, index) => { %>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card h-100 carnival-selection-card" data-carnival-id="<%= sourceCarnival.id %>">
+                                            <div class="card-body">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="sourceCarnivals" value="<%= sourceCarnival.id %>" 
+                                                           id="carnival<%= sourceCarnival.id %>">
+                                                    <label class="form-check-label w-100" for="carnival<%= sourceCarnival.id %>">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <h6 class="fw-bold mb-0"><%= sourceCarnival.title %></h6>
+                                                            <div>
+                                                                <% if (!sourceCarnival.creator) { %>
+                                                                    <span class="badge bg-secondary">Unclaimed</span>
+                                                                <% } %>
+                                                                <% if (sourceCarnival.mySidelineTitle) { %>
+                                                                    <span class="badge bg-info">MySideline</span>
+                                                                <% } %>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <p class="text-muted small mb-2">
+                                                            <% if (sourceCarnival.date) { %>
+                                                                <i class="bi bi-calendar"></i> <%= new Date(sourceCarnival.date).toLocaleDateString('en-AU') %>
+                                                            <% } else { %>
+                                                                <i class="bi bi-calendar-x"></i> No date
+                                                            <% } %>
+                                                            | <i class="bi bi-geo-alt"></i> <%= sourceCarnival.state || 'No state' %>
+                                                        </p>
+                                                        
+                                                        <% if (sourceCarnival.locationAddress) { %>
+                                                            <p class="small text-muted mb-2">
+                                                                <i class="bi bi-pin-map"></i> 
+                                                                <%= sourceCarnival.locationAddress.length > 60 ? 
+                                                                    sourceCarnival.locationAddress.substring(0, 60) + '...' : 
+                                                                    sourceCarnival.locationAddress %>
+                                                            </p>
+                                                        <% } %>
+                                                        
+                                                        <% if (sourceCarnival.creator) { %>
+                                                            <p class="small text-muted mb-2">
+                                                                <i class="bi bi-person"></i> <%= sourceCarnival.creator.firstName %> <%= sourceCarnival.creator.lastName %>
+                                                            </p>
+                                                        <% } %>
+                                                        
+                                                        <% if (sourceCarnival.attendingClubs && sourceCarnival.attendingClubs.length > 0) { %>
+                                                            <p class="small text-muted mb-0">
+                                                                <i class="bi bi-people"></i> <%= sourceCarnival.attendingClubs.length %> club(s) attending
+                                                            </p>
+                                                        <% } %>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            </div>
+                            
+                            <!-- Bulk Selection Controls -->
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <button type="button" id="selectAll" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-check-square"></i> Select All
+                                        </button>
+                                        <button type="button" id="selectNone" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-square"></i> Select None
+                                        </button>
+                                        <button type="button" id="selectUnclaimed" class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-check-circle"></i> Select Unclaimed Only
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-4">
+                                <i class="bi bi-exclamation-circle display-4 text-muted mb-3"></i>
+                                <h5 class="text-muted">No Available Carnivals</h5>
+                                <p class="text-muted">There are no other carnivals available to merge with this one.</p>
+                                <a href="/carnivals/<%= carnival.id %>" class="btn btn-primary">
+                                    <i class="bi bi-arrow-left"></i> Back to Carnival
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Actions -->
+        <% if (availableCarnivals && availableCarnivals.length > 0) { %>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-danger">
+                        <div class="card-header bg-light-danger">
+                            <h6 class="mb-0">
+                                <i class="bi bi-exclamation-triangle text-danger"></i>
+                                Confirm Merge Operation
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <strong>Warning:</strong> This operation cannot be undone. Source carnivals will be disabled and their data merged into the destination carnival.
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-danger" id="submitMerge" disabled>
+                                    <i class="bi bi-arrow-down-up"></i> Merge Selected Carnivals
+                                </button>
+                                <a href="/carnivals/<%= carnival.id %>" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </form>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="mergeConfirmModal" tabindex="-1" aria-labelledby="mergeConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mergeConfirmModalLabel">
+                    <i class="bi bi-exclamation-triangle text-warning"></i> Confirm Merge Operation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to merge <strong><span id="selectedCount">0</span></strong> carnival(s) into:</p>
+                <div class="alert alert-info">
+                    <strong><%= carnival.title %></strong>
+                </div>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>This action cannot be undone!</strong> The selected source carnivals will be disabled and their data will be permanently merged.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmMerge" class="btn btn-danger">
+                    <i class="bi bi-arrow-down-up"></i> Confirm Merge
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="/js/carnivals-merge.js"></script>

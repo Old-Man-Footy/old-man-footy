@@ -1,7 +1,25 @@
 /**
  * Gallery Upload Middleware
  * 
- * Specialized middleware f/**
+ * Specialized middleware for AJAX-based gallery image uploads.
+ * Handles uploads to gallery subfolders with entity-based organization.
+ * 
+ * Usage: Used by API routes for dynamic gallery management
+ * Storage: public/uploads/{entityType}/{entityId}/gallery/
+ * 
+ * @module middleware/galleryUpload
+ */
+
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { GALLERY_UPLOAD_CONFIG } from '../config/constants.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/**
  * File filter for gallery images
  * Uses same validation logic as original upload middleware
  */
@@ -28,27 +46,6 @@ const galleryFileFilter = (req, file, cb) => {
     cb(error, false);
   }
 };
-
-/**
- * Gallery Upload Middleware
- * 
- * Specialized middleware for AJAX-based gallery image uploads.
- * Handles uploads to gallery subfolders with entity-based organization.
- * 
- * Usage: Used by API routes for dynamic gallery management
- * Storage: public/uploads/{entityType}/{entityId}/gallery/
- * 
- * @module middleware/galleryUpload
- */
-
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { GALLERY_UPLOAD_CONFIG } from '../config/constants.mjs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 /**
  * Configure multer storage for gallery uploads

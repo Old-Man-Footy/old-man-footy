@@ -130,6 +130,9 @@ class MySidelineDataService {
                     }
 
                     // Update Potentially Modified Fields
+                    if (!existingCarnival.subtitle && eventData.subtitle) {
+                        updateData.subtitle = eventData.subtitle;
+                    }
                     if (!existingCarnival.clubLogoURL && eventData.clubLogoURL) {
                         updateData.clubLogoURL = eventData.clubLogoURL;
                     }
@@ -139,8 +142,11 @@ class MySidelineDataService {
                     if (!existingCarnival.googleMapsUrl && eventData.googleMapsUrl) {
                         updateData.googleMapsUrl = eventData.googleMapsUrl;
                     }
-                    if (!existingCarnival.isActive && eventData.isActive !== undefined) {
-                        updateData.isActive = eventData.isActive;
+                    // Never re-enable carnivals that have been deactivated
+                    // Only update isActive if the carnival is currently active and MySideline says it should be inactive
+                    if (existingCarnival.isActive && eventData.isActive === false) {
+                        updateData.isActive = false;
+                        console.log(`Deactivating carnival based on MySideline data: ${eventData.title}`);
                     }
                     if (!existingCarnival.isManuallyEntered && eventData.isManuallyEntered !== undefined) {
                         updateData.isManuallyEntered = false;
@@ -177,6 +183,9 @@ class MySidelineDataService {
                     }
                     if (!existingCarnival.mySidelineTitle && eventData.mySidelineTitle) {
                         updateData.mySidelineTitle = eventData.mySidelineTitle;
+                    }
+                    if (!existingCarnival.mySidelineSubtitle && eventData.mySidelineSubtitle) {
+                        updateData.mySidelineSubtitle = eventData.mySidelineSubtitle;
                     }
                     if (!existingCarnival.organiserContactEmail && eventData.organiserContactEmail) {
                         updateData.organiserContactEmail = eventData.organiserContactEmail;
@@ -232,6 +241,7 @@ class MySidelineDataService {
                     const newCarnival = await Carnival.create({
                         // Core carnival fields
                         title: eventData.title,
+                        subtitle: eventData.subtitle,
                         date: eventData.date,                    
                         endDate: null,
                         state: eventData.state,
@@ -240,6 +250,7 @@ class MySidelineDataService {
                         // MySideline-specific tracking fields
                         mySidelineId: eventData.mySidelineId,
                         mySidelineTitle: eventData.mySidelineTitle,
+                        mySidelineSubtitle: eventData.mySidelineSubtitle,
                         mySidelineAddress: eventData.mySidelineAddress,
                         mySidelineDate: eventData.mySidelineDate,
                         
@@ -395,10 +406,10 @@ class MySidelineDataService {
             // Set time to start of today to avoid timezone issues
             currentDate.setHours(0, 0, 0, 0);
             
-            // Find all active carnivals with dates in the past
+            // Find all non-disabled carnivals with dates in the past
             const pastCarnivals = await Carnival.findAll({
                 where: {
-                    isActive: true,
+                    isDisabled: false,
                     date: {
                         [Op.lt]: currentDate // Less than current date
                     }

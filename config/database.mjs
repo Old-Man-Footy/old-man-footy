@@ -14,7 +14,6 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { createSequelizeLogger } from '../utils/sequelizeLogger.mjs';
 // Note: Avoid importing DatabaseOptimizer at module top-level to prevent ESM circular deps
 
 const __filename = fileURLToPath(import.meta.url);
@@ -94,7 +93,7 @@ function getSequelizeOptions() {
   const baseOptions = {
     dialect: 'sqlite',
     storage: dbPath,
-    logging: createSequelizeLogger(env),
+    logging: console.log,
     define: {
       timestamps: true,
       underscored: false,

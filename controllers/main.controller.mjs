@@ -33,6 +33,7 @@ export const getIndex = asyncHandler(async (req, res) => {
   // First, try to get 4 carnivals with confirmed dates
   let upcomingCarnivals = await Carnival.findAll({
     where: {
+      isDisabled: false,
       isActive: true,
       date: { [Op.gte]: new Date() }
     },
@@ -56,6 +57,7 @@ export const getIndex = asyncHandler(async (req, res) => {
   if (upcomingCarnivals.length < 4) {
     const undatedCarnivals = await Carnival.findAll({
       where: {
+        isDisabled: false,
         isActive: true,
         date: null
       },
@@ -81,8 +83,8 @@ export const getIndex = asyncHandler(async (req, res) => {
   // Apply logo fallback logic to ALL carnivals (both dated and undated)
   upcomingCarnivals.forEach(carnival => {
     // Priority: Carnival's own logo -> Host club logo -> Missing icon
-    const displayLogoUrl = (carnival.clubLogoUrl && carnival.clubLogoUrl.trim()) 
-      ? carnival.clubLogoUrl 
+    const displayLogoUrl = (carnival.clubLogoURL && carnival.clubLogoURL.trim()) 
+      ? carnival.clubLogoURL 
       : (carnival.hostClub?.logoUrl || '/icons/missing.svg');
 
     carnival.displayLogoUrl = displayLogoUrl;
@@ -90,9 +92,10 @@ export const getIndex = asyncHandler(async (req, res) => {
 
   // Get statistics for the stats runner
   const stats = {
-    totalCarnivals: await Carnival.count({ where: { isActive: true } }),
+    totalCarnivals: await Carnival.count({ where: { isDisabled: false } }),
     upcomingCount: await Carnival.count({
       where: {
+        isDisabled: false,
         isActive: true,
         [Op.or]: [
           { date: { [Op.gte]: new Date() } },
@@ -150,7 +153,7 @@ export const getDashboard = asyncHandler(async (req, res) => {
   const userCarnivals = await Carnival.findAll({
     where: {
       createdByUserId: userWithClub.id,
-      isActive: true
+      isDisabled: false
     },
     order: [['date', 'DESC']],
     limit: 5
@@ -179,7 +182,7 @@ export const getDashboard = asyncHandler(async (req, res) => {
         {
           model: Carnival,
           as: 'carnival',
-          where: { isActive: true }, // Only show active carnivals (not deleted ones)
+          where: { isDisabled: false }, // Only show active carnivals (not disabled ones)
           include: [
             {
               model: User,
@@ -208,7 +211,7 @@ export const getDashboard = asyncHandler(async (req, res) => {
   // Get upcoming carnivals for dashboard display
   const dashboardUpcomingCarnivals = await Carnival.findAll({
     where: {
-      isActive: true,
+      isDisabled: false,
       [Op.or]: [
         { date: { [Op.gte]: new Date() } },
         { date: null }
@@ -645,7 +648,7 @@ export const postUnsubscribe = asyncHandler(async (req, res) => {
 export const getStats = asyncHandler(async (_req, res) => {
   const stats = {
     totalUsers: await User.count(),
-    totalCarnivals: await Carnival.count({ where: { isActive: true } }),
+    totalCarnivals: await Carnival.count({ where: { isDisabled: false } }),
     totalClubs: await Club.count(),
     totalSubscriptions: await EmailSubscription.count({ where: { isActive: true } }),
   };

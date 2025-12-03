@@ -22,6 +22,7 @@ import AuditLog from './AuditLog.mjs';
 import SyncLog from './SyncLog.mjs';
 import HelpContent from './HelpContent.mjs';
 import ImageUpload from './ImageUpload.mjs';
+import Session from './Session.mjs';
 
 /**
  * Define model associations/relationships
@@ -218,5 +219,6 @@ export {
   AuditLog,
   SyncLog,
   HelpContent,
-  ImageUpload
+  ImageUpload,
+  Session
 };

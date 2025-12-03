@@ -232,7 +232,7 @@ class Carnival extends Model {
   static async findUpcoming() {
     return await this.findAll({
       where: {
-        isActive: true,
+        isDisabled: false,
         date: {
           [Op.gte]: new Date()
         }
@@ -249,7 +249,7 @@ class Carnival extends Model {
   static async findByState(state) {
     return await this.findAll({
       where: {
-        isActive: true,
+        isDisabled: false,
         state: state
       },
       order: [['date', 'ASC']]
@@ -263,7 +263,7 @@ class Carnival extends Model {
   static async findMySidelineCarnivals() {
     return await this.findAll({
       where: {
-        isActive: true,
+        isDisabled: false,
         isManuallyEntered: false
       },
       order: [['date', 'ASC']]
@@ -783,10 +783,22 @@ Carnival.init({
       this.setDataValue('title', value ? value.trim() : value);
     }
   },
+  subtitle: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    set(value) {
+      this.setDataValue('subtitle', value ? value.trim() : value);
+    }
+  },
   mySidelineTitle: {
     type: DataTypes.STRING,
     allowNull: true,
     comment: 'Original MySideline title for matching purposes - never changes once set'
+  },
+  mySidelineSubtitle: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    comment: 'Original MySideline subtitle for matching purposes - never changes once set'
   },
   mySidelineId: {
     type: DataTypes.INTEGER,
@@ -1014,6 +1026,12 @@ Carnival.init({
     defaultValue: true,
     allowNull: false
   },
+  isDisabled: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+    comment: 'Indicates if the carnival has been manually disabled or merged into another carnival'
+  },
   claimedAt: {
     type: DataTypes.DATE,
     allowNull: true
@@ -1085,6 +1103,9 @@ Carnival.init({
       fields: ['isActive']
     },
     {
+      fields: ['isDisabled']
+    },
+    {
       fields: ['createdByUserId']
     },
     {
@@ -1123,7 +1144,7 @@ Carnival.getStatistics = async function() {
   const stats = await this.findAll({
     attributes: [
       [sequelize.fn('COUNT', sequelize.col('id')), 'totalCarnivals'],
-      [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isActive = 1 THEN 1 END')), 'activeCarnivals'],
+      [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isDisabled = 1 THEN 1 END')), 'activeCarnivals'],
       [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isManuallyEntered = 1 THEN 1 END')), 'manualCarnivals'],
       [sequelize.fn('COUNT', sequelize.literal('CASE WHEN isManuallyEntered = 0 THEN 1 END')), 'importedCarnivals']
     ],

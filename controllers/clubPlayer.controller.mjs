@@ -192,9 +192,10 @@ export async function showAddPlayerForm(req, res, next) {
  * @param {Function} next - Express next middleware function
  */
 export async function createPlayer(req, res, next) {
+  // Get club ID from URL first (outside try block so it's available in catch)
+  const clubId = parseInt(req.params.id);
+  
   try {
-    // Get club ID from URL
-    const clubId = parseInt(req.params.id);
     if (!clubId || isNaN(clubId)) {
       req.flash('error', 'Invalid club ID.');
       return res.redirect('/dashboard');
@@ -262,7 +263,7 @@ export async function createPlayer(req, res, next) {
       req.flash('error', 'Failed to add player. Please try again.');
     }
 
-    // Redirect back to form
+    // Redirect back to form (clubId is now accessible)
     return res.redirect(`/clubs/${clubId}/players/add`);
   }
 }

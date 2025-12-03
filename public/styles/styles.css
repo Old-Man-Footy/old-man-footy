@@ -1947,41 +1947,107 @@ button[type="submit"]:contains("Complete Registration"):focus {
     color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Tooltip Dark Mode Fixes */
+/* Custom Tooltip Styling - Primary Color with White Text and Fade Animation */
+.tooltip {
+    --bs-tooltip-bg: var(--bs-primary) !important;
+    --bs-tooltip-color: #ffffff !important;
+    /* Hide tooltip initially to prevent flash at bottom-left */
+    opacity: 0 !important;
+    /* Remove conflicting animations and transitions */
+    animation: none !important;
+    transition: opacity 0.15s ease-in-out 0.1s !important;
+}
+
+/* Show tooltip after Popper.js positioning is complete */
+.tooltip.show {
+    opacity: 1 !important;
+}
+
+.tooltip .tooltip-inner {
+    background-color: var(--bs-primary) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    /* Flexible width for longer tooltips */
+    max-width: 300px !important;
+    width: max-content !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    line-height: 1.4 !important;
+}
+
+/* Tooltip Arrow Styling - All Directions */
+.tooltip .tooltip-arrow::before {
+    border-color: var(--bs-primary) transparent !important;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="top"] .tooltip-arrow::before {
+    border-top-color: var(--bs-primary) !important;
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="right"] .tooltip-arrow::before {
+    border-right-color: var(--bs-primary) !important;
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="bottom"] .tooltip-arrow::before {
+    border-bottom-color: var(--bs-primary) !important;
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="left"] .tooltip-arrow::before {
+    border-left-color: var(--bs-primary) !important;
+}
+
+/* Dark Theme Override - Keep Same Primary Color Styling */
 [data-theme="dark"] .tooltip {
-    --bs-tooltip-bg: var(--theme-bg-tertiary) !important;
-    --bs-tooltip-color: var(--theme-text-primary) !important;
+    --bs-tooltip-bg: var(--bs-primary) !important;
+    --bs-tooltip-color: #ffffff !important;
+}
+
+[data-theme="dark"] .tooltip.show {
+    opacity: 1 !important;
 }
 
 [data-theme="dark"] .tooltip .tooltip-inner {
-    background-color: var(--theme-bg-tertiary) !important;
-    color: var(--theme-text-primary) !important;
-    border: 1px solid var(--theme-border-color) !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+    background-color: var(--bs-primary) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+    /* Flexible width for longer tooltips */
+    max-width: 300px !important;
+    width: max-content !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    line-height: 1.4 !important;
 }
 
 [data-theme="dark"] .tooltip .tooltip-arrow::before {
-    border-color: var(--theme-bg-tertiary) transparent !important;
+    border-color: var(--bs-primary) transparent !important;
 }
 
 [data-theme="dark"] .tooltip.bs-tooltip-top .tooltip-arrow::before,
 [data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="top"] .tooltip-arrow::before {
-    border-top-color: var(--theme-bg-tertiary) !important;
+    border-top-color: var(--bs-primary) !important;
 }
 
 [data-theme="dark"] .tooltip.bs-tooltip-end .tooltip-arrow::before,
 [data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="right"] .tooltip-arrow::before {
-    border-right-color: var(--theme-bg-tertiary) !important;
+    border-right-color: var(--bs-primary) !important;
 }
 
 [data-theme="dark"] .tooltip.bs-tooltip-bottom .tooltip-arrow::before,
 [data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="bottom"] .tooltip-arrow::before {
-    border-bottom-color: var(--theme-bg-tertiary) !important;
+    border-bottom-color: var(--bs-primary) !important;
 }
 
 [data-theme="dark"] .tooltip.bs-tooltip-start .tooltip-arrow::before,
 [data-theme="dark"] .tooltip.bs-tooltip-auto[data-popper-placement^="left"] .tooltip-arrow::before {
-    border-left-color: var(--theme-bg-tertiary) !important;
+    border-left-color: var(--bs-primary) !important;
 }
 
 /* Navbar Alignment */

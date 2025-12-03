@@ -475,19 +475,20 @@ class DatabaseSeeder {
             clubs: await Club.count({ where: { isActive: true } }),
             users: await User.count({ where: { isActive: true } }),
             players: await ClubPlayer.count({ where: { isActive: true } }),
-            carnivals: await Carnival.count({ where: { isActive: true } }),
-            manualCarnivals: await Carnival.count({ where: { isManuallyEntered: true, isActive: true } }),
-            mySidelineCarnivals: await Carnival.count({ where: { isManuallyEntered: false, isActive: true } }),
+            carnivals: await Carnival.count({ where: { isActive: true, isDisabled: false } }),
+            manualCarnivals: await Carnival.count({ where: { isManuallyEntered: true, isActive: true, isDisabled: false } }),
+            mySidelineCarnivals: await Carnival.count({ where: { isManuallyEntered: false, isActive: true, isDisabled: false } }),
             subscriptions: await EmailSubscription.count({ where: { isActive: true } }),
             sponsors: await Sponsor.count({ where: { isActive: true } }),
             carnivalSponsors: await CarnivalSponsor.count({ where: { isActive: true } }),
             carnivalRegistrations: await CarnivalClub.count({ where: { isActive: true } }),
             paidRegistrations: await CarnivalClub.count({ where: { isPaid: true, isActive: true } }),
             playerAssignments: await CarnivalClubPlayer.count({ where: { isActive: true } }),
-            upcomingCarnivals: await Carnival.count({ 
-                where: { 
-                    date: { [Op.gte]: new Date() }, 
-                    isActive: true 
+            upcomingCarnivals: await Carnival.count({
+                where: {
+                    date: { [Op.gte]: new Date() },
+                    isActive: true,
+                    isDisabled: false
                 }
             })
         };

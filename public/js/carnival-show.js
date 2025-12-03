@@ -34,8 +34,9 @@ export const carnivalShowManager = {
         // Post-creation modal elements
         this.elements.postCreationModal = document.getElementById('postCreationModal');
 
-        // Admin status toggle buttons
+        // Admin toggle buttons
         this.elements.statusToggleButtons = document.querySelectorAll('[data-toggle-carnival-status]');
+        this.elements.activeToggleButtons = document.querySelectorAll('[data-toggle-carnival-active]');
     },
 
     /** Bind DOM events */
@@ -66,13 +67,26 @@ export const carnivalShowManager = {
             this.elements.customMessage.addEventListener('input', this.handleCustomMessageInput);
         }
 
+        // Admin status toggle buttons (disable/enable)
         if (this.elements.statusToggleButtons && this.elements.statusToggleButtons.length) {
             this.elements.statusToggleButtons.forEach((button) => {
                 button.addEventListener('click', (e) => {
                     const carnivalId = button.getAttribute('data-toggle-carnival-status');
                     const carnivalTitle = button.getAttribute('data-carnival-title');
-                    const currentStatus = button.getAttribute('data-current-status');
-                    this.toggleCarnivalStatus(carnivalId, carnivalTitle, currentStatus);
+                    const currentDisabled = button.getAttribute('data-current-disabled');
+                    this.toggleCarnivalStatus(carnivalId, carnivalTitle, currentDisabled);
+                });
+            });
+        }
+
+        // Admin active toggle buttons (activate/deactivate)
+        if (this.elements.activeToggleButtons && this.elements.activeToggleButtons.length) {
+            this.elements.activeToggleButtons.forEach((button) => {
+                button.addEventListener('click', (e) => {
+                    const carnivalId = button.getAttribute('data-toggle-carnival-active');
+                    const carnivalTitle = button.getAttribute('data-carnival-title');
+                    const currentActive = button.getAttribute('data-current-active');
+                    this.toggleCarnivalActive(carnivalId, carnivalTitle, currentActive);
                 });
             });
         }
@@ -282,30 +296,30 @@ export const carnivalShowManager = {
         // Merge confirmation uses confirmMerge(), available via window shim.
     },
 
-    /** Toggle carnival status (admin) */
-    toggleCarnivalStatus(carnivalId, carnivalTitle, currentStatus) {
-        const isActive = currentStatus === 'true';
-        const action = isActive ? 'deactivate' : 'reactivate';
-        const confirmMessage = isActive
-            ? `Are you sure you want to deactivate "${carnivalTitle}"? This will hide it from public listings and disable registration.`
-            : `Are you sure you want to reactivate "${carnivalTitle}"? This will make it visible in public listings again.`;
+    /** Toggle carnival status (admin - disable/enable) */
+    toggleCarnivalStatus(carnivalId, carnivalTitle, currentDisabled) {
+        const isDisabled = currentDisabled === 'false'; // Currently enabled, will disable
+        const action = isDisabled ? 'disable' : 'enable';
+        const confirmMessage = isDisabled
+            ? `Are you sure you want to DISABLE "${carnivalTitle}"? This is a soft-delete and will hide it from all listings.`
+            : `Are you sure you want to ENABLE "${carnivalTitle}"? This will restore it from soft-delete.`;
 
         if (!confirm(confirmMessage)) return;
 
-    const button = document.querySelector(`[data-toggle-carnival-status="${carnivalId}"]`);
+        const button = document.querySelector(`[data-toggle-carnival-status="${carnivalId}"]`);
         const originalContent = button ? button.innerHTML : null;
         if (button) {
             button.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
             button.disabled = true;
         }
 
-    return fetch(`/admin/carnivals/${carnivalId}/toggle-status`, {
+        return fetch(`/admin/carnivals/${carnivalId}/toggle-status`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ action })
+            body: JSON.stringify({ isDisabled: isDisabled })
         })
         .then(res => res.json())
         .then(data => {
@@ -326,6 +340,57 @@ export const carnivalShowManager = {
         .catch(err => {
             console.error('Error:', err);
             showAlert('An error occurred while updating the carnival status. Please try again.');
+            if (button && originalContent !== null) {
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            }
+        });
+    },
+
+    /** Toggle carnival active status (admin - activate/deactivate) */
+    toggleCarnivalActive(carnivalId, carnivalTitle, currentActive) {
+        const isActive = currentActive === 'false'; // Currently inactive, will activate
+        const action = isActive ? 'activate' : 'deactivate';
+        const confirmMessage = isActive
+            ? `Are you sure you want to ACTIVATE "${carnivalTitle}"? This will make it visible in public listings and enable registration.`
+            : `Are you sure you want to DEACTIVATE "${carnivalTitle}"? This will hide it from public listings but keep it enabled.`;
+
+        if (!confirm(confirmMessage)) return;
+
+        const button = document.querySelector(`[data-toggle-carnival-active="${carnivalId}"]`);
+        const originalContent = button ? button.innerHTML : null;
+        if (button) {
+            button.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+            button.disabled = true;
+        }
+
+        return fetch(`/admin/carnivals/${carnivalId}/toggle-active`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ isActive: isActive })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(`Carnival ${action}d successfully!`);
+                // Defer reload to avoid jsdom navigation errors in tests
+                setTimeout(() => {
+                    try { window.location.reload(); } catch (_) { /* noop in non-browser env */ }
+                }, 0);
+            } else {
+                showAlert('Error: ' + (data.message || 'Failed to update carnival active status'));
+                if (button && originalContent !== null) {
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showAlert('An error occurred while updating the carnival active status. Please try again.');
             if (button && originalContent !== null) {
                 button.innerHTML = originalContent;
                 button.disabled = false;

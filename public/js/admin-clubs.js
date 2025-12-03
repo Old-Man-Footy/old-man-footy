@@ -63,8 +63,8 @@ export const adminClubsManager = {
      */
     handleClubStatusToggle(button) {
         const { clubId, clubName, currentStatus } = button.dataset;
-        const isActive = currentStatus === 'true';
-        const newStatus = !isActive;
+        const isDisabled = currentStatus === 'true';
+        const newStatus = !isDisabled;
         const action = newStatus ? 'reactivate' : 'deactivate';
         
         const confirmed = confirm(
@@ -77,7 +77,7 @@ export const adminClubsManager = {
         this.performToggleRequest(
             button,
             `/admin/clubs/${clubId}/toggle-status`,
-            { isActive: newStatus },
+            { isDisabled: newStatus },
             (btn, status) => this.updateStatusUI(btn, status)
         );
     },

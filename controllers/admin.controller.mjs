@@ -44,7 +44,7 @@ const getAdminDashboardHandler = async (req, res) => {
     ] = await Promise.all([
         User.count(),
         Club.count(),
-        Carnival.count({ where: { isActive: true } }),
+        Carnival.count({ where: { isDisabled: false } }),
         Sponsor.count(),
         EmailSubscription.count(),
         User.count({ where: { isActive: false } }),
@@ -58,7 +58,7 @@ const getAdminDashboardHandler = async (req, res) => {
         }),
         Carnival.count({
             where: {
-                isActive: true,
+                isDisabled: false,
                 createdAt: {
                     [Op.gte]: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                 }
@@ -66,7 +66,7 @@ const getAdminDashboardHandler = async (req, res) => {
         }),
         Carnival.count({
             where: {
-                isActive: true,
+                isDisabled: false,
                 date: {
                     [Op.gte]: new Date()
                 }
@@ -82,6 +82,7 @@ const getAdminDashboardHandler = async (req, res) => {
             include: [{ model: Club, as: 'club' }]
         }),
         carnivals: await Carnival.findAll({
+            where: { isDisabled: false },
             limit: 5,
             order: [['createdAt', 'DESC']],
             include: [{ model: User, as: 'creator' }]
@@ -727,6 +728,7 @@ const updateCarnivalHandler = async (req, res) => {
     const carnivalId = req.params.id;
     const {
         title,
+        subtitle,
         date,
         endDate,
         locationAddress,
@@ -748,7 +750,8 @@ const updateCarnivalHandler = async (req, res) => {
         drawTitle,
         drawDescription,
         adminNotes,
-        isActive
+        isActive,
+        isDisabled
     } = req.body;
 
     const carnival = await Carnival.findByPk(carnivalId);
@@ -759,6 +762,7 @@ const updateCarnivalHandler = async (req, res) => {
     // Prepare base update data
     const updateData = {
         title,
+        subtitle,
         date: new Date(date),
         endDate: endDate ? new Date(endDate) : null,
         locationAddress,
@@ -789,7 +793,8 @@ const updateCarnivalHandler = async (req, res) => {
         drawTitle: drawTitle || null,
         drawDescription: drawDescription || null,
         adminNotes: adminNotes || null,
-        isActive: !!isActive
+        isActive: !!isActive,
+        isDisabled: !!isDisabled
     };
 
     // Handle all uploads using shared processor (defensive against corrupted uploads)
@@ -810,6 +815,50 @@ const updateCarnivalHandler = async (req, res) => {
  */
 const toggleCarnivalStatusHandler = async (req, res) => {
     const carnivalId = req.params.id;
+    const { isDisabled } = req.body;
+    
+    const carnival = await Carnival.findByPk(carnivalId);
+    if (!carnival) {
+        return res.json({ success: false, message: 'Carnival not found' });
+    }
+
+    const newStatus = !!isDisabled;
+    await carnival.update({ isDisabled: newStatus });
+
+    const statusText = newStatus ? 'disabled' : 'enabled';
+    const message = `Carnival "${carnival.title}" has been ${statusText} successfully`;
+    
+    console.log(`✅ Admin ${req.user.email} ${statusText} carnival: ${carnival.title} (ID: ${carnival.id})`);
+
+    // Log carnival status change
+    await AuditService.logAdminAction(
+        newStatus ? AuditService.ACTIONS.CARNIVAL_DEACTIVATE : AuditService.ACTIONS.CARNIVAL_ACTIVATE,
+        req,
+        AuditService.ENTITIES.CARNIVAL,
+        carnivalId,
+        {
+            oldValues: { isDisabled: !newStatus },
+            newValues: { isDisabled: newStatus },
+            targetCarnivalId: carnivalId,
+            metadata: {
+                adminAction: `Carnival ${statusText}`,
+                targetCarnivalTitle: carnival.title
+            }
+        }
+    );
+
+    return res.json({ 
+        success: true, 
+        message: message,
+        newStatus: newStatus
+    });
+};
+
+/**
+ * Toggle Carnival Active Status (Activate/Deactivate)
+ */
+const toggleCarnivalActiveHandler = async (req, res) => {
+    const carnivalId = req.params.id;
     const { isActive } = req.body;
     
     const carnival = await Carnival.findByPk(carnivalId);
@@ -820,7 +869,7 @@ const toggleCarnivalStatusHandler = async (req, res) => {
     const newStatus = !!isActive;
     await carnival.update({ isActive: newStatus });
 
-    const statusText = newStatus ? 'reactivated' : 'deactivated';
+    const statusText = newStatus ? 'activated' : 'deactivated';
     const message = `Carnival "${carnival.title}" has been ${statusText} successfully`;
     
     console.log(`✅ Admin ${req.user.email} ${statusText} carnival: ${carnival.title} (ID: ${carnival.id})`);
@@ -986,22 +1035,23 @@ const generateReportHandler = async (req, res) => {
             })
         },
         carnivals: {
-            total: await Carnival.count({ where: { isActive: true } }),
+            total: await Carnival.count({ where: { isDisabled: false } }),
             upcoming: await Carnival.count({
                 where: {
+                    isDisabled: false,
                     isActive: true,
                     date: { [Op.gte]: new Date() }
                 }
             }),
             past: await Carnival.count({
                 where: {
-                    isActive: true,
+                    isDisabled: false,
                     date: { [Op.lt]: new Date() }
                 }
             }),
             byState: await Carnival.findAll({
                 attributes: ['state', [fn('COUNT', '*'), 'count']],
-                where: { isActive: true },
+                where: { isDisabled: false },
                 group: ['state'],
                 raw: true
             })
@@ -1821,6 +1871,7 @@ const rawControllers = {
     showEditCarnivalHandler,
     updateCarnivalHandler,
     toggleCarnivalStatusHandler,
+    toggleCarnivalActiveHandler,
     toggleClubStatusHandler,
     toggleClubVisibilityHandler,
     generateReportHandler,
@@ -1853,6 +1904,7 @@ export const {
     showEditCarnivalHandler: showEditCarnival,
     updateCarnivalHandler: updateCarnival,
     toggleCarnivalStatusHandler: toggleCarnivalStatus,
+    toggleCarnivalActiveHandler: toggleCarnivalActive,
     toggleClubStatusHandler: toggleClubStatus,
     toggleClubVisibilityHandler: toggleClubVisibility,
     generateReportHandler: generateReport,

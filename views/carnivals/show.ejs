@@ -73,6 +73,9 @@
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <h1 class="h3 mb-2"><%= carnival.title %></h1>
+                            <% if (carnival.subtitle) { %>
+                                <h2 class="h5 text-muted mb-2"><%= carnival.subtitle %></h2>
+                            <% } %>
                             <div class="mb-2">
                                 <% if (carnival.state) { %>
                                     <span class="badge state-<%= carnival.state.toLowerCase() %> me-2"><%= carnival.state %></span>
@@ -135,20 +138,41 @@
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <!-- Admin Activate/Deactivate Button -->
+                                    <!-- Deactivate/Activate Button (isActive field) -->
                                     <% if (carnival.isActive) { %>
+                                        <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                data-toggle-carnival-active="<%= carnival.id %>"
+                                                data-carnival-title="<%= carnival.title %>"
+                                                data-current-active="true"
+                                                title="Deactivate Carnival (Make inactive)">
+                                            <i class="bi bi-pause-circle"></i> Deactivate
+                                        </button>
+                                    <% } else { %>
+                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                                data-toggle-carnival-active="<%= carnival.id %>"
+                                                data-carnival-title="<%= carnival.title %>"
+                                                data-current-active="false"
+                                                title="Activate Carnival (Make active)">
+                                            <i class="bi bi-play-circle"></i> Activate
+                                        </button>
+                                    <% } %>
+                                    
+                                    <!-- Disable/Enable Button (isDisabled field) -->
+                                    <% if (!carnival.isDisabled) { %>
                                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                                 data-toggle-carnival-status="<%= carnival.id %>"
                                                 data-carnival-title="<%= carnival.title %>"
-                                                data-current-status="true">
-                                            <i class="bi bi-eye-slash"></i> Deactivate
+                                                data-current-disabled="false"
+                                                title="Disable Carnival (Soft delete)">
+                                            <i class="bi bi-trash"></i> Disable
                                         </button>
                                     <% } else { %>
-                                        <button type="button" class="btn btn-outline-tertiary btn-sm" 
+                                        <button type="button" class="btn btn-outline-info btn-sm" 
                                                 data-toggle-carnival-status="<%= carnival.id %>"
                                                 data-carnival-title="<%= carnival.title %>"
-                                                data-current-status="false">
-                                            <i class="bi bi-eye"></i> Reactivate
+                                                data-current-disabled="true"
+                                                title="Enable Carnival (Restore from soft delete)">
+                                            <i class="bi bi-arrow-clockwise"></i> Enable
                                         </button>
                                     <% } %>
                                     
@@ -1571,4 +1595,65 @@
 </div>
 <% } %>
 
+<!-- Carnival Active Status Toggle Modal -->
+<div class="modal fade" id="toggleCarnivalActiveModal" tabindex="-1" aria-labelledby="toggleCarnivalActiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toggleCarnivalActiveModalLabel">
+                    <!-- Title will be set by JavaScript -->
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="toggleCarnivalActiveModalBody">
+                    <!-- Message will be set by JavaScript -->
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmToggleCarnivalActive">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Carnival Status (Disabled) Toggle Modal -->
+<div class="modal fade" id="toggleCarnivalStatusModal" tabindex="-1" aria-labelledby="toggleCarnivalStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="toggleCarnivalStatusModalLabel">
+                    <!-- Title will be set by JavaScript -->
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="toggleCarnivalStatusModalBody">
+                    <!-- Message will be set by JavaScript -->
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmToggleCarnivalStatus">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="module" src="/js/share-button.js"></script>
+<% if (user && user.role === 'Admin') { %>
+<script type="module" src="/js/admin-carnivals.js"></script>
+<% } %>

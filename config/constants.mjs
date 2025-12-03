@@ -14,6 +14,10 @@ import path from 'path';
  */
 export const AUSTRALIAN_STATES = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'];
 
+/**
+ * Default country for location fields
+ */
+export const DEFAULT_COUNTRY = 'Australia';
 
 /**
  * Sponsorship levels with consistent ordering
