@@ -240,7 +240,7 @@ class MySidelineScraperService {
         let eventData = null;
         
         // Extract venue name from MySideline data with null checks
-        venueName = item.venue?.name || item.orgtree?.venue?.name || null;
+        venueName = item.venue?.name || item.orgtree?.venue?.name || item.competition?.venue?.name || null;
 
         // Get address data (prefer venue address, fallback to contact address)
         const addressData = item.venue?.address || item.contact?.address;
@@ -306,15 +306,15 @@ class MySidelineScraperService {
             mySidelineId: item._id,
             
             // Contact information
-            organiserContactName: item.contact?.name || null,
-            organiserContactPhone: item.contact?.number || null,
-            organiserContactEmail: item.contact?.email || null,
+            organiserContactName: item.contact?.name || item.association?.contact?.name || null,
+            organiserContactPhone: item.contact?.number || item.association?.contact?.number || null,
+            organiserContactEmail: item.contact?.email || item.association?.contact?.email || null,
             
             // URLs and links
             registrationLink: registrationLink,
             googleMapsUrl: googleMapsUrl,
-            socialMediaWebsite: item.meta?.website || null,
-            socialMediaFacebook: item.meta?.facebook || null,
+            socialMediaWebsite: item.meta?.website || item.association?.meta?.website || null,
+            socialMediaFacebook: item.meta?.facebook || item.association?.meta?.facebook || null,
             
             // Carnival details
             scheduleDetails: item.finderDetails?.description || null,
