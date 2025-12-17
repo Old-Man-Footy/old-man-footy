@@ -15,6 +15,7 @@ vi.mock('./mySidelineCarnivalParserService.mjs', () => ({
 vi.mock('./mySidelineDataService.mjs', () => ({
   default: vi.fn().mockImplementation(() => ({
     deactivatePastCarnivals: vi.fn(),
+    deactivateMissingCarnivals: vi.fn(),
     processScrapedCarnivals: vi.fn(),
     shouldRunInitialSync: vi.fn(),
   })),
@@ -52,6 +53,7 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
 
     // Ensure deactivatePastCarnivals is always a vi.fn()
     dataService.deactivatePastCarnivals = vi.fn();
+    dataService.deactivateMissingCarnivals = vi.fn();
     // Ensure scrapeCarnivals is always a vi.fn()
     scraperService.scrapeCarnivals = vi.fn();
     // Ensure validateAndCleanData is always a vi.fn()
@@ -131,13 +133,18 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
       { title: 'Carnival1', clubLogoURL: 'http://logo.com/1', id: 1 },
       { title: 'Carnival2', clubLogoURL: null, id: 2 },
     ]);
-    scraperService.validateAndCleanData.mockImplementation(carnival => carnival);
+    scraperService.validateAndCleanData.mockImplementation((carnival) => carnival);
     const processedCarnivals = [
       expect.objectContaining({ id: 1, clubLogoURL: 'http://logo.com/1', title: 'Carnival1' }),
       expect.objectContaining({ id: 2, clubLogoURL: null, title: 'Carnival2' }),
     ];
     dataService.processScrapedCarnivals.mockResolvedValue([
-      { id: 1, clubLogoURL: 'http://logo.com/1', createdAt: new Date().toISOString(), title: 'Carnival1' },
+      {
+        id: 1,
+        clubLogoURL: 'http://logo.com/1',
+        createdAt: new Date().toISOString(),
+        title: 'Carnival1',
+      },
       { id: 2, clubLogoURL: null, createdAt: new Date().toISOString(), title: 'Carnival2' },
     ]);
     logoDownloadService.downloadLogos.mockResolvedValue([
@@ -152,6 +159,12 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
     expect(scraperService.validateAndCleanData).toHaveBeenCalledTimes(2);
     expect(dataService.processScrapedCarnivals.mock.calls[0][0]).toEqual(
       expect.arrayContaining(processedCarnivals)
+    );
+    expect(dataService.deactivateMissingCarnivals).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ title: 'Carnival1', clubLogoURL: 'http://logo.com/1' }),
+        expect.objectContaining({ title: 'Carnival2', clubLogoURL: null }),
+      ])
     );
     expect(logoDownloadService.downloadLogos).toHaveBeenCalled();
     expect(Carnival.update).toHaveBeenCalledWith(
@@ -175,7 +188,7 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
     scraperService.scrapeCarnivals.mockResolvedValue([
       { title: 'Carnival1', clubLogoURL: 'http://logo.com/1', id: 1 },
     ]);
-    scraperService.validateAndCleanData.mockImplementation(carnival => carnival);
+    scraperService.validateAndCleanData.mockImplementation((carnival) => carnival);
     const processedCarnivals = [
       { id: 1, clubLogoURL: 'http://logo.com/1', createdAt: new Date().toISOString() },
     ];
@@ -187,10 +200,7 @@ describe('MySidelineIntegrationService.syncMySidelineCarnivals', () => {
 
     const result = await service.syncMySidelineCarnivals();
 
-    expect(Carnival.update).toHaveBeenCalledWith(
-      { clubLogoURL: null },
-      { where: { id: 1 } }
-    );
+    expect(Carnival.update).toHaveBeenCalledWith({ clubLogoURL: null }, { where: { id: 1 } });
     expect(result.success).toBe(true);
     expect(result.carnivalsProcessed).toBe(1);
   });

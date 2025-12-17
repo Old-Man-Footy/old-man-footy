@@ -180,6 +180,39 @@
                                     <a href="/admin/carnivals?search=<%= encodeURIComponent(carnival.title) %>" class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-list-ul"></i> View in Admin
                                     </a>
+
+                                    <!-- Management Buttons (Admins can modify any carnival) -->
+                                    <a href="/carnivals/<%= carnival.id %>/attendees" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-people"></i> Attending Clubs
+                                    </a>
+                                    <a href="/carnivals/<%= carnival.id %>/players" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-list-ul"></i> All Players
+                                    </a>
+                                    <a href="/carnivals/<%= carnival.id %>/sponsors" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-building me-1"></i> Sponsors
+                                    </a>
+                                    <% if (carnival.attendingClubs && carnival.attendingClubs.length > 0) { %>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#emailAttendeesModal">
+                                            <i class="bi bi-envelope"></i> Email Attendees
+                                        </button>
+                                    <% } %>
+                                    <a href="/carnivals/<%= carnival.id %>/edit" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil"></i> Edit Carnival
+                                    </a>
+                                    <% if (carnival.lastMySidelineSync && carnival.clubId) { %>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#releaseOwnershipModal">
+                                            <i class="bi bi-unlock"></i> Release Ownership
+                                        </button>
+                                    <% } %>
+                                    <% if (canMergeCarnival) { %>
+                                        <button type="button" class="btn btn-outline-tertiary btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#mergeCarnivalModal">
+                                            <i class="bi bi-arrow-down-up"></i> Merge Carnival
+                                        </button>
+                                    <% } %>
                                     
                                     <!-- Admin Claim Button (if not already owned by someone) -->
                                     <% if (!canEditCarnival && user && user.isAdmin) { %>
@@ -193,7 +226,11 @@
                     <% } %>
 
                     <!-- Carnival Owner Actions Section -->
-                    <% if (canEditCarnival) { %>
+                    <% 
+                    // Show organiser banner only if user is the ACTUAL organiser (not just admin)
+                    const isActualOrganiser = user && user.clubId && carnival.clubId && user.clubId === carnival.clubId;
+                    %>
+                    <% if (canEditCarnival && isActualOrganiser && !user.isAdmin) { %>
                         <div class="alert alert-info mb-4">
                             <div>
                                 <div>
