@@ -96,7 +96,12 @@ if (carnival.date && carnival.date instanceof Date && !isNaN(carnival.date)) {
         }
     }
 } else {
-    dateString = format === 'compact' ? 'Date TBA' : 'Date To Be Announced';
+    // Check if the carnival is inactive (past) and has no date
+    if (carnival.isActive === false) {
+        dateString = 'Unknown Date';
+    } else {
+        dateString = format === 'compact' ? 'Date TBA' : 'Date To Be Announced';
+    }
 }
 %>
 

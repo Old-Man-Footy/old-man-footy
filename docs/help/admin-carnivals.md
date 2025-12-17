@@ -4,7 +4,7 @@ title: Admin Carnivals Help
 ---
 
 ## Overview
-The Carnivals page lets administrators view, create, and manage all carnivals in the system. It’s the central hub for organizing carnivals and tracking participation.
+The Carnivals page lets administrators view, create, and manage all carnivals in the system. It’s the central hub for organising carnivals and tracking participation.
 
 ## Key Features Explained
 ### Carnival List

@@ -14,7 +14,7 @@ Learn how Old Man Footy connects clubs, players, and fans, making carnivals disc
 Find out how to browse carnivals and clubs, register as a delegate, and stay informed about new activities.
 
 ### Delegate Role
-Understand what delegates do, including managing club profiles and organizing carnivals.
+Understand what delegates do, including managing club profiles and organising carnivals.
 
 ### Carnival Organization
 See how carnivals are created, managed, and promoted on the platform.
