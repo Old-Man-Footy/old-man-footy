@@ -135,7 +135,11 @@
                                                         <span class="badge badge-sm bg-secondary me-1">Past Carnival</span>
                                                     <% } %>
                                                 <% } else { %>
-                                                    <span class="badge badge-sm bg-warning text-dark me-1">Date TBA</span>
+                                                    <% if (carnival.isActive === false) { %>
+                                                        <span class="badge badge-sm bg-secondary me-1">Past Carnival</span>
+                                                    <% } else { %>
+                                                        <span class="badge badge-sm bg-warning text-dark me-1">Date TBA</span>
+                                                    <% } %>
                                                 <% } %>
                                                 <% if (carnival.canTakeOwnership) { %>
                                                     <span class="badge badge-sm bg-info text-primary me-1">
