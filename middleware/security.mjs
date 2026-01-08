@@ -1,12 +1,12 @@
 /**
  * Centralized Security Middleware - Security First Implementation
- * 
+ *
  * Consolidates all security measures in one location for better maintainability,
  * auditing, and compliance with the project's security-first directive.
- * 
+ *
  * Security Features:
  * - CSRF Protection
- * - Rate Limiting  
+ * - Rate Limiting
  * - Input Sanitization
  * - XSS Protection
  * - Security Headers
@@ -25,7 +25,7 @@ import { setWindowMs, getFailureCount } from './failureCounterStore.mjs';
  */
 const getSecurityConfig = () => {
   const config = getCurrentConfig();
-  
+
   return {
     rateLimit: {
       windowMs: config.rateLimit.windowMs,
@@ -33,25 +33,27 @@ const getSecurityConfig = () => {
       message: {
         error: {
           status: 429,
-          message: 'You\'re browsing a bit too quickly! Please wait a few minutes before continuing.'
-        }
+          message:
+            "You're browsing a bit too quickly! Please wait a few minutes before continuing.",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
       skipSuccessfulRequests: false,
-      skipFailedRequests: false
+      skipFailedRequests: false,
     },
-    
+
     authRateLimit: {
       windowMs: 10 * 60 * 1000, // 10 minutes (reduced from 15)
       max: 8, // Increased from 5 to 8 attempts - allows for legitimate typos
       message: {
         error: {
           status: 429,
-          message: 'Multiple login attempts detected. For your security, please wait 10 minutes before trying again.'
-        }
+          message:
+            'Multiple login attempts detected. For your security, please wait 10 minutes before trying again.',
+        },
       },
-      skipSuccessfulRequests: true
+      skipSuccessfulRequests: true,
     },
 
     formSubmissionRateLimit: {
@@ -60,20 +62,26 @@ const getSecurityConfig = () => {
       message: {
         error: {
           status: 429,
-          message: 'You\'re submitting forms quite frequently. Please wait a few minutes before trying again.'
-        }
+          message:
+            "You're submitting forms quite frequently. Please wait a few minutes before trying again.",
+        },
       },
-      skipSuccessfulRequests: false
+      skipSuccessfulRequests: false,
     },
 
     helmet: {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-          fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-          imgSrc: ["'self'", "data:", "https:"],
+          scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+            'https://cdn.jsdelivr.net',
+          ],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+          imgSrc: ["'self'", 'data:', 'https:'],
           connectSrc: ["'self'"],
           frameSrc: ["'none'"],
           objectSrc: ["'none'"],
@@ -83,16 +91,16 @@ const getSecurityConfig = () => {
           formAction: ["'self'"],
           frameAncestors: ["'none'"],
           baseUri: ["'self'"],
-          manifestSrc: ["'self'"]
-        }
+          manifestSrc: ["'self'"],
+        },
       },
       crossOriginEmbedderPolicy: false, // Disabled for compatibility
       hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
-        preload: true
-      }
-    }
+        preload: true,
+      },
+    },
   };
 };
 
@@ -104,18 +112,28 @@ const SECURITY_CONFIG = getSecurityConfig();
  * @param {boolean} perUser - Whether to track per-user instead of per-IP
  * @returns {Function} Express middleware
  */
-const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false, useFailureCounter = false) => {
+const createRateLimiter = (
+  config = SECURITY_CONFIG.rateLimit,
+  perUser = false,
+  useFailureCounter = false
+) => {
   // Disable rate limiting only in development environment
   // Keep enabled in test environment so we can verify it works for users
   if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-    console.log(`🔓 Rate limiting disabled for ${process.env.NODE_ENV || 'development'} environment`);
+    console.log(
+      `🔓 Rate limiting disabled for ${process.env.NODE_ENV || 'development'} environment`
+    );
     return (req, res, next) => {
       // Just pass through without any rate limiting in development environment
       next();
     };
   }
 
-  console.log(`🔒 Rate limiting enabled for ${process.env.NODE_ENV} environment (${perUser ? 'per-user' : 'per-IP'})`);
+  console.log(
+    `🔒 Rate limiting enabled for ${process.env.NODE_ENV} environment (${
+      perUser ? 'per-user' : 'per-IP'
+    })`
+  );
 
   // If configured, use the failure-only counter store (process-local by default).
   if (useFailureCounter) {
@@ -130,32 +148,40 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false, 
       // Skip rate limiting for certain paths to prevent redirect loops
       const isLoginPage = req.path === '/auth/login';
       const isHomePage = req.path === '/';
-      const isStaticAsset = req.path.startsWith('/styles') ||
-                           req.path.startsWith('/public') ||
-                           req.path.startsWith('/js') ||
-                           req.path.startsWith('/icons') ||
-                           req.path.startsWith('/logos');
+      const isStaticAsset =
+        req.path.startsWith('/styles') ||
+        req.path.startsWith('/public') ||
+        req.path.startsWith('/js') ||
+        req.path.startsWith('/icons') ||
+        req.path.startsWith('/logos');
 
       if (isLoginPage || isHomePage || isStaticAsset) {
         return next();
       }
 
       // Derive key consistent with controller usage: prefer email.toLowerCase(), fallback to IP
-      const key = req.body?.email ? String(req.body.email).toLowerCase() : (req.ip || req.connection?.remoteAddress || 'unknown');
+      const key = req.body?.email
+        ? String(req.body.email).toLowerCase()
+        : req.ip || req.connection?.remoteAddress || 'unknown';
 
       let failureCount = 0;
       try {
         failureCount = getFailureCount(key);
       } catch (e) {
-        if (process.env.NODE_ENV !== 'test') console.error('failureCounter getFailureCount error', e);
+        if (process.env.NODE_ENV !== 'test')
+          console.error('failureCounter getFailureCount error', e);
       }
 
       if (failureCount >= config.max) {
-        if (process.env.NODE_ENV !== 'test') console.log(`🚫 Auth rate limit exceeded for ${key}: ${failureCount}/${config.max} failures in ${config.windowMs}ms window`);
+        if (process.env.NODE_ENV !== 'test')
+          console.log(
+            `🚫 Auth rate limit exceeded for ${key}: ${failureCount}/${config.max} failures in ${config.windowMs}ms window`
+          );
 
         const isExplicitApiRequest = req.path && req.path.startsWith('/api/');
         const isAjaxRequest = req.headers['x-requested-with'] === 'XMLHttpRequest';
-        const acceptsOnlyJson = req.accepts && req.accepts(['json', 'html']) === 'json' && !req.accepts('html');
+        const acceptsOnlyJson =
+          req.accepts && req.accepts(['json', 'html']) === 'json' && !req.accepts('html');
 
         if (isExplicitApiRequest || (isAjaxRequest && acceptsOnlyJson)) {
           return res.status(429).json(config.message);
@@ -174,7 +200,7 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false, 
 
   // Simple in-memory rate limiter (fallback behaviour)
   const requests = new Map();
-  
+
   return (req, res, next) => {
     // Generate key based on configuration
     let key;
@@ -187,45 +213,50 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false, 
       // Fall back to IP-based tracking
       key = `ip:${req.ip || req.connection?.remoteAddress || 'unknown'}`;
     }
-    
+
     const now = Date.now();
     const windowStart = now - config.windowMs;
-    
+
     // Skip rate limiting for certain paths to prevent redirect loops
     const isLoginPage = req.path === '/auth/login';
     const isHomePage = req.path === '/';
-    const isStaticAsset = req.path.startsWith('/styles') || 
-                         req.path.startsWith('/public') ||
-                         req.path.startsWith('/js') ||
-                         req.path.startsWith('/icons') ||
-                         req.path.startsWith('/logos');
-    
+    const isStaticAsset =
+      req.path.startsWith('/styles') ||
+      req.path.startsWith('/public') ||
+      req.path.startsWith('/js') ||
+      req.path.startsWith('/icons') ||
+      req.path.startsWith('/logos');
+
     // Always allow access to login page and static assets to prevent loops
     if (isLoginPage || isHomePage || isStaticAsset) {
       return next();
     }
-    
+
     // Get or create request log for this key
     if (!requests.has(key)) {
       requests.set(key, []);
     }
-    
+
     const userRequests = requests.get(key);
-    
+
     // Remove old requests outside the window
-    const validRequests = userRequests.filter(time => time > windowStart);
+    const validRequests = userRequests.filter((time) => time > windowStart);
     requests.set(key, validRequests);
-    
+
     // Check if limit exceeded
     if (validRequests.length >= config.max) {
-      if (process.env.NODE_ENV !== 'test') console.log(`🚫 Rate limit exceeded for ${key}: ${validRequests.length}/${config.max} requests in ${config.windowMs}ms window`);
-      
+      if (process.env.NODE_ENV !== 'test')
+        console.log(
+          `🚫 Rate limit exceeded for ${key}: ${validRequests.length}/${config.max} requests in ${config.windowMs}ms window`
+        );
+
       // For web requests, always redirect with flash message to maintain user experience
       // Only return JSON for explicit API requests
       const isExplicitApiRequest = req.path && req.path.startsWith('/api/');
       const isAjaxRequest = req.headers['x-requested-with'] === 'XMLHttpRequest';
-      const acceptsOnlyJson = req.accepts && req.accepts(['json', 'html']) === 'json' && !req.accepts('html');
-      
+      const acceptsOnlyJson =
+        req.accepts && req.accepts(['json', 'html']) === 'json' && !req.accepts('html');
+
       if (isExplicitApiRequest || (isAjaxRequest && acceptsOnlyJson)) {
         // Explicit API request or AJAX request that only accepts JSON
         return res.status(429).json(config.message);
@@ -234,17 +265,17 @@ const createRateLimiter = (config = SECURITY_CONFIG.rateLimit, perUser = false, 
         if (req.flash && typeof req.flash === 'function') {
           req.flash('error_msg', config.message.error.message);
         }
-        
+
         // Redirect to appropriate page based on context
         const redirectPath = req.path.startsWith('/auth/') ? '/auth/login' : '/';
         return res.redirect(redirectPath);
       }
     }
-    
+
     // Add current request
     validRequests.push(now);
     requests.set(key, validRequests);
-    
+
     next();
   };
 };
@@ -277,7 +308,7 @@ const sanitizeString = (value) => {
   if (typeof value !== 'string') {
     return value;
   }
-  
+
   // Remove potentially dangerous HTML tags and script content
   return value
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -297,22 +328,22 @@ const validateInputSecurity = (value) => {
   if (typeof value !== 'string') {
     return true;
   }
-  
+
   // Check for SQL injection patterns
   const sqlInjectionPatterns = [
     /(\bUNION\b.*\bSELECT\b)|(\bSELECT\b.*\bFROM\b)/i,
     /(\bINSERT\b.*\bINTO\b)|(\bUPDATE\b.*\bSET\b)/i,
     /(\bDELETE\b.*\bFROM\b)|(\bDROP\b.*\bTABLE\b)/i,
     /(\bEXEC\b)|(\bEXECUTE\b)/i,
-    /(\'.*\bOR\b.*\')|(\bOR\b.*1.*=.*1)/i
+    /(\'.*\bOR\b.*\')|(\bOR\b.*1.*=.*1)/i,
   ];
-  
+
   for (const pattern of sqlInjectionPatterns) {
     if (pattern.test(value)) {
       throw new Error('Invalid input detected. Please check your data.');
     }
   }
-  
+
   // Check for XSS patterns
   const xssPatterns = [
     /<script/i,
@@ -321,15 +352,15 @@ const validateInputSecurity = (value) => {
     /on\w+\s*=/i,
     /<iframe/i,
     /<object/i,
-    /<embed/i
+    /<embed/i,
   ];
-  
+
   for (const pattern of xssPatterns) {
     if (pattern.test(value)) {
       throw new Error('Invalid input detected. HTML/JavaScript content is not allowed.');
     }
   }
-  
+
   return true;
 };
 
@@ -348,14 +379,14 @@ export const sanitizeInput = (req, res, next) => {
           return res.status(400).json({
             error: {
               status: 400,
-              message: error.message
-            }
+              message: error.message,
+            },
           });
         }
       }
     }
   }
-  
+
   // Sanitize query parameters
   if (req.query && typeof req.query === 'object') {
     for (const key in req.query) {
@@ -367,14 +398,14 @@ export const sanitizeInput = (req, res, next) => {
           return res.status(400).json({
             error: {
               status: 400,
-              message: error.message
-            }
+              message: error.message,
+            },
           });
         }
       }
     }
   }
-  
+
   next();
 };
 
@@ -388,14 +419,14 @@ export const csrfTokenProvider = (req, res, next) => {
     if (!req.session) {
       throw new Error('Session is required for CSRF protection');
     }
-    
+
     if (!req.session.csrfToken) {
       req.session.csrfToken = crypto.randomBytes(32).toString('hex');
     }
-    
+
     return req.session.csrfToken;
   };
-  
+
   next();
 };
 
@@ -408,29 +439,29 @@ export const csrfProtection = (req, res, next) => {
   if (req.method === 'GET' || req.path.startsWith('/api/')) {
     return next();
   }
-  
+
   // Use the same token system as csrfTokenProvider
   const token = req.body._token || req.headers['x-csrf-token'];
   const expectedToken = req.csrfToken ? req.csrfToken() : null;
-  
+
   if (!expectedToken) {
     return res.status(403).json({
       error: {
         status: 403,
-        message: 'CSRF token system not available'
-      }
+        message: 'CSRF token system not available',
+      },
     });
   }
-  
+
   if (req.method !== 'GET' && token !== expectedToken) {
     return res.status(403).json({
       error: {
         status: 403,
-        message: 'Invalid or missing CSRF token'
-      }
+        message: 'Invalid or missing CSRF token',
+      },
     });
   }
-  
+
   next();
 };
 
@@ -443,15 +474,15 @@ export const sessionSecurity = (req, res, next) => {
   if (req.session && req.user) {
     const now = Date.now();
     const regenerationInterval = 30 * 60 * 1000; // 30 minutes
-    
+
     // Initialize lastRegeneration if not set (first time after login)
     if (!req.session.lastRegeneration) {
       req.session.lastRegeneration = now;
       return next();
     }
-    
+
     const lastRegeneration = req.session.lastRegeneration;
-    
+
     if (now - lastRegeneration > regenerationInterval) {
       req.session.regenerate((err) => {
         if (err) {
@@ -468,7 +499,7 @@ export const sessionSecurity = (req, res, next) => {
       return;
     }
   }
-  
+
   next();
 };
 
@@ -478,19 +509,21 @@ export const sessionSecurity = (req, res, next) => {
  */
 export const validatePassword = (password) => {
   const errors = [];
-  
+
   if (!password || password.length < 8) {
     errors.push('Password must be at least 8 characters long');
   }
-  
+
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
   if (!passwordRegex.test(password)) {
-    errors.push('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
+    errors.push(
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+    );
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -500,42 +533,51 @@ export const validatePassword = (password) => {
  */
 export const validateSecureEmail = (email) => {
   const errors = [];
-  
+
   // Check if email is provided
   if (!email || typeof email !== 'string') {
     errors.push('Email address is required');
     return {
       isValid: false,
-      errors
+      errors,
     };
   }
-  
+
   // Basic email format validation - more strict
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
     errors.push('Please provide a valid email address');
   }
-  
+
   // Additional validation for edge cases
-  if (email.includes('..') || email.startsWith('.') || email.endsWith('.') || 
-      email.startsWith('@') || email.endsWith('@')) {
+  if (
+    email.includes('..') ||
+    email.startsWith('.') ||
+    email.endsWith('.') ||
+    email.startsWith('@') ||
+    email.endsWith('@')
+  ) {
     errors.push('Please provide a valid email address');
   }
-  
+
   // Block common disposable email domains
   const disposableDomains = [
-    '10minutemail.com', 'tempmail.org', 'guerrillamail.com',
-    'mailinator.com', 'yopmail.com', 'throwaway.email'
+    '10minutemail.com',
+    'tempmail.org',
+    'guerrillamail.com',
+    'mailinator.com',
+    'yopmail.com',
+    'throwaway.email',
   ];
-  
+
   const domain = email.split('@')[1];
   if (domain && disposableDomains.includes(domain)) {
     errors.push('Disposable email addresses are not allowed');
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -548,43 +590,43 @@ export const validateFileUpload = (allowedTypes = [], maxSize = 10 * 1024 * 1024
     if (!req.file && !req.files) {
       return next();
     }
-    
+
     const files = req.files || [req.file];
-    
+
     for (const file of files) {
       if (!file) continue;
-      
+
       // Check file size
       if (file.size > maxSize) {
         return res.status(400).json({
           error: {
             status: 400,
-            message: `File size exceeds limit of ${maxSize / (1024 * 1024)}MB`
-          }
+            message: `File size exceeds limit of ${maxSize / (1024 * 1024)}MB`,
+          },
         });
       }
-      
+
       // Check file type
       if (allowedTypes.length > 0 && !allowedTypes.includes(file.mimetype)) {
         return res.status(400).json({
           error: {
             status: 400,
-            message: `File type ${file.mimetype} is not allowed`
-          }
+            message: `File type ${file.mimetype} is not allowed`,
+          },
         });
       }
-      
+
       // Check for malicious file names
       if (/[<>:"/\\|?*\x00-\x1f]/.test(file.originalname)) {
         return res.status(400).json({
           error: {
             status: 400,
-            message: 'Invalid file name'
-          }
+            message: 'Invalid file name',
+          },
         });
       }
     }
-    
+
     next();
   };
 };
@@ -599,12 +641,12 @@ export const apiSecurity = (req, res, next) => {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',
-    'Referrer-Policy': 'strict-origin-when-cross-origin'
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
   });
-  
+
   // Ensure API responses are JSON
   res.type('application/json');
-  
+
   next();
 };
 
@@ -622,14 +664,18 @@ export const securityAuditLog = (carnival, details = {}) => {
       userId: req.user?.id || null,
       path: req.path || 'Unknown',
       method: req.method || 'Unknown',
-      ...details
+      ...details,
     };
-    
+
     // In production, send to proper logging service
     if (process.env.NODE_ENV !== 'test') {
-      console.log('SECURITY_AUDIT:', JSON.stringify(logData));
+      try {
+        console.log('SECURITY_AUDIT:', JSON.stringify(logData));
+      } catch (e) {
+        console.error('SECURITY_AUDIT LOGGING ERROR:', e);
+      }
     }
-    
+
     next();
   };
 };
@@ -643,7 +689,7 @@ export const applySecurity = [
   generalRateLimit,
   sessionSecurity,
   csrfTokenProvider,
-  sanitizeInput
+  sanitizeInput,
 ];
 
 /**
@@ -653,17 +699,13 @@ export const applyAuthSecurity = [
   securityHeaders,
   authRateLimit,
   sanitizeInput,
-  securityAuditLog('auth_attempt')
+  securityAuditLog('auth_attempt'),
 ];
 
 /**
  * API security middleware stack
  */
-export const applyApiSecurity = [
-  apiSecurity,
-  generalRateLimit,
-  sanitizeInput
-];
+export const applyApiSecurity = [apiSecurity, generalRateLimit, sanitizeInput];
 
 /**
  * Admin security middleware stack
@@ -677,12 +719,12 @@ export const applyAdminSecurity = [
     message: {
       error: {
         status: 429,
-        message: 'Admin activity rate limit reached. Please wait a few minutes before continuing.'
-      }
-    }
+        message: 'Admin activity rate limit reached. Please wait a few minutes before continuing.',
+      },
+    },
   }),
   sanitizeInput,
-  securityAuditLog('admin_action')
+  securityAuditLog('admin_action'),
 ];
 
 // Export individual components for testing
@@ -691,5 +733,5 @@ export {
   getSecurityConfig,
   createRateLimiter,
   sanitizeString,
-  validateInputSecurity
+  validateInputSecurity,
 };

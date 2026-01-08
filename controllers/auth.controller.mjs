@@ -25,7 +25,7 @@ import { wrapControllers } from '../middleware/asyncHandler.mjs';
 const showLoginForm = (req, res) => {
   return res.render('auth/login', {
     title: 'Login',
-    csrfToken: req.csrfToken()
+    csrfToken: req.csrfToken(),
   });
 };
 
@@ -37,7 +37,7 @@ const showLoginForm = (req, res) => {
  */
 const loginUser = async (req, res, next) => {
   const DEBUG_AUTH = process.env.NODE_ENV === 'test';
-  
+
   if (DEBUG_AUTH) {
     console.log(`[AUTH CONTROLLER DEBUG] Login attempt for email: ${req.body.email}`);
   }
@@ -47,7 +47,7 @@ const loginUser = async (req, res, next) => {
     if (DEBUG_AUTH) {
       console.log(`[AUTH CONTROLLER DEBUG] Validation errors:`, errors.array());
     }
-    
+
     // Log failed login attempt due to validation
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, null, {
       result: 'FAILURE',
@@ -85,15 +85,19 @@ const loginUser = async (req, res, next) => {
       isActive: user?.isActive,
       email: user?.email,
       passwordHashLength: user?.passwordHash?.length,
-      passwordHashPrefix: user?.passwordHash?.substring(0, 10)
+      passwordHashPrefix: user?.passwordHash?.substring(0, 10),
     });
   }
 
   if (!user || !user.isActive) {
     if (DEBUG_AUTH) {
-      console.log(`[AUTH CONTROLLER DEBUG] Authentication failed: ${user ? 'User inactive' : 'User not found'}`);
+      console.log(
+        `[AUTH CONTROLLER DEBUG] Authentication failed: ${
+          user ? 'User inactive' : 'User not found'
+        }`
+      );
     }
-    
+
     // Log failed login attempt - user not found or inactive
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, null, {
       result: 'FAILURE',
@@ -118,16 +122,16 @@ const loginUser = async (req, res, next) => {
 
   // Check password
   const isMatch = await bcrypt.compare(password, user.passwordHash);
-  
+
   if (DEBUG_AUTH) {
     console.log(`[AUTH CONTROLLER DEBUG] Password comparison result: ${isMatch}`);
   }
-  
+
   if (!isMatch) {
     if (DEBUG_AUTH) {
       console.log(`[AUTH CONTROLLER DEBUG] Authentication failed: Password mismatch`);
     }
-    
+
     // Log failed login attempt - wrong password
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_LOGIN, req, user, {
       result: 'FAILURE',
@@ -173,9 +177,11 @@ const loginUser = async (req, res, next) => {
       req.flash('error_msg', 'Login failed. Please try again.');
       return res.redirect('/auth/login');
     }
-    
+
     if (DEBUG_AUTH) {
-      console.log(`[AUTH CONTROLLER DEBUG] req.login() successful, checking user role for redirect`);
+      console.log(
+        `[AUTH CONTROLLER DEBUG] req.login() successful, checking user role for redirect`
+      );
     }
     // On successful login, reset failure counter for this key
     (async () => {
@@ -186,7 +192,7 @@ const loginUser = async (req, res, next) => {
         if (process.env.NODE_ENV !== 'test') console.error('failureCounter reset error', e);
       }
     })();
-    
+
     // Redirect based on user role
     if (user.isAdmin) {
       if (DEBUG_AUTH) {
@@ -207,10 +213,19 @@ const loginUser = async (req, res, next) => {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-const showRegisterForm = async (req, res) => {
-  return res.render('auth/register', {
-    title: 'Create Account',
-  });
+const showRegisterForm = async (req, res, next) => {
+  try {
+    return res.render('auth/register', {
+      title: 'Create Account',
+    });
+  } catch (error) {
+    console.error('CRITICAL ERROR in showRegisterForm:', error);
+    // Send plain text response to avoid rendering error view (which might be causing the crash)
+    res
+      .status(500)
+      .type('text/plain')
+      .send('Critical Error loading registration form. Please contact support.');
+  }
 };
 
 /**
@@ -280,10 +295,16 @@ const registerUser = async (req, res) => {
       phoneNumber: newUser.phoneNumber,
       isAdmin: newUser.isAdmin,
     }),
-    metadata: isFirstUser ? { adminBootstrap: true, reason: 'First user automatically promoted to admin' } : {},
+    metadata: isFirstUser
+      ? { adminBootstrap: true, reason: 'First user automatically promoted to admin' }
+      : {},
   });
 
-  console.log(`✅ New user registered: ${newUser.email} (ID: ${newUser.id})${isFirstUser ? ' [ADMIN - First User]' : ''}`);
+  console.log(
+    `✅ New user registered: ${newUser.email} (ID: ${newUser.id})${
+      isFirstUser ? ' [ADMIN - First User]' : ''
+    }`
+  );
 
   // Additional audit log for admin promotion if this is the first user
   if (isFirstUser) {
@@ -292,17 +313,17 @@ const registerUser = async (req, res) => {
       entityType: AuditService.ENTITIES.USER,
       entityId: newUser.id,
       newValues: { isAdmin: true },
-      metadata: { 
-        adminBootstrap: true, 
+      metadata: {
+        adminBootstrap: true,
         reason: 'First registered user automatically promoted to admin',
-        userCount: 1
+        userCount: 1,
       },
     });
   }
 
   req.flash(
     'success_msg',
-    isFirstUser 
+    isFirstUser
       ? 'Registration successful! As the first user, you have been granted administrator privileges. You can now log in and manage the system.'
       : 'Registration successful! You can now log in and create or join a club from your dashboard.'
   );
@@ -753,15 +774,16 @@ const initiateForgotPassword = async (req, res) => {
 
   try {
     // Find user by email (if exists)
-    const user = await User.findOne({ 
-      where: { 
+    const user = await User.findOne({
+      where: {
         email: email.toLowerCase(),
-        isActive: true
-      } 
+        isActive: true,
+      },
     });
 
     // Always show success message to prevent user enumeration
-    const successMessage = 'If an account with that email exists, a password reset link has been sent.';
+    const successMessage =
+      'If an account with that email exists, a password reset link has been sent.';
 
     if (user) {
       // Generate secure reset token
@@ -776,16 +798,12 @@ const initiateForgotPassword = async (req, res) => {
       });
 
       // Send password reset email with unhashed token
-      await AuthEmailService.sendPasswordResetEmail(
-        user.email,
-        resetToken,
-        user.getFullName()
-      );
+      await AuthEmailService.sendPasswordResetEmail(user.email, resetToken, user.getFullName());
 
       // Log successful forgot password request
       await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, user.id, {
         action: 'forgot_password_initiated',
-        success: true
+        success: true,
       });
 
       console.log(`✅ Password reset email sent to: ${user.email} (ID: ${user.id})`);
@@ -795,31 +813,30 @@ const initiateForgotPassword = async (req, res) => {
         action: 'forgot_password_initiated',
         success: false,
         reason: 'invalid_email',
-        attemptedEmail: email.toLowerCase()
+        attemptedEmail: email.toLowerCase(),
       });
     }
 
     req.flash('success_msg', successMessage);
     return res.redirect('/auth/login');
-
   } catch (error) {
     console.error('Forgot password error:', error);
-    
+
     req.flash('error_msg', 'An error occurred while processing your request. Please try again.');
-    
+
     // Check if error is from email service (no csrfToken) vs database error (with csrfToken)
     const isEmailServiceError = error.message && error.message.includes('Email service');
-    
+
     const renderData = {
       title: 'Forgot Password',
       formData: req.body,
     };
-    
+
     // Only include csrfToken for database errors, not email service errors
     if (!isEmailServiceError) {
       renderData.csrfToken = req.csrfToken();
     }
-    
+
     return res.render('auth/forgot-password', renderData);
   }
 };
@@ -860,7 +877,6 @@ const showResetPasswordForm = async (req, res) => {
       token,
       csrfToken: req.csrfToken(),
     });
-
   } catch (error) {
     console.error('Reset password form error:', error);
     req.flash('error_msg', 'An error occurred while processing your request. Please try again.');
@@ -910,7 +926,7 @@ const resetPasswordWithToken = async (req, res) => {
       await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, null, {
         action: 'password_reset_with_token',
         success: false,
-        reason: 'invalid_or_expired_token'
+        reason: 'invalid_or_expired_token',
       });
 
       req.flash('error_msg', 'Password reset link is invalid or has expired.');
@@ -928,7 +944,7 @@ const resetPasswordWithToken = async (req, res) => {
         token,
         error: 'An error occurred while resetting your password. Please try again.',
         csrfToken: req.csrfToken(),
-        title: 'Reset Password'
+        title: 'Reset Password',
       });
     }
 
@@ -945,27 +961,29 @@ const resetPasswordWithToken = async (req, res) => {
         token,
         error: 'An error occurred while resetting your password. Please try again.',
         csrfToken: req.csrfToken(),
-        title: 'Reset Password'
+        title: 'Reset Password',
       });
     }
 
     // Log successful password reset
     await AuditService.logUserAction(
-      user.id, 
-      AuditService.ACTIONS.USER_PASSWORD_RESET, 
-      AuditService.ENTITIES.USER, 
-      user.id, 
+      user.id,
+      AuditService.ACTIONS.USER_PASSWORD_RESET,
+      AuditService.ENTITIES.USER,
+      user.id,
       { method: 'token_reset' }
     );
 
     console.log(`✅ Password reset successful for user: ${user.email} (ID: ${user.id})`);
 
-    req.flash('success_msg', 'Your password has been successfully reset. You can now log in with your new password.');
+    req.flash(
+      'success_msg',
+      'Your password has been successfully reset. You can now log in with your new password.'
+    );
     return res.redirect('/auth/login');
-
   } catch (error) {
     console.error('Password reset with token error:', error);
-    
+
     req.flash('error_msg', 'An error occurred while processing your request. Please try again.');
     return res.redirect('/auth/forgot-password');
   }
@@ -982,15 +1000,15 @@ const resetPassword = async (req, res, next) => {
 
   if (!errors.isEmpty()) {
     const errorMessage = errors.array()[0].msg;
-    
+
     // Check if request is AJAX
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
       return res.status(400).json({
         success: false,
-        message: errorMessage
+        message: errorMessage,
       });
     }
-    
+
     req.flash('error_msg', errorMessage);
     return res.redirect('/dashboard');
   }
@@ -1002,20 +1020,20 @@ const resetPassword = async (req, res, next) => {
     const isPasswordValid = await req.user.checkPassword(existingPassword);
     if (!isPasswordValid) {
       const errorMessage = 'Current password is incorrect. Please try again.';
-      
+
       // Log failed password reset attempt
       await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
         success: false,
-        reason: 'invalid_current_password'
+        reason: 'invalid_current_password',
       });
 
       if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
         return res.status(401).json({
           success: false,
-          message: errorMessage
+          message: errorMessage,
         });
       }
-      
+
       req.flash('error_msg', errorMessage);
       return res.redirect('/dashboard');
     }
@@ -1024,14 +1042,14 @@ const resetPassword = async (req, res, next) => {
     const isSamePassword = await req.user.checkPassword(newPassword);
     if (isSamePassword) {
       const errorMessage = 'New password must be different from your current password.';
-      
+
       if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
         return res.status(400).json({
           success: false,
-          message: errorMessage
+          message: errorMessage,
         });
       }
-      
+
       req.flash('error_msg', errorMessage);
       return res.redirect('/dashboard');
     }
@@ -1047,7 +1065,7 @@ const resetPassword = async (req, res, next) => {
 
     // Log successful password reset
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
-      success: true
+      success: true,
     });
 
     console.log(`✅ Password updated successfully for user: ${req.user.id} (${req.user.email})`);
@@ -1057,21 +1075,20 @@ const resetPassword = async (req, res, next) => {
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
       return res.json({
         success: true,
-        message: successMessage
+        message: successMessage,
       });
     }
 
     req.flash('success_msg', successMessage);
     return res.redirect('/dashboard');
-
   } catch (error) {
     console.error('Password reset error:', error);
-    
+
     // Log failed password reset attempt
     await AuditService.logAuthAction(AuditService.ACTIONS.USER_PASSWORD_RESET, req, req.user.id, {
       success: false,
       reason: 'server_error',
-      error: error.message
+      error: error.message,
     });
 
     const errorMessage = 'An error occurred while updating your password. Please try again.';
@@ -1079,7 +1096,7 @@ const resetPassword = async (req, res, next) => {
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
       return res.status(500).json({
         success: false,
-        message: errorMessage
+        message: errorMessage,
       });
     }
 
