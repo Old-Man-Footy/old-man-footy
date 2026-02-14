@@ -6,10 +6,11 @@
  */
 
 import { validationResult } from 'express-validator';
-import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, sequelize } from '../models/index.mjs';
+import { User, Club, Carnival, Sponsor, EmailSubscription, AuditLog, ContactSubmission, ContactReply, sequelize } from '../models/index.mjs';
 import { Op, fn } from 'sequelize';
 import crypto from 'crypto';
 import AuthEmailService from '../services/email/AuthEmailService.mjs';
+import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuditService from '../services/auditService.mjs';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
@@ -40,7 +41,8 @@ const getAdminDashboardHandler = async (req, res) => {
         inactiveClubs,
         recentUsers,
         recentCarnivals,
-        upcomingCarnivals
+        upcomingCarnivals,
+        pendingContactSubmissions
     ] = await Promise.all([
         User.count(),
         Club.count(),
@@ -71,6 +73,13 @@ const getAdminDashboardHandler = async (req, res) => {
                     [Op.gte]: new Date()
                 }
             }
+        }),
+        ContactSubmission.count({
+            where: {
+                status: {
+                    [Op.in]: ['new', 'in_progress']
+                }
+            }
         })
     ]);
 
@@ -99,7 +108,8 @@ const getAdminDashboardHandler = async (req, res) => {
         inactiveClubs,
         recentUsers,
         recentCarnivals,
-        upcomingCarnivals
+        upcomingCarnivals,
+        pendingContactSubmissions
     };
 
     return res.render('admin/dashboard', {
@@ -1587,6 +1597,245 @@ const exportAuditLogsHandler = async (req, res) => {
 };
 
 /**
+ * Get Contact Submission Management page
+ */
+const getContactSubmissionsHandler = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const filters = {
+        search: req.query.search || '',
+        status: req.query.status || '',
+        subject: req.query.subject || '',
+        emailDeliveryStatus: req.query.emailDeliveryStatus || ''
+    };
+
+    const whereConditions = {};
+
+    if (filters.search) {
+        whereConditions[Op.or] = [
+            { firstName: { [Op.like]: `%${filters.search}%` } },
+            { lastName: { [Op.like]: `%${filters.search}%` } },
+            { email: { [Op.like]: `%${filters.search}%` } },
+            { clubName: { [Op.like]: `%${filters.search}%` } },
+            { message: { [Op.like]: `%${filters.search}%` } }
+        ];
+    }
+
+    if (filters.status) {
+        whereConditions.status = filters.status;
+    }
+
+    if (filters.subject) {
+        whereConditions.subject = filters.subject;
+    }
+
+    if (filters.emailDeliveryStatus) {
+        whereConditions.emailDeliveryStatus = filters.emailDeliveryStatus;
+    }
+
+    const { count, rows: submissions } = await ContactSubmission.findAndCountAll({
+        where: whereConditions,
+        include: [{
+            model: ContactReply,
+            as: 'replies',
+            attributes: ['id'],
+            required: false
+        }],
+        order: [['submittedAt', 'DESC']],
+        distinct: true,
+        limit,
+        offset
+    });
+
+    const normalizedSubmissions = submissions.map(submission => {
+        const submissionData = submission.toJSON();
+        return {
+            ...submissionData,
+            replyCount: submissionData.replies?.length || 0
+        };
+    });
+
+    const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        hasNext: page < Math.ceil(count / limit),
+        hasPrev: page > 1
+    };
+
+    return res.render('admin/contact-submissions', {
+        title: 'Contact Submissions - Admin Dashboard',
+        submissions: normalizedSubmissions,
+        filters,
+        pagination,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Show contact submission detail with reply history
+ */
+const showContactSubmissionHandler = async (req, res) => {
+    const submission = await ContactSubmission.findByPk(req.params.id, {
+        include: [{
+            model: ContactReply,
+            as: 'replies',
+            include: [{
+                model: User,
+                as: 'repliedBy',
+                attributes: ['id', 'firstName', 'lastName', 'email'],
+                required: false
+            }],
+            order: [['createdAt', 'DESC']]
+        }]
+    });
+
+    if (!submission) {
+        req.flash('error_msg', 'Contact submission not found');
+        return res.redirect('/admin/contact-submissions');
+    }
+
+    const replies = [...(submission.replies || [])].sort((a, b) => b.createdAt - a.createdAt);
+
+    return res.render('admin/contact-submission-detail', {
+        title: `Contact Message #${submission.id} - Admin Dashboard`,
+        submission,
+        replies,
+        additionalCSS: ['/styles/admin.styles.css']
+    });
+};
+
+/**
+ * Send admin reply to a contact submission sender
+ */
+const replyToContactSubmissionHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array()[0].msg);
+        return res.redirect(`/admin/contact-submissions/${req.params.id}`);
+    }
+
+    const { subject, message } = req.body;
+    const submissionId = req.params.id;
+
+    const submission = await ContactSubmission.findByPk(submissionId);
+
+    if (!submission) {
+        req.flash('error_msg', 'Contact submission not found');
+        return res.redirect('/admin/contact-submissions');
+    }
+
+    const dispatchResult = await ContactEmailService.sendAdminReplyEmail({
+        toEmail: submission.email,
+        subject: subject.trim(),
+        message: message.trim()
+    });
+
+    const deliveryStatus = dispatchResult.success ? 'sent' : dispatchResult.blocked ? 'blocked' : 'failed';
+    const sentAt = dispatchResult.success ? new Date() : null;
+
+    await ContactReply.create({
+        contactSubmissionId: submission.id,
+        repliedByUserId: req.user?.id || null,
+        recipientEmail: submission.email,
+        subject: subject.trim(),
+        message: message.trim(),
+        deliveryStatus,
+        emailProvider: dispatchResult.provider || 'resend',
+        emailProviderMessageId: dispatchResult.messageId || null,
+        deliveryError: dispatchResult.success ? null : (dispatchResult.message || dispatchResult.error || 'Reply delivery failed'),
+        sentAt
+    });
+
+    if (dispatchResult.success) {
+        await submission.update({
+            status: 'replied',
+            lastRepliedAt: new Date(),
+            lastRepliedByUserId: req.user?.id || null
+        });
+    }
+
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.CONTACT_REPLY_SEND,
+        req,
+        AuditService.ENTITIES.CONTACT_SUBMISSION,
+        submission.id,
+        {
+            oldValues: { status: submission.status },
+            newValues: {
+                status: dispatchResult.success ? 'replied' : submission.status,
+                deliveryStatus
+            },
+            metadata: {
+                adminAction: 'Contact submission reply sent',
+                recipientEmail: submission.email,
+                subject: subject.trim(),
+                provider: dispatchResult.provider || 'resend'
+            }
+        }
+    );
+
+    if (dispatchResult.success) {
+        req.flash('success_msg', `Reply sent to ${submission.email}`);
+    } else if (dispatchResult.blocked) {
+        req.flash('warning_msg', 'Reply was logged but delivery is blocked in the current environment');
+    } else {
+        req.flash('error_msg', `Reply logged but delivery failed: ${dispatchResult.error || dispatchResult.message || 'Unknown error'}`);
+    }
+
+    return res.redirect(`/admin/contact-submissions/${submission.id}`);
+};
+
+/**
+ * Update contact submission status
+ */
+const updateContactSubmissionStatusHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array()[0].msg);
+        return res.redirect(`/admin/contact-submissions/${req.params.id}`);
+    }
+
+    const { status } = req.body;
+    const submissionId = req.params.id;
+
+    const submission = await ContactSubmission.findByPk(submissionId);
+
+    if (!submission) {
+        req.flash('error_msg', 'Contact submission not found');
+        return res.redirect('/admin/contact-submissions');
+    }
+
+    const oldStatus = submission.status;
+
+    await submission.update({
+        status,
+        closedAt: status === 'closed' || status === 'spam' ? new Date() : null
+    });
+
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.CONTACT_STATUS_UPDATE,
+        req,
+        AuditService.ENTITIES.CONTACT_SUBMISSION,
+        submission.id,
+        {
+            oldValues: { status: oldStatus },
+            newValues: { status },
+            metadata: {
+                adminAction: 'Contact submission status update',
+                oldStatus,
+                newStatus: status
+            }
+        }
+    );
+
+    req.flash('success_msg', 'Contact submission status updated');
+    return res.redirect(`/admin/contact-submissions/${submission.id}`);
+};
+
+/**
  * Get Sponsor Management page
  */
 const getSponsorManagementHandler = async (req, res) => {
@@ -1885,6 +2134,10 @@ const rawControllers = {
     getAuditLogsHandler,
     getAuditStatisticsHandler,
     exportAuditLogsHandler,
+    getContactSubmissionsHandler,
+    showContactSubmissionHandler,
+    replyToContactSubmissionHandler,
+    updateContactSubmissionStatusHandler,
     syncMySidelineHandler
 };
 
@@ -1918,5 +2171,9 @@ export const {
     getAuditLogsHandler: getAuditLogs,
     getAuditStatisticsHandler: getAuditStatistics,
     exportAuditLogsHandler: exportAuditLogs,
+    getContactSubmissionsHandler: getContactSubmissions,
+    showContactSubmissionHandler: showContactSubmission,
+    replyToContactSubmissionHandler: replyToContactSubmission,
+    updateContactSubmissionStatusHandler: updateContactSubmissionStatus,
     syncMySidelineHandler: syncMySideline
 } = wrapControllers(rawControllers); 

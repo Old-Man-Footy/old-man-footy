@@ -12,6 +12,7 @@ import {
   EmailSubscription,
   ClubPlayer,
   CarnivalClub,
+  ContactSubmission,
 } from '../models/index.mjs';
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
@@ -740,13 +741,33 @@ export const postContact = asyncHandler(async (req, res) => {
   }
 
   const { firstName, lastName, email, phone, subject, clubName, message, newsletter } = req.body;
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const submission = await ContactSubmission.create({
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: normalizedEmail,
+    phone: phone?.trim() || null,
+    subject,
+    clubName: clubName?.trim() || null,
+    message: message.trim(),
+    newsletterOptIn: newsletter === 'on',
+    source: 'contact_form',
+    ipAddress: req.ip,
+    userAgent: req.get('User-Agent'),
+    submittedAt: new Date(),
+    status: 'new',
+    emailDeliveryStatus: 'pending',
+  });
+
+  let supportEmailFailed = false;
 
   // Send contact email using the email service
   try {
     const emailResult = await ContactEmailService.sendContactFormEmail({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       phone: phone?.trim(),
       subject,
       clubName: clubName?.trim(),
@@ -756,24 +777,34 @@ export const postContact = asyncHandler(async (req, res) => {
       ipAddress: req.ip,
     });
 
-    // Log if email was blocked (E2E/test environments)
-    if (emailResult && emailResult.blocked) {
-      console.log('📧 Contact form email blocked (E2E/test environment)');
+    const supportEmailResult = emailResult?.supportEmail;
+    if (supportEmailResult?.success) {
+      await submission.markEmailDispatched({
+        provider: supportEmailResult.provider,
+        messageId: supportEmailResult.messageId,
+      });
+    } else if (supportEmailResult?.blocked) {
+      await submission.markEmailBlocked(supportEmailResult.message);
+      console.log('📧 Contact form email blocked (environment policy)');
+    } else {
+      supportEmailFailed = true;
+      await submission.markEmailFailed('Support notification did not return a success status');
     }
   } catch (error) {
     console.error('Contact form email error:', error);
-    // Continue with form processing even if email fails
+    supportEmailFailed = true;
+    await submission.markEmailFailed(error.message);
   }
 
   // If user wants newsletter and isn't already subscribed, add them
   if (newsletter === 'on') {
     const existingSubscription = await EmailSubscription.findOne({
-      where: { email: email.trim().toLowerCase() },
+      where: { email: normalizedEmail },
     });
 
         if (!existingSubscription) {
             await EmailSubscription.create({
-                email: email.trim().toLowerCase(),
+                email: normalizedEmail,
                 states: AUSTRALIAN_STATES, // Fixed: Use 'states' instead of 'subscribedStates'
                 isActive: true,
                 subscribedAt: new Date(),
@@ -781,6 +812,13 @@ export const postContact = asyncHandler(async (req, res) => {
             });
         }
     }
+
+  if (supportEmailFailed) {
+    req.flash(
+      'warning_msg',
+      'Your message was saved successfully, but support notification delivery is delayed. The admin team can still respond from the dashboard.'
+    );
+  }
 
   req.flash(
     'success_msg',

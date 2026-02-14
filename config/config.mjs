@@ -123,10 +123,12 @@ export const getCurrentConfig = () => {
       url: getEnvVar('DATABASE_URL', `sqlite:./data/${env === 'test' ? 'test-' : env === 'development' ? 'dev-' : ''}old-man-footy.db`)
     },
     
-    // Email Settings
+    // Email Settings (Resend transactional provider)
     email: {
-      serviceUser: getEnvVar('EMAIL_USER', null, false),                                                                             
-      servicePassword: getEnvVar('EMAIL_PASSWORD', null, false),
+      provider: getEnvVar('EMAIL_PROVIDER', 'resend', false),
+      resendApiKey: getEnvVar('RESEND_API_KEY', null, false),
+      contactFrom: getEnvVar('EMAIL_FROM', 'no_reply@oldmanfooty.au', false),
+      supportEmail: getEnvVar('SUPPORT_EMAIL', 'support@oldmanfooty.au', false),
       serviceFrom: getEnvVar('EMAIL_FROM', null, false)
     },
 

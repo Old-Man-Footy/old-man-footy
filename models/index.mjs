@@ -23,6 +23,8 @@ import SyncLog from './SyncLog.mjs';
 import HelpContent from './HelpContent.mjs';
 import ImageUpload from './ImageUpload.mjs';
 import Session from './Session.mjs';
+import ContactSubmission from './ContactSubmission.mjs';
+import ContactReply from './ContactReply.mjs';
 
 /**
  * Define model associations/relationships
@@ -203,6 +205,37 @@ Club.hasMany(ImageUpload, {
   as: 'galleryImages'
 });
 
+// Contact submission and reply associations
+ContactSubmission.hasMany(ContactReply, {
+  foreignKey: 'contactSubmissionId',
+  as: 'replies'
+});
+
+ContactReply.belongsTo(ContactSubmission, {
+  foreignKey: 'contactSubmissionId',
+  as: 'submission'
+});
+
+ContactSubmission.belongsTo(User, {
+  foreignKey: 'lastRepliedByUserId',
+  as: 'lastRepliedBy'
+});
+
+User.hasMany(ContactSubmission, {
+  foreignKey: 'lastRepliedByUserId',
+  as: 'contactSubmissionsReplied'
+});
+
+ContactReply.belongsTo(User, {
+  foreignKey: 'repliedByUserId',
+  as: 'repliedBy'
+});
+
+User.hasMany(ContactReply, {
+  foreignKey: 'repliedByUserId',
+  as: 'contactRepliesAuthored'
+});
+
 // Export all models and sequelize instance
 export {
   sequelize,
@@ -220,5 +253,7 @@ export {
   SyncLog,
   HelpContent,
   ImageUpload,
-  Session
+  Session,
+  ContactSubmission,
+  ContactReply
 };

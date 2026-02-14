@@ -15,27 +15,38 @@
                 <div class="card-body p-4">
                     <h2 class="h4 text-primary mb-3">Send us a Message</h2>
                     <p class="text-muted mb-4">Whether you're a player looking for carnivals or a club delegate needing help with the platform, we're here to assist.</p>
+
+                    <% if (errors && errors.length > 0) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <h6 class="mb-2"><i class="bi bi-exclamation-triangle me-1"></i>Please correct the following:</h6>
+                            <ul class="mb-0">
+                                <% errors.forEach((error) => { %>
+                                    <li><%= error.msg || error %></li>
+                                <% }) %>
+                            </ul>
+                        </div>
+                    <% } %>
                     
                     <form id="contactForm" method="POST" action="/contact">
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="firstName" name="firstName" required maxlength="50">
+                                <input type="text" class="form-control" id="firstName" name="firstName" required maxlength="50" value="<%= formData?.firstName || user?.firstName || '' %>">
                             </div>
                             <div class="col-md-6">
                                 <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="lastName" name="lastName" required maxlength="50">
+                                <input type="text" class="form-control" id="lastName" name="lastName" required maxlength="50" value="<%= formData?.lastName || user?.lastName || '' %>">
                             </div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="email" name="email" required maxlength="100">
+                                <input type="email" class="form-control" id="email" name="email" required maxlength="100" value="<%= formData?.email || user?.email || '' %>">
                             </div>
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" maxlength="20">
+                                <input type="tel" class="form-control" id="phone" name="phone" maxlength="20" value="<%= formData?.phone || user?.phoneNumber || '' %>">
                             </div>
                         </div>
                         
@@ -43,13 +54,13 @@
                             <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
                             <select class="form-select" id="subject" name="subject" required>
                                 <option value="">Please select a subject...</option>
-                                <option value="general">General Inquiry</option>
-                                <option value="technical">Technical Support</option>
-                                <option value="carnival">Carnival Information</option>
-                                <option value="delegate">Club Delegate Support</option>
-                                <option value="registration">Registration Help</option>
-                                <option value="feedback">Feedback/Suggestions</option>
-                                <option value="other">Other</option>
+                                <option value="general" <%= formData?.subject === 'general' ? 'selected' : '' %>>General Inquiry</option>
+                                <option value="technical" <%= formData?.subject === 'technical' ? 'selected' : '' %>>Technical Support</option>
+                                <option value="carnival" <%= formData?.subject === 'carnival' ? 'selected' : '' %>>Carnival Information</option>
+                                <option value="delegate" <%= formData?.subject === 'delegate' ? 'selected' : '' %>>Club Delegate Support</option>
+                                <option value="registration" <%= formData?.subject === 'registration' ? 'selected' : '' %>>Registration Help</option>
+                                <option value="feedback" <%= formData?.subject === 'feedback' ? 'selected' : '' %>>Feedback/Suggestions</option>
+                                <option value="other" <%= formData?.subject === 'other' ? 'selected' : '' %>>Other</option>
                             </select>
                         </div>
                         
@@ -65,7 +76,7 @@
                         <div class="mb-3">
                             <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="message" name="message" rows="6" required 
-                                      maxlength="2000" placeholder="Please describe your inquiry or issue in detail..."></textarea>
+                                      maxlength="2000" placeholder="Please describe your inquiry or issue in detail..."><%= formData?.message || '' %></textarea>
                             <div class="form-text">
                                 <span id="charCount">0</span>/2000 characters
                             </div>
@@ -73,7 +84,7 @@
                         
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter">
+                                <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter" <%= formData?.newsletter === 'on' ? 'checked' : '' %>>
                                 <label class="form-check-label" for="newsletter">
                                     I would like to receive updates about new carnivals and platform features
                                 </label>

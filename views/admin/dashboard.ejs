@@ -93,7 +93,8 @@
                         <div>
                             <h6 class="card-title">System Activity</h6>
                             <h2 class="mb-0"><%= stats.recentUsers + stats.recentCarnivals %></h2>
-                            <small>New this week</small>
+                            <small>New this week</small><br>
+                            <small><%= stats.pendingContactSubmissions %> contact messages awaiting action</small>
                         </div>
                         <div class="align-self-center">
                             <i class="bi bi-activity fs-1"></i>
@@ -172,6 +173,13 @@
                             <i class="bi bi-people fs-3 mb-2"></i>
                             <strong>Club Management</strong>
                             <small class="text-muted">Manage all clubs</small>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="/admin/contact-submissions" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center text-decoration-none">
+                            <i class="bi bi-envelope-paper fs-3 mb-2"></i>
+                            <strong>Contact Inbox</strong>
+                            <small class="text-muted">Review and reply to contact messages</small>
                         </a>
                     </div>
                     </div>

@@ -64,6 +64,8 @@ class AuditService {
     ADMIN_SYSTEM_SYNC: 'ADMIN_SYSTEM_SYNC',
     ADMIN_DATA_EXPORT: 'ADMIN_DATA_EXPORT',
     ADMIN_BULK_UPDATE: 'ADMIN_BULK_UPDATE',
+    CONTACT_REPLY_SEND: 'CONTACT_REPLY_SEND',
+    CONTACT_STATUS_UPDATE: 'CONTACT_STATUS_UPDATE',
 
     // System Actions
     SYSTEM_STARTUP: 'SYSTEM_STARTUP',
@@ -82,7 +84,8 @@ class AuditService {
     CARNIVAL: 'Carnival',
     PLAYER: 'Player',
     SPONSOR: 'Sponsor',
-    SYSTEM: 'System'
+    SYSTEM: 'System',
+    CONTACT_SUBMISSION: 'ContactSubmission'
   };
 
   /**

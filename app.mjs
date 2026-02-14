@@ -130,6 +130,23 @@ async function initializeMySidelineSync() {
     }
 }
 
+/**
+ * Initialize contact reply retention cleanup schedule.
+ */
+async function initializeContactReplyRetention() {
+    if (process.env.NODE_ENV === 'test' && process.env.JEST_WORKER_ID) {
+        return;
+    }
+
+    try {
+        const { default: contactReplyRetentionService } = await import('./services/contactReplyRetentionService.mjs');
+        contactReplyRetentionService.initializeScheduledCleanup();
+        console.log('✅ Contact reply retention service initialized successfully');
+    } catch (error) {
+        console.error('❌ Contact reply retention initialization failed:', error);
+    }
+}
+
 // Import routes using dynamic imports
 const indexRoutes = await import('./routes/index.mjs');
 const authRoutes = await import('./routes/auth.mjs');
@@ -281,6 +298,7 @@ async function startServer() {
         if (!process.env.JEST_WORKER_ID) {
             global.mySidelineInitTimeout = setTimeout(async () => {
                 await initializeMySidelineSync();
+                await initializeContactReplyRetention();
                 global.mySidelineInitTimeout = null;
             }, 1000);
         }

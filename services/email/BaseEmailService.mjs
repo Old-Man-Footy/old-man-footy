@@ -1,4 +1,4 @@
-import { createTransport } from 'nodemailer';
+import { Resend } from 'resend';
 
 /**
  * Base Email Service Class
@@ -6,14 +6,7 @@ import { createTransport } from 'nodemailer';
  */
 export class BaseEmailService {
     constructor() {
-        this.transporter = createTransport({
-            // Gmail configuration (can be switched to other providers)
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD
-            }
-        });
+        this.resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
     }
 
     /**
@@ -34,7 +27,7 @@ export class BaseEmailService {
         };
 
         // Check if all required email environment variables are set
-        const requiredEmailVars = ['EMAIL_FROM_NAME', 'EMAIL_FROM', 'EMAIL_PASSWORD', 'EMAIL_SERVICE', 'EMAIL_USER'];
+        const requiredEmailVars = ['EMAIL_FROM', 'RESEND_API_KEY'];
         for (const varName of requiredEmailVars) {
             if (!process.env[varName] || process.env[varName].trim() === '') {
                 console.log(`📧 Email sending disabled: Required environment variable ${varName} is not set`);
@@ -123,7 +116,8 @@ export class BaseEmailService {
         return `
             <a href="${url}" 
                style="background: ${backgroundColor}; color: ${textColor}; padding: 15px 30px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                      text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;
+                      margin: 6px 8px; line-height: 1.2; white-space: nowrap;">
                 ${text}
             </a>
         `;
@@ -203,8 +197,8 @@ export class BaseEmailService {
     }
 
     /**
-     * Add standard unsubscribe headers to mail options
-     * @param {Object} mailOptions - Nodemailer mail options
+    * Add standard unsubscribe headers to mail options
+    * @param {Object} mailOptions - Mail options
      * @param {string} unsubscribeToken - Unsubscribe token for the recipient
      * @returns {Object} Enhanced mail options with unsubscribe headers
      */
@@ -248,8 +242,8 @@ export class BaseEmailService {
     }
 
     /**
-     * Send an email with mode checking
-     * @param {Object} mailOptions - Nodemailer mail options
+     * Send an email with mode checking via Resend API
+     * @param {Object} mailOptions - Mail options
      * @param {string} emailType - Type of email for logging
      * @returns {Object} Result object with success status
      */
@@ -265,11 +259,31 @@ export class BaseEmailService {
                 };
             }
 
-            const result = await this.transporter.sendMail(mailOptions);
-            console.log(`${emailType} email sent successfully:`, result.messageId);
+            if (!this.resend) {
+                throw new Error('Resend API key is not configured (RESEND_API_KEY)');
+            }
+
+            const toAddresses = Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to];
+            const payload = {
+                from: mailOptions.from,
+                to: toAddresses,
+                subject: mailOptions.subject,
+                html: mailOptions.html,
+                text: mailOptions.text,
+                replyTo: mailOptions.replyTo,
+                headers: mailOptions.headers,
+            };
+
+            const { data, error } = await this.resend.emails.send(payload);
+            if (error) {
+                throw new Error(error.message || 'Failed to send email via Resend');
+            }
+
+            console.log(`${emailType} email sent successfully:`, data?.id);
             return { 
                 success: true, 
-                messageId: result.messageId 
+                messageId: data?.id || null,
+                provider: 'resend'
             };
         } catch (error) {
             console.error(`Failed to send ${emailType} email:`, error);
@@ -283,8 +297,16 @@ export class BaseEmailService {
      */
     async testEmailConfiguration() {
         try {
-            const result = await this.transporter.verify();
-            console.log('Email configuration is valid');
+            if (!this.resend) {
+                throw new Error('Resend API key is not configured');
+            }
+
+            const { error } = await this.resend.domains.list();
+            if (error) {
+                throw new Error(error.message || 'Resend API verification failed');
+            }
+
+            console.log('Email configuration is valid (Resend)');
             return { success: true, message: 'Email configuration is valid' };
         } catch (error) {
             console.error('Email configuration error:', error);

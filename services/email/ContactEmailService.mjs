@@ -1,4 +1,5 @@
 import { BaseEmailService } from './BaseEmailService.mjs';
+import { Resend } from 'resend';
 
 /**
  * Contact Email Service Class
@@ -7,6 +8,52 @@ import { BaseEmailService } from './BaseEmailService.mjs';
 export class ContactEmailService extends BaseEmailService {
     constructor() {
         super();
+        this.resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+    }
+
+    /**
+     * Send transactional email through Resend API.
+     * @param {Object} mailOptions - Generic mail options
+     * @param {string} emailType - Friendly email type for logs
+     * @returns {Promise<Object>} Dispatch result
+     */
+    async _sendTransactionalEmail(mailOptions, emailType = 'Contact') {
+        if (!this._canSendEmails()) {
+            this._logBlockedEmail(emailType, mailOptions.to, mailOptions.subject);
+            return {
+                success: false,
+                blocked: true,
+                provider: 'resend',
+                message: 'Email sending is disabled in the current site mode',
+            };
+        }
+
+        if (!this.resend) {
+            throw new Error('Resend API key is not configured (RESEND_API_KEY)');
+        }
+
+        const toAddresses = Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to];
+        const payload = {
+            from: mailOptions.from,
+            to: toAddresses,
+            subject: mailOptions.subject,
+            html: mailOptions.html,
+            text: mailOptions.text,
+            replyTo: mailOptions.replyTo,
+            headers: mailOptions.headers,
+        };
+
+        const { data, error } = await this.resend.emails.send(payload);
+
+        if (error) {
+            throw new Error(error.message || 'Failed to send email via Resend');
+        }
+
+        return {
+            success: true,
+            provider: 'resend',
+            messageId: data?.id || null,
+        };
     }
 
     /**
@@ -31,8 +78,11 @@ export class ContactEmailService extends BaseEmailService {
         const subjectMapping = this._getSubjectMapping();
         const emailSubject = `Contact Form: ${subjectMapping[subject] || 'General Inquiry'} - ${firstName} ${lastName}`;
 
+        const fromAddress = process.env.EMAIL_FROM || 'noreply@oldmanfooty.au';
+        const supportAddress = process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au';
+
         const mailOptions = {
-            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.au',
+            from: `"Old Man Footy" <${fromAddress}>`,
             to: process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au',
             replyTo: email,
             subject: emailSubject,
@@ -40,13 +90,19 @@ export class ContactEmailService extends BaseEmailService {
             html: this._buildContactFormHtmlContent(contactData, subjectMapping, emailSubject)
         };
 
+        mailOptions.to = supportAddress;
+
         try {
-            // Route through BaseEmailService to honor environment/site-mode email rules
-            await this.sendEmail(mailOptions, 'Contact');
+            const supportEmailResult = await this._sendTransactionalEmail(mailOptions, 'Contact');
             console.log(`✅ Contact form email processed for ${email}`);
             
             // Send auto-reply to the user
-            await this.sendContactFormAutoReply(email, firstName, subject);
+            const autoReplyResult = await this.sendContactFormAutoReply(email, firstName, subject);
+
+            return {
+                supportEmail: supportEmailResult,
+                autoReply: autoReplyResult,
+            };
             
         } catch (error) {
             console.error('❌ Error sending contact form email:', error);
@@ -66,8 +122,10 @@ export class ContactEmailService extends BaseEmailService {
         const carnivalsUrl = `${this._getBaseUrl()}/carnivals`;
         const clubsUrl = `${this._getBaseUrl()}/clubs`;
 
+        const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_FROM || 'no_reply@oldmanfooty.au';
+
         const mailOptions = {
-            from: process.env.SMTP_FROM || 'noreply@oldmanfooty.au',
+            from: `"Old Man Footy" <${fromAddress}>`,
             to: email,
             subject: `Thank you for contacting Old Man Footy - ${subjectMapping[subject] || 'Your Inquiry'}`,
             text: this._buildAutoReplyTextContent(firstName, subject, subjectMapping, email, carnivalsUrl, clubsUrl),
@@ -75,12 +133,52 @@ export class ContactEmailService extends BaseEmailService {
         };
 
         try {
-            await this.sendEmail(mailOptions, 'Contact Auto-Reply');
+            const result = await this._sendTransactionalEmail(mailOptions, 'Contact Auto-Reply');
             console.log(`✅ Contact form auto-reply processed for ${email}`);
+            return result;
         } catch (error) {
             console.error('❌ Error sending contact form auto-reply:', error);
             // Don't throw error here as it's not critical
+            return {
+                success: false,
+                error: error.message,
+                provider: 'resend',
+            };
         }
+    }
+
+    /**
+     * Send admin reply email to a contact submission sender.
+     * @param {Object} replyData - Reply details
+     * @param {string} replyData.toEmail - Recipient email address
+     * @param {string} replyData.subject - Reply subject
+     * @param {string} replyData.message - Reply message body
+     * @returns {Promise<Object>} Dispatch result
+     */
+    async sendAdminReplyEmail(replyData) {
+        const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_FROM || 'no_reply@oldmanfooty.au';
+        const supportAddress = process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au';
+
+        const mailOptions = {
+            from: `"Old Man Footy Support" <${fromAddress}>`,
+            to: replyData.toEmail,
+            replyTo: supportAddress,
+            subject: replyData.subject,
+            text: `${replyData.message}\n\n---\nReply to: ${supportAddress}`,
+            html: `
+                <div style="${this._getEmailContainerStyles()}">
+                    ${this._getEmailHeader()}
+                    <div style="${this._getEmailContentStyles()}">
+                        <p>Hello,</p>
+                        <div style="white-space: pre-wrap; line-height: 1.6;">${replyData.message}</div>
+                        <p style="margin-top: 24px;">You can reply directly to this email and our support team will respond.</p>
+                    </div>
+                    ${this._getEmailFooter()}
+                </div>
+            `,
+        };
+
+        return this._sendTransactionalEmail(mailOptions, 'Contact Admin Reply');
     }
 
     /**
@@ -252,7 +350,7 @@ We'll respond to your inquiry from our support team shortly.
                     <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <h3 style="color: #006837; margin-top: 0;">While you wait...</h3>
                         <p>Feel free to explore more of what Old Man Footy has to offer:</p>
-                        <div style="text-align: center; margin: 20px 0;">
+                        <div style="text-align: center; margin: 20px 0; line-height: 1.6;">
                             ${this._createButton(carnivalsUrl, 'Browse Carnivals')}
                             ${this._createButton(clubsUrl, 'Find Clubs')}
                         </div>

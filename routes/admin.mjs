@@ -176,6 +176,27 @@ router.get('/audit-logs/export', adminController.exportAuditLogs);
 router.get('/audit-logs/statistics', adminController.getAuditStatistics);
 
 /**
+ * Contact Submission Management Routes
+ */
+router.get('/contact-submissions', adminController.getContactSubmissions);
+router.get('/contact-submissions/:id', adminController.showContactSubmission);
+router.post('/contact-submissions/:id/reply', [
+    body('subject')
+        .trim()
+        .isLength({ min: 3, max: 200 })
+        .withMessage('Reply subject must be between 3 and 200 characters'),
+    body('message')
+        .trim()
+        .isLength({ min: 10, max: 5000 })
+        .withMessage('Reply message must be between 10 and 5000 characters')
+], adminController.replyToContactSubmission);
+router.post('/contact-submissions/:id/status', [
+    body('status')
+        .isIn(['new', 'in_progress', 'replied', 'closed', 'spam'])
+        .withMessage('Invalid contact submission status')
+], adminController.updateContactSubmissionStatus);
+
+/**
  * System Management Routes
  */
 router.post('/system/sync-mysideline', adminController.syncMySideline);

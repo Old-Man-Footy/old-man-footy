@@ -1,0 +1,203 @@
+<div class="container" data-page-id="admin-contact-submissions">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="admin-page-title">
+                    <i class="bi bi-envelope-paper text-primary"></i>
+                    Contact Submissions
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="/admin/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Admin Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel"></i> Search & Filter Messages
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="/admin/contact-submissions" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search"
+                                placeholder="Name, email, club, message..." value="<%= filters.search %>">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All</option>
+                                <option value="new" <%= filters.status === 'new' ? 'selected' : '' %>>New</option>
+                                <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                                <option value="replied" <%= filters.status === 'replied' ? 'selected' : '' %>>Replied</option>
+                                <option value="closed" <%= filters.status === 'closed' ? 'selected' : '' %>>Closed</option>
+                                <option value="spam" <%= filters.status === 'spam' ? 'selected' : '' %>>Spam</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="subject" class="form-label">Subject</label>
+                            <select class="form-select" id="subject" name="subject">
+                                <option value="">All</option>
+                                <option value="general" <%= filters.subject === 'general' ? 'selected' : '' %>>General</option>
+                                <option value="technical" <%= filters.subject === 'technical' ? 'selected' : '' %>>Technical</option>
+                                <option value="carnival" <%= filters.subject === 'carnival' ? 'selected' : '' %>>Carnival</option>
+                                <option value="delegate" <%= filters.subject === 'delegate' ? 'selected' : '' %>>Delegate</option>
+                                <option value="registration" <%= filters.subject === 'registration' ? 'selected' : '' %>>Registration</option>
+                                <option value="feedback" <%= filters.subject === 'feedback' ? 'selected' : '' %>>Feedback</option>
+                                <option value="other" <%= filters.subject === 'other' ? 'selected' : '' %>>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="emailDeliveryStatus" class="form-label">Email Delivery</label>
+                            <select class="form-select" id="emailDeliveryStatus" name="emailDeliveryStatus">
+                                <option value="">All</option>
+                                <option value="pending" <%= filters.emailDeliveryStatus === 'pending' ? 'selected' : '' %>>Pending</option>
+                                <option value="sent" <%= filters.emailDeliveryStatus === 'sent' ? 'selected' : '' %>>Sent</option>
+                                <option value="failed" <%= filters.emailDeliveryStatus === 'failed' ? 'selected' : '' %>>Failed</option>
+                                <option value="blocked" <%= filters.emailDeliveryStatus === 'blocked' ? 'selected' : '' %>>Blocked</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                    <% if (filters.search || filters.status || filters.subject || filters.emailDeliveryStatus) { %>
+                        <div class="mt-3">
+                            <a href="/admin/contact-submissions" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-x-circle"></i> Clear Filters
+                            </a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table"></i> Messages
+                        <span class="badge bg-primary"><%= pagination.totalItems %></span>
+                    </h5>
+                    <small class="text-muted">
+                        Showing <%= ((pagination.currentPage - 1) * 20) + 1 %>-<%= Math.min(pagination.currentPage * 20, pagination.totalItems) %>
+                        of <%= pagination.totalItems %>
+                    </small>
+                </div>
+                <div class="card-body p-0">
+                    <% if (submissions && submissions.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Submitted</th>
+                                        <th>Sender</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Email Delivery</th>
+                                        <th>Replies</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% submissions.forEach((submission) => { %>
+                                        <tr>
+                                            <td><small><%= new Date(submission.submittedAt).toLocaleString('en-AU') %></small></td>
+                                            <td>
+                                                <strong><%= submission.firstName %> <%= submission.lastName %></strong>
+                                                <br>
+                                                <small class="text-muted"><%= submission.email %></small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark text-capitalize"><%= submission.subject %></span>
+                                            </td>
+                                            <td>
+                                                <% if (submission.status === 'new') { %>
+                                                    <span class="badge bg-primary">New</span>
+                                                <% } else if (submission.status === 'in_progress') { %>
+                                                    <span class="badge bg-info text-dark">In Progress</span>
+                                                <% } else if (submission.status === 'replied') { %>
+                                                    <span class="badge bg-success">Replied</span>
+                                                <% } else if (submission.status === 'closed') { %>
+                                                    <span class="badge bg-secondary">Closed</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-warning text-dark">Spam</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (submission.emailDeliveryStatus === 'sent') { %>
+                                                    <span class="badge bg-success">Sent</span>
+                                                <% } else if (submission.emailDeliveryStatus === 'failed') { %>
+                                                    <span class="badge bg-danger">Failed</span>
+                                                <% } else if (submission.emailDeliveryStatus === 'blocked') { %>
+                                                    <span class="badge bg-warning text-dark">Blocked</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-secondary">Pending</span>
+                                                <% } %>
+                                            </td>
+                                            <td><span class="badge bg-light text-dark"><%= submission.replyCount || 0 %></span></td>
+                                            <td>
+                                                <a href="/admin/contact-submissions/<%= submission.id %>" class="btn btn-outline-primary btn-sm" title="View and reply">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-5">
+                            <i class="bi bi-envelope-paper fs-1 text-muted"></i>
+                            <h5 class="mt-3">No contact messages found</h5>
+                            <p class="text-muted">No submissions match the current filters.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <% if (pagination.totalPages > 1) { %>
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Contact submissions pagination">
+                    <ul class="pagination justify-content-center">
+                        <% if (pagination.hasPrev) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<%= pagination.currentPage - 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&subject=<%= filters.subject %>&emailDeliveryStatus=<%= filters.emailDeliveryStatus %>">
+                                    <i class="bi bi-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        <% } %>
+
+                        <% for (let i = Math.max(1, pagination.currentPage - 2); i <= Math.min(pagination.totalPages, pagination.currentPage + 2); i++) { %>
+                            <li class="page-item <%= i === pagination.currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="?page=<%= i %>&search=<%= filters.search %>&status=<%= filters.status %>&subject=<%= filters.subject %>&emailDeliveryStatus=<%= filters.emailDeliveryStatus %>"><%= i %></a>
+                            </li>
+                        <% } %>
+
+                        <% if (pagination.hasNext) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<%= pagination.currentPage + 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&subject=<%= filters.subject %>&emailDeliveryStatus=<%= filters.emailDeliveryStatus %>">
+                                    Next <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    <% } %>
+</div>

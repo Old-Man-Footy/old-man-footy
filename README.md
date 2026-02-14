@@ -28,6 +28,29 @@ A comprehensive web application for managing Rugby League Masters carnivals acro
 - **Dashboard:** Personalized view of user's carnivals and activities
 - **Audit Logging:** Comprehensive tracking of user actions and system changes
 
+### Contact Support Pipeline
+
+- **Database Persistence:** Every contact form submission is stored before any email is dispatched
+- **Transactional Delivery:** Contact notifications and admin replies use Resend API (not Gmail SMTP)
+- **Admin Contact Inbox:** Secure admin views for triage, status updates, and direct replies
+- **Reply Retention:** Contact reply logs are retained for 1 year and then automatically removed
+
+#### Required Environment Variables (Contact + Resend)
+
+- `EMAIL_PROVIDER=resend`
+- `RESEND_API_KEY=<your resend api key>`
+- `EMAIL_FROM=no_reply@oldmanfooty.au`
+- `EMAIL_FROM=noreply@oldmanfooty.au`
+- `SUPPORT_EMAIL=support@oldmanfooty.au`
+- `CONTACT_REPLY_RETENTION_DAYS=365` (optional; default 365)
+- `CONTACT_REPLY_RETENTION_CRON="30 3 * * *"` (optional; default daily 3:30 AM)
+
+#### DNS Authentication (Transactional Sender)
+
+- **SPF:** Add provider include record for the sending domain/subdomain
+- **DKIM:** Publish all Resend-provided DKIM selector records
+- **DMARC:** Start with `p=none` monitoring, then raise to `quarantine`/`reject` after alignment checks
+
 ### Enhanced User Experience
 
 - **Responsive Design:** Mobile-optimized interface with Bootstrap 5

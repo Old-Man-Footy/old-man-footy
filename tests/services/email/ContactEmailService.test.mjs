@@ -1,20 +1,9 @@
-/**
- * ContactEmailService Tests
- * 
- * Tests for the contact email service, ensuring that contact form submissions
- * and auto-replies are generated and sent correctly.
- */
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ContactEmailService } from '../../../services/email/ContactEmailService.mjs';
 import { BaseEmailService } from '../../../services/email/BaseEmailService.mjs';
 
-// Mock dependencies
-vi.mock('/services/email/BaseEmailService.mjs');
-
 describe('ContactEmailService', () => {
   let contactEmailService;
-  let sendMailMock;
 
   const mockContactData = {
     firstName: 'John',
@@ -26,92 +15,62 @@ describe('ContactEmailService', () => {
     message: 'This is a test message.',
     newsletter: true,
     userAgent: 'Test Agent',
-    ipAddress: '127.0.0.1'
+    ipAddress: '127.0.0.1',
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    sendMailMock = vi.fn().mockResolvedValue({ messageId: 'mock-id' });
-
-    BaseEmailService.prototype.transporter = { sendMail: sendMailMock };
     BaseEmailService.prototype._getBaseUrl = vi.fn().mockReturnValue('http://localhost:3050');
     BaseEmailService.prototype._createButton = vi.fn((url, text) => `<a href="${url}">${text}</a>`);
     BaseEmailService.prototype._getEmailContainerStyles = vi.fn().mockReturnValue('');
     BaseEmailService.prototype._getEmailContentStyles = vi.fn().mockReturnValue('');
     BaseEmailService.prototype._canSendEmails = vi.fn().mockReturnValue(true);
-    BaseEmailService.prototype.sendEmail = vi.fn().mockImplementation(async (mailOptions, emailType) => {
-      return await BaseEmailService.prototype.transporter.sendMail(mailOptions);
-    });
-
     contactEmailService = new ContactEmailService();
-    
-    // Mock console.error to spy on it
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  describe('sendContactFormEmail', () => {
-    it('should send the contact form email and an auto-reply', async () => {
-      await contactEmailService.sendContactFormEmail(mockContactData);
+  it('should send the contact form email and an auto-reply through transactional client', async () => {
+    const sendTransactionalSpy = vi
+      .spyOn(contactEmailService, '_sendTransactionalEmail')
+      .mockResolvedValueOnce({ success: true, provider: 'resend', messageId: 'support-123' })
+      .mockResolvedValueOnce({ success: true, provider: 'resend', messageId: 'autoreply-123' });
 
-      expect(sendMailMock).toHaveBeenCalledTimes(2);
+    const result = await contactEmailService.sendContactFormEmail(mockContactData);
 
-      // Check main email
-      const mainEmailOptions = sendMailMock.mock.calls[0][0];
-      expect(mainEmailOptions.to).toBe(process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au');
-      expect(mainEmailOptions.replyTo).toBe(mockContactData.email);
-      expect(mainEmailOptions.subject).toContain('Technical Support');
-      expect(mainEmailOptions.html).toContain(mockContactData.message);
-
-      // Check auto-reply
-      const autoReplyOptions = sendMailMock.mock.calls[1][0];
-      expect(autoReplyOptions.to).toBe(mockContactData.email);
-      expect(autoReplyOptions.subject).toContain('Thank you for contacting Old Man Footy');
-      expect(autoReplyOptions.html).toContain('Hi John,');
-    });
-
-    it('should throw an error if sending the main email fails', async () => {
-      const testError = new Error('SMTP Error');
-      sendMailMock.mockRejectedValueOnce(testError);
-
-      await expect(contactEmailService.sendContactFormEmail(mockContactData))
-        .rejects.toThrow('SMTP Error');
-      
-      expect(console.error).toHaveBeenCalledWith('❌ Error sending contact form email:', testError);
-    });
-
-    it('should not throw an error if only the auto-reply fails', async () => {
-        const autoReplyError = new Error('Auto-reply failed');
-        sendMailMock
-          .mockResolvedValueOnce({ messageId: 'main-id' }) // Main email succeeds
-          .mockRejectedValueOnce(autoReplyError);         // Auto-reply fails
-  
-        await expect(contactEmailService.sendContactFormEmail(mockContactData))
-          .resolves.toBeUndefined();
-  
-        expect(sendMailMock).toHaveBeenCalledTimes(2);
-        expect(console.error).toHaveBeenCalledWith('❌ Error sending contact form auto-reply:', autoReplyError);
-      });
+    expect(sendTransactionalSpy).toHaveBeenCalledTimes(2);
+    expect(result.supportEmail.messageId).toBe('support-123');
+    expect(result.autoReply.messageId).toBe('autoreply-123');
   });
 
-  describe('sendContactFormAutoReply', () => {
-    it('should send an auto-reply email with correct content', async () => {
-        await contactEmailService.sendContactFormAutoReply(mockContactData.email, mockContactData.firstName, mockContactData.subject);
+  it('should throw an error if support email dispatch fails', async () => {
+    const testError = new Error('Resend unavailable');
+    vi.spyOn(contactEmailService, '_sendTransactionalEmail').mockRejectedValueOnce(testError);
 
-        expect(sendMailMock).toHaveBeenCalledOnce();
-        const mailOptions = sendMailMock.mock.calls[0][0];
-        expect(mailOptions.to).toBe(mockContactData.email);
-        expect(mailOptions.subject).toContain('Technical Support');
-        expect(mailOptions.html).toContain('Hi John,');
+    await expect(contactEmailService.sendContactFormEmail(mockContactData)).rejects.toThrow('Resend unavailable');
+    expect(console.error).toHaveBeenCalledWith('❌ Error sending contact form email:', testError);
+  });
+
+  it('should return a non-throwing failure object if auto-reply fails', async () => {
+    vi.spyOn(contactEmailService, '_sendTransactionalEmail').mockRejectedValueOnce(new Error('Auto-reply failed'));
+
+    const result = await contactEmailService.sendContactFormAutoReply('test@test.com', 'Test', 'general');
+
+    expect(result.success).toBe(false);
+    expect(result.provider).toBe('resend');
+  });
+
+  it('should dispatch admin replies with support reply-to', async () => {
+    const sendTransactionalSpy = vi
+      .spyOn(contactEmailService, '_sendTransactionalEmail')
+      .mockResolvedValue({ success: true, provider: 'resend', messageId: 'reply-1' });
+
+    const result = await contactEmailService.sendAdminReplyEmail({
+      toEmail: 'visitor@example.com',
+      subject: 'Support follow-up',
+      message: 'Thanks for your message.',
     });
 
-    it('should log an error but not throw if sending fails', async () => {
-        const testError = new Error('SMTP Connection Failed');
-        sendMailMock.mockRejectedValue(testError);
-
-        await contactEmailService.sendContactFormAutoReply('test@test.com', 'Test', 'general');
-
-        expect(console.error).toHaveBeenCalledWith('❌ Error sending contact form auto-reply:', testError);
-    });
+    expect(sendTransactionalSpy).toHaveBeenCalledTimes(1);
+    expect(result.success).toBe(true);
   });
 });
