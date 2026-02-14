@@ -718,8 +718,9 @@ export const getContact = asyncHandler(async (req, res) => {
   return res.render('contact', {
     title: 'Contact Us',
     user: userWithClub || req.user,
-    errors: req.flash('error'),
-    success: req.flash('success'),
+    formData: {},
+    errors: req.flash.get('error_msg'),
+    success: req.flash.get('success_msg'),
     additionalCSS: [],
   });
 });

@@ -21,7 +21,7 @@
                             <h6 class="mb-2"><i class="bi bi-exclamation-triangle me-1"></i>Please correct the following:</h6>
                             <ul class="mb-0">
                                 <% errors.forEach((error) => { %>
-                                    <li><%= error.msg || error %></li>
+                                    <li><%= error?.msg || error || 'An unexpected validation error occurred.' %></li>
                                 <% }) %>
                             </ul>
                         </div>
