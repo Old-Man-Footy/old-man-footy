@@ -9,13 +9,14 @@
  */
 function initTheme() {
     'use strict';
+    const root = document.documentElement;
     
     // Check if theme was already initialized inline
     let theme = window.__INITIAL_THEME__;
     
     if (!theme) {
         // Fallback: Apply theme-loading class immediately to prevent flash
-        document.documentElement.className = 'theme-loading';
+        root.classList.add('theme-loading');
         
         // Check localStorage for saved theme preference
         const savedTheme = localStorage.getItem('oldmanfooty-theme');
@@ -31,11 +32,15 @@ function initTheme() {
         
         // Apply theme immediately to prevent flash
         if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.documentElement.setAttribute('data-bs-theme', 'dark');
+            root.setAttribute('data-theme', 'dark');
+            root.setAttribute('data-bs-theme', 'dark');
+            root.style.colorScheme = 'dark';
+            root.style.backgroundColor = '#1a1a1a';
         } else {
-            document.documentElement.removeAttribute('data-bs-theme');
-            document.documentElement.removeAttribute('data-theme');
+            root.removeAttribute('data-bs-theme');
+            root.removeAttribute('data-theme');
+            root.style.colorScheme = 'light';
+            root.style.backgroundColor = '#f5f5f5';
         }
         
         // Store theme for main app to use later
@@ -45,9 +50,8 @@ function initTheme() {
     // Remove loading class after DOM content is loaded
     function showContent() {
         try {
-            if (document.documentElement) {
-                document.documentElement.classList.remove('theme-loading');
-            }
+            root.classList.remove('theme-loading');
+            root.style.removeProperty('background-color');
             if (document.body) {
                 document.body.classList.add('theme-applied');
             }
@@ -67,8 +71,18 @@ function initTheme() {
     return theme;
 }
 
+if (typeof window !== 'undefined') {
+    window.initTheme = initTheme;
+}
+
 // Auto-initialize when this file is loaded directly (not as a module)
 // This maintains backward compatibility for non-module usage
 if (typeof window !== 'undefined' && !window.__THEME_INIT_MODULE_MODE__) {
-    initTheme();
+    try {
+        if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+            initTheme();
+        }
+    } catch (_) {
+        // Ignore initialization errors in constrained/test environments
+    }
 }

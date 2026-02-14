@@ -1,5 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { initTheme } from '../../../public/js/theme-init.js';
+import '../../../public/js/theme-init.js';
+
+function createMockLocalStorage() {
+  const store = new Map();
+  return {
+    getItem: (key) => store.has(key) ? store.get(key) : null,
+    setItem: (key, value) => store.set(key, String(value)),
+    removeItem: (key) => store.delete(key),
+    clear: () => store.clear()
+  };
+}
 
 function resetDOM() {
   document.documentElement.removeAttribute('data-theme');
@@ -10,12 +20,15 @@ function resetDOM() {
 
 describe('theme-init.js', () => {
   beforeEach(() => {
+    vi.stubGlobal('localStorage', createMockLocalStorage());
     resetDOM();
     // Clear any stored theme
     localStorage.clear();
     // Set module mode to prevent auto-initialization
     window.__THEME_INIT_MODULE_MODE__ = true;
   });
+
+  const initTheme = () => window.initTheme();
 
   it('applies dark theme when saved preference is dark', () => {
     localStorage.setItem('oldmanfooty-theme', 'dark');

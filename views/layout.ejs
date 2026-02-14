@@ -37,9 +37,10 @@
     <script>
         (function() {
             'use strict';
+            const root = document.documentElement;
             
             // Apply theme-loading class immediately
-            document.documentElement.className = 'theme-loading';
+            root.classList.add('theme-loading');
             
             // Get saved theme or use system preference
             const savedTheme = localStorage.getItem('oldmanfooty-theme');
@@ -53,8 +54,15 @@
             
             // Apply theme immediately
             if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                root.setAttribute('data-theme', 'dark');
+                root.setAttribute('data-bs-theme', 'dark');
+                root.style.colorScheme = 'dark';
+                root.style.backgroundColor = '#1a1a1a';
+            } else {
+                root.removeAttribute('data-theme');
+                root.removeAttribute('data-bs-theme');
+                root.style.colorScheme = 'light';
+                root.style.backgroundColor = '#f5f5f5';
             }
             
             // Store for later use
@@ -62,7 +70,8 @@
             
             // Remove loading class once DOM is ready
             function showContent() {
-                document.documentElement.classList.remove('theme-loading');
+                root.classList.remove('theme-loading');
+                root.style.removeProperty('background-color');
                 if (document.body) {
                     document.body.classList.add('theme-applied');
                 }
