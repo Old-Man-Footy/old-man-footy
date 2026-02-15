@@ -98,7 +98,7 @@ describe('Admin Controller - Contact submissions page', () => {
           toJSON: () => ({
             id: 202,
             email: 'sub2@example.com',
-            createdAt: new Date('2026-01-03T09:00:00Z'),
+            createdAt: null,
             notificationPreferences: []
           })
         }
@@ -199,10 +199,12 @@ describe('Admin Controller - Contact submissions page', () => {
       email: 'sub1@example.com',
       notificationType: 'Carnival_Notifications, Website_Updates'
     });
+    expect(renderPayload.subscribers[0].subscriptionDateDisplay).not.toBe('Unknown');
 
     expect(renderPayload.subscribers[1]).toMatchObject({
       email: 'sub2@example.com',
-      notificationType: 'All Notifications'
+      notificationType: 'All Notifications',
+      subscriptionDateDisplay: 'Unknown'
     });
   });
 });

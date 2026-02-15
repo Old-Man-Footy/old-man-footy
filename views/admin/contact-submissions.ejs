@@ -264,7 +264,7 @@
                                             <% currentSubscribers.forEach((subscriber) => { %>
                                                 <tr>
                                                     <td><strong><%= subscriber.email %></strong></td>
-                                                    <td><small><%= new Date(subscriber.subscriptionDate).toLocaleString('en-AU') %></small></td>
+                                                    <td><small><%= subscriber.subscriptionDateDisplay || 'Unknown' %></small></td>
                                                     <td><span class="badge bg-light text-dark"><%= subscriber.notificationType %></span></td>
                                                 </tr>
                                             <% }) %>

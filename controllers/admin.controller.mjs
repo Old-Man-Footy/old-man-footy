@@ -1680,11 +1680,15 @@ const getContactSubmissionsHandler = async (req, res) => {
         const notificationType = Array.isArray(subscriptionData.notificationPreferences) && subscriptionData.notificationPreferences.length > 0
             ? subscriptionData.notificationPreferences.join(', ')
             : 'All Notifications';
+        const rawSubscriptionDate = subscriptionData.createdAt || subscriptionData.subscribedAt || subscriptionData.updatedAt || null;
+        const parsedSubscriptionDate = rawSubscriptionDate ? new Date(rawSubscriptionDate) : null;
+        const isValidSubscriptionDate = parsedSubscriptionDate && !Number.isNaN(parsedSubscriptionDate.getTime());
 
         return {
             id: subscriptionData.id,
             email: subscriptionData.email,
-            subscriptionDate: subscriptionData.createdAt,
+            subscriptionDate: isValidSubscriptionDate ? parsedSubscriptionDate : null,
+            subscriptionDateDisplay: isValidSubscriptionDate ? parsedSubscriptionDate.toLocaleString('en-AU') : 'Unknown',
             notificationType
         };
     });
