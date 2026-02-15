@@ -34,7 +34,8 @@
     <meta name="twitter:image" content="<%= pageImage %>">
 
     <!-- Critical inline theme initialization to prevent flash -->
-    <script>
+    <script data-cfasync="false" src="/js/theme-init.js"></script>
+    <script data-cfasync="false">
         (function() {
             'use strict';
             const root = document.documentElement;
@@ -260,14 +261,12 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- Critical theme initialization - runs immediately to prevent flash -->
-    <script src="/js/theme-init.js"></script>
-    <script type="module" src="/js/app.js"></script>
-    <script type="module" src="/js/help-system.js"></script>
+    <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script data-cfasync="false" type="module" src="/js/app.js"></script>
+    <script data-cfasync="false" type="module" src="/js/help-system.js"></script>
     <% if (typeof additionalJS !== 'undefined' && additionalJS && additionalJS.length > 0) { %>
         <% additionalJS.forEach(jsFile => { %>
-            <script type="module" src="<%= jsFile %>"></script>
+            <script data-cfasync="false" type="module" src="<%= jsFile %>"></script>
         <% }); %>
     <% } %>
     <!-- Global Help Modal -->

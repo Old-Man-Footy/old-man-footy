@@ -1419,8 +1419,8 @@
 
 
 <!-- Include external JavaScript files -->
-<script type="module" src="/js/common-utils.js"></script>
-<script type="module" src="/js/carnival-show.js"></script>
+<script data-cfasync="false" type="module" src="/js/common-utils.js"></script>
+<script data-cfasync="false" type="module" src="/js/carnival-show.js"></script>
 
 <!-- Help modal partial for carnival show page -->
 <%- include('../partials/help-modal.ejs', { modalId: 'help-carnival-show' }) %>
@@ -1690,7 +1690,7 @@
     </div>
 </div>
 
-<script type="module" src="/js/share-button.js"></script>
+<script data-cfasync="false" type="module" src="/js/share-button.js"></script>
 <% if (user && user.role === 'Admin') { %>
-<script type="module" src="/js/admin-carnivals.js"></script>
+<script data-cfasync="false" type="module" src="/js/admin-carnivals.js"></script>
 <% } %>
