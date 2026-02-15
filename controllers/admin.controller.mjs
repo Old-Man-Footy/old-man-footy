@@ -1600,9 +1600,19 @@ const exportAuditLogsHandler = async (req, res) => {
  * Get Contact Submission Management page
  */
 const getContactSubmissionsHandler = async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
+    const parsePositiveInt = (value, fallback = 1) => {
+        const parsed = Number.parseInt(value, 10);
+        return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+    };
+
+    const activeTab = req.query.tab === 'subscribers' ? 'subscribers' : 'messages';
+
+    const messagesPage = parsePositiveInt(req.query.messagesPage || req.query.page, 1);
+    const subscribersPage = parsePositiveInt(req.query.subscribersPage, 1);
+
     const limit = 20;
-    const offset = (page - 1) * limit;
+    const messagesOffset = (messagesPage - 1) * limit;
+    const subscribersOffset = (subscribersPage - 1) * limit;
 
     const filters = {
         search: req.query.search || '',
@@ -1635,7 +1645,7 @@ const getContactSubmissionsHandler = async (req, res) => {
         whereConditions.emailDeliveryStatus = filters.emailDeliveryStatus;
     }
 
-    const { count, rows: submissions } = await ContactSubmission.findAndCountAll({
+    const { count: messageCount, rows: submissions } = await ContactSubmission.findAndCountAll({
         where: whereConditions,
         include: [{
             model: ContactReply,
@@ -1646,7 +1656,15 @@ const getContactSubmissionsHandler = async (req, res) => {
         order: [['submittedAt', 'DESC']],
         distinct: true,
         limit,
-        offset
+        offset: messagesOffset
+    });
+
+    const { count: subscriberCount, rows: subscriberRows } = await EmailSubscription.findAndCountAll({
+        where: { isActive: true },
+        attributes: ['id', 'email', 'notificationPreferences', 'createdAt'],
+        order: [['createdAt', 'DESC']],
+        limit,
+        offset: subscribersOffset
     });
 
     const normalizedSubmissions = submissions.map(submission => {
@@ -1657,19 +1675,44 @@ const getContactSubmissionsHandler = async (req, res) => {
         };
     });
 
+    const subscribers = subscriberRows.map(subscription => {
+        const subscriptionData = subscription.toJSON();
+        const notificationType = Array.isArray(subscriptionData.notificationPreferences) && subscriptionData.notificationPreferences.length > 0
+            ? subscriptionData.notificationPreferences.join(', ')
+            : 'All Notifications';
+
+        return {
+            id: subscriptionData.id,
+            email: subscriptionData.email,
+            subscriptionDate: subscriptionData.createdAt,
+            notificationType
+        };
+    });
+
     const pagination = {
-        currentPage: page,
-        totalPages: Math.ceil(count / limit),
-        totalItems: count,
-        hasNext: page < Math.ceil(count / limit),
-        hasPrev: page > 1
+        currentPage: messagesPage,
+        totalPages: Math.ceil(messageCount / limit),
+        totalItems: messageCount,
+        hasNext: messagesPage < Math.ceil(messageCount / limit),
+        hasPrev: messagesPage > 1
+    };
+
+    const subscribersPagination = {
+        currentPage: subscribersPage,
+        totalPages: Math.ceil(subscriberCount / limit),
+        totalItems: subscriberCount,
+        hasNext: subscribersPage < Math.ceil(subscriberCount / limit),
+        hasPrev: subscribersPage > 1
     };
 
     return res.render('admin/contact-submissions', {
         title: 'Contact Submissions - Admin Dashboard',
+        activeTab,
         submissions: normalizedSubmissions,
         filters,
         pagination,
+        subscribers,
+        subscribersPagination,
         additionalCSS: ['/styles/admin.styles.css']
     });
 };
