@@ -73,4 +73,48 @@ describe('ContactEmailService', () => {
     expect(sendTransactionalSpy).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
   });
+
+  it('should send subscriber communication in bulk using BCC', async () => {
+    const sendTransactionalSpy = vi
+      .spyOn(contactEmailService, '_sendTransactionalEmail')
+      .mockResolvedValue({ success: true, provider: 'resend', messageId: 'bulk-1' });
+
+    const result = await contactEmailService.sendSubscriberCommunicationEmail({
+      subject: 'Broadcast update',
+      message: 'News for your selected communication type.',
+      greetingName: 'Old Man Footy Subscriber',
+      bccEmails: ['a@example.com', 'b@example.com']
+    });
+
+    expect(sendTransactionalSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bcc: ['a@example.com', 'b@example.com'],
+        subject: 'Broadcast update'
+      }),
+      'Subscriber Communication'
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('should send subscriber communication directly for a single subscriber', async () => {
+    const sendTransactionalSpy = vi
+      .spyOn(contactEmailService, '_sendTransactionalEmail')
+      .mockResolvedValue({ success: true, provider: 'resend', messageId: 'single-1' });
+
+    await contactEmailService.sendSubscriberCommunicationEmail({
+      subject: 'Personal update',
+      message: 'Thanks for supporting Old Man Footy!',
+      greetingName: 'Jane Doe',
+      toEmail: 'jane@example.com'
+    });
+
+    expect(sendTransactionalSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'jane@example.com',
+        bcc: undefined,
+        subject: 'Personal update'
+      }),
+      'Subscriber Communication'
+    );
+  });
 });

@@ -14,6 +14,7 @@ import ContactEmailService from '../services/email/ContactEmailService.mjs';
 import AuditService from '../services/auditService.mjs';
 import { wrapControllers } from '../middleware/asyncHandler.mjs';
 import { processStructuredUploads } from '../utils/uploadProcessor.mjs';
+import { NOTIFICATION_TYPES_ARRAY } from '../config/constants.mjs';
 
 /**
  * Check if carnival is null and handle errors
@@ -25,6 +26,46 @@ const checkNullCarnival = (carnival, res, req, path = '/carnivals') => {
       return res.redirect(path);
     }
 }
+
+/**
+ * Format notification type value for display.
+ * @param {string} value - Notification type value
+ * @returns {string} Human-readable label
+ */
+const formatNotificationTypeLabel = (value) => {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+        return 'Unknown';
+    }
+
+    return value
+        .split('_')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join(' ');
+};
+
+/**
+ * Build a greeting name from email local-part.
+ * @param {string} email - Subscriber email
+ * @returns {string} Greeting name
+ */
+const buildGreetingNameFromEmail = (email) => {
+    const localPart = (email || '').split('@')[0] || 'Subscriber';
+    return localPart
+        .split(/[._-]+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join(' ') || 'Subscriber';
+};
+
+/**
+ * Build notification type options for the subscribers UI.
+ * @returns {Array<{value: string, label: string}>} Notification type options
+ */
+const getNotificationTypeOptions = () => NOTIFICATION_TYPES_ARRAY.map((value) => ({
+    value,
+    label: formatNotificationTypeLabel(value)
+}));
 
 /**
  * Get Admin Dashboard with system statistics
@@ -1677,8 +1718,11 @@ const getContactSubmissionsHandler = async (req, res) => {
 
     const subscribers = subscriberRows.map(subscription => {
         const subscriptionData = subscription.toJSON();
-        const notificationType = Array.isArray(subscriptionData.notificationPreferences) && subscriptionData.notificationPreferences.length > 0
-            ? subscriptionData.notificationPreferences.join(', ')
+        const notificationPreferences = Array.isArray(subscriptionData.notificationPreferences)
+            ? subscriptionData.notificationPreferences
+            : [];
+        const notificationType = notificationPreferences.length > 0
+            ? notificationPreferences.map(formatNotificationTypeLabel).join(', ')
             : 'All Notifications';
         const rawSubscriptionDate = subscriptionData.createdAt || subscriptionData.subscribedAt || subscriptionData.updatedAt || null;
         const parsedSubscriptionDate = rawSubscriptionDate ? new Date(rawSubscriptionDate) : null;
@@ -1687,6 +1731,7 @@ const getContactSubmissionsHandler = async (req, res) => {
         return {
             id: subscriptionData.id,
             email: subscriptionData.email,
+            notificationPreferences,
             subscriptionDate: isValidSubscriptionDate ? parsedSubscriptionDate : null,
             subscriptionDateDisplay: isValidSubscriptionDate ? parsedSubscriptionDate.toLocaleString('en-AU') : 'Unknown',
             notificationType
@@ -1717,8 +1762,144 @@ const getContactSubmissionsHandler = async (req, res) => {
         pagination,
         subscribers,
         subscribersPagination,
-        additionalCSS: ['/styles/admin.styles.css']
+        notificationTypes: getNotificationTypeOptions(),
+        additionalCSS: ['/styles/admin.styles.css'],
+        additionalJS: ['/js/admin-contact-submissions.js']
     });
+};
+
+/**
+ * Send subscriber email to all active subscribers who have a selected notification type.
+ */
+const sendSubscriberEmailByTypeHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array()[0].msg);
+        return res.redirect('/admin/contact-submissions?tab=subscribers');
+    }
+
+    const { notificationType, subject, message } = req.body;
+    const subscriptions = await EmailSubscription.findByNotificationType(notificationType);
+    let recipientEmails = [...new Set((subscriptions || []).map((subscription) => subscription.email).filter(Boolean))];
+
+    if (notificationType === 'Delegate_Alerts' && recipientEmails.length > 0) {
+        const delegateUsers = await User.findAll({
+            where: {
+                email: { [Op.in]: recipientEmails },
+                isActive: true,
+                clubId: { [Op.not]: null }
+            },
+            attributes: ['email']
+        });
+
+        const delegateEmailSet = new Set(
+            delegateUsers
+                .map((user) => String(user.email || '').toLowerCase().trim())
+                .filter(Boolean)
+        );
+
+        recipientEmails = recipientEmails.filter((email) => delegateEmailSet.has(String(email).toLowerCase().trim()));
+    }
+
+    if (recipientEmails.length === 0) {
+        const emptyMessage = notificationType === 'Delegate_Alerts'
+            ? 'No active delegate subscribers were found for that notification type'
+            : 'No active subscribers were found for that notification type';
+        req.flash('warning_msg', emptyMessage);
+        return res.redirect('/admin/contact-submissions?tab=subscribers');
+    }
+
+    const dispatchResult = await ContactEmailService.sendSubscriberCommunicationEmail({
+        subject: subject.trim(),
+        message: message.trim(),
+        greetingName: 'Old Man Footy Subscriber',
+        bccEmails: recipientEmails
+    });
+
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.SYSTEM_EMAIL_SEND,
+        req,
+        AuditService.ENTITIES.SYSTEM,
+        null,
+        {
+            metadata: {
+                adminAction: 'Subscriber bulk email by notification type',
+                notificationType,
+                recipientCount: recipientEmails.length,
+                subject: subject.trim(),
+                provider: dispatchResult.provider || 'resend'
+            }
+        }
+    );
+
+    if (dispatchResult.success) {
+        req.flash('success_msg', `Email sent to ${recipientEmails.length} subscriber(s)`);
+    } else if (dispatchResult.blocked) {
+        req.flash('warning_msg', 'Email was prepared but delivery is blocked in the current environment');
+    } else {
+        req.flash('error_msg', `Email delivery failed: ${dispatchResult.error || dispatchResult.message || 'Unknown error'}`);
+    }
+
+    return res.redirect('/admin/contact-submissions?tab=subscribers');
+};
+
+/**
+ * Send a personalised subscriber email to a single active subscriber.
+ */
+const sendSubscriberEmailToSingleHandler = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array()[0].msg);
+        return res.redirect('/admin/contact-submissions?tab=subscribers');
+    }
+
+    const subscription = await EmailSubscription.findOne({
+        where: {
+            id: req.params.id,
+            isActive: true
+        }
+    });
+
+    if (!subscription) {
+        req.flash('error_msg', 'Subscriber not found');
+        return res.redirect('/admin/contact-submissions?tab=subscribers');
+    }
+
+    const { subject, message } = req.body;
+    const greetingName = buildGreetingNameFromEmail(subscription.email);
+
+    const dispatchResult = await ContactEmailService.sendSubscriberCommunicationEmail({
+        subject: subject.trim(),
+        message: message.trim(),
+        greetingName,
+        toEmail: subscription.email
+    });
+
+    await AuditService.logAdminAction(
+        AuditService.ACTIONS.SYSTEM_EMAIL_SEND,
+        req,
+        AuditService.ENTITIES.SYSTEM,
+        null,
+        {
+            metadata: {
+                adminAction: 'Subscriber single email',
+                subscriberId: subscription.id,
+                recipientEmail: subscription.email,
+                subject: subject.trim(),
+                provider: dispatchResult.provider || 'resend'
+            }
+        }
+    );
+
+    if (dispatchResult.success) {
+        req.flash('success_msg', `Email sent to ${subscription.email}`);
+    } else if (dispatchResult.blocked) {
+        req.flash('warning_msg', 'Email was prepared but delivery is blocked in the current environment');
+    } else {
+        req.flash('error_msg', `Email delivery failed: ${dispatchResult.error || dispatchResult.message || 'Unknown error'}`);
+    }
+
+    return res.redirect('/admin/contact-submissions?tab=subscribers');
 };
 
 /**
@@ -2182,6 +2363,8 @@ const rawControllers = {
     getAuditStatisticsHandler,
     exportAuditLogsHandler,
     getContactSubmissionsHandler,
+    sendSubscriberEmailByTypeHandler,
+    sendSubscriberEmailToSingleHandler,
     showContactSubmissionHandler,
     replyToContactSubmissionHandler,
     updateContactSubmissionStatusHandler,
@@ -2219,6 +2402,8 @@ export const {
     getAuditStatisticsHandler: getAuditStatistics,
     exportAuditLogsHandler: exportAuditLogs,
     getContactSubmissionsHandler: getContactSubmissions,
+    sendSubscriberEmailByTypeHandler: sendSubscriberEmailByType,
+    sendSubscriberEmailToSingleHandler: sendSubscriberEmailToSingle,
     showContactSubmissionHandler: showContactSubmission,
     replyToContactSubmissionHandler: replyToContactSubmission,
     updateContactSubmissionStatusHandler: updateContactSubmissionStatus,

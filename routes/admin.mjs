@@ -12,6 +12,7 @@ import { createFormUploader, validateEntityId } from '../middleware/formUpload.m
 import asyncHandler from '../middleware/asyncHandler.mjs';
 import { applyAdminSecurity, validateSecureEmail } from '../middleware/security.mjs';
 import * as adminController from '../controllers/admin.controller.mjs';
+import { NOTIFICATION_TYPES_ARRAY } from '../config/constants.mjs';
 
 // Upload configurations for admin routes
 const clubFieldConfig = [{ name: 'logo', maxCount: 1 }, { name: 'gallery', maxCount: 5 }];
@@ -179,6 +180,29 @@ router.get('/audit-logs/statistics', adminController.getAuditStatistics);
  * Contact Submission Management Routes
  */
 router.get('/contact-submissions', adminController.getContactSubmissions);
+router.post('/contact-submissions/subscribers/email-by-type', [
+    body('notificationType')
+        .isIn(NOTIFICATION_TYPES_ARRAY)
+        .withMessage('Invalid notification type selected'),
+    body('subject')
+        .trim()
+        .isLength({ min: 3, max: 200 })
+        .withMessage('Email subject must be between 3 and 200 characters'),
+    body('message')
+        .trim()
+        .isLength({ min: 10, max: 5000 })
+        .withMessage('Email message must be between 10 and 5000 characters')
+], adminController.sendSubscriberEmailByType);
+router.post('/contact-submissions/subscribers/:id/email', [
+    body('subject')
+        .trim()
+        .isLength({ min: 3, max: 200 })
+        .withMessage('Email subject must be between 3 and 200 characters'),
+    body('message')
+        .trim()
+        .isLength({ min: 10, max: 5000 })
+        .withMessage('Email message must be between 10 and 5000 characters')
+], adminController.sendSubscriberEmailToSingle);
 router.get('/contact-submissions/:id', adminController.showContactSubmission);
 router.post('/contact-submissions/:id/reply', [
     body('subject')

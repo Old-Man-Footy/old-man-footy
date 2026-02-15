@@ -17,7 +17,8 @@ vi.mock('../../services/email/AuthEmailService.mjs', () => ({
 
 vi.mock('../../services/email/ContactEmailService.mjs', () => ({
   default: {
-    sendContactReply: vi.fn()
+    sendAdminReplyEmail: vi.fn(),
+    sendSubscriberCommunicationEmail: vi.fn()
   }
 }));
 
@@ -39,7 +40,7 @@ vi.mock('../../models/index.mjs', () => ({
   Club: { count: vi.fn(), findAll: vi.fn(), findByPk: vi.fn(), findOne: vi.fn() },
   Carnival: { count: vi.fn(), findAll: vi.fn(), findByPk: vi.fn(), findOne: vi.fn() },
   Sponsor: { count: vi.fn(), findAll: vi.fn(), findByPk: vi.fn(), findOne: vi.fn() },
-  EmailSubscription: { count: vi.fn(), findAndCountAll: vi.fn(), findAll: vi.fn(), findOne: vi.fn() },
+  EmailSubscription: { count: vi.fn(), findAndCountAll: vi.fn(), findAll: vi.fn(), findOne: vi.fn(), findByNotificationType: vi.fn() },
   AuditLog: { count: vi.fn(), findAndCountAll: vi.fn() },
   ContactSubmission: { count: vi.fn(), findAndCountAll: vi.fn(), findByPk: vi.fn() },
   ContactReply: { count: vi.fn(), findAndCountAll: vi.fn(), findByPk: vi.fn() },
@@ -47,7 +48,9 @@ vi.mock('../../models/index.mjs', () => ({
 }));
 
 import * as adminController from '../../controllers/admin.controller.mjs';
-import { ContactSubmission, EmailSubscription } from '../../models/index.mjs';
+import { ContactSubmission, EmailSubscription, User } from '../../models/index.mjs';
+import ContactEmailService from '../../services/email/ContactEmailService.mjs';
+import AuditService from '../../services/auditService.mjs';
 
 describe('Admin Controller - Contact submissions page', () => {
   let req;
@@ -197,7 +200,7 @@ describe('Admin Controller - Contact submissions page', () => {
 
     expect(renderPayload.subscribers[0]).toMatchObject({
       email: 'sub1@example.com',
-      notificationType: 'Carnival_Notifications, Website_Updates'
+      notificationType: 'Carnival Notifications, Website Updates'
     });
     expect(renderPayload.subscribers[0].subscriptionDateDisplay).not.toBe('Unknown');
 
@@ -206,5 +209,109 @@ describe('Admin Controller - Contact submissions page', () => {
       notificationType: 'All Notifications',
       subscriptionDateDisplay: 'Unknown'
     });
+
+    expect(renderPayload.notificationTypes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ value: 'Carnival_Notifications', label: 'Carnival Notifications' })
+      ])
+    );
+  });
+
+  it('sends subscriber emails by selected notification type', async () => {
+    req.body = {
+      notificationType: 'Carnival_Notifications',
+      subject: 'Carnival update',
+      message: 'Details for subscribed members.'
+    };
+    req.flash = vi.fn();
+    req.user = { id: 11, email: 'admin@example.com' };
+    res.redirect = vi.fn();
+
+    EmailSubscription.findByNotificationType = vi.fn().mockResolvedValue([
+      { email: 'one@example.com' },
+      { email: 'two@example.com' }
+    ]);
+    ContactEmailService.sendSubscriberCommunicationEmail.mockResolvedValue({
+      success: true,
+      provider: 'resend'
+    });
+
+    await adminController.sendSubscriberEmailByType(req, res);
+
+    expect(EmailSubscription.findByNotificationType).toHaveBeenCalledWith('Carnival_Notifications');
+    expect(ContactEmailService.sendSubscriberCommunicationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: 'Carnival update',
+        greetingName: 'Old Man Footy Subscriber',
+        bccEmails: ['one@example.com', 'two@example.com']
+      })
+    );
+    expect(AuditService.logAdminAction).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith('/admin/contact-submissions?tab=subscribers');
+  });
+
+  it('filters Delegate Alerts recipients to active delegate users only', async () => {
+    req.body = {
+      notificationType: 'Delegate_Alerts',
+      subject: 'Delegate bulletin',
+      message: 'Delegate-only details.'
+    };
+    req.flash = vi.fn();
+    req.user = { id: 11, email: 'admin@example.com' };
+    res.redirect = vi.fn();
+
+    EmailSubscription.findByNotificationType = vi.fn().mockResolvedValue([
+      { email: 'delegate@example.com' },
+      { email: 'member@example.com' }
+    ]);
+    User.findAll.mockResolvedValue([
+      { email: 'delegate@example.com' }
+    ]);
+    ContactEmailService.sendSubscriberCommunicationEmail.mockResolvedValue({
+      success: true,
+      provider: 'resend'
+    });
+
+    await adminController.sendSubscriberEmailByType(req, res);
+
+    expect(User.findAll).toHaveBeenCalled();
+    expect(ContactEmailService.sendSubscriberCommunicationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bccEmails: ['delegate@example.com']
+      })
+    );
+    expect(res.redirect).toHaveBeenCalledWith('/admin/contact-submissions?tab=subscribers');
+  });
+
+  it('sends personalised email to a single subscriber', async () => {
+    req.params = { id: '201' };
+    req.body = {
+      subject: 'Personal update',
+      message: 'Thanks for being part of our community.'
+    };
+    req.flash = vi.fn();
+    req.user = { id: 11, email: 'admin@example.com' };
+    res.redirect = vi.fn();
+
+    EmailSubscription.findOne.mockResolvedValue({
+      id: 201,
+      email: 'jane.doe@example.com'
+    });
+    ContactEmailService.sendSubscriberCommunicationEmail.mockResolvedValue({
+      success: true,
+      provider: 'resend'
+    });
+
+    await adminController.sendSubscriberEmailToSingle(req, res);
+
+    expect(ContactEmailService.sendSubscriberCommunicationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        toEmail: 'jane.doe@example.com',
+        greetingName: 'Jane Doe',
+        subject: 'Personal update'
+      })
+    );
+    expect(AuditService.logAdminAction).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith('/admin/contact-submissions?tab=subscribers');
   });
 });

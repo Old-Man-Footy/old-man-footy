@@ -36,6 +36,7 @@ export class ContactEmailService extends BaseEmailService {
         const payload = {
             from: mailOptions.from,
             to: toAddresses,
+            bcc: mailOptions.bcc,
             subject: mailOptions.subject,
             html: mailOptions.html,
             text: mailOptions.text,
@@ -158,6 +159,7 @@ export class ContactEmailService extends BaseEmailService {
     async sendAdminReplyEmail(replyData) {
         const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_FROM || 'no_reply@oldmanfooty.au';
         const supportAddress = process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au';
+        const safeMessage = this._escapeHtml(replyData.message || '');
 
         const mailOptions = {
             from: `"Old Man Footy Support" <${fromAddress}>`,
@@ -170,7 +172,7 @@ export class ContactEmailService extends BaseEmailService {
                     ${this._getEmailHeader()}
                     <div style="${this._getEmailContentStyles()}">
                         <p>Hello,</p>
-                        <div style="white-space: pre-wrap; line-height: 1.6;">${replyData.message}</div>
+                        <div style="white-space: pre-wrap; line-height: 1.6;">${safeMessage}</div>
                         <p style="margin-top: 24px;">You can reply directly to this email and our support team will respond.</p>
                     </div>
                     ${this._getEmailFooter()}
@@ -179,6 +181,62 @@ export class ContactEmailService extends BaseEmailService {
         };
 
         return this._sendTransactionalEmail(mailOptions, 'Contact Admin Reply');
+    }
+
+    /**
+     * Send a subscriber communication email.
+     * Uses BCC for bulk sends and direct delivery for single recipient sends.
+     * @param {Object} emailData - Subscriber email payload
+     * @param {string} emailData.subject - Email subject
+     * @param {string} emailData.message - Email body content
+     * @param {string} emailData.greetingName - Personalised greeting name
+     * @param {string[]} [emailData.bccEmails] - BCC recipients for bulk sends
+     * @param {string} [emailData.toEmail] - Direct recipient for single sends
+     * @param {string} [emailData.replyToEmail] - Reply-to address
+     * @returns {Promise<Object>} Dispatch result
+     */
+    async sendSubscriberCommunicationEmail(emailData) {
+        const fromAddress = process.env.EMAIL_FROM || 'no_reply@oldmanfooty.au';
+        const supportAddress = process.env.SUPPORT_EMAIL || 'support@oldmanfooty.au';
+        const safeGreetingName = this._escapeHtml(emailData.greetingName || 'Old Man Footy Subscriber');
+        const safeMessage = this._escapeHtml(emailData.message || '');
+        const textGreetingName = emailData.greetingName || 'Old Man Footy Subscriber';
+
+        const mailOptions = {
+            from: `"Old Man Footy Support" <${fromAddress}>`,
+            to: emailData.toEmail || supportAddress,
+            bcc: Array.isArray(emailData.bccEmails) && emailData.bccEmails.length > 0 ? emailData.bccEmails : undefined,
+            replyTo: emailData.replyToEmail || supportAddress,
+            subject: emailData.subject,
+            text: `Hi ${textGreetingName},\n\n${emailData.message}\n\nKind regards,\nOld Man Footy Team`,
+            html: `
+                <div style="${this._getEmailContainerStyles()}">
+                    ${this._getEmailHeader()}
+                    <div style="${this._getEmailContentStyles()}">
+                        <p>Hi ${safeGreetingName},</p>
+                        <div style="white-space: pre-wrap; line-height: 1.6;">${safeMessage}</div>
+                        <p style="margin-top: 24px;">Kind regards,<br>Old Man Footy Team</p>
+                    </div>
+                    ${this._getEmailFooter()}
+                </div>
+            `,
+        };
+
+        return this._sendTransactionalEmail(mailOptions, 'Subscriber Communication');
+    }
+
+    /**
+     * Safely escape HTML special characters in dynamic content.
+     * @param {string} value - Raw string value
+     * @returns {string} Escaped HTML-safe value
+     */
+    _escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     /**
