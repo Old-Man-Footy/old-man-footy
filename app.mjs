@@ -179,6 +179,10 @@ app.use((req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
+    if (res.headersSent) {
+        return next(error);
+    }
+
     const statusCode = error.status || 500;
     
     // Check if this is an AJAX/API request
@@ -197,8 +201,7 @@ app.use((error, req, res, next) => {
     }
     
     // Return HTML error page for regular web requests
-    res.status(statusCode);
-    res.render('error', {
+    return res.status(statusCode).render('error', {
         title: 'Error',
         message: error.message,
         error: process.env.NODE_ENV === 'production' ? {} : error,
