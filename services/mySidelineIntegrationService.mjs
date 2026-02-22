@@ -203,7 +203,7 @@ class MySidelineIntegrationService {
       // Process the results of logo downloads
       if (results && results.length > 0) {
         console.log(`Downloaded logos for ${results.length} carnivals.`);
-        results.forEach(async (result) => {
+        for (const result of results) {
           // Update the carnival with the public URL
           const carnival = processedCarnivals.find((e) => e.id === result.entityId);
           if (result.success) {
@@ -239,7 +239,7 @@ class MySidelineIntegrationService {
               }
             }
           }
-        });
+        }
       }
 
       console.log(

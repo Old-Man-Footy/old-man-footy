@@ -5,6 +5,7 @@ import { QueryTypes } from 'sequelize';
 import fs from 'fs/promises';
 import * as fsSync from 'fs';
 import * as path from 'path';
+import util from 'node:util';
 
 /**
  * DatabaseOptimizer
@@ -231,10 +232,31 @@ class DatabaseOptimizer {
 
             // Query performance monitoring - Enable in all environments for debugging
             try {
+                const normalizeSqlForLogging = (value) => {
+                    if (!value) {
+                        return null;
+                    }
+
+                    if (typeof value === 'string') {
+                        return value;
+                    }
+
+                    if (typeof value === 'object') {
+                        const nestedSql = value.sql || value.query || value.statement || value.text;
+                        if (typeof nestedSql === 'string' && nestedSql.length > 0) {
+                            return nestedSql;
+                        }
+                    }
+
+                    return util.inspect(value, { depth: 2, breakLength: 120 });
+                };
+
                 await safeAddHook('beforeQuery', (options) => {
                     options.startTime = Date.now();
                     // Capture SQL query with multiple fallback strategies
-                    options.capturedSql = options.sql || options.query || options.statement;
+                    options.capturedSql = normalizeSqlForLogging(
+                        options.sql || options.query || options.statement
+                    );
                     
                     // Also capture bind parameters if available
                     if (options.bind && options.bind.length > 0) {
@@ -249,11 +271,13 @@ class DatabaseOptimizer {
                         const duration = Date.now() - options.startTime;
                         // Configurable threshold via environment variable
                         // Default: 500ms (more realistic for SQLite in containers)
-                        const slowQueryThreshold = parseInt(process.env.SLOW_QUERY_THRESHOLD_MS) || 500;
+                        const slowQueryThreshold = parseInt(process.env.SLOW_QUERY_THRESHOLD_MS, 10) || 500;
                         
                         if (duration > slowQueryThreshold) {
                             // Get the actual SQL with fallback strategies
-                            let actualSql = options.capturedSql || options.sql || options.query || options.statement;
+                            let actualSql = options.capturedSql || normalizeSqlForLogging(
+                                options.sql || options.query || options.statement
+                            );
                             
                             // If still no SQL, try to extract from other properties
                             if (!actualSql && options.instance && options.instance._previousDataValues) {
