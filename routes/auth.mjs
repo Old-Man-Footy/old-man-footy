@@ -2,6 +2,7 @@ import express from 'express';
 import { body, param } from 'express-validator';
 import { ensureAuthenticated } from '../middleware/auth.mjs';
 import { applyAuthSecurity, validatePassword, validateSecureEmail, formSubmissionRateLimit, csrfProtection } from '../middleware/security.mjs';
+import { validateTurnstile } from '../middleware/turnstile.mjs';
 import * as authController from '../controllers/auth.controller.mjs';
 
 const router = express.Router();
@@ -11,11 +12,12 @@ router.use(applyAuthSecurity);
 
 // Login routes
 router.get('/login', authController.showLoginForm);
-router.post('/login', authController.loginUser);
+router.post('/login', [validateTurnstile], authController.loginUser);
 
 // Registration routes
 router.get('/register', authController.showRegisterForm);
 router.post('/register', [
+    validateTurnstile,
     body('firstName').trim().notEmpty().withMessage('First name is required'),
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
     body('email').custom((email) => {
