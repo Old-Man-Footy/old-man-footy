@@ -104,6 +104,11 @@ app.use(comingSoonMode);
 // Global variables for templates using enhanced flash
 app.use(flashTemplateVariables);
 
+// Pass Cloudflare Turnstile SITE_KEY to all views
+app.use((req, res, next) => {
+    res.locals.SITE_KEY = process.env.SITE_KEY || '';
+    next();
+});
 
 /**
  * Initialize MySideline sync service

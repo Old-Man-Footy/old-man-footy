@@ -78,6 +78,10 @@
                             </small>
                         </div>
 
+                        <div class="mb-3 d-flex justify-content-center">
+                            <div class="cf-turnstile" data-sitekey="<%= SITE_KEY %>"></div>
+                        </div>
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-person-check"></i> Create Account
@@ -99,4 +103,6 @@
     </div>
 </div>
 
+<!-- Cloudflare Turnstile API -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script data-cfasync="false" type="module" src="/js/auth-register.js"></script>

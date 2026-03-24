@@ -90,6 +90,9 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="mb-3 d-flex justify-content-end">
+                            <div class="cf-turnstile" data-sitekey="<%= SITE_KEY %>"></div>
+                        </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <button type="reset" class="btn btn-outline-secondary">
@@ -366,4 +369,6 @@
     </div>
 </div>
 
+<!-- Cloudflare Turnstile API -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script data-cfasync="false" type="module" src="/js/contact.js"></script>
