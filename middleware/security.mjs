@@ -78,12 +78,14 @@ const getSecurityConfig = () => {
             "'unsafe-inline'",
             'https://cdn.jsdelivr.net',
             'https://static.cloudflareinsights.com',
+            'https://challenges.cloudflare.com',
           ],
           scriptSrcElem: [
             "'self'",
             "'unsafe-inline'",
             'https://cdn.jsdelivr.net',
             'https://static.cloudflareinsights.com',
+            'https://challenges.cloudflare.com',
           ],
           // Cloudflare Rocket Loader may temporarily rely on inline script attributes.
           // This keeps production functional when Rocket Loader is enabled upstream.
@@ -97,7 +99,7 @@ const getSecurityConfig = () => {
           fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
           imgSrc: ["'self'", 'data:', 'https:'],
           connectSrc: ["'self'", 'https://cdn.jsdelivr.net'],
-          frameSrc: ["'none'"],
+          frameSrc: ["'self'", 'https://challenges.cloudflare.com'],
           objectSrc: ["'none'"],
           mediaSrc: ["'self'"],
           workerSrc: ["'none'"],
