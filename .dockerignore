@@ -96,6 +96,7 @@ tests/
 # Documentation
 docs/*
 !docs/help
+**/AGENTS.md
 
 # Development files
 debug-*.png
