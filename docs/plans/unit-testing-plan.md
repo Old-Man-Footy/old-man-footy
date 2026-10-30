@@ -1,5 +1,7 @@
 # Comprehensive Unit Testing Plan for 16 Missing Test Files
 
+> **Status:** Superseded by [remediation plan](../remediation_plan.md) Part C — 4 of 16 target files exist; partly stale (verified 2026-10-30). Tracked in [master-plan](master-plan.md).
+
 ## Overview
 This plan follows the existing Vitest testing patterns observed in the codebase, emphasizing **actual code execution** through proper mocking that tests real implementation without skipping logic.
 

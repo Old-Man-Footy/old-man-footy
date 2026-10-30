@@ -100,16 +100,13 @@ Hard constraints:
 6. Never weaken security controls (CSRF, rate limits, helmet/CSP, auth middleware, input validation, escaping) to make a feature or test pass.
 7. Never disable, skip (`it.skip`, `describe.skip`) or delete failing tests to obtain a green run. Never lower coverage thresholds.
 
-Spec Kit:
+Plans:
 
-- Non-trivial features (new route, new model, new service, cross-layer change) start with `/speckit.specify`, followed by `/speckit.plan`, `/speckit.tasks`, then `/speckit.implement`. Artifacts live in `specs/<NNN>-<feature-slug>/`.
-- If `.specify/` is absent, stop and ask a human to run `specify init` and `/speckit.constitution`; agents must not author the constitution unilaterally. The constitution must reflect this file.
-- Bug fixes and single-file changes do not require Spec Kit.
-- Plain checklists explicitly requested as "plans" remain in `docs/plans/` (see `docs/AGENTS.md`).
+- Plain checklists explicitly requested as "plans" live in `docs/plans/` (see `docs/AGENTS.md`).
 
 YQ:
 
-- Use `yq` (mikefarah v4) for all reads and edits of YAML: `docker-compose.prod.yml`, `docker-compose.test.yml`, any `.github/**/*.yml`, and Spec Kit YAML. Prefer targeted in-place expressions (`yq -i '.services.app.environment += ["KEY=${KEY:-default}"]' docker-compose.prod.yml`) over free-text rewrites. Validate after edit with `yq eval '.' <file> > /dev/null`.
+- Use `yq` (mikefarah v4) for all reads and edits of YAML: `docker-compose.prod.yml`, `docker-compose.test.yml`, and any `.github/**/*.yml`. Prefer targeted in-place expressions (`yq -i '.services.app.environment += ["KEY=${KEY:-default}"]' docker-compose.prod.yml`) over free-text rewrites. Validate after edit with `yq eval '.' <file> > /dev/null`.
 - Use `yq --front-matter=extract` to read/validate front matter in `docs/help/*.md`.
 
 Manual architectural review required (stop and request human approval before implementing):

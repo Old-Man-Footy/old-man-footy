@@ -51,5 +51,4 @@ Resend ^4.8.0, Playwright ^1.55.0 (Docker uses system Chromium via `PLAYWRIGHT_C
 
 - Never send real email or run live scraping during development or tests.
 - Manual architectural review required for: changes to `_canSendEmails()` conditions, MySideline URLs/selectors/schedules, cron expressions, retention periods, new external services or API keys.
-- New services or new integrations: begin with `/speckit.specify`.
 - Never store credentials in service code; read from `process.env` via config.

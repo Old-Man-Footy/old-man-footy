@@ -30,7 +30,6 @@ Markdown with YAML front matter (help files), rendered with marked ^16.3.0 by `c
 - `pageIdentifier` equals the filename stem and the `data-page-id` attribute of the corresponding view. Section anchors referenced by `data-help-key` in views must exist as headings.
 - One help file per page; filename `<domain>-<page>.md` in kebab-case.
 - Plans: markdown checklists, static (no progress narratives); test counts permitted beside items (e.g., `(5/7)`). Filename `<feature>-plan.md`.
-- Spec Kit artifacts are not stored here; they belong in `specs/`.
 
 ## 4. Coding Conventions
 
@@ -46,4 +45,4 @@ Markdown with YAML front matter (help files), rendered with marked ^16.3.0 by `c
 ## 6. Agent Directives
 
 - Do not rename or delete a help file without updating the matching view `data-page-id` and confirming no orphaned `HelpContent` rows matter (manual review).
-- Do not create plans unless explicitly asked; use `/speckit.specify` for feature specifications instead.
+- Do not create plans unless explicitly asked.

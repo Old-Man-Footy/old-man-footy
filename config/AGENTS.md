@@ -46,4 +46,3 @@ Database files: `data/dev-old-man-footy.db`, `data/test-old-man-footy.db`, `data
 - Do not add synchronous `fs` reads of `.env` files or bypass `setEnvironmentVariables()`.
 - Do not print `process.env` or `getCurrentConfig()` output.
 - Adding a value to an existing constant enum requires checking every consumer (`grep -rn "<CONST_NAME>"`) including views, validators and migrations; removing or renaming a value requires manual review and a data migration.
-- Use `/speckit.specify` when a config change introduces a new feature flag or integration.

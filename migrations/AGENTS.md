@@ -45,4 +45,3 @@ Sequelize `QueryInterface` ^6.37.7, Umzug ^3.8.2, SQLite3. Files use `.js` exten
 - Never run migrations against `data/dev-old-man-footy.db` or `data/old-man-footy.db` without explicit instruction; never run `db:migrate:undo` without explicit instruction.
 - Manual architectural review required for any migration that drops/renames/retypes columns or tables, modifies existing data, or alters constraints/keys.
 - A migration must accompany every model attribute change; reference the model file in the migration header comment.
-- Schema-changing features begin with `/speckit.specify` including the migration and rollback plan.

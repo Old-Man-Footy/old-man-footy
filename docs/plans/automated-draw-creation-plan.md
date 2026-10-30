@@ -2,7 +2,7 @@
 
 **Project:** Old Man Footy - Automated Draw Creation System  
 **Created:** September 29, 2025  
-**Status:** Planning Phase  
+**Status:** Backlog — not started; no draw code exists (verified 2026-10-30). Tracked in [master-plan](master-plan.md).  
 
 ## Overview
 

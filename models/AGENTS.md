@@ -47,4 +47,3 @@ Sequelize ^6.37.7 (`Model`, `DataTypes`, `Op`), SQLite3. ESM `.mjs`.
 - Manual architectural review required for: association changes, removing/renaming attributes, changing primary/foreign keys, adding hooks with side effects, changes to `User` authentication fields.
 - Never call `sequelize.sync()` / `Model.sync()` outside tests.
 - Never expose sensitive attributes by default; use `defaultScope`/`attributes.exclude` or explicit selection.
-- New entities begin with `/speckit.specify` capturing fields, constraints, associations and migration plan.

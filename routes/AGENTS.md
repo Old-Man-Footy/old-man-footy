@@ -52,4 +52,3 @@ Express ^5.1.0 `Router`, express-validator ^7.2.1, multer (via `middleware/formU
 - Never remove or reorder an auth guard or security bundle in an existing chain without manual architectural review.
 - Never put database queries, model imports, or response-building logic in route files.
 - Never introduce an unauthenticated state-changing route.
-- New endpoints that form part of a feature: start with `/speckit.specify` and record method, path, guard, validator and response contract in the spec.

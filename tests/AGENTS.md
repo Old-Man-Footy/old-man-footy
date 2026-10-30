@@ -43,4 +43,3 @@ Vitest ^3.2.4 (`describe`, `it`, `expect`, `vi`), @vitest/coverage-v8, jsdom ^26
 - Never use `.skip`, `.only`, `.todo` in committed tests, delete failing tests, or weaken assertions to make them pass. Report failing tests with output.
 - Never point tests at the development or production database.
 - Never change `vitest.config*.mjs`, coverage thresholds, `setup.mjs` or `teardown.mjs` without manual architectural review.
-- Write tests before or alongside implementation (TDD) for any `/speckit.implement` task.

@@ -47,4 +47,3 @@ Express ^5.1.0, helmet ^8.1.0, express-rate-limit ^8.1.0, express-validator ^7.2
 - Manual architectural review is mandatory for any change to `auth.mjs`, `security.mjs`, `turnstile.mjs`, helmet/CSP directives, CSRF logic, rate-limit values, or session regeneration.
 - Never relax CSP to `unsafe-inline`/`unsafe-eval`, widen allowed MIME types, raise upload size limits, or exempt additional paths from CSRF without approval.
 - Never log credentials, tokens, CSRF values or session contents.
-- New guards require a `/speckit.specify` spec describing the role matrix they enforce.

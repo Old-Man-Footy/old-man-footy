@@ -1,5 +1,7 @@
 # Controller Standardization Plan: Migrating to wrapControllers Pattern
 
+> **Status:** Blocked — 0 of 7 stages done; conflicts with root `AGENTS.md` (`asyncHandler` standard). Folded into [remediation plan](../remediation_plan.md) Phase 4 (verified 2026-10-30). Tracked in [master-plan](master-plan.md).
+
 This plan systematically standardizes all controllers to use the `wrapControllers()` utility instead of the current mix of `asyncHandler`, manual `try/catch`, and direct exports.
 
 ## Project Overview

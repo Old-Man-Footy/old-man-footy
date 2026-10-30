@@ -45,5 +45,4 @@ Express ^5.1.0 req/res, express-validator `validationResult`, Sequelize models v
 - Do not query with `sequelize.query` or construct SQL strings.
 - Do not pass raw Sequelize instances containing sensitive fields (`passwordHash`, tokens) to views or JSON; select/omit attributes explicitly.
 - Do not send email or call external HTTP directly; use services.
-- Feature work spanning controller + model/service: begin with `/speckit.specify`.
 - Changing a JSON response shape consumed by `public/js/` requires updating the client module and its jsdom test in the same change, and manual review if the shape is shared.

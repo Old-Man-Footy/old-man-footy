@@ -2,7 +2,7 @@
 
 **Project:** Old Man Footy - Scheduled Email Notifications  
 **Created:** September 29, 2025  
-**Status:** Planning Phase  
+**Status:** Backlog / needs refresh — not started; plan still describes Gmail, code uses Resend (verified 2026-10-30). Tracked in [master-plan](master-plan.md).  
 
 ## Overview
 
