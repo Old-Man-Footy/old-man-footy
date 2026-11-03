@@ -1,5 +1,5 @@
 # Multi-stage build for optimized production image
-FROM node:22-alpine AS browser-deps
+FROM node:24-alpine AS browser-deps
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN npm ci --only=production && \
     npm cache clean --force
 
 # Common runtime stage for test and production
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 # Improve reliability of Alpine package fetches by switching mirror if dl-cdn is problematic
 RUN sed -i 's|https://dl-cdn.alpinelinux.org|https://dl-2.alpinelinux.org|g' /etc/apk/repositories \
         && apk update \
